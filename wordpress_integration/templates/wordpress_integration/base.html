@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title|default:"Retail Trade Scan Net" }}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    {% block meta %}
+    <meta name="description" content="{% block meta_description %}Stock analysis, trading insights, and market research from Retail Trade Scan Net{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}stocks, trading, analysis, finance, market research{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Retail Trade Scan Net">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    
+    <!-- Open Graph Meta Tags -->
+    {% block og_meta %}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}{{ page_title|default:"Retail Trade Scan Net" }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Stock analysis, trading insights, and market research{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:site_name" content="Retail Trade Scan Net">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}/static/og-image.jpg">
+    {% endblock %}
+    
+    <!-- Twitter Card Meta Tags -->
+    {% block twitter_meta %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@RetailTradeScan">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ page_title|default:"Retail Trade Scan Net" }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Stock analysis, trading insights, and market research{% endblock %}">
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}/static/twitter-card.jpg">
+    {% endblock %}
+    
+    <!-- Structured Data -->
+    {% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Retail Trade Scan Net",
+        "url": "{{ request.scheme }}://{{ request.get_host }}",
+        "logo": "{{ request.scheme }}://{{ request.get_host }}/static/logo.png",
+        "description": "Professional stock analysis, trading insights, and market research platform",
+        "sameAs": [
+            "https://twitter.com/RetailTradeScan"
+        ]
+    }
+    </script>
+    {% endblock %}
+    {% endblock %}
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #1f2937;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .navbar a {
+            color: white;
+            margin-left: 1rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .navbar a:hover {
+            color: #e5e7eb;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .post-meta {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .post-excerpt {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        .stock-ticker {
+            background: #2563eb;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+        .stock-ticker.positive { background: #10b981; }
+        .stock-ticker.negative { background: #ef4444; }
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+        .category-badge {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+        .category-badge:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+            text-decoration: none;
+        }
+        .wp-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        .wp-content {
+            line-height: 1.8;
+        }
+        .wp-content h2, .wp-content h3, .wp-content h4 {
+            color: #1f2937;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .pagination {
+            justify-content: center;
+        }
+        .footer {
+            background: #1f2937;
+            color: white;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <h1>📊 Retail Trade Scan Net</h1>
+        <div>
+            <a href="/">Stock Scanner</a>
+            <a href="/news/">News</a>
+            <a href="/search/">Search</a>
+            <a href="/filter/">Filter</a>
+            <a href="/admin-dashboard/">Admin</a>
+            <a href="{% url 'wordpress_integration:home' %}">Blog</a>
+            <a href="{% url 'wordpress_integration:stock_posts' %}">Stock Articles</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        {% block breadcrumb %}{% endblock %}
+        
+        <div class="row">
+            <div class="col-lg-8">
+                {% block content %}{% endblock %}
+            </div>
+            
+            <div class="col-lg-4">
+                {% block sidebar %}
+                <!-- Recent Stocks Widget -->
+                {% if recent_stocks %}
+                <div class="sidebar">
+                    <h5>📈 Recent Stock Updates</h5>
+                    {% for stock in recent_stocks %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>{{ stock.ticker }}</strong>
+                        <span class="stock-ticker {% if stock.price_change_today > 0 %}positive{% elif stock.price_change_today < 0 %}negative{% endif %}">
+                            ${{ stock.current_price|floatformat:2 }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    <a href="/filter/" class="btn btn-sm btn-outline-primary mt-2">View All Stocks</a>
+                </div>
+                {% endif %}
+
+                <!-- Categories Widget -->
+                {% if categories %}
+                <div class="sidebar">
+                    <h5>📂 Categories</h5>
+                    {% for category in categories %}
+                    <a href="{% url 'wordpress_integration:category' category.slug %}" class="category-badge">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- WordPress Menu Widget -->
+                {% if main_menu %}
+                <div class="sidebar">
+                    <h5>🔗 Quick Links</h5>
+                    <ul class="list-unstyled">
+                        {% for menu_item in main_menu %}
+                        <li class="mb-2">
+                            <a href="{{ menu_item.get_url }}" class="text-decoration-none">
+                                {{ menu_item.title }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Search Widget -->
+                <div class="sidebar">
+                    <h5>🔍 Search Content</h5>
+                    <form method="get" action="{% url 'wordpress_integration:search' %}">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" placeholder="Search articles..." value="{{ request.GET.q }}">
+                            <button class="btn btn-outline-primary" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Retail Trade Scan Net</h5>
+                    <p>Your source for stock analysis, market insights, and trading strategies.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>
+                        <a href="{% url 'wordpress_integration:rss' %}" class="text-light me-3">RSS Feed</a>
+                        <a href="{% url 'wordpress_integration:sitemap' %}" class="text-light">Sitemap</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

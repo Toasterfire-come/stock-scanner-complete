@@ -1,0 +1,160 @@
+{% extends 'wordpress_integration/base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="content-card">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1>📊 Welcome to Retail Trade Scan Net</h1>
+            <p class="lead">Your comprehensive source for stock analysis, market insights, and trading strategies. Combining real-time stock data with expert commentary and analysis.</p>
+            <div class="mt-3">
+                <a href="{% url 'wordpress_integration:blog' %}" class="btn btn-primary me-3">📖 Read Articles</a>
+                <a href="{% url 'wordpress_integration:stock_posts' %}" class="btn btn-outline-primary me-3">📈 Stock Analysis</a>
+                <a href="/filter/" class="btn btn-outline-secondary">🔍 Stock Scanner</a>
+            </div>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="p-4" style="background: #f8fafc; border-radius: 10px;">
+                <h3 class="text-primary">Live Market Data</h3>
+                <p class="mb-0">Real-time stock monitoring</p>
+                <small class="text-muted">Updated every 15 minutes</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock-Related Posts Section -->
+{% if stock_related_posts %}
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📈 Latest Stock Analysis</h2>
+        <a href="{% url 'wordpress_integration:stock_posts' %}" class="btn btn-outline-primary btn-sm">View All Stock Articles</a>
+    </div>
+    
+    <div class="row">
+        {% for post in stock_related_posts %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{{ post.get_absolute_url }}" class="text-decoration-none">
+                            {{ post.title }}
+                        </a>
+                    </h5>
+                    <div class="post-meta mb-2">
+                        <small>📅 {{ post.wp_created_date|date:"M d, Y" }}</small>
+                        {% if post.author_name %}
+                        <small>👤 {{ post.author_name }}</small>
+                        {% endif %}
+                    </div>
+                    {% if post.related_tickers %}
+                    <div class="mb-2">
+                        {% for ticker in post.related_tickers|cut:','|cut:' '|split %}
+                        <span class="stock-ticker">{{ ticker }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="card-text">{{ post.excerpt|truncatewords:20 }}</p>
+                    <div class="mt-auto">
+                        {% for category in post.categories.all %}
+                        <a href="{% url 'wordpress_integration:category' category.slug %}" class="category-badge">
+                            {{ category.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Posts Section -->
+{% if recent_posts %}
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📰 Recent Articles</h2>
+        <a href="{% url 'wordpress_integration:blog' %}" class="btn btn-outline-primary btn-sm">View All Posts</a>
+    </div>
+    
+    <div class="row">
+        {% for post in recent_posts %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{{ post.get_absolute_url }}" class="text-decoration-none">
+                            {{ post.title }}
+                        </a>
+                    </h5>
+                    <div class="post-meta mb-2">
+                        <small>📅 {{ post.wp_created_date|date:"M d, Y" }}</small>
+                        {% if post.author_name %}
+                        <small>👤 {{ post.author_name }}</small>
+                        {% endif %}
+                        {% if post.is_stock_related %}
+                        <span class="badge bg-success">📈 Stock Related</span>
+                        {% endif %}
+                    </div>
+                    <p class="card-text">{{ post.excerpt|truncatewords:25 }}</p>
+                    <div class="mt-auto">
+                        {% for category in post.categories.all %}
+                        <a href="{% url 'wordpress_integration:category' category.slug %}" class="category-badge">
+                            {{ category.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Call to Action Section -->
+<div class="content-card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h3>🚀 Ready to Start Trading?</h3>
+    <p class="lead">Get real-time stock data, expert analysis, and trading insights all in one place.</p>
+    <div class="mt-3">
+        <a href="/filter/" class="btn btn-light btn-lg me-3">🔍 Explore Stocks</a>
+        <a href="/subscribe/dvsa-50/" class="btn btn-outline-light btn-lg">📧 Get Alerts</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+{{ block.super }}
+
+<!-- Quick Stats Widget -->
+<div class="sidebar">
+    <h5>📊 Quick Stats</h5>
+    <div class="row text-center">
+        <div class="col-12 mb-3">
+            <div class="p-3" style="background: #f0f9ff; border-radius: 8px;">
+                <h6 class="text-primary mb-1">Articles Published</h6>
+                <h4 class="mb-0">{{ recent_posts|length }}+</h4>
+            </div>
+        </div>
+        <div class="col-12 mb-3">
+            <div class="p-3" style="background: #f0fdf4; border-radius: 8px;">
+                <h6 class="text-success mb-1">Stock Analysis</h6>
+                <h4 class="mb-0">{{ stock_related_posts|length }}+</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popular Categories -->
+{% load django_extensions %}
+<div class="sidebar">
+    <h5>🔥 Popular Topics</h5>
+    <ul class="list-unstyled">
+        <li class="mb-2"><a href="/wp/category/analysis/" class="text-decoration-none">📈 Stock Analysis</a></li>
+        <li class="mb-2"><a href="/wp/category/trading/" class="text-decoration-none">💹 Trading Strategies</a></li>
+        <li class="mb-2"><a href="/wp/category/market-news/" class="text-decoration-none">📰 Market News</a></li>
+        <li class="mb-2"><a href="/wp/category/education/" class="text-decoration-none">🎓 Trading Education</a></li>
+    </ul>
+</div>
+{% endblock %}
