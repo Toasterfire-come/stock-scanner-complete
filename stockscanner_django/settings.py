@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-3o(csaf*^k*d41wf+k#tt$jcu13wo*o^*41*h&)18b1r-^7krg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.6.200.155']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.6.200.155', 'retailtradescanner.com', 'www.retailtradescanner.com', 'api.retailtradescanner.com']
 
 
 # Application definition
@@ -170,8 +170,10 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "https://retailtradescan.net",
-    "https://www.retailtradescan.net",
+    "https://retailtradescanner.com",
+    "https://www.retailtradescanner.com",
+    "http://retailtradescanner.com",
+    "http://www.retailtradescanner.com",
     # Add your WordPress domain here
 ]
 

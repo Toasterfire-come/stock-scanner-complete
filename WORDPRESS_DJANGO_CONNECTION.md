@@ -33,8 +33,8 @@ class StockScannerIntegration {
     private $api_secret;
     
     public function __construct() {
-        // Django API endpoint configuration
-        $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.yoursite.com/api/v1/');
+                 // Django API endpoint configuration
+         $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
         $this->api_secret = get_option('stock_scanner_api_secret', '');
     }
     
@@ -217,12 +217,12 @@ MIDDLEWARE = [
 ]
 
 # CORS Configuration for WordPress Integration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",      # Local development
-    "http://127.0.0.1:8000",      # Local development
-    "https://retailtradescan.net", # Production WordPress site
-    "https://www.retailtradescan.net", # Production with www
-]
+ CORS_ALLOWED_ORIGINS = [
+     "http://localhost:8000",      # Local development
+     "http://127.0.0.1:8000",      # Local development
+     "https://retailtradescanner.com", # Production WordPress site
+     "https://www.retailtradescanner.com", # Production with www
+ ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 
@@ -340,10 +340,10 @@ def rate_limit_check(request, limit=100, window=3600):
 - **Django:** `http://localhost:8000`
 - **API Calls:** WordPress → `localhost:8000/api/`
 
-### **Production Setup:**
-- **WordPress:** `https://retailtradescan.net`
-- **Django:** `https://api.retailtradescan.net` (subdomain)
-- **API Calls:** WordPress → `https://api.retailtradescan.net/api/`
+ ### **Production Setup:**
+ - **WordPress:** `https://retailtradescanner.com`
+ - **Django:** `https://api.retailtradescanner.com` (subdomain)
+ - **API Calls:** WordPress → `https://api.retailtradescanner.com/api/`
 
 ### **Proxy Configuration** (Optional)
 ```nginx
@@ -361,34 +361,35 @@ location /api/ {
 ## 🔧 **Configuration Steps**
 
 ### **1. WordPress Plugin Configuration**
-```php
-// In WordPress admin, set these options:
-update_option('stock_scanner_api_url', 'https://api.yoursite.com/api/');
-update_option('stock_scanner_api_secret', 'your-secret-key');
-```
+ ```php
+ // In WordPress admin, set these options:
+ update_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
+ update_option('stock_scanner_api_secret', 'your-secret-key');
+ ```
 
 ### **2. Django Settings Update**
-```python
-# Add your WordPress domain to CORS
-CORS_ALLOWED_ORIGINS = [
-    "https://your-wordpress-site.com",
-]
+ ```python
+ # Add your WordPress domain to CORS
+ CORS_ALLOWED_ORIGINS = [
+     "https://retailtradescanner.com",
+     "https://www.retailtradescanner.com",
+ ]
 
-# Add to ALLOWED_HOSTS
-ALLOWED_HOSTS = ['api.yoursite.com', 'yoursite.com']
-```
+ # Add to ALLOWED_HOSTS
+ ALLOWED_HOSTS = ['api.retailtradescanner.com', 'retailtradescanner.com', 'www.retailtradescanner.com']
+ ```
 
-### **3. DNS/Domain Setup**
-```
-# WordPress site
-yoursite.com → WordPress server
+ ### **3. DNS/Domain Setup**
+ ```
+ # WordPress site
+ retailtradescanner.com → WordPress server
 
-# Django API
-api.yoursite.com → Django server
+ # Django API
+ api.retailtradescanner.com → Django server
 
-# Or subdirectory
-yoursite.com/api/ → Proxy to Django
-```
+ # Or subdirectory
+ retailtradescanner.com/api/ → Proxy to Django
+ ```
 
 ---
 

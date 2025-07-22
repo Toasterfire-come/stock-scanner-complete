@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Stock Scanner Integration
- * Plugin URI: https://github.com/Toasterfire-come/stock-scanner-complete
+ * Plugin URI: https://retailtradescanner.com
  * Description: Creates 19 pages from XML export with live stock widgets, membership paywall, and seamless Django API integration
  * Version: 2.0.0
  * Author: Stock Scanner Team
@@ -57,7 +57,7 @@ class StockScannerIntegration {
     private $api_secret;
     
     public function __construct() {
-        $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.yoursite.com/api/v1/');
+        $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
         $this->api_secret = get_option('stock_scanner_api_secret', '');
         
         add_action('init', array($this, 'init'));
