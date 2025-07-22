@@ -1,53 +1,81 @@
-# 📊 Stock Scanner - Django Application
+# 📊 Stock Scanner - Complete Business Platform
 
-A powerful, real-time stock monitoring and analysis application built with Django, featuring Gmail SMTP integration, local SQLite database, and WordPress API compatibility.
+A comprehensive stock monitoring and membership platform for **retailtradescanner.com** featuring real-time analytics, 4-tier membership system, automatic sales tax collection, and full WordPress integration with 24 professional pages.
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Download and extract the project
-# 2. Run the automated setup
-python3 setup_local.py
+# 1. Clone the repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
 
-# 3. Start the application
-source venv/bin/activate
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Set up database and memberships
+python manage.py migrate
+python manage.py setup_memberships
+
+# 4. Create admin user
+python manage.py createsuperuser
+
+# 5. Start the development server
 python manage.py runserver
 
-# 4. Visit http://localhost:8000
+# 6. Visit http://localhost:8000 for APIs
+# 7. Visit http://localhost:8000/admin for admin panel
 ```
 
 ## ✨ Features
 
-### 📈 **Stock Data**
-- **Real-time stock prices** via yfinance API
-- **Market movers** and statistics
-- **Technical indicators** (DVAV, DVSA, PE ratios)
-- **Rate-limited requests** to prevent blocking
-- **Caching system** for better performance
+### 💰 **Membership System (NEW)**
+- **4-Tier Pricing:** Free (15 lookups), Basic ($9.99), Professional ($29.99), Expert ($49.99)
+- **Real-time Analytics:** Live member counts, revenue tracking, spending averages
+- **Usage Limits:** Automatic enforcement per tier with monthly resets
+- **Stripe Integration:** Ready for payment processing with customer tracking
+- **Auto-Signup:** New users automatically get free memberships
 
-### 📧 **Email Notifications**
-- **Gmail SMTP integration** with app passwords
-- **Automated stock alerts** based on price changes
-- **Category-based subscriptions** (technology, healthcare, etc.)
-- **Rate limiting** to respect Gmail quotas
+### 📊 **Real Data Analytics (NEW)**
+- **Live Business Intelligence:** Real member counts and revenue calculations
+- **Dynamic Statistics:** No fake data - everything calculated from database
+- **Admin Dashboard:** WordPress widget showing live analytics
+- **Growth Tracking:** Real conversion rates and tier adoption metrics
+- **API Endpoints:** `/api/analytics/public/` and `/api/analytics/members/`
 
-### 🗄️ **Database**
-- **Local SQLite database** - no passwords required
-- **Automatic backups** with timestamps
-- **Health monitoring** and optimization
-- **Django ORM** for easy data management
+### 💳 **Sales Tax System (NEW)**
+- **Automatic Collection:** All 50 US states + DC tax rates
+- **IP Geolocation:** Detects user location for accurate tax calculation
+- **Paid Membership Pro Integration:** Seamless checkout experience
+- **Expert Tier:** $49.99/month with automatic tax calculation
 
-### 🌐 **API & Integration**
-- **REST API** for external integrations
-- **WordPress compatibility** with CORS support
-- **JSON data export** for filtering systems
-- **Admin dashboard** for management
+### 🖥️ **WordPress Integration (COMPLETE)**
+- **24 Professional Pages:** Complete site structure from XML import
+- **Live Stock Widgets:** Real-time data from Django backend
+- **Modern Design:** Professional CSS with responsive layout
+- **Email Signups:** Working backend integration
+- **Stock Filtering:** Advanced search and filtering capabilities
+- **News Display:** Real-time stock news and important updates
 
-### 🔐 **Security**
-- **Production-ready security** settings
-- **HTTPS enforcement** for production
-- **Rate limiting** and monitoring
-- **Custom security middleware**
+### 📈 **Stock Data & APIs**
+- **Real-time stock prices** via yfinance API with rate limiting
+- **Advanced Filtering:** Filter by price, volume, market cap, sector
+- **Stock Lookup:** Complete company data and financials
+- **Market News:** Live news feeds for specific tickers
+- **Technical Indicators:** DVAV, DVSA, PE ratios, market cap
+
+### 🗄️ **Database & Models**
+- **Membership Model:** Complete user tier tracking with Stripe integration
+- **Usage Tracking:** Monthly lookup limits and reset functionality
+- **Email Subscriptions:** Category-based with active status tracking
+- **Stock Alerts:** Company data with price and volume monitoring
+- **SQLite:** Local development database, easily migrated to PostgreSQL
+
+### 🔐 **Security & Production**
+- **Domain Ready:** Configured for retailtradescanner.com
+- **CORS Setup:** WordPress-Django communication enabled
+- **Rate Limiting:** API protection and usage enforcement
+- **Sales Tax Compliance:** Automatic collection for US customers
+- **Admin Security:** Staff-only access to sensitive analytics
 
 ## 📋 System Requirements
 
@@ -58,111 +86,265 @@ python manage.py runserver
 ## 📁 Project Structure
 
 ```
-stock-scanner/
-├── 📄 README.md                          # This file
-├── 📄 COMPLETE_SETUP_GUIDE.md           # Detailed setup instructions
-├── 📄 requirements_secure.txt            # Python dependencies
+stock-scanner-complete/
+├── 📄 README.md                          # This file - updated with latest features
+├── 📄 requirements.txt                   # Python dependencies (with celery, django-celery-beat)
 ├── 📄 manage.py                          # Django management script
-├── 🔧 setup_local.py                     # Automated setup script
-├── 🧪 test_database_setup.py            # Database test script
-├── 🗄️ database_settings_local.py        # SQLite configuration
-├── 🔐 security_hardening.py             # Security configuration
+├── 📄 REAL_DATA_ANALYTICS.md            # Real data analytics system documentation
+├── 📄 BUGFIXES_SUMMARY.md               # Comprehensive bug fixes applied
+├── 📄 COMPLETE_SITEMAP.md               # Full site structure (24 pages)
+├── 📄 WORDPRESS_DJANGO_CONNECTION.md    # Technical integration guide
 ├── 📁 stockscanner_django/              # Django project
-│   ├── 📄 settings.py                   # Django settings
-│   ├── 📄 urls.py                       # URL routing
+│   ├── 📄 settings.py                   # Configured for retailtradescanner.com
+│   ├── 📄 urls.py                       # URL routing with analytics endpoints
+│   ├── 📄 celery.py                     # Celery task queue configuration
 │   └── 📄 wsgi.py                       # WSGI configuration
-├── 📁 stocks/                           # Stock data app
-│   ├── 📄 models.py                     # Database models
-│   ├── 📄 api_views.py                  # REST API views
-│   ├── 📄 yfinance_config.py           # Stock data configuration
+├── 📁 stocks/                           # Stock data & membership app
+│   ├── 📄 models.py                     # StockAlert + Membership models
+│   ├── 📄 api_views.py                  # Stock APIs with filtering & lookup
+│   ├── 📄 analytics_views.py            # 🆕 Real data analytics APIs
+│   ├── 📄 admin_dashboard.py            # 🆕 Admin dashboard with live data
+│   ├── 📄 admin.py                      # Updated with Membership admin
+│   ├── 📄 signals.py                    # 🆕 Auto-create memberships for new users
 │   └── 📁 management/commands/          # Django commands
-├── 📁 emails/                          # Email system
-│   ├── 📄 models.py                     # Email models
-│   ├── 📄 email_config.py              # Gmail SMTP configuration
-│   ├── 📄 tasks.py                     # Email tasks
-│   └── 📁 templates/                   # Email templates
+│       └── 📄 setup_memberships.py     # 🆕 Setup memberships for existing users
+├── 📁 emails/                          # Email subscription system
+│   ├── 📄 models.py                     # EmailSubscription model
+│   └── 📄 email_config.py              # Gmail SMTP configuration
 ├── 📁 core/                            # Core functionality
-│   ├── 📄 views.py                     # Web views
-│   └── 📁 templates/                   # HTML templates
-├── 📁 wordpress_plugin/                # WordPress plugin (auto-creates pages)
-│   └── 📁 stock-scanner-integration/   # Complete plugin with paywall
-├── 📁 wordpress_theme/                 # WordPress theme
-│   └── 📁 stock-scanner-theme/         # Modern responsive theme
-├── 📄 retailtradescanner.WordPress.2025-07-22.xml  # WordPress content export
-└── 📁 static/                          # Static files (CSS, JS, images)
+│   └── 📄 views.py                     # Basic web views
+├── 📁 wordpress_plugin/                # Complete WordPress integration
+│   └── 📁 stock-scanner-integration/   # Full plugin with 24 pages
+│       ├── 📄 stock-scanner-integration.php  # 🆕 With sales tax & analytics widget
+│       └── 📁 assets/
+│           └── 📄 stock-scanner-frontend.js  # 🆕 Complete frontend integration
+├── 📁 wordpress_theme/                 # Professional WordPress theme
+│   └── 📁 stock-scanner-theme/         
+│       ├── 📄 style.css                # 🆕 Professional modern design
+│       ├── 📄 functions.php            # Updated navigation
+│       └── 📁 js/theme.js              # Enhanced JavaScript
+├── 📁 docs/                           # Documentation
+│   └── 📄 SALES_TAX_SETUP.md          # 🆕 Sales tax system guide
+├── 📁 tests/                          # Test files
+├── 📁 logs_archive/                   # Archived logs
+└── 📄 retailtradescanner.WordPress.2025-07-22.xml  # Updated WordPress export (19 pages)
 ```
 
-## 🛠️ Installation Options
+## 🛠️ Installation & Setup
 
-### 🚀 Complete WordPress Installation (Recommended)
+### 🚀 Development Setup (Recommended)
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
 cd stock-scanner-complete
-git checkout complete-stock-scanner-v1
 
-# 2. One-command Django setup
-python3 setup_local.py
-
-# 3. WordPress Integration
-# Copy wordpress_plugin/stock-scanner-integration/ to /wp-content/plugins/
-# Copy wordpress_theme/stock-scanner-theme/ to /wp-content/themes/
-# Activate both in WordPress admin
-
-# 4. Your complete stock scanner is ready!
-# Django API: http://localhost:8000
-# WordPress: http://your-site.com
-```
-
-### Option 2: Django Only (Manual Setup)
-```bash
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
+# 2. Install Python dependencies
 pip install -r requirements.txt
 
-# Setup database
+# 3. Set up database and create tables
 python manage.py migrate
 
-# Create admin user
+# 4. Create memberships for any existing users
+python manage.py setup_memberships
+
+# 5. Create an admin user
 python manage.py createsuperuser
 
-# Start server
+# 6. Start the Django development server
 python manage.py runserver
+
+# 7. Access the application
+# Django Admin: http://localhost:8000/admin
+# API Endpoints: http://localhost:8000/api/
+# Analytics: http://localhost:8000/api/analytics/public/
 ```
 
-### Option 3: Production Deployment
-```bash
-# Run security hardening
-python3 security_hardening.py
+### 🌐 Production Deployment (retailtradescanner.com)
 
-# Deploy with generated script
-./deploy_secure.sh
+```bash
+# 1. Server setup (Ubuntu/CentOS)
+sudo apt-get update
+sudo apt-get install python3 python3-pip postgresql nginx
+
+# 2. Clone and setup
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+pip install -r requirements.txt
+
+# 3. Configure for production
+# Update ALLOWED_HOSTS in settings.py
+# Set up PostgreSQL database
+# Configure SSL certificates
+
+# 4. Deploy Django backend
+python manage.py migrate
+python manage.py collectstatic
+python manage.py setup_memberships
+
+# 5. WordPress Integration
+# Copy wordpress_plugin/stock-scanner-integration/ to /wp-content/plugins/
+# Copy wordpress_theme/stock-scanner-theme/ to /wp-content/themes/
+# Activate plugin and theme in WordPress admin
 ```
 
-## 📧 Gmail Configuration
+### 🔧 WordPress Plugin Setup
 
-1. **Enable 2-Factor Authentication** in your Google account
-2. **Generate App Password**:
-   - Go to Google Account Settings
-   - Security → App passwords
-   - Generate password for "Mail" application
-3. **Update .env file** with your Gmail credentials
-
-## 🌐 API Usage
-
-### Get Stock Data
 ```bash
-# List all stocks
-curl "http://localhost:8000/api/stocks/"
+# 1. Copy plugin to WordPress
+cp -r wordpress_plugin/stock-scanner-integration/ /path/to/wordpress/wp-content/plugins/
 
-# Get specific stock
-curl "http://localhost:8000/api/stocks/AAPL/"
+# 2. Copy theme to WordPress  
+cp -r wordpress_theme/stock-scanner-theme/ /path/to/wordpress/wp-content/themes/
 
-# Search stocks
+# 3. Activate in WordPress admin
+# Go to Plugins > Activate "Stock Scanner Integration"
+# Go to Appearance > Themes > Activate "Stock Scanner Theme"
+
+# 4. Configure plugin settings
+# Go to WordPress Admin > Stock Scanner Settings
+# Set Django API URL (e.g., https://api.retailtradescanner.com)
+# Test API connection
+
+```
+
+## 🌐 API Endpoints
+
+### 📊 Analytics APIs (NEW)
+
+```bash
+# Public analytics (for website display)
+GET /api/analytics/public/
+{
+  "total_members": 47,
+  "avg_spending_per_person": 6.97,
+  "monthly_revenue": 327.84,
+  "email_subscribers": 25,
+  "stocks_tracked": 150
+}
+
+# Admin analytics (staff only)
+GET /api/analytics/members/
+{
+  "membership_overview": {
+    "total_members": 47,
+    "monthly_revenue": 327.84,
+    "membership_distribution": {
+      "free": 35, "basic": 8, "professional": 3, "expert": 1
+    }
+  }
+}
+
+# Admin dashboard data
+GET /api/admin/dashboard/
+```
+
+### 📈 Stock Data APIs
+
+```bash
+# List all stocks with pagination
+GET /api/stocks/
+
+# Get specific stock details
+GET /api/stocks/AAPL/
+
+# Advanced stock filtering (NEW)
+GET /api/stocks/filter/?min_price=50&max_price=200&sector=technology&min_volume=1000000
+
+# Detailed stock lookup with financials (NEW)
+GET /api/stocks/lookup/AAPL/
+{
+  "basic_info": {...},
+  "financial_data": {...},
+  "technical_indicators": {...},
+  "market_data": {...}
+}
+
+# Stock news for specific ticker (NEW)
+GET /api/news/?ticker=AAPL
+
+# Market movers and statistics
+GET /api/market-movers/
+GET /api/stats/
+```
+
+### 📧 Email & Subscriptions
+
+```bash
+# Email signup (NEW)
+POST /api/email-signup/
+{
+  "email": "user@example.com",
+  "category": "technology"
+}
+
+# WordPress subscription compatibility
+POST /api/wordpress/subscribe/
+```
+
+## 💰 Membership System
+
+### 🎯 Tier Structure
+
+| Tier | Price | Monthly Lookups | Features |
+|------|-------|----------------|----------|
+| **Free** | $0.00 | 15 | Basic stock data, email alerts |
+| **Basic** | $9.99 | 100 | Advanced filtering, news feeds |
+| **Professional** | $29.99 | 500 | Portfolio tracking, analytics |
+| **Expert** | $49.99 | Unlimited | All features, priority support |
+
+### 🔧 Membership Management
+
+```bash
+# Create memberships for existing users
+python manage.py setup_memberships
+
+# View membership stats in Django admin
+http://localhost:8000/admin/stocks/membership/
+
+# Check user membership in code
+user.membership.tier  # 'free', 'basic', 'professional', 'expert'
+user.membership.can_make_lookup()  # True/False
+user.membership.monthly_lookups_used  # Current usage
+```
+
+## 🎨 WordPress Integration
+
+### 📱 24 Complete Pages Created
+
+1. **Home** - Landing page with live stock widgets
+2. **About Us** - Company information and team
+3. **Stock Scanner** - Main scanning interface
+4. **Premium Plans** - Membership tiers and pricing
+5. **Stock Alerts** - Real-time alert management
+6. **Market Analysis** - Professional analysis tools
+7. **Portfolio Tracker** - Investment portfolio management
+8. **News & Insights** - Market news and insights
+9. **Educational Resources** - Trading education center
+10. **Watchlist** - Personal stock watchlists
+11. **Technical Analysis** - Advanced charting tools
+12. **Fundamentals** - Company fundamental analysis
+13. **Screener** - Stock screening tools
+14. **Research** - Investment research platform
+15. **Earnings Calendar** - Upcoming earnings tracker
+16. **Dividend Tracker** - Dividend analysis tools
+17. **Options** - Options trading resources
+18. **Forex** - Foreign exchange tools
+19. **Crypto** - Cryptocurrency tracking
+20. **Contact** - Contact form and support
+21. **FAQ** - Frequently asked questions
+22. **Privacy Policy** - Privacy and data policy
+23. **Terms of Service** - Terms and conditions
+24. **Member Dashboard** - User account management
+
+### 🔧 Live Features
+
+- **Real-time Stock Data** from Django backend
+- **Email Signup Forms** with backend integration
+- **Advanced Stock Filtering** and search
+- **Live News Feeds** for specific tickers
+- **Professional CSS Design** with responsive layout
+- **Analytics Dashboard** in WordPress admin
 curl "http://localhost:8000/api/stocks/search/?q=apple"
 ```
 
