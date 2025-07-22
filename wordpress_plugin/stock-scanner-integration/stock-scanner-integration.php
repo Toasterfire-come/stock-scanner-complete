@@ -64,6 +64,11 @@ class StockScannerIntegration {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_shortcode('stock_scanner', array($this, 'stock_scanner_shortcode'));
         add_action('admin_menu', array($this, 'admin_menu'));
+        
+        // Sales tax hooks
+        add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
+        add_action('pmpro_checkout_preheader', array($this, 'detect_user_location'));
+        add_filter('pmpro_checkout_order', array($this, 'add_tax_to_order'), 10, 1);
     }
     
     public function init() {
@@ -346,6 +351,203 @@ class StockScannerIntegration {
         </div>
         <?php
     }
+    
+    /**
+     * Sales Tax Implementation
+     */
+    
+    /**
+     * Detect user location for tax calculation
+     */
+    public function detect_user_location() {
+        if (!session_id()) {
+            session_start();
+        }
+        
+        // Try to get location from IP if not already detected
+        if (!isset($_SESSION['user_state']) || !isset($_SESSION['user_country'])) {
+            $location = $this->get_location_from_ip();
+            $_SESSION['user_state'] = $location['state'];
+            $_SESSION['user_country'] = $location['country'];
+            $_SESSION['user_city'] = $location['city'];
+        }
+    }
+    
+    /**
+     * Get location from IP address
+     */
+    private function get_location_from_ip() {
+        $ip = $this->get_user_ip();
+        
+        // Use ipapi.co for free IP geolocation
+        $response = wp_remote_get("http://ipapi.co/{$ip}/json/");
+        
+        if (!is_wp_error($response)) {
+            $data = json_decode(wp_remote_retrieve_body($response), true);
+            
+            return array(
+                'country' => isset($data['country_code']) ? $data['country_code'] : 'US',
+                'state' => isset($data['region_code']) ? $data['region_code'] : '',
+                'city' => isset($data['city']) ? $data['city'] : ''
+            );
+        }
+        
+        // Default to US if detection fails
+        return array(
+            'country' => 'US',
+            'state' => '',
+            'city' => ''
+        );
+    }
+    
+    /**
+     * Get user's IP address
+     */
+    private function get_user_ip() {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+        return '127.0.0.1';
+    }
+    
+    /**
+     * Calculate sales tax based on location
+     */
+    public function calculate_sales_tax($tax, $values, $order) {
+        if (!session_id()) {
+            session_start();
+        }
+        
+        $country = isset($_SESSION['user_country']) ? $_SESSION['user_country'] : 'US';
+        $state = isset($_SESSION['user_state']) ? $_SESSION['user_state'] : '';
+        
+        // Only calculate tax for US customers
+        if ($country !== 'US') {
+            return 0;
+        }
+        
+        $subtotal = floatval($order->subtotal);
+        $tax_rate = $this->get_tax_rate_for_state($state);
+        
+        return $subtotal * ($tax_rate / 100);
+    }
+    
+    /**
+     * Get tax rate for US states (2024 rates)
+     */
+    private function get_tax_rate_for_state($state) {
+        $tax_rates = array(
+            'AL' => 4.00,  // Alabama
+            'AK' => 0.00,  // Alaska
+            'AZ' => 5.60,  // Arizona
+            'AR' => 6.50,  // Arkansas
+            'CA' => 7.25,  // California
+            'CO' => 2.90,  // Colorado
+            'CT' => 6.35,  // Connecticut
+            'DE' => 0.00,  // Delaware
+            'FL' => 6.00,  // Florida
+            'GA' => 4.00,  // Georgia
+            'HI' => 4.00,  // Hawaii
+            'ID' => 6.00,  // Idaho
+            'IL' => 6.25,  // Illinois
+            'IN' => 7.00,  // Indiana
+            'IA' => 6.00,  // Iowa
+            'KS' => 6.50,  // Kansas
+            'KY' => 6.00,  // Kentucky
+            'LA' => 4.45,  // Louisiana
+            'ME' => 5.50,  // Maine
+            'MD' => 6.00,  // Maryland
+            'MA' => 6.25,  // Massachusetts
+            'MI' => 6.00,  // Michigan
+            'MN' => 6.875, // Minnesota
+            'MS' => 7.00,  // Mississippi
+            'MO' => 4.225, // Missouri
+            'MT' => 0.00,  // Montana
+            'NE' => 5.50,  // Nebraska
+            'NV' => 6.85,  // Nevada
+            'NH' => 0.00,  // New Hampshire
+            'NJ' => 6.625, // New Jersey
+            'NM' => 5.125, // New Mexico
+            'NY' => 8.00,  // New York
+            'NC' => 4.75,  // North Carolina
+            'ND' => 5.00,  // North Dakota
+            'OH' => 5.75,  // Ohio
+            'OK' => 4.50,  // Oklahoma
+            'OR' => 0.00,  // Oregon
+            'PA' => 6.00,  // Pennsylvania
+            'RI' => 7.00,  // Rhode Island
+            'SC' => 6.00,  // South Carolina
+            'SD' => 4.50,  // South Dakota
+            'TN' => 7.00,  // Tennessee
+            'TX' => 6.25,  // Texas
+            'UT' => 5.95,  // Utah
+            'VT' => 6.00,  // Vermont
+            'VA' => 5.30,  // Virginia
+            'WA' => 6.50,  // Washington
+            'WV' => 6.00,  // West Virginia
+            'WI' => 5.00,  // Wisconsin
+            'WY' => 4.00,  // Wyoming
+            'DC' => 6.00   // District of Columbia
+        );
+        
+        return isset($tax_rates[$state]) ? $tax_rates[$state] : 6.00; // Default 6% if state unknown
+    }
+    
+    /**
+     * Add tax to checkout order
+     */
+    public function add_tax_to_order($order) {
+        if (!session_id()) {
+            session_start();
+        }
+        
+        $country = isset($_SESSION['user_country']) ? $_SESSION['user_country'] : 'US';
+        $state = isset($_SESSION['user_state']) ? $_SESSION['user_state'] : '';
+        
+        if ($country === 'US') {
+            $tax_rate = $this->get_tax_rate_for_state($state);
+            $tax_amount = $order->subtotal * ($tax_rate / 100);
+            
+            $order->tax = $tax_amount;
+            $order->total = $order->subtotal + $tax_amount;
+            
+            // Add tax line item for display
+            if ($tax_amount > 0) {
+                $state_name = $this->get_state_name($state);
+                $order->tax_rate = $tax_rate;
+                $order->tax_description = "Sales Tax ({$state_name} {$tax_rate}%)";
+            }
+        }
+        
+        return $order;
+    }
+    
+    /**
+     * Get full state name from code
+     */
+    private function get_state_name($state_code) {
+        $states = array(
+            'AL' => 'Alabama', 'AK' => 'Alaska', 'AZ' => 'Arizona', 'AR' => 'Arkansas',
+            'CA' => 'California', 'CO' => 'Colorado', 'CT' => 'Connecticut', 'DE' => 'Delaware',
+            'FL' => 'Florida', 'GA' => 'Georgia', 'HI' => 'Hawaii', 'ID' => 'Idaho',
+            'IL' => 'Illinois', 'IN' => 'Indiana', 'IA' => 'Iowa', 'KS' => 'Kansas',
+            'KY' => 'Kentucky', 'LA' => 'Louisiana', 'ME' => 'Maine', 'MD' => 'Maryland',
+            'MA' => 'Massachusetts', 'MI' => 'Michigan', 'MN' => 'Minnesota', 'MS' => 'Mississippi',
+            'MO' => 'Missouri', 'MT' => 'Montana', 'NE' => 'Nebraska', 'NV' => 'Nevada',
+            'NH' => 'New Hampshire', 'NJ' => 'New Jersey', 'NM' => 'New Mexico', 'NY' => 'New York',
+            'NC' => 'North Carolina', 'ND' => 'North Dakota', 'OH' => 'Ohio', 'OK' => 'Oklahoma',
+            'OR' => 'Oregon', 'PA' => 'Pennsylvania', 'RI' => 'Rhode Island', 'SC' => 'South Carolina',
+            'SD' => 'South Dakota', 'TN' => 'Tennessee', 'TX' => 'Texas', 'UT' => 'Utah',
+            'VT' => 'Vermont', 'VA' => 'Virginia', 'WA' => 'Washington', 'WV' => 'West Virginia',
+            'WI' => 'Wisconsin', 'WY' => 'Wyoming', 'DC' => 'District of Columbia'
+        );
+        
+        return isset($states[$state_code]) ? $states[$state_code] : $state_code;
+    }
 }
 
 // Initialize the plugin
@@ -459,7 +661,7 @@ function create_stock_scanner_pages() {
                     <div class="pricing-card expert-plan card premium">
                         <div class="card-header text-center">
                             <h3>💎 Expert Plan</h3>
-                            <div class="price">$99.99<span>/month</span></div>
+                            <div class="price">$49.99<span>/month</span></div>
                             <p class="plan-subtitle">For professional traders</p>
                         </div>
                         <div class="card-body">
