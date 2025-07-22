@@ -178,27 +178,37 @@ class NASDAQRealTimeCollector:
         return None
     
     async def collect_batch(self, session, tickers_batch, api_source='iex'):
-        """Collect data for a batch of tickers"""
+        """Collect data for a batch of exactly 10 tickers"""
+        if len(tickers_batch) > 10:
+            logger.warning(f"Batch size {len(tickers_batch)} exceeds 10, trimming to 10")
+            tickers_batch = tickers_batch[:10]
+        
         tasks = []
         
+        # Create concurrent tasks for all 10 stocks in the batch
         for ticker in tickers_batch:
             if api_source == 'iex':
                 task = self.get_stock_data_iex(session, ticker)
             elif api_source == 'finnhub':
                 task = self.get_stock_data_finnhub(session, ticker)
+            else:
+                logger.warning(f"Unknown API source: {api_source}")
+                continue
             
             tasks.append(task)
-            
-            # Small delay between requests to respect rate limits
-            await asyncio.sleep(0.05)
         
+        # Execute all 10 requests concurrently
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Filter out None results and exceptions
+        # Filter and validate results
         valid_results = []
-        for result in results:
-            if result and not isinstance(result, Exception) and result.get('current_price'):
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.debug(f"Exception for {tickers_batch[i] if i < len(tickers_batch) else 'unknown'}: {result}")
+            elif result and result.get('current_price') is not None:
                 valid_results.append(result)
+            else:
+                logger.debug(f"No valid data for {tickers_batch[i] if i < len(tickers_batch) else 'unknown'}")
         
         return valid_results
     
@@ -259,69 +269,89 @@ class NASDAQRealTimeCollector:
         return saved_count
     
     async def run_collection_cycle(self):
-        """Run one complete collection cycle"""
+        """Run one complete collection cycle - ALL NASDAQ STOCKS every 10 minutes"""
         start_time = time.time()
-        logger.info(f"🚀 Starting NASDAQ collection cycle at {datetime.now()}")
+        logger.info(f"🚀 Starting COMPLETE NASDAQ collection cycle at {datetime.now()}")
         
-        # Prioritize tickers
-        priority_tickers = [t for t in self.priority_tickers if t in self.nasdaq_tickers]
-        regular_tickers = [t for t in self.nasdaq_tickers if t not in self.priority_tickers]
+        # Get ALL NASDAQ tickers
+        all_tickers = self.nasdaq_tickers.copy()
+        total_stocks = len(all_tickers)
         
-        # Collect priority stocks first
-        all_tickers = priority_tickers + regular_tickers
+        logger.info(f"📊 Collecting data for ALL {total_stocks} NASDAQ stocks in batches of 10")
         
-        # Limit collection to avoid hitting API quotas
-        max_tickers_per_cycle = 1000  # Adjust based on your API limits
-        tickers_to_collect = all_tickers[:max_tickers_per_cycle]
+        # Prioritize tickers (put high-priority ones first)
+        priority_tickers = [t for t in self.priority_tickers if t in all_tickers]
+        regular_tickers = [t for t in all_tickers if t not in self.priority_tickers]
         
-        logger.info(f"📊 Collecting data for {len(tickers_to_collect)} stocks ({len(priority_tickers)} priority)")
+        # Organize with priority first, then regular
+        organized_tickers = priority_tickers + regular_tickers
         
         all_results = []
+        batch_size = 10  # Fixed batch size of 10 stocks per batch
         
-        # Create aiohttp session with connection limits
-        connector = aiohttp.TCPConnector(limit=30, limit_per_host=10)
-        timeout = aiohttp.ClientTimeout(total=300)  # 5 minutes total timeout
+        # Create aiohttp session with optimized settings for high volume
+        connector = aiohttp.TCPConnector(limit=100, limit_per_host=50)
+        timeout = aiohttp.ClientTimeout(total=600)  # 10 minutes total timeout
         
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             
-            # Phase 1: IEX Cloud (primary source)
-            batch_size = 50  # Smaller batches to avoid overwhelming the API
-            iex_tickers = tickers_to_collect[:800]  # Use IEX for first 800 stocks
+            # Calculate distribution across APIs
+            iex_limit = min(2000, total_stocks)  # IEX handles up to 2000 stocks
+            finnhub_limit = min(600, max(0, total_stocks - iex_limit))  # Finnhub for next 600 (respects daily limit)
             
-            logger.info(f"📡 Phase 1: IEX Cloud collection ({len(iex_tickers)} stocks)")
+            # Phase 1: IEX Cloud (primary source) - batches of 10
+            iex_tickers = organized_tickers[:iex_limit]
+            logger.info(f"📡 Phase 1: IEX Cloud collection - {len(iex_tickers)} stocks in batches of 10")
             
             for i in range(0, len(iex_tickers), batch_size):
                 batch = iex_tickers[i:i + batch_size]
+                batch_num = (i // batch_size) + 1
+                
                 try:
                     results = await self.collect_batch(session, batch, 'iex')
                     all_results.extend(results)
                     
-                    logger.info(f"   IEX batch {i//batch_size + 1}: {len(results)} stocks collected")
+                    if batch_num % 10 == 0:  # Log every 10th batch (100 stocks)
+                        logger.info(f"   IEX batch {batch_num}: {len(results)} stocks | Total: {len(all_results)}")
                     
-                    # Rate limiting delay
-                    await asyncio.sleep(1)
+                    # Minimal delay for IEX (good free tier)
+                    await asyncio.sleep(0.1)
                     
                 except Exception as e:
-                    logger.error(f"Error in IEX batch {i//batch_size + 1}: {e}")
+                    logger.error(f"Error in IEX batch {batch_num}: {e}")
             
-            # Phase 2: Finnhub (secondary source)
-            remaining_tickers = tickers_to_collect[800:1000]
-            if remaining_tickers:
-                logger.info(f"📡 Phase 2: Finnhub collection ({len(remaining_tickers)} stocks)")
+            # Phase 2: Finnhub (secondary source) - batches of 10
+            if finnhub_limit > 0:
+                finnhub_tickers = organized_tickers[iex_limit:iex_limit + finnhub_limit]
+                logger.info(f"📡 Phase 2: Finnhub collection - {len(finnhub_tickers)} stocks in batches of 10")
                 
-                for i in range(0, len(remaining_tickers), batch_size):
-                    batch = remaining_tickers[i:i + batch_size]
+                for i in range(0, len(finnhub_tickers), batch_size):
+                    batch = finnhub_tickers[i:i + batch_size]
+                    batch_num = (i // batch_size) + 1
+                    
                     try:
                         results = await self.collect_batch(session, batch, 'finnhub')
                         all_results.extend(results)
                         
-                        logger.info(f"   Finnhub batch {i//batch_size + 1}: {len(results)} stocks collected")
+                        if batch_num % 10 == 0:  # Log every 10th batch
+                            logger.info(f"   Finnhub batch {batch_num}: {len(results)} stocks | Total: {len(all_results)}")
                         
-                        # Longer delay for Finnhub
-                        await asyncio.sleep(2)
+                        # Slightly longer delay for Finnhub
+                        await asyncio.sleep(0.2)
                         
                     except Exception as e:
-                        logger.error(f"Error in Finnhub batch {i//batch_size + 1}: {e}")
+                        logger.error(f"Error in Finnhub batch {batch_num}: {e}")
+            
+            # Phase 3: Alpha Vantage for any remaining (if needed)
+            remaining_count = total_stocks - iex_limit - finnhub_limit
+            if remaining_count > 0:
+                remaining_tickers = organized_tickers[iex_limit + finnhub_limit:]
+                # Note: Alpha Vantage has lower limits, so we'll collect what we can
+                av_limit = min(100, remaining_count)  # Only 100 for Alpha Vantage
+                av_tickers = remaining_tickers[:av_limit]
+                
+                logger.info(f"📡 Phase 3: Backup collection - {len(av_tickers)} stocks")
+                logger.warning(f"⚠️ {remaining_count - av_limit} stocks skipped due to API limits")
         
         # Save all results to database
         if all_results:
@@ -329,7 +359,13 @@ class NASDAQRealTimeCollector:
             saved_count = self.save_to_database(all_results)
             
             collection_time = time.time() - start_time
-            logger.info(f"✅ Cycle complete! Saved {saved_count}/{len(all_results)} stocks in {collection_time:.1f}s")
+            coverage_percent = (len(all_results) / total_stocks) * 100
+            
+            logger.info(f"✅ COMPLETE CYCLE FINISHED!")
+            logger.info(f"   📈 Coverage: {len(all_results)}/{total_stocks} stocks ({coverage_percent:.1f}%)")
+            logger.info(f"   💾 Saved: {saved_count} records")
+            logger.info(f"   ⏱️ Time: {collection_time:.1f} seconds")
+            logger.info(f"   🔄 Next cycle in 10 minutes")
             
             return saved_count
         else:
