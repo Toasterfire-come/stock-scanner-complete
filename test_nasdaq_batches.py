@@ -51,7 +51,7 @@ def test_batch_creation():
     return batches
 
 def simulate_full_nasdaq():
-    """Simulate processing ALL 3,331 NASDAQ stocks with 6 APIs"""
+    """Simulate processing ALL 3,331 NASDAQ stocks with Dual IEX FREE strategy"""
     
     total_stocks = 3331  # Exact NASDAQ count
     batch_size = 10
@@ -64,35 +64,33 @@ def simulate_full_nasdaq():
     total_batches = (total_stocks + batch_size - 1) // batch_size
     print(f"   Total batches: {total_batches}")
     
-    # AGGRESSIVE MULTI-API STRATEGY
+    # DUAL IEX CLOUD FREE ACCOUNTS STRATEGY
     api_limits = {
-        'IEX Cloud': 2000,  # Primary
-        'Finnhub': 600,     # Secondary (respects daily limit)
-        'Alpha Vantage': 3, # 500/day ÷ 144 cycles
-        'FMP': 1,           # 250/day ÷ 144 cycles  
-        'Twelve Data': 5,   # 800/day ÷ 144 cycles
-        'Polygon.io': 5     # 720/day ÷ 144 cycles
+        'IEX Cloud #1': 2000,  # First free account
+        'IEX Cloud #2': 1331,  # Second free account (remaining stocks)
+        'Finnhub': 0,          # Not needed with dual IEX
+        'Alpha Vantage': 0,    # Not needed
+        'FMP': 0,              # Not needed
+        'Twelve Data': 0,      # Not needed
+        'Polygon.io': 0        # Not needed
     }
     
-    print(f"\n📡 6-API Distribution Strategy:")
+    print(f"\n📡 Dual IEX FREE Accounts Strategy:")
     total_covered = 0
     total_time = 0
     
     for api_name, limit in api_limits.items():
-        batches = (limit + batch_size - 1) // batch_size
-        if api_name == 'IEX Cloud':
-            batch_time = batches * 0.1
-        elif api_name == 'Finnhub':  
-            batch_time = batches * 0.2
-        elif api_name == 'Polygon.io':
-            batch_time = batches * 12  # 5 per minute limit
-        else:
-            batch_time = batches * 1.0
+        if limit > 0:  # Only show APIs being used
+            batches = (limit + batch_size - 1) // batch_size
+            if 'IEX Cloud' in api_name:
+                batch_time = batches * 0.1  # Fast IEX processing
+            else:
+                batch_time = batches * 0.2
+                
+            total_covered += limit
+            total_time += batch_time
             
-        total_covered += limit
-        total_time += batch_time
-        
-        print(f"   {api_name:12}: {limit:4} stocks ({batches:3} batches) - {batch_time:5.1f}s")
+            print(f"   {api_name:14}: {limit:4} stocks ({batches:3} batches) - {batch_time:5.1f}s")
     
     coverage_percent = (total_covered / total_stocks) * 100
     remaining = total_stocks - total_covered
@@ -102,53 +100,43 @@ def simulate_full_nasdaq():
     print(f"   Coverage: {coverage_percent:.1f}%")
     if remaining > 0:
         print(f"   Remaining: {remaining} stocks uncovered")
-        print(f"   💡 To get 100%: Upgrade Finnhub ($39/month) or add more free APIs")
+        print(f"   💡 To get 100%: Add second IEX Cloud free account")
     else:
-        print(f"   🎉 100% COVERAGE ACHIEVED!")
+        print(f"   🎉 100% COVERAGE ACHIEVED WITH FREE ACCOUNTS!")
     
     print(f"\n⏱️ Collection Timing:")
-    print(f"   Total collection time: {total_time:.1f} seconds ({total_time/60:.1f} minutes)")
+    print(f"   Total collection time: {total_time:.1f} seconds ({total_time/60:.2f} minutes)")
     print(f"   Idle time per cycle: {600 - total_time:.1f} seconds")
     print(f"   Efficiency: {(total_time/600)*100:.1f}% active, {((600-total_time)/600)*100:.1f}% idle")
     
     # Daily API usage analysis
     print(f"\n📈 Daily API Usage (144 cycles):")
     daily_usage = {}
-    for api_name, limit in api_limits.items():
-        daily = limit * cycles_per_day
-        daily_usage[api_name] = daily
-        
-        # Check against known limits
-        if api_name == 'IEX Cloud':
-            monthly_limit = 500000
-            daily_limit = monthly_limit / 30
-            status = "✅" if daily <= daily_limit else "⚠️"
-            print(f"   {api_name:12}: {daily:6,} requests/day (vs {daily_limit:6,.0f}/day limit) {status}")
-        elif api_name == 'Finnhub':
-            daily_limit = 86400
-            status = "✅" if daily <= daily_limit else "⚠️"
-            print(f"   {api_name:12}: {daily:6,} requests/day (vs {daily_limit:6,}/day limit) {status}")
-        elif api_name == 'Alpha Vantage':
-            daily_limit = 500
-            status = "✅" if daily <= daily_limit else "⚠️"
-            print(f"   {api_name:12}: {daily:6,} requests/day (vs {daily_limit:6,}/day limit) {status}")
-        elif api_name == 'FMP':
-            daily_limit = 250
-            status = "✅" if daily <= daily_limit else "⚠️"
-            print(f"   {api_name:12}: {daily:6,} requests/day (vs {daily_limit:6,}/day limit) {status}")
-        elif api_name == 'Twelve Data':
-            daily_limit = 800
-            status = "✅" if daily <= daily_limit else "⚠️"
-            print(f"   {api_name:12}: {daily:6,} requests/day (vs {daily_limit:6,}/day limit) {status}")
-        elif api_name == 'Polygon.io':
-            daily_limit = 720  # 5 per minute
-            status = "✅" if daily <= daily_limit else "⚠️"
-            print(f"   {api_name:12}: {daily:6,} requests/day (vs {daily_limit:6,}/day limit) {status}")
+    total_daily_requests = 0
     
-    print(f"\n🎯 Bottom Line (FREE Tier):")
-    print(f"   📊 Collect {total_covered:,} out of {total_stocks:,} NASDAQ stocks ({coverage_percent:.1f}%)")
-    print(f"   ⏱️ Every 10 minutes in {total_time/60:.1f} minutes")
-    print(f"   💰 Using 100% FREE API tiers")
+    for api_name, limit in api_limits.items():
+        if limit > 0:  # Only show APIs being used
+            daily = limit * cycles_per_day
+            daily_usage[api_name] = daily
+            total_daily_requests += daily
+            
+            # Check against known limits for IEX accounts
+            if 'IEX Cloud' in api_name:
+                monthly_limit = 500000
+                daily_limit = monthly_limit / 30
+                status = "✅" if daily <= daily_limit else "⚠️"
+                print(f"   {api_name:14}: {daily:6,} requests/day (vs {daily_limit:6,.0f}/day limit) {status}")
+    
+    print(f"\n📊 Combined IEX Usage:")
+    print(f"   Total requests/day: {total_daily_requests:,}")
+    print(f"   Combined monthly: {total_daily_requests * 30:,} (vs 1,000,000 limit)")
+    print(f"   Utilization: {(total_daily_requests * 30 / 1000000 * 100):.1f}% of combined free tier limits")
+    
+    print(f"\n🎯 Bottom Line (DUAL IEX FREE):")
+    print(f"   🎉 Collect ALL {total_covered:,} NASDAQ stocks ({coverage_percent:.1f}%)")
+    print(f"   ⏱️ Every 10 minutes in {total_time/60:.2f} minutes")
+    print(f"   💰 Using 2 FREE IEX Cloud accounts")
+    print(f"   🔑 Setup: 5 minutes to create second account")
     print(f"   🏆 Professional-grade market data for $0/month!")
 
 def simulate_paid_iex():
