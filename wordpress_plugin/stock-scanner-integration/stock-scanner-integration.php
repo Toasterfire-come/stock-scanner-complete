@@ -318,5 +318,262 @@ register_activation_hook(__FILE__, function() {
     // Set default options
     add_option('stock_scanner_api_url', 'https://api.yoursite.com/api/v1/');
     add_option('stock_scanner_api_secret', '');
+    
+    // Create default pages
+    create_stock_scanner_pages();
 });
+
+/**
+ * Create default Stock Scanner pages
+ */
+function create_stock_scanner_pages() {
+    $pages = array(
+        'stock-dashboard' => array(
+            'title' => 'Stock Dashboard',
+            'content' => '
+                <h2>📈 Real-Time Stock Dashboard</h2>
+                <p>Monitor your favorite stocks with live data and charts.</p>
+                
+                <div class="stock-grid">
+                    <div class="stock-row">
+                        <h3>🏢 Technology Stocks</h3>
+                        [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="GOOGL" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="TSLA" show_chart="true" show_details="true"]
+                    </div>
+                    
+                    <div class="stock-row">
+                        <h3>💰 Financial Stocks</h3>
+                        [stock_scanner symbol="JPM" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="BAC" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="WFC" show_chart="true" show_details="true"]
+                    </div>
+                    
+                    <div class="stock-row">
+                        <h3>🛒 Consumer Stocks</h3>
+                        [stock_scanner symbol="AMZN" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="WMT" show_chart="true" show_details="true"]
+                        [stock_scanner symbol="HD" show_chart="true" show_details="true"]
+                    </div>
+                </div>
+                
+                <style>
+                .stock-grid { max-width: 1200px; margin: 0 auto; }
+                .stock-row { margin-bottom: 40px; }
+                .stock-row h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                </style>
+            ',
+            'template' => 'page'
+        ),
+        'stock-watchlist' => array(
+            'title' => 'My Stock Watchlist',
+            'content' => '
+                <h2>📋 Your Personal Stock Watchlist</h2>
+                <p>Track your most important stocks in one place.</p>
+                
+                <div class="watchlist-container">
+                    <h3>🎯 Top Picks</h3>
+                    [stock_scanner symbol="AAPL" show_details="true"]
+                    [stock_scanner symbol="NVDA" show_details="true"]
+                    [stock_scanner symbol="AMD" show_details="true"]
+                    
+                    <h3>💎 Growth Stocks</h3>
+                    [stock_scanner symbol="TSLA" show_details="true"]
+                    [stock_scanner symbol="NFLX" show_details="true"]
+                    [stock_scanner symbol="SHOP" show_details="true"]
+                    
+                    <h3>🏦 Dividend Stocks</h3>
+                    [stock_scanner symbol="JNJ" show_details="true"]
+                    [stock_scanner symbol="PG" show_details="true"]
+                    [stock_scanner symbol="KO" show_details="true"]
+                </div>
+                
+                <div class="upgrade-notice">
+                    <h4>🚀 Want to track more stocks?</h4>
+                    <p>Upgrade to Premium for 1,000 stocks per month or Professional for 10,000 stocks per month!</p>
+                    <a href="/membership-account/membership-checkout/?level=2" class="button-premium">Upgrade to Premium</a>
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'stock-market-news' => array(
+            'title' => 'Stock Market News',
+            'content' => '
+                <h2>📰 Latest Stock Market News</h2>
+                <p>Stay updated with the latest market movements and stock analysis.</p>
+                
+                <div class="news-stocks">
+                    <h3>📈 Trending Stocks Today</h3>
+                    [stock_scanner symbol="SPY" show_chart="true" show_details="true"]
+                    [stock_scanner symbol="QQQ" show_chart="true" show_details="true"]
+                    [stock_scanner symbol="DIA" show_chart="true" show_details="true"]
+                </div>
+                
+                <div class="market-movers">
+                    <h3>🚀 Market Movers</h3>
+                    <p>Check out these stocks making headlines:</p>
+                    [stock_scanner symbol="TSLA"]
+                    [stock_scanner symbol="NVDA"]
+                    [stock_scanner symbol="META"]
+                    [stock_scanner symbol="GOOGL"]
+                </div>
+                
+                <div class="market-analysis">
+                    <h3>📊 Market Analysis</h3>
+                    <p>Get insights into market trends with our real-time data.</p>
+                    [stock_scanner symbol="VTI" show_chart="true"]
+                    [stock_scanner symbol="VXUS" show_chart="true"]
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'membership-plans' => array(
+            'title' => 'Membership Plans',
+            'content' => '
+                <h2>🎯 Choose Your Stock Scanner Plan</h2>
+                <p>Get the perfect plan for your stock tracking needs.</p>
+                
+                <div class="pricing-table">
+                    <div class="pricing-plan free">
+                        <h3>🆓 Free</h3>
+                        <div class="price">$0<span>/month</span></div>
+                        <ul>
+                            <li>✅ 15 stocks per month</li>
+                            <li>✅ Real-time data</li>
+                            <li>✅ Basic charts</li>
+                            <li>✅ Email alerts</li>
+                        </ul>
+                        <a href="/register/" class="button-free">Get Started</a>
+                    </div>
+                    
+                    <div class="pricing-plan premium">
+                        <h3>⭐ Premium</h3>
+                        <div class="price">$9.99<span>/month</span></div>
+                        <ul>
+                            <li>✅ 1,000 stocks per month</li>
+                            <li>✅ Advanced charts</li>
+                            <li>✅ Historical data</li>
+                            <li>✅ Priority support</li>
+                            <li>✅ Custom watchlists</li>
+                        </ul>
+                        <a href="/membership-account/membership-checkout/?level=2" class="button-premium">Upgrade Now</a>
+                    </div>
+                    
+                    <div class="pricing-plan professional">
+                        <h3>💼 Professional</h3>
+                        <div class="price">$29.99<span>/month</span></div>
+                        <ul>
+                            <li>✅ 10,000 stocks per month</li>
+                            <li>✅ API access</li>
+                            <li>✅ Custom indicators</li>
+                            <li>✅ Portfolio tracking</li>
+                            <li>✅ White-label options</li>
+                        </ul>
+                        <a href="/membership-account/membership-checkout/?level=3" class="button-professional">Go Pro</a>
+                    </div>
+                </div>
+                
+                <style>
+                .pricing-table { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 30px 0; }
+                .pricing-plan { border: 2px solid #e1e5e9; border-radius: 10px; padding: 30px; text-align: center; }
+                .pricing-plan.premium { border-color: #f39c12; transform: scale(1.05); }
+                .pricing-plan h3 { font-size: 1.8rem; margin-bottom: 15px; }
+                .price { font-size: 2.5rem; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
+                .price span { font-size: 1rem; color: #7f8c8d; }
+                .pricing-plan ul { list-style: none; padding: 0; margin: 20px 0; }
+                .pricing-plan li { padding: 8px 0; }
+                .button-free, .button-premium, .button-professional { 
+                    display: inline-block; padding: 15px 30px; border-radius: 5px; 
+                    text-decoration: none; font-weight: bold; margin-top: 20px; 
+                }
+                .button-free { background: #95a5a6; color: white; }
+                .button-premium { background: #f39c12; color: white; }
+                .button-professional { background: #9b59b6; color: white; }
+                </style>
+            ',
+            'template' => 'page'
+        ),
+        'stock-alerts' => array(
+            'title' => 'Stock Alerts',
+            'content' => '
+                <h2>🔔 Stock Price Alerts</h2>
+                <p>Get notified when your stocks hit target prices.</p>
+                
+                <div class="alert-setup">
+                    <h3>📧 Email Alert Examples</h3>
+                    <p>Here are some stocks you might want to set alerts for:</p>
+                    
+                    [stock_scanner symbol="AAPL" show_details="true"]
+                    <p><em>Set an alert when Apple reaches $200 or drops below $150</em></p>
+                    
+                    [stock_scanner symbol="TSLA" show_details="true"]
+                    <p><em>Get notified when Tesla moves more than 5% in a day</em></p>
+                    
+                    [stock_scanner symbol="NVDA" show_details="true"]
+                    <p><em>Alert me when NVIDIA hits a new all-time high</em></p>
+                </div>
+                
+                <div class="alert-premium">
+                    <h3>⚡ Premium Alert Features</h3>
+                    <ul>
+                        <li>📱 SMS alerts</li>
+                        <li>📊 Technical indicator alerts</li>
+                        <li>🎯 Multiple price targets</li>
+                        <li>📈 Volume spike alerts</li>
+                        <li>🔄 Recurring alerts</li>
+                    </ul>
+                    <a href="/membership-account/membership-checkout/?level=2" class="upgrade-button">Upgrade for Premium Alerts</a>
+                </div>
+            ',
+            'template' => 'page'
+        )
+    );
+    
+    foreach ($pages as $slug => $page_data) {
+        // Check if page already exists
+        $existing_page = get_page_by_path($slug);
+        if (!$existing_page) {
+            $page_id = wp_insert_post(array(
+                'post_title'   => $page_data['title'],
+                'post_content' => $page_data['content'],
+                'post_status'  => 'publish',
+                'post_type'    => 'page',
+                'post_name'    => $slug
+            ));
+            
+            if ($page_id) {
+                // Add to menu if it's the main dashboard
+                if ($slug === 'stock-dashboard') {
+                    update_option('stock_scanner_dashboard_page_id', $page_id);
+                }
+            }
+        }
+    }
+    
+    // Create a simple navigation menu
+    $menu_name = 'Stock Scanner Menu';
+    $menu_exists = wp_get_nav_menu_object($menu_name);
+    
+    if (!$menu_exists) {
+        $menu_id = wp_create_nav_menu($menu_name);
+        
+        // Add menu items
+        $menu_items = array(
+            array('title' => 'Dashboard', 'url' => '/stock-dashboard/'),
+            array('title' => 'Watchlist', 'url' => '/stock-watchlist/'),
+            array('title' => 'Market News', 'url' => '/stock-market-news/'),
+            array('title' => 'Alerts', 'url' => '/stock-alerts/'),
+            array('title' => 'Pricing', 'url' => '/membership-plans/')
+        );
+        
+        foreach ($menu_items as $item) {
+            wp_update_nav_menu_item($menu_id, 0, array(
+                'menu-item-title' => $item['title'],
+                'menu-item-url' => home_url($item['url']),
+                'menu-item-status' => 'publish'
+            ));
+        }
+    }
+}
 ?>
