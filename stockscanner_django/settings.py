@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "news",
     "stocks",
-    "wordpress_integration",
 ]
 
 MIDDLEWARE = [

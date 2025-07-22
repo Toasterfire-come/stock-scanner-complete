@@ -890,7 +890,7 @@ function create_stock_scanner_pages() {
                     </details>
                     <details>
                         <summary>What happens if I exceed my monthly stock lookup limit?</summary>
-                        <p>We\'ll notify you when you reach 80% of your limit. If you exceed it, you can either upgrade your plan or wait until next month for your limit to reset.</p>
+                        <p>We will notify you when you reach 80% of your limit. If you exceed it, you can either upgrade your plan or wait until next month for your limit to reset.</p>
                     </details>
                     <details>
                         <summary>Do you offer annual discounts?</summary>

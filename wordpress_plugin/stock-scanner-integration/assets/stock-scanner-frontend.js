@@ -898,9 +898,9 @@ class StockScannerFrontend {
             if (location.country_code === 'US') {
                 this.displayTaxInfo(location.region_code, location.region);
             }
-        } catch (error) {
-            console.log('Could not detect location for tax calculation');
-        }
+                 } catch (error) {
+             // Could not detect location for tax calculation - silent failure
+         }
     }
 
     displayTaxInfo(stateCode, stateName) {
