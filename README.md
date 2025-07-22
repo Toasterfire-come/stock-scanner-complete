@@ -84,29 +84,44 @@ stock-scanner/
 ├── 📁 core/                            # Core functionality
 │   ├── 📄 views.py                     # Web views
 │   └── 📁 templates/                   # HTML templates
-├── 📁 wordpress_integration/           # WordPress compatibility
-│   └── 📄 urls.py                      # WordPress API routes
-├── 📁 wordpress_deployment_package/    # WordPress theme/plugin
-│   ├── 📁 theme/                       # WordPress theme
-│   └── 📁 plugin/                      # WordPress plugin
+├── 📁 wordpress_plugin/                # WordPress plugin (auto-creates pages)
+│   └── 📁 stock-scanner-integration/   # Complete plugin with paywall
+├── 📁 wordpress_theme/                 # WordPress theme
+│   └── 📁 stock-scanner-theme/         # Modern responsive theme
 └── 📁 static/                          # Static files (CSS, JS, images)
 ```
 
 ## 🛠️ Installation Options
 
-### Option 1: Automated Setup (Recommended)
+### 🚀 Complete WordPress Installation (Recommended)
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+git checkout complete-stock-scanner-v1
+
+# 2. One-command Django setup
 python3 setup_local.py
+
+# 3. WordPress Integration
+# Copy wordpress_plugin/stock-scanner-integration/ to /wp-content/plugins/
+# Copy wordpress_theme/stock-scanner-theme/ to /wp-content/themes/
+# Activate both in WordPress admin
+
+# 4. Your complete stock scanner is ready!
+# Django API: http://localhost:8000
+# WordPress: http://your-site.com
 ```
 
-### Option 2: Manual Setup
+### Option 2: Django Only (Manual Setup)
 ```bash
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install -r requirements_secure.txt
+pip install -r requirements.txt
 
 # Setup database
 python manage.py migrate
