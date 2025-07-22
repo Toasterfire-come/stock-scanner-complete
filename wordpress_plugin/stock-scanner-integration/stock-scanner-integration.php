@@ -372,15 +372,19 @@ function create_stock_scanner_pages() {
                 <h3>Gold Plan</h3>
                 <p>Our gold scanner plan will perfectly highlight your trading style and bring you to success. With unlimited access to our over 40 email lists, in-depth stock look up, and personalized stock search, you will stay informed and in the action. If you are interested in elevating your positions, check out if our gold plan is right for you.</p>
                 
-                <div style="text-align: center; margin: 20px 0;">
-                    <a href="/membership-account/membership-checkout/?level=3" class="wp-block-button__link wp-element-button" style="background: #f39c12; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Buy Gold Plan</a>
+                <div class="text-center" style="margin: var(--spacing-xl) 0;">
+                    <a href="/membership-account/membership-checkout/?level=3" class="btn btn-gold btn-lg animate-pulse">
+                        <span>✨ Buy Gold Plan</span>
+                    </a>
                 </div>
                 
                 <h4>Silver Plan</h4>
                 <p>Upon purchase of the silver scanner plan, you will receive access to unlimited access of our most popular email lists, stock lookup, and limited access to personalized stock search. With access to our tools you will receive an edge on the market at a practical price. If you are excited to further improve your trading, check out the silver plan.</p>
                 
-                <div style="text-align: center; margin: 20px 0;">
-                    <a href="/membership-account/membership-checkout/?level=2" class="wp-block-button__link wp-element-button" style="background: #95a5a6; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Buy Silver Plan</a>
+                <div class="text-center" style="margin: var(--spacing-xl) 0;">
+                    <a href="/membership-account/membership-checkout/?level=2" class="btn btn-silver btn-lg">
+                        <span>🥈 Buy Silver Plan</span>
+                    </a>
                 </div>
                 
                 <h3>📊 Live Stock Analysis</h3>
@@ -404,9 +408,13 @@ function create_stock_scanner_pages() {
             'content' => '
                 <p>Our email stock lists will keep you informed and up to date on the changing market. Look below for all of our stock lists, chose your favorites and subscribe.</p>
                 
-                <div style="text-align: center; margin: 20px 0;">
-                    <a href="/popular-stock-lists/" style="margin: 10px; padding: 12px 24px; border: 2px solid #007cba; color: #007cba; text-decoration: none; border-radius: 5px;">Popular Stock Lists</a>
-                    <a href="/all-stock-lists/" style="margin: 10px; padding: 12px 24px; border: 2px solid #007cba; color: #007cba; text-decoration: none; border-radius: 5px;">All Stock Lists</a>
+                <div class="text-center d-flex justify-content-center gap-md flex-wrap" style="margin: var(--spacing-xl) 0;">
+                    <a href="/popular-stock-lists/" class="btn btn-outline btn-primary">
+                        <span>🌟 Popular Stock Lists</span>
+                    </a>
+                    <a href="/all-stock-lists/" class="btn btn-outline btn-primary">
+                        <span>📋 All Stock Lists</span>
+                    </a>
                 </div>
                 
                 <h3>📈 Featured Stocks</h3>
@@ -448,10 +456,14 @@ function create_stock_scanner_pages() {
                 [stock_scanner symbol="NVDA" show_details="true"]
                 [stock_scanner symbol="AMD" show_details="true"]
                 
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; margin: 30px 0;">
-                    <h4>🚀 Upgrade for Full Access</h4>
-                    <p>Get unlimited access to all stock lists with our premium plans!</p>
-                    <a href="/premium-plans/" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold;">View Premium Plans</a>
+                <div class="card bg-primary text-center animate-fade-in" style="margin: var(--spacing-2xl) 0;">
+                    <div class="card-body">
+                        <h4 class="text-white">🚀 Upgrade for Full Access</h4>
+                        <p class="text-white" style="opacity: 0.9;">Get unlimited access to all stock lists with our premium plans!</p>
+                        <a href="/premium-plans/" class="btn btn-secondary">
+                            <span>View Premium Plans</span>
+                        </a>
+                    </div>
                 </div>
             ',
             'template' => 'page'

@@ -19,6 +19,9 @@ import logging
 
 from .models import StockAlert
 from emails.models import EmailSubscription
+import yfinance as yf
+import requests
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -524,6 +527,442 @@ def calculate_technical_rating(stock):
         return "NEUTRAL"
 
 # CORS handling for WordPress integration
+@csrf_exempt
+@require_http_methods(["POST"])
+def email_signup_api(request):
+    """
+    Handle email subscription signups from WordPress
+    
+    URL: /api/email-signup/
+    POST Parameters:
+    - email: User's email address
+    - category: Subscription category (e.g., 'popular', 'all', 'earnings')
+    - name: Optional user name
+    """
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+        category = data.get('category', 'popular').strip()
+        name = data.get('name', '').strip()
+        
+        if not email:
+            return JsonResponse({
+                'success': False,
+                'message': 'Email address is required'
+            }, status=400)
+        
+        # Validate email format
+        if '@' not in email or '.' not in email:
+            return JsonResponse({
+                'success': False,
+                'message': 'Please enter a valid email address'
+            }, status=400)
+        
+        # Check if already subscribed
+        existing = EmailSubscription.objects.filter(email=email, category=category).first()
+        if existing:
+            if existing.is_active:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'You are already subscribed to this list!',
+                    'already_subscribed': True
+                })
+            else:
+                # Reactivate existing subscription
+                existing.is_active = True
+                existing.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Your subscription has been reactivated!',
+                    'reactivated': True
+                })
+        
+        # Create new subscription
+        subscription = EmailSubscription.objects.create(
+            email=email,
+            category=category,
+            is_active=True
+        )
+        
+        logger.info(f"New email subscription: {email} -> {category}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully subscribed to {category} stock alerts!',
+            'subscription_id': subscription.id,
+            'category': category
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid data format'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Email signup error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_filter_api(request):
+    """
+    Advanced stock filtering based on multiple criteria
+    
+    URL: /api/stocks/filter/
+    Parameters:
+    - min_price: Minimum stock price
+    - max_price: Maximum stock price
+    - min_volume: Minimum volume
+    - max_volume: Maximum volume
+    - min_market_cap: Minimum market cap
+    - max_market_cap: Maximum market cap
+    - min_pe: Minimum P/E ratio
+    - max_pe: Maximum P/E ratio
+    - sector: Stock sector
+    - sort_by: Sort field (price, volume, market_cap, pe_ratio)
+    - sort_order: asc or desc
+    - limit: Number of results (default: 50)
+    """
+    try:
+        # Get filter parameters
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        min_volume = request.GET.get('min_volume')
+        max_volume = request.GET.get('max_volume')
+        min_market_cap = request.GET.get('min_market_cap')
+        max_market_cap = request.GET.get('max_market_cap')
+        min_pe = request.GET.get('min_pe')
+        max_pe = request.GET.get('max_pe')
+        sector = request.GET.get('sector', '').strip()
+        sort_by = request.GET.get('sort_by', 'current_price')
+        sort_order = request.GET.get('sort_order', 'desc')
+        limit = int(request.GET.get('limit', 50))
+        
+        # Start with all stocks
+        queryset = StockAlert.objects.all()
+        
+        # Apply filters
+        if min_price:
+            queryset = queryset.filter(current_price__gte=float(min_price))
+        if max_price:
+            queryset = queryset.filter(current_price__lte=float(max_price))
+        if min_volume:
+            queryset = queryset.filter(volume_today__gte=int(min_volume))
+        if max_volume:
+            queryset = queryset.filter(volume_today__lte=int(max_volume))
+        if min_market_cap:
+            queryset = queryset.filter(market_cap__gte=int(min_market_cap))
+        if max_market_cap:
+            queryset = queryset.filter(market_cap__lte=int(max_market_cap))
+        if min_pe:
+            queryset = queryset.filter(pe_ratio__gte=float(min_pe))
+        if max_pe:
+            queryset = queryset.filter(pe_ratio__lte=float(max_pe))
+        if sector:
+            queryset = queryset.filter(company_name__icontains=sector)
+        
+        # Apply sorting
+        sort_field = sort_by
+        if sort_order == 'desc':
+            sort_field = f'-{sort_field}'
+        
+        queryset = queryset.order_by(sort_field)[:limit]
+        
+        # Format response
+        stocks = []
+        for stock in queryset:
+            stocks.append({
+                'ticker': stock.ticker,
+                'company_name': stock.company_name or stock.ticker,
+                'current_price': round(stock.current_price, 2),
+                'volume_today': stock.volume_today,
+                'avg_volume': stock.avg_volume,
+                'market_cap': stock.market_cap,
+                'pe_ratio': stock.pe_ratio,
+                'dvav': stock.dvav,
+                'dvsa': stock.dvsa,
+                'last_update': stock.last_update.isoformat() if stock.last_update else None,
+                'note': stock.note
+            })
+        
+        return Response({
+            'success': True,
+            'count': len(stocks),
+            'filters_applied': {
+                'min_price': min_price,
+                'max_price': max_price,
+                'min_volume': min_volume,
+                'max_volume': max_volume,
+                'min_market_cap': min_market_cap,
+                'max_market_cap': max_market_cap,
+                'min_pe': min_pe,
+                'max_pe': max_pe,
+                'sector': sector,
+                'sort_by': sort_by,
+                'sort_order': sort_order
+            },
+            'stocks': stocks
+        })
+        
+    except Exception as e:
+        logger.error(f"Stock filter error: {str(e)}")
+        return Response({
+            'success': False,
+            'error': 'Failed to filter stocks',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_lookup_api(request, ticker):
+    """
+    Detailed stock lookup for a specific ticker
+    
+    URL: /api/stocks/lookup/<ticker>/
+    Returns comprehensive data for a single stock
+    """
+    try:
+        ticker = ticker.upper().strip()
+        
+        # Check cache first
+        cache_key = f'stock_lookup_{ticker}'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        
+        # Try to get from database first
+        db_stock = StockAlert.objects.filter(ticker=ticker).first()
+        
+        # Get real-time data from yfinance
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            hist = stock.history(period="5d", interval="1d")
+            
+            # Format comprehensive response
+            stock_data = {
+                'ticker': ticker,
+                'company_name': info.get('longName', info.get('shortName', ticker)),
+                'sector': info.get('sector', 'Unknown'),
+                'industry': info.get('industry', 'Unknown'),
+                'website': info.get('website', ''),
+                'description': info.get('longBusinessSummary', ''),
+                
+                # Price data
+                'current_price': info.get('currentPrice', info.get('regularMarketPrice', 0)),
+                'previous_close': info.get('previousClose', 0),
+                'open': info.get('open', 0),
+                'day_low': info.get('dayLow', 0),
+                'day_high': info.get('dayHigh', 0),
+                'fifty_two_week_low': info.get('fiftyTwoWeekLow', 0),
+                'fifty_two_week_high': info.get('fiftyTwoWeekHigh', 0),
+                
+                # Volume data
+                'volume': info.get('volume', 0),
+                'avg_volume': info.get('averageVolume', 0),
+                'avg_volume_10d': info.get('averageVolume10days', 0),
+                
+                # Market data
+                'market_cap': info.get('marketCap', 0),
+                'shares_outstanding': info.get('sharesOutstanding', 0),
+                'float_shares': info.get('floatShares', 0),
+                
+                # Financial ratios
+                'pe_ratio': info.get('trailingPE', 0),
+                'forward_pe': info.get('forwardPE', 0),
+                'peg_ratio': info.get('pegRatio', 0),
+                'price_to_book': info.get('priceToBook', 0),
+                'price_to_sales': info.get('priceToSalesTrailing12Months', 0),
+                
+                # Dividends
+                'dividend_yield': info.get('dividendYield', 0),
+                'dividend_rate': info.get('dividendRate', 0),
+                
+                # Performance
+                'beta': info.get('beta', 0),
+                'fifty_day_average': info.get('fiftyDayAverage', 0),
+                'two_hundred_day_average': info.get('twoHundredDayAverage', 0),
+                
+                # Additional metrics from our database
+                'dvav': db_stock.dvav if db_stock else None,
+                'dvsa': db_stock.dvsa if db_stock else None,
+                'note': db_stock.note if db_stock else '',
+                'last_update': db_stock.last_update.isoformat() if db_stock and db_stock.last_update else None,
+                
+                # Price history (last 5 days)
+                'price_history': []
+            }
+            
+            # Add price history if available
+            if not hist.empty:
+                for date, row in hist.iterrows():
+                    stock_data['price_history'].append({
+                        'date': date.strftime('%Y-%m-%d'),
+                        'open': round(row['Open'], 2),
+                        'high': round(row['High'], 2),
+                        'low': round(row['Low'], 2),
+                        'close': round(row['Close'], 2),
+                        'volume': int(row['Volume'])
+                    })
+            
+            # Cache the result for 5 minutes
+            cache.set(cache_key, stock_data, 300)
+            
+            return Response({
+                'success': True,
+                'data': stock_data
+            })
+            
+        except Exception as yf_error:
+            logger.error(f"YFinance error for {ticker}: {str(yf_error)}")
+            
+            # Fallback to database data only
+            if db_stock:
+                fallback_data = {
+                    'ticker': db_stock.ticker,
+                    'company_name': db_stock.company_name or db_stock.ticker,
+                    'current_price': db_stock.current_price,
+                    'volume_today': db_stock.volume_today,
+                    'avg_volume': db_stock.avg_volume,
+                    'market_cap': db_stock.market_cap,
+                    'pe_ratio': db_stock.pe_ratio,
+                    'dvav': db_stock.dvav,
+                    'dvsa': db_stock.dvsa,
+                    'note': db_stock.note,
+                    'last_update': db_stock.last_update.isoformat() if db_stock.last_update else None,
+                    'data_source': 'database_only'
+                }
+                
+                return Response({
+                    'success': True,
+                    'data': fallback_data,
+                    'warning': 'Limited data available - real-time data unavailable'
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'error': f'Stock {ticker} not found',
+                    'message': 'Stock not found in database and real-time data unavailable'
+                }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        logger.error(f"Stock lookup error for {ticker}: {str(e)}")
+        return Response({
+            'success': False,
+            'error': 'Failed to fetch stock data',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_news_api(request):
+    """
+    Get financial news and important stocks
+    
+    URL: /api/news/
+    Parameters:
+    - ticker: Get news for specific ticker
+    - category: news category (market, earnings, analysis)
+    - limit: Number of articles (default: 20)
+    """
+    try:
+        ticker = request.GET.get('ticker', '').upper().strip()
+        category = request.GET.get('category', 'market').strip()
+        limit = int(request.GET.get('limit', 20))
+        
+        # Cache key
+        cache_key = f'stock_news_{ticker}_{category}_{limit}'
+        cached_news = cache.get(cache_key)
+        if cached_news:
+            return Response(cached_news)
+        
+        news_articles = []
+        important_stocks = []
+        
+        # Get important/trending stocks from our database
+        trending_stocks = StockAlert.objects.filter(
+            volume_today__gt=1000000  # High volume stocks
+        ).order_by('-volume_today')[:10]
+        
+        for stock in trending_stocks:
+            important_stocks.append({
+                'ticker': stock.ticker,
+                'company_name': stock.company_name or stock.ticker,
+                'current_price': stock.current_price,
+                'volume_today': stock.volume_today,
+                'note': stock.note
+            })
+        
+        # Try to get news from Yahoo Finance
+        if ticker:
+            try:
+                stock = yf.Ticker(ticker)
+                news = stock.news
+                
+                for article in news[:limit]:
+                    news_articles.append({
+                        'title': article.get('title', ''),
+                        'summary': article.get('summary', ''),
+                        'url': article.get('link', ''),
+                        'publisher': article.get('publisher', ''),
+                        'publish_time': article.get('providerPublishTime', 0),
+                        'thumbnail': article.get('thumbnail', {}).get('resolutions', [{}])[0].get('url', '') if article.get('thumbnail') else '',
+                        'related_ticker': ticker
+                    })
+            except Exception as e:
+                logger.warning(f"Could not fetch news for {ticker}: {str(e)}")
+        
+        # If no ticker-specific news or general news requested, get market news
+        if not news_articles or not ticker:
+            # Sample market news (in production, integrate with real news API)
+            sample_news = [
+                {
+                    'title': 'Market Update: Technology Stocks Show Strong Performance',
+                    'summary': 'Major tech stocks including AAPL, MSFT, and GOOGL showed significant gains in today\'s trading session.',
+                    'url': '#',
+                    'publisher': 'Market News',
+                    'publish_time': int(datetime.now().timestamp()),
+                    'thumbnail': '',
+                    'category': 'market'
+                },
+                {
+                    'title': 'Earnings Season Outlook: Key Companies to Watch',
+                    'summary': 'Analysts are closely watching upcoming earnings reports from major corporations.',
+                    'url': '#',
+                    'publisher': 'Financial Times',
+                    'publish_time': int((datetime.now() - timedelta(hours=2)).timestamp()),
+                    'thumbnail': '',
+                    'category': 'earnings'
+                }
+            ]
+            
+            news_articles.extend(sample_news)
+        
+        response_data = {
+            'success': True,
+            'news': news_articles[:limit],
+            'important_stocks': important_stocks,
+            'category': category,
+            'ticker_specific': bool(ticker),
+            'count': len(news_articles)
+        }
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, response_data, 600)
+        
+        return Response(response_data)
+        
+    except Exception as e:
+        logger.error(f"News API error: {str(e)}")
+        return Response({
+            'success': False,
+            'error': 'Failed to fetch news',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @csrf_exempt
 @require_http_methods(["GET", "POST", "OPTIONS"])
 def cors_handler(request):

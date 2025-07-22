@@ -17,6 +17,12 @@ urlpatterns = [
     path('api/stats/', api_views.stock_statistics_api, name='stock_statistics'),
     path('api/wordpress/subscribe/', api_views.wordpress_subscription_api, name='wordpress_subscribe'),
     
+    # NEW FRONTEND INTEGRATION ENDPOINTS
+    path('api/email-signup/', api_views.email_signup_api, name='email_signup'),
+    path('api/stocks/filter/', api_views.stock_filter_api, name='stock_filter'),
+    path('api/stocks/lookup/<str:ticker>/', api_views.stock_lookup_api, name='stock_lookup'),
+    path('api/news/', api_views.stock_news_api, name='stock_news'),
+    
     # CORS handling
     path('api/cors/', api_views.cors_handler, name='cors_handler'),
 ]
