@@ -90,3 +90,7 @@ packaging==24.2
 six==1.15.0
 urllib3==2.3.0
 typing_extensions==4.12.2
+
+# ===== REAL-TIME DATA COLLECTION =====
+aiohttp>=3.9.0
+asyncio-throttle>=1.0.2
