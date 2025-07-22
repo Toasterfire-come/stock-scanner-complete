@@ -21,18 +21,20 @@ logger = logging.getLogger(__name__)
 
 class NASDAQRealTimeCollector:
     def __init__(self):
-        # Free API configuration
+        # Free API configuration - AGGRESSIVE MULTI-API STRATEGY
         self.apis = {
             'iex': {
                 'key': os.getenv('IEX_API_KEY', 'pk_test_your_iex_key'),
                 'base_url': 'https://cloud.iexapis.com/stable',
                 'calls_per_minute': 100,
-                'calls_per_month': 500000
+                'calls_per_month': 500000,
+                'daily_limit': 16666  # 500K/30 days
             },
             'finnhub': {
                 'key': os.getenv('FINNHUB_API_KEY', 'your_finnhub_key'),
                 'base_url': 'https://finnhub.io/api/v1',
-                'calls_per_minute': 60
+                'calls_per_minute': 60,
+                'calls_per_day': 86400
             },
             'alphavantage': {
                 'key': os.getenv('ALPHAVANTAGE_API_KEY', 'your_alphavantage_key'),
@@ -43,6 +45,17 @@ class NASDAQRealTimeCollector:
                 'key': os.getenv('FMP_API_KEY', 'your_fmp_key'),
                 'base_url': 'https://financialmodelingprep.com/api/v3',
                 'calls_per_day': 250
+            },
+            'twelvedata': {
+                'key': os.getenv('TWELVEDATA_API_KEY', 'your_twelvedata_key'),
+                'base_url': 'https://api.twelvedata.com/v1',
+                'calls_per_day': 800
+            },
+            'polygon': {
+                'key': os.getenv('POLYGON_API_KEY', 'your_polygon_key'),
+                'base_url': 'https://api.polygon.io/v2',
+                'calls_per_minute': 5,
+                'calls_per_day': 720  # 5 per minute * 1440 minutes
             }
         }
         
@@ -176,6 +189,165 @@ class NASDAQRealTimeCollector:
             logger.debug(f"Finnhub error for {ticker}: {e}")
         
         return None
+
+    async def get_stock_data_alphavantage(self, session, ticker):
+        """Get stock data from Alpha Vantage"""
+        url = self.apis['alphavantage']['base_url']
+        params = {
+            'function': 'GLOBAL_QUOTE',
+            'symbol': ticker,
+            'apikey': self.apis['alphavantage']['key']
+        }
+
+        try:
+            async with session.get(url, params=params, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    quote = data.get('Global Quote', {})
+
+                    current_price = quote.get('05. price')
+                    prev_close = quote.get('08. previous close')
+
+                    if current_price and prev_close:
+                        current_price = float(current_price)
+                        prev_close = float(prev_close)
+                        change = current_price - prev_close
+                        change_percent = (change / prev_close) * 100
+
+                        return {
+                            'ticker': ticker,
+                            'current_price': current_price,
+                            'change': change,
+                            'change_percent': change_percent,
+                            'high_today': float(quote.get('03. high', 0)) or None,
+                            'low_today': float(quote.get('04. low', 0)) or None,
+                            'open_today': float(quote.get('02. open', 0)) or None,
+                            'prev_close': prev_close,
+                            'volume_today': int(quote.get('06. volume', 0)) or None,
+                            'source': 'alphavantage',
+                            'last_update': timezone.now()
+                        }
+        except Exception as e:
+            logger.debug(f"Alpha Vantage error for {ticker}: {e}")
+
+        return None
+
+    async def get_stock_data_fmp(self, session, ticker):
+        """Get stock data from Financial Modeling Prep"""
+        url = f"{self.apis['fmp']['base_url']}/quote/{ticker}"
+        params = {'apikey': self.apis['fmp']['key']}
+
+        try:
+            async with session.get(url, params=params, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data and len(data) > 0:
+                        quote = data[0]
+                        
+                        current_price = quote.get('price')
+                        prev_close = quote.get('previousClose')
+
+                        if current_price and prev_close:
+                            change = quote.get('change', current_price - prev_close)
+                            change_percent = quote.get('changesPercentage', 0)
+
+                            return {
+                                'ticker': ticker,
+                                'company_name': quote.get('name', ''),
+                                'current_price': current_price,
+                                'change': change,
+                                'change_percent': change_percent,
+                                'high_today': quote.get('dayHigh'),
+                                'low_today': quote.get('dayLow'),
+                                'open_today': quote.get('open'),
+                                'prev_close': prev_close,
+                                'volume_today': quote.get('volume'),
+                                'market_cap': quote.get('marketCap'),
+                                'pe_ratio': quote.get('pe'),
+                                'source': 'fmp',
+                                'last_update': timezone.now()
+                            }
+        except Exception as e:
+            logger.debug(f"FMP error for {ticker}: {e}")
+
+        return None
+
+    async def get_stock_data_twelvedata(self, session, ticker):
+        """Get stock data from Twelve Data"""
+        url = f"{self.apis['twelvedata']['base_url']}/quote"
+        params = {
+            'symbol': ticker,
+            'apikey': self.apis['twelvedata']['key']
+        }
+
+        try:
+            async with session.get(url, params=params, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    current_price = data.get('close')
+                    prev_close = data.get('previous_close')
+
+                    if current_price and prev_close:
+                        current_price = float(current_price)
+                        prev_close = float(prev_close)
+                        change = current_price - prev_close
+                        change_percent = (change / prev_close) * 100
+
+                        return {
+                            'ticker': ticker,
+                            'company_name': data.get('name', ''),
+                            'current_price': current_price,
+                            'change': change,
+                            'change_percent': change_percent,
+                            'high_today': float(data.get('high', 0)) or None,
+                            'low_today': float(data.get('low', 0)) or None,
+                            'open_today': float(data.get('open', 0)) or None,
+                            'prev_close': prev_close,
+                            'volume_today': int(data.get('volume', 0)) or None,
+                            'source': 'twelvedata',
+                            'last_update': timezone.now()
+                        }
+        except Exception as e:
+            logger.debug(f"Twelve Data error for {ticker}: {e}")
+
+        return None
+
+    async def get_stock_data_polygon(self, session, ticker):
+        """Get stock data from Polygon.io"""
+        url = f"{self.apis['polygon']['base_url']}/aggs/ticker/{ticker}/prev"
+        params = {'apikey': self.apis['polygon']['key']}
+
+        try:
+            async with session.get(url, params=params, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get('status') == 'OK' and data.get('results'):
+                        result = data['results'][0]
+                        
+                        current_price = result.get('c')  # close price
+                        open_price = result.get('o')     # open price
+
+                        if current_price and open_price:
+                            change = current_price - open_price
+                            change_percent = (change / open_price) * 100
+
+                            return {
+                                'ticker': ticker,
+                                'current_price': current_price,
+                                'change': change,
+                                'change_percent': change_percent,
+                                'high_today': result.get('h'),
+                                'low_today': result.get('l'),
+                                'open_today': open_price,
+                                'volume_today': result.get('v'),
+                                'source': 'polygon',
+                                'last_update': timezone.now()
+                            }
+        except Exception as e:
+            logger.debug(f"Polygon error for {ticker}: {e}")
+
+        return None
     
     async def collect_batch(self, session, tickers_batch, api_source='iex'):
         """Collect data for a batch of exactly 10 tickers"""
@@ -191,6 +363,14 @@ class NASDAQRealTimeCollector:
                 task = self.get_stock_data_iex(session, ticker)
             elif api_source == 'finnhub':
                 task = self.get_stock_data_finnhub(session, ticker)
+            elif api_source == 'alphavantage':
+                task = self.get_stock_data_alphavantage(session, ticker)
+            elif api_source == 'fmp':
+                task = self.get_stock_data_fmp(session, ticker)
+            elif api_source == 'twelvedata':
+                task = self.get_stock_data_twelvedata(session, ticker)
+            elif api_source == 'polygon':
+                task = self.get_stock_data_polygon(session, ticker)
             else:
                 logger.warning(f"Unknown API source: {api_source}")
                 continue
@@ -211,7 +391,29 @@ class NASDAQRealTimeCollector:
                 logger.debug(f"No valid data for {tickers_batch[i] if i < len(tickers_batch) else 'unknown'}")
         
         return valid_results
-    
+
+    async def process_api_phase(self, session, tickers, api_source, batch_size, all_results, delay=0.1):
+        """Process a complete API phase with batching and delays"""
+        total_batches = (len(tickers) + batch_size - 1) // batch_size
+        
+        for i in range(0, len(tickers), batch_size):
+            batch = tickers[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            
+            try:
+                results = await self.collect_batch(session, batch, api_source)
+                all_results.extend(results)
+                
+                # Log progress for every batch since we have fewer batches per API
+                logger.info(f"   {api_source.upper()} batch {batch_num}/{total_batches}: {len(results)} stocks | Total: {len(all_results)}")
+                
+                # Apply delay between batches
+                if batch_num < total_batches:  # Don't delay after last batch
+                    await asyncio.sleep(delay)
+                
+            except Exception as e:
+                logger.error(f"Error in {api_source.upper()} batch {batch_num}: {e}")
+
     def save_to_database(self, stock_data_list):
         """Save stock data to Django database"""
         saved_count = 0
@@ -295,63 +497,86 @@ class NASDAQRealTimeCollector:
         
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             
-            # Calculate distribution across APIs
-            iex_limit = min(2000, total_stocks)  # IEX handles up to 2000 stocks
-            finnhub_limit = min(600, max(0, total_stocks - iex_limit))  # Finnhub for next 600 (respects daily limit)
+            # AGGRESSIVE MULTI-API STRATEGY TO COLLECT ALL 3,331 STOCKS
+            # Calculate daily limits per cycle (144 cycles per day = every 10 minutes)
+            cycles_per_day = 144
             
-            # Phase 1: IEX Cloud (primary source) - batches of 10
-            iex_tickers = organized_tickers[:iex_limit]
-            logger.info(f"📡 Phase 1: IEX Cloud collection - {len(iex_tickers)} stocks in batches of 10")
+            # API limits per cycle
+            api_limits = {
+                'iex': min(2000, self.apis['iex']['daily_limit'] // cycles_per_day),      # ~115 per cycle, using 2000 max
+                'finnhub': self.apis['finnhub']['calls_per_day'] // cycles_per_day,       # 600 per cycle  
+                'alphavantage': self.apis['alphavantage']['calls_per_day'] // cycles_per_day,  # 3 per cycle
+                'fmp': self.apis['fmp']['calls_per_day'] // cycles_per_day,               # 1 per cycle
+                'twelvedata': self.apis['twelvedata']['calls_per_day'] // cycles_per_day, # 5 per cycle
+                'polygon': self.apis['polygon']['calls_per_day'] // cycles_per_day        # 5 per cycle
+            }
             
-            for i in range(0, len(iex_tickers), batch_size):
-                batch = iex_tickers[i:i + batch_size]
-                batch_num = (i // batch_size) + 1
-                
-                try:
-                    results = await self.collect_batch(session, batch, 'iex')
-                    all_results.extend(results)
-                    
-                    if batch_num % 10 == 0:  # Log every 10th batch (100 stocks)
-                        logger.info(f"   IEX batch {batch_num}: {len(results)} stocks | Total: {len(all_results)}")
-                    
-                    # Minimal delay for IEX (good free tier)
-                    await asyncio.sleep(0.1)
-                    
-                except Exception as e:
-                    logger.error(f"Error in IEX batch {batch_num}: {e}")
+            logger.info(f"📊 API limits per cycle: {api_limits}")
             
-            # Phase 2: Finnhub (secondary source) - batches of 10
-            if finnhub_limit > 0:
-                finnhub_tickers = organized_tickers[iex_limit:iex_limit + finnhub_limit]
-                logger.info(f"📡 Phase 2: Finnhub collection - {len(finnhub_tickers)} stocks in batches of 10")
-                
-                for i in range(0, len(finnhub_tickers), batch_size):
-                    batch = finnhub_tickers[i:i + batch_size]
-                    batch_num = (i // batch_size) + 1
-                    
-                    try:
-                        results = await self.collect_batch(session, batch, 'finnhub')
-                        all_results.extend(results)
-                        
-                        if batch_num % 10 == 0:  # Log every 10th batch
-                            logger.info(f"   Finnhub batch {batch_num}: {len(results)} stocks | Total: {len(all_results)}")
-                        
-                        # Slightly longer delay for Finnhub
-                        await asyncio.sleep(0.2)
-                        
-                    except Exception as e:
-                        logger.error(f"Error in Finnhub batch {batch_num}: {e}")
+            # Distribute ALL 3,331 stocks across APIs
+            current_index = 0
             
-            # Phase 3: Alpha Vantage for any remaining (if needed)
-            remaining_count = total_stocks - iex_limit - finnhub_limit
-            if remaining_count > 0:
-                remaining_tickers = organized_tickers[iex_limit + finnhub_limit:]
-                # Note: Alpha Vantage has lower limits, so we'll collect what we can
-                av_limit = min(100, remaining_count)  # Only 100 for Alpha Vantage
-                av_tickers = remaining_tickers[:av_limit]
-                
-                logger.info(f"📡 Phase 3: Backup collection - {len(av_tickers)} stocks")
-                logger.warning(f"⚠️ {remaining_count - av_limit} stocks skipped due to API limits")
+            # Phase 1: IEX Cloud (primary - handles most stocks)
+            iex_limit = api_limits['iex']
+            iex_tickers = organized_tickers[current_index:current_index + iex_limit]
+            current_index += len(iex_tickers)
+            
+            if iex_tickers:
+                logger.info(f"📡 Phase 1: IEX Cloud - {len(iex_tickers)} stocks in batches of 10")
+                await self.process_api_phase(session, iex_tickers, 'iex', batch_size, all_results)
+            
+            # Phase 2: Finnhub (secondary - good volume)
+            finnhub_limit = api_limits['finnhub']
+            finnhub_tickers = organized_tickers[current_index:current_index + finnhub_limit]
+            current_index += len(finnhub_tickers)
+            
+            if finnhub_tickers:
+                logger.info(f"📡 Phase 2: Finnhub - {len(finnhub_tickers)} stocks in batches of 10")
+                await self.process_api_phase(session, finnhub_tickers, 'finnhub', batch_size, all_results, delay=0.2)
+            
+            # Phase 3: Alpha Vantage
+            av_limit = api_limits['alphavantage']
+            av_tickers = organized_tickers[current_index:current_index + av_limit]
+            current_index += len(av_tickers)
+            
+            if av_tickers:
+                logger.info(f"📡 Phase 3: Alpha Vantage - {len(av_tickers)} stocks in batches of 10")
+                await self.process_api_phase(session, av_tickers, 'alphavantage', batch_size, all_results, delay=1.0)
+            
+            # Phase 4: Financial Modeling Prep
+            fmp_limit = api_limits['fmp']
+            fmp_tickers = organized_tickers[current_index:current_index + fmp_limit]
+            current_index += len(fmp_tickers)
+            
+            if fmp_tickers:
+                logger.info(f"📡 Phase 4: FMP - {len(fmp_tickers)} stocks in batches of 10")
+                await self.process_api_phase(session, fmp_tickers, 'fmp', batch_size, all_results, delay=1.0)
+            
+            # Phase 5: Twelve Data
+            twelve_limit = api_limits['twelvedata']
+            twelve_tickers = organized_tickers[current_index:current_index + twelve_limit]
+            current_index += len(twelve_tickers)
+            
+            if twelve_tickers:
+                logger.info(f"📡 Phase 5: Twelve Data - {len(twelve_tickers)} stocks in batches of 10")
+                await self.process_api_phase(session, twelve_tickers, 'twelvedata', batch_size, all_results, delay=1.0)
+            
+            # Phase 6: Polygon.io
+            polygon_limit = api_limits['polygon']
+            polygon_tickers = organized_tickers[current_index:current_index + polygon_limit]
+            current_index += len(polygon_tickers)
+            
+            if polygon_tickers:
+                logger.info(f"📡 Phase 6: Polygon.io - {len(polygon_tickers)} stocks in batches of 10")
+                await self.process_api_phase(session, polygon_tickers, 'polygon', batch_size, all_results, delay=12.0)  # 5 per minute = 12 second delay
+            
+            # Calculate remaining stocks
+            remaining_stocks = total_stocks - current_index
+            if remaining_stocks > 0:
+                logger.warning(f"⚠️ {remaining_stocks} stocks not collected due to API limits")
+                logger.info(f"💡 Consider: Reduce collection frequency, upgrade APIs, or add more free APIs")
+            else:
+                logger.info(f"🎉 ALL {total_stocks} NASDAQ stocks will be collected!")
         
         # Save all results to database
         if all_results:
