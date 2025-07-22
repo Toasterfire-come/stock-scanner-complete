@@ -62,6 +62,7 @@ simplejson==3.19.3
 gunicorn>=21.2.0
 whitenoise>=6.6.0
 python-dotenv>=1.0.0
+dj-database-url>=2.1.0
 
 # ===== SCRAPY DEPENDENCIES =====
 Twisted==24.11.0

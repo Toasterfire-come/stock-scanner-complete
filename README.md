@@ -9,22 +9,16 @@ A comprehensive stock monitoring and membership platform for **retailtradescanne
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
 cd stock-scanner-complete
 
-# 2. Install dependencies
-pip install -r requirements.txt
+# 2. Run automated setup
+./startup.sh
 
-# 3. Set up database and memberships
-python manage.py migrate
-python manage.py setup_memberships
-
-# 4. Create admin user
-python manage.py createsuperuser
-
-# 5. Start the development server
-python manage.py runserver
-
-# 6. Visit http://localhost:8000 for APIs
-# 7. Visit http://localhost:8000/admin for admin panel
+# 3. Access your application
+# Django Admin: http://localhost:8000/admin
+# Analytics API: http://localhost:8000/api/analytics/public/
+# Stock Data: http://localhost:8000/api/stocks/
 ```
+
+**For detailed setup instructions, see: [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)**
 
 ## ✨ Features
 
@@ -81,17 +75,22 @@ python manage.py runserver
 
 - **Python 3.8+** (Python 3.9+ recommended)
 - **Internet connection** (for stock data)
-- **Gmail account** (for email notifications)
+- **Git** (for cloning repository)
+- **Gmail account** (optional, for email notifications)
 
 ## 📁 Project Structure
 
 ```
 stock-scanner-complete/
-├── 📄 README.md                          # This file - updated with latest features
-├── 📄 requirements.txt                   # Python dependencies (with celery, django-celery-beat)
+├── 📄 README.md                          # This file - project overview
+├── 📄 requirements.txt                   # Python dependencies (production-ready)
 ├── 📄 manage.py                          # Django management script
-├── 📄 REAL_DATA_ANALYTICS.md            # Real data analytics system documentation
-├── 📄 BUGFIXES_SUMMARY.md               # Comprehensive bug fixes applied
+├── 📄 startup.sh                         # Automated setup script
+├── 📄 .env.example                       # Environment variables template
+├── 📄 QUICK_START_GUIDE.md              # 5-minute setup guide
+├── 📄 PRODUCTION_DEPLOYMENT_GUIDE.md    # Complete production deployment
+├── 📄 DEVELOPMENT_GUIDE.md              # Development documentation
+├── 📄 REAL_DATA_ANALYTICS.md            # Real data analytics system
 ├── 📄 COMPLETE_SITEMAP.md               # Full site structure (24 pages)
 ├── 📄 WORDPRESS_DJANGO_CONNECTION.md    # Technical integration guide
 ├── 📁 stockscanner_django/              # Django project
@@ -134,59 +133,53 @@ stock-scanner-complete/
 
 ### 🚀 Development Setup (Recommended)
 
+**Quick Setup:**
+```bash
+# Clone and run automated setup
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+./startup.sh
+```
+
+**Manual Setup:**
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
 cd stock-scanner-complete
 
-# 2. Install Python dependencies
+# 2. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 3. Set up database and create tables
+# 4. Setup environment
+cp .env.example .env
+# Edit .env with your settings
+
+# 5. Setup database
 python manage.py migrate
-
-# 4. Create memberships for any existing users
 python manage.py setup_memberships
-
-# 5. Create an admin user
 python manage.py createsuperuser
 
-# 6. Start the Django development server
+# 6. Start server
 python manage.py runserver
-
-# 7. Access the application
-# Django Admin: http://localhost:8000/admin
-# API Endpoints: http://localhost:8000/api/
-# Analytics: http://localhost:8000/api/analytics/public/
 ```
 
-### 🌐 Production Deployment (retailtradescanner.com)
+### 🌐 Production Deployment
 
-```bash
-# 1. Server setup (Ubuntu/CentOS)
-sudo apt-get update
-sudo apt-get install python3 python3-pip postgresql nginx
+**For complete production deployment instructions, see:**
+- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Complete production setup
+- **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** - Quick development setup
 
-# 2. Clone and setup
-git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
-cd stock-scanner-complete
-pip install -r requirements.txt
-
-# 3. Configure for production
-# Update ALLOWED_HOSTS in settings.py
-# Set up PostgreSQL database
-# Configure SSL certificates
-
-# 4. Deploy Django backend
-python manage.py migrate
-python manage.py collectstatic
-python manage.py setup_memberships
-
-# 5. WordPress Integration
-# Copy wordpress_plugin/stock-scanner-integration/ to /wp-content/plugins/
-# Copy wordpress_theme/stock-scanner-theme/ to /wp-content/themes/
-# Activate plugin and theme in WordPress admin
-```
+**Production highlights:**
+- PostgreSQL database configuration
+- Nginx reverse proxy with SSL
+- Gunicorn application server
+- Redis caching
+- Automated SSL certificates
+- System service configuration
 
 ### 🔧 WordPress Plugin Setup
 
