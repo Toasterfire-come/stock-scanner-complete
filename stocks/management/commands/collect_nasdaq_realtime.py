@@ -21,14 +21,17 @@ logger = logging.getLogger(__name__)
 
 class NASDAQRealTimeCollector:
     def __init__(self):
+        # IEX Cloud tier detection and configuration
+        iex_key = os.getenv('IEX_API_KEY', 'pk_test_your_iex_key')
+        iex_tier = self.detect_iex_tier(iex_key)
+        
         # Free API configuration - AGGRESSIVE MULTI-API STRATEGY
         self.apis = {
             'iex': {
-                'key': os.getenv('IEX_API_KEY', 'pk_test_your_iex_key'),
+                'key': iex_key,
                 'base_url': 'https://cloud.iexapis.com/stable',
-                'calls_per_minute': 100,
-                'calls_per_month': 500000,
-                'daily_limit': 16666  # 500K/30 days
+                'tier': iex_tier,
+                **self.get_iex_limits(iex_tier)
             },
             'finnhub': {
                 'key': os.getenv('FINNHUB_API_KEY', 'your_finnhub_key'),
@@ -61,6 +64,75 @@ class NASDAQRealTimeCollector:
         
         # Load NASDAQ tickers
         self.nasdaq_tickers = self.get_nasdaq_tickers()
+        
+        # Log IEX configuration
+        logger.info(f"🔑 IEX Cloud detected: {self.apis['iex']['tier']} tier")
+        logger.info(f"📊 IEX daily limit: {self.apis['iex']['daily_limit']:,} requests")
+
+    def detect_iex_tier(self, api_key):
+        """Detect IEX Cloud tier based on API key prefix and environment variable"""
+        # Check if user explicitly set the tier
+        explicit_tier = os.getenv('IEX_TIER', '').lower()
+        if explicit_tier in ['free', 'start', 'launch', 'grow', 'scale', 'enterprise']:
+            return explicit_tier
+        
+        # Auto-detect based on API key prefix
+        if api_key.startswith('pk_test_'):
+            return 'free'
+        elif api_key.startswith('pk_'):
+            # Production key - check environment or default to Launch (most common paid tier)
+            return os.getenv('IEX_TIER', 'launch').lower()
+        else:
+            return 'free'
+    
+    def get_iex_limits(self, tier):
+        """Get IEX Cloud limits based on tier"""
+        iex_tiers = {
+            'free': {
+                'calls_per_minute': 100,
+                'calls_per_month': 500000,
+                'daily_limit': 16666,  # 500K/30 days
+                'monthly_cost': 0,
+                'can_handle_all_nasdaq': False
+            },
+            'start': {
+                'calls_per_minute': 100,
+                'calls_per_month': 5000000,  # 5M
+                'daily_limit': 166666,  # 5M/30 days
+                'monthly_cost': 9,
+                'can_handle_all_nasdaq': True
+            },
+            'launch': {
+                'calls_per_minute': 1000,
+                'calls_per_month': 5000000,  # 5M
+                'daily_limit': 166666,  # 5M/30 days
+                'monthly_cost': 19,
+                'can_handle_all_nasdaq': True
+            },
+            'grow': {
+                'calls_per_minute': 2000,
+                'calls_per_month': 50000000,  # 50M
+                'daily_limit': 1666666,  # 50M/30 days
+                'monthly_cost': 99,
+                'can_handle_all_nasdaq': True
+            },
+            'scale': {
+                'calls_per_minute': 10000,
+                'calls_per_month': 100000000,  # 100M
+                'daily_limit': 3333333,  # 100M/30 days
+                'monthly_cost': 199,
+                'can_handle_all_nasdaq': True
+            },
+            'enterprise': {
+                'calls_per_minute': 100000,
+                'calls_per_month': 1000000000,  # 1B
+                'daily_limit': 33333333,  # 1B/30 days
+                'monthly_cost': 999,
+                'can_handle_all_nasdaq': True
+            }
+        }
+        
+        return iex_tiers.get(tier, iex_tiers['free'])
         
         # Priority tickers (most important stocks to update first)
         self.priority_tickers = [
@@ -497,33 +569,53 @@ class NASDAQRealTimeCollector:
         
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             
-            # AGGRESSIVE MULTI-API STRATEGY TO COLLECT ALL 3,331 STOCKS
+            # SMART API STRATEGY - ADAPTS TO IEX TIER
             # Calculate daily limits per cycle (144 cycles per day = every 10 minutes)
             cycles_per_day = 144
             
-            # API limits per cycle
-            api_limits = {
-                'iex': min(2000, self.apis['iex']['daily_limit'] // cycles_per_day),      # ~115 per cycle, using 2000 max
-                'finnhub': self.apis['finnhub']['calls_per_day'] // cycles_per_day,       # 600 per cycle  
-                'alphavantage': self.apis['alphavantage']['calls_per_day'] // cycles_per_day,  # 3 per cycle
-                'fmp': self.apis['fmp']['calls_per_day'] // cycles_per_day,               # 1 per cycle
-                'twelvedata': self.apis['twelvedata']['calls_per_day'] // cycles_per_day, # 5 per cycle
-                'polygon': self.apis['polygon']['calls_per_day'] // cycles_per_day        # 5 per cycle
-            }
+            # Check if IEX can handle all NASDAQ stocks
+            if self.apis['iex']['can_handle_all_nasdaq']:
+                # PAID IEX TIER - Use IEX for ALL stocks
+                iex_cycle_limit = min(total_stocks, self.apis['iex']['daily_limit'] // cycles_per_day)
+                logger.info(f"🚀 Using PAID IEX tier - can collect {iex_cycle_limit:,} stocks per cycle")
+                
+                api_limits = {
+                    'iex': iex_cycle_limit,  # Use IEX for as many as possible
+                    'finnhub': max(0, min(600, total_stocks - iex_cycle_limit)) if total_stocks > iex_cycle_limit else 0,
+                    'alphavantage': 0,  # Not needed with paid IEX
+                    'fmp': 0,
+                    'twelvedata': 0,
+                    'polygon': 0
+                }
+            else:
+                # FREE TIER - Use multi-API strategy
+                logger.info(f"📱 Using FREE IEX tier - multi-API strategy required")
+                
+                api_limits = {
+                    'iex': min(2000, self.apis['iex']['daily_limit'] // cycles_per_day),
+                    'finnhub': self.apis['finnhub']['calls_per_day'] // cycles_per_day,
+                    'alphavantage': self.apis['alphavantage']['calls_per_day'] // cycles_per_day,
+                    'fmp': self.apis['fmp']['calls_per_day'] // cycles_per_day,
+                    'twelvedata': self.apis['twelvedata']['calls_per_day'] // cycles_per_day,
+                    'polygon': self.apis['polygon']['calls_per_day'] // cycles_per_day
+                }
             
             logger.info(f"📊 API limits per cycle: {api_limits}")
             
             # Distribute ALL 3,331 stocks across APIs
             current_index = 0
             
-            # Phase 1: IEX Cloud (primary - handles most stocks)
+            # Phase 1: IEX Cloud (primary - can handle all stocks if paid tier)
             iex_limit = api_limits['iex']
             iex_tickers = organized_tickers[current_index:current_index + iex_limit]
             current_index += len(iex_tickers)
             
             if iex_tickers:
-                logger.info(f"📡 Phase 1: IEX Cloud - {len(iex_tickers)} stocks in batches of 10")
-                await self.process_api_phase(session, iex_tickers, 'iex', batch_size, all_results)
+                tier_info = f"({self.apis['iex']['tier']} tier - ${self.apis['iex']['monthly_cost']}/month)"
+                logger.info(f"📡 Phase 1: IEX Cloud {tier_info} - {len(iex_tickers)} stocks in batches of 10")
+                # Faster processing for paid tiers due to higher rate limits
+                delay = 0.05 if self.apis['iex']['can_handle_all_nasdaq'] else 0.1
+                await self.process_api_phase(session, iex_tickers, 'iex', batch_size, all_results, delay=delay)
             
             # Phase 2: Finnhub (secondary - good volume)
             finnhub_limit = api_limits['finnhub']
@@ -570,13 +662,21 @@ class NASDAQRealTimeCollector:
                 logger.info(f"📡 Phase 6: Polygon.io - {len(polygon_tickers)} stocks in batches of 10")
                 await self.process_api_phase(session, polygon_tickers, 'polygon', batch_size, all_results, delay=12.0)  # 5 per minute = 12 second delay
             
-            # Calculate remaining stocks
+            # Calculate remaining stocks and provide recommendations
             remaining_stocks = total_stocks - current_index
             if remaining_stocks > 0:
                 logger.warning(f"⚠️ {remaining_stocks} stocks not collected due to API limits")
-                logger.info(f"💡 Consider: Reduce collection frequency, upgrade APIs, or add more free APIs")
+                if not self.apis['iex']['can_handle_all_nasdaq']:
+                    logger.info(f"💡 TO GET 100% COVERAGE:")
+                    logger.info(f"   🚀 Upgrade to IEX Start ($9/month) for all {total_stocks} stocks")
+                    logger.info(f"   🚀 Or IEX Launch ($19/month) with 10x faster processing")
+                    logger.info(f"   📱 Or reduce collection frequency to 15 minutes")
+                else:
+                    logger.info(f"💡 Consider upgrading IEX tier or adding more APIs")
             else:
                 logger.info(f"🎉 ALL {total_stocks} NASDAQ stocks will be collected!")
+                if self.apis['iex']['can_handle_all_nasdaq']:
+                    logger.info(f"✨ Using IEX {self.apis['iex']['tier']} tier (${self.apis['iex']['monthly_cost']}/month)")
         
         # Save all results to database
         if all_results:
@@ -590,6 +690,9 @@ class NASDAQRealTimeCollector:
             logger.info(f"   📈 Coverage: {len(all_results)}/{total_stocks} stocks ({coverage_percent:.1f}%)")
             logger.info(f"   💾 Saved: {saved_count} records")
             logger.info(f"   ⏱️ Time: {collection_time:.1f} seconds")
+            logger.info(f"   🔑 IEX Tier: {self.apis['iex']['tier']} (${self.apis['iex']['monthly_cost']}/month)")
+            if coverage_percent >= 99.9:
+                logger.info(f"   🎉 FULL NASDAQ COVERAGE ACHIEVED!")
             logger.info(f"   🔄 Next cycle in 10 minutes")
             
             return saved_count
