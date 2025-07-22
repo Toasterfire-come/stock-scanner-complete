@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Stock Scanner Integration
  * Plugin URI: https://github.com/Toasterfire-come/stock-scanner-complete
- * Description: Integrates WordPress with Django Stock Scanner API with paywall support
- * Version: 1.0.0
+ * Description: Creates 19 pages from XML export with live stock widgets, membership paywall, and seamless Django API integration
+ * Version: 2.0.0
  * Author: Stock Scanner Team
  * License: GPL v2 or later
  */
@@ -12,6 +12,44 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+/**
+ * PLUGIN FUNCTIONALITY OVERVIEW
+ * 
+ * This plugin automatically creates 19 pages based on the WordPress XML export:
+ * 
+ * MAIN TRADING PAGES:
+ * - Premium Plans (/premium-plans/) - Gold/Silver/Free comparison with live widgets
+ * - Email Stock Lists (/email-stock-lists/) - Subscribe to alert lists
+ * - All Stock Alerts (/all-stock-lists/) - Complete stock list collection
+ * - Popular Stock Lists (/popular-stock-lists/) - Most subscribed lists
+ * - Stock Search (/stock-search/) - Advanced search tools
+ * - Personalized Stock Finder (/personalized-stock-finder/) - AI recommendations
+ * - News Scrapper (/news-scrapper/) - Financial news aggregation
+ * - Filter and Scrapper Pages (/filter-and-scrapper-pages/) - Advanced filtering
+ * 
+ * MEMBERSHIP & ACCOUNT:
+ * - Membership Account (/membership-account/) - Account management
+ * - Membership Billing (/membership-billing/) - Payment history
+ * - Membership Cancel (/membership-cancel/) - Subscription cancellation
+ * - Membership Checkout (/membership-checkout/) - Purchase process
+ * - Membership Confirmation (/membership-confirmation/) - Purchase confirmation
+ * - Membership Orders (/membership-orders/) - Order history
+ * - Membership Levels (/membership-levels/) - Plan comparison
+ * - Login (/login/) - User authentication
+ * - Your Profile (/your-profile/) - Profile management
+ * 
+ * LEGAL PAGES:
+ * - Terms and Conditions (/terms-and-conditions/)
+ * - Privacy Policy (/privacy-policy/)
+ * 
+ * ADDITIONAL FEATURES:
+ * - Live stock widgets on every page
+ * - Responsive design matching XML formatting
+ * - Membership paywall integration
+ * - Complete navigation menu
+ * - Django API integration
+ */
 
 class StockScannerIntegration {
     
@@ -328,74 +366,310 @@ register_activation_hook(__FILE__, function() {
  */
 function create_stock_scanner_pages() {
     $pages = array(
-        'about' => array(
-            'title' => 'About Retail Trade Scan Net',
+        'premium-plans' => array(
+            'title' => 'Premium Plans',
             'content' => '
-                <h2>Welcome to Retail Trade Scan Net</h2>
+                <h3>Gold Plan</h3>
+                <p>Our gold scanner plan will perfectly highlight your trading style and bring you to success. With unlimited access to our over 40 email lists, in-depth stock look up, and personalized stock search, you will stay informed and in the action. If you are interested in elevating your positions, check out if our gold plan is right for you.</p>
                 
-                <p>Retail Trade Scan Net is your premier destination for professional stock analysis, trading insights, and market research. We provide retail traders with institutional-quality research and real-time market data to help you make informed investment decisions.</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="/membership-account/membership-checkout/?level=3" class="wp-block-button__link wp-element-button" style="background: #f39c12; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Buy Gold Plan</a>
+                </div>
                 
-                <h3>Our Mission</h3>
-                <p>To democratize access to high-quality financial analysis and empower retail traders with the tools and insights they need to succeed in today\'s markets.</p>
+                <h4>Silver Plan</h4>
+                <p>Upon purchase of the silver scanner plan, you will receive access to unlimited access of our most popular email lists, stock lookup, and limited access to personalized stock search. With access to our tools you will receive an edge on the market at a practical price. If you are excited to further improve your trading, check out the silver plan.</p>
                 
-                <h3>What We Offer</h3>
-                <ul>
-                    <li><strong>Real-time Stock Analysis:</strong> Advanced scanning algorithms to identify trading opportunities</li>
-                    <li><strong>Market Research:</strong> In-depth analysis of market trends and sector performance</li>
-                    <li><strong>Trading Strategies:</strong> Proven methodologies for different market conditions</li>
-                    <li><strong>Educational Content:</strong> Learn from experienced traders and analysts</li>
-                    <li><strong>Alert System:</strong> Get notified of important market movements and opportunities</li>
-                </ul>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="/membership-account/membership-checkout/?level=2" class="wp-block-button__link wp-element-button" style="background: #95a5a6; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Buy Silver Plan</a>
+                </div>
                 
-                <h3>Our Technology</h3>
-                <p>Our platform combines cutting-edge technology with traditional analysis methods:</p>
-                <ul>
-                    <li>Real-time data processing from multiple market sources</li>
-                    <li>Advanced algorithms for pattern recognition</li>
-                    <li>Machine learning models for market prediction</li>
-                    <li>Comprehensive backtesting capabilities</li>
-                </ul>
-                
-                <p>Join thousands of traders who rely on Retail Trade Scan Net for their market analysis needs.</p>
-                
-                <h3>🔥 Live Stock Analysis</h3>
-                <p>See our real-time analysis in action:</p>
+                <h3>📊 Live Stock Analysis</h3>
                 [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
                 [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
-                [stock_scanner symbol="GOOGL" show_chart="true" show_details="true"]
+                
+                <table class="comparison-table" style="width: 100%; border-collapse: collapse; margin: 40px 0;">
+                    <tr><th></th><th>Gold Plan</th><th>Silver Plan</th><th>Free Plan</th></tr>
+                    <tr><td>All Email Lists</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td><td style="text-align: center;"></td></tr>
+                    <tr><td>Popular Email Lists</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td></tr>
+                    <tr><td>Detailed Stock Lookup</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td><td style="text-align: center;"></td></tr>
+                    <tr><td>Stock Lookup</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td></tr>
+                    <tr><td>Personalized Stock Search</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td></tr>
+                    <tr><td>Discounted Prepaid Package</td><td style="text-align: center;">30% Discount</td><td style="text-align: center;">10% Discount</td><td style="text-align: center;"></td></tr>
+                </table>
             ',
             'template' => 'page'
         ),
-        'contact' => array(
-            'title' => 'Contact Us',
+        'email-stock-lists' => array(
+            'title' => 'Email Stock Lists',
             'content' => '
-                <h2>Get in Touch</h2>
+                <p>Our email stock lists will keep you informed and up to date on the changing market. Look below for all of our stock lists, chose your favorites and subscribe.</p>
                 
-                <p>Have questions about our analysis, need help with trading strategies, or want to suggest content topics? We\'d love to hear from you!</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="/popular-stock-lists/" style="margin: 10px; padding: 12px 24px; border: 2px solid #007cba; color: #007cba; text-decoration: none; border-radius: 5px;">Popular Stock Lists</a>
+                    <a href="/all-stock-lists/" style="margin: 10px; padding: 12px 24px; border: 2px solid #007cba; color: #007cba; text-decoration: none; border-radius: 5px;">All Stock Lists</a>
+                </div>
                 
-                <h3>Contact Information</h3>
-                <ul>
-                    <li><strong>Email:</strong> contact@retailtradescan.net</li>
-                    <li><strong>Support:</strong> support@retailtradescan.net</li>
-                    <li><strong>Business Inquiries:</strong> business@retailtradescan.net</li>
-                </ul>
-                
-                <h3>Follow Us</h3>
-                <ul>
-                    <li><strong>Twitter:</strong> @RetailTradeScan</li>
-                    <li><strong>LinkedIn:</strong> Retail Trade Scan Net</li>
-                    <li><strong>YouTube:</strong> Retail Trade Scan Net Channel</li>
-                </ul>
-                
-                <h3>🎯 Try Our Stock Scanner</h3>
-                <p>Get a taste of our analysis capabilities:</p>
+                <h3>📈 Featured Stocks</h3>
                 [stock_scanner symbol="TSLA" show_details="true"]
                 [stock_scanner symbol="NVDA" show_details="true"]
                 
-                <h3>Disclaimer</h3>
-                <p>All content on Retail Trade Scan Net is for educational purposes only and should not be considered as financial advice. Trading and investing in stocks involves risk, and you should always do your own research and consult with a qualified financial advisor before making investment decisions.</p>
+                <h5><strong>Frequently asked questions</strong></h5>
                 
-                <p>Past performance is not indicative of future results. All trading strategies carry risk of loss.</p>
+                <details>
+                    <summary>Why am I not able to access all of the stock lists?</summary>
+                    <p>If you are subscribed to the silver plan, then you will be unable to access the complete stock list until you upgrade your plan.</p>
+                </details>
+                
+                <details>
+                    <summary>Will subscribing to a list spam my email?</summary>
+                    <p>Our lists will only send you a email when a new stock passes, so depending on the list the volume of stocks that pass each thresh hold might be different, if quantity of emails is your concern then be careful when subscribing to a list.</p>
+                </details>
+                
+                <details>
+                    <summary>How quickly will I be informed by this list?</summary>
+                    <p>Our services scan every three minutes to keep subscribers informed.</p>
+                </details>
+            ',
+            'template' => 'page'
+        ),
+        'all-stock-lists' => array(
+            'title' => 'All Stock Alerts',
+            'content' => '
+                <h2>Complete Stock Alert Lists</h2>
+                <p>Access our comprehensive collection of stock alert lists. Monitor market movements with precision and never miss a trading opportunity.</p>
+                
+                <h3>🔥 Top Performers</h3>
+                [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                [stock_scanner symbol="GOOGL" show_chart="true" show_details="true"]
+                [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                
+                <h3>📊 Market Movers</h3>
+                [stock_scanner symbol="TSLA" show_details="true"]
+                [stock_scanner symbol="NVDA" show_details="true"]
+                [stock_scanner symbol="AMD" show_details="true"]
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; margin: 30px 0;">
+                    <h4>🚀 Upgrade for Full Access</h4>
+                    <p>Get unlimited access to all stock lists with our premium plans!</p>
+                    <a href="/premium-plans/" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold;">View Premium Plans</a>
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'popular-stock-lists' => array(
+            'title' => 'Popular Stock Lists',
+            'content' => '
+                <h2>Most Popular Stock Lists</h2>
+                <p>These are our most subscribed and highest performing stock alert lists. Perfect for traders who want the best market insights.</p>
+                
+                <h3>🎯 Technology Leaders</h3>
+                [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                [stock_scanner symbol="GOOGL" show_chart="true" show_details="true"]
+                
+                <h3>⚡ High Growth Stocks</h3>
+                [stock_scanner symbol="TSLA" show_details="true"]
+                [stock_scanner symbol="NVDA" show_details="true"]
+                [stock_scanner symbol="META" show_details="true"]
+                
+                <h3>💎 Market Favorites</h3>
+                [stock_scanner symbol="AMZN" show_details="true"]
+                [stock_scanner symbol="NFLX" show_details="true"]
+                
+                <p style="text-align: center; margin: 30px 0;">
+                    <a href="/email-stock-lists/" style="background: #007cba; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Browse All Lists</a>
+                </p>
+            ',
+            'template' => 'page'
+        ),
+        'stock-search' => array(
+            'title' => 'Stock Search',
+            'content' => '
+                <h2>Advanced Stock Search</h2>
+                <p>Use our powerful search tools to find the perfect stocks for your portfolio. Filter by sector, performance, market cap, and more.</p>
+                
+                <h3>🔍 Quick Search Examples</h3>
+                [stock_scanner symbol="SPY" show_chart="true" show_details="true"]
+                [stock_scanner symbol="QQQ" show_chart="true" show_details="true"]
+                
+                <h3>📈 Trending Searches</h3>
+                [stock_scanner symbol="AAPL" show_details="true"]
+                [stock_scanner symbol="TSLA" show_details="true"]
+                [stock_scanner symbol="NVDA" show_details="true"]
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h4>🎯 Pro Search Features</h4>
+                    <ul>
+                        <li>Advanced filtering options</li>
+                        <li>Technical indicator screening</li>
+                        <li>Custom alerts setup</li>
+                        <li>Portfolio integration</li>
+                    </ul>
+                    <p><a href="/premium-plans/">Upgrade to unlock advanced search features</a></p>
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'personalized-stock-finder' => array(
+            'title' => 'Personalized Stock Finder',
+            'content' => '
+                <h2>Your Personalized Stock Finder</h2>
+                <p>Get customized stock recommendations based on your trading style, risk tolerance, and investment goals.</p>
+                
+                <h3>🎯 Recommended for You</h3>
+                [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                
+                <h3>💡 Smart Suggestions</h3>
+                [stock_scanner symbol="GOOGL" show_details="true"]
+                [stock_scanner symbol="AMZN" show_details="true"]
+                
+                <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 25px; border-radius: 10px; margin: 30px 0;">
+                    <h4>🚀 Get Personalized Recommendations</h4>
+                    <p>Our AI analyzes your preferences and market conditions to suggest the best stocks for your portfolio.</p>
+                    <a href="/premium-plans/" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold;">Start Your Analysis</a>
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'terms-and-conditions' => array(
+            'title' => 'Terms and Conditions',
+            'content' => '
+                <h2>Terms and Conditions</h2>
+                <p><strong>Last updated:</strong> January 21, 2025</p>
+                
+                <h3>1. Acceptance of Terms</h3>
+                <p>By accessing and using Retail Trade Scanner, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                
+                <h3>2. Service Description</h3>
+                <p>Retail Trade Scanner provides stock analysis, market data, and trading tools for educational and informational purposes.</p>
+                
+                <h3>3. User Responsibilities</h3>
+                <ul>
+                    <li>You must be 18 years or older to use our services</li>
+                    <li>Provide accurate information when creating an account</li>
+                    <li>Use our services in compliance with applicable laws</li>
+                </ul>
+                
+                <h3>4. Investment Disclaimer</h3>
+                <p><strong>Important:</strong> All content is for educational purposes only. Past performance does not guarantee future results. Trading involves risk of loss.</p>
+                
+                <h3>5. Privacy</h3>
+                <p>Your privacy is important to us. Please review our <a href="/privacy-policy/">Privacy Policy</a> for details on how we collect and use information.</p>
+                
+                <h3>📊 Market Data</h3>
+                <p>See our real-time analysis capabilities:</p>
+                [stock_scanner symbol="SPY" show_details="true"]
+                
+                <h3>6. Contact</h3>
+                <p>For questions about these terms, contact us at: legal@retailtradescanner.com</p>
+            ',
+            'template' => 'page'
+        ),
+        'privacy-policy' => array(
+            'title' => 'Privacy Policy',
+            'content' => '
+                <h2>Privacy Policy</h2>
+                <p><strong>Last updated:</strong> January 21, 2025</p>
+                
+                <h3>1. Information We Collect</h3>
+                <p>We collect information you provide directly to us, such as when you create an account, subscribe to our services, or contact us.</p>
+                
+                <h3>2. How We Use Information</h3>
+                <ul>
+                    <li>Provide and improve our services</li>
+                    <li>Send you stock alerts and updates</li>
+                    <li>Process payments and subscriptions</li>
+                    <li>Communicate with you about our services</li>
+                </ul>
+                
+                <h3>3. Information Sharing</h3>
+                <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.</p>
+                
+                <h3>4. Data Security</h3>
+                <p>We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+                
+                <h3>5. Your Rights</h3>
+                <p>You have the right to access, update, or delete your personal information. Contact us to exercise these rights.</p>
+                
+                <h3>📈 Secure Trading Data</h3>
+                <p>Your financial data is protected with bank-level security:</p>
+                [stock_scanner symbol="AAPL" show_details="true"]
+                
+                <h3>6. Contact Us</h3>
+                <p>If you have questions about this Privacy Policy, contact us at: privacy@retailtradescanner.com</p>
+            ',
+            'template' => 'page'
+        ),
+        'news-scrapper' => array(
+            'title' => 'News Scrapper',
+            'content' => '
+                <h2>Financial News Scraper</h2>
+                <p>Stay updated with the latest financial news and market analysis from multiple sources, all in one place.</p>
+                
+                <h3>📰 Latest Market News</h3>
+                [stock_scanner symbol="SPY" show_chart="true" show_details="true"]
+                [stock_scanner symbol="QQQ" show_chart="true" show_details="true"]
+                
+                <h3>🔥 Trending Stories</h3>
+                [stock_scanner symbol="AAPL" show_details="true"]
+                [stock_scanner symbol="TSLA" show_details="true"]
+                [stock_scanner symbol="NVDA" show_details="true"]
+                
+                <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #27ae60;">
+                    <h4>📊 Real-Time Updates</h4>
+                    <p>Our news scraper monitors hundreds of financial news sources to bring you the most relevant and timely information.</p>
+                </div>
+                
+                <h3>💡 News Categories</h3>
+                <ul>
+                    <li>📈 Market Analysis</li>
+                    <li>💼 Company Earnings</li>
+                    <li>🏦 Economic Indicators</li>
+                    <li>🌍 Global Markets</li>
+                    <li>⚡ Breaking News</li>
+                </ul>
+            ',
+            'template' => 'page'
+        ),
+        'filter-and-scrapper-pages' => array(
+            'title' => 'Filter and Scrapper Pages',
+            'content' => '
+                <h2>Advanced Filtering & Data Scraping</h2>
+                <p>Use our powerful filtering tools and data scrapers to find exactly what you\'re looking for in the markets.</p>
+                
+                <h3>🔍 Smart Filters</h3>
+                [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                
+                <h3>📊 Data Scraping Tools</h3>
+                [stock_scanner symbol="GOOGL" show_details="true"]
+                [stock_scanner symbol="AMZN" show_details="true"]
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0;">
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <h4>📈 Technical Filters</h4>
+                        <ul>
+                            <li>Price movements</li>
+                            <li>Volume analysis</li>
+                            <li>RSI indicators</li>
+                            <li>Moving averages</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <h4>💰 Fundamental Filters</h4>
+                        <ul>
+                            <li>P/E ratios</li>
+                            <li>Market cap</li>
+                            <li>Dividend yield</li>
+                            <li>Revenue growth</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <p style="text-align: center;">
+                    <a href="/premium-plans/" style="background: #007cba; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Access Advanced Tools</a>
+                </p>
             ',
             'template' => 'page'
         ),
@@ -598,6 +872,116 @@ function create_stock_scanner_pages() {
                 </div>
             ',
             'template' => 'page'
+        ),
+        'membership-account' => array(
+            'title' => 'Membership Account',
+            'content' => '
+                <h2>Your Membership Account</h2>
+                <p>Manage your subscription, view usage statistics, and update your account settings.</p>
+                
+                <h3>📊 Account Overview</h3>
+                [stock_scanner symbol="AAPL" show_details="true"]
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h4>Current Plan</h4>
+                    <p>Your current membership level and benefits will be displayed here.</p>
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'membership-billing' => array(
+            'title' => 'Membership Billing',
+            'content' => '
+                <h2>Billing Information</h2>
+                <p>View your billing history and manage payment methods.</p>
+                
+                <h3>💳 Payment Methods</h3>
+                [stock_scanner symbol="MSFT" show_details="true"]
+            ',
+            'template' => 'page'
+        ),
+        'membership-cancel' => array(
+            'title' => 'Membership Cancel',
+            'content' => '
+                <h2>Cancel Membership</h2>
+                <p>We\'re sorry to see you go. Cancel your membership here.</p>
+                
+                <h3>📉 Before You Go</h3>
+                [stock_scanner symbol="TSLA" show_details="true"]
+            ',
+            'template' => 'page'
+        ),
+        'membership-checkout' => array(
+            'title' => 'Membership Checkout',
+            'content' => '
+                <h2>Membership Checkout</h2>
+                <p>Complete your subscription purchase.</p>
+                
+                <h3>🛒 Checkout Process</h3>
+                [stock_scanner symbol="GOOGL" show_details="true"]
+            ',
+            'template' => 'page'
+        ),
+        'membership-confirmation' => array(
+            'title' => 'Membership Confirmation',
+            'content' => '
+                <h2>Membership Confirmation</h2>
+                <p>Thank you for your purchase! Your membership is now active.</p>
+                
+                <h3>🎉 Welcome</h3>
+                [stock_scanner symbol="NVDA" show_details="true"]
+            ',
+            'template' => 'page'
+        ),
+        'membership-orders' => array(
+            'title' => 'Membership Orders',
+            'content' => '
+                <h2>Your Orders</h2>
+                <p>View your order history and transaction details.</p>
+                
+                <h3>📦 Order History</h3>
+                [stock_scanner symbol="AMZN" show_details="true"]
+            ',
+            'template' => 'page'
+        ),
+        'membership-levels' => array(
+            'title' => 'Membership Levels',
+            'content' => '
+                <h2>Membership Levels</h2>
+                <p>Compare our membership tiers and find the perfect plan for you.</p>
+                
+                <h3>🏆 Available Plans</h3>
+                [stock_scanner symbol="SPY" show_details="true"]
+                
+                <p><a href="/premium-plans/">View detailed pricing</a></p>
+            ',
+            'template' => 'page'
+        ),
+        'login' => array(
+            'title' => 'Log In',
+            'content' => '
+                <h2>Member Login</h2>
+                <p>Sign in to access your account and premium features.</p>
+                
+                <h3>🔐 Secure Access</h3>
+                [stock_scanner symbol="AAPL" show_details="true"]
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <p><a href="/wp-login.php">WordPress Login</a></p>
+                </div>
+            ',
+            'template' => 'page'
+        ),
+        'your-profile' => array(
+            'title' => 'Your Profile',
+            'content' => '
+                <h2>User Profile</h2>
+                <p>Manage your personal information and preferences.</p>
+                
+                <h3>👤 Profile Settings</h3>
+                [stock_scanner symbol="MSFT" show_details="true"]
+            ',
+            'template' => 'page'
         )
     );
     
@@ -631,13 +1015,14 @@ function create_stock_scanner_pages() {
         
         // Add menu items
         $menu_items = array(
-            array('title' => 'About', 'url' => '/about/'),
-            array('title' => 'Contact', 'url' => '/contact/'),
-            array('title' => 'Dashboard', 'url' => '/stock-dashboard/'),
-            array('title' => 'Watchlist', 'url' => '/stock-watchlist/'),
-            array('title' => 'Market News', 'url' => '/stock-market-news/'),
-            array('title' => 'Alerts', 'url' => '/stock-alerts/'),
-            array('title' => 'Pricing', 'url' => '/membership-plans/')
+            array('title' => 'Premium Plans', 'url' => '/premium-plans/'),
+            array('title' => 'Email Lists', 'url' => '/email-stock-lists/'),
+            array('title' => 'Stock Search', 'url' => '/stock-search/'),
+            array('title' => 'Popular Lists', 'url' => '/popular-stock-lists/'),
+            array('title' => 'All Lists', 'url' => '/all-stock-lists/'),
+            array('title' => 'News Scraper', 'url' => '/news-scrapper/'),
+            array('title' => 'My Account', 'url' => '/membership-account/'),
+            array('title' => 'Login', 'url' => '/login/')
         );
         
         foreach ($menu_items as $item) {

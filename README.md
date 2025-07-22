@@ -88,6 +88,7 @@ stock-scanner/
 │   └── 📁 stock-scanner-integration/   # Complete plugin with paywall
 ├── 📁 wordpress_theme/                 # WordPress theme
 │   └── 📁 stock-scanner-theme/         # Modern responsive theme
+├── 📄 retailtradescanner.WordPress.2025-07-22.xml  # WordPress content export
 └── 📁 static/                          # Static files (CSS, JS, images)
 ```
 
@@ -251,6 +252,40 @@ python3 -c "from stocks.yfinance_config import test_yfinance_connection; print(t
 - **Bulk email processing** with queues
 - **Template-based** HTML and text emails
 - **Subscription management** by category
+
+### WordPress Integration
+The plugin automatically creates pages from your XML export:
+
+**Main Trading Pages:**
+- Premium Plans - Gold/Silver/Free plan comparison with live stock widgets
+- Email Stock Lists - Subscribe to stock alert lists
+- All Stock Alerts - Complete collection of stock lists
+- Popular Stock Lists - Most subscribed lists
+- Stock Search - Advanced stock search tools
+- Personalized Stock Finder - AI-powered recommendations
+- News Scrapper - Financial news aggregation
+- Filter and Scrapper Pages - Advanced filtering tools
+
+**Membership & Account Pages:**
+- Membership Account - User account management
+- Membership Billing - Payment and billing history
+- Membership Cancel - Subscription cancellation
+- Membership Checkout - Purchase process
+- Membership Confirmation - Purchase confirmation
+- Membership Orders - Order history
+- Membership Levels - Plan comparison
+- Login - User authentication
+- Your Profile - User profile management
+
+**Legal Pages:**
+- Terms and Conditions
+- Privacy Policy
+
+**Additional Features:**
+- Stock widgets on every page with live data
+- Responsive design matching your brand
+- Membership paywall integration
+- Navigation menu with all pages
 
 ### Database
 - **SQLite** for simplicity and portability

@@ -52,13 +52,12 @@ add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
  */
 function stock_scanner_fallback_menu() {
     echo '<ul class="main-menu">';
-    echo '<li><a href="' . home_url('/about/') . '">About</a></li>';
-    echo '<li><a href="' . home_url('/contact/') . '">Contact</a></li>';
-    echo '<li><a href="' . home_url('/stock-dashboard/') . '">Dashboard</a></li>';
-    echo '<li><a href="' . home_url('/stock-watchlist/') . '">Watchlist</a></li>';
-    echo '<li><a href="' . home_url('/stock-market-news/') . '">Market News</a></li>';
-    echo '<li><a href="' . home_url('/stock-alerts/') . '">Alerts</a></li>';
-    echo '<li><a href="' . home_url('/membership-plans/') . '">Pricing</a></li>';
+    echo '<li><a href="' . home_url('/premium-plans/') . '">Premium Plans</a></li>';
+    echo '<li><a href="' . home_url('/email-stock-lists/') . '">Email Lists</a></li>';
+    echo '<li><a href="' . home_url('/stock-search/') . '">Stock Search</a></li>';
+    echo '<li><a href="' . home_url('/popular-stock-lists/') . '">Popular Lists</a></li>';
+    echo '<li><a href="' . home_url('/news-scrapper/') . '">News Scraper</a></li>';
+    echo '<li><a href="' . home_url('/membership-account/') . '">My Account</a></li>';
     echo '</ul>';
 }
 
