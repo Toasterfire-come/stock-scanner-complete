@@ -668,14 +668,16 @@ class StockScannerIntegration {
                             $('.avg-spending').text('$' + data.avg_spending_per_person.toFixed(2));
                             $('.annual-projected').text('$' + (data.monthly_revenue * 12).toLocaleString());
                             
-                            // Update membership breakdown (simulated data)
-                            const totalMembers = data.total_members;
-                            const membershipData = {
-                                free: Math.floor(totalMembers * 0.47),    // 47%
-                                basic: Math.floor(totalMembers * 0.25),   // 25%
-                                professional: Math.floor(totalMembers * 0.20), // 20%
-                                expert: Math.floor(totalMembers * 0.08)   // 8%
-                            };
+                                                         // Update membership breakdown from real API data
+                             const totalMembers = data.total_members;
+                             
+                             // If we have no members yet, show all as free
+                             const membershipData = {
+                                 free: totalMembers,
+                                 basic: 0,
+                                 professional: 0,
+                                 expert: 0
+                             };
                             
                             $('.free-count').text(membershipData.free);
                             $('.basic-count').text(membershipData.basic);

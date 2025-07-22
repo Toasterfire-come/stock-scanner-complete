@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from emails.models import EmailSubscription
-from .models import StockAlert
+from .models import StockAlert, Membership
 from django.utils import timezone
 
 # Register your models here.
@@ -16,14 +16,31 @@ class StockAlertAdmin(admin.ModelAdmin):
         # Add analytics data to the changelist view
         extra_context = extra_context or {}
         
-        # Calculate member statistics
+        # Calculate real member statistics from database
         total_users = User.objects.count()
         email_subs = EmailSubscription.objects.filter(is_active=True).count()
         
-        # Simulated membership data for demo
-        total_members = 142
-        monthly_revenue = 1847.53
-        avg_spending = round(monthly_revenue / total_members, 2)
+        # Get real membership data
+        total_members = Membership.objects.filter(is_active=True).count()
+        
+        # If no memberships exist, count all users as members
+        if total_members == 0:
+            total_members = total_users
+        
+        # Calculate real monthly revenue
+        monthly_revenue = 0.00
+        tier_pricing = {
+            'free': 0.00,
+            'basic': 9.99,
+            'professional': 29.99,
+            'expert': 49.99
+        }
+        
+        for tier_code, price in tier_pricing.items():
+            tier_count = Membership.objects.filter(tier=tier_code, is_active=True).count()
+            monthly_revenue += tier_count * price
+        
+        avg_spending = round(monthly_revenue / total_members, 2) if total_members > 0 else 0.00
         
         extra_context.update({
             'show_analytics': True,
@@ -34,3 +51,39 @@ class StockAlertAdmin(admin.ModelAdmin):
             'projected_annual': round(monthly_revenue * 12, 2)
         })
         return super().changelist_view(request, extra_context=extra_context)
+
+@admin.register(Membership)
+class MembershipAdmin(admin.ModelAdmin):
+    list_display = ('user', 'tier', 'monthly_price', 'is_active', 'subscription_status', 'monthly_lookups_used', 'created_at')
+    list_filter = ('tier', 'is_active', 'subscription_status', 'created_at')
+    search_fields = ('user__username', 'user__email', 'stripe_customer_id')
+    readonly_fields = ('created_at', 'updated_at', 'pricing_info', 'tier_limits')
+    
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user', 'tier', 'monthly_price', 'is_active')
+        }),
+        ('Subscription Details', {
+            'fields': ('stripe_customer_id', 'stripe_subscription_id', 'subscription_status')
+        }),
+        ('Usage Tracking', {
+            'fields': ('monthly_lookups_used', 'last_reset_date', 'tier_limits')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def pricing_info(self, obj):
+        """Display pricing information"""
+        return f"${obj.pricing_info:.2f}/month"
+    pricing_info.short_description = "Tier Price"
+    
+    def tier_limits(self, obj):
+        """Display lookup limits"""
+        limits = obj.tier_limits
+        if limits == -1:
+            return "Unlimited"
+        return f"{limits} lookups/month"
+    tier_limits.short_description = "Monthly Limit"
