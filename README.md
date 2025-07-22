@@ -18,7 +18,7 @@ cd stock-scanner-complete
 # Stock Data: http://localhost:8000/api/stocks/
 ```
 
-**For detailed setup instructions, see: [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)**
+**For complete setup instructions, see: [COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)**
 
 ## ✨ Features
 
@@ -93,9 +93,7 @@ stock-scanner-complete/
 ├── 📄 manage.py                          # Django management script
 ├── 📄 startup.sh                         # Automated setup script
 ├── 📄 .env.example                       # Environment variables template
-├── 📄 QUICK_START_GUIDE.md              # 5-minute setup guide
-├── 📄 PRODUCTION_DEPLOYMENT_GUIDE.md    # Complete production deployment
-├── 📄 DEVELOPMENT_GUIDE.md              # Development documentation
+├── 📄 COMPLETE_SETUP_GUIDE.md           # Complete setup guide (development + production)
 ├── 📄 REAL_DATA_ANALYTICS.md            # Real data analytics system
 ├── 📄 COMPLETE_SITEMAP.md               # Full site structure (24 pages)
 ├── 📄 WORDPRESS_DJANGO_CONNECTION.md    # Technical integration guide
@@ -175,9 +173,8 @@ python manage.py runserver
 
 ### 🌐 Production Deployment
 
-**For complete production deployment instructions, see:**
-- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Complete production setup
-- **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** - Quick development setup
+**For complete setup instructions (development + production), see:**
+- **[COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)** - Complete setup guide
 
 **Production highlights:**
 - PostgreSQL database configuration
@@ -415,10 +412,11 @@ python3 -c "from stocks.yfinance_config import test_yfinance_connection; print(t
 
 ## 📚 Documentation
 
-- **[Complete Setup Guide](COMPLETE_SETUP_GUIDE.md)** - Detailed installation instructions
-- **[Security Configuration](security_hardening.py)** - Production security settings
-- **[Database Management](database_settings_local.py)** - SQLite utilities
-- **[Email Configuration](emails/email_config.py)** - Gmail SMTP setup
+- **[Complete Setup Guide](COMPLETE_SETUP_GUIDE.md)** - Complete installation and deployment guide
+- **[Advanced Features Guide](ADVANCED_FEATURES_GUIDE.md)** - Regulatory compliance, analytics, and advanced features
+- **[WordPress Integration](WORDPRESS_DJANGO_CONNECTION.md)** - Technical integration guide
+- **[Real Data Analytics](REAL_DATA_ANALYTICS.md)** - Analytics system documentation
+- **[Complete Sitemap](COMPLETE_SITEMAP.md)** - Full site structure (24 pages)
 
 ## 🎯 Key Features in Detail
 
