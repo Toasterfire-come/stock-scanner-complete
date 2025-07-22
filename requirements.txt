@@ -94,3 +94,4 @@ typing_extensions==4.12.2
 # ===== REAL-TIME DATA COLLECTION =====
 aiohttp>=3.9.0
 asyncio-throttle>=1.0.2requests>=2.31.0  # For synchronous API calls when needed
+pytz>=2023.3  # For market hours timezone handling

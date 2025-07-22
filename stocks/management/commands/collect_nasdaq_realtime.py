@@ -9,6 +9,7 @@ import json
 import time
 import logging
 import os
+import pytz
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -151,6 +152,34 @@ class NASDAQRealTimeCollector:
         }
         
         return iex_tiers.get(tier, iex_tiers['free'])
+
+    def is_market_hours(self):
+        """Check if market is currently open (9:30 AM - 4:00 PM ET, weekdays only)"""
+        et_tz = pytz.timezone('America/New_York')
+        now = datetime.now(et_tz)
+        
+        # Skip weekends
+        if now.weekday() >= 5:  # Saturday = 5, Sunday = 6
+            return False
+        
+        # Check if within market hours (9:30 AM - 4:00 PM ET)
+        market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+        market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
+        
+        return market_open <= now <= market_close
+
+    def should_collect_now(self, market_hours_only=True):
+        """Determine if we should collect data now"""
+        if not market_hours_only:
+            return True
+        
+        is_open = self.is_market_hours()
+        if not is_open:
+            et_tz = pytz.timezone('America/New_York')
+            now = datetime.now(et_tz)
+            logger.info(f"⏰ Market closed - skipping collection (current ET time: {now.strftime('%Y-%m-%d %H:%M:%S')})")
+        
+        return is_open
         
         # Priority tickers (most important stocks to update first)
         self.priority_tickers = [
@@ -591,16 +620,21 @@ class NASDAQRealTimeCollector:
         
         return saved_count
     
-    async def run_collection_cycle(self):
-        """Run one complete collection cycle - ALL NASDAQ STOCKS every 10 minutes"""
+    async def run_collection_cycle(self, market_hours_only=True):
+        """Run one complete collection cycle - MARKET HOURS with CORRECTED API LIMITS"""
         start_time = time.time()
-        logger.info(f"🚀 Starting COMPLETE NASDAQ collection cycle at {datetime.now()}")
+        
+        # Check if we should collect now
+        if not self.should_collect_now(market_hours_only):
+            return 0
+        
+        logger.info(f"🚀 Starting NASDAQ collection cycle at {datetime.now()}")
         
         # Get ALL NASDAQ tickers
         all_tickers = self.nasdaq_tickers.copy()
         total_stocks = len(all_tickers)
         
-        logger.info(f"📊 Collecting data for ALL {total_stocks} NASDAQ stocks in batches of 10")
+        logger.info(f"📊 Collecting data for ALL {total_stocks} NASDAQ stocks in batches of 10 (MARKET HOURS ONLY)")
         
         # Prioritize tickers (put high-priority ones first)
         priority_tickers = [t for t in self.priority_tickers if t in all_tickers]
@@ -618,14 +652,14 @@ class NASDAQRealTimeCollector:
         
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             
-            # DUAL IEX FREE ACCOUNTS STRATEGY FOR 100% NASDAQ COVERAGE
-            # Calculate daily limits per cycle (144 cycles per day = every 10 minutes)
-            cycles_per_day = 144
+            # CORRECTED DUAL IEX FREE STRATEGY - MARKET HOURS ONLY
+            # Realistic calculation: 13 cycles per day (every 30 minutes, 6.5 market hours)
+            cycles_per_day = 13  # Every 30 minutes during 6.5 hour market day
             
-            # Calculate what each IEX account can handle per cycle
-            # Use aggressive limits since monthly quota has plenty of room
-            iex_1_cycle_limit = min(2000, 2000)  # Use 2000 per cycle (well within monthly limit)
-            iex_2_cycle_limit = min(1500, 1500)  # Use 1500 per cycle for second account
+            # Calculate what each IEX account can handle per cycle (CORRECTED MATH)
+            # 500K/month ÷ 22 trading days ÷ 14 cycles = ~1,620 requests per cycle per account
+            iex_1_cycle_limit = min(1650, 1650)  # Conservative limit within monthly quota
+            iex_2_cycle_limit = min(1681, 1681)  # Handle remaining stocks (3331 - 1650)
             total_iex_capacity = iex_1_cycle_limit + iex_2_cycle_limit
             
             logger.info(f"🎯 DUAL IEX FREE STRATEGY FOR 100% COVERAGE")
@@ -749,14 +783,34 @@ class Command(BaseCommand):
         parser.add_argument(
             '--interval',
             type=int,
-            default=600,  # 10 minutes
-            help='Collection interval in seconds (default: 600)',
+            default=1800,  # 30 minutes (CORRECTED)
+            help='Collection interval in seconds (default: 1800 = 30 minutes)',
+        )
+        parser.add_argument(
+            '--market-hours-only',
+            action='store_true',
+            default=True,
+            help='Only collect during market hours (9:30 AM - 4:00 PM ET, weekdays)',
+        )
+        parser.add_argument(
+            '--24-7',
+            action='store_true',
+            help='Run 24/7 (ignores market hours - WARNING: will exceed API limits)',
         )
     
     def handle(self, *args, **options):
+        # Determine market hours setting
+        market_hours_only = not options['24_7']  # Default to market hours unless --24-7 specified
+        
+        if options['24_7']:
+            self.stdout.write(
+                self.style.WARNING('⚠️ Running 24/7 mode - this WILL exceed API limits!')
+            )
+        
         self.stdout.write(
-            self.style.SUCCESS('🚀 Starting NASDAQ Real-Time Data Collector')
+            self.style.SUCCESS(f'🚀 Starting NASDAQ Data Collector ({"Market Hours Only" if market_hours_only else "24/7"})')
         )
+        self.stdout.write(f'⏰ Interval: {options["interval"]} seconds ({options["interval"]/60:.0f} minutes)')
         
         collector = NASDAQRealTimeCollector()
         
@@ -765,10 +819,15 @@ class Command(BaseCommand):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                collected = loop.run_until_complete(collector.run_collection_cycle())
-                self.stdout.write(
-                    self.style.SUCCESS(f'✅ Collected {collected} stocks')
-                )
+                collected = loop.run_until_complete(collector.run_collection_cycle(market_hours_only))
+                if collected > 0:
+                    self.stdout.write(
+                        self.style.SUCCESS(f'✅ Collected {collected} stocks')
+                    )
+                else:
+                    self.stdout.write(
+                        self.style.WARNING('⏰ No collection (market closed or no data)')
+                    )
             finally:
                 loop.close()
         else:
@@ -776,7 +835,7 @@ class Command(BaseCommand):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                loop.run_until_complete(self.run_continuous_collection(collector, options['interval']))
+                loop.run_until_complete(self.run_continuous_collection(collector, options['interval'], market_hours_only))
             except KeyboardInterrupt:
                 self.stdout.write(
                     self.style.WARNING('⏹️ Collection stopped by user')
@@ -784,7 +843,7 @@ class Command(BaseCommand):
             finally:
                 loop.close()
     
-    async def run_continuous_collection(self, collector, interval):
+    async def run_continuous_collection(self, collector, interval, market_hours_only=True):
         """Run collection continuously every interval seconds"""
         cycle_count = 0
         
@@ -793,14 +852,20 @@ class Command(BaseCommand):
                 cycle_count += 1
                 self.stdout.write(f"\n🔄 Starting collection cycle #{cycle_count}")
                 
-                collected = await collector.run_collection_cycle()
+                collected = await collector.run_collection_cycle(market_hours_only)
                 
-                self.stdout.write(
-                    self.style.SUCCESS(f'✅ Cycle #{cycle_count}: {collected} stocks collected')
-                )
+                if collected > 0:
+                    self.stdout.write(
+                        self.style.SUCCESS(f'✅ Cycle #{cycle_count}: {collected} stocks collected')
+                    )
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(f'⏰ Cycle #{cycle_count}: Market closed, no collection')
+                    )
                 
                 # Wait for next cycle
-                self.stdout.write(f"⏰ Waiting {interval} seconds for next cycle...")
+                next_cycle_time = datetime.now() + timedelta(seconds=interval)
+                self.stdout.write(f"⏰ Next cycle at {next_cycle_time.strftime('%H:%M:%S')} ({interval/60:.0f} minutes)")
                 await asyncio.sleep(interval)
                 
             except Exception as e:
