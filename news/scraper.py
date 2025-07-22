@@ -23,7 +23,7 @@ def assign_grade(text):
     try:
         text = text.encode('utf-8', 'ignore').decode('utf-8')  # Remove problematic characters
     except Exception as e:
-        print(f"❌ Encoding error: {e}")
+        logger.error(f"Encoding error: {e}")
         return "N/A", 0  # Return default grade and score
 
     analyzer = SentimentIntensityAnalyzer()

@@ -2,98 +2,28 @@
 Django>=5.1.8,<5.2
 djangorestframework>=3.15.0
 django-cors-headers>=4.3.0
-django-celery-beat==2.5.0
-celery==5.3.4
+
+# ===== DATABASE & CACHING =====
+psycopg2-binary>=2.9.9
+django-redis>=5.4.0
 redis>=5.0.0
 
-# ===== DATABASE & ORM =====
-psycopg2-binary>=2.9.9
-# SQLite is built-in with Python
-
-# ===== STOCK DATA & FINANCIAL APIs =====
+# ===== STOCK DATA APIs =====
 yfinance==0.2.51
+requests>=2.31.0
+requests-cache==1.2.1
+
+# ===== DATA PROCESSING =====
 pandas==2.2.3
 numpy==1.26.4
-requests==2.32.3
-requests-cache==1.2.1
-requests-ratelimiter==0.7.0
-beautifulsoup4==4.12.3
-
-# ===== DATA PROCESSING & ANALYSIS =====
-scikit-learn==1.6.1
-scipy==1.13.1
-nltk==3.9.1
-vaderSentiment==3.3.2
-textblob>=0.17.1
-tweepy>=4.14.0
-
-# ===== WEB SCRAPING & NEWS =====
-Scrapy==2.12.0
-lxml==5.3.0
-html5lib==1.1
-soupsieve==2.6
-
-# ===== TASK SCHEDULING & BACKGROUND JOBS =====
-schedule==1.2.2
-python-daemon==2.3.0
-
-# ===== UTILITIES & HELPERS =====
-python-dateutil==2.9.0.post0
-pytz==2022.7.1
-tzdata==2024.2
-charset-normalizer==3.4.0
-certifi==2024.12.14
-click==8.1.8
-colorama==0.4.4
-tqdm==4.67.1
-
-# ===== SECURITY & AUTHENTICATION =====
-cryptography==44.0.0
-pyOpenSSL==25.0.0
-oauthlib==3.0.2
-
-# ===== API RATE LIMITING =====
-pyrate-limiter==2.10.0
-
-# ===== DATA FORMATS =====
-PyYAML==6.0.1
-jsonschema==3.2.0
-simplejson==3.19.3
 
 # ===== PRODUCTION DEPLOYMENT =====
 gunicorn>=21.2.0
 whitenoise>=6.6.0
 python-dotenv>=1.0.0
 dj-database-url>=2.1.0
-django-redis>=5.4.0
 
-# ===== SCRAPY DEPENDENCIES =====
-Twisted==24.11.0
-attrs==24.3.0
-Automat==24.8.1
-constantly==23.10.4
-hyperlink==21.0.0
-incremental==24.7.2
-itemadapter==0.10.0
-itemloaders==1.3.2
-parsel==1.10.0
-Protego==0.4.0
-pyasn1==0.6.1
-pyasn1_modules==0.4.1
-PyDispatcher==2.0.7
-queuelib==1.7.0
-service-identity==24.2.0
-w3lib==2.2.1
-zope.interface==7.2
-
-# ===== OTHER UTILITIES =====
-packaging==24.2
-six==1.15.0
-urllib3==2.3.0
-typing_extensions==4.12.2
-
-# ===== REAL-TIME DATA COLLECTION =====
-aiohttp>=3.9.0
-asyncio-throttle>=1.0.2
-requests>=2.31.0  # For synchronous API calls when needed
-pytz>=2023.3  # For market hours timezone handling
+# ===== UTILITIES =====
+python-dateutil==2.9.0.post0
+pytz>=2023.3
+certifi>=2024.12.14

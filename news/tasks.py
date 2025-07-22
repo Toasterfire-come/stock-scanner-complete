@@ -1,8 +1,11 @@
+import logging
 from celery import shared_task
-from . import scraper  # assuming `news.py` is in /blueprint
+from . import scraper
+
+logger = logging.getLogger(__name__)
 
 @shared_task
 def update_news_feed():
-    print("📡 Running hourly news scrape...")
+    logger.info("Running hourly news scrape...")
     scraper.main()
-    print("✅ News feed updated.")
+    logger.info("News feed updated.")

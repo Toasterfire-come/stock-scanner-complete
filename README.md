@@ -94,9 +94,8 @@ stock-scanner-complete/
 ├── 📄 startup.sh                         # Automated setup script
 ├── 📄 .env.example                       # Environment variables template
 ├── 📄 COMPLETE_SETUP_GUIDE.md           # Production deployment guide with separated API keys
-├── 📄 REAL_DATA_ANALYTICS.md            # Real data analytics system
-├── 📄 COMPLETE_SITEMAP.md               # Full site structure (24 pages)
-├── 📄 WORDPRESS_DJANGO_CONNECTION.md    # Technical integration guide
+├── 📄 test_setup.py                     # Setup verification script
+├── 📄 validate_production_ready.py      # Production readiness check
 ├── 📁 stockscanner_django/              # Django project
 │   ├── 📄 settings.py                   # Configured for retailtradescanner.com
 │   ├── 📄 urls.py                       # URL routing with analytics endpoints

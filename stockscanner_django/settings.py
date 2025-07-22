@@ -305,3 +305,31 @@ LOGGING = {
         },
     },
 }
+
+# ===== IEX CLOUD API CONFIGURATION =====
+# Load all 6 IEX Cloud API keys for load balancing
+IEX_API_KEYS = []
+for i in range(1, 7):
+    key = os.environ.get(f'IEX_API_KEY_{i}')
+    name = os.environ.get(f'IEX_API_KEY_{i}_NAME', f'Account {i}')
+    if key:
+        IEX_API_KEYS.append({
+            'key': key,
+            'name': name,
+            'account_id': i
+        })
+
+# Backward compatibility
+if not IEX_API_KEYS:
+    primary_key = os.environ.get('IEX_API_KEY')
+    if primary_key:
+        IEX_API_KEYS.append({
+            'key': primary_key,
+            'name': 'Primary Account',
+            'account_id': 1
+        })
+
+# WordPress Integration
+WORDPRESS_URL = os.environ.get('WORDPRESS_URL', '')
+WORDPRESS_USERNAME = os.environ.get('WORDPRESS_USERNAME', '')
+WORDPRESS_APP_PASSWORD = os.environ.get('WORDPRESS_APP_PASSWORD', '')

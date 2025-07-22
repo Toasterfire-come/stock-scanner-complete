@@ -1,8 +1,11 @@
+import logging
 from celery import shared_task
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 from django.conf import settings
 from emails.email_filter import EmailFilter
+
+logger = logging.getLogger(__name__)
 
 CATEGORY_TEMPLATE_MAP = {
     "DVSA 50": "emails/dvsa_50.html",
@@ -28,7 +31,7 @@ CATEGORY_TEMPLATE_MAP = {
 @shared_task
 def send_personalized_email(user_email, user_name, category, stock_list):
     if category not in CATEGORY_TEMPLATE_MAP:
-        print(f"[INFO] Skipping email: No template for category '{category}'")
+        logger.info(f"Skipping email: No template for category '{category}'")
         return
 
     template_path = CATEGORY_TEMPLATE_MAP[category]
