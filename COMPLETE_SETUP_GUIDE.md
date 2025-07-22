@@ -10,27 +10,178 @@ A complete production-ready business platform featuring:
 - **Business Features**: Sales tax automation, revenue tracking, email marketing
 - **Advanced Features**: Regulatory compliance, portfolio analytics, sentiment analysis
 
-## 🎯 **Production Server Requirements**
+## 🎯 **Installation Options**
 
-### **Server Specifications**
+### **Option 1: Windows Home Computer (Recommended for Starting)**
+- **OS**: Windows 10/11 
+- **RAM**: 8GB minimum
+- **Storage**: 50GB free space
+- **Internet**: Stable broadband connection
+- **Cost**: $55/month (6 IEX Cloud accounts)
+
+### **Option 2: Linux Production Server**
 - **OS**: Ubuntu 20.04+ LTS or CentOS 8+
 - **RAM**: 8GB minimum (16GB recommended for high traffic)
 - **Storage**: 100GB SSD (50GB for application, 50GB for database/logs)
 - **CPU**: 4 cores minimum (8 cores recommended)
 - **Network**: Static IP address with domain pointing to server
 - **Domain**: retailtradescanner.com (DNS properly configured)
+- **Cost**: $75-200/month (server + services)
 
-### **Required Services**
-- **Web Server**: Nginx (reverse proxy + static files)
-- **Application Server**: Gunicorn (WSGI server for Django)
-- **Database**: PostgreSQL 12+ (production database)
-- **Cache**: Redis 6+ (session storage + API caching)
-- **SSL**: Let's Encrypt (free SSL certificates)
-- **Process Manager**: systemd (service management)
+## 🚀 **Windows Home Computer Setup (Recommended)**
 
-## 🚀 **Step-by-Step Production Deployment**
+### **Step 1: Install Required Software**
 
-### **Step 1: Initial Server Setup**
+**Download and Install:**
+1. **Python 3.9+**: https://www.python.org/downloads/
+   - ✅ Check "Add Python to PATH" during installation
+2. **Git**: https://git-scm.com/download/win
+   - Use default settings
+3. **PostgreSQL**: https://www.postgresql.org/download/windows/
+   - Remember the password you set for 'postgres' user
+
+**Verify Installations:**
+```cmd
+# Open Command Prompt (cmd) and test:
+python --version
+git --version
+psql --version
+```
+
+### **Step 2: Download and Setup Project**
+
+```cmd
+# 1. Create project directory
+cd C:\
+mkdir StockScanner
+cd StockScanner
+
+# 2. Clone the repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+
+# 3. Create virtual environment
+python -m venv venv
+
+# 4. Activate virtual environment
+venv\Scripts\activate
+
+# 5. Install Python dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### **Step 3: Configure Your 6 IEX Cloud Accounts**
+
+```cmd
+# Copy environment template
+copy .env.example .env
+
+# Open .env file in Notepad
+notepad .env
+```
+
+**Add your 6 IEX Cloud API keys:**
+```env
+# ===== YOUR 6 IEX CLOUD ACCOUNTS =====
+IEX_API_KEY_1=pk_test_your_first_iex_key_here
+IEX_API_KEY_2=pk_test_your_second_iex_key_here
+IEX_API_KEY_3=pk_test_your_third_iex_key_here
+IEX_API_KEY_4=pk_test_your_fourth_iex_key_here
+IEX_API_KEY_5=pk_test_your_fifth_iex_key_here
+IEX_API_KEY_6=pk_test_your_sixth_iex_key_here
+
+# Core Settings
+SECRET_KEY=your_super_secret_key_here_make_it_long_and_random
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
+
+# Email (Gmail)
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your_gmail_app_password
+```
+
+### **Step 4: Setup Database**
+
+```cmd
+# 1. Create PostgreSQL database
+# Open Command Prompt as Administrator and run:
+psql -U postgres
+
+# 2. In PostgreSQL shell, create database:
+CREATE DATABASE stockscanner_prod;
+CREATE USER stockscanner_user WITH PASSWORD 'your_secure_password_123';
+GRANT ALL PRIVILEGES ON DATABASE stockscanner_prod TO stockscanner_user;
+\q
+
+# 3. Update .env file with database URL
+# Add this line to your .env file:
+# DATABASE_URL=postgresql://stockscanner_user:your_secure_password_123@localhost:5432/stockscanner_prod
+```
+
+### **Step 5: Initialize Application**
+
+```cmd
+# Make sure virtual environment is activated
+venv\Scripts\activate
+
+# 1. Run database migrations
+python manage.py migrate
+
+# 2. Create admin user
+python manage.py createsuperuser
+# Enter username, email, and password when prompted
+
+# 3. Setup membership system
+python manage.py setup_memberships
+
+# 4. Collect static files
+python manage.py collectstatic --noinput
+
+# 5. Test the installation
+python test_setup.py
+```
+
+### **Step 6: Start the Server**
+
+```cmd
+# Start Django development server
+python manage.py runserver 0.0.0.0:8000
+
+# Your platform is now running at:
+# - Admin: http://localhost:8000/admin
+# - API: http://localhost:8000/api/analytics/public/
+# - Stocks: http://localhost:8000/api/stocks/
+```
+
+### **Step 7: Create Windows Service (Optional)**
+
+To run automatically on Windows startup:
+
+```cmd
+# 1. Install NSSM (Non-Sucking Service Manager)
+# Download from: https://nssm.cc/download
+
+# 2. Open Command Prompt as Administrator
+cd C:\nssm\win64
+
+# 3. Create Windows service
+nssm install StockScanner
+nssm set StockScanner Application "C:\StockScanner\stock-scanner-complete\venv\Scripts\python.exe"
+nssm set StockScanner AppParameters "C:\StockScanner\stock-scanner-complete\manage.py runserver 0.0.0.0:8000"
+nssm set StockScanner AppDirectory "C:\StockScanner\stock-scanner-complete"
+
+# 4. Start the service
+nssm start StockScanner
+
+# Your service will now start automatically with Windows!
+```
+
+---
+
+## 🐧 **Linux Production Server Setup (Advanced)**
+
+### **Step 1: Server Setup**
 
 ```bash
 # 1. Update system packages
@@ -39,23 +190,181 @@ sudo apt update && sudo apt upgrade -y
 # 2. Install essential packages
 sudo apt install -y python3 python3-pip python3-venv postgresql postgresql-contrib nginx redis-server git curl wget htop ufw
 
-# 3. Install Node.js (for WordPress)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# 4. Configure firewall
+# 3. Configure firewall
 sudo ufw allow 22    # SSH
 sudo ufw allow 80    # HTTP
 sudo ufw allow 443   # HTTPS
 sudo ufw enable
 
-# 5. Create application user
+# 4. Create application user
 sudo adduser stockscanner --disabled-password --gecos ""
 sudo usermod -aG sudo stockscanner
-sudo usermod -aG www-data stockscanner
 ```
 
-### **Step 2: PostgreSQL Database Setup**
+### **Step 2: Linux Application Setup**
+
+```bash
+# 1. Switch to application user
+sudo su - stockscanner
+
+# 2. Clone repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+
+# 3. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 4. Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 5. Setup environment with your 6 IEX keys
+cp .env.example .env
+nano .env
+# Add your 6 IEX Cloud API keys as shown in Windows section
+
+# 6. Setup database and initialize
+python manage.py migrate
+python manage.py setup_memberships
+python manage.py createsuperuser
+python manage.py collectstatic --noinput
+```
+
+---
+
+## 📊 **Setup Comparison: Windows vs Linux**
+
+### **Windows Home Computer (Recommended for Starting)**
+
+**✅ Advantages:**
+- **Ultra-low cost**: $55/month total (just API keys)
+- **Easy setup**: Windows GUI, familiar environment
+- **No server rental**: Use your existing computer
+- **Full control**: Complete access to your system
+- **Quick start**: Running in 30 minutes
+- **High profit margins**: 94%+ profit margins
+
+**⚠️ Considerations:**
+- Requires stable internet connection
+- Computer must run 24/7
+- Need to configure router port forwarding for public access
+- Windows updates may require restarts
+
+### **Linux Production Server (Advanced)**
+
+**✅ Advantages:**
+- **Professional setup**: Enterprise-grade hosting
+- **High availability**: 99.9% uptime guarantees
+- **Scalability**: Easy to upgrade resources
+- **No home internet dependency**: Dedicated connection
+- **Professional SSL**: Automatic certificate management
+
+**⚠️ Considerations:**
+- **Higher cost**: $75-200/month hosting fees
+- **Complex setup**: Requires Linux knowledge
+- **Lower profit margins**: 75-85% due to hosting costs
+- **Ongoing maintenance**: Server updates and security
+
+### **Cost Comparison**
+
+| Aspect | Windows Home | Linux Server |
+|--------|-------------|--------------|
+| **Monthly Costs** | $55 | $125-275 |
+| **Setup Time** | 30 minutes | 2-4 hours |
+| **Technical Skill** | Beginner | Advanced |
+| **Break-Even** | 6 Basic members | 13-28 Basic members |
+| **Profit Margin** | 94%+ | 75-85% |
+| **Annual Savings** | $840-2,640 vs Linux | Base cost |
+
+**💡 Recommendation**: Start with Windows home setup, then migrate to Linux server when you have 200+ paying members and consistent revenue.
+
+## 🔧 **Port Forwarding for Windows Setup**
+
+To make your Windows installation accessible from the internet:
+
+### **Step 1: Configure Router**
+1. **Find your router's IP**: Usually 192.168.1.1 or 192.168.0.1
+2. **Login to router admin panel**
+3. **Find "Port Forwarding" or "Virtual Server" section**
+4. **Add these rules**:
+   ```
+   Service Name: StockScanner-HTTP
+   External Port: 80
+   Internal IP: [Your Computer's IP]
+   Internal Port: 8000
+   Protocol: TCP
+   
+   Service Name: StockScanner-HTTPS
+   External Port: 443
+   Internal IP: [Your Computer's IP]
+   Internal Port: 8000
+   Protocol: TCP
+   ```
+
+### **Step 2: Get Your Computer's Local IP**
+```cmd
+ipconfig
+# Look for "IPv4 Address" under your network adapter
+# Example: 192.168.1.100
+```
+
+### **Step 3: Configure Dynamic DNS (Free)**
+Since your home IP changes, use a free dynamic DNS service:
+
+1. **Sign up at No-IP.com** (free)
+2. **Create hostname**: yourname.no-ip.org
+3. **Download DUC client** to keep IP updated
+4. **Point your domain** to the no-ip hostname
+
+### **Step 4: Update Django Settings**
+```env
+# In your .env file, add your domain:
+ALLOWED_HOSTS=localhost,127.0.0.1,yourname.no-ip.org,yourdomain.com
+```
+
+---
+
+## 🎯 **Quick Start Summary**
+
+### **For Windows Users (Recommended)**:
+1. **Install**: Python, Git, PostgreSQL (15 minutes)
+2. **Setup**: Clone repo, create virtual environment (10 minutes)
+3. **Configure**: Add your 6 IEX API keys to .env file (5 minutes)
+4. **Initialize**: Database, admin user, start server (10 minutes)
+5. **Optional**: Setup as Windows service for auto-start
+
+**Total Time**: 40 minutes to live business platform
+**Total Cost**: $55/month (6 IEX Cloud accounts)
+**Break-Even**: 6 paying members ($59.94 revenue)
+
+### **For Linux Users (Advanced)**:
+Follow the Linux Production Server Setup section for enterprise-grade hosting.
+
+## 🔍 **Testing Your Installation**
+
+### **Verify Everything Works:**
+```cmd
+# 1. Test admin panel
+# Open browser: http://localhost:8000/admin
+# Login with your superuser account
+
+# 2. Test API endpoints
+curl http://localhost:8000/api/analytics/public/
+curl http://localhost:8000/api/stocks/
+
+# 3. Check 6 IEX accounts are loaded
+# Go to: http://localhost:8000/admin
+# Should show 6 API keys in logs
+```
+
+### **Success Indicators:**
+- ✅ Admin panel loads without errors
+- ✅ Analytics API returns member data
+- ✅ Stock API returns market data  
+- ✅ All 6 IEX keys appear in usage logs
+- ✅ Database shows membership data
+- ✅ No error messages in command prompt
 
 ```bash
 # 1. Secure PostgreSQL installation
