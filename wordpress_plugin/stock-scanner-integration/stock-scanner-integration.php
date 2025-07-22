@@ -328,6 +328,77 @@ register_activation_hook(__FILE__, function() {
  */
 function create_stock_scanner_pages() {
     $pages = array(
+        'about' => array(
+            'title' => 'About Retail Trade Scan Net',
+            'content' => '
+                <h2>Welcome to Retail Trade Scan Net</h2>
+                
+                <p>Retail Trade Scan Net is your premier destination for professional stock analysis, trading insights, and market research. We provide retail traders with institutional-quality research and real-time market data to help you make informed investment decisions.</p>
+                
+                <h3>Our Mission</h3>
+                <p>To democratize access to high-quality financial analysis and empower retail traders with the tools and insights they need to succeed in today\'s markets.</p>
+                
+                <h3>What We Offer</h3>
+                <ul>
+                    <li><strong>Real-time Stock Analysis:</strong> Advanced scanning algorithms to identify trading opportunities</li>
+                    <li><strong>Market Research:</strong> In-depth analysis of market trends and sector performance</li>
+                    <li><strong>Trading Strategies:</strong> Proven methodologies for different market conditions</li>
+                    <li><strong>Educational Content:</strong> Learn from experienced traders and analysts</li>
+                    <li><strong>Alert System:</strong> Get notified of important market movements and opportunities</li>
+                </ul>
+                
+                <h3>Our Technology</h3>
+                <p>Our platform combines cutting-edge technology with traditional analysis methods:</p>
+                <ul>
+                    <li>Real-time data processing from multiple market sources</li>
+                    <li>Advanced algorithms for pattern recognition</li>
+                    <li>Machine learning models for market prediction</li>
+                    <li>Comprehensive backtesting capabilities</li>
+                </ul>
+                
+                <p>Join thousands of traders who rely on Retail Trade Scan Net for their market analysis needs.</p>
+                
+                <h3>🔥 Live Stock Analysis</h3>
+                <p>See our real-time analysis in action:</p>
+                [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                [stock_scanner symbol="GOOGL" show_chart="true" show_details="true"]
+            ',
+            'template' => 'page'
+        ),
+        'contact' => array(
+            'title' => 'Contact Us',
+            'content' => '
+                <h2>Get in Touch</h2>
+                
+                <p>Have questions about our analysis, need help with trading strategies, or want to suggest content topics? We\'d love to hear from you!</p>
+                
+                <h3>Contact Information</h3>
+                <ul>
+                    <li><strong>Email:</strong> contact@retailtradescan.net</li>
+                    <li><strong>Support:</strong> support@retailtradescan.net</li>
+                    <li><strong>Business Inquiries:</strong> business@retailtradescan.net</li>
+                </ul>
+                
+                <h3>Follow Us</h3>
+                <ul>
+                    <li><strong>Twitter:</strong> @RetailTradeScan</li>
+                    <li><strong>LinkedIn:</strong> Retail Trade Scan Net</li>
+                    <li><strong>YouTube:</strong> Retail Trade Scan Net Channel</li>
+                </ul>
+                
+                <h3>🎯 Try Our Stock Scanner</h3>
+                <p>Get a taste of our analysis capabilities:</p>
+                [stock_scanner symbol="TSLA" show_details="true"]
+                [stock_scanner symbol="NVDA" show_details="true"]
+                
+                <h3>Disclaimer</h3>
+                <p>All content on Retail Trade Scan Net is for educational purposes only and should not be considered as financial advice. Trading and investing in stocks involves risk, and you should always do your own research and consult with a qualified financial advisor before making investment decisions.</p>
+                
+                <p>Past performance is not indicative of future results. All trading strategies carry risk of loss.</p>
+            ',
+            'template' => 'page'
+        ),
         'stock-dashboard' => array(
             'title' => 'Stock Dashboard',
             'content' => '
@@ -560,6 +631,8 @@ function create_stock_scanner_pages() {
         
         // Add menu items
         $menu_items = array(
+            array('title' => 'About', 'url' => '/about/'),
+            array('title' => 'Contact', 'url' => '/contact/'),
             array('title' => 'Dashboard', 'url' => '/stock-dashboard/'),
             array('title' => 'Watchlist', 'url' => '/stock-watchlist/'),
             array('title' => 'Market News', 'url' => '/stock-market-news/'),

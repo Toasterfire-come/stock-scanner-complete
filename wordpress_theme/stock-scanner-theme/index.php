@@ -111,6 +111,8 @@
                 <div class="footer-section">
                     <h4>Stock Scanner</h4>
                     <ul>
+                        <li><a href="/about/">About</a></li>
+                        <li><a href="/contact/">Contact</a></li>
                         <li><a href="/stock-dashboard/">Dashboard</a></li>
                         <li><a href="/stock-watchlist/">Watchlist</a></li>
                         <li><a href="/stock-market-news/">Market News</a></li>

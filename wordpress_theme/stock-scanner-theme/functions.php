@@ -52,6 +52,8 @@ add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
  */
 function stock_scanner_fallback_menu() {
     echo '<ul class="main-menu">';
+    echo '<li><a href="' . home_url('/about/') . '">About</a></li>';
+    echo '<li><a href="' . home_url('/contact/') . '">Contact</a></li>';
     echo '<li><a href="' . home_url('/stock-dashboard/') . '">Dashboard</a></li>';
     echo '<li><a href="' . home_url('/stock-watchlist/') . '">Watchlist</a></li>';
     echo '<li><a href="' . home_url('/stock-market-news/') . '">Market News</a></li>';
@@ -239,6 +241,8 @@ function stock_scanner_options_page() {
             <h2>📊 Stock Scanner Pages</h2>
             <p>The following pages were automatically created when you activated the Stock Scanner plugin:</p>
             <ul>
+                <li><strong>About Retail Trade Scan Net</strong> - <a href="<?php echo home_url('/about/'); ?>" target="_blank">View Page</a></li>
+                <li><strong>Contact Us</strong> - <a href="<?php echo home_url('/contact/'); ?>" target="_blank">View Page</a></li>
                 <li><strong>Stock Dashboard</strong> - <a href="<?php echo home_url('/stock-dashboard/'); ?>" target="_blank">View Page</a></li>
                 <li><strong>Stock Watchlist</strong> - <a href="<?php echo home_url('/stock-watchlist/'); ?>" target="_blank">View Page</a></li>
                 <li><strong>Market News</strong> - <a href="<?php echo home_url('/stock-market-news/'); ?>" target="_blank">View Page</a></li>
