@@ -1,1 +1,0 @@
-# WordPress integration management commands

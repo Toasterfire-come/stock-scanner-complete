@@ -369,37 +369,171 @@ function create_stock_scanner_pages() {
         'premium-plans' => array(
             'title' => 'Premium Plans',
             'content' => '
-                <h3>Gold Plan</h3>
-                <p>Our gold scanner plan will perfectly highlight your trading style and bring you to success. With unlimited access to our over 40 email lists, in-depth stock look up, and personalized stock search, you will stay informed and in the action. If you are interested in elevating your positions, check out if our gold plan is right for you.</p>
-                
-                <div class="text-center" style="margin: var(--spacing-xl) 0;">
-                    <a href="/membership-account/membership-checkout/?level=3" class="btn btn-gold btn-lg animate-pulse">
-                        <span>✨ Buy Gold Plan</span>
-                    </a>
+                <div class="pricing-header text-center" style="margin: var(--spacing-2xl) 0;">
+                    <h2>Choose Your Trading Plan</h2>
+                    <p class="lead">Unlock powerful stock analysis tools with our flexible membership tiers</p>
+                </div>
+
+                <div class="pricing-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-xl); margin: var(--spacing-2xl) 0;">
+                    
+                    <!-- FREE PLAN -->
+                    <div class="pricing-card free-plan card">
+                        <div class="card-header text-center">
+                            <h3>🆓 Free Plan</h3>
+                            <div class="price">$0<span>/month</span></div>
+                            <p class="plan-subtitle">Get started with basic features</p>
+                        </div>
+                        <div class="card-body">
+                            <ul class="feature-list">
+                                <li>✅ 15 stocks per month</li>
+                                <li>✅ Basic stock lookup</li>
+                                <li>✅ 5 email list subscriptions</li>
+                                <li>✅ Market news access</li>
+                                <li>✅ Community support</li>
+                                <li>❌ Advanced filters</li>
+                                <li>❌ Historical data</li>
+                                <li>❌ Priority support</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="/register/" class="btn btn-outline btn-primary">
+                                <span>Get Started Free</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- BASIC PLAN -->
+                    <div class="pricing-card basic-plan card">
+                        <div class="card-header text-center">
+                            <h3>🥉 Basic Plan</h3>
+                            <div class="price">$9.99<span>/month</span></div>
+                            <p class="plan-subtitle">Perfect for casual traders</p>
+                        </div>
+                        <div class="card-body">
+                            <ul class="feature-list">
+                                <li>✅ 100 stocks per month</li>
+                                <li>✅ Advanced stock lookup</li>
+                                <li>✅ 15 email list subscriptions</li>
+                                <li>✅ Real-time market news</li>
+                                <li>✅ Basic filtering tools</li>
+                                <li>✅ 30-day history</li>
+                                <li>✅ Email support</li>
+                                <li>❌ Custom watchlists</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="/membership-account/membership-checkout/?level=1" class="btn btn-primary">
+                                <span>Choose Basic</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- PROFESSIONAL PLAN -->
+                    <div class="pricing-card professional-plan card popular">
+                        <div class="popular-badge">Most Popular</div>
+                        <div class="card-header text-center">
+                            <h3>🏆 Professional Plan</h3>
+                            <div class="price">$29.99<span>/month</span></div>
+                            <p class="plan-subtitle">Ideal for active traders</p>
+                        </div>
+                        <div class="card-body">
+                            <ul class="feature-list">
+                                <li>✅ 1,000 stocks per month</li>
+                                <li>✅ Professional stock analysis</li>
+                                <li>✅ Unlimited email lists</li>
+                                <li>✅ Advanced news filtering</li>
+                                <li>✅ Advanced filtering & screening</li>
+                                <li>✅ 1-year historical data</li>
+                                <li>✅ Custom watchlists (10)</li>
+                                <li>✅ Priority email support</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="/membership-account/membership-checkout/?level=2" class="btn btn-success btn-lg">
+                                <span>Choose Professional</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- EXPERT PLAN -->
+                    <div class="pricing-card expert-plan card premium">
+                        <div class="card-header text-center">
+                            <h3>💎 Expert Plan</h3>
+                            <div class="price">$99.99<span>/month</span></div>
+                            <p class="plan-subtitle">For professional traders</p>
+                        </div>
+                        <div class="card-body">
+                            <ul class="feature-list">
+                                <li>✅ Unlimited stocks</li>
+                                <li>✅ Expert-level analysis</li>
+                                <li>✅ All premium features</li>
+                                <li>✅ Real-time alerts</li>
+                                <li>✅ API access</li>
+                                <li>✅ 5-year historical data</li>
+                                <li>✅ Unlimited watchlists</li>
+                                <li>✅ Priority phone support</li>
+                                <li>✅ Personal account manager</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="/membership-account/membership-checkout/?level=3" class="btn btn-gold btn-lg animate-pulse">
+                                <span>Choose Expert</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-center" style="margin: var(--spacing-2xl) 0;">📊 Live Stock Analysis</h3>
+                <div class="demo-widgets" style="margin: var(--spacing-xl) 0;">
+                    [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
+                    [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
+                    [stock_scanner symbol="GOOGL" show_chart="true" show_details="true"]
                 </div>
                 
-                <h4>Silver Plan</h4>
-                <p>Upon purchase of the silver scanner plan, you will receive access to unlimited access of our most popular email lists, stock lookup, and limited access to personalized stock search. With access to our tools you will receive an edge on the market at a practical price. If you are excited to further improve your trading, check out the silver plan.</p>
-                
-                <div class="text-center" style="margin: var(--spacing-xl) 0;">
-                    <a href="/membership-account/membership-checkout/?level=2" class="btn btn-silver btn-lg">
-                        <span>🥈 Buy Silver Plan</span>
-                    </a>
+                <div class="comparison-section" style="margin: var(--spacing-3xl) 0;">
+                    <h3 class="text-center">📋 Feature Comparison</h3>
+                    <table class="comparison-table" style="width: 100%; border-collapse: collapse; margin: 40px 0;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">Features</th>
+                                <th style="text-align: center;">Free</th>
+                                <th style="text-align: center;">Basic</th>
+                                <th style="text-align: center;">Professional</th>
+                                <th style="text-align: center;">Expert</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Monthly Stock Lookups</td><td style="text-align: center;">15</td><td style="text-align: center;">100</td><td style="text-align: center;">1,000</td><td style="text-align: center;">Unlimited</td></tr>
+                            <tr><td>Email List Subscriptions</td><td style="text-align: center;">5</td><td style="text-align: center;">15</td><td style="text-align: center;">Unlimited</td><td style="text-align: center;">Unlimited</td></tr>
+                            <tr><td>Advanced Filtering</td><td style="text-align: center;">❌</td><td style="text-align: center;">Basic</td><td style="text-align: center;">✅</td><td style="text-align: center;">✅</td></tr>
+                            <tr><td>Historical Data</td><td style="text-align: center;">❌</td><td style="text-align: center;">30 days</td><td style="text-align: center;">1 year</td><td style="text-align: center;">5 years</td></tr>
+                            <tr><td>Custom Watchlists</td><td style="text-align: center;">❌</td><td style="text-align: center;">❌</td><td style="text-align: center;">10</td><td style="text-align: center;">Unlimited</td></tr>
+                            <tr><td>API Access</td><td style="text-align: center;">❌</td><td style="text-align: center;">❌</td><td style="text-align: center;">❌</td><td style="text-align: center;">✅</td></tr>
+                            <tr><td>Support Level</td><td style="text-align: center;">Community</td><td style="text-align: center;">Email</td><td style="text-align: center;">Priority</td><td style="text-align: center;">Phone + Manager</td></tr>
+                            <tr><td>Real-time Alerts</td><td style="text-align: center;">❌</td><td style="text-align: center;">❌</td><td style="text-align: center;">Email</td><td style="text-align: center;">SMS + Email</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                
-                <h3>📊 Live Stock Analysis</h3>
-                [stock_scanner symbol="AAPL" show_chart="true" show_details="true"]
-                [stock_scanner symbol="MSFT" show_chart="true" show_details="true"]
-                
-                <table class="comparison-table" style="width: 100%; border-collapse: collapse; margin: 40px 0;">
-                    <tr><th></th><th>Gold Plan</th><th>Silver Plan</th><th>Free Plan</th></tr>
-                    <tr><td>All Email Lists</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td><td style="text-align: center;"></td></tr>
-                    <tr><td>Popular Email Lists</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td></tr>
-                    <tr><td>Detailed Stock Lookup</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td><td style="text-align: center;"></td></tr>
-                    <tr><td>Stock Lookup</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td><td style="text-align: center;"></td></tr>
-                    <tr><td>Personalized Stock Search</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td><td style="text-align: center;">✔</td></tr>
-                    <tr><td>Discounted Prepaid Package</td><td style="text-align: center;">30% Discount</td><td style="text-align: center;">10% Discount</td><td style="text-align: center;"></td></tr>
-                </table>
+
+                <div class="faq-section" style="margin: var(--spacing-3xl) 0;">
+                    <h3 class="text-center">❓ Frequently Asked Questions</h3>
+                    <details>
+                        <summary>Can I upgrade or downgrade my plan anytime?</summary>
+                        <p>Yes! You can change your plan at any time. Upgrades take effect immediately, and downgrades take effect at your next billing cycle.</p>
+                    </details>
+                    <details>
+                        <summary>What happens if I exceed my monthly stock lookup limit?</summary>
+                        <p>We\'ll notify you when you reach 80% of your limit. If you exceed it, you can either upgrade your plan or wait until next month for your limit to reset.</p>
+                    </details>
+                    <details>
+                        <summary>Do you offer annual discounts?</summary>
+                        <p>Yes! Annual plans save you 20% compared to monthly billing. Contact our sales team for enterprise pricing.</p>
+                    </details>
+                    <details>
+                        <summary>What payment methods do you accept?</summary>
+                        <p>We accept all major credit cards, PayPal, and bank transfers for annual plans.</p>
+                    </details>
+                </div>
             ',
             'template' => 'page'
         ),
