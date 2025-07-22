@@ -1,5 +1,5 @@
 from django.urls import path
-from . import api_views, analytics_views, admin_dashboard, portfolio_api_views, market_analysis_views, comprehensive_api_views
+from . import api_views, analytics_views, admin_dashboard, portfolio_api_views, market_analysis_views, comprehensive_api_views, page_endpoints
 try:
     from . import paywall_api_views
     PAYWALL_AVAILABLE = True
@@ -50,6 +50,30 @@ urlpatterns = [
     path('api/contact/', comprehensive_api_views.contact_form_api, name='contact_form'),
     path('api/faq/', comprehensive_api_views.faq_api, name='faq'),
     path('api/member-dashboard/', comprehensive_api_views.member_dashboard_api, name='member_dashboard'),
+    
+    # PAGE-SPECIFIC ENDPOINTS FOR ALL 24 WORDPRESS PAGES
+    path('api/pages/premium-plans/', page_endpoints.premium_plans_api, name='premium_plans'),
+    path('api/pages/email-stock-lists/', page_endpoints.email_stock_lists_api, name='email_stock_lists'),
+    path('api/pages/all-stock-alerts/', page_endpoints.all_stock_alerts_api, name='all_stock_alerts'),
+    path('api/pages/popular-stock-lists/', page_endpoints.popular_stock_lists_api, name='popular_stock_lists'),
+    path('api/pages/personalized-stock-finder/', page_endpoints.personalized_stock_finder_api, name='personalized_stock_finder'),
+    path('api/pages/news-scrapper/', page_endpoints.news_scrapper_api, name='news_scrapper'),
+    path('api/pages/filter-scrapper/', page_endpoints.filter_and_scrapper_pages_api, name='filter_scrapper'),
+    path('api/pages/membership-account/', page_endpoints.membership_account_api, name='membership_account_page'),
+    path('api/pages/membership-billing/', page_endpoints.membership_billing_api, name='membership_billing'),
+    path('api/pages/membership-cancel/', page_endpoints.membership_cancel_api, name='membership_cancel'),
+    path('api/pages/membership-checkout/', page_endpoints.membership_checkout_api, name='membership_checkout'),
+    path('api/pages/membership-confirmation/', page_endpoints.membership_confirmation_api, name='membership_confirmation'),
+    path('api/pages/membership-orders/', page_endpoints.membership_orders_api, name='membership_orders'),
+    path('api/pages/membership-levels/', page_endpoints.membership_levels_api, name='membership_levels'),
+    path('api/pages/login/', page_endpoints.login_api, name='login_page'),
+    path('api/pages/your-profile/', page_endpoints.your_profile_api, name='your_profile'),
+    path('api/pages/terms-conditions/', page_endpoints.terms_and_conditions_api, name='terms_conditions'),
+    path('api/pages/privacy-policy/', page_endpoints.privacy_policy_api, name='privacy_policy'),
+    path('api/pages/stock-dashboard/', page_endpoints.stock_dashboard_api, name='stock_dashboard'),
+    path('api/pages/stock-watchlist/', page_endpoints.stock_watchlist_api, name='stock_watchlist'),
+    path('api/pages/stock-market-news/', page_endpoints.stock_market_news_api, name='stock_market_news'),
+    path('api/pages/membership-plans/', page_endpoints.membership_plans_api, name='membership_plans'),
     
     # CORS handling
     path('api/cors/', api_views.cors_handler, name='cors_handler'),
