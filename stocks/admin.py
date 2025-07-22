@@ -1,7 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from emails.models import EmailSubscription
-from .models import StockAlert, Membership, Portfolio, PortfolioHolding, MarketAnalysis, TechnicalIndicator
+from .models import (
+    StockAlert, Membership, Portfolio, PortfolioHolding, MarketAnalysis, TechnicalIndicator,
+    APIUsageTracking, MarketSentiment, PortfolioAnalytics, ComplianceLog, SecurityEvent
+)
 from django.utils import timezone
 
 # Register your models here.
@@ -132,3 +135,114 @@ class TechnicalIndicatorAdmin(admin.ModelAdmin):
     list_filter = ('indicator_type', 'signal', 'calculated_at')
     search_fields = ('ticker',)
     readonly_fields = ('calculated_at',)
+
+# ==================== ADVANCED FEATURES ADMIN ====================
+
+@admin.register(APIUsageTracking)
+class APIUsageTrackingAdmin(admin.ModelAdmin):
+    list_display = ['user', 'endpoint', 'method', 'timestamp', 'response_time_ms', 'status_code', 'membership_tier']
+    list_filter = ['method', 'status_code', 'membership_tier', 'timestamp']
+    search_fields = ['user__username', 'endpoint', 'ip_address']
+    readonly_fields = ['timestamp']
+    date_hierarchy = 'timestamp'
+    
+    def has_add_permission(self, request):
+        return False  # These are created automatically
+
+@admin.register(MarketSentiment)
+class MarketSentimentAdmin(admin.ModelAdmin):
+    list_display = ['ticker', 'sentiment_source', 'sentiment_score', 'sentiment_label', 'confidence_level', 'analyzed_at']
+    list_filter = ['sentiment_source', 'sentiment_trend', 'analyzed_at']
+    search_fields = ['ticker']
+    readonly_fields = ['analyzed_at']
+    date_hierarchy = 'analyzed_at'
+    
+    def sentiment_label(self, obj):
+        return obj.sentiment_label
+    sentiment_label.short_description = 'Sentiment'
+
+@admin.register(PortfolioAnalytics)
+class PortfolioAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ['portfolio', 'sharpe_ratio', 'beta', 'risk_score', 'calculation_status', 'last_calculated']
+    list_filter = ['calculation_status', 'rebalancing_needed', 'last_calculated']
+    search_fields = ['portfolio__name', 'portfolio__user__username']
+    readonly_fields = ['last_calculated']
+    
+    fieldsets = (
+        ('Portfolio Info', {
+            'fields': ('portfolio', 'calculation_status', 'last_calculated')
+        }),
+        ('Risk Metrics', {
+            'fields': ('sharpe_ratio', 'beta', 'alpha', 'value_at_risk_1d', 'value_at_risk_1w', 'max_drawdown', 'volatility_annualized')
+        }),
+        ('Performance Metrics', {
+            'fields': ('total_return_1m', 'total_return_3m', 'total_return_6m', 'total_return_1y', 'total_return_ytd', 'annualized_return')
+        }),
+        ('Diversification', {
+            'fields': ('sector_concentration_risk', 'geographic_concentration', 'largest_position_weight', 'effective_number_stocks')
+        }),
+        ('Rebalancing', {
+            'fields': ('rebalancing_needed', 'risk_score')
+        })
+    )
+
+@admin.register(ComplianceLog)
+class ComplianceLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'action_type', 'compliance_status', 'risk_level', 'regulatory_framework', 'timestamp']
+    list_filter = ['action_type', 'compliance_status', 'risk_level', 'regulatory_framework', 'timestamp']
+    search_fields = ['user__username', 'description', 'ip_address']
+    readonly_fields = ['timestamp']
+    date_hierarchy = 'timestamp'
+    
+    fieldsets = (
+        ('Event Info', {
+            'fields': ('user', 'action_type', 'description', 'timestamp')
+        }),
+        ('Compliance', {
+            'fields': ('compliance_status', 'risk_level', 'regulatory_framework')
+        }),
+        ('Technical Details', {
+            'fields': ('ip_address', 'user_agent', 'session_id'),
+            'classes': ('collapse',)
+        }),
+        ('Resolution', {
+            'fields': ('resolved_at', 'resolved_by'),
+            'classes': ('collapse',)
+        })
+    )
+
+@admin.register(SecurityEvent)
+class SecurityEventAdmin(admin.ModelAdmin):
+    list_display = ['event_type', 'severity', 'source_ip', 'target_user', 'mitigation_action', 'detected_at']
+    list_filter = ['event_type', 'severity', 'mitigation_action', 'false_positive', 'detected_at']
+    search_fields = ['source_ip', 'target_user__username', 'description', 'target_endpoint']
+    readonly_fields = ['detected_at']
+    date_hierarchy = 'detected_at'
+    
+    fieldsets = (
+        ('Event Details', {
+            'fields': ('event_type', 'severity', 'description', 'detected_at')
+        }),
+        ('Target Info', {
+            'fields': ('source_ip', 'target_user', 'target_endpoint')
+        }),
+        ('Response', {
+            'fields': ('mitigation_action', 'resolved_at', 'false_positive')
+        }),
+        ('Technical Details', {
+            'fields': ('user_agent', 'attack_vector'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    actions = ['mark_as_false_positive', 'escalate_event']
+    
+    def mark_as_false_positive(self, request, queryset):
+        queryset.update(false_positive=True, resolved_at=timezone.now())
+        self.message_user(request, f'Marked {queryset.count()} events as false positives.')
+    mark_as_false_positive.short_description = 'Mark selected events as false positives'
+    
+    def escalate_event(self, request, queryset):
+        queryset.update(mitigation_action='escalated')
+        self.message_user(request, f'Escalated {queryset.count()} events.')
+    escalate_event.short_description = 'Escalate selected events'

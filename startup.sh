@@ -131,6 +131,18 @@ setup_database() {
     print_status "Setting up memberships for existing users..."
     python manage.py setup_memberships
     
+    print_status "Setting up advanced features..."
+    # Download NLTK data for sentiment analysis
+    python -c "
+try:
+    import nltk
+    nltk.download('punkt', quiet=True)
+    nltk.download('vader_lexicon', quiet=True)
+    print('✅ NLTK data downloaded successfully')
+except Exception as e:
+    print(f'⚠️ NLTK data setup skipped: {e}')
+" 2>/dev/null || echo "⚠️ NLTK data setup skipped (dependencies not found)"
+    
     ADMIN_EXISTS=$(python manage.py shell -c "from django.contrib.auth.models import User; print(User.objects.filter(is_superuser=True).exists())" 2>/dev/null || echo "False")
     
     if [ "$ADMIN_EXISTS" = "False" ]; then

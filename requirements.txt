@@ -24,6 +24,8 @@ scikit-learn==1.6.1
 scipy==1.13.1
 nltk==3.9.1
 vaderSentiment==3.3.2
+textblob>=0.17.1
+tweepy>=4.14.0
 
 # ===== WEB SCRAPING & NEWS =====
 Scrapy==2.12.0

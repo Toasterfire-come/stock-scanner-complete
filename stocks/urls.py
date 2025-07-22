@@ -1,5 +1,5 @@
 from django.urls import path
-from . import api_views, analytics_views, admin_dashboard, portfolio_api_views, market_analysis_views, comprehensive_api_views, page_endpoints
+from . import api_views, analytics_views, admin_dashboard, portfolio_api_views, market_analysis_views, comprehensive_api_views, page_endpoints, advanced_features
 try:
     from . import paywall_api_views
     PAYWALL_AVAILABLE = True
@@ -74,6 +74,25 @@ urlpatterns = [
     path('api/pages/stock-watchlist/', page_endpoints.stock_watchlist_api, name='stock_watchlist'),
     path('api/pages/stock-market-news/', page_endpoints.stock_market_news_api, name='stock_market_news'),
     path('api/pages/membership-plans/', page_endpoints.membership_plans_api, name='membership_plans'),
+    
+    # ==================== ADVANCED FEATURES ====================
+    
+    # API Usage Analytics
+    path('api/advanced/usage-analytics/', advanced_features.api_usage_analytics, name='api_usage_analytics'),
+    path('api/advanced/admin-usage/', advanced_features.admin_usage_analytics, name='admin_usage_analytics'),
+    
+    # Market Sentiment Analysis
+    path('api/advanced/sentiment/<str:ticker>/', advanced_features.market_sentiment_api, name='market_sentiment'),
+    path('api/advanced/sentiment-dashboard/', advanced_features.sentiment_dashboard_api, name='sentiment_dashboard'),
+    
+    # Portfolio Analytics
+    path('api/advanced/portfolio-analytics/<int:portfolio_id>/', advanced_features.portfolio_analytics_api, name='portfolio_analytics'),
+    
+    # Compliance & Security
+    path('api/advanced/compliance-dashboard/', advanced_features.compliance_dashboard_api, name='compliance_dashboard'),
+    path('api/advanced/security-event/', advanced_features.report_security_event, name='report_security_event'),
+    path('api/advanced/gdpr-export/', advanced_features.gdpr_data_export, name='gdpr_data_export'),
+    path('api/advanced/gdpr-deletion/', advanced_features.gdpr_data_deletion, name='gdpr_data_deletion'),
     
     # CORS handling
     path('api/cors/', api_views.cors_handler, name='cors_handler'),
