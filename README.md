@@ -18,7 +18,7 @@ cd stock-scanner-complete
 # Stock Data: http://localhost:8000/api/stocks/
 ```
 
-**For complete setup instructions, see: [COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)**
+**For production deployment, see: [COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)**
 
 ## ✨ Features
 
@@ -93,7 +93,7 @@ stock-scanner-complete/
 ├── 📄 manage.py                          # Django management script
 ├── 📄 startup.sh                         # Automated setup script
 ├── 📄 .env.example                       # Environment variables template
-├── 📄 COMPLETE_SETUP_GUIDE.md           # Complete setup guide (development + production)
+├── 📄 COMPLETE_SETUP_GUIDE.md           # Production deployment guide with separated API keys
 ├── 📄 REAL_DATA_ANALYTICS.md            # Real data analytics system
 ├── 📄 COMPLETE_SITEMAP.md               # Full site structure (24 pages)
 ├── 📄 WORDPRESS_DJANGO_CONNECTION.md    # Technical integration guide
@@ -173,8 +173,8 @@ python manage.py runserver
 
 ### 🌐 Production Deployment
 
-**For complete setup instructions (development + production), see:**
-- **[COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)** - Complete setup guide
+**For production deployment instructions, see:**
+- **[COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)** - Step-by-step production deployment with separated API keys
 
 **Production highlights:**
 - PostgreSQL database configuration
