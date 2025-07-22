@@ -7,7 +7,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
     path('', include('stocks.urls')),
-    path('', include('wordpress_integration.urls')),
 ]
 
 if settings.DEBUG:

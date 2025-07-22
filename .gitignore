@@ -130,3 +130,20 @@ Caddyfile.local
 !COMPLETE_SETUP_GUIDE.md
 !PACKAGE_MANIFEST.md
 !INSTALLATION_CHECKLIST.md
+# Additional cleanup
+*.log
+*.sqlite3
+celery.log
+beat.log
+caddy.log
+stock_data_export.json
+venv/
+staticfiles/
+logs/
+logs_archive/
+deployment_old/
+*.pyc
+__pycache__/
+.env
+.DS_Store
+Thumbs.db
