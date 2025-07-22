@@ -1,5 +1,5 @@
 from django.urls import path
-from . import api_views
+from . import api_views, analytics_views, admin_dashboard
 try:
     from . import paywall_api_views
     PAYWALL_AVAILABLE = True
@@ -22,6 +22,11 @@ urlpatterns = [
     path('api/stocks/filter/', api_views.stock_filter_api, name='stock_filter'),
     path('api/stocks/lookup/<str:ticker>/', api_views.stock_lookup_api, name='stock_lookup'),
     path('api/news/', api_views.stock_news_api, name='stock_news'),
+    
+    # ANALYTICS ENDPOINTS
+    path('api/analytics/members/', analytics_views.member_analytics_api, name='member_analytics'),
+    path('api/analytics/public/', analytics_views.public_stats_api, name='public_stats'),
+    path('api/admin/dashboard/', admin_dashboard.dashboard_data, name='admin_dashboard_data'),
     
     # CORS handling
     path('api/cors/', api_views.cors_handler, name='cors_handler'),

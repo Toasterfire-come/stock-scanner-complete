@@ -64,6 +64,7 @@ class StockScannerIntegration {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_shortcode('stock_scanner', array($this, 'stock_scanner_shortcode'));
         add_action('admin_menu', array($this, 'admin_menu'));
+        add_action('wp_dashboard_setup', array($this, 'add_dashboard_widget'));
         
         // Sales tax hooks
         add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
@@ -547,6 +548,170 @@ class StockScannerIntegration {
         );
         
         return isset($states[$state_code]) ? $states[$state_code] : $state_code;
+    }
+    
+    /**
+     * Add dashboard widget to WordPress admin
+     */
+    public function add_dashboard_widget() {
+        wp_add_dashboard_widget(
+            'stock_scanner_analytics',
+            '📊 Stock Scanner Analytics',
+            array($this, 'dashboard_widget_content')
+        );
+    }
+    
+    /**
+     * Dashboard widget content
+     */
+    public function dashboard_widget_content() {
+        ?>
+        <div id="stock-scanner-analytics">
+            <div class="analytics-loading">
+                <p>⏳ Loading analytics data...</p>
+            </div>
+            
+            <div class="analytics-content" style="display: none;">
+                <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+                    
+                    <div class="stat-card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0; color: #007cba;">👥 Total Members</h4>
+                        <p class="total-members" style="font-size: 24px; font-weight: bold; margin: 5px 0; color: #333;">-</p>
+                    </div>
+                    
+                    <div class="stat-card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0; color: #28a745;">💰 Monthly Revenue</h4>
+                        <p class="monthly-revenue" style="font-size: 24px; font-weight: bold; margin: 5px 0; color: #333;">-</p>
+                    </div>
+                    
+                    <div class="stat-card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0; color: #ffc107;">📈 Avg Per Person</h4>
+                        <p class="avg-spending" style="font-size: 24px; font-weight: bold; margin: 5px 0; color: #333;">-</p>
+                    </div>
+                    
+                    <div class="stat-card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0; color: #17a2b8;">📅 Annual Projected</h4>
+                        <p class="annual-projected" style="font-size: 24px; font-weight: bold; margin: 5px 0; color: #333;">-</p>
+                    </div>
+                    
+                </div>
+                
+                <div class="membership-breakdown" style="margin: 20px 0;">
+                    <h4>📊 Membership Distribution</h4>
+                    <div class="membership-bars">
+                        <div class="tier-bar" style="margin: 10px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>🆓 Free</span>
+                                <span class="free-count">-</span>
+                            </div>
+                            <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
+                                <div class="free-bar" style="background: #6c757d; height: 100%; border-radius: 10px; width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tier-bar" style="margin: 10px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>🥉 Basic ($9.99)</span>
+                                <span class="basic-count">-</span>
+                            </div>
+                            <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
+                                <div class="basic-bar" style="background: #007cba; height: 100%; border-radius: 10px; width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tier-bar" style="margin: 10px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>🏆 Professional ($29.99)</span>
+                                <span class="professional-count">-</span>
+                            </div>
+                            <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
+                                <div class="professional-bar" style="background: #28a745; height: 100%; border-radius: 10px; width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tier-bar" style="margin: 10px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>💎 Expert ($49.99)</span>
+                                <span class="expert-count">-</span>
+                            </div>
+                            <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
+                                <div class="expert-bar" style="background: #ffc107; height: 100%; border-radius: 10px; width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analytics-footer" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef; text-align: center;">
+                    <p style="margin: 0; color: #6c757d; font-size: 12px;">
+                        Last updated: <span class="last-updated">-</span>
+                    </p>
+                    <button type="button" id="refresh-analytics" class="button button-small" style="margin-top: 10px;">
+                        🔄 Refresh Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            function loadAnalytics() {
+                $.ajax({
+                    url: '<?php echo esc_url($this->api_base_url); ?>analytics/public/',
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            const data = response.data;
+                            
+                            // Update main stats
+                            $('.total-members').text(data.total_members.toLocaleString());
+                            $('.monthly-revenue').text('$' + data.monthly_revenue.toLocaleString());
+                            $('.avg-spending').text('$' + data.avg_spending_per_person.toFixed(2));
+                            $('.annual-projected').text('$' + (data.monthly_revenue * 12).toLocaleString());
+                            
+                            // Update membership breakdown (simulated data)
+                            const totalMembers = data.total_members;
+                            const membershipData = {
+                                free: Math.floor(totalMembers * 0.47),    // 47%
+                                basic: Math.floor(totalMembers * 0.25),   // 25%
+                                professional: Math.floor(totalMembers * 0.20), // 20%
+                                expert: Math.floor(totalMembers * 0.08)   // 8%
+                            };
+                            
+                            $('.free-count').text(membershipData.free);
+                            $('.basic-count').text(membershipData.basic);
+                            $('.professional-count').text(membershipData.professional);
+                            $('.expert-count').text(membershipData.expert);
+                            
+                            // Update progress bars
+                            $('.free-bar').css('width', (membershipData.free / totalMembers * 100) + '%');
+                            $('.basic-bar').css('width', (membershipData.basic / totalMembers * 100) + '%');
+                            $('.professional-bar').css('width', (membershipData.professional / totalMembers * 100) + '%');
+                            $('.expert-bar').css('width', (membershipData.expert / totalMembers * 100) + '%');
+                            
+                            $('.last-updated').text(data.last_updated);
+                            
+                            $('.analytics-loading').hide();
+                            $('.analytics-content').show();
+                        }
+                    },
+                    error: function() {
+                        $('.analytics-loading').html('<p style="color: red;">❌ Failed to load analytics data</p>');
+                    }
+                });
+            }
+            
+            // Load analytics on page load
+            loadAnalytics();
+            
+            // Refresh button
+            $('#refresh-analytics').click(function() {
+                $('.analytics-content').hide();
+                $('.analytics-loading').show().html('<p>⏳ Refreshing analytics data...</p>');
+                loadAnalytics();
+            });
+        });
+        </script>
+        <?php
     }
 }
 
