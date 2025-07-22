@@ -68,8 +68,7 @@ def track_api_usage(view_func):
                     status_code=response.status_code,
                     ip_address=get_client_ip(request),
                     user_agent=request.META.get('HTTP_USER_AGENT', ''),
-                    membership_tier=membership.tier,
-                    cost_credits=calculate_api_cost(request.path, membership.tier)
+                    membership_tier=membership.tier
                 )
             except Exception as e:
                 # Log error but don't break the request
@@ -78,31 +77,7 @@ def track_api_usage(view_func):
         return response
     return wrapper
 
-def calculate_api_cost(endpoint, tier):
-    """Calculate API cost based on endpoint and membership tier"""
-    base_costs = {
-        '/api/stocks/': 0.001,
-        '/api/portfolio/': 0.002,
-        '/api/sentiment/': 0.005,
-        '/api/analytics/': 0.003,
-    }
-    
-    # Get base cost
-    base_cost = 0.001  # default
-    for path, cost in base_costs.items():
-        if endpoint.startswith(path):
-            base_cost = cost
-            break
-    
-    # Apply tier multiplier
-    multipliers = {
-        'free': 1.0,
-        'basic': 0.8,
-        'professional': 0.6,
-        'expert': 0.4
-    }
-    
-    return base_cost * multipliers.get(tier, 1.0)
+
 
 def log_compliance_action(user, action_type, description, request, risk_level='low'):
     """Log compliance action"""
@@ -169,21 +144,18 @@ def api_usage_analytics(request):
         # Calculate metrics
         total_requests = usage_data.count()
         avg_response_time = usage_data.aggregate(Avg('response_time_ms'))['response_time_ms__avg'] or 0
-        total_cost = usage_data.aggregate(Sum('cost_credits'))['cost_credits__sum'] or 0
         
         # Endpoint usage breakdown
         endpoint_usage = usage_data.values('endpoint').annotate(
             count=Count('id'),
-            avg_response_time=Avg('response_time_ms'),
-            total_cost=Sum('cost_credits')
+            avg_response_time=Avg('response_time_ms')
         ).order_by('-count')
         
         # Daily usage trend
         daily_usage = usage_data.extra(
             select={'day': 'date(timestamp)'}
         ).values('day').annotate(
-            requests=Count('id'),
-            cost=Sum('cost_credits')
+            requests=Count('id')
         ).order_by('day')
         
         # Error rate
@@ -208,7 +180,6 @@ def api_usage_analytics(request):
                 'period_days': days,
                 'total_requests': total_requests,
                 'avg_response_time_ms': round(avg_response_time, 2),
-                'total_cost_credits': round(total_cost, 6),
                 'error_rate_percent': round(error_rate, 2),
                 'membership_tier': membership.tier,
                 'monthly_usage': {
@@ -217,8 +188,7 @@ def api_usage_analytics(request):
                     'percentage': round(usage_percentage, 1)
                 },
                 'endpoint_breakdown': list(endpoint_usage),
-                'daily_trend': list(daily_usage),
-                'cost_per_request': round(total_cost / total_requests, 6) if total_requests > 0 else 0
+                'daily_trend': list(daily_usage)
             }
         })
         
@@ -244,8 +214,7 @@ def admin_usage_analytics(request):
         ).values('membership_tier').annotate(
             requests=Count('id'),
             users=Count('user', distinct=True),
-            avg_response_time=Avg('response_time_ms'),
-            total_cost=Sum('cost_credits')
+            avg_response_time=Avg('response_time_ms')
         ).order_by('-requests')
         
         # Top endpoints

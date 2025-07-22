@@ -96,8 +96,7 @@ class AdvancedFeaturesTester:
                     response_time_ms=100 + i * 10,
                     status_code=200,
                     ip_address='127.0.0.1',
-                    membership_tier='professional',
-                    cost_credits=0.001
+                    membership_tier='professional'
                 )
             
             # Create sample sentiment data

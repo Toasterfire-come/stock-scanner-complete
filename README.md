@@ -44,7 +44,7 @@ cd stock-scanner-complete
 
 ### 🚀 **Advanced Features (NEW)**
 - **🔒 Regulatory Compliance:** GDPR Article 17 & 20, FINRA, security monitoring, audit logs
-- **📊 API Usage Analytics:** Tiered pricing, usage optimization, performance metrics, cost tracking
+- **📊 API Usage Analytics:** Usage optimization, performance metrics, tier analytics
 - **🎯 Market Sentiment Analysis:** Multi-source sentiment scoring with confidence levels
 - **📈 Portfolio Analytics:** Sharpe ratio, beta, VaR, risk scoring, rebalancing suggestions
 

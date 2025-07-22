@@ -110,32 +110,20 @@ GET /api/advanced/admin-usage/?days=30
 # Returns platform-wide usage statistics
 ```
 
-#### **Tier-Based Cost Calculation**
+#### **Usage Monitoring**
 ```python
-# Automatic cost calculation based on endpoint and tier
-base_costs = {
-    '/api/stocks/': 0.001,
-    '/api/portfolio/': 0.002,
-    '/api/sentiment/': 0.005,
-    '/api/analytics/': 0.003,
-}
-
-# Tier multipliers
-multipliers = {
-    'free': 1.0,      # Full cost
-    'basic': 0.8,     # 20% discount
-    'professional': 0.6,  # 40% discount
-    'expert': 0.4     # 60% discount
-}
+# Automatic usage tracking for all API calls
+# Tracks response times, error rates, and usage patterns
+# No cost calculation - pure analytics for optimization
 ```
 
 ### **Analytics Provided:**
 - **Response Time Monitoring** - Average response times per endpoint
 - **Error Rate Tracking** - 4xx/5xx error percentages
 - **Usage Patterns** - Most popular endpoints, daily trends
-- **Cost Analysis** - Cost per request, total spend per user
 - **Performance Bottlenecks** - Slow endpoint identification
-- **Tier Optimization** - Usage-based pricing insights
+- **Tier Usage Analysis** - Usage patterns by membership tier
+- **System Optimization** - Data-driven performance improvements
 
 ### **Database Model:**
 ```python
@@ -147,7 +135,6 @@ class APIUsageTracking(models.Model):
     status_code = models.IntegerField()
     ip_address = models.GenericIPAddressField()
     membership_tier = models.CharField(max_length=20)
-    cost_credits = models.DecimalField(max_digits=10, decimal_places=4)
     timestamp = models.DateTimeField(auto_now_add=True)
 ```
 

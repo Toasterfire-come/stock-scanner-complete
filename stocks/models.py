@@ -241,7 +241,7 @@ class APIUsageTracking(models.Model):
     request_size_bytes = models.IntegerField(default=0)
     response_size_bytes = models.IntegerField(default=0)
     membership_tier = models.CharField(max_length=20, db_index=True)
-    cost_credits = models.DecimalField(max_digits=10, decimal_places=4, default=0.0001)
+
     
     class Meta:
         ordering = ['-timestamp']
