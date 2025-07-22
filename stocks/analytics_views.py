@@ -16,6 +16,7 @@ import json
 from django.contrib.auth.models import User
 from emails.models import EmailSubscription
 from .models import StockAlert, Membership
+from .performance_optimizations import OptimizedQueries, PerformanceOptimizer
 
 def is_admin_user(user):
     """Check if user is admin/staff"""
@@ -94,36 +95,31 @@ def member_analytics_api(request):
 @require_http_methods(["GET"])
 def public_stats_api(request):
     """
-    Get public statistics for displaying on website using real data
+    Get public statistics for displaying on website using real data - OPTIMIZED
     """
     try:
-        # Get real data from database
-        total_subscribers = EmailSubscription.objects.filter(is_active=True).count()
-        total_stocks_tracked = StockAlert.objects.count()
-        total_users = User.objects.count()
+        # Use optimized analytics computation with caching
+        analytics_data = OptimizedQueries.get_membership_analytics_optimized()
         
-        # Calculate real membership stats
-        total_members = Membership.objects.filter(is_active=True).count()
+        # Additional cached data
+        cache_key = PerformanceOptimizer.get_cache_key("public_stats")
         
-        # If no memberships exist, count all users as members
-        if total_members == 0:
-            total_members = total_users
+        def compute_additional_stats():
+            return {
+                'stocks_tracked': StockAlert.objects.count(),
+                'platform_status': 'active',
+                'last_updated': timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
         
-        # Calculate real monthly revenue
-        monthly_revenue = 0.00
-        tier_pricing = {
-            'free': 0.00,
-            'basic': 9.99,
-            'professional': 29.99,
-            'expert': 49.99
+        additional_stats = PerformanceOptimizer.get_cached_or_compute(
+            cache_key, compute_additional_stats, timeout=600
+        )
+        
+        # Combine data efficiently
+        result_data = {
+            **analytics_data,
+            **additional_stats
         }
-        
-        for tier_code, price in tier_pricing.items():
-            tier_count = Membership.objects.filter(tier=tier_code, is_active=True).count()
-            monthly_revenue += tier_count * price
-        
-        # Calculate real average spending
-        avg_spending = round(monthly_revenue / total_members, 2) if total_members > 0 else 0.00
         
         return JsonResponse({
             'success': True,

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from emails.models import EmailSubscription
-from .models import StockAlert, Membership
+from .models import StockAlert, Membership, Portfolio, PortfolioHolding, MarketAnalysis, TechnicalIndicator
 from django.utils import timezone
 
 # Register your models here.
@@ -80,10 +80,55 @@ class MembershipAdmin(admin.ModelAdmin):
         return f"${obj.pricing_info:.2f}/month"
     pricing_info.short_description = "Tier Price"
     
-    def tier_limits(self, obj):
-        """Display lookup limits"""
-        limits = obj.tier_limits
-        if limits == -1:
-            return "Unlimited"
-        return f"{limits} lookups/month"
-    tier_limits.short_description = "Monthly Limit"
+         def tier_limits(self, obj):
+         """Display lookup limits"""
+         limits = obj.tier_limits
+         if limits == -1:
+             return "Unlimited"
+         return f"{limits} lookups/month"
+     tier_limits.short_description = "Monthly Limit"
+
+@admin.register(Portfolio)
+class PortfolioAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'total_value', 'total_gain_loss_percent', 'holdings_count', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at', 'updated_at')
+    search_fields = ('name', 'user__username', 'user__email')
+    readonly_fields = ('total_value', 'total_gain_loss', 'total_gain_loss_percent', 'holdings_count', 'created_at', 'updated_at')
+    
+    def holdings_count(self, obj):
+        return obj.holdings.count()
+    holdings_count.short_description = "Holdings"
+
+@admin.register(PortfolioHolding)
+class PortfolioHoldingAdmin(admin.ModelAdmin):
+    list_display = ('portfolio', 'ticker', 'company_name', 'shares', 'purchase_price', 'current_price', 'gain_loss_percent', 'last_updated')
+    list_filter = ('purchase_date', 'last_updated', 'portfolio__user')
+    search_fields = ('ticker', 'company_name', 'portfolio__name', 'portfolio__user__username')
+    readonly_fields = ('total_cost', 'total_value', 'gain_loss', 'gain_loss_percent', 'last_updated')
+
+@admin.register(MarketAnalysis)
+class MarketAnalysisAdmin(admin.ModelAdmin):
+    list_display = ('title', 'analysis_type', 'author', 'is_premium', 'views', 'created_at')
+    list_filter = ('analysis_type', 'is_premium', 'sector', 'created_at')
+    search_fields = ('title', 'content', 'tickers', 'sector')
+    readonly_fields = ('views', 'created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Content', {
+            'fields': ('title', 'content', 'analysis_type', 'tickers', 'sector')
+        }),
+        ('Publication', {
+            'fields': ('author', 'is_premium', 'views')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(TechnicalIndicator)
+class TechnicalIndicatorAdmin(admin.ModelAdmin):
+    list_display = ('ticker', 'indicator_type', 'value', 'signal', 'confidence', 'calculated_at')
+    list_filter = ('indicator_type', 'signal', 'calculated_at')
+    search_fields = ('ticker',)
+    readonly_fields = ('calculated_at',)
