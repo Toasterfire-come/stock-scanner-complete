@@ -3,8 +3,10 @@ from django.contrib.auth.models import User
 
 class StockAlert(models.Model):
     ticker = models.CharField(max_length=10)
-    company_name = models.CharField(max_length=255, blank=True)  # <- New field
+    company_name = models.CharField(max_length=255, blank=True)
     current_price = models.FloatField()
+    price_change_today = models.FloatField(null=True, blank=True, help_text="Price change from previous close")
+    price_change_percent = models.FloatField(null=True, blank=True, help_text="Percentage change from previous close")
     volume_today = models.BigIntegerField()
     avg_volume = models.BigIntegerField(null=True, blank=True)
     dvav = models.FloatField(null=True, blank=True)

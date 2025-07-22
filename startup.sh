@@ -131,6 +131,19 @@ setup_database() {
     print_status "Setting up memberships for existing users..."
     python manage.py setup_memberships
     
+    print_status "Checking database integrity..."
+    python manage.py shell -c "
+from stocks.models import StockAlert
+fields = [f.name for f in StockAlert._meta.get_fields()]
+required = ['price_change_today', 'price_change_percent']
+missing = [f for f in required if f not in fields]
+if missing:
+    print(f'ERROR: Missing fields: {missing}')
+    exit(1)
+else:
+    print('✅ All StockAlert model fields present')
+"
+    
     print_status "Setting up advanced features..."
     # Download NLTK data for sentiment analysis
     python -c "

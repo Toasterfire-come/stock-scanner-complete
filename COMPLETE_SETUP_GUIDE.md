@@ -76,6 +76,9 @@ curl http://localhost:8000/api/stocks/
 
 # Comprehensive test
 python test_setup.py
+
+# Production readiness validation
+python validate_production_ready.py
 ```
 
 ## 🔧 **Configuration**

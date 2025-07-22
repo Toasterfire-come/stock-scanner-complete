@@ -59,11 +59,22 @@ def test_models():
         stock_count = StockAlert.objects.count()
         email_count = EmailSubscription.objects.count()
         
+        # Test StockAlert model has required fields
+        stock_fields = [field.name for field in StockAlert._meta.get_fields()]
+        required_fields = ['price_change_today', 'price_change_percent']
+        missing_fields = [field for field in required_fields if field not in stock_fields]
+        
+        if missing_fields:
+            print(f"❌ StockAlert model missing fields: {missing_fields}")
+            print("   Run: python manage.py migrate")
+            return False
+        
         print(f"✅ Models loaded successfully")
         print(f"   Users: {user_count}")
         print(f"   Memberships: {membership_count}")
         print(f"   Stock Alerts: {stock_count}")
         print(f"   Email Subscriptions: {email_count}")
+        print("✅ All required model fields present")
         return True
     except Exception as e:
         print(f"❌ Model testing failed: {e}")
