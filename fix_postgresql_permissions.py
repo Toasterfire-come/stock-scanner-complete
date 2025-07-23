@@ -18,7 +18,6 @@ Version: 1.0.0
 
 import os
 import sys
-import getpass
 import psycopg2
 from psycopg2 import sql
 from urllib.parse import urlparse
@@ -56,20 +55,22 @@ def connect_as_superuser(host, port):
     """Connect to PostgreSQL as superuser"""
     print("\n🔐 Connecting to PostgreSQL as superuser...")
     
+    # Default password - Windows command prompt input issues workaround
+    default_password = "C2rt3rK#2010"
+    
     # Common superuser names to try
     superuser_names = ['postgres', 'postgresql', 'admin']
     
     for username in superuser_names:
         try:
-            print(f"🔑 Trying username: {username}")
-            password = getpass.getpass(f"Enter password for {username}: ")
+            print(f"🔑 Trying username: {username} with default password")
             
             conn = psycopg2.connect(
                 host=host,
                 port=port,
                 database='postgres',  # Connect to default postgres database
                 user=username,
-                password=password
+                password=default_password
             )
             
             print(f"✅ Connected as {username}")
@@ -79,7 +80,24 @@ def connect_as_superuser(host, port):
             print(f"❌ Failed to connect as {username}: {e}")
             continue
     
+    # If default password doesn't work, try empty password
+    print("🔑 Trying with empty password...")
+    for username in superuser_names:
+        try:
+            conn = psycopg2.connect(
+                host=host,
+                port=port,
+                database='postgres',
+                user=username,
+                password=""
+            )
+            print(f"✅ Connected as {username} (no password)")
+            return conn, username
+        except psycopg2.Error:
+            continue
+    
     print("❌ Could not connect as any superuser")
+    print("💡 Make sure PostgreSQL is running and the password is correct")
     return None, None
 
 def fix_permissions(conn, db_config):
@@ -114,15 +132,15 @@ def fix_permissions(conn, db_config):
         )
         
         if not cursor.fetchone():
-            # Get password for new user
-            user_password = getpass.getpass(f"Enter password for new user '{db_config['username']}': ")
+            # Use default password for new user
+            user_password = "C2rt3rK#2010"
             cursor.execute(
                 sql.SQL("CREATE USER {} WITH PASSWORD %s").format(
                     sql.Identifier(db_config['username'])
                 ),
                 [user_password]
             )
-            print(f"✅ Created user '{db_config['username']}'")
+            print(f"✅ Created user '{db_config['username']}' with default password")
         else:
             print(f"✅ User '{db_config['username']}' already exists")
         
@@ -161,14 +179,18 @@ def fix_schema_permissions(db_config):
     """Fix schema permissions on the target database"""
     print(f"\n🗄️ Fixing schema permissions on database '{db_config['database']}'...")
     
+    # Default password for connection
+    default_password = "C2rt3rK#2010"
+    
     try:
         # Connect to the target database
+        print("🔑 Connecting with default password...")
         conn = psycopg2.connect(
             host=db_config['host'],
             port=db_config['port'],
             database=db_config['database'],
             user='postgres',  # Use superuser
-            password=getpass.getpass("Enter postgres user password again: ")
+            password=default_password
         )
         
         cursor = conn.cursor()
@@ -233,10 +255,11 @@ def test_django_connection(db_config):
     """Test Django database connection"""
     print(f"\n🧪 Testing Django database connection...")
     
+    # Use default password for Django user
+    django_password = "C2rt3rK#2010"
+    
     try:
-        # Get password for Django user
-        django_password = getpass.getpass(f"Enter password for Django user '{db_config['username']}': ")
-        
+        print("🔑 Testing with default password...")
         conn = psycopg2.connect(
             host=db_config['host'],
             port=db_config['port'],
@@ -312,8 +335,14 @@ def main():
         print("✅ PERMISSIONS FIXED SUCCESSFULLY!")
         print("=" * 50)
         print()
+        print("📋 Database Configuration:")
+        print(f"   Host: {db_config['host']}")
+        print(f"   Database: {db_config['database']}")
+        print(f"   Username: {db_config['username']}")
+        print(f"   Password: C2rt3rK#2010")
+        print()
         print("📋 Next steps:")
-        print("1. Update your .env file with the correct database password")
+        print("1. Update your .env file with these database credentials")
         print("2. Run: python manage.py migrate")
         print("3. Run: python manage.py createsuperuser")
         print("4. Run: python manage.py runserver")

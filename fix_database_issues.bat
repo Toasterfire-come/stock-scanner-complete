@@ -41,11 +41,13 @@ goto choice
 :postgresql
 echo.
 echo 🔧 Fixing PostgreSQL permissions...
-echo 📋 You will need:
-echo    • PostgreSQL superuser password (usually 'postgres' user)
-echo    • Database name and user credentials
+echo 📋 Using default password: C2rt3rK#2010
+echo 💡 This will automatically configure database permissions
 echo.
 python fix_postgresql_permissions.py
+echo.
+echo 🔧 Updating .env file with database configuration...
+python update_env_database.py
 goto end
 
 :sqlite
