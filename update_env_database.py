@@ -19,7 +19,7 @@ def update_env_file():
     
     env_file = Path(".env")
     
-    # Database configuration
+    # Database configuration (only these will be updated)
     db_config = {
         'DB_HOST': 'localhost',
         'DB_PORT': '5432',
@@ -39,63 +39,89 @@ def update_env_file():
                 if '=' in line and not line.startswith('#'):
                     key, value = line.split('=', 1)
                     existing_config[key] = value
+        print(f"✅ Found {len(existing_config)} existing settings - preserving them")
     
-    # Update with database configuration
-    existing_config.update(db_config)
+    # Only update database-specific configuration, preserve everything else
+    for key, value in db_config.items():
+        existing_config[key] = value
+        print(f"🔄 Updated: {key}")
+    
+    # Set default values for missing keys (but don't override existing ones)
+    default_config = {
+        'DEBUG': 'False',
+        'SECRET_KEY': 'your-super-secret-key-here-make-it-long-and-random',
+        'ALLOWED_HOSTS': 'localhost,127.0.0.1,your-domain.com,www.your-domain.com',
+        'REDIS_URL': 'redis://localhost:6379/0',
+        'CELERY_BROKER_URL': 'redis://localhost:6379/0',
+        'CELERY_RESULT_BACKEND': 'redis://localhost:6379/0',
+        'EMAIL_BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+        'EMAIL_HOST': 'smtp.your-email-provider.com',
+        'EMAIL_PORT': '587',
+        'EMAIL_USE_TLS': 'True',
+        'EMAIL_HOST_USER': 'your-email@domain.com',
+        'EMAIL_HOST_PASSWORD': 'your-email-password',
+        'STRIPE_PUBLIC_KEY': 'pk_test_your_stripe_public_key',
+        'STRIPE_SECRET_KEY': 'sk_test_your_stripe_secret_key',
+        'STRIPE_WEBHOOK_SECRET': 'whsec_your_webhook_secret',
+        'STOCK_API_RATE_LIMIT': '1.0',
+        'YFINANCE_THREADS': '5',
+        'STATIC_URL': '/static/',
+        'MEDIA_URL': '/media/'
+    }
+    
+    # Only add defaults for missing keys
+    for key, value in default_config.items():
+        if key not in existing_config:
+            existing_config[key] = value
+            print(f"➕ Added default: {key}")
     
     # Write updated .env file
     print("💾 Writing updated .env file...")
     with open(env_file, 'w', encoding='utf-8') as f:
         f.write("# Stock Scanner Environment Configuration\n")
-        f.write("# Updated automatically with database credentials\n\n")
+        f.write("# Database configuration updated automatically\n")
+        f.write("# Other settings preserved from existing configuration\n\n")
         
-        # Production settings
-        f.write("# Production Environment\n")
-        f.write("DEBUG=False\n")
-        f.write("SECRET_KEY=your-super-secret-key-here-make-it-long-and-random\n")
-        f.write("ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com,www.your-domain.com\n\n")
+        # Group related settings
+        groups = {
+            'Production Environment': ['DEBUG', 'SECRET_KEY', 'ALLOWED_HOSTS'],
+            'Database Configuration': ['DATABASE_URL', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'],
+            'Redis Configuration': ['REDIS_URL', 'CELERY_BROKER_URL', 'CELERY_RESULT_BACKEND'],
+            'Email Configuration': ['EMAIL_BACKEND', 'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USE_TLS', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD'],
+            'Payment Configuration': ['STRIPE_PUBLIC_KEY', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
+            'Yahoo Finance API Configuration': ['STOCK_API_RATE_LIMIT', 'YFINANCE_THREADS'],
+            'Static Files': ['STATIC_URL', 'MEDIA_URL']
+        }
         
-        # Database configuration
-        f.write("# Database Configuration\n")
-        for key, value in db_config.items():
-            f.write(f"{key}={value}\n")
-        f.write("\n")
+        # Write grouped settings
+        written_keys = set()
+        for group_name, keys in groups.items():
+            f.write(f"# {group_name}\n")
+            for key in keys:
+                if key in existing_config:
+                    f.write(f"{key}={existing_config[key]}\n")
+                    written_keys.add(key)
+            f.write("\n")
         
-        # Other configurations
-        f.write("# Redis Configuration\n")
-        f.write("REDIS_URL=redis://localhost:6379/0\n")
-        f.write("CELERY_BROKER_URL=redis://localhost:6379/0\n")
-        f.write("CELERY_RESULT_BACKEND=redis://localhost:6379/0\n\n")
-        
-        f.write("# Email Configuration\n")
-        f.write("EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend\n")
-        f.write("EMAIL_HOST=smtp.your-email-provider.com\n")
-        f.write("EMAIL_PORT=587\n")
-        f.write("EMAIL_USE_TLS=True\n")
-        f.write("EMAIL_HOST_USER=your-email@domain.com\n")
-        f.write("EMAIL_HOST_PASSWORD=your-email-password\n\n")
-        
-        f.write("# Payment Configuration\n")
-        f.write("STRIPE_PUBLIC_KEY=pk_test_your_stripe_public_key\n")
-        f.write("STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key\n")
-        f.write("STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret\n\n")
-        
-        f.write("# Yahoo Finance API Configuration\n")
-        f.write("STOCK_API_RATE_LIMIT=1.0\n")
-        f.write("YFINANCE_THREADS=5\n\n")
-        
-        f.write("# Static Files\n")
-        f.write("STATIC_URL=/static/\n")
-        f.write("MEDIA_URL=/media/\n")
+        # Write any remaining settings not in groups
+        remaining_keys = set(existing_config.keys()) - written_keys
+        if remaining_keys:
+            f.write("# Additional Configuration\n")
+            for key in sorted(remaining_keys):
+                f.write(f"{key}={existing_config[key]}\n")
+            f.write("\n")
     
     print("✅ .env file updated successfully!")
     print()
-    print("📋 Database configuration:")
+    print("🔄 Database configuration updated:")
     print("   Host: localhost")
     print("   Port: 5432")
     print("   Database: stockscanner_prod")
     print("   Username: stockscanner")
     print("   Password: C2rt3rK#2010")
+    print()
+    print("✅ Preserved all existing settings (passwords, API keys, etc.)")
+    print("📝 Only database settings were updated")
     
     return True
 
