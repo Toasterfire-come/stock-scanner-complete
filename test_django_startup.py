@@ -60,11 +60,15 @@ def test_django_startup():
         print("   ✅ Django setup completed")
     except Exception as e:
         error_message = str(e)
-        if "no such table" in error_message and "django_celery_beat" in error_message:
-            print(f"   ⚠️ Django setup issue: {e}")
+        if ("no such table" in error_message or "does not exist" in error_message) and "django_celery_beat" in error_message:
+            print(f"   ⚠️ Django setup issue: Celery Beat tables not found")
             print("   💡 This is normal before running migrations")
-            print("   🔧 Run: python manage.py migrate")
-            # Continue with limited testing
+            print("   🔧 Solution: python run_migrations.py")
+            # Continue with limited testing - this is expected before migrations
+        elif "ProgrammingError" in str(type(e).__name__) and "django_celery_beat" in error_message:
+            print(f"   ⚠️ Celery Beat database error (expected before migrations)")
+            print("   💡 Run migrations to fix: python run_migrations.py")
+            # Continue testing
         else:
             print(f"   ❌ Django setup failed: {e}")
             print(f"   Error type: {type(e).__name__}")
@@ -105,10 +109,11 @@ def test_django_startup():
         print(f"   ⚠️ Database connection issue: {e}")
         print("   (This is normal if database isn't set up yet)")
     
-    print("\n🎉 Django startup test completed successfully!")
+    print("\n🎉 Django startup test completed!")
     print("\n💡 Next steps:")
-    print("   1. python manage.py migrate")
+    print("   1. python run_migrations.py  (fixes Celery Beat tables)")
     print("   2. python manage.py runserver")
+    print("   3. Access: http://localhost:8000")
     
     return True
 
