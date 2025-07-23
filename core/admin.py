@@ -8,7 +8,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
     search_fields = ('email', 'category')
     ordering = ('-subscribed_at',)
 
-# Celery Beat task setup - only run when Celery Beat is available
 def setup_periodic_tasks():
     """Setup periodic tasks for email sending - only call when Celery Beat is enabled"""
     try:
