@@ -312,20 +312,12 @@ YFINANCE_RATE_LIMIT = float(os.environ.get('YFINANCE_RATE_LIMIT', '1.0'))
 YFINANCE_TIMEOUT = int(os.environ.get('YFINANCE_TIMEOUT', '15'))
 YFINANCE_RETRIES = int(os.environ.get('YFINANCE_RETRIES', '3'))
 
-# Backup APIs
-ALPHA_VANTAGE_KEYS = []
-for i in range(1, 7):
-    key = os.environ.get(f'ALPHA_VANTAGE_API_KEY_{i}')
-    if key:
-        ALPHA_VANTAGE_KEYS.append(key)
-
+# Backup APIs - Simplified
 FINNHUB_KEYS = []
 for i in range(1, 3):
     key = os.environ.get(f'FINNHUB_API_KEY_{i}')
     if key:
         FINNHUB_KEYS.append(key)
-
-TWELVE_DATA_API_KEY = os.environ.get('TWELVE_DATA_API_KEY', '')
 
 # WordPress Integration
 WORDPRESS_URL = os.environ.get('WORDPRESS_URL', '')

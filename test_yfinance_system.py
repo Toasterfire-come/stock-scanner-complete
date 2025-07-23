@@ -87,11 +87,9 @@ def test_django_integration():
         # Test settings
         print(f"   ⚙️ Checking Django settings...")
         yfinance_rate_limit = getattr(settings, 'YFINANCE_RATE_LIMIT', None)
-        alpha_keys = getattr(settings, 'ALPHA_VANTAGE_KEYS', [])
         finnhub_keys = getattr(settings, 'FINNHUB_KEYS', [])
         
         print(f"      • YFinance rate limit: {yfinance_rate_limit}s")
-        print(f"      • Alpha Vantage keys: {len(alpha_keys)} accounts")
         print(f"      • Finnhub keys: {len(finnhub_keys)} accounts")
         
         # Test database model
@@ -310,7 +308,7 @@ def run_comprehensive_test():
     
     print("\n💡 Next steps:")
     print("   1. Run the Yahoo Finance rate limit optimizer")
-    print("   2. Set up your backup API keys (Alpha Vantage, Finnhub)")
+    print("   2. Set up your Finnhub backup API keys (optional)")
     print("   3. Test with your actual stock symbols")
     print("   4. Deploy to production")
     

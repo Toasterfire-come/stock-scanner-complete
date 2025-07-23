@@ -1,7 +1,7 @@
 """
-Stock Data API Manager - yfinance Primary with FREE Backup APIs
+Stock Data API Manager - Simplified Two-API System
 Primary: Yahoo Finance (yfinance) - Unlimited and Free  
-Backup: Alpha Vantage, Finnhub, Twelve Data
+Backup: Finnhub (2 accounts × 1000 calls/day)
 """
 
 import os
@@ -25,31 +25,24 @@ class YFinanceStockManager:
         self.yfinance_timeout = getattr(settings, 'YFINANCE_TIMEOUT', 15)
         self.yfinance_retries = getattr(settings, 'YFINANCE_RETRIES', 3)
         
-        # Backup API keys
-        self.alpha_vantage_keys = getattr(settings, 'ALPHA_VANTAGE_KEYS', [])
+        # Backup API keys - Simplified
         self.finnhub_keys = getattr(settings, 'FINNHUB_KEYS', [])
-        self.twelve_data_key = getattr(settings, 'TWELVE_DATA_API_KEY', '')
         
-        # Usage tracking
-        self.current_av_index = 0
+        # Usage tracking - Simplified
         self.current_finnhub_index = 0
         self.daily_usage = self._load_daily_usage()
         self.last_yfinance_request = 0
         
         logger.info(f"🎯 YFinance Stock Manager initialized:")
         logger.info(f"   • Yahoo Finance: ✅ Primary (unlimited)")
-        logger.info(f"   • Alpha Vantage backup: {len(self.alpha_vantage_keys)} accounts")
         logger.info(f"   • Finnhub backup: {len(self.finnhub_keys)} accounts")
-        logger.info(f"   • Twelve Data backup: {'✅' if self.twelve_data_key else '❌'}")
         logger.info(f"   • Rate limit: {self.yfinance_rate_limit}s delay")
 
     def _load_daily_usage(self) -> Dict:
         """Load daily API usage from cache"""
         today = datetime.now().strftime('%Y-%m-%d')
         return cache.get(f'api_usage_{today}', {
-            'alpha_vantage': [0] * len(self.alpha_vantage_keys),
             'finnhub': [0] * len(self.finnhub_keys),
-            'twelve_data': 0,
             'yfinance_requests': 0
         })
 
@@ -138,9 +131,9 @@ class YFinanceStockManager:
             return None
 
     def _get_backup_quote(self, symbol: str) -> Optional[Dict]:
-        """Try backup APIs in order of preference"""
+        """Try backup API - Simplified to Finnhub only"""
         
-        # Try Finnhub first (highest daily limit)
+        # Try Finnhub backup
         if self.finnhub_keys:
             try:
                 quote = self._get_finnhub_quote(symbol)
@@ -149,26 +142,8 @@ class YFinanceStockManager:
                     return quote
             except Exception as e:
                 logger.warning(f"Finnhub backup failed for {symbol}: {e}")
-        
-        # Try Alpha Vantage
-        if self.alpha_vantage_keys:
-            try:
-                quote = self._get_alpha_vantage_quote(symbol)
-                if quote:
-                    logger.info(f"✅ {symbol} from Alpha Vantage (backup)")
-                    return quote
-            except Exception as e:
-                logger.warning(f"Alpha Vantage backup failed for {symbol}: {e}")
-        
-        # Try Twelve Data as last resort
-        if self.twelve_data_key:
-            try:
-                quote = self._get_twelve_data_quote(symbol)
-                if quote:
-                    logger.info(f"✅ {symbol} from Twelve Data (backup)")
-                    return quote
-            except Exception as e:
-                logger.warning(f"Twelve Data backup failed for {symbol}: {e}")
+        else:
+            logger.warning(f"No Finnhub API keys configured")
         
         logger.error(f"❌ All APIs failed for {symbol}")
         return None
@@ -216,92 +191,7 @@ class YFinanceStockManager:
             logger.error(f"Finnhub error for {symbol}: {e}")
             return None
 
-    def _get_alpha_vantage_quote(self, symbol: str) -> Optional[Dict]:
-        """Get quote from Alpha Vantage (backup API)"""
-        if not self.alpha_vantage_keys:
-            return None
-            
-        # Check usage limits
-        if self.daily_usage['alpha_vantage'][self.current_av_index % len(self.alpha_vantage_keys)] >= 24:
-            return None
-            
-        api_key = self.alpha_vantage_keys[self.current_av_index % len(self.alpha_vantage_keys)]
-        
-        try:
-            response = requests.get(
-                "https://www.alphavantage.co/query",
-                params={
-                    'function': 'GLOBAL_QUOTE',
-                    'symbol': symbol,
-                    'apikey': api_key
-                },
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Update usage counter
-                self.daily_usage['alpha_vantage'][self.current_av_index % len(self.alpha_vantage_keys)] += 1
-                self.current_av_index += 1
-                self._save_daily_usage()
-                
-                if 'Global Quote' in data:
-                    quote = data['Global Quote']
-                    return {
-                        'symbol': symbol,
-                        'price': float(quote['05. price']),
-                        'change': float(quote['09. change']),
-                        'change_percent': float(quote['10. change percent'].replace('%', '')),
-                        'volume': int(quote['06. volume']),
-                        'market_cap': 0,
-                        'source': 'alpha_vantage',
-                        'timestamp': datetime.now().isoformat(),
-                        'currency': 'USD'
-                    }
-            return None
-        except Exception as e:
-            logger.error(f"Alpha Vantage error for {symbol}: {e}")
-            return None
 
-    def _get_twelve_data_quote(self, symbol: str) -> Optional[Dict]:
-        """Get quote from Twelve Data (backup API)"""
-        if not self.twelve_data_key or self.daily_usage['twelve_data'] >= 790:
-            return None
-
-        try:
-            response = requests.get(
-                "https://api.twelvedata.com/quote",
-                params={
-                    'symbol': symbol,
-                    'apikey': self.twelve_data_key
-                },
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Update usage counter
-                self.daily_usage['twelve_data'] += 1
-                self._save_daily_usage()
-                
-                if 'close' in data:
-                    return {
-                        'symbol': symbol,
-                        'price': float(data['close']),
-                        'change': float(data.get('change', 0)),
-                        'change_percent': float(data.get('percent_change', 0)),
-                        'volume': int(data.get('volume', 0)),
-                        'market_cap': 0,
-                        'source': 'twelve_data',
-                        'timestamp': datetime.now().isoformat(),
-                        'currency': 'USD'
-                    }
-            return None
-        except Exception as e:
-            logger.error(f"Twelve Data error for {symbol}: {e}")
-            return None
 
     def get_multiple_quotes(self, symbols: List[str]) -> Dict[str, Dict]:
         """Get quotes for multiple symbols efficiently"""
@@ -320,7 +210,7 @@ class YFinanceStockManager:
         return results
 
     def get_usage_stats(self) -> Dict:
-        """Get current API usage statistics"""
+        """Get current API usage statistics - Simplified"""
         return {
             'yahoo_finance': {
                 'status': 'primary',
@@ -335,29 +225,14 @@ class YFinanceStockManager:
                 'limits': [1000] * len(self.finnhub_keys),
                 'total_available': 1000 * len(self.finnhub_keys),
                 'status': 'backup'
-            },
-            'alpha_vantage': {
-                'accounts': len(self.alpha_vantage_keys),
-                'usage': self.daily_usage['alpha_vantage'] if self.alpha_vantage_keys else [],
-                'limits': [25] * len(self.alpha_vantage_keys),
-                'total_available': 25 * len(self.alpha_vantage_keys),
-                'status': 'backup'
-            },
-            'twelve_data': {
-                'usage': self.daily_usage['twelve_data'],
-                'limit': 800,
-                'available': 800 - self.daily_usage['twelve_data'],
-                'status': 'backup'
             }
         }
 
     def test_connection(self) -> Dict:
-        """Test connection to primary and backup APIs"""
+        """Test connection to primary and backup APIs - Simplified"""
         results = {
             'yahoo_finance': False,
-            'finnhub': False,
-            'alpha_vantage': False,
-            'twelve_data': False
+            'finnhub': False
         }
         
         # Test Yahoo Finance
@@ -367,25 +242,11 @@ class YFinanceStockManager:
         except:
             pass
         
-        # Test backup APIs
+        # Test Finnhub backup
         if self.finnhub_keys:
             try:
                 test_quote = self._get_finnhub_quote('AAPL')
                 results['finnhub'] = test_quote is not None
-            except:
-                pass
-        
-        if self.alpha_vantage_keys:
-            try:
-                test_quote = self._get_alpha_vantage_quote('AAPL')
-                results['alpha_vantage'] = test_quote is not None
-            except:
-                pass
-        
-        if self.twelve_data_key:
-            try:
-                test_quote = self._get_twelve_data_quote('AAPL')
-                results['twelve_data'] = test_quote is not None
             except:
                 pass
         
