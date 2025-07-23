@@ -38,43 +38,61 @@ def main():
     # Set up Django environment
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
     
-    # Test imports in order
-    tests = [
+    # First test basic imports (before Django setup)
+    basic_tests = [
         ('core', 'Core app'),
-        ('core.models', 'Core models'),
-        ('core.admin', 'Core admin'),
         ('emails', 'Emails app'),
         ('stocks', 'Stocks app'),
         ('news', 'News app'),
         ('stockscanner_django.settings', 'Django settings'),
     ]
     
-    all_passed = True
+    print("📋 Testing basic imports...")
+    basic_passed = True
     
-    for module_name, description in tests:
+    for module_name, description in basic_tests:
         success = test_import(module_name, description)
         if not success:
-            all_passed = False
+            basic_passed = False
         print()
     
-    print("=" * 30)
-    if all_passed:
-        print("✅ All imports passed syntax check!")
-        
-        # Try Django setup
-        print("\n🔧 Testing Django setup...")
-        try:
-            import django
-            django.setup()
-            print("✅ Django setup successful!")
-        except Exception as e:
-            print(f"❌ Django setup failed: {e}")
-            all_passed = False
-            
-    else:
-        print("❌ Syntax errors found in imports!")
+    # Try Django setup
+    print("🔧 Setting up Django...")
+    django_setup_success = False
+    try:
+        import django
+        django.setup()
+        print("✅ Django setup successful!")
+        django_setup_success = True
+    except Exception as e:
+        print(f"❌ Django setup failed: {e}")
+        basic_passed = False
     
-    return all_passed
+    # Test Django-dependent imports (after Django setup)
+    if django_setup_success:
+        print("\n📋 Testing Django-dependent imports...")
+        django_tests = [
+            ('core.models', 'Core models'),
+            ('core.admin', 'Core admin'),
+        ]
+        
+        for module_name, description in django_tests:
+            success = test_import(module_name, description)
+            if not success:
+                basic_passed = False
+            print()
+    
+    print("=" * 30)
+    if basic_passed and django_setup_success:
+        print("✅ All imports passed!")
+        print("✅ Django setup successful!")
+        print("🎉 Ready to run Django server!")
+    elif basic_passed:
+        print("✅ Basic imports OK, Django setup has issues")
+    else:
+        print("❌ Import/syntax errors found!")
+    
+    return basic_passed and django_setup_success
 
 if __name__ == "__main__":
     success = main()
