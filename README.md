@@ -5,7 +5,8 @@ A comprehensive stock monitoring and membership platform for **retailtradescanne
 ## 🚀 Quick Start
 
 ### 🪟 **Windows Users (RECOMMENDED):**
-**[📖 WINDOWS_SETUP_GUIDE.md](WINDOWS_SETUP_GUIDE.md)** - Complete Windows setup guide with all compatibility issues resolved
+**[🚀 WINDOWS_PRODUCTION_DEPLOYMENT_GUIDE.md](docs/WINDOWS_PRODUCTION_DEPLOYMENT_GUIDE.md)** - **COMPLETE PRODUCTION DEPLOYMENT** - Every step to get online
+**[📖 WINDOWS_SETUP_GUIDE.md](WINDOWS_SETUP_GUIDE.md)** - Basic development setup guide
 
 ```cmd
 # 1. Clone the repository
@@ -246,6 +247,34 @@ python scripts/utils/yahoo_rate_limit_optimizer.py
 **📚 Complete Guides**: 
 - [📖 Complete Start Guide](docs/COMPLETE_START_GUIDE.md) - **Step-by-step setup**
 - [📊 Rate Limit Guide](docs/YFINANCE_RATE_LIMIT_GUIDE.md) - **Technical details**
+
+---
+
+## 🚀 Production Deployment
+
+### 🪟 **Windows Production Deployment**
+**[📖 COMPLETE WINDOWS PRODUCTION GUIDE](docs/WINDOWS_PRODUCTION_DEPLOYMENT_GUIDE.md)**
+
+**Every single step to get your Stock Scanner platform live on Windows:**
+
+1. ✅ **System Setup** - Python, PostgreSQL, Redis, IIS installation
+2. ✅ **Database Configuration** - Production database with security
+3. ✅ **Django Production** - Settings, static files, security headers
+4. ✅ **WordPress Integration** - XAMPP, plugins, 24 professional pages
+5. ✅ **SSL & Domain** - Certificates, DNS, security configuration
+6. ✅ **Payment System** - Stripe integration with tax automation
+7. ✅ **Windows Services** - Service installation and management
+8. ✅ **Monitoring & Backup** - Logging, performance, automated backups
+9. ✅ **Final Testing** - Complete production verification
+
+```cmd
+# Production system test
+python scripts/testing/test_production_system.py
+```
+
+**Result**: Full business platform at **retailtradescanner.com** with 4-tier membership system ready for customers!
+
+---
 
 ### 🔧 WordPress Plugin Setup
 
