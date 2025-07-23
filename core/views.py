@@ -8,11 +8,8 @@ import csv
 import re
 from io import StringIO
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../blueprint')))
-import news
-import News_display
-import Stock_search_up
-import personalized_stock_filter
+# Import Django models for stock search functionality
+from stocks.models import StockAlert
 from emails.email_filter import EmailFilter
 from emails.models import EmailSubscription
 
@@ -213,11 +210,27 @@ def news_view(request):
 
 
 # Stock search view
-import Stock_search_up
-
 def stock_search(request):
     query = request.GET.get('q', '')
-    results = Stock_search_up.search_stocks(query) if query else []
+    results = []
+    
+    if query:
+        # Search stocks using Django model
+        stocks = StockAlert.objects.filter(
+            ticker__icontains=query
+        ) | StockAlert.objects.filter(
+            company_name__icontains=query
+        )
+        
+        results = [
+            {
+                'ticker': stock.ticker,
+                'company_name': stock.company_name,
+                'current_price': stock.current_price,
+                'sector': getattr(stock, 'sector', 'N/A')
+            }
+            for stock in stocks[:20]  # Limit to 20 results
+        ]
     return render(request, 'search.html', {'results': results, 'query': query})
 
 
