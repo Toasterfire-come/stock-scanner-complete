@@ -5,7 +5,6 @@ Uses direct API requests as the foundation with advanced enhancements
 """
 
 import time
-import yfinance as yf
 import requests
 import random
 import threading
@@ -46,6 +45,22 @@ class EnhancedDirectAPIOptimizer:
         else:
             self.user_agent_rotator = None
         
+        # Create base session for direct API calls
+        self.session = self._create_base_session()
+    
+    def _create_base_session(self):
+        """Create base session for Yahoo Finance API calls"""
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'no-cache'
+        })
+        return session
+        
     def print_header(self, title: str):
         """Print formatted header"""
         print(f"\n{'='*70}")
@@ -76,82 +91,89 @@ class EnhancedDirectAPIOptimizer:
             time.sleep(1)
         print("   ✅ Isolation delay completed              ")
     
-    # ==================== CORE METHOD: DIRECT API REQUESTS ====================
+    # ==================== CORE METHOD: DIRECT YAHOO FINANCE API ====================
+    
+    def test_direct_requests_method(self, delay: float, num_requests: int = 50) -> Dict:
+        """Test direct requests to Yahoo Finance API"""
+        print(f"🌐 Testing direct requests with {delay}s delay, {num_requests} requests...")
+        
+        start_time = time.time()
+        successes = 0
+        failures = 0
+        response_times = []
+        error_types = {}
+        
+        for i in range(num_requests):
+            symbol = random.choice(self.test_symbols)
+            request_start = time.time()
+            
+            try:
+                # Direct Yahoo Finance API call
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                response = self.session.get(url, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'chart' in data and data['chart']['result']:
+                        successes += 1
+                        response_times.append(time.time() - request_start)
+                    else:
+                        failures += 1
+                        error_types['invalid_data'] = error_types.get('invalid_data', 0) + 1
+                else:
+                    failures += 1
+                    error_types[f'http_{response.status_code}'] = error_types.get(f'http_{response.status_code}', 0) + 1
+                    
+            except Exception as e:
+                failures += 1
+                error_type = type(e).__name__
+                error_types[error_type] = error_types.get(error_type, 0) + 1
+            
+            # Progress indicator
+            if (i + 1) % 10 == 0:
+                success_rate = (successes / (i + 1)) * 100
+                print(f"   Progress: {i+1}/{num_requests} | Success Rate: {success_rate:.1f}%")
+            
+            if i < num_requests - 1:
+                time.sleep(delay)
+        
+        total_time = time.time() - start_time
+        success_rate = (successes / num_requests) * 100 if num_requests > 0 else 0
+        avg_response_time = statistics.mean(response_times) if response_times else 0
+        rps = num_requests / total_time if total_time > 0 else 0
+        
+        return {
+            'delay': delay,
+            'success_rate': success_rate,
+            'total_requests': num_requests,
+            'successes': successes,
+            'failures': failures,
+            'avg_response_time': avg_response_time,
+            'total_time': total_time,
+            'requests_per_second': rps,
+            'error_types': error_types
+        }
     
     def test_direct_api_requests(self, delays: List[float] = None, num_requests: int = 30) -> Dict:
-        """Test direct API requests with various delays - CORE METHOD"""
+        """Test direct Yahoo Finance API requests with various delays - CORE METHOD"""
         if delays is None:
             delays = [0.5, 1.0, 1.5]
             
-        self.print_step("🌐", "DIRECT API REQUESTS - CORE METHOD")
+        self.print_step("🌐", "DIRECT YAHOO FINANCE API - CORE METHOD")
         
         all_delay_results = {}
         best_delay_result = None
         best_success_rate = 0
         
         for delay in delays:
-            print(f"\n🌐 Testing direct requests with {delay}s delay, {num_requests} requests...")
-            
-            start_time = time.time()
-            successes = 0
-            failures = 0
-            response_times = []
-            error_types = {}
-            
-            for i in range(num_requests):
-                symbol = random.choice(self.test_symbols)
-                request_start = time.time()
-                
-                try:
-                    # Pure direct yfinance request - no enhancements
-                    ticker = yf.Ticker(symbol)
-                    info = ticker.info
-                    hist = ticker.history(period="1d")
-                    
-                    if hist.empty or not info:
-                        failures += 1
-                        error_types['empty_data'] = error_types.get('empty_data', 0) + 1
-                    else:
-                        successes += 1
-                        response_times.append(time.time() - request_start)
-                        
-                except Exception as e:
-                    failures += 1
-                    error_type = type(e).__name__
-                    error_types[error_type] = error_types.get(error_type, 0) + 1
-                    
-                # Progress updates every 10 requests
-                if (i + 1) % 10 == 0:
-                    success_rate = (successes / (i + 1)) * 100
-                    print(f"   Progress: {i+1}/{num_requests} | Success Rate: {success_rate:.1f}%")
-                    
-                # Apply delay
-                if i < num_requests - 1:
-                    time.sleep(delay)
-                    
-            total_time = time.time() - start_time
-            success_rate = (successes / num_requests) * 100 if num_requests > 0 else 0
-            avg_response_time = statistics.mean(response_times) if response_times else 0
-            rps = num_requests / total_time if total_time > 0 else 0
-            
-            delay_result = {
-                'delay': delay,
-                'success_rate': success_rate,
-                'total_requests': num_requests,
-                'successes': successes,
-                'failures': failures,
-                'avg_response_time': avg_response_time,
-                'total_time': total_time,
-                'requests_per_second': rps,
-                'error_types': error_types
-            }
+            delay_result = self.test_direct_requests_method(delay, num_requests)
             
             all_delay_results[f"{delay}s"] = delay_result
-            print(f"   Delay {delay}s: {success_rate:.1f}% success, {rps:.2f} RPS")
+            print(f"   Delay {delay}s: {delay_result['success_rate']:.1f}% success, {delay_result['requests_per_second']:.2f} RPS")
             
             # Track best performing delay
-            if success_rate > best_success_rate:
-                best_success_rate = success_rate
+            if delay_result['success_rate'] > best_success_rate:
+                best_success_rate = delay_result['success_rate']
                 best_delay_result = delay_result
                 
             # Brief pause between delay tests
@@ -160,7 +182,7 @@ class EnhancedDirectAPIOptimizer:
         
         # Summary result
         result = {
-            'method': 'direct_api_requests',
+            'method': 'direct_yahoo_api',
             'success_rate': best_delay_result['success_rate'] if best_delay_result else 0,
             'total_requests': num_requests * len(delays),
             'successes': sum(r['successes'] for r in all_delay_results.values()),
@@ -178,14 +200,14 @@ class EnhancedDirectAPIOptimizer:
             for error_type, count in delay_result['error_types'].items():
                 result['error_types'][error_type] = result['error_types'].get(error_type, 0) + count
         
-        self.print_result(f"Direct API Core: Best {best_success_rate:.1f}% success with {best_delay_result['delay']}s delay")
+        self.print_result(f"Direct Yahoo API: Best {best_success_rate:.1f}% success with {best_delay_result['delay']}s delay")
         return result
     
     # ==================== ENHANCEMENT 1: USER AGENT ROTATION ====================
     
     def test_direct_api_with_user_agents(self, optimal_delay: float = 1.0, num_requests: int = 30) -> Dict:
-        """Enhance direct API with user agent rotation"""
-        self.print_step("🎭", "DIRECT API + USER AGENT ROTATION")
+        """Enhance direct Yahoo Finance API with user agent rotation"""
+        self.print_step("🎭", "DIRECT YAHOO API + USER AGENT ROTATION")
         
         if not FAKE_USERAGENT_AVAILABLE:
             print("   ⚠️ fake-useragent not available, using default user agents")
@@ -198,7 +220,7 @@ class EnhancedDirectAPIOptimizer:
             'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1'
         ]
         
-        print(f"🌐 Testing direct requests with user agent rotation, {optimal_delay}s delay, {num_requests} requests...")
+        print(f"🌐 Testing direct Yahoo API with user agent rotation, {optimal_delay}s delay, {num_requests} requests...")
         
         start_time = time.time()
         successes = 0
@@ -221,24 +243,34 @@ class EnhancedDirectAPIOptimizer:
                 user_agent = random.choice(user_agents)
             
             try:
-                # Create session with user agent
+                # Create session with rotating user agent
                 session = requests.Session()
-                session.headers.update({'User-Agent': user_agent})
+                session.headers.update({
+                    'User-Agent': user_agent,
+                    'Accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive'
+                })
                 
-                # Direct API request with custom session
-                ticker = yf.Ticker(symbol, session=session)
-                info = ticker.info
-                hist = ticker.history(period="1d")
+                # Direct Yahoo Finance API call with rotating user agent
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                response = session.get(url, timeout=10)
                 
-                if hist.empty or not info:
-                    failures += 1
-                    error_types['empty_data'] = error_types.get('empty_data', 0) + 1
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'chart' in data and data['chart']['result']:
+                        successes += 1
+                        response_times.append(time.time() - request_start)
+                        # Track user agent success
+                        ua_short = user_agent.split()[0] if user_agent else 'unknown'
+                        user_agent_success[ua_short] = user_agent_success.get(ua_short, 0) + 1
+                    else:
+                        failures += 1
+                        error_types['invalid_data'] = error_types.get('invalid_data', 0) + 1
                 else:
-                    successes += 1
-                    response_times.append(time.time() - request_start)
-                    # Track user agent success
-                    ua_short = user_agent.split()[0] if user_agent else 'unknown'
-                    user_agent_success[ua_short] = user_agent_success.get(ua_short, 0) + 1
+                    failures += 1
+                    error_types[f'http_{response.status_code}'] = error_types.get(f'http_{response.status_code}', 0) + 1
                     
             except Exception as e:
                 failures += 1
@@ -280,10 +312,10 @@ class EnhancedDirectAPIOptimizer:
     # ==================== ENHANCEMENT 2: HEADER OPTIMIZATION ====================
     
     def test_direct_api_with_headers(self, optimal_delay: float = 1.0, num_requests: int = 30) -> Dict:
-        """Enhance direct API with optimized headers"""
-        self.print_step("📋", "DIRECT API + OPTIMIZED HEADERS")
+        """Enhance direct Yahoo Finance API with optimized headers"""
+        self.print_step("📋", "DIRECT YAHOO API + OPTIMIZED HEADERS")
         
-        print(f"🌐 Testing direct requests with optimized headers, {optimal_delay}s delay, {num_requests} requests...")
+        print(f"🌐 Testing direct Yahoo API with optimized headers, {optimal_delay}s delay, {num_requests} requests...")
         
         start_time = time.time()
         successes = 0
@@ -296,37 +328,45 @@ class EnhancedDirectAPIOptimizer:
             request_start = time.time()
             
             try:
-                # Create session with optimized headers
+                # Create session with comprehensive optimized headers
                 session = requests.Session()
                 
                 # Randomize headers to appear more natural
                 headers = {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                     'Accept-Language': random.choice(['en-US,en;q=0.9', 'en-GB,en;q=0.8', 'en-CA,en;q=0.7']),
                     'Accept-Encoding': 'gzip, deflate, br',
                     'DNT': '1',
                     'Connection': 'keep-alive',
                     'Upgrade-Insecure-Requests': '1',
-                    'Sec-Fetch-Dest': 'document',
-                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Dest': random.choice(['document', 'empty']),
+                    'Sec-Fetch-Mode': random.choice(['navigate', 'cors']),
                     'Sec-Fetch-Site': 'none',
                     'Cache-Control': random.choice(['no-cache', 'max-age=0']),
+                    'Pragma': 'no-cache',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"'
                 }
                 
                 session.headers.update(headers)
                 
-                # Direct API request with optimized headers
-                ticker = yf.Ticker(symbol, session=session)
-                info = ticker.info
-                hist = ticker.history(period="1d")
+                # Direct Yahoo Finance API call with optimized headers
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                response = session.get(url, timeout=10)
                 
-                if hist.empty or not info:
-                    failures += 1
-                    error_types['empty_data'] = error_types.get('empty_data', 0) + 1
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'chart' in data and data['chart']['result']:
+                        successes += 1
+                        response_times.append(time.time() - request_start)
+                    else:
+                        failures += 1
+                        error_types['invalid_data'] = error_types.get('invalid_data', 0) + 1
                 else:
-                    successes += 1
-                    response_times.append(time.time() - request_start)
+                    failures += 1
+                    error_types[f'http_{response.status_code}'] = error_types.get(f'http_{response.status_code}', 0) + 1
                     
             except Exception as e:
                 failures += 1
@@ -366,19 +406,21 @@ class EnhancedDirectAPIOptimizer:
     # ==================== ENHANCEMENT 3: SESSION PERSISTENCE ====================
     
     def test_direct_api_with_session_persistence(self, optimal_delay: float = 1.0, num_requests: int = 30) -> Dict:
-        """Enhance direct API with persistent session"""
-        self.print_step("🔗", "DIRECT API + SESSION PERSISTENCE")
+        """Enhance direct Yahoo Finance API with persistent session"""
+        self.print_step("🔗", "DIRECT YAHOO API + SESSION PERSISTENCE")
         
-        print(f"🌐 Testing direct requests with session persistence, {optimal_delay}s delay, {num_requests} requests...")
+        print(f"🌐 Testing direct Yahoo API with session persistence, {optimal_delay}s delay, {num_requests} requests...")
         
-        # Create persistent session
+        # Create persistent session for all requests
         session = requests.Session()
         session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive'
+            'Connection': 'keep-alive',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
         })
         
         start_time = time.time()
@@ -392,17 +434,21 @@ class EnhancedDirectAPIOptimizer:
             request_start = time.time()
             
             try:
-                # Direct API request with persistent session
-                ticker = yf.Ticker(symbol, session=session)
-                info = ticker.info
-                hist = ticker.history(period="1d")
+                # Direct Yahoo Finance API call using persistent session
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                response = session.get(url, timeout=10)
                 
-                if hist.empty or not info:
-                    failures += 1
-                    error_types['empty_data'] = error_types.get('empty_data', 0) + 1
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'chart' in data and data['chart']['result']:
+                        successes += 1
+                        response_times.append(time.time() - request_start)
+                    else:
+                        failures += 1
+                        error_types['invalid_data'] = error_types.get('invalid_data', 0) + 1
                 else:
-                    successes += 1
-                    response_times.append(time.time() - request_start)
+                    failures += 1
+                    error_types[f'http_{response.status_code}'] = error_types.get(f'http_{response.status_code}', 0) + 1
                     
             except Exception as e:
                 failures += 1
@@ -442,10 +488,10 @@ class EnhancedDirectAPIOptimizer:
     # ==================== ENHANCEMENT 4: ADAPTIVE TIMING ====================
     
     def test_direct_api_with_adaptive_timing(self, base_delay: float = 1.0, num_requests: int = 30) -> Dict:
-        """Enhance direct API with adaptive timing based on success/failure"""
-        self.print_step("⏰", "DIRECT API + ADAPTIVE TIMING")
+        """Enhance direct Yahoo Finance API with adaptive timing based on success/failure"""
+        self.print_step("⏰", "DIRECT YAHOO API + ADAPTIVE TIMING")
         
-        print(f"🌐 Testing direct requests with adaptive timing, base {base_delay}s delay, {num_requests} requests...")
+        print(f"🌐 Testing direct Yahoo API with adaptive timing, base {base_delay}s delay, {num_requests} requests...")
         
         start_time = time.time()
         successes = 0
@@ -460,27 +506,36 @@ class EnhancedDirectAPIOptimizer:
             request_start = time.time()
             
             try:
-                # Direct API request
-                ticker = yf.Ticker(symbol)
-                info = ticker.info
-                hist = ticker.history(period="1d")
+                # Direct Yahoo Finance API call with adaptive timing
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                response = self.session.get(url, timeout=10)
                 
-                if hist.empty or not info:
-                    failures += 1
-                    error_types['empty_data'] = error_types.get('empty_data', 0) + 1
-                    # Increase delay on failure
-                    current_delay = min(current_delay * 1.2, 3.0)
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'chart' in data and data['chart']['result']:
+                        successes += 1
+                        response_times.append(time.time() - request_start)
+                        # Decrease delay on success (faster for working requests)
+                        current_delay = max(current_delay * 0.95, 0.1)
+                    else:
+                        failures += 1
+                        error_types['invalid_data'] = error_types.get('invalid_data', 0) + 1
+                        # Increase delay on invalid data
+                        current_delay = min(current_delay * 1.2, 3.0)
                 else:
-                    successes += 1
-                    response_times.append(time.time() - request_start)
-                    # Decrease delay on success
-                    current_delay = max(current_delay * 0.95, 0.1)
+                    failures += 1
+                    error_types[f'http_{response.status_code}'] = error_types.get(f'http_{response.status_code}', 0) + 1
+                    # Increase delay more for HTTP errors (likely rate limiting)
+                    if response.status_code == 429:  # Too Many Requests
+                        current_delay = min(current_delay * 2.0, 5.0)
+                    else:
+                        current_delay = min(current_delay * 1.3, 4.0)
                     
             except Exception as e:
                 failures += 1
                 error_type = type(e).__name__
                 error_types[error_type] = error_types.get(error_type, 0) + 1
-                # Increase delay on exception
+                # Increase delay significantly on exceptions
                 current_delay = min(current_delay * 1.5, 5.0)
                 
             adaptive_delays.append(current_delay)
