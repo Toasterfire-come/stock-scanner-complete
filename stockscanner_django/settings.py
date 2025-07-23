@@ -84,8 +84,6 @@ WSGI_APPLICATION = "stockscanner_django.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-import dj_database_url
-
 # Default to SQLite for development
 DATABASES = {
     "default": {
@@ -96,8 +94,13 @@ DATABASES = {
 
 # Use DATABASE_URL environment variable for production
 if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+    except ImportError:
+        print("Warning: dj_database_url not installed. Using SQLite for development.")
+        print("Install with: pip install dj-database-url")
 
 
 # Password validation
