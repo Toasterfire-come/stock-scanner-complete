@@ -170,18 +170,22 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Celery Configuration
-celery_broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+# Celery Configuration - Optional for development
+celery_broker_url = os.environ.get('CELERY_BROKER_URL')
 
-# Validate Celery broker URL
-if celery_broker_url and ('://' in celery_broker_url):
+# Check if Redis is available for Celery
+CELERY_ENABLED = os.environ.get('CELERY_ENABLED', 'false').lower() == 'true'
+
+if CELERY_ENABLED and celery_broker_url:
     CELERY_BROKER_URL = celery_broker_url
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_BACKEND = celery_broker_url
 else:
-    # Fallback to default Redis URL
-    CELERY_BROKER_URL = 'redis://localhost:6379/0'
-    
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
+    # Development mode - disable Celery
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+    CELERY_BROKER_URL = None
 
 
 # Email Configuration
