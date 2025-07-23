@@ -96,14 +96,31 @@ DATABASES = {
 if os.environ.get('DATABASE_URL'):
     try:
         import dj_database_url
+        from urllib.parse import quote_plus
+        
         database_url = os.environ.get('DATABASE_URL')
         
-        # Validate URL format
+        # Fix URL encoding for special characters in password
         if database_url and ('://' in database_url):
+            # Check if URL contains unencoded special characters
+            if '#' in database_url and '@' in database_url:
+                # Extract and fix the password part
+                import re
+                # Pattern to match: protocol://user:password@host:port/db
+                pattern = r'(postgresql://[^:]+:)([^@]+)(@.+)'
+                match = re.match(pattern, database_url)
+                if match:
+                    prefix, password, suffix = match.groups()
+                    # URL encode the password
+                    encoded_password = quote_plus(password)
+                    database_url = prefix + encoded_password + suffix
+                    print(f"🔧 Fixed DATABASE_URL encoding for special characters")
+            
             DATABASES['default'] = dj_database_url.parse(database_url)
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+            print(f"✅ Using PostgreSQL database")
         else:
-            print(f"Warning: Invalid DATABASE_URL format: {database_url}")
+            print(f"Warning: Invalid DATABASE_URL format")
             print("Using SQLite for development.")
             
     except ImportError:
