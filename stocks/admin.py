@@ -83,13 +83,13 @@ class MembershipAdmin(admin.ModelAdmin):
         return f"${obj.pricing_info:.2f}/month"
     pricing_info.short_description = "Tier Price"
     
-         def tier_limits(self, obj):
-         """Display lookup limits"""
-         limits = obj.tier_limits
-         if limits == -1:
-             return "Unlimited"
-         return f"{limits} lookups/month"
-     tier_limits.short_description = "Monthly Limit"
+    def tier_limits(self, obj):
+        """Display lookup limits"""
+        limits = obj.tier_limits
+        if limits == -1:
+            return "Unlimited"
+        return f"{limits} lookups/month"
+    tier_limits.short_description = "Monthly Limit"
 
 @admin.register(Portfolio)
 class PortfolioAdmin(admin.ModelAdmin):
