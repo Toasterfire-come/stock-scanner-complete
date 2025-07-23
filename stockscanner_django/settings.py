@@ -33,30 +33,6 @@ if additional_hosts:
 
 # Application definition
 
-# Check what command we're running to decide on Celery Beat
-import sys
-import os
-
-# Determine if we should include django_celery_beat
-include_celery_beat = False
-
-if len(sys.argv) > 1:
-    command = sys.argv[1]
-    # Include Celery Beat for migrations and after database is ready
-    if command in ['migrate', 'makemigrations', 'showmigrations']:
-        include_celery_beat = True
-    elif command in ['runserver', 'shell', 'test']:
-        # Only include if we're likely to have database tables
-        # For now, skip it to avoid startup issues
-        include_celery_beat = False
-    else:
-        # For other commands, be conservative
-        include_celery_beat = False
-else:
-    # Not a Django management command (e.g., testing scripts)
-    include_celery_beat = False
-
-# Base Django apps
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -71,10 +47,6 @@ INSTALLED_APPS = [
     "news",
     "stocks",
 ]
-
-# Add Celery Beat conditionally
-if include_celery_beat:
-    INSTALLED_APPS.append("django_celery_beat")
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
