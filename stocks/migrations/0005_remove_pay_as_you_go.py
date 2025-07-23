@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('stocks', '0002_advanced_features'),
+        ('stocks', '0004_add_price_change_fields'),
     ]
 
     operations = [
