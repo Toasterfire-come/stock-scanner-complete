@@ -207,7 +207,8 @@ python3 test_optimized_fetcher.py --quick
 
 # Test alternative APIs
 python manage.py shell
->>> from stocks.alternative_apis import test_providers
+>>> from stocks.api_manager import stock_manager
+>>> stock_manager.test_connection()
 >>> import asyncio
 >>> asyncio.run(test_providers())
 ```

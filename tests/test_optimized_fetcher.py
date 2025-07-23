@@ -83,16 +83,17 @@ def test_configuration():
         return False
 
 def test_alternative_apis():
-    """Test alternative API providers"""
-    logger.info("🔌 Testing alternative API providers...")
+    """Test API providers - Simplified for Yahoo Finance + Finnhub"""
+    logger.info("🔌 Testing API providers...")
     
     try:
-        from stocks.alternative_apis import get_provider_status
+        from stocks.api_manager import stock_manager
         
-        status = get_provider_status()
-        configured_providers = [p for p, s in status.items() if s['configured']]
+        connections = stock_manager.test_connection()
+        usage_stats = stock_manager.get_usage_stats()
+        configured_providers = [api for api, connected in connections.items()]
         
-        logger.info(f"✅ Alternative APIs status loaded")
+        logger.info(f"✅ API status loaded")
         logger.info(f"📊 Configured providers: {len(configured_providers)}")
         
         if configured_providers:
@@ -300,7 +301,7 @@ def quick_test():
         # Test core imports
         from stocks.management.commands.import_stock_data_optimized import Command
         from stocks.config import RATE_LIMITS
-        from stocks.alternative_apis import get_provider_status
+        from stocks.api_manager import stock_manager
         
         # Test workflow imports
         from stocks.management.commands.stock_workflow import Command as WorkflowCommand

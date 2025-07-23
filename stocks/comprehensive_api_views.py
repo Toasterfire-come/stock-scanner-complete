@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import json
 import yfinance as yf
 import requests
+from .api_manager import stock_manager
 from bs4 import BeautifulSoup
 
 from django.contrib.auth.models import User
@@ -47,17 +48,14 @@ def watchlist_api(request):
                 
                 for ticker in category_tickers:
                     try:
-                        stock_data = yf.Ticker(ticker)
-                        hist = stock_data.history(period="2d")
-                        if len(hist) >= 1:
-                            current_price = hist['Close'].iloc[-1]
-                            prev_price = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
-                            change_percent = ((current_price - prev_price) / prev_price) * 100
-                            
+                        # Use API manager instead of direct yfinance
+                        quote_data = stock_manager.get_stock_quote(ticker)
+                        
+                        if quote_data:
                             items.append({
                                 'ticker': ticker,
-                                'price': round(current_price, 2),
-                                'change_percent': round(change_percent, 2),
+                                'price': round(quote_data['price'], 2),
+                                'change_percent': round(quote_data['change_percent'], 2),
                                 'category': item.category,
                                 'added_date': item.created_at.isoformat()
                             })

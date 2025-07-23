@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from stocks.models import StockAlert
 from emails.models import EmailSubscription
-from stocks.alternative_apis import get_provider_status
+from stocks.api_manager import stock_manager
 import io
 import sys
 
@@ -52,9 +52,27 @@ def admin_status(request):
 
 @require_http_methods(["GET"])
 def api_providers_status(request):
-    """Get alternative API providers status"""
+    """Get API providers status - Simplified for Yahoo Finance + Finnhub"""
     try:
-        providers = get_provider_status()
+        # Test API connections
+        connections = stock_manager.test_connection()
+        usage_stats = stock_manager.get_usage_stats()
+        
+        providers = {
+            'yahoo_finance': {
+                'status': 'active' if connections.get('yahoo_finance', False) else 'inactive',
+                'description': 'Yahoo Finance (Primary - Unlimited)',
+                'requests_today': usage_stats['yahoo_finance']['requests_today'],
+                'rate_limit': usage_stats['yahoo_finance']['rate_limit']
+            },
+            'finnhub': {
+                'status': 'active' if connections.get('finnhub', False) else 'inactive',
+                'description': 'Finnhub (Backup)',
+                'accounts': usage_stats['finnhub']['accounts'],
+                'total_available': usage_stats['finnhub']['total_available']
+            }
+        }
+        
         return JsonResponse(providers)
     except Exception as e:
         logger.error(f"Error getting API providers status: {e}")

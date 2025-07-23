@@ -406,7 +406,7 @@ python3 -c "from emails.email_config import test_email_connection; print(test_em
 #### Stock Data Issues
 ```bash
 # Test yfinance connection
-python3 -c "from stocks.yfinance_config import test_yfinance_connection; print(test_yfinance_connection())"
+python test_yfinance_system.py
 ```
 
 ## 📚 Documentation
