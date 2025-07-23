@@ -96,11 +96,22 @@ DATABASES = {
 if os.environ.get('DATABASE_URL'):
     try:
         import dj_database_url
-        DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
-        DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+        database_url = os.environ.get('DATABASE_URL')
+        
+        # Validate URL format
+        if database_url and ('://' in database_url):
+            DATABASES['default'] = dj_database_url.parse(database_url)
+            DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+        else:
+            print(f"Warning: Invalid DATABASE_URL format: {database_url}")
+            print("Using SQLite for development.")
+            
     except ImportError:
         print("Warning: dj_database_url not installed. Using SQLite for development.")
         print("Install with: pip install dj-database-url")
+    except Exception as e:
+        print(f"Warning: Error parsing DATABASE_URL: {e}")
+        print("Using SQLite for development.")
 
 
 # Password validation
@@ -143,8 +154,16 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# settings.py
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# Celery Configuration
+celery_broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+
+# Validate Celery broker URL
+if celery_broker_url and ('://' in celery_broker_url):
+    CELERY_BROKER_URL = celery_broker_url
+else:
+    # Fallback to default Redis URL
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
@@ -218,12 +237,13 @@ CORS_ALLOW_METHODS = [
 ]
 
 # Cache Configuration for API responses
-if os.environ.get('REDIS_URL'):
+redis_url = os.environ.get('REDIS_URL')
+if redis_url and ('://' in redis_url):
     # Production Redis cache
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': os.environ.get('REDIS_URL'),
+            'LOCATION': redis_url,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             }
