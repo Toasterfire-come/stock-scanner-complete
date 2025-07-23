@@ -80,6 +80,12 @@ The basic optimizer tests several predefined delay-based strategies:
 
 The advanced optimizer uses sophisticated techniques beyond simple delays:
 
+### **🌐 Baseline Test: Direct API Requests**
+- **Method**: Simple yfinance requests with varying delays (0.5s, 1.0s, 1.5s)
+- **Purpose**: Establishes baseline performance for comparison
+- **Output**: Shows success rates and RPS for each delay
+- **Example**: `Delay 0.5s: 93.3% success, 1.67 RPS`
+
 ### 1. **🔄 Session Rotation**
 - **Method**: Multiple HTTP sessions with different fingerprints
 - **Benefits**: Distributes requests across different "identities"
@@ -350,6 +356,32 @@ The advanced optimizer includes automatic test isolation:
 - **Progressive countdown** to show remaining isolation time
 - **Prevents spillover effects** from previous test methods
 - **Ensures clean test environment** for each method
+
+### Expected Output Format
+
+The advanced optimizer produces detailed output like your example:
+
+```
+🌐 TEST 1: Direct API Requests (Baseline)
+🌐 Testing direct requests with 0.5s delay, 30 requests...
+   Progress: 10/30 | Success Rate: 80.0%
+   Progress: 20/30 | Success Rate: 90.0%
+   Progress: 30/30 | Success Rate: 93.3%
+   Delay 0.5s: 93.3% success, 1.67 RPS
+
+🔄 TEST 2: Session Rotation
+   📊 Progress: 5/30 | Session 2 | Success: 96.0%
+   📊 Progress: 10/30 | Session 5 | Success: 94.5%
+   ✅ Session Rotation: 94.5% success rate
+
+📊 BASELINE COMPARISON:
+   🌐 Direct API (best delay): 93.3% success, 1.67 RPS
+   ⏰ Best delay: 0.5s
+
+🏆 ADVANCED METHODS - RANKING BY SUCCESS RATE:
+   1. session_rotation: 94.5% success (+1.2%)
+   2. header_spoofing: 89.2% success (-4.1%)
+```
 
 ## 📁 Output Files
 

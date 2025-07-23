@@ -489,6 +489,110 @@ class AdvancedYahooBypass:
         self.print_result(f"Patterns: {result['timing_patterns']} timing patterns used")
         return result
     
+    # ==================== BASELINE TEST: DIRECT API REQUESTS ====================
+    
+    def test_direct_api_requests(self, num_requests: int = 30) -> Dict:
+        """Test direct API requests with various delays as baseline"""
+        self.print_step("🌐", "TESTING DIRECT API REQUESTS (BASELINE)")
+        
+        delay_tests = [0.5, 1.0, 1.5]
+        all_delay_results = {}
+        best_delay_result = None
+        best_success_rate = 0
+        
+        for delay in delay_tests:
+            print(f"\n🌐 Testing direct requests with {delay}s delay, {num_requests} requests...")
+            
+            start_time = time.time()
+            successes = 0
+            failures = 0
+            response_times = []
+            error_types = {}
+            
+            for i in range(num_requests):
+                symbol = random.choice(self.test_symbols)
+                request_start = time.time()
+                
+                try:
+                    # Simple direct yfinance request
+                    ticker = yf.Ticker(symbol)
+                    info = ticker.info
+                    hist = ticker.history(period="1d")
+                    
+                    if hist.empty or not info:
+                        failures += 1
+                        error_types['empty_data'] = error_types.get('empty_data', 0) + 1
+                    else:
+                        successes += 1
+                        response_times.append(time.time() - request_start)
+                        
+                except Exception as e:
+                    failures += 1
+                    error_type = type(e).__name__
+                    error_types[error_type] = error_types.get(error_type, 0) + 1
+                    
+                # Progress updates
+                if (i + 1) % 10 == 0:
+                    success_rate = (successes / (i + 1)) * 100
+                    print(f"   Progress: {i+1}/{num_requests} | Success Rate: {success_rate:.1f}%")
+                    
+                # Apply delay
+                if i < num_requests - 1:
+                    time.sleep(delay)
+                    
+            total_time = time.time() - start_time
+            success_rate = (successes / num_requests) * 100 if num_requests > 0 else 0
+            avg_response_time = statistics.mean(response_times) if response_times else 0
+            rps = num_requests / total_time if total_time > 0 else 0
+            
+            delay_result = {
+                'delay': delay,
+                'success_rate': success_rate,
+                'total_requests': num_requests,
+                'successes': successes,
+                'failures': failures,
+                'avg_response_time': avg_response_time,
+                'total_time': total_time,
+                'requests_per_second': rps,
+                'error_types': error_types
+            }
+            
+            all_delay_results[f"{delay}s"] = delay_result
+            print(f"   Delay {delay}s: {success_rate:.1f}% success, {rps:.2f} RPS")
+            
+            # Track best performing delay
+            if success_rate > best_success_rate:
+                best_success_rate = success_rate
+                best_delay_result = delay_result
+                
+            # Brief pause between delay tests
+            if delay != delay_tests[-1]:
+                time.sleep(2.0)
+        
+        # Summary result for direct API tests
+        result = {
+            'method': 'direct_api_requests',
+            'success_rate': best_delay_result['success_rate'] if best_delay_result else 0,
+            'total_requests': num_requests * len(delay_tests),
+            'successes': sum(r['successes'] for r in all_delay_results.values()),
+            'failures': sum(r['failures'] for r in all_delay_results.values()),
+            'avg_response_time': best_delay_result['avg_response_time'] if best_delay_result else 0,
+            'total_time': sum(r['total_time'] for r in all_delay_results.values()),
+            'requests_per_second': best_delay_result['requests_per_second'] if best_delay_result else 0,
+            'error_types': {},
+            'best_delay': best_delay_result['delay'] if best_delay_result else 0,
+            'delay_results': all_delay_results
+        }
+        
+        # Combine error types from all delay tests
+        for delay_result in all_delay_results.values():
+            for error_type, count in delay_result['error_types'].items():
+                result['error_types'][error_type] = result['error_types'].get(error_type, 0) + count
+        
+        self.print_result(f"Direct API: Best {best_success_rate:.1f}% success with {best_delay_result['delay']}s delay")
+        self.print_result(f"Baseline: {result['requests_per_second']:.2f} RPS")
+        return result
+    
     # ==================== COMPREHENSIVE TEST RUNNER ====================
     
     def run_comprehensive_test(self) -> Dict:
@@ -497,6 +601,7 @@ class AdvancedYahooBypass:
         
         all_results = {}
         test_methods = [
+            ('direct_api_requests', self.test_direct_api_requests),  # Baseline test first
             ('session_rotation', self.test_session_rotation),
             ('header_spoofing', self.test_header_spoofing),
             ('request_chunking', self.test_request_chunking),
@@ -534,6 +639,10 @@ class AdvancedYahooBypass:
         if not valid_results:
             self.print_result("No valid test results", success=False)
             return {}
+        
+        # Separate baseline from advanced methods
+        baseline_result = valid_results.pop('direct_api_requests', None)
+        advanced_results = valid_results
             
         # Rank by success rate
         ranked_by_success = sorted(valid_results.items(), 
@@ -543,24 +652,52 @@ class AdvancedYahooBypass:
         ranked_by_speed = sorted(valid_results.items(), 
                                key=lambda x: x[1]['requests_per_second'], reverse=True)
         
-        print("\n🏆 RANKING BY SUCCESS RATE:")
+        # Show baseline comparison
+        if baseline_result:
+            print(f"\n📊 BASELINE COMPARISON:")
+            print(f"   🌐 Direct API (best delay): {baseline_result['success_rate']:.1f}% success, {baseline_result['requests_per_second']:.2f} RPS")
+            if baseline_result.get('best_delay'):
+                print(f"   ⏰ Best delay: {baseline_result['best_delay']}s")
+                
+        print("\n🏆 ADVANCED METHODS - RANKING BY SUCCESS RATE:")
         for i, (method, result) in enumerate(ranked_by_success, 1):
-            print(f"   {i}. {method}: {result['success_rate']:.1f}% success")
+            improvement = ""
+            if baseline_result and result['success_rate'] > baseline_result['success_rate']:
+                improvement = f" (+{result['success_rate'] - baseline_result['success_rate']:.1f}%)"
+            print(f"   {i}. {method}: {result['success_rate']:.1f}% success{improvement}")
             
-        print("\n⚡ RANKING BY SPEED:")
+        print("\n⚡ ADVANCED METHODS - RANKING BY SPEED:")
         for i, (method, result) in enumerate(ranked_by_speed, 1):
-            print(f"   {i}. {method}: {result['requests_per_second']:.1f} req/s")
+            speed_comparison = ""
+            if baseline_result and result['requests_per_second'] > baseline_result['requests_per_second']:
+                speed_comparison = f" (+{result['requests_per_second'] - baseline_result['requests_per_second']:.1f} RPS)"
+            elif baseline_result:
+                speed_comparison = f" ({result['requests_per_second'] - baseline_result['requests_per_second']:.1f} RPS)"
+            print(f"   {i}. {method}: {result['requests_per_second']:.1f} req/s{speed_comparison}")
             
-        # Determine best overall method
-        best_method = ranked_by_success[0]
-        self.print_result(f"BEST METHOD: {best_method[0]} ({best_method[1]['success_rate']:.1f}% success)")
+        # Determine best overall method (excluding baseline)
+        if ranked_by_success:
+            best_method = ranked_by_success[0]
+            self.print_result(f"BEST ADVANCED METHOD: {best_method[0]} ({best_method[1]['success_rate']:.1f}% success)")
+            
+            # Compare to baseline
+            if baseline_result:
+                if best_method[1]['success_rate'] > baseline_result['success_rate']:
+                    improvement = best_method[1]['success_rate'] - baseline_result['success_rate']
+                    self.print_result(f"Improvement over baseline: +{improvement:.1f}% success rate")
+                else:
+                    decline = baseline_result['success_rate'] - best_method[1]['success_rate']
+                    self.print_warning(f"Baseline performs better by {decline:.1f}% success rate")
+        else:
+            best_method = None
         
         # Generate recommendations
-        recommendations = self.generate_recommendations(valid_results, best_method)
+        recommendations = self.generate_recommendations(valid_results, best_method, baseline_result)
         
         final_result = {
-            'best_method': best_method[0],
-            'best_success_rate': best_method[1]['success_rate'],
+            'best_method': best_method[0] if best_method else 'direct_api_requests',
+            'best_success_rate': best_method[1]['success_rate'] if best_method else (baseline_result['success_rate'] if baseline_result else 0),
+            'baseline_result': baseline_result,
             'all_results': results,
             'rankings': {
                 'by_success': ranked_by_success,
@@ -571,36 +708,54 @@ class AdvancedYahooBypass:
         
         return final_result
     
-    def generate_recommendations(self, results: Dict, best_method: Tuple) -> List[str]:
+    def generate_recommendations(self, results: Dict, best_method: Tuple, baseline_result: Dict = None) -> List[str]:
         """Generate implementation recommendations"""
         recommendations = []
         
-        best_name, best_result = best_method
-        
-        if best_result['success_rate'] >= 90:
-            recommendations.append(f"✅ {best_name} is highly reliable - implement immediately")
-        elif best_result['success_rate'] >= 75:
-            recommendations.append(f"⚠️ {best_name} is moderately reliable - consider with fallbacks")
-        else:
-            recommendations.append(f"❌ {best_name} needs improvement - combine with other methods")
+        if best_method:
+            best_name, best_result = best_method
             
-        # Speed recommendations
-        if best_result['requests_per_second'] >= 10:
-            recommendations.append("🚀 High throughput achieved - suitable for production")
-        elif best_result['requests_per_second'] >= 5:
-            recommendations.append("⚡ Moderate throughput - good for regular use")
-        else:
-            recommendations.append("🐌 Low throughput - optimize delays")
+            # Compare to baseline first
+            if baseline_result:
+                if best_result['success_rate'] > baseline_result['success_rate']:
+                    improvement = best_result['success_rate'] - baseline_result['success_rate']
+                    recommendations.append(f"🎯 {best_name} outperforms simple delays by {improvement:.1f}%")
+                else:
+                    recommendations.append(f"⚠️ Simple delays ({baseline_result['best_delay']}s) may be sufficient for your use case")
             
-        # Method-specific recommendations
-        if best_name == 'session_rotation':
-            recommendations.append("🔄 Implement session pool with 5-10 rotating sessions")
-        elif best_name == 'header_spoofing':
-            recommendations.append("🎭 Focus on Chrome/Firefox profiles for best results")
-        elif best_name == 'request_chunking':
-            recommendations.append("📦 Use chunk size of 5 with 2-3 second inter-chunk delays")
-        elif best_name == 'distributed_timing':
-            recommendations.append("⏰ Implement natural timing patterns with jitter")
+            # Reliability recommendations
+            if best_result['success_rate'] >= 90:
+                recommendations.append(f"✅ {best_name} is highly reliable - implement immediately")
+            elif best_result['success_rate'] >= 75:
+                recommendations.append(f"⚠️ {best_name} is moderately reliable - consider with fallbacks")
+            else:
+                recommendations.append(f"❌ {best_name} needs improvement - combine with other methods")
+                
+            # Speed recommendations
+            if best_result['requests_per_second'] >= 10:
+                recommendations.append("🚀 High throughput achieved - suitable for production")
+            elif best_result['requests_per_second'] >= 5:
+                recommendations.append("⚡ Moderate throughput - good for regular use")
+            else:
+                recommendations.append("🐌 Low throughput - optimize delays")
+                
+            # Method-specific recommendations
+            if best_name == 'session_rotation':
+                recommendations.append("🔄 Implement session pool with 5-10 rotating sessions")
+            elif best_name == 'header_spoofing':
+                recommendations.append("🎭 Focus on Chrome/Firefox profiles for best results")
+            elif best_name == 'request_chunking':
+                recommendations.append("📦 Use chunk size of 5 with 2-3 second inter-chunk delays")
+            elif best_name == 'distributed_timing':
+                recommendations.append("⏰ Implement natural timing patterns with jitter")
+                
+        else:
+            # Fallback to baseline if no advanced methods worked
+            if baseline_result:
+                recommendations.append(f"🌐 Use direct API with {baseline_result['best_delay']}s delay")
+                recommendations.append("📈 Consider upgrading to advanced methods for better performance")
+            else:
+                recommendations.append("❌ All methods failed - check network connectivity")
             
         return recommendations
     
@@ -634,6 +789,17 @@ def main():
         if results:
             print(f"🏆 Best Method: {results['best_method']}")
             print(f"📊 Success Rate: {results['best_success_rate']:.1f}%")
+            
+            # Show baseline comparison in summary
+            if results.get('baseline_result'):
+                baseline = results['baseline_result']
+                print(f"🌐 Baseline (Direct API): {baseline['success_rate']:.1f}% with {baseline['best_delay']}s delay")
+                if results['best_success_rate'] > baseline['success_rate']:
+                    improvement = results['best_success_rate'] - baseline['success_rate']
+                    print(f"📈 Improvement: +{improvement:.1f}% over simple delays")
+                else:
+                    print(f"📊 Simple delays perform competitively")
+            
             print(f"\n💡 RECOMMENDATIONS:")
             for rec in results['recommendations']:
                 print(f"   {rec}")
