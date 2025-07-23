@@ -45,8 +45,8 @@ python windows_fix_install.py
 # Test Django configuration
 python test_django_startup.py
 
-# Run migrations
-python manage.py migrate
+# Run migrations (use our migration runner for best results)
+python run_migrations.py
 
 # Start development server
 python manage.py runserver
@@ -166,7 +166,10 @@ python test_django_startup.py
 
 #### **Run Database Migrations:**
 ```cmd
-# Create and apply database migrations
+# Use our migration runner (handles Celery Beat dependency issues)
+python run_migrations.py
+
+# Or run manually:
 python manage.py makemigrations
 python manage.py migrate
 ```
@@ -224,11 +227,17 @@ C:\path\to\project\venv\Scripts\activate
 pip install --user -r requirements-windows.txt
 ```
 
-#### **❌ Django migration errors**
+#### **❌ Django migration errors (Celery Beat tables)**
 **Solution:**
 ```cmd
-# Reset migrations if needed
-python manage.py migrate --run-syncdb
+# Use our migration runner (handles order correctly)
+python run_migrations.py
+
+# Or run manually in order:
+python manage.py migrate contenttypes
+python manage.py migrate auth
+python manage.py migrate django_celery_beat
+python manage.py migrate
 ```
 
 ### **Windows-Specific Notes**
@@ -261,6 +270,7 @@ stock-scanner-complete/
 ├── 📄 requirements-windows.txt  # Windows-safe packages
 ├── 📄 windows_fix_install.py   # Windows installer
 ├── 📄 test_django_startup.py   # Django test script
+├── 📄 run_migrations.py        # Migration runner (fixes Celery Beat)
 └── 📄 .env.example         # Environment variables template
 ```
 
