@@ -264,7 +264,33 @@ if not DEBUG:
     # Additional security headers
     X_FRAME_OPTIONS = 'DENY'
 
+# Ensure logs directory exists and handle errors gracefully
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+try:
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    USE_FILE_LOGGING = True
+except (OSError, PermissionError):
+    # If we can't create logs directory, only use console logging
+    USE_FILE_LOGGING = False
+
 # Logging Configuration
+LOGGING_HANDLERS = {
+    'console': {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+        'formatter': 'simple',
+    },
+}
+
+# Add file handler only if we can write to logs directory
+if USE_FILE_LOGGING:
+    LOGGING_HANDLERS['file'] = {
+        'level': 'INFO',
+        'class': 'logging.FileHandler',
+        'filename': os.path.join(LOGS_DIR, 'django.log'),
+        'formatter': 'verbose',
+    }
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -278,21 +304,9 @@ LOGGING = {
             'style': '{',
         },
     },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-    },
+    'handlers': LOGGING_HANDLERS,
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'] + (['file'] if USE_FILE_LOGGING else []),
         'level': 'INFO',
     },
     'loggers': {
