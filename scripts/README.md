@@ -1,57 +1,111 @@
 # 🔧 Scripts Directory
 
-This directory contains organized utility scripts for the Stock Scanner project.
+This directory contains essential setup and utility scripts for the Stock Scanner platform.
 
 ## 📁 Directory Structure
 
 ```
 scripts/
-├── setup/          # Installation and setup scripts
-├── testing/        # Testing and validation scripts
-├── utils/          # Utility and maintenance scripts
-└── README.md       # This file
+├── 📁 setup/          # Installation and setup scripts
+│   ├── 📄 fix_migration_conflicts.py     # 🔧 Django migration conflict resolver
+│   ├── 📄 windows_fix_install.py         # 🪟 Windows compatibility fixes
+│   ├── 📄 install_missing_packages.py    # 📦 Package installation helper
+│   ├── 📄 apply_yfinance_migrations.py   # 📊 Yahoo Finance integration setup
+│   ├── 📄 run_migrations.py              # 🗄️ Database migration runner
+│   └── 📄 setup_redis_windows.py         # 🔴 Redis Windows configuration
+└── 📁 utils/         # Utility and maintenance scripts
+    ├── 📄 enable_celery_beat.py          # 🔄 Celery task scheduler setup
+    ├── 📄 fix_env_urls.py                # 🔧 Environment URL configuration
+    └── 📄 check_syntax.py               # ✅ Code syntax validation
 ```
 
-## 🚀 Quick Reference
+## 🚀 Essential Scripts
 
 ### Setup Scripts
+
+#### Migration Conflict Resolver
 ```bash
-# Windows installation with fixes
-python scripts/setup/windows_fix_install.py
-
-# Database migrations
-python scripts/setup/run_migrations.py
-
-# Redis setup for Windows
-python scripts/setup/setup_redis_windows.py
+# Fix Django migration conflicts (essential for setup)
+python scripts/setup/fix_migration_conflicts.py
 ```
 
-### Testing Scripts
+#### Windows Setup
 ```bash
-# Django startup test
-python scripts/testing/test_django_startup.py
+# Windows compatibility fixes
+python scripts/setup/windows_fix_install.py
+```
 
-# YFinance API test
-python scripts/testing/test_yfinance_system.py
-
-# Redis dependency test
-python scripts/testing/test_redis_fix.py
+#### Database Setup
+```bash
+# Run Django migrations
+python scripts/setup/run_migrations.py
 ```
 
 ### Utility Scripts
+
+#### Celery Setup
 ```bash
-# Rate limit optimizer (⭐ FEATURED)
-python scripts/utils/yahoo_rate_limit_optimizer.py
-
-# Enable Celery Beat
+# Enable background task processing
 python scripts/utils/enable_celery_beat.py
+```
 
-# Check code syntax
-python scripts/utils/check_syntax.py
+#### Environment Configuration
+```bash
+# Fix environment URLs and settings
+python scripts/utils/fix_env_urls.py
 ```
 
 ## 📚 Documentation
 
-- [Project Structure Guide](../docs/PROJECT_STRUCTURE.md)
-- [Rate Limit Optimizer Guide](../docs/YFINANCE_RATE_LIMIT_GUIDE.md)
-- [Windows Setup Guide](../WINDOWS_SETUP_GUIDE.md)
+- **[Django Migration Guide](../docs/DJANGO_MIGRATION_GUIDE.md)** - Migration troubleshooting
+- **[Windows Production Guide](../docs/WINDOWS_PRODUCTION_DEPLOYMENT_GUIDE.md)** - Complete Windows setup
+- **[Integration Summary](../docs/INTEGRATION_SUMMARY.md)** - Platform integration overview
+
+## 🔧 Usage Examples
+
+### Development Setup
+```bash
+# 1. Fix any migration conflicts
+python scripts/setup/fix_migration_conflicts.py
+
+# 2. Install missing packages
+python scripts/setup/install_missing_packages.py
+
+# 3. Run migrations
+python scripts/setup/run_migrations.py
+
+# 4. Enable Celery (optional)
+python scripts/utils/enable_celery_beat.py
+```
+
+### Production Setup
+```bash
+# 1. Windows compatibility (if on Windows)
+python scripts/setup/windows_fix_install.py
+
+# 2. Fix migration conflicts
+python scripts/setup/fix_migration_conflicts.py
+
+# 3. Setup Redis (Windows)
+python scripts/setup/setup_redis_windows.py
+
+# 4. Apply migrations
+python scripts/setup/run_migrations.py
+```
+
+## ⚠️ Important Notes
+
+- **Always backup your database** before running migration scripts
+- **Run scripts from the project root directory**
+- **Activate your virtual environment** before running scripts
+- **Check script output** for any errors or warnings
+
+## 🆘 Troubleshooting
+
+If you encounter issues:
+
+1. **Check Python version**: Ensure Python 3.9+ is installed
+2. **Verify virtual environment**: Make sure it's activated
+3. **Check dependencies**: Run `pip install -r requirements.txt`
+4. **Review logs**: Check script output for specific errors
+5. **Consult documentation**: See the docs/ directory for guides

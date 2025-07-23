@@ -126,12 +126,10 @@ stock-scanner-complete/
 │   └── 📄 YFINANCE_RATE_LIMIT_GUIDE.md   # 🌟 Rate limit optimizer guide
 ├── 📁 scripts/                           # 🔧 Organized utility scripts
 │   ├── 📁 setup/                         # Installation and setup scripts
-│   ├── 📁 testing/                       # Testing and validation scripts
 │   └── 📁 utils/                         # Utility and maintenance scripts
-│       ├── 📄 yahoo_finance_api_optimizer_v2.py # 🌟 Enhanced production optimizer
-│       ├── 📄 yahoo_rate_limit_optimizer_production.py # 🚀 Production-ready optimizer
-│       ├── 📄 yahoo_rate_limit_optimizer_advanced.py # 🔧 Advanced bypass methods
-│       └── 📄 yahoo_rate_limit_optimizer.py # 📊 Basic rate limit optimizer
+│       ├── 📄 enable_celery_beat.py      # 🔄 Celery task scheduler setup
+│       ├── 📄 fix_env_urls.py            # 🔧 Environment URL configuration
+│       └── 📄 check_syntax.py           # ✅ Code syntax validation
 ├── 📁 stockscanner_django/              # Django project
 │   ├── 📄 settings.py                   # Configured for retailtradescanner.com
 │   ├── 📄 urls.py                       # URL routing with analytics endpoints
@@ -219,34 +217,24 @@ python manage.py runserver
 - Automated SSL certificates
 - System service configuration
 
-### 📊 **Yahoo Finance Rate Limit Optimization**
+### 📊 **Yahoo Finance API Integration**
 
-Optimize API performance with our advanced rate limit optimizers:
+The platform uses yfinance library for real-time stock data with built-in rate limiting:
 
-```bash
-# 🌟 ENHANCED PRODUCTION-READY OPTIMIZER (RECOMMENDED)
-python scripts/utils/yahoo_finance_api_optimizer_v2.py
-
-# Advanced optimizer with bypass methods
-python scripts/utils/yahoo_rate_limit_optimizer_advanced.py
-
-# Production-ready with enhanced features
-python scripts/utils/yahoo_rate_limit_optimizer_production.py
-
-# Basic optimization test
-python scripts/utils/yahoo_rate_limit_optimizer.py
+```python
+# Stock data is automatically fetched with rate limiting
+# Configuration in settings.py:
+STOCK_API_RATE_LIMIT = 1.0  # 1 second between requests
+YFINANCE_THREADS = 5        # Maximum concurrent threads
 ```
 
-**🚀 New Features:**
-- **Direct Yahoo Finance API Integration** - Bypasses yfinance library limitations
-- **User Agent Rotation** - 20+ realistic browser agents
-- **Optimized Headers** - Dynamic header randomization  
-- **Session Persistence** - Connection pooling for better performance
-- **Adaptive Timing** - AI-powered delay optimization
+**Features:**
+- **Real-time stock prices** with automatic rate limiting
+- **Company information** and historical data
+- **Error handling** for API failures
+- **Caching** to reduce API calls
 
-**📚 Complete Guides**: 
-- [📖 Complete Start Guide](docs/COMPLETE_START_GUIDE.md) - **Step-by-step setup**
-- [📊 Rate Limit Guide](docs/YFINANCE_RATE_LIMIT_GUIDE.md) - **Technical details**
+**📚 Integration Guide**: [docs/YFINANCE_RATE_LIMIT_GUIDE.md](docs/YFINANCE_RATE_LIMIT_GUIDE.md)
 
 ---
 
@@ -268,8 +256,14 @@ python scripts/utils/yahoo_rate_limit_optimizer.py
 9. ✅ **Final Testing** - Complete production verification
 
 ```cmd
-# Production system test
-python scripts/testing/test_production_system.py
+# Django system check
+python manage.py check
+
+# Run migrations
+python manage.py migrate
+
+# Test server startup
+python manage.py runserver 127.0.0.1:8000
 ```
 
 **Result**: Full business platform at **retailtradescanner.com** with 4-tier membership system ready for customers!
@@ -498,15 +492,8 @@ python3 -c "from emails.email_config import test_email_connection; print(test_em
 
 #### Stock Data Issues
 ```bash
-# Test yfinance connection
-python scripts/testing/test_yfinance_system.py
-
-# Enhanced production optimizer (recommended)
-python scripts/utils/yahoo_finance_api_optimizer_v2.py
-
-# Alternative optimizers
-python scripts/utils/yahoo_rate_limit_optimizer_production.py
-python scripts/utils/yahoo_rate_limit_optimizer.py
+# Check yfinance integration
+python -c "import yfinance as yf; print('yfinance working:', yf.Ticker('AAPL').info['symbol'])"
 ```
 
 ## 📚 Documentation
