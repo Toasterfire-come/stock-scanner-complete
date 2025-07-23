@@ -11,7 +11,7 @@ from django.utils import timezone
 @admin.register(StockAlert)
 class StockAlertAdmin(admin.ModelAdmin):
     list_display = ('ticker', 'company_name', 'current_price', 'volume_today', 'last_update')
-    list_filter = ('last_update', 'sector')
+    list_filter = ('last_update', 'sent')
     search_fields = ('ticker', 'company_name')
     readonly_fields = ('last_update',)
     

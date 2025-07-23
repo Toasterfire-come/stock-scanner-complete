@@ -33,8 +33,8 @@ class YFinanceStockManager:
         self.daily_usage = self._load_daily_usage()
         self.last_yfinance_request = 0
         
-        logger.info(f"🎯 YFinance Stock Manager initialized:")
-        logger.info(f"   • Yahoo Finance: ✅ Primary (unlimited)")
+        logger.info(f"YFinance Stock Manager initialized:")
+        logger.info(f"   • Yahoo Finance: Primary (unlimited)")
         logger.info(f"   • Finnhub backup: {len(self.finnhub_keys)} accounts")
         logger.info(f"   • Rate limit: {self.yfinance_rate_limit}s delay")
 
@@ -74,7 +74,7 @@ class YFinanceStockManager:
                 if quote:
                     self.daily_usage['yfinance_requests'] += 1
                     self._save_daily_usage()
-                    logger.info(f"✅ {symbol} from Yahoo Finance (attempt {attempt + 1})")
+                    logger.info(f"SUCCESS: {symbol} from Yahoo Finance (attempt {attempt + 1})")
                     return quote
                     
             except Exception as e:
@@ -82,7 +82,7 @@ class YFinanceStockManager:
                 if attempt < self.yfinance_retries - 1:
                     time.sleep(1)  # Brief pause before retry
         
-        logger.warning(f"⚠️ Yahoo Finance failed for {symbol} after {self.yfinance_retries} attempts")
+        logger.warning(f"WARNING: Yahoo Finance failed for {symbol} after {self.yfinance_retries} attempts")
         
         # Fallback to backup APIs
         return self._get_backup_quote(symbol)
@@ -138,14 +138,14 @@ class YFinanceStockManager:
             try:
                 quote = self._get_finnhub_quote(symbol)
                 if quote:
-                    logger.info(f"✅ {symbol} from Finnhub (backup)")
+                    logger.info(f"SUCCESS: {symbol} from Finnhub (backup)")
                     return quote
             except Exception as e:
                 logger.warning(f"Finnhub backup failed for {symbol}: {e}")
         else:
             logger.warning(f"No Finnhub API keys configured")
         
-        logger.error(f"❌ All APIs failed for {symbol}")
+        logger.error(f"ERROR: All APIs failed for {symbol}")
         return None
 
     def _get_finnhub_quote(self, symbol: str) -> Optional[Dict]:
