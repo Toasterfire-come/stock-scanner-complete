@@ -7,8 +7,20 @@ Tests all packages in requirements.txt to ensure they can be installed and impor
 import subprocess
 import sys
 import importlib
-import pkg_resources
 from pathlib import Path
+
+# Try to import pkg_resources, fallback to importlib.metadata for Python 3.8+
+try:
+    import pkg_resources
+    USE_PKG_RESOURCES = True
+except ImportError:
+    try:
+        import importlib.metadata as importlib_metadata
+        USE_PKG_RESOURCES = False
+    except ImportError:
+        # Fallback for older Python versions
+        import importlib_metadata
+        USE_PKG_RESOURCES = False
 
 def parse_requirements(file_path):
     """Parse requirements.txt and extract package names"""
@@ -76,11 +88,18 @@ def test_package_import(package_name):
 
 def check_installed_version(package_name):
     """Check if package is installed and get version"""
-    try:
-        distribution = pkg_resources.get_distribution(package_name)
-        return True, distribution.version
-    except pkg_resources.DistributionNotFound:
-        return False, None
+    if USE_PKG_RESOURCES:
+        try:
+            distribution = pkg_resources.get_distribution(package_name)
+            return True, distribution.version
+        except pkg_resources.DistributionNotFound:
+            return False, None
+    else:
+        try:
+            distribution = importlib_metadata.distribution(package_name)
+            return True, distribution.version
+        except importlib_metadata.PackageNotFoundError:
+            return False, None
 
 def main():
     """Main validation process"""
