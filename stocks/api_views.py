@@ -19,6 +19,7 @@ import logging
 
 from .models import StockAlert
 from emails.models import EmailSubscription
+from .api_manager import stock_manager
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
@@ -736,8 +737,13 @@ def stock_lookup_api(request, ticker):
         # Try to get from database first
         db_stock = StockAlert.objects.filter(ticker=ticker).first()
         
-        # Get real-time data from yfinance
+        # Get real-time data using stock manager
         try:
+            quote_data = stock_manager.get_stock_quote(ticker)
+            if not quote_data:
+                raise Exception("No data available from any API")
+            
+            # Get additional data from yfinance for detailed info
             stock = yf.Ticker(ticker)
             info = stock.info
             hist = stock.history(period="5d", interval="1d")
@@ -751,9 +757,9 @@ def stock_lookup_api(request, ticker):
                 'website': info.get('website', ''),
                 'description': info.get('longBusinessSummary', ''),
                 
-                # Price data
-                'current_price': info.get('currentPrice', info.get('regularMarketPrice', 0)),
-                'previous_close': info.get('previousClose', 0),
+                # Price data (primary from stock manager, fallback to yfinance info)
+                'current_price': quote_data.get('price', info.get('currentPrice', info.get('regularMarketPrice', 0))),
+                'previous_close': quote_data.get('price', 0) - quote_data.get('change', 0) if quote_data.get('change') else info.get('previousClose', 0),
                 'open': info.get('open', 0),
                 'day_low': info.get('dayLow', 0),
                 'day_high': info.get('dayHigh', 0),
@@ -899,6 +905,7 @@ def stock_news_api(request):
         # Try to get news from Yahoo Finance
         if ticker:
             try:
+                # Use yfinance directly for news (not available in stock manager)
                 stock = yf.Ticker(ticker)
                 news = stock.news
                 

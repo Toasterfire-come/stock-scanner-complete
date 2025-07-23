@@ -306,28 +306,26 @@ LOGGING = {
     },
 }
 
-# ===== IEX CLOUD API CONFIGURATION =====
-# Load all 6 IEX Cloud API keys for load balancing
-IEX_API_KEYS = []
-for i in range(1, 7):
-    key = os.environ.get(f'IEX_API_KEY_{i}')
-    name = os.environ.get(f'IEX_API_KEY_{i}_NAME', f'Account {i}')
-    if key:
-        IEX_API_KEYS.append({
-            'key': key,
-            'name': name,
-            'account_id': i
-        })
+# ===== STOCK DATA API CONFIGURATION =====
+# Primary: Yahoo Finance (yfinance) - Unlimited and Free
+YFINANCE_RATE_LIMIT = float(os.environ.get('YFINANCE_RATE_LIMIT', '1.0'))
+YFINANCE_TIMEOUT = int(os.environ.get('YFINANCE_TIMEOUT', '15'))
+YFINANCE_RETRIES = int(os.environ.get('YFINANCE_RETRIES', '3'))
 
-# Backward compatibility
-if not IEX_API_KEYS:
-    primary_key = os.environ.get('IEX_API_KEY')
-    if primary_key:
-        IEX_API_KEYS.append({
-            'key': primary_key,
-            'name': 'Primary Account',
-            'account_id': 1
-        })
+# Backup APIs
+ALPHA_VANTAGE_KEYS = []
+for i in range(1, 7):
+    key = os.environ.get(f'ALPHA_VANTAGE_API_KEY_{i}')
+    if key:
+        ALPHA_VANTAGE_KEYS.append(key)
+
+FINNHUB_KEYS = []
+for i in range(1, 3):
+    key = os.environ.get(f'FINNHUB_API_KEY_{i}')
+    if key:
+        FINNHUB_KEYS.append(key)
+
+TWELVE_DATA_API_KEY = os.environ.get('TWELVE_DATA_API_KEY', '')
 
 # WordPress Integration
 WORDPRESS_URL = os.environ.get('WORDPRESS_URL', '')

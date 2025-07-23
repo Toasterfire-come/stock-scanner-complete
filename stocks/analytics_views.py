@@ -16,6 +16,7 @@ import json
 from django.contrib.auth.models import User
 from emails.models import EmailSubscription
 from .models import StockAlert, Membership
+from .api_manager import stock_manager
 
 def is_admin_user(user):
     """Check if user is admin/staff"""
