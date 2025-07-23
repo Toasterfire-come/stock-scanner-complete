@@ -17,33 +17,44 @@ The optimizer tests various strategies to find the optimal configuration for fet
 ### Basic Usage
 
 ```bash
-# Run the optimizer with default settings
-python yahoo_rate_limit_optimizer.py
+# Run the basic optimizer
+python scripts/utils/yahoo_rate_limit_optimizer.py
+
+# Run the ADVANCED optimizer (recommended)
+python scripts/utils/yahoo_rate_limit_optimizer_advanced.py
 ```
 
 ### Advanced Usage
 
 ```python
-from yahoo_rate_limit_optimizer import YahooRateLimitOptimizer
+from scripts.utils.yahoo_rate_limit_optimizer_advanced import AdvancedYahooBypass
 
-# Initialize optimizer
-optimizer = YahooRateLimitOptimizer()
+# Initialize advanced optimizer
+optimizer = AdvancedYahooBypass()
 
-# Test specific strategy
-results = optimizer.test_rate_limit_strategy(
-    delay=1.5,
-    num_requests=50,
-    strategy_name="conservative"
-)
+# Run comprehensive tests with multiple bypass methods
+results = optimizer.run_comprehensive_test()
 
-# Get best configuration
-best_config = optimizer.analyze_results(results)
-print(f"Optimal delay: {best_config['delay']}s")
+# Get best method and recommendations
+print(f"Best Method: {results['best_method']}")
+print(f"Success Rate: {results['best_success_rate']:.1f}%")
+```
+
+### Installation for Advanced Features
+
+```bash
+# Install additional dependencies for advanced optimizer
+pip install -r scripts/utils/requirements-advanced.txt
+
+# Or install individually
+pip install fake-useragent aiohttp httpx requests-cache
 ```
 
 ## 🧪 Testing Strategies
 
-The optimizer tests several predefined strategies:
+### Basic Optimizer Strategies
+
+The basic optimizer tests several predefined delay-based strategies:
 
 ### 1. **Aggressive Strategy**
 - **Delay**: 0.5 seconds
@@ -64,6 +75,34 @@ The optimizer tests several predefined strategies:
 - **Delay**: 5.0 seconds
 - **Use Case**: Long-term data archiving
 - **Risk**: Minimal
+
+## 🚀 Advanced Bypass Methods
+
+The advanced optimizer uses sophisticated techniques beyond simple delays:
+
+### 1. **🔄 Session Rotation**
+- **Method**: Multiple HTTP sessions with different fingerprints
+- **Benefits**: Distributes requests across different "identities"
+- **Implementation**: 5 rotating sessions with unique headers and retry strategies
+- **Best For**: High-volume applications
+
+### 2. **🎭 Header Spoofing**
+- **Method**: Mimics real browser requests with authentic headers
+- **Benefits**: Appears as legitimate web traffic
+- **Implementation**: Chrome, Firefox, Safari, and Edge browser profiles
+- **Best For**: Avoiding bot detection
+
+### 3. **📦 Request Chunking**
+- **Method**: Burst requests in chunks with longer inter-chunk delays
+- **Benefits**: Natural traffic patterns that avoid sustained load
+- **Implementation**: 5-request chunks with 2-4 second delays
+- **Best For**: Batch processing
+
+### 4. **⏰ Distributed Timing**
+- **Method**: Natural human-like timing patterns with jitter
+- **Benefits**: Mimics human behavior patterns
+- **Implementation**: Variable delays with pattern multipliers and randomization
+- **Best For**: Long-term sustained access
 
 ## 🔧 Configuration Options
 
@@ -274,27 +313,43 @@ except NetworkError:
 
 ## 🔧 Command Line Options
 
+### Basic Optimizer
+
 ```bash
 # Basic testing
-python yahoo_rate_limit_optimizer.py
+python scripts/utils/yahoo_rate_limit_optimizer.py
 
 # Custom configuration
-python yahoo_rate_limit_optimizer.py \
+python scripts/utils/yahoo_rate_limit_optimizer.py \
     --min-delay 0.5 \
     --max-delay 3.0 \
     --test-symbols 100 \
     --save-results \
     --output results.json
-
-# Quick test
-python yahoo_rate_limit_optimizer.py --quick
-
-# Comprehensive test
-python yahoo_rate_limit_optimizer.py --comprehensive
-
-# Debug mode
-python yahoo_rate_limit_optimizer.py --debug --verbose
 ```
+
+### Advanced Optimizer (Recommended)
+
+```bash
+# Run all advanced bypass methods
+python scripts/utils/yahoo_rate_limit_optimizer_advanced.py
+
+# The advanced optimizer automatically:
+# - Tests all 4 bypass methods
+# - Adds isolation delays between tests
+# - Ranks methods by success rate and speed
+# - Generates implementation recommendations
+# - Saves detailed results with timestamps
+```
+
+### Test Isolation Features
+
+The advanced optimizer includes automatic test isolation:
+
+- **10-second delays** between different bypass method tests
+- **Progressive countdown** to show remaining isolation time
+- **Prevents spillover effects** from previous test methods
+- **Ensures clean test environment** for each method
 
 ## 📁 Output Files
 
