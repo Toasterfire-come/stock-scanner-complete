@@ -4,21 +4,48 @@ A comprehensive stock monitoring and membership platform for **retailtradescanne
 
 ## 🚀 Quick Start
 
+### 🪟 **Windows Users (RECOMMENDED):**
+**[📖 WINDOWS_SETUP_GUIDE.md](WINDOWS_SETUP_GUIDE.md)** - Complete Windows setup guide with all compatibility issues resolved
+
+```cmd
+# 1. Clone the repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+
+# 2. Create virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+# 3. Run Windows installer (handles all issues)
+python windows_fix_install.py
+
+# 4. Test and start Django
+python test_django_startup.py
+python manage.py migrate
+python manage.py runserver
+```
+
+### 🐧 **Linux/Mac:**
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
 cd stock-scanner-complete
 
-# 2. Run automated setup
-./startup.sh
+# 2. Create virtual environment  
+python -m venv venv
+source venv/bin/activate
 
-# 3. Access your application
-# Django Admin: http://localhost:8000/admin
-# Analytics API: http://localhost:8000/api/analytics/public/
-# Stock Data: http://localhost:8000/api/stocks/
+# 3. Install packages
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
 ```
 
-**For production deployment, see: [COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)**
+### 🌐 **Access Your Platform:**
+- **Main Platform:** http://localhost:8000
+- **Django Admin:** http://localhost:8000/admin
+- **Analytics API:** http://localhost:8000/api/analytics/public/
+- **Stock Data:** http://localhost:8000/api/stocks/
 
 ## ✨ Features
 
