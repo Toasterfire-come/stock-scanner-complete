@@ -127,7 +127,10 @@ stock-scanner-complete/
 │   ├── 📁 setup/                         # Installation and setup scripts
 │   ├── 📁 testing/                       # Testing and validation scripts
 │   └── 📁 utils/                         # Utility and maintenance scripts
-│       └── 📄 yahoo_rate_limit_optimizer.py # 🌟 Rate limit optimizer
+│       ├── 📄 yahoo_finance_api_optimizer_v2.py # 🌟 Enhanced production optimizer
+│       ├── 📄 yahoo_rate_limit_optimizer_production.py # 🚀 Production-ready optimizer
+│       ├── 📄 yahoo_rate_limit_optimizer_advanced.py # 🔧 Advanced bypass methods
+│       └── 📄 yahoo_rate_limit_optimizer.py # 📊 Basic rate limit optimizer
 ├── 📁 stockscanner_django/              # Django project
 │   ├── 📄 settings.py                   # Configured for retailtradescanner.com
 │   ├── 📄 urls.py                       # URL routing with analytics endpoints
@@ -217,20 +220,32 @@ python manage.py runserver
 
 ### 📊 **Yahoo Finance Rate Limit Optimization**
 
-Optimize API performance with our advanced rate limit optimizer:
+Optimize API performance with our advanced rate limit optimizers:
 
 ```bash
+# 🌟 ENHANCED PRODUCTION-READY OPTIMIZER (RECOMMENDED)
+python scripts/utils/yahoo_finance_api_optimizer_v2.py
+
+# Advanced optimizer with bypass methods
+python scripts/utils/yahoo_rate_limit_optimizer_advanced.py
+
+# Production-ready with enhanced features
+python scripts/utils/yahoo_rate_limit_optimizer_production.py
+
 # Basic optimization test
 python scripts/utils/yahoo_rate_limit_optimizer.py
-
-# Comprehensive test with results saved
-python scripts/utils/yahoo_rate_limit_optimizer.py --comprehensive --save-results
-
-# Quick test for immediate results
-python scripts/utils/yahoo_rate_limit_optimizer.py --quick
 ```
 
-**📚 Complete Guide**: [docs/YFINANCE_RATE_LIMIT_GUIDE.md](docs/YFINANCE_RATE_LIMIT_GUIDE.md)
+**🚀 New Features:**
+- **Direct Yahoo Finance API Integration** - Bypasses yfinance library limitations
+- **User Agent Rotation** - 20+ realistic browser agents
+- **Optimized Headers** - Dynamic header randomization  
+- **Session Persistence** - Connection pooling for better performance
+- **Adaptive Timing** - AI-powered delay optimization
+
+**📚 Complete Guides**: 
+- [📖 Complete Start Guide](docs/COMPLETE_START_GUIDE.md) - **Step-by-step setup**
+- [📊 Rate Limit Guide](docs/YFINANCE_RATE_LIMIT_GUIDE.md) - **Technical details**
 
 ### 🔧 WordPress Plugin Setup
 
@@ -457,7 +472,11 @@ python3 -c "from emails.email_config import test_email_connection; print(test_em
 # Test yfinance connection
 python scripts/testing/test_yfinance_system.py
 
-# Optimize rate limiting
+# Enhanced production optimizer (recommended)
+python scripts/utils/yahoo_finance_api_optimizer_v2.py
+
+# Alternative optimizers
+python scripts/utils/yahoo_rate_limit_optimizer_production.py
 python scripts/utils/yahoo_rate_limit_optimizer.py
 ```
 
