@@ -13,6 +13,10 @@ scripts/
 │   ├── 📄 apply_yfinance_migrations.py   # 📊 Yahoo Finance integration setup
 │   ├── 📄 run_migrations.py              # 🗄️ Database migration runner
 │   └── 📄 setup_redis_windows.py         # 🔴 Redis Windows configuration
+├── 📁 testing/        # Testing and validation scripts
+│   ├── 📄 test_django_startup.py         # 🌐 Django application startup test
+│   ├── 📄 test_yfinance_system.py        # 📈 Yahoo Finance API integration test
+│   └── 📄 validate_migrations.py         # 🔍 Migration sequence validator
 └── 📁 utils/         # Utility and maintenance scripts
     ├── 📄 enable_celery_beat.py          # 🔄 Celery task scheduler setup
     ├── 📄 fix_env_urls.py                # 🔧 Environment URL configuration
@@ -53,6 +57,26 @@ python scripts/utils/enable_celery_beat.py
 ```bash
 # Fix environment URLs and settings
 python scripts/utils/fix_env_urls.py
+```
+
+### Testing Scripts
+
+#### Django Startup Test
+```bash
+# Test Django application startup and configuration
+python scripts/testing/test_django_startup.py
+```
+
+#### YFinance Integration Test
+```bash
+# Test Yahoo Finance API integration
+python scripts/testing/test_yfinance_system.py
+```
+
+#### Migration Validation
+```bash
+# Validate Django migration sequence and dependencies
+python scripts/testing/validate_migrations.py
 ```
 
 ## 📚 Documentation

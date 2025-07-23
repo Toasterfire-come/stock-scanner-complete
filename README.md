@@ -126,6 +126,7 @@ stock-scanner-complete/
 │   └── 📄 YFINANCE_RATE_LIMIT_GUIDE.md   # 🌟 Rate limit optimizer guide
 ├── 📁 scripts/                           # 🔧 Organized utility scripts
 │   ├── 📁 setup/                         # Installation and setup scripts
+│   ├── 📁 testing/                       # Testing and validation scripts
 │   └── 📁 utils/                         # Utility and maintenance scripts
 │       ├── 📄 enable_celery_beat.py      # 🔄 Celery task scheduler setup
 │       ├── 📄 fix_env_urls.py            # 🔧 Environment URL configuration
@@ -492,8 +493,11 @@ python3 -c "from emails.email_config import test_email_connection; print(test_em
 
 #### Stock Data Issues
 ```bash
-# Check yfinance integration
-python -c "import yfinance as yf; print('yfinance working:', yf.Ticker('AAPL').info['symbol'])"
+# Test yfinance connection
+python scripts/testing/test_yfinance_system.py
+
+# Test Django startup
+python scripts/testing/test_django_startup.py
 ```
 
 ## 📚 Documentation
