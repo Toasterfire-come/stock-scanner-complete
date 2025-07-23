@@ -17,10 +17,10 @@ python -m venv venv
 venv\Scripts\activate
 
 # 3. Run Windows installer (handles all issues)
-python windows_fix_install.py
+python scripts/setup/windows_fix_install.py
 
 # 4. Test and start Django
-python test_django_startup.py
+python scripts/testing/test_django_startup.py
 python manage.py migrate
 python manage.py runserver
 ```
@@ -35,9 +35,9 @@ cd stock-scanner-complete
 python -m venv venv
 source venv/bin/activate
 
-# 3. Install packages
+# 3. Install packages and setup
 pip install -r requirements.txt
-python manage.py migrate
+python scripts/setup/run_migrations.py
 python manage.py runserver
 ```
 
@@ -117,12 +117,17 @@ python manage.py runserver
 stock-scanner-complete/
 ├── 📄 README.md                          # This file - project overview
 ├── 📄 requirements.txt                   # Python dependencies (production-ready)
+├── 📄 requirements-windows.txt           # Windows-specific dependencies
 ├── 📄 manage.py                          # Django management script
-├── 📄 startup.sh                         # Automated setup script
-├── 📄 .env.example                       # Environment variables template
-├── 📄 COMPLETE_SETUP_GUIDE.md           # Production deployment guide with separated API keys
-├── 📄 test_setup.py                     # Setup verification script
-├── 📄 validate_production_ready.py      # Production readiness check
+├── 📄 WINDOWS_SETUP_GUIDE.md             # Windows setup guide
+├── 📁 docs/                              # 📚 Complete documentation
+│   ├── 📄 PROJECT_STRUCTURE.md           # Project organization guide
+│   └── 📄 YFINANCE_RATE_LIMIT_GUIDE.md   # 🌟 Rate limit optimizer guide
+├── 📁 scripts/                           # 🔧 Organized utility scripts
+│   ├── 📁 setup/                         # Installation and setup scripts
+│   ├── 📁 testing/                       # Testing and validation scripts
+│   └── 📁 utils/                         # Utility and maintenance scripts
+│       └── 📄 yahoo_rate_limit_optimizer.py # 🌟 Rate limit optimizer
 ├── 📁 stockscanner_django/              # Django project
 │   ├── 📄 settings.py                   # Configured for retailtradescanner.com
 │   ├── 📄 urls.py                       # URL routing with analytics endpoints
@@ -209,6 +214,23 @@ python manage.py runserver
 - Redis caching
 - Automated SSL certificates
 - System service configuration
+
+### 📊 **Yahoo Finance Rate Limit Optimization**
+
+Optimize API performance with our advanced rate limit optimizer:
+
+```bash
+# Basic optimization test
+python scripts/utils/yahoo_rate_limit_optimizer.py
+
+# Comprehensive test with results saved
+python scripts/utils/yahoo_rate_limit_optimizer.py --comprehensive --save-results
+
+# Quick test for immediate results
+python scripts/utils/yahoo_rate_limit_optimizer.py --quick
+```
+
+**📚 Complete Guide**: [docs/YFINANCE_RATE_LIMIT_GUIDE.md](docs/YFINANCE_RATE_LIMIT_GUIDE.md)
 
 ### 🔧 WordPress Plugin Setup
 
@@ -416,12 +438,12 @@ STOCK_API_RATE_LIMIT=1.0
 
 #### Database Issues
 ```bash
-# Test database
-python3 test_database_setup.py
+# Test database and Django startup
+python scripts/testing/test_django_startup.py
 
 # Reset database
-rm stock_scanner.db
-python manage.py migrate
+rm db.sqlite3
+python scripts/setup/run_migrations.py
 ```
 
 #### Email Issues
@@ -433,16 +455,18 @@ python3 -c "from emails.email_config import test_email_connection; print(test_em
 #### Stock Data Issues
 ```bash
 # Test yfinance connection
-python test_yfinance_system.py
+python scripts/testing/test_yfinance_system.py
+
+# Optimize rate limiting
+python scripts/utils/yahoo_rate_limit_optimizer.py
 ```
 
 ## 📚 Documentation
 
-- **[Complete Setup Guide](COMPLETE_SETUP_GUIDE.md)** - Complete installation and deployment guide
-- **[Advanced Features Guide](ADVANCED_FEATURES_GUIDE.md)** - Regulatory compliance, analytics, and advanced features
-- **[WordPress Integration](WORDPRESS_DJANGO_CONNECTION.md)** - Technical integration guide
-- **[Real Data Analytics](REAL_DATA_ANALYTICS.md)** - Analytics system documentation
-- **[Complete Sitemap](COMPLETE_SITEMAP.md)** - Full site structure (24 pages)
+- **[📁 Project Structure Guide](docs/PROJECT_STRUCTURE.md)** - Complete project organization and file structure
+- **[📊 Rate Limit Optimizer Guide](docs/YFINANCE_RATE_LIMIT_GUIDE.md)** - Yahoo Finance API optimization
+- **[🪟 Windows Setup Guide](WINDOWS_SETUP_GUIDE.md)** - Windows installation and troubleshooting
+- **[📖 Main Documentation](README.md)** - This file - comprehensive project overview
 
 ## 🎯 Key Features in Detail
 
