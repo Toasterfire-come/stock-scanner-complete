@@ -1,12 +1,40 @@
 #!/usr/bin/env python3
 """
-Absolute Minimal Django Test
-Find the exact source of the Django setup failure
+🔍 DJANGO MINIMAL DIAGNOSTIC TEST
+==================================
+Comprehensive step-by-step Django testing to isolate startup issues.
+Tests each component individually to find the exact failure point.
 """
 
-import os
 import sys
-from pathlib import Path
+import os
+import traceback
+import importlib
+
+# 🎯 FIX: Add current directory to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+print("🔍 Django Minimal Diagnostic Test")
+print("=" * 50)
+print(f"📂 Current directory: {current_dir}")
+print(f"🐍 Python path includes current dir: {current_dir in sys.path}")
+
+# 🔍 Check if we're in the right directory
+required_files = ['manage.py', 'stockscanner_django', 'core', 'emails']
+missing_files = []
+for file in required_files:
+    if not os.path.exists(os.path.join(current_dir, file)):
+        missing_files.append(file)
+
+if missing_files:
+    print(f"⚠️  Missing files/dirs: {missing_files}")
+    print("❌ You might be in the wrong directory!")
+else:
+    print("✅ All required files/directories found")
+
+print()
 
 def test_step_by_step():
     """Test Django setup step by step to find exact failure point"""
