@@ -56,11 +56,17 @@ stock-scanner-complete/
 
 ## 🎯 Quick Navigation
 
-### **🪟 Windows Users (RECOMMENDED):**
-1. **`WINDOWS_SETUP_FIX.bat`** → Fixes compilation issues
-2. **`LOAD_COMPLETE_NASDAQ.bat`** → Load 11,658+ tickers
+### **🪟 Windows Users (ZERO COMPILATION ISSUES):**
+1. **`FIX_WINDOWS_COMPLETE.bat`** → Ultimate Windows fix (NO COMPILER NEEDED)
+2. **`LOAD_NASDAQ_ONLY.bat`** → Load NASDAQ tickers only
 3. **`START_HERE.bat`** → Start stock scanning
-4. Done! No compiler needed!
+4. Done! 100% Windows compatible!
+
+### **Alternative Installation:**
+```cmd
+# Minimal installation (essential packages only)
+pip install -r requirements_minimal.txt
+```
 
 ### **First Time Setup (All Platforms):**
 1. **`START_HERE.bat`** → Option 1 (Simple Start)
@@ -73,8 +79,9 @@ stock-scanner-complete/
 
 ### **Need Help:**
 - **`docs/WINDOWS_SETUP_GUIDE.md`** - Windows compilation fixes
-- **`docs/COMPLETE_NASDAQ_INTEGRATION.md`** - 11,658+ ticker guide
-- **`docs/setup/SIMPLE_SETUP_README.md`** - Simple setup guide
+- **`docs/NASDAQ_ONLY_GUIDE.md`** - NASDAQ-only ticker system
+- **`requirements_minimal.txt`** - Essential packages (no compilation)
+- **`FIX_WINDOWS_COMPLETE.bat`** - Ultimate Windows solution
 - **`docs/troubleshooting/`** - Problem solving
 - **`START_HERE.bat`** → Option 4 (Test System)
 
