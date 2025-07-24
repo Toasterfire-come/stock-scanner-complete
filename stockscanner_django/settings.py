@@ -121,7 +121,7 @@ if os.environ.get('DATABASE_URL'):
             # Connection pooling for production
             DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
             DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
-                                    print(f"✅ Using MySQL database with production optimizations (Linux optimized)")
+            print(f"✅ Using MySQL database with production optimizations (Linux optimized)")
         else:
             # Default to PostgreSQL for backward compatibility
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
@@ -385,3 +385,11 @@ for i in range(1, 3):
 WORDPRESS_URL = os.environ.get('WORDPRESS_URL', '')
 WORDPRESS_USERNAME = os.environ.get('WORDPRESS_USERNAME', '')
 WORDPRESS_APP_PASSWORD = os.environ.get('WORDPRESS_APP_PASSWORD', '')
+
+# Windows Git Bash PyMySQL compatibility
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    print("✅ PyMySQL configured for Windows compatibility")
+except ImportError:
+    print("⚠️  PyMySQL not available, using default MySQL driver")
