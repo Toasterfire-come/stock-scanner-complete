@@ -24,6 +24,9 @@ redis>=5.0.0
 # ===== ENVIRONMENT & UTILITIES =====
 python-dotenv>=1.0.0
 
+# ===== TEXT PROCESSING & NLP =====
+textblob>=0.17.1
+
 # ===== DATA PROCESSING (OPTIONAL) =====
 # These are optional and will be installed if available
 numpy>=1.24.0

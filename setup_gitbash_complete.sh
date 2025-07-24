@@ -209,6 +209,10 @@ install_python_packages() {
     pip install celery>=5.3.0
     pip install redis>=5.0.0
     
+    # Text processing packages
+    info "Installing text processing packages..."
+    pip install textblob>=0.17.1
+    
     # Optional data processing (may fail on Windows without compiler)
     info "Installing data processing packages..."
     pip install numpy>=1.24.0 || warning "NumPy installation failed (optional)"
