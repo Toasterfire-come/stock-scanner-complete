@@ -53,7 +53,7 @@ try:
     conn = pymysql.connect(
         host='localhost',
         user='stock_scanner',
-        password='StockScanner2024!',
+        password='StockScanner2010',
         database='stock_scanner_nasdaq'
     )
     conn.close()

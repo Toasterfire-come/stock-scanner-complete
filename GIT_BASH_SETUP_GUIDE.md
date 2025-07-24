@@ -140,14 +140,14 @@ python manage.py collectstatic
 The script automatically creates:
 - **Database**: `stock_scanner_nasdaq`
 - **User**: `stock_scanner`
-- **Password**: `StockScanner2024!`
+- **Password**: `StockScanner2010`
 - **MySQL Root**: Uses your password `stockscanner2010`
 
 ### Manual MySQL Setup (if needed):
 ```sql
 -- Using your MySQL root password: stockscanner2010
 CREATE DATABASE stock_scanner_nasdaq CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'stock_scanner'@'localhost' IDENTIFIED BY 'StockScanner2024!';
+CREATE USER 'stock_scanner'@'localhost' IDENTIFIED BY 'StockScanner2010';
 GRANT ALL PRIVILEGES ON stock_scanner_nasdaq.* TO 'stock_scanner'@'localhost';
 FLUSH PRIVILEGES;
 ```
@@ -158,7 +158,7 @@ FLUSH PRIVILEGES;
 mysql -u root -pstockscanner2010
 
 # Test application connection
-mysql -u stock_scanner -pStockScanner2024! stock_scanner_nasdaq
+mysql -u stock_scanner -pStockScanner2010 stock_scanner_nasdaq
 ```
 
 ## 📁 Project Structure After Setup

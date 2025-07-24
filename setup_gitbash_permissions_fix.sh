@@ -23,7 +23,7 @@ SETUP_DIR="$PROJECT_DIR/setup"
 LOG_FILE="$PROJECT_DIR/setup.log"
 DB_NAME="stock_scanner_nasdaq"
 DB_USER="stock_scanner"
-DB_PASS="StockScanner2024!"
+DB_PASS="StockScanner2010"
 MYSQL_ROOT_PASSWORD="stockscanner2010"
 
 # Logging functions

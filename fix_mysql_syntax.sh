@@ -52,7 +52,7 @@ except Exception as e:
     print('  1. MySQL service running: net start mysql')
     print('  2. Database exists: stock_scanner_nasdaq')
     print('  3. User exists: stock_scanner')
-    print('  4. Password correct: StockScanner2024!')
+    print('  4. Password correct: StockScanner2010')
 "
 
 # Try makemigrations
