@@ -171,18 +171,18 @@ class StockPrice(models.Model):
         return f"{self.stock.symbol} - {self.date}: ${self.close_price}"
 
 class StockAlert(models.Model):
-    ticker = models.CharField(max_length=10)
-    company_name = models.CharField(max_length=255, blank=True)
+    ticker = models.CharField(max_length=10, default='UNKNOWN')
+    company_name = models.CharField(max_length=255, blank=True, default='')
     current_price = models.FloatField(default=0.0, help_text="Current stock price in USD")
     price_change_today = models.FloatField(null=True, blank=True, help_text="Price change from previous close")
     price_change_percent = models.FloatField(null=True, blank=True, help_text="Percentage change from previous close")
-    volume_today = models.BigIntegerField()
+    volume_today = models.BigIntegerField(default=0)
     avg_volume = models.BigIntegerField(null=True, blank=True)
     dvav = models.FloatField(null=True, blank=True)
     dvsa = models.FloatField(null=True, blank=True)
     pe_ratio = models.FloatField(null=True, blank=True)
     market_cap = models.BigIntegerField(null=True, blank=True)
-    note = models.TextField(blank=True)
+    note = models.TextField(blank=True, default='')
     last_update = models.DateTimeField(auto_now_add=True)
     sent = models.BooleanField(default=False)
 
@@ -291,8 +291,8 @@ class Portfolio(models.Model):
 class PortfolioHolding(models.Model):
     """Individual stock holdings in a portfolio"""
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name='holdings')
-    ticker = models.CharField(max_length=10)
-    company_name = models.CharField(max_length=255, blank=True)
+    ticker = models.CharField(max_length=10, default='UNKNOWN')
+    company_name = models.CharField(max_length=255, blank=True, default='')
     shares = models.DecimalField(max_digits=15, decimal_places=4)
     purchase_price = models.DecimalField(max_digits=12, decimal_places=4)
     purchase_date = models.DateField()
