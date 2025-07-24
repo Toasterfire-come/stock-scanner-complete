@@ -1,163 +1,156 @@
-# 📊 Stock Scanner - Complete Business Platform
+# 🚀 Stock Scanner - Linux Production Setup
 
-A comprehensive stock monitoring and membership platform featuring real-time analytics, 4-tier membership system, automatic sales tax collection, and full WordPress integration.
+**Single Command Setup: `./setup_linux_complete.sh`**
 
-## 🚀 SUPER QUICK START
+## 🎯 Quick Start
 
-### 🎯 **Just want it to work?**
+```bash
+# Clone the repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
 
-**Double-click: `START_HERE.bat`**
+# Run the complete setup (single command)
+chmod +x setup_linux_complete.sh
+./setup_linux_complete.sh
 
-Then choose option 1 (Simple Start) for one-command setup!
-
----
+# Start the application
+./start_stock_scanner.sh
+```
 
 ## 📁 Project Structure
 
 ```
-stock-scanner-complete/
-├── 🚀 START_HERE.bat           # Main launcher (START HERE!)
-├── 📖 README.md                # This file
-├── 📋 requirements.txt         # Main Python requirements
-├── ⚙️  manage.py               # Django management script
+stock-scanner/
+├── 🚀 setup_linux_complete.sh   # Single setup script (START HERE!)
+├── 🌐 start_stock_scanner.sh    # Application launcher
+├── 📊 manage.py                 # Django management
+├── 📋 requirements.txt          # Linux dependencies
 │
-├── 🔧 setup/                   # All setup scripts
-│   ├── SIMPLE_START.bat        # One-command setup
-│   ├── windows/                # Windows-specific setup
-│   ├── mysql/                  # MySQL database setup
-│   └── requirements/           # Python package tools
-│
-├── 🛠️  tools/                  # Management tools
-│   ├── database/               # Database management
-│   ├── django/                 # Django management
-│   ├── testing/                # System testing
-│   └── monitoring/             # Health monitoring
-│
-├── 📚 docs/                    # Documentation
-│   ├── setup/                  # Installation guides
-│   ├── production/             # Production deployment
-│   ├── troubleshooting/        # Problem solving
-│   └── api/                    # API documentation
-│
-├── 🧰 utils/                   # Utilities
-│   ├── windows/                # Windows-specific tools
-│   ├── database/               # Database utilities
-│   └── common/                 # Shared functions
-│
-└── 🏗️  Application Code/       # Django application
-    ├── stocks/                 # Stock scanning app
-    ├── core/                   # Core functionality
-    ├── emails/                 # Email management
-    ├── news/                   # News integration
-    └── stockscanner_django/    # Django project settings
+├── 📂 stocks/                   # Main application
+├── 📂 data/nasdaq_only/         # NASDAQ ticker data
+├── 📂 tools/                    # Utility scripts
+├── 📂 setup/                    # Setup configurations
+└── 📂 docs/                     # Documentation
 ```
 
----
+## 🎯 What This Setup Includes
 
-## 🎯 Quick Navigation
+✅ **MySQL Database** - Production-ready configuration  
+✅ **Django Framework** - Web application backend  
+✅ **yfinance Integration** - Real-time stock data  
+✅ **NASDAQ-Only Tickers** - Focus on NASDAQ securities  
+✅ **Automated Testing** - Complete system verification  
+✅ **Linux Compatibility** - Ubuntu/Debian/CentOS/RHEL/Fedora  
 
-### **🪟 Windows Users (ZERO COMPILATION ISSUES):**
-1. **`FIX_WINDOWS_COMPLETE.bat`** → Ultimate Windows fix (NO COMPILER NEEDED)
-2. **`LOAD_NASDAQ_ONLY.bat`** → Load NASDAQ tickers only
-3. **`START_HERE.bat`** → Start stock scanning
-4. Done! 100% Windows compatible!
+## 🛠️ System Requirements
 
-### **Alternative Installation:**
-```cmd
-# Minimal installation (essential packages only)
-pip install -r requirements_minimal.txt
+- **Linux OS**: Ubuntu 18.04+, Debian 10+, CentOS 7+, RHEL 7+, or Fedora 30+
+- **Python**: 3.8+ (automatically installed)
+- **MySQL**: 5.7+ or 8.0+ (automatically installed)
+- **Memory**: 2GB+ RAM recommended
+- **Storage**: 1GB+ free space
+
+## 🚀 Quick Commands
+
+After setup completion:
+
+```bash
+# Start the stock scanner
+./start_stock_scanner.sh
+
+# Load/update NASDAQ tickers
+source venv/bin/activate
+python manage.py load_nasdaq_only --update-existing
+
+# Backup database
+./setup/scripts/backup_database.sh
+
+# Create admin user
+source venv/bin/activate
+python manage.py createsuperuser
 ```
 
-### **First Time Setup (All Platforms):**
-1. **`START_HERE.bat`** → Option 1 (Simple Start)
-2. Wait 15-20 minutes
-3. Application opens in browser
-4. Done!
+## 🌐 Access Points
 
-### **Daily Use:**
-- **`start_stock_scanner.bat`** (created after first setup)
+- **Main Application**: http://localhost:8000
+- **Django Admin**: http://localhost:8000/admin
+- **API Endpoint**: http://localhost:8000/api/stocks
 
-### **Need Help:**
-- **`docs/WINDOWS_SETUP_GUIDE.md`** - Windows compilation fixes
-- **`docs/NASDAQ_ONLY_GUIDE.md`** - NASDAQ-only ticker system
-- **`requirements_minimal.txt`** - Essential packages (no compilation)
-- **`FIX_WINDOWS_COMPLETE.bat`** - Ultimate Windows solution
-- **`docs/troubleshooting/`** - Problem solving
-- **`START_HERE.bat`** → Option 4 (Test System)
+## 📚 Documentation
 
----
+- **Setup Info**: `setup/configs/installation_info.txt`
+- **NASDAQ Guide**: `docs/NASDAQ_ONLY_GUIDE.md`
+- **MySQL Production**: `docs/production/MYSQL_PRODUCTION_GUIDE.md`
+- **Setup Logs**: `setup.log`
 
-## 🔧 What's Included
+## 🔧 Management Commands
 
-### **Core Features:**
-- 📊 Real-time stock data monitoring
-- 🚨 Automated price alerts
-- 📈 Portfolio tracking and analytics
-- 👥 4-tier membership system
-- 💳 Stripe payment integration
-- 🌐 WordPress integration
-- 📧 Email notification system
+```bash
+# Activate virtual environment first
+source venv/bin/activate
 
-### **Technical Stack:**
-- **Backend:** Django 5.1+ with MySQL production database
-- **Frontend:** Modern responsive web interface
-- **Data:** Yahoo Finance API integration
-- **Payments:** Stripe integration
-- **Email:** SMTP email system
-- **Deployment:** Production-ready Windows deployment
+# Django management
+python manage.py load_nasdaq_only              # Load NASDAQ tickers
+python manage.py makemigrations                # Create migrations  
+python manage.py migrate                       # Apply migrations
+python manage.py collectstatic                 # Collect static files
+python manage.py createsuperuser               # Create admin user
 
-### **Membership Tiers:**
-1. **Free** - Basic stock alerts
-2. **Premium** ($10/month) - Advanced analytics
-3. **Pro** ($25/month) - Portfolio management
-4. **Enterprise** ($50/month) - Full platform access
+# Database management
+./setup/scripts/backup_database.sh             # Backup database
+mysql -u stock_scanner -p stock_scanner_nasdaq # Connect to database
+```
 
----
+## ⚠️ Troubleshooting
 
-## 📋 Prerequisites
+### Setup Issues
+- **Permission denied**: Run with `sudo ./setup_linux_complete.sh`
+- **MySQL fails**: Check if port 3306 is available
+- **Python errors**: Ensure Python 3.8+ is installed
 
-**Only 2 things needed:**
+### Runtime Issues  
+- **Can't connect to database**: Check MySQL service status
+- **yfinance errors**: Check internet connection
+- **Import errors**: Reactivate virtual environment
 
-1. **Python 3.8+** - [Download here](https://python.org/downloads/)
-   - ⚠️ **IMPORTANT:** Check "Add Python to PATH" during installation
+### Getting Help
+- Check setup logs: `cat setup.log`
+- View installation info: `cat setup/configs/installation_info.txt`
+- Test installation: Run the built-in tests during setup
 
-2. **MySQL Server 8.0+** - [Download here](https://dev.mysql.com/downloads/mysql/)
-   - ⚠️ **IMPORTANT:** Set root password to `StockScannerRoot2024!` during installation
+## 🎯 Features
 
----
+- **NASDAQ-Only Focus**: Streamlined for NASDAQ securities
+- **Real-time Data**: yfinance integration for live market data
+- **Production Ready**: MySQL database with optimized settings
+- **Automated Setup**: Single script handles everything
+- **Linux Native**: Optimized for Linux server environments
+- **Backup System**: Automated database backup scripts
+- **Health Monitoring**: Built-in system health checks
 
-## 🆘 Support
+## 🚀 Production Deployment
 
-### **Common Issues:**
-- **Python not found** → Install Python and check "Add to PATH"
-- **MySQL not found** → Install MySQL with password `StockScannerRoot2024!`
-- **Setup fails** → Run `START_HERE.bat` → Option 4 (Test System)
+The setup script configures everything for production use:
 
-### **Get Help:**
-1. Check `docs/troubleshooting/`
-2. Run system diagnostics: `START_HERE.bat` → Option 4
-3. View setup logs in `logs/` directory
-4. GitHub Issues: [Report problems here](https://github.com/Toasterfire-come/stock-scanner-complete/issues)
+- **Security**: DEBUG=False, secure SECRET_KEY, proper ALLOWED_HOSTS
+- **Database**: MySQL with optimized connection pooling
+- **Performance**: Static file optimization, database indexing
+- **Monitoring**: Health checks and backup systems
+- **Logging**: Comprehensive logging configuration
 
----
+## 📊 NASDAQ Ticker System
 
-## 🏆 Production Ready
+The application focuses exclusively on NASDAQ-listed securities:
 
-This platform is production-ready with:
-- ✅ **Secure MySQL database** with connection pooling
-- ✅ **Professional UI/UX** with responsive design
-- ✅ **Payment processing** via Stripe
-- ✅ **Email notifications** for alerts and updates
-- ✅ **WordPress integration** for content management
-- ✅ **Automated backups** and monitoring
-- ✅ **Windows deployment** scripts and guides
+- **Automatic Download**: Fetches latest NASDAQ ticker list
+- **Fallback System**: Core tickers available if download fails  
+- **Database Integration**: Seamless loading into Django models
+- **Update Mechanism**: Easy ticker list updates
 
----
+## 🎉 Ready to Start?
 
-## 📜 License
+**Run the setup script and you'll be scanning NASDAQ stocks in minutes!**
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-**🚀 Ready to start? Double-click `START_HERE.bat` and choose Simple Start!**
+```bash
+./setup_linux_complete.sh
+```

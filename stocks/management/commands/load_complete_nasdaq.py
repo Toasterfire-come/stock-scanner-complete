@@ -299,7 +299,7 @@ class Command(BaseCommand):
         self.stdout.write(f'\n🚀 Next Steps:')
         self.stdout.write('   1. Fetch price data: python manage.py update_stocks_yfinance')
         self.stdout.write('   2. Test web interface: python manage.py runserver')
-        self.stdout.write('   3. Start full scanner: START_HERE.bat')
+        self.stdout.write('   3. Start full scanner: ./start_stock_scanner.sh')
         self.stdout.write(f'   4. Verify count: python manage.py shell -c "from stocks.models import Stock; print(f\'Stocks: {{Stock.objects.count():,}}\')"')
 
     def determine_exchange(self, ticker: str) -> str:

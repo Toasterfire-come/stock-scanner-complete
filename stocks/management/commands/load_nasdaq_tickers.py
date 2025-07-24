@@ -243,7 +243,7 @@ class Command(BaseCommand):
         self.stdout.write(f'\n🚀 Next steps:')
         self.stdout.write('   1. Run: python manage.py update_stocks_yfinance')
         self.stdout.write('   2. Test: python manage.py shell -c "from stocks.models import Stock; print(Stock.objects.count())"')
-        self.stdout.write('   3. Start scanner: START_HERE.bat')
+        self.stdout.write('   3. Start scanner: ./start_stock_scanner.sh')
 
     def determine_sector_exchange(self, ticker):
         """Determine sector and exchange for a ticker"""

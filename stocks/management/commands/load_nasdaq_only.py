@@ -280,7 +280,7 @@ class Command(BaseCommand):
         self.stdout.write(f'\n🚀 Next Steps:')
         self.stdout.write('   1. Fetch NASDAQ price data: python manage.py update_stocks_yfinance --exchange NASDAQ')
         self.stdout.write('   2. Test NASDAQ scanning: python manage.py runserver')
-        self.stdout.write('   3. Start NASDAQ-only scanner: START_HERE.bat')
+        self.stdout.write('   3. Start NASDAQ-only scanner: ./start_stock_scanner.sh')
         self.stdout.write(f'   4. Verify NASDAQ count: python manage.py shell -c "from stocks.models import Stock; print(f\'NASDAQ stocks: {{Stock.objects.filter(exchange=\\\"NASDAQ\\\").count():,}}\')"')
 
     def determine_nasdaq_sector(self, ticker: str) -> str:
