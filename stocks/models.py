@@ -183,7 +183,7 @@ class StockAlert(models.Model):
     pe_ratio = models.FloatField(null=True, blank=True)
     market_cap = models.BigIntegerField(null=True, blank=True)
     note = models.TextField(blank=True)
-    last_update = models.DateTimeField()
+    last_update = models.DateTimeField(auto_now_add=True)
     sent = models.BooleanField(default=False)
 
     def __str__(self):
