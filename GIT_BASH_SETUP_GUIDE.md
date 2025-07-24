@@ -80,7 +80,7 @@ chmod +x setup_gitbash_complete.sh
 # 3. Run the setup (will take 5-10 minutes)
 ./setup_gitbash_complete.sh
 
-# 4. Follow the prompts (MySQL root password, etc.)
+# 4. Script will automatically use your MySQL root password: stockscanner2010
 
 # 5. After completion, start the application
 ./start_gitbash.sh
@@ -141,13 +141,24 @@ The script automatically creates:
 - **Database**: `stock_scanner_nasdaq`
 - **User**: `stock_scanner`
 - **Password**: `StockScanner2024!`
+- **MySQL Root**: Uses your password `stockscanner2010`
 
 ### Manual MySQL Setup (if needed):
 ```sql
+-- Using your MySQL root password: stockscanner2010
 CREATE DATABASE stock_scanner_nasdaq CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'stock_scanner'@'localhost' IDENTIFIED BY 'StockScanner2024!';
 GRANT ALL PRIVILEGES ON stock_scanner_nasdaq.* TO 'stock_scanner'@'localhost';
 FLUSH PRIVILEGES;
+```
+
+### Quick MySQL Test:
+```bash
+# Test your root connection
+mysql -u root -pstockscanner2010
+
+# Test application connection
+mysql -u stock_scanner -pStockScanner2024! stock_scanner_nasdaq
 ```
 
 ## 📁 Project Structure After Setup

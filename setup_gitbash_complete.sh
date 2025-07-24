@@ -481,6 +481,9 @@ setup_mysql_database() {
     
     info "Attempting to connect to MySQL..."
     
+    # Your MySQL root password
+    MYSQL_ROOT_PASSWORD="stockscanner2010"
+    
     # Try to connect to MySQL and create database
     cat > "$PROJECT_DIR/setup_mysql.sql" <<EOF
 CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -491,17 +494,21 @@ EOF
     
     # Try to execute MySQL commands
     if command -v mysql &> /dev/null; then
-        info "Executing MySQL setup..."
-        echo "Please enter your MySQL root password when prompted:"
-        mysql -u root -p < "$PROJECT_DIR/setup_mysql.sql" || warning "MySQL setup may have failed"
+        info "Executing MySQL setup with your root password..."
+        if mysql -u root -p"$MYSQL_ROOT_PASSWORD" < "$PROJECT_DIR/setup_mysql.sql" 2>/dev/null; then
+            success "MySQL database configured automatically"
+        else
+            warning "Automatic setup failed, trying manual setup..."
+            echo "Please enter your MySQL root password (stockscanner2010) when prompted:"
+            mysql -u root -p < "$PROJECT_DIR/setup_mysql.sql" || warning "MySQL setup may have failed"
+        fi
         rm "$PROJECT_DIR/setup_mysql.sql"
-        success "MySQL database configured"
     else
         warning "MySQL command not found in PATH"
         echo "Please manually create the database with these commands:"
         cat "$PROJECT_DIR/setup_mysql.sql"
         echo ""
-        echo "Save this file and run: mysql -u root -p < setup_mysql.sql"
+        echo "Save this file and run: mysql -u root -pstockscanner2010 < setup_mysql.sql"
     fi
 }
 
