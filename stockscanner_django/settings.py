@@ -108,12 +108,17 @@ if os.environ.get('DATABASE_URL'):
             print(f"✅ Using PostgreSQL database")
         elif database_url.startswith('mysql://'):
             DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
-            # MySQL specific settings
+            # MySQL production optimizations
             DATABASES['default']['OPTIONS'] = {
                 'charset': 'utf8mb4',
-                'sql_mode': 'STRICT_TRANS_TABLES',
+                'sql_mode': 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO',
+                'isolation_level': 'READ COMMITTED',
+                'init_command': "SET foreign_key_checks = 0; SET sql_mode='STRICT_TRANS_TABLES'; SET foreign_key_checks = 1;",
             }
-            print(f"✅ Using MySQL database")
+            # Connection pooling for production
+            DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
+            DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
+            print(f"✅ Using MySQL database with production optimizations")
         else:
             # Default to PostgreSQL for backward compatibility
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'

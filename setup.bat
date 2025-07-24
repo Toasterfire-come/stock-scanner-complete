@@ -113,8 +113,19 @@ goto migrations
 
 :manual_mysql
 echo.
-echo 🔧 Setting up MySQL...
-python windows_complete_setup.py --mysql-setup
+echo 🔧 Setting up MySQL for production...
+echo 📋 This will install and configure MySQL with production settings
+echo ⏱️  Estimated time: 10-15 minutes
+echo.
+set /p confirm_mysql="Continue with MySQL production setup? (y/n): "
+if /i not "%confirm_mysql%"=="y" goto db_choice
+
+call setup_mysql_windows.bat
+if errorlevel 1 (
+    echo ❌ MySQL setup failed
+    echo 💡 Falling back to SQLite for development
+    python windows_complete_setup.py --sqlite-setup
+)
 goto migrations
 
 :manual_sqlite
