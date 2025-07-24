@@ -13,6 +13,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 DB_NAME="stock_scanner_nasdaq"
 DB_USER="stock_scanner"
 DB_PASS="StockScanner2010"
+MYSQL_ROOT_PASS="StockScanner2010"
 
 # Colors
 RED='\033[0;31m'
@@ -69,23 +70,15 @@ if [[ -z "$MYSQL_FOUND" ]]; then
     fi
 fi
 
-# Get MySQL root password from user
-echo ""
-echo -e "${BLUE}🔐 MySQL Root Password Required${NC}"
-echo "Please enter your MySQL root password:"
-read -s -p "MySQL root password: " MYSQL_ROOT_PASS
-echo ""
-
 # Test MySQL root connection
 log "Testing MySQL root connection..."
 if mysql -u root -p"$MYSQL_ROOT_PASS" -e "SELECT 1;" 2>/dev/null; then
     success "MySQL root connection successful"
 else
-    error "Cannot connect to MySQL as root"
+    error "Cannot connect to MySQL as root with password: $MYSQL_ROOT_PASS"
     echo "Please ensure:"
     echo "  1. MySQL service is running: net start mysql"
-    echo "  2. Root password is correct"
-    echo "  3. Try connecting manually: mysql -u root -p"
+    echo "  2. Root password is: $MYSQL_ROOT_PASS"
     exit 1
 fi
 
@@ -354,7 +347,7 @@ echo -e "${BLUE}📊 Configuration:${NC}"
 echo "   • Database: $DB_NAME"
 echo "   • User: $DB_USER"
 echo "   • Password: $DB_PASS"
-echo "   • MySQL Root: [password provided]"
+echo "   • MySQL Root: $MYSQL_ROOT_PASS"
 echo ""
 echo -e "${BLUE}📋 Models Ready:${NC}"
 echo "   • Stock (with defaults)"

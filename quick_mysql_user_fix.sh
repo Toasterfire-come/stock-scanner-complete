@@ -11,6 +11,7 @@ echo "🔧 Quick MySQL User Fix"
 DB_NAME="stock_scanner_nasdaq"
 DB_USER="stock_scanner"
 DB_PASS="StockScanner2010"
+MYSQL_ROOT_PASS="StockScanner2010"
 
 # Colors
 GREEN='\033[0;32m'
@@ -61,35 +62,24 @@ if [[ -z "$MYSQL_FOUND" ]]; then
     fi
 fi
 
-# Get MySQL root password from user
-echo ""
-echo -e "${BLUE}🔐 MySQL Root Password Required${NC}"
-echo "Please enter your MySQL root password:"
-read -s -p "MySQL root password: " MYSQL_ROOT_PASS
-echo ""
-
 # Test MySQL root connection
-info "Testing MySQL root connection..."
+echo ""
+info "Testing MySQL root connection with password: $MYSQL_ROOT_PASS"
 
 if mysql -u root -p"$MYSQL_ROOT_PASS" -e "SELECT 1;" 2>/dev/null; then
     success "MySQL root connection successful"
 else
-    error "Cannot connect to MySQL as root"
+    error "Cannot connect to MySQL as root with password: $MYSQL_ROOT_PASS"
     echo ""
     echo "Please check:"
     echo "  1. MySQL service is running: net start mysql"
-    echo "  2. Root password is correct"
+    echo "  2. Root password is: $MYSQL_ROOT_PASS"
     echo "  3. MySQL is accessible"
     echo ""
-    echo "Common solutions:"
-    echo "  - Check if MySQL service is running: net start mysql"
-    echo "  - Verify root password in MySQL Workbench"
-    echo "  - Try connecting with: mysql -u root -p"
-    echo ""
     echo "If you need to reset MySQL root password:"
-    echo "  1. Stop MySQL: net stop mysql"
-    echo "  2. Start with skip-grant-tables"
-    echo "  3. Reset password and restart normally"
+    echo "  - Stop MySQL service: net stop mysql"
+    echo "  - Start with --skip-grant-tables"
+    echo "  - Reset password"
     exit 1
 fi
 
@@ -199,7 +189,7 @@ echo -e "${BLUE}📊 Database Configuration:${NC}"
 echo "   • Database: $DB_NAME"
 echo "   • User: $DB_USER"
 echo "   • Password: $DB_PASS"
-echo "   • MySQL Root: [password provided]"
+echo "   • MySQL Root: $MYSQL_ROOT_PASS"
 echo ""
 echo -e "${GREEN}✅ Ready for migrations!${NC}"
 echo ""
