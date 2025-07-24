@@ -128,7 +128,7 @@ stock-scanner-complete/
 │   ├── 📁 setup/                         # Installation and setup scripts
 │   ├── 📁 testing/                       # Testing and validation scripts
 │   └── 📁 utils/                         # Utility and maintenance scripts
-│       ├── 📄 enable_celery_beat.py      # 🔄 Celery task scheduler setup
+
 │       ├── 📄 fix_env_urls.py            # 🔧 Environment URL configuration
 │       └── 📄 check_syntax.py           # ✅ Code syntax validation
 ├── 📁 stockscanner_django/              # Django project

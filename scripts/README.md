@@ -10,7 +10,7 @@ scripts/
 │   ├── 📄 fix_migration_conflicts.py     # 🔧 Django migration conflict resolver
 │   ├── 📄 windows_fix_install.py         # 🪟 Windows compatibility fixes
 │   ├── 📄 install_missing_packages.py    # 📦 Package installation helper
-│   ├── 📄 apply_yfinance_migrations.py   # 📊 Yahoo Finance integration setup
+
 │   ├── 📄 run_migrations.py              # 🗄️ Database migration runner
 │   └── 📄 setup_redis_windows.py         # 🔴 Redis Windows configuration
 ├── 📁 testing/        # Testing and validation scripts
@@ -18,7 +18,7 @@ scripts/
 │   ├── 📄 test_yfinance_system.py        # 📈 Yahoo Finance API integration test
 │   └── 📄 validate_migrations.py         # 🔍 Migration sequence validator
 └── 📁 utils/         # Utility and maintenance scripts
-    ├── 📄 enable_celery_beat.py          # 🔄 Celery task scheduler setup
+    
     ├── 📄 fix_env_urls.py                # 🔧 Environment URL configuration
     └── 📄 check_syntax.py               # ✅ Code syntax validation
 ```
@@ -49,8 +49,8 @@ python scripts/setup/run_migrations.py
 
 #### Celery Setup
 ```bash
-# Enable background task processing
-python scripts/utils/enable_celery_beat.py
+# Celery functionality now integrated into main application
+# No separate setup script needed
 ```
 
 #### Environment Configuration
@@ -98,8 +98,7 @@ python scripts/setup/install_missing_packages.py
 # 3. Run migrations
 python scripts/setup/run_migrations.py
 
-# 4. Enable Celery (optional)
-python scripts/utils/enable_celery_beat.py
+# 4. Celery now integrated (no separate setup needed)
 ```
 
 ### Production Setup

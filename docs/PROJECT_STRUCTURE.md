@@ -25,7 +25,7 @@ stock-scanner-complete/
 │   │   ├── 📄 setup_redis_windows.py     # Redis setup for Windows
 │   │   ├── 📄 install_missing_packages.py # Package installer
 │   │   ├── 📄 run_migrations.py          # Database migration runner
-│   │   └── 📄 apply_yfinance_migrations.py # YFinance specific migrations
+
 │   ├── 📁 testing/                       # Testing and validation scripts
 │   │   ├── 📄 test_django_startup.py     # Django startup test
 │   │   ├── 📄 test_yfinance_system.py    # YFinance API test
@@ -34,7 +34,7 @@ stock-scanner-complete/
 │   │   └── 📄 django_minimal_test.py     # Minimal Django test
 │   └── 📁 utils/                         # Utility and maintenance scripts
 │       ├── 📄 yahoo_rate_limit_optimizer.py # 🌟 Rate limit optimizer
-│       ├── 📄 enable_celery_beat.py      # Celery Beat enabler
+
 │       ├── 📄 fix_env_urls.py            # Environment URL fixer
 │       └── 📄 check_syntax.py            # Code syntax checker
 │
@@ -122,7 +122,7 @@ stock-scanner-complete/
 | Script | Purpose | Usage |
 |--------|---------|-------|
 | `yahoo_rate_limit_optimizer.py` | 🌟 **Rate limit optimizer** | `python scripts/utils/yahoo_rate_limit_optimizer.py` |
-| `enable_celery_beat.py` | ⏰ Celery Beat scheduler setup | `python scripts/utils/enable_celery_beat.py` |
+
 | `check_syntax.py` | 🔍 Code syntax validation | `python scripts/utils/check_syntax.py` |
 
 ## 🌟 Rate Limit Optimizer Spotlight

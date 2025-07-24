@@ -8,6 +8,8 @@ django-cors-headers>=4.3.0
 
 # ===== DATABASE & CACHING =====
 psycopg2-binary>=2.9.9
+mysqlclient>=2.1.0
+dj-database-url>=2.1.0
 django-redis>=5.4.0
 
 # ===== TASK QUEUE & SCHEDULING =====
