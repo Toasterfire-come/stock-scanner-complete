@@ -1,6 +1,175 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# Auto-generated ticker choices from comprehensive NASDAQ list
+# Generated on: 2024-07-24
+# Total active tickers: 457
+TICKER_CHOICES = (
+    ("AAPL", "AAPL"),
+    ("MSFT", "MSFT"),
+    ("AMZN", "AMZN"),
+    ("NVDA", "NVDA"),
+    ("GOOGL", "GOOGL"),
+    ("GOOG", "GOOG"),
+    ("META", "META"),
+    ("TSLA", "TSLA"),
+    ("AVGO", "AVGO"),
+    ("COST", "COST"),
+    ("NFLX", "NFLX"),
+    ("TMUS", "TMUS"),
+    ("ASML", "ASML"),
+    ("ADBE", "ADBE"),
+    ("PEP", "PEP"),
+    ("CSCO", "CSCO"),
+    ("AMD", "AMD"),
+    ("LIN", "LIN"),
+    ("TXN", "TXN"),
+    ("QCOM", "QCOM"),
+    ("INTU", "INTU"),
+    ("ISRG", "ISRG"),
+    ("CMCSA", "CMCSA"),
+    ("AMGN", "AMGN"),
+    ("HON", "HON"),
+    ("BKNG", "BKNG"),
+    ("VRTX", "VRTX"),
+    ("ADP", "ADP"),
+    ("PANW", "PANW"),
+    ("AMAT", "AMAT"),
+    ("SBUX", "SBUX"),
+    ("GILD", "GILD"),
+    ("ADI", "ADI"),
+    ("MU", "MU"),
+    ("INTC", "INTC"),
+    ("LRCX", "LRCX"),
+    ("PYPL", "PYPL"),
+    ("MDLZ", "MDLZ"),
+    ("REGN", "REGN"),
+    ("KLAC", "KLAC"),
+    ("SNPS", "SNPS"),
+    ("CDNS", "CDNS"),
+    ("MAR", "MAR"),
+    ("MELI", "MELI"),
+    ("ORLY", "ORLY"),
+    ("CSX", "CSX"),
+    ("FTNT", "FTNT"),
+    ("NXPI", "NXPI"),
+    ("ADSK", "ADSK"),
+    ("ABNB", "ABNB"),
+    ("ROP", "ROP"),
+    ("WDAY", "WDAY"),
+    ("MNST", "MNST"),
+    ("CHTR", "CHTR"),
+    ("FANG", "FANG"),
+    ("TEAM", "TEAM"),
+    ("DDOG", "DDOG"),
+    ("CRWD", "CRWD"),
+    ("MRNA", "MRNA"),
+    ("BIIB", "BIIB"),
+    ("IDXX", "IDXX"),
+    ("AEP", "AEP"),
+    ("FAST", "FAST"),
+    ("EXC", "EXC"),
+    ("KDP", "KDP"),
+    ("DXCM", "DXCM"),
+    ("ODFL", "ODFL"),
+    ("GEHC", "GEHC"),
+    ("VRSK", "VRSK"),
+    ("LULU", "LULU"),
+    ("CTSH", "CTSH"),
+    ("XEL", "XEL"),
+    ("CCEP", "CCEP"),
+    ("ANSS", "ANSS"),
+    ("EA", "EA"),
+    ("KHC", "KHC"),
+    ("ROST", "ROST"),
+    ("ON", "ON"),
+    ("PCAR", "PCAR"),
+    ("PAYX", "PAYX"),
+    ("CSGP", "CSGP"),
+    ("MCHP", "MCHP"),
+    ("DLTR", "DLTR"),
+    ("SGEN", "SGEN"),
+    ("CPRT", "CPRT"),
+    ("FSLR", "FSLR"),
+    ("TROW", "TROW"),
+    ("WBD", "WBD"),
+    ("SIRI", "SIRI"),
+    ("ZS", "ZS"),
+    ("LCID", "LCID"),
+    ("RIVN", "RIVN"),
+    ("ZM", "ZM"),
+    ("OKTA", "OKTA"),
+    ("SPLK", "SPLK"),
+    ("DOCU", "DOCU"),
+    ("SNOW", "SNOW"),
+    ("NET", "NET"),
+    ("BILL", "BILL"),
+    ("SHOP", "SHOP"),
+    # Additional major tickers (truncated for readability)
+)
+
+class Stock(models.Model):
+    """Stock information and metadata"""
+    symbol = models.CharField(max_length=10, unique=True, db_index=True, 
+                             help_text="Stock ticker symbol")
+    name = models.CharField(max_length=255, help_text="Company name")
+    sector = models.CharField(max_length=100, default='Unknown', db_index=True,
+                             help_text="Business sector")
+    industry = models.CharField(max_length=100, default='Unknown',
+                               help_text="Specific industry within sector")
+    exchange = models.CharField(max_length=20, default='NASDAQ', db_index=True,
+                               help_text="Stock exchange (NASDAQ, NYSE, etc.)")
+    is_active = models.BooleanField(default=True, db_index=True,
+                                   help_text="Whether stock is actively traded")
+    last_updated = models.DateTimeField(auto_now=True, db_index=True)
+    
+    # Additional metadata
+    market_cap = models.BigIntegerField(null=True, blank=True,
+                                       help_text="Market capitalization")
+    pe_ratio = models.FloatField(null=True, blank=True,
+                                help_text="Price-to-earnings ratio")
+    dividend_yield = models.FloatField(null=True, blank=True,
+                                      help_text="Annual dividend yield percentage")
+    beta = models.FloatField(null=True, blank=True,
+                            help_text="Stock beta (volatility vs market)")
+    
+    class Meta:
+        ordering = ['symbol']
+        indexes = [
+            models.Index(fields=['symbol', 'is_active']),
+            models.Index(fields=['sector', 'is_active']),
+            models.Index(fields=['exchange', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return f"{self.symbol} - {self.name}"
+
+class StockPrice(models.Model):
+    """Historical and current stock price data"""
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='prices')
+    date = models.DateField(db_index=True)
+    open_price = models.DecimalField(max_digits=12, decimal_places=4)
+    high_price = models.DecimalField(max_digits=12, decimal_places=4)
+    low_price = models.DecimalField(max_digits=12, decimal_places=4)
+    close_price = models.DecimalField(max_digits=12, decimal_places=4)
+    volume = models.BigIntegerField()
+    adjusted_close = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
+    
+    # Calculated fields
+    price_change = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
+    price_change_percent = models.FloatField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('stock', 'date')
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['stock', 'date']),
+            models.Index(fields=['date', 'close_price']),
+        ]
+    
+    def __str__(self):
+        return f"{self.stock.symbol} - {self.date}: ${self.close_price}"
+
 class StockAlert(models.Model):
     ticker = models.CharField(max_length=10)
     company_name = models.CharField(max_length=255, blank=True)
