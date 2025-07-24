@@ -99,28 +99,25 @@ if os.environ.get('DATABASE_URL'):
         
         database_url = os.environ.get('DATABASE_URL')
         
-        # Fix URL encoding for special characters in password
-        if database_url and ('://' in database_url):
-            # Check if URL contains unencoded special characters
-            if '#' in database_url and '@' in database_url:
-                # Extract and fix the password part
-                import re
-                # Pattern to match: protocol://user:password@host:port/db
-                pattern = r'(postgresql://[^:]+:)([^@]+)(@.+)'
-                match = re.match(pattern, database_url)
-                if match:
-                    prefix, password, suffix = match.groups()
-                    # URL encode the password
-                    encoded_password = quote_plus(password)
-                    database_url = prefix + encoded_password + suffix
-                    print(f"🔧 Fixed DATABASE_URL encoding for special characters")
-            
-            DATABASES['default'] = dj_database_url.parse(database_url)
+        # Parse the database URL and detect the database type
+        DATABASES['default'] = dj_database_url.parse(database_url)
+        
+        # Auto-detect database engine from URL
+        if database_url.startswith('postgresql://'):
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
             print(f"✅ Using PostgreSQL database")
+        elif database_url.startswith('mysql://'):
+            DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
+            # MySQL specific settings
+            DATABASES['default']['OPTIONS'] = {
+                'charset': 'utf8mb4',
+                'sql_mode': 'STRICT_TRANS_TABLES',
+            }
+            print(f"✅ Using MySQL database")
         else:
-            print(f"Warning: Invalid DATABASE_URL format")
-            print("Using SQLite for development.")
+            # Default to PostgreSQL for backward compatibility
+            DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+            print(f"✅ Using PostgreSQL database (default)")
             
     except ImportError:
         print("Warning: dj_database_url not installed. Using SQLite for development.")
