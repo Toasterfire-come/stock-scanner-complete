@@ -116,7 +116,6 @@ if os.environ.get('DATABASE_URL'):
                 'charset': 'utf8mb4',
                 'sql_mode': 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO',
                 'isolation_level': 'READ COMMITTED',
-                'init_command': "SET foreign_key_checks = 0; SET sql_mode='STRICT_TRANS_TABLES'; SET foreign_key_checks = 1;",
             }
             # Connection pooling for production
             DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
