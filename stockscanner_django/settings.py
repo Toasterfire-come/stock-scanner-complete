@@ -91,6 +91,14 @@ DATABASES = {
     }
 }
 
+# Windows PyMySQL compatibility setup (fixes Windows compilation issues)
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    print("✅ PyMySQL configured as MySQL driver for Windows compatibility")
+except ImportError:
+    pass  # mysqlclient will be used if available
+
 # Use DATABASE_URL environment variable for production
 if os.environ.get('DATABASE_URL'):
     try:
@@ -118,7 +126,7 @@ if os.environ.get('DATABASE_URL'):
             # Connection pooling for production
             DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
             DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
-            print(f"✅ Using MySQL database with production optimizations")
+            print(f"✅ Using MySQL database with production optimizations (Windows compatible)")
         else:
             # Default to PostgreSQL for backward compatibility
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'

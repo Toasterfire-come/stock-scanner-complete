@@ -56,7 +56,13 @@ stock-scanner-complete/
 
 ## 🎯 Quick Navigation
 
-### **First Time Setup:**
+### **🪟 Windows Users (RECOMMENDED):**
+1. **`WINDOWS_SETUP_FIX.bat`** → Fixes compilation issues
+2. **`LOAD_COMPLETE_NASDAQ.bat`** → Load 11,658+ tickers
+3. **`START_HERE.bat`** → Start stock scanning
+4. Done! No compiler needed!
+
+### **First Time Setup (All Platforms):**
 1. **`START_HERE.bat`** → Option 1 (Simple Start)
 2. Wait 15-20 minutes
 3. Application opens in browser
@@ -66,6 +72,8 @@ stock-scanner-complete/
 - **`start_stock_scanner.bat`** (created after first setup)
 
 ### **Need Help:**
+- **`docs/WINDOWS_SETUP_GUIDE.md`** - Windows compilation fixes
+- **`docs/COMPLETE_NASDAQ_INTEGRATION.md`** - 11,658+ ticker guide
 - **`docs/setup/SIMPLE_SETUP_README.md`** - Simple setup guide
 - **`docs/troubleshooting/`** - Problem solving
 - **`START_HERE.bat`** → Option 4 (Test System)
