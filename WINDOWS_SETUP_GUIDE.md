@@ -26,6 +26,17 @@ cd stock-scanner-complete
 setup.bat
 ```
 
+### **🔧 NumPy Compilation Fix (If Needed)**
+If you get NumPy compilation errors during setup, run:
+```cmd
+fix_numpy_windows.bat
+```
+
+**This fixes the common error:**
+```
+ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang']]
+```
+
 **That's it!** The setup.bat file handles everything automatically:
 - ✅ Creates virtual environment
 - ✅ Installs all dependencies

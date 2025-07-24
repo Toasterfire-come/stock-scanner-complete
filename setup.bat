@@ -59,19 +59,24 @@ if errorlevel 1 (
 )
 
 echo.
-echo 🔧 Step 4: Installing Python requirements...
+echo 🔧 Step 4: Installing Python requirements (Windows-safe method)...
 echo 📦 This may take a few minutes...
-pip install -r requirements.txt
+python install_windows_safe.py
 if errorlevel 1 (
-    echo ❌ Failed to install requirements
-    echo.
-    echo 💡 Common solutions:
-    echo    - Check your internet connection
-    echo    - Try running as administrator
-    echo    - Install Visual Studio Build Tools if on Windows
-    echo.
-    pause
-    exit /b 1
+    echo ❌ Windows-safe installation failed, trying standard method...
+    echo 💡 Attempting standard pip install...
+    pip install -r requirements.txt
+    if errorlevel 1 (
+        echo ❌ Both installation methods failed
+        echo.
+        echo 💡 Solutions:
+        echo    - Install Microsoft Visual Studio Build Tools
+        echo    - Run as administrator
+        echo    - Check your internet connection
+        echo.
+        pause
+        exit /b 1
+    )
 )
 echo ✅ Requirements installed successfully
 
