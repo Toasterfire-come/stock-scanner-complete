@@ -1,6 +1,7 @@
 # 🪟 Stock Scanner - Windows Setup Guide
 
 **Complete setup guide for Windows users with all common issues resolved.**
+**Updated for Windows CMD optimization and automatic setup.**
 
 ---
 
@@ -9,44 +10,65 @@
 - **Windows 10/11**
 - **Python 3.8+** (we recommend Python 3.11 or 3.12)
 - **Git** (for cloning the repository)
-- **Visual Studio Code** (recommended)
+- **Optional**: MySQL (for production) or uses SQLite automatically
 
 ---
 
-## 🚀 **QUICK START (5 Minutes)**
+## 🚀 **SUPER QUICK START (2 Minutes)**
+
+### **One-Click Setup (Recommended)**
+```cmd
+# 1. Clone the repository
+git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
+cd stock-scanner-complete
+
+# 2. Double-click setup.bat (or run in CMD)
+setup.bat
+```
+
+**That's it!** The setup.bat file handles everything automatically:
+- ✅ Creates virtual environment
+- ✅ Installs all dependencies
+- ✅ Sets up database (MySQL or SQLite)
+- ✅ Fixes migration conflicts
+- ✅ Runs comprehensive tests
+- ✅ Creates admin user (optional)
+
+---
+
+## 📁 **Windows Batch Files**
+
+| File | Purpose | Usage |
+|------|---------|--------|
+| `setup.bat` | Complete installation | Double-click to install everything |
+| `start_app.bat` | Start the application | Double-click to run the app |
+| `setup_database.bat` | Database configuration | Choose MySQL or SQLite |
+| `test_system.bat` | Run all system tests | Verify everything works |
+
+---
+
+## 🔧 **STEP-BY-STEP SETUP**
 
 ### **Step 1: Clone Repository**
 ```cmd
-# Open Command Prompt or PowerShell
+# Open Command Prompt (CMD) or PowerShell
 cd Desktop
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
 cd stock-scanner-complete
 ```
 
-### **Step 2: Create Virtual Environment**
+### **Step 2: Run Complete Setup**
 ```cmd
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-venv\Scripts\activate
-
-# Verify activation (should show (venv) in prompt)
+# Option A: Double-click setup.bat
+# Option B: Run in command prompt
+setup.bat
 ```
 
-### **Step 3: Run Windows Installer**
+### **Step 3: Start Application**
 ```cmd
-# Run the Windows-specific installer
-python windows_fix_install.py
-```
-
-### **Step 4: Test Django**
-```cmd
-# Test Django configuration
-python test_django_startup.py
-
-# Run migrations (use our migration runner for best results)
-python run_migrations.py
+# Option A: Double-click start_app.bat
+# Option B: Run in command prompt
+start_app.bat
 
 # Start development server
 python manage.py runserver
