@@ -173,7 +173,7 @@ class StockPrice(models.Model):
 class StockAlert(models.Model):
     ticker = models.CharField(max_length=10)
     company_name = models.CharField(max_length=255, blank=True)
-    current_price = models.FloatField()
+    current_price = models.FloatField(default=0.0)
     price_change_today = models.FloatField(null=True, blank=True, help_text="Price change from previous close")
     price_change_percent = models.FloatField(null=True, blank=True, help_text="Percentage change from previous close")
     volume_today = models.BigIntegerField()
