@@ -170,6 +170,10 @@ install_python_packages() {
     pip install $PIP_OPTIONS djangorestframework==3.14.0
     pip install $PIP_OPTIONS django-cors-headers==4.3.1
     
+    # Security packages (required for PyMySQL authentication)
+    info "Installing security packages..."
+    pip install $PIP_OPTIONS cryptography>=41.0.0
+    
     # Database packages
     info "Installing database packages..."
     pip install $PIP_OPTIONS PyMySQL>=1.1.0
