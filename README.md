@@ -2,9 +2,19 @@
 
 A comprehensive stock monitoring and membership platform for **retailtradescanner.com** featuring real-time analytics, 4-tier membership system, automatic sales tax collection, and full WordPress integration with 24 professional pages.
 
-## 🚀 Quick Start
+## 🚀 SUPER SIMPLE START (ONE COMMAND)
 
-### 🪟 **Windows Users (RECOMMENDED):**
+### 🎯 **Want it to just work? No complex setup?**
+
+👉 **[SIMPLE_SETUP_README.md](SIMPLE_SETUP_README.md)** ⭐ **EASIEST WAY**
+
+**Just double-click `SIMPLE_START.bat` and everything works automatically!**
+
+---
+
+## 🚀 Advanced Setup Options
+
+### 🪟 **Windows Users (Full Control):**
 **[🚀 WINDOWS_PRODUCTION_DEPLOYMENT_GUIDE.md](docs/WINDOWS_PRODUCTION_DEPLOYMENT_GUIDE.md)** - **COMPLETE PRODUCTION DEPLOYMENT** - Every step to get online
 **[📖 WINDOWS_SETUP_GUIDE.md](WINDOWS_SETUP_GUIDE.md)** - Basic development setup guide
 
