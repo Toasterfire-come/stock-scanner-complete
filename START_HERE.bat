@@ -28,14 +28,32 @@ if "%choice%"=="1" (
     echo.
     pause
     call setup\SIMPLE_START.bat
+if errorlevel 1 (
+    echo ❌ Setup step failed
+    echo 💡 Check the error message above
+    pause
+    exit /b 1
+)
 ) else if "%choice%"=="2" (
     echo.
     echo 🔧 Opening advanced setup options...
     call setup\windows\setup.bat
+if errorlevel 1 (
+    echo ❌ Setup step failed
+    echo 💡 Check the error message above
+    pause
+    exit /b 1
+)
 ) else if "%choice%"=="3" (
     echo.
     echo 🗄️  Opening database management tools...
     call tools\database\setup_database.bat
+if errorlevel 1 (
+    echo ❌ Setup step failed
+    echo 💡 Check the error message above
+    pause
+    exit /b 1
+)
 ) else if "%choice%"=="4" (
     echo.
     echo 🧪 Running comprehensive system tests...
@@ -66,6 +84,12 @@ if "%choice%"=="1" (
         call tools\django\start_app.bat
     ) else if /i "%mgmt_choice%"=="b" (
         call tools\database\setup_database.bat
+if errorlevel 1 (
+    echo ❌ Setup step failed
+    echo 💡 Check the error message above
+    pause
+    exit /b 1
+)
     ) else if /i "%mgmt_choice%"=="c" (
         call tools\testing\test_system.bat
     ) else if /i "%mgmt_choice%"=="d" (

@@ -1,0 +1,2329 @@
+{
+  "issues": [],
+  "warnings": [
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/manage.py",
+      "message": "Django import but Django not available: from django.core.management import execute_from_command_line",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/manage.py",
+      "message": "Django import but Django not available: \"Couldn't import Django. Are you sure it's installed and \"",
+      "line": 14
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/comprehensive_bug_check.py",
+      "message": "Django import but Django not available: if 'django' in line.lower() and 'import' in line:",
+      "line": 122
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/comprehensive_bug_check.py",
+      "message": "Django import but Django not available: f\"Django import but Django not available: {line}\", i)",
+      "line": 125
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/comprehensive_bug_check.py",
+      "message": "Django import but Django not available: import django",
+      "line": 632
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/scripts/setup/fix_migration_conflicts.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 64
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/scripts/setup/fix_migration_conflicts.py",
+      "message": "Django import but Django not available: from django.db import migrations, models",
+      "line": 65
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/scripts/setup/fix_migration_conflicts.py",
+      "message": "Django import but Django not available: import django.db.models.deletion",
+      "line": 66
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_optimized_fetcher.py",
+      "message": "Django import but Django not available: import django",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_optimized_fetcher.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_optimized_fetcher.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 13
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_optimized_fetcher.py",
+      "message": "Django import but Django not available: from django.test.utils import get_runner",
+      "line": 14
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_optimized_fetcher.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 116
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_wordpress_integration.py",
+      "message": "Django import but Django not available: import django",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_wordpress_integration.py",
+      "message": "Django import but Django not available: from django.test import Client",
+      "line": 20
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_wordpress_integration.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 21
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_complete_system.py",
+      "message": "Django import but Django not available: import django",
+      "line": 16
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_complete_system.py",
+      "message": "Django import but Django not available: from django.test import Client",
+      "line": 25
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_complete_system.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 26
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_frontend_integration.py",
+      "message": "Django import but Django not available: import django",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_frontend_integration.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_frontend_integration.py",
+      "message": "Django import but Django not available: from django.test import Client",
+      "line": 13
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tests/test_frontend_integration.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 14
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/paywall_api_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/paywall_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/paywall_api_views.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/paywall_api_views.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 13
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/paywall_api_views.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 208
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/paywall_api_views.py",
+      "message": "Django import but Django not available: from django.db.models import Q",
+      "line": 295
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/tasks.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_views.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 13
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_views.py",
+      "message": "Django import but Django not available: from django.db.models import Q",
+      "line": 14
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_views.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 15
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin_dashboard.py",
+      "message": "Django import but Django not available: from django.shortcuts import render",
+      "line": 5
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin_dashboard.py",
+      "message": "Django import but Django not available: from django.contrib.admin.views.decorators import staff_member_required",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin_dashboard.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin_dashboard.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin_dashboard.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin.py",
+      "message": "Django import but Django not available: from django.contrib import admin",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/admin.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.contrib.auth.decorators import login_required",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.db.models import Q, Avg, Count, Sum, F",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/page_endpoints.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 16
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/models.py",
+      "message": "Django import but Django not available: from django.db import models",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/models.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/signals.py",
+      "message": "Django import but Django not available: from django.db.models.signals import post_save",
+      "line": 5
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/signals.py",
+      "message": "Django import but Django not available: from django.dispatch import receiver",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/signals.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/urls.py",
+      "message": "Django import but Django not available: from django.urls import path",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.decorators import login_required",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.db.models import Sum, Avg, Count",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/portfolio_api_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 16
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/performance_optimizations.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/performance_optimizations.py",
+      "message": "Django import but Django not available: from django.db.models import Prefetch, Q, Count, Sum",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/performance_optimizations.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/performance_optimizations.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 115
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/tests.py",
+      "message": "Django import but Django not available: from django.test import TestCase",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_manager.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 14
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/api_manager.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 15
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/views.py",
+      "message": "Django import but Django not available: from django.shortcuts import render",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/apps.py",
+      "message": "Django import but Django not available: from django.apps import AppConfig",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.decorators import user_passes_test",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.db.models import Count, Sum, Avg, F, Q",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.db.models.functions import Coalesce",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/analytics_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 16
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.decorators import login_required",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.db.models import Q, Avg, Count",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/market_analysis_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 17
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 15
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 16
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 17
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.contrib.auth.decorators import login_required, user_passes_test",
+      "line": 18
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.db.models import Q, Count, Sum, Avg, F, Max, Min",
+      "line": 19
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 20
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 21
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 22
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/advanced_features.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 29
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.decorators import login_required",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.db.models import Q, Avg, Count, Sum",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/comprehensive_api_views.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 19
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/migrations/0001_initial.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/migrations/0001_initial.py",
+      "message": "Django import but Django not available: from django.db import migrations, models",
+      "line": 4
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/migrations/0001_initial.py",
+      "message": "Django import but Django not available: import django.db.models.deletion",
+      "line": 5
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/send_stock_notifications.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/setup_memberships.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/setup_memberships.py",
+      "message": "Django import but Django not available: from django.contrib.auth.models import User",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/export_stock_data.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 5
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/export_stock_data.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/import_stock_data_optimized.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 21
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/import_stock_data_optimized.py",
+      "message": "Django import but Django not available: from django.utils.timezone import now, make_aware",
+      "line": 22
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/import_stock_data_optimized.py",
+      "message": "Django import but Django not available: from django.core.cache import cache",
+      "line": 23
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/import_stock_data_optimized.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 395
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/update_stocks_yfinance.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand, CommandError",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/update_stocks_yfinance.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/update_stocks_yfinance.py",
+      "message": "Django import but Django not available: from django.db import transaction",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/import_stock_data.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 14
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/import_stock_data.py",
+      "message": "Django import but Django not available: from django.utils.timezone import now, make_aware",
+      "line": 15
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/optimize_database.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/optimize_database.py",
+      "message": "Django import but Django not available: from django.db import connection, transaction",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/optimize_database.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/stock_workflow.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/stock_workflow.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 4
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stockscanner_django/asgi.py",
+      "message": "Django import but Django not available: from django.core.asgi import get_asgi_application",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stockscanner_django/urls.py",
+      "message": "Django import but Django not available: from django.contrib import admin",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stockscanner_django/urls.py",
+      "message": "Django import but Django not available: from django.urls import path, include",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stockscanner_django/urls.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stockscanner_django/urls.py",
+      "message": "Django import but Django not available: from django.conf.urls.static import static",
+      "line": 4
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stockscanner_django/wsgi.py",
+      "message": "Django import but Django not available: from django.core.wsgi import get_wsgi_application",
+      "line": 12
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/tasks.py",
+      "message": "Django import but Django not available: from django.core.mail import EmailMultiAlternatives, get_connection",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/tasks.py",
+      "message": "Django import but Django not available: from django.template.loader import render_to_string",
+      "line": 4
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/tasks.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 5
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/email_config.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/email_config.py",
+      "message": "Django import but Django not available: from django.core.mail import get_connection",
+      "line": 112
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/email_config.py",
+      "message": "Django import but Django not available: from django.core.mail.backends.smtp import EmailBackend",
+      "line": 113
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/email_config.py",
+      "message": "Django import but Django not available: from django.core.mail import send_mail",
+      "line": 205
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/models.py",
+      "message": "Django import but Django not available: from django.db import models",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/app.py",
+      "message": "Django import but Django not available: from django.apps import AppConfig",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/migrations/0001_initial.py",
+      "message": "Django import but Django not available: from django.db import migrations, models",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/management/commands/seed_subscriptions.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/emails/management/commands/send_stock_emails.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/setup/mysql/setup_mysql_production_complete.py",
+      "message": "Django import but Django not available: import django",
+      "line": 412
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/setup/mysql/setup_mysql_production_complete.py",
+      "message": "Django import but Django not available: from django.db import connection",
+      "line": 415
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin_api_views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse",
+      "line": 5
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 6
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin_api_views.py",
+      "message": "Django import but Django not available: from django.views.decorators.http import require_http_methods",
+      "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin_api_views.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 8
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin_api_views.py",
+      "message": "Django import but Django not available: from django.utils.decorators import method_decorator",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin_api_views.py",
+      "message": "Django import but Django not available: from django.views import View",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/admin.py",
+      "message": "Django import but Django not available: from django.contrib import admin",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/models.py",
+      "message": "Django import but Django not available: from django.db import models",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/urls.py",
+      "message": "Django import but Django not available: from django.urls import path",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/tests.py",
+      "message": "Django import but Django not available: from django.test import TestCase",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/views.py",
+      "message": "Django import but Django not available: from django.shortcuts import render",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/views.py",
+      "message": "Django import but Django not available: from django.http import JsonResponse, HttpResponse",
+      "line": 2
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/views.py",
+      "message": "Django import but Django not available: from django.views.decorators.csrf import csrf_exempt",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/views.py",
+      "message": "Django import but Django not available: from django.http import HttpResponseBadRequest",
+      "line": 165
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/views.py",
+      "message": "Django import but Django not available: from django.shortcuts import render",
+      "line": 190
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/apps.py",
+      "message": "Django import but Django not available: from django.apps import AppConfig",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/core/migrations/0001_initial.py",
+      "message": "Django import but Django not available: from django.db import migrations, models",
+      "line": 3
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/run_migrations.py",
+      "message": "Django import but Django not available: import django",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/run_migrations.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 10
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/run_migrations.py",
+      "message": "Django import but Django not available: from django.db import connection",
+      "line": 11
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: import django",
+      "line": 9
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: # Step 4: Test Django import",
+      "line": 37
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: print(\"\\n4\ufe0f\u20e3 Testing Django import...\")",
+      "line": 38
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: import django",
+      "line": 40
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: print(f\"   \u274c Django import failed: {e}\")",
+      "line": 43
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 49
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 80
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/django/test_django_startup.py",
+      "message": "Django import but Django not available: from django.db import connection",
+      "line": 105
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_django_settings_error.py",
+      "message": "Django import but Django not available: \"\"\"Test Django settings import\"\"\"",
+      "line": 189
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_django_settings_error.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 197
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_django_settings_error.py",
+      "message": "Django import but Django not available: print_success(\"Django settings imported successfully\")",
+      "line": 198
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_django_settings_error.py",
+      "message": "Django import but Django not available: import django",
+      "line": 283
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_migrations_windows.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 60
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_migrations_windows.py",
+      "message": "Django import but Django not available: from django.db import migrations, models",
+      "line": 61
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/database/fix_migrations_windows.py",
+      "message": "Django import but Django not available: import django.db.models.deletion",
+      "line": 62
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: import django",
+      "line": 39
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: print(f\"\u274c Django import failed: {e}\")",
+      "line": 44
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: def test_django_imports() -> Dict[str, bool]:",
+      "line": 51
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: Test essential Django imports.",
+      "line": 53
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: # Core Django imports",
+      "line": 60
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: from django.db import connection",
+      "line": 91
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: from django.conf import settings",
+      "line": 109
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/utils/common.py",
+      "message": "Django import but Django not available: from django.core.management import call_command",
+      "line": 224
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/news/admin.py",
+      "message": "Django import but Django not available: from django.contrib import admin",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/news/models.py",
+      "message": "Django import but Django not available: from django.db import models",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/news/tests.py",
+      "message": "Django import but Django not available: from django.test import TestCase",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/news/views.py",
+      "message": "Django import but Django not available: from django.shortcuts import render",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/news/apps.py",
+      "message": "Django import but Django not available: from django.apps import AppConfig",
+      "line": 1
+    },
+    {
+      "severity": "major",
+      "category": "security",
+      "file": "/workspace/tools/database/fix_postgresql_permissions.py",
+      "message": "Hardcoded password",
+      "line": 59
+    },
+    {
+      "severity": "major",
+      "category": "security",
+      "file": "/workspace/tools/database/fix_postgresql_permissions.py",
+      "message": "Hardcoded password",
+      "line": 136
+    },
+    {
+      "severity": "major",
+      "category": "security",
+      "file": "/workspace/tools/database/fix_postgresql_permissions.py",
+      "message": "Hardcoded password",
+      "line": 183
+    },
+    {
+      "severity": "major",
+      "category": "security",
+      "file": "/workspace/tools/database/fix_postgresql_permissions.py",
+      "message": "Hardcoded password",
+      "line": 259
+    },
+    {
+      "severity": "major",
+      "category": "security",
+      "file": "/workspace/setup/mysql/setup_mysql_production_complete.py",
+      "message": "Hardcoded password",
+      "line": 123
+    },
+    {
+      "severity": "major",
+      "category": "security",
+      "file": "/workspace/.env",
+      "message": "ALLOWED_HOSTS allows all hosts",
+      "line": null
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "requirements",
+      "message": "Cannot import django (Django framework)",
+      "line": null
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "requirements",
+      "message": "Cannot import pandas (Data processing)",
+      "line": null
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "requirements",
+      "message": "Cannot import yfinance (Yahoo Finance API)",
+      "line": null
+    }
+  ],
+  "suggestions": [
+    {
+      "severity": "minor",
+      "category": "models",
+      "file": "/workspace/core/models.py",
+      "message": "Consider adding Meta class with ordering",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 30
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 34
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 38
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 42
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 66
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 68
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 70
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/START_HERE.bat",
+      "message": "Consider adding error handling",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "batch",
+      "file": "/workspace/setup/windows/setup.bat",
+      "message": "Consider quoting paths with spaces",
+      "line": 123
+    },
+    {
+      "severity": "minor",
+      "category": "performance",
+      "file": "/workspace/emails/models.py",
+      "message": "Consider adding database indexes for frequently queried fields",
+      "line": null
+    },
+    {
+      "severity": "minor",
+      "category": "performance",
+      "file": "/workspace/core/models.py",
+      "message": "Consider adding database indexes for frequently queried fields",
+      "line": null
+    }
+  ],
+  "passed_checks": [
+    "Syntax check: PROJECT_CLEANUP.py",
+    "Syntax check: manage.py",
+    "Syntax check: comprehensive_bug_check.py",
+    "Syntax check: setup_redis_windows.py",
+    "Syntax check: install_missing_packages.py",
+    "Syntax check: windows_fix_install.py",
+    "Syntax check: fix_migration_conflicts.py",
+    "Syntax check: check_syntax.py",
+    "Syntax check: fix_env_urls.py",
+    "Syntax check: validate_migrations.py",
+    "Syntax check: test_yfinance_system.py",
+    "Syntax check: test_database_setup.py",
+    "Syntax check: test_optimized_fetcher.py",
+    "Syntax check: test_wordpress_integration.py",
+    "Syntax check: test_complete_system.py",
+    "Syntax check: test_frontend_integration.py",
+    "Syntax check: paywall_api_views.py",
+    "Syntax check: tasks.py",
+    "Syntax check: api_views.py",
+    "Syntax check: admin_dashboard.py",
+    "Syntax check: admin.py",
+    "Syntax check: page_endpoints.py",
+    "Syntax check: models.py",
+    "Syntax check: config.py",
+    "Syntax check: signals.py",
+    "Syntax check: urls.py",
+    "Syntax check: portfolio_api_views.py",
+    "Syntax check: performance_optimizations.py",
+    "Syntax check: tests.py",
+    "Syntax check: api_manager.py",
+    "Syntax check: views.py",
+    "Syntax check: apps.py",
+    "Syntax check: analytics_views.py",
+    "Syntax check: market_analysis_views.py",
+    "Syntax check: __init__.py",
+    "Syntax check: advanced_features.py",
+    "Syntax check: comprehensive_api_views.py",
+    "Syntax check: 0001_initial.py",
+    "Syntax check: __init__.py",
+    "Syntax check: __init__.py",
+    "Syntax check: send_stock_notifications.py",
+    "Syntax check: setup_memberships.py",
+    "Syntax check: export_stock_data.py",
+    "Syntax check: import_stock_data_optimized.py",
+    "Syntax check: update_stocks_yfinance.py",
+    "Syntax check: import_stock_data.py",
+    "Syntax check: optimize_database.py",
+    "Syntax check: __init__.py",
+    "Syntax check: stock_workflow.py",
+    "Syntax check: asgi.py",
+    "Syntax check: settings.py",
+    "Syntax check: urls.py",
+    "Syntax check: celery.py",
+    "Syntax check: __init__.py",
+    "Syntax check: wsgi.py",
+    "Syntax check: tasks.py",
+    "Syntax check: email_config.py",
+    "Syntax check: models.py",
+    "Syntax check: app.py",
+    "Syntax check: email_filter.py",
+    "Syntax check: __init__.py",
+    "Syntax check: stock_notifications.py",
+    "Syntax check: 0001_initial.py",
+    "Syntax check: __init__.py",
+    "Syntax check: __init__.py",
+    "Syntax check: seed_subscriptions.py",
+    "Syntax check: send_stock_emails.py",
+    "Syntax check: __init__.py",
+    "Syntax check: install_windows_safe.py",
+    "Syntax check: windows_complete_setup.py",
+    "Syntax check: setup_mysql_production_complete.py",
+    "Syntax check: enhanced_filter_logic.py",
+    "Syntax check: admin_api_views.py",
+    "Syntax check: final_load_filtered_data.py",
+    "Syntax check: admin.py",
+    "Syntax check: models.py",
+    "Syntax check: urls.py",
+    "Syntax check: tests.py",
+    "Syntax check: views.py",
+    "Syntax check: apps.py",
+    "Syntax check: __init__.py",
+    "Syntax check: 0001_initial.py",
+    "Syntax check: __init__.py",
+    "Syntax check: run_migrations.py",
+    "Syntax check: test_django_startup.py",
+    "Syntax check: switch_to_sqlite.py",
+    "Syntax check: update_env_database.py",
+    "Syntax check: fix_django_settings_error.py",
+    "Syntax check: fix_migrations_windows.py",
+    "Syntax check: fix_postgresql_permissions.py",
+    "Syntax check: windows_bug_check.py",
+    "Syntax check: common.py",
+    "Syntax check: tasks.py",
+    "Syntax check: scraper.py",
+    "Syntax check: admin.py",
+    "Syntax check: models.py",
+    "Syntax check: tests.py",
+    "Syntax check: views.py",
+    "Syntax check: apps.py",
+    "Syntax check: __init__.py",
+    "Syntax check: __init__.py",
+    "All required Django settings present",
+    "Multiple database backends supported",
+    "Models check: stocks",
+    "Models check: core",
+    "Models check: emails",
+    "Requirements check: requirements.txt",
+    "Requirements check: setup/requirements/requirements-minimal.txt",
+    "Requirements check: setup/requirements/requirements-windows.txt",
+    "Batch script check: START_HERE.bat",
+    "Batch script check: SIMPLE_START.bat",
+    "Batch script check: setup.bat",
+    "Batch script check: emergency_setup_windows.bat",
+    "Batch script check: setup_mysql_windows.bat",
+    "Batch script check: start_app.bat",
+    "Batch script check: setup_database.bat",
+    "Batch script check: fix_migrations.bat",
+    "Batch script check: fix_database_issues.bat",
+    "Batch script check: test_system.bat",
+    "Batch script check: fix_numpy_windows.bat",
+    "Batch script check: fix_windows_compiler_issues.bat",
+    "All required directories present",
+    "All main entry points present",
+    "Root directory is clean",
+    "Main documentation files present",
+    "README has essential sections",
+    "Caching configuration found",
+    "Import test: requests"
+  ],
+  "overall_result": false
+}
