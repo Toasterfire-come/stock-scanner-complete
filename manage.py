@@ -3,6 +3,13 @@
 import os
 import sys
 
+# Configure PyMySQL for Windows MySQL compatibility
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 
 def main():
     """Run administrative tasks."""
