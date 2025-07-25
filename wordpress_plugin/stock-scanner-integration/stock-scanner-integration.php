@@ -51,14 +51,23 @@ if (!defined('ABSPATH')) {
  * - Django API integration
  */
 
+// Include required files
+require_once plugin_dir_path(__FILE__) . 'includes/usage-tracker.php';
+require_once plugin_dir_path(__FILE__) . 'includes/api-interceptor.php';
+
 class StockScannerIntegration {
     
     private $api_base_url;
     private $api_secret;
+    private $usage_tracker;
     
     public function __construct() {
         $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
         $this->api_secret = get_option('stock_scanner_api_secret', '');
+        
+        // Initialize usage tracker
+        global $stock_scanner_usage_tracker;
+        $this->usage_tracker = $stock_scanner_usage_tracker;
         
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -66,10 +75,22 @@ class StockScannerIntegration {
         add_action('admin_menu', array($this, 'admin_menu'));
         add_action('wp_dashboard_setup', array($this, 'add_dashboard_widget'));
         
+        // Professional page enhancement
+        add_filter('the_content', array($this, 'enhance_page_content'));
+        add_action('wp_head', array($this, 'add_professional_meta_tags'));
+        
+        // Usage tracking hooks
+        add_action('wp_ajax_track_usage', array($this, 'track_user_usage'));
+        add_action('wp_ajax_nopriv_track_usage', array($this, 'track_user_usage'));
+        
         // Sales tax hooks
         add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
         add_action('pmpro_checkout_preheader', array($this, 'detect_user_location'));
         add_filter('pmpro_checkout_order', array($this, 'add_tax_to_order'), 10, 1);
+        
+        // Resource monitoring hooks
+        add_action('wp_ajax_check_system_status', array($this, 'check_system_status'));
+        add_action('wp_ajax_nopriv_check_system_status', array($this, 'check_system_status'));
     }
     
     public function init() {
@@ -79,16 +100,42 @@ class StockScannerIntegration {
         
         // Hook into PMP membership changes
         add_action('pmpro_after_change_membership_level', array($this, 'sync_membership_level'), 10, 2);
+        
+        // Create professional pages if they don't exist
+        $this->create_professional_pages();
+        
+        // Register professional shortcodes
+        $this->register_professional_shortcodes();
     }
     
     public function enqueue_scripts() {
-        wp_enqueue_script('stock-scanner-js', plugin_dir_url(__FILE__) . 'assets/stock-scanner.js', array('jquery'), '1.0.0', true);
-        wp_enqueue_style('stock-scanner-css', plugin_dir_url(__FILE__) . 'assets/stock-scanner.css', array(), '1.0.0');
+        wp_enqueue_script('stock-scanner-js', plugin_dir_url(__FILE__) . 'assets/stock-scanner.js', array('jquery'), '2.0.0', true);
+        wp_enqueue_style('stock-scanner-css', plugin_dir_url(__FILE__) . 'assets/stock-scanner.css', array(), '2.0.0');
         
-        // Localize script for AJAX
+        // Font Awesome for icons
+        wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', array(), '6.0.0');
+        
+        // Professional styles for different membership levels
+        $user_level = $this->get_user_membership_level();
+        wp_enqueue_style('stock-scanner-level-' . $user_level, plugin_dir_url(__FILE__) . 'assets/level-' . $user_level . '.css', array('stock-scanner-css'), '2.0.0');
+        
+        // Localize script for AJAX with enhanced data
         wp_localize_script('stock-scanner-js', 'stock_scanner_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('stock_scanner_nonce')
+            'nonce' => wp_create_nonce('stock_scanner_nonce'),
+            'user_level' => $user_level,
+            'api_base' => $this->api_base_url,
+            'features' => $this->get_available_features($user_level),
+            'limits' => $this->get_user_limits($user_level),
+            'system_status_url' => admin_url('admin-ajax.php?action=check_system_status'),
+            'messages' => array(
+                'upgrade_required' => 'This feature requires a higher membership level.',
+                'limit_exceeded' => 'You have reached your daily limit.',
+                'system_overload' => 'System is currently overloaded. Please try again later.',
+                'loading' => 'Loading...',
+                'error' => 'An error occurred. Please try again.',
+                'retry' => 'Retry'
+            )
         ));
     }
     
@@ -1547,6 +1594,387 @@ function create_stock_scanner_pages() {
                 'menu-item-status' => 'publish'
             ));
         }
+    }
+    
+    /**
+     * Get user membership level
+     */
+    private function get_user_membership_level() {
+        $user_id = get_current_user_id();
+        
+        if (function_exists('pmpro_getMembershipLevelForUser')) {
+            $level = pmpro_getMembershipLevelForUser($user_id);
+            if ($level && $level->id) {
+                switch ($level->id) {
+                    case 1: return 'free';
+                    case 2: return 'premium';
+                    case 3: return 'professional';
+                    default: return 'free';
+                }
+            }
+        }
+        
+        return $user_id > 0 ? 'free' : 'free';
+    }
+    
+    /**
+     * Get available features for user level
+     */
+    private function get_available_features($user_level) {
+        $features = array(
+            'free' => array('basic_search', 'limited_data', 'basic_charts'),
+            'premium' => array('advanced_search', 'real_time_data', 'premium_charts', 'email_alerts', 'portfolio_tracking'),
+            'professional' => array('all_features', 'professional_indicators', 'advanced_analytics', 'api_access', 'priority_support', 'custom_alerts', 'backtesting')
+        );
+        
+        return $features[$user_level] ?? $features['free'];
+    }
+    
+    /**
+     * Get user limits for membership level
+     */
+    private function get_user_limits($user_level) {
+        $limits = array(
+            'free' => array(
+                'api_calls_daily' => 100,
+                'searches_daily' => 20,
+                'news_articles_daily' => 50,
+                'concurrent_requests' => 2,
+                'data_retention_days' => 7
+            ),
+            'premium' => array(
+                'api_calls_daily' => 2500,
+                'searches_daily' => 500,
+                'news_articles_daily' => 1000,
+                'concurrent_requests' => 5,
+                'data_retention_days' => 30
+            ),
+            'professional' => array(
+                'api_calls_daily' => 10000,
+                'searches_daily' => 2000,
+                'news_articles_daily' => 5000,
+                'concurrent_requests' => 10,
+                'data_retention_days' => 365
+            )
+        );
+        
+        return $limits[$user_level] ?? $limits['free'];
+    }
+    
+    /**
+     * Create professional pages
+     */
+    private function create_professional_pages() {
+        $professional_pages = array(
+            'professional-dashboard' => array(
+                'title' => 'Professional Dashboard',
+                'content' => '[stock_scanner_widget symbol="SPY" style="professional" show_indicators="true"]
+                             [stock_scanner_search style="professional" show_filters="true"]
+                             [stock_scanner_news template="professional" limit="10"]',
+                'template' => 'page-professional.php'
+            ),
+            'advanced-analytics' => array(
+                'title' => 'Advanced Analytics',
+                'content' => '[stock_scanner_portfolio style="professional"]
+                             [stock_scanner_alerts style="professional"]',
+                'template' => 'page-analytics.php'
+            ),
+            'market-insights' => array(
+                'title' => 'Market Insights',
+                'content' => '[stock_scanner_news template="insights" limit="20"]
+                             [stock_scanner_sentiment_analysis]',
+                'template' => 'page-insights.php'
+            )
+        );
+        
+        foreach ($professional_pages as $slug => $page_data) {
+            $existing_page = get_page_by_path($slug);
+            
+            if (!$existing_page) {
+                $page_id = wp_insert_post(array(
+                    'post_title' => $page_data['title'],
+                    'post_content' => $page_data['content'],
+                    'post_status' => 'publish',
+                    'post_type' => 'page',
+                    'post_name' => $slug
+                ));
+                
+                if ($page_id && isset($page_data['template'])) {
+                    update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Register professional shortcodes
+     */
+    private function register_professional_shortcodes() {
+        add_shortcode('stock_scanner_portfolio', array($this, 'render_portfolio_shortcode'));
+        add_shortcode('stock_scanner_alerts', array($this, 'render_alerts_shortcode'));
+        add_shortcode('stock_scanner_sentiment_analysis', array($this, 'render_sentiment_shortcode'));
+        add_shortcode('stock_scanner_system_status', array($this, 'render_system_status_shortcode'));
+    }
+    
+    /**
+     * Enhance page content with professional features
+     */
+    public function enhance_page_content($content) {
+        if (is_page()) {
+            $user_level = $this->get_user_membership_level();
+            
+            // Add usage tracking to all API calls
+            $content = $this->add_usage_tracking_to_content($content);
+            
+            // Add professional styling wrapper
+            if ($user_level === 'professional') {
+                $content = '<div class="professional-content-wrapper">' . $content . '</div>';
+            } elseif ($user_level === 'premium') {
+                $content = '<div class="premium-content-wrapper">' . $content . '</div>';
+            } else {
+                $content = '<div class="free-content-wrapper">' . $content . '</div>';
+            }
+            
+            // Add system status indicator for professional users
+            if ($user_level === 'professional') {
+                $content .= $this->render_system_status_indicator();
+            }
+        }
+        
+        return $content;
+    }
+    
+    /**
+     * Add professional meta tags
+     */
+    public function add_professional_meta_tags() {
+        if (is_page()) {
+            $user_level = $this->get_user_membership_level();
+            
+            echo '<meta name="stock-scanner-user-level" content="' . esc_attr($user_level) . '">' . "\n";
+            echo '<meta name="stock-scanner-features" content="' . esc_attr(implode(',', $this->get_available_features($user_level))) . '">' . "\n";
+            
+            // Add professional page specific meta tags
+            global $post;
+            if ($post && strpos($post->post_name, 'professional') !== false) {
+                echo '<meta name="stock-scanner-page-type" content="professional">' . "\n";
+                echo '<meta name="stock-scanner-requires-auth" content="true">' . "\n";
+            }
+        }
+    }
+    
+    /**
+     * Track user usage via AJAX
+     */
+    public function track_user_usage() {
+        check_ajax_referer('stock_scanner_nonce', 'nonce');
+        
+        $user_id = get_current_user_id();
+        $action_type = sanitize_text_field($_POST['action_type'] ?? 'page_view');
+        $endpoint = sanitize_text_field($_POST['endpoint'] ?? '');
+        $response_time = floatval($_POST['response_time'] ?? 0);
+        
+        if ($this->usage_tracker) {
+            $tracking_id = $this->usage_tracker->track_usage(
+                $user_id,
+                $action_type,
+                $endpoint,
+                $response_time
+            );
+            
+            wp_send_json_success(array(
+                'tracking_id' => $tracking_id,
+                'user_level' => $this->get_user_membership_level(),
+                'remaining_calls' => $this->get_remaining_calls($user_id)
+            ));
+        } else {
+            wp_send_json_error('Usage tracker not available');
+        }
+    }
+    
+    /**
+     * Check system status via AJAX
+     */
+    public function check_system_status() {
+        if ($this->usage_tracker) {
+            $status = $this->usage_tracker->get_current_system_status();
+            
+            wp_send_json_success(array(
+                'status' => $status,
+                'timestamp' => current_time('mysql'),
+                'user_level' => $this->get_user_membership_level()
+            ));
+        } else {
+            wp_send_json_error('System status not available');
+        }
+    }
+    
+    /**
+     * Get remaining API calls for user
+     */
+    private function get_remaining_calls($user_id) {
+        if (!$this->usage_tracker) return 0;
+        
+        $user_level = $this->get_user_membership_level();
+        $limits = $this->get_user_limits($user_level);
+        
+        // This would need to be implemented in the usage tracker
+        // For now, return a placeholder
+        return $limits['api_calls_daily'] ?? 100;
+    }
+    
+    /**
+     * Add usage tracking to content
+     */
+    private function add_usage_tracking_to_content($content) {
+        // Add data attributes to track interactions
+        $content = str_replace(
+            array('[stock_scanner_widget', '[stock_scanner_search', '[stock_scanner_news'),
+            array('[stock_scanner_widget data-track="true"', '[stock_scanner_search data-track="true"', '[stock_scanner_news data-track="true"'),
+            $content
+        );
+        
+        return $content;
+    }
+    
+    /**
+     * Render system status indicator
+     */
+    private function render_system_status_indicator() {
+        ob_start();
+        ?>
+        <div id="system-status-indicator" class="professional-system-status">
+            <div class="status-icon">
+                <i class="fas fa-circle" id="status-light"></i>
+            </div>
+            <div class="status-text">
+                <span id="status-message">Checking system status...</span>
+            </div>
+        </div>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            function updateSystemStatus() {
+                $.ajax({
+                    url: stock_scanner_ajax.system_status_url,
+                    type: 'POST',
+                    data: {
+                        action: 'check_system_status',
+                        nonce: stock_scanner_ajax.nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            const status = response.data.status;
+                            const statusLight = $('#status-light');
+                            const statusMessage = $('#status-message');
+                            
+                            statusLight.removeClass('text-success text-warning text-danger');
+                            
+                            switch(status.alert_level) {
+                                case 'none':
+                                    statusLight.addClass('text-success');
+                                    statusMessage.text('System operating normally');
+                                    break;
+                                case 'warning':
+                                    statusLight.addClass('text-warning');
+                                    statusMessage.text('System under moderate load');
+                                    break;
+                                case 'critical':
+                                    statusLight.addClass('text-danger');
+                                    statusMessage.text('System under heavy load');
+                                    break;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update status immediately and then every 30 seconds
+            updateSystemStatus();
+            setInterval(updateSystemStatus, 30000);
+        });
+        </script>
+        
+        <style>
+        .professional-system-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-icon {
+            font-size: 8px;
+        }
+        
+        .text-success { color: #48bb78; }
+        .text-warning { color: #ed8936; }
+        .text-danger { color: #f56565; }
+        </style>
+        <?php
+        return ob_get_clean();
+    }
+    
+    /**
+     * Render portfolio shortcode
+     */
+    public function render_portfolio_shortcode($atts) {
+        $user_level = $this->get_user_membership_level();
+        
+        if ($user_level === 'free') {
+            return '<div class="upgrade-notice">Portfolio tracking requires a Premium subscription. <a href="/premium-plans/">Upgrade now</a></div>';
+        }
+        
+        return '[stock_scanner_widget symbol="PORTFOLIO" style="professional" show_chart="true"]';
+    }
+    
+    /**
+     * Render alerts shortcode
+     */
+    public function render_alerts_shortcode($atts) {
+        $user_level = $this->get_user_membership_level();
+        
+        if ($user_level === 'free') {
+            return '<div class="upgrade-notice">Advanced alerts require a Premium subscription. <a href="/premium-plans/">Upgrade now</a></div>';
+        }
+        
+        return '<div class="stock-scanner-alerts professional-alerts">Alert system coming soon...</div>';
+    }
+    
+    /**
+     * Render sentiment analysis shortcode
+     */
+    public function render_sentiment_shortcode($atts) {
+        $user_level = $this->get_user_membership_level();
+        
+        if ($user_level !== 'professional') {
+            return '<div class="upgrade-notice">Sentiment analysis requires a Professional subscription. <a href="/premium-plans/">Upgrade now</a></div>';
+        }
+        
+        return '<div class="stock-scanner-sentiment professional-sentiment">Sentiment analysis coming soon...</div>';
+    }
+    
+    /**
+     * Render system status shortcode
+     */
+    public function render_system_status_shortcode($atts) {
+        $user_level = $this->get_user_membership_level();
+        
+        if ($user_level !== 'professional') {
+            return '<div class="upgrade-notice">System status monitoring requires a Professional subscription. <a href="/premium-plans/">Upgrade now</a></div>';
+        }
+        
+        return $this->render_system_status_indicator();
     }
 }
 ?>
