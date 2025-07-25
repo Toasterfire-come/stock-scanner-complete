@@ -81,6 +81,164 @@ def admin_status(request):
         }, status=500)
 
 @require_http_methods(["GET"])
+def recent_news(request):
+    """Get recent news articles for the admin dashboard"""
+    try:
+        from news.models import NewsArticle
+        
+        # Get recent articles (last 7 days, limit 10)
+        articles = NewsArticle.objects.filter(
+            is_active=True,
+            published_date__gte=timezone.now() - timedelta(days=7)
+        ).order_by('-published_date')[:10]
+        
+        article_data = []
+        for article in articles:
+            article_data.append({
+                'headline': article.headline,
+                'url': article.url,
+                'sentiment_grade': article.sentiment_grade,
+                'sentiment_score': article.sentiment_score,
+                'published_date': article.published_date.strftime('%Y-%m-%d %H:%M'),
+                'mentioned_tickers': article.mentioned_tickers,
+                'source': article.source
+            })
+        
+        return JsonResponse({
+            'articles': article_data,
+            'count': len(article_data),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting recent news: {e}")
+        return JsonResponse({
+            'articles': [],
+            'count': 0,
+            'error': str(e),
+            'status': 'error'
+        }, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def load_nasdaq_data(request):
+    """Load NASDAQ ticker data"""
+    try:
+        # Capture command output
+        output = io.StringIO()
+        call_command('load_nasdaq_only', stdout=output)
+        result = output.getvalue()
+        
+        return JsonResponse({
+            'message': 'NASDAQ data loaded successfully',
+            'output': result,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error loading NASDAQ data: {e}")
+        return JsonResponse({
+            'message': f'Failed to load NASDAQ data: {str(e)}',
+            'status': 'error'
+        }, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def update_stocks(request):
+    """Update stock data using yfinance"""
+    try:
+        # Capture command output
+        output = io.StringIO()
+        call_command('update_stocks_yfinance', stdout=output)
+        result = output.getvalue()
+        
+        return JsonResponse({
+            'message': 'Stock data updated successfully',
+            'output': result,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating stocks: {e}")
+        return JsonResponse({
+            'message': f'Failed to update stocks: {str(e)}',
+            'status': 'error'
+        }, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def scrape_news(request):
+    """Scrape news data"""
+    try:
+        from news.scraper import update_news_data
+        
+        success = update_news_data()
+        
+        if success:
+            return JsonResponse({
+                'message': 'News data scraped successfully',
+                'status': 'success'
+            })
+        else:
+            return JsonResponse({
+                'message': 'News scraping completed with warnings',
+                'status': 'warning'
+            })
+        
+    except Exception as e:
+        logger.error(f"Error scraping news: {e}")
+        return JsonResponse({
+            'message': f'Failed to scrape news: {str(e)}',
+            'status': 'error'
+        }, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def send_notifications(request):
+    """Send pending notifications"""
+    try:
+        # Capture command output
+        output = io.StringIO()
+        call_command('send_stock_notifications', stdout=output)
+        result = output.getvalue()
+        
+        return JsonResponse({
+            'message': 'Notifications sent successfully',
+            'output': result,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error sending notifications: {e}")
+        return JsonResponse({
+            'message': f'Failed to send notifications: {str(e)}',
+            'status': 'error'
+        }, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def optimize_database(request):
+    """Optimize database performance"""
+    try:
+        # Capture command output
+        output = io.StringIO()
+        call_command('optimize_database', stdout=output)
+        result = output.getvalue()
+        
+        return JsonResponse({
+            'message': 'Database optimized successfully',
+            'output': result,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error optimizing database: {e}")
+        return JsonResponse({
+            'message': f'Failed to optimize database: {str(e)}',
+            'status': 'error'
+        }, status=500)
+
+@require_http_methods(["GET"])
 def api_providers_status(request):
     """Get API providers status - Simplified for Yahoo Finance"""
     try:
@@ -117,272 +275,82 @@ def api_providers_status(request):
             }
         }, status=500)
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AdminExecuteView(View):
-    """Execute admin commands"""
-    
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-            command = data.get('command')
-            params = data.get('params', {})
-            
-            logger.info(f"Executing admin command: {command} with params: {params}")
-            
-            # Capture output
-            output = io.StringIO()
-            old_stdout = sys.stdout
-            sys.stdout = output
-            
-            try:
-                if command == 'quick_test':
-                    result = self._run_quick_test(params)
-                elif command == 'workflow':
-                    result = self._run_workflow(params)
-                elif command == 'custom_workflow':
-                    result = self._run_custom_workflow(params)
-                elif command == 'export_data':
-                    result = self._export_data(params)
-                elif command == 'test_notifications':
-                    result = self._test_notifications(params)
-                else:
-                    return JsonResponse({
-                        'error': f'Unknown command: {command}',
-                        'status': 'error'
-                    }, status=400)
-                
-                # Get captured output
-                command_output = output.getvalue()
-                
-            finally:
-                sys.stdout = old_stdout
-            
-            return JsonResponse({
-                'message': result,
-                'output': command_output,
-                'status': 'success'
-            })
-            
-        except Exception as e:
-            logger.error(f"Error executing admin command: {e}")
-            return JsonResponse({
-                'error': str(e),
-                'status': 'error'
-            }, status=500)
-    
-    def _run_quick_test(self, params):
-        """Run a quick test with minimal data"""
-        try:
-            call_command(
-                'stock_workflow',
-                batch_size=5,
-                max_workers=1,
-                use_cache=True,
-                dry_run_notifications=True,
-                verbosity=1
-            )
-            return "Quick test completed successfully with 5 test stocks"
-        except Exception as e:
-            raise Exception(f"Quick test failed: {e}")
-    
-    def _run_workflow(self, params):
-        """Run the complete stock workflow"""
-        try:
-            batch_size = params.get('batch_size', 30)
-            max_workers = params.get('max_workers', 3)
-            use_cache = params.get('use_cache', True)
-            delay_range = params.get('delay_range', [1.5, 3.5])
-            
-            call_command(
-                'stock_workflow',
-                batch_size=batch_size,
-                max_workers=max_workers,
-                use_cache=use_cache,
-                delay_range=delay_range,
-                verbosity=1
-            )
-            return f"Workflow completed with batch_size={batch_size}, max_workers={max_workers}"
-        except Exception as e:
-            raise Exception(f"Workflow failed: {e}")
-    
-    def _run_custom_workflow(self, params):
-        """Run workflow with custom parameters"""
-        try:
-            batch_size = params.get('batch_size', 30)
-            max_workers = params.get('max_workers', 3)
-            use_cache = params.get('use_cache', True)
-            dry_run = params.get('dry_run', False)
-            delay_range = params.get('delay_range', [1.5, 3.5])
-            
-            call_command(
-                'stock_workflow',
-                batch_size=batch_size,
-                max_workers=max_workers,
-                use_cache=use_cache,
-                dry_run_notifications=dry_run,
-                delay_range=delay_range,
-                verbosity=1
-            )
-            
-            mode = "dry run" if dry_run else "live"
-            return f"Custom workflow completed in {mode} mode"
-        except Exception as e:
-            raise Exception(f"Custom workflow failed: {e}")
-    
-    def _export_data(self, params):
-        """Export stock data"""
-        try:
-            format_type = params.get('format', 'web')
-            
-            call_command(
-                'export_stock_data',
-                format=format_type,
-                verbosity=1
-            )
-            return f"Data exported successfully in {format_type} format"
-        except Exception as e:
-            raise Exception(f"Data export failed: {e}")
-    
-    def _test_notifications(self, params):
-        """Test email notifications"""
-        try:
-            dry_run = params.get('dry_run', True)
-            
-            call_command(
-                'send_stock_notifications',
-                dry_run=dry_run,
-                verbosity=1
-            )
-            
-            mode = "dry run" if dry_run else "live"
-            return f"Notification test completed in {mode} mode"
-        except Exception as e:
-            raise Exception(f"Notification test failed: {e}")
-
+# WordPress Integration Endpoints
 @require_http_methods(["GET"])
-def system_health(request):
-    """Get detailed system health information"""
+def wordpress_stock_data(request):
+    """Get stock data formatted for WordPress consumption"""
     try:
-        # Database health
-        db_healthy = True
-        try:
-            StockAlert.objects.count()
-        except Exception:
-            db_healthy = False
+        # Get recent stock alerts
+        stocks = StockAlert.objects.filter(
+            current_price__gt=0
+        ).order_by('-last_update')[:50]
         
-        # File system health
-        fs_healthy = True
-        try:
-            import os
-            json_dir = os.path.join(os.path.dirname(__file__), '../../../json')
-            fs_healthy = os.path.exists(json_dir) and os.access(json_dir, os.W_OK)
-        except Exception:
-            fs_healthy = False
-        
-        # Recent activity
-        recent_stocks = StockAlert.objects.filter(
-            last_update__isnull=False
-        ).order_by('-last_update')[:5]
-        
-        recent_activity = []
-        for stock in recent_stocks:
-            recent_activity.append({
+        stock_data = []
+        for stock in stocks:
+            stock_data.append({
                 'ticker': stock.ticker,
-                'price': float(stock.current_price),
-                'note': stock.note[:50] + '...' if len(stock.note) > 50 else stock.note,
-                'updated': stock.last_update.strftime('%Y-%m-%d %H:%M:%S')
+                'company_name': stock.company_name,
+                'current_price': float(stock.current_price) if stock.current_price else 0,
+                'price_change': float(stock.price_change_today) if stock.price_change_today else 0,
+                'price_change_percent': float(stock.price_change_percent) if stock.price_change_percent else 0,
+                'volume': int(stock.volume_today) if stock.volume_today else 0,
+                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'last_update': stock.last_update.isoformat() if stock.last_update else None
             })
         
-        # System metrics
-        try:
-            import psutil
-            memory_percent = psutil.virtual_memory().percent
-            cpu_percent = psutil.cpu_percent(interval=1)
-        except ImportError:
-            memory_percent = None
-            cpu_percent = None
-        
         return JsonResponse({
-            'database_healthy': db_healthy,
-            'filesystem_healthy': fs_healthy,
-            'memory_usage': memory_percent,
-            'cpu_usage': cpu_percent,
-            'recent_activity': recent_activity,
-            'timestamp': datetime.now().isoformat(),
+            'stocks': stock_data,
+            'count': len(stock_data),
+            'last_updated': timezone.now().isoformat(),
             'status': 'success'
         })
         
     except Exception as e:
-        logger.error(f"Error getting system health: {e}")
+        logger.error(f"Error getting WordPress stock data: {e}")
         return JsonResponse({
+            'stocks': [],
+            'count': 0,
             'error': str(e),
             'status': 'error'
         }, status=500)
 
 @require_http_methods(["GET"])
-def performance_metrics(request):
-    """Get performance metrics for the admin dashboard"""
+def wordpress_news_data(request):
+    """Get news data formatted for WordPress consumption"""
     try:
-        # Stock processing metrics
-        total_stocks = StockAlert.objects.count()
-        stocks_today = StockAlert.objects.filter(
-            last_update__date=datetime.now().date()
-        ).count()
+        from news.models import NewsArticle
         
-        # Email metrics
-        total_subscriptions = EmailSubscription.objects.count()
-        active_subscriptions = EmailSubscription.objects.filter(is_active=True).count()
+        # Get recent news
+        articles = NewsArticle.objects.filter(
+            is_active=True
+        ).order_by('-published_date')[:20]
         
-        # Processing efficiency (placeholder calculations)
-        processing_rate = stocks_today  # stocks per day
-        success_rate = (stocks_today / max(total_stocks, 1)) * 100 if total_stocks > 0 else 0
-        
-        # Rate limiting effectiveness
-        rate_limit_effectiveness = 95  # placeholder - could be calculated from logs
+        news_data = []
+        for article in articles:
+            news_data.append({
+                'headline': article.headline,
+                'url': article.url,
+                'content': article.content[:200] + '...' if len(article.content) > 200 else article.content,
+                'sentiment_grade': article.sentiment_grade,
+                'sentiment_score': article.sentiment_score,
+                'published_date': article.published_date.isoformat(),
+                'mentioned_tickers': article.mentioned_tickers,
+                'source': article.source,
+                'is_market_relevant': article.is_market_relevant
+            })
         
         return JsonResponse({
-            'total_stocks': total_stocks,
-            'stocks_processed_today': stocks_today,
-            'processing_rate_per_day': processing_rate,
-            'success_rate': round(success_rate, 2),
-            'rate_limit_effectiveness': rate_limit_effectiveness,
-            'total_subscriptions': total_subscriptions,
-            'active_subscriptions': active_subscriptions,
-            'subscription_rate': round((active_subscriptions / max(total_subscriptions, 1)) * 100, 2),
-            'timestamp': datetime.now().isoformat(),
+            'articles': news_data,
+            'count': len(news_data),
+            'last_updated': timezone.now().isoformat(),
             'status': 'success'
         })
         
     except Exception as e:
-        logger.error(f"Error getting performance metrics: {e}")
+        logger.error(f"Error getting WordPress news data: {e}")
         return JsonResponse({
-            'error': str(e),
-            'status': 'error'
-        }, status=500)
-
-@require_http_methods(["POST"])
-@csrf_exempt
-def update_configuration(request):
-    """Update system configuration"""
-    try:
-        data = json.loads(request.body)
-        
-        # Validate configuration data
-        valid_keys = ['batch_size', 'max_workers', 'delay_min', 'delay_max', 'use_cache']
-        config = {k: v for k, v in data.items() if k in valid_keys}
-        
-        # Save configuration to file or database
-        # For now, we'll just validate and return success
-        
-        return JsonResponse({
-            'message': 'Configuration updated successfully',
-            'config': config,
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        logger.error(f"Error updating configuration: {e}")
-        return JsonResponse({
+            'articles': [],
+            'count': 0,
             'error': str(e),
             'status': 'error'
         }, status=500)

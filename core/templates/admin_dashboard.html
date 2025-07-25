@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Scanner Admin Dashboard</title>
+    <title>📊 Stock Scanner Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -71,9 +72,8 @@
             align-items: center;
             gap: 0.5rem;
         }
-        .status-header::before {
-            content: "📊";
-            font-size: 1.2rem;
+        .status-header i {
+            color: #3b82f6;
         }
         .metrics-grid {
             display: grid;
@@ -130,6 +130,9 @@
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         .btn-primary {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
@@ -235,350 +238,324 @@
         .status-online { background: #10b981; }
         .status-offline { background: #ef4444; }
         .status-warning { background: #f59e0b; }
+        .news-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #3b82f6;
+        }
+        .news-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        .news-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .sentiment-A { background: #d1fae5; color: #065f46; }
+        .sentiment-B { background: #dbeafe; color: #1e40af; }
+        .sentiment-C { background: #fef3c7; color: #92400e; }
+        .sentiment-D { background: #fed7d7; color: #991b1b; }
+        .sentiment-F { background: #fecaca; color: #991b1b; }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <h1>📊 Stock Scanner Admin</h1>
+        <h1><i class="fas fa-chart-line"></i> Stock Scanner Admin</h1>
         <div>
-            <a href="/">Home</a>
-            <a href="/news/">News</a>
-            <a href="/search/">Search</a>
-            <a href="/filter/">Filter</a>
-            <a href="/admin-dashboard/">Admin</a>
+            <a href="/"><i class="fas fa-home"></i> Home</a>
+            <a href="/news/"><i class="fas fa-newspaper"></i> News</a>
+            <a href="/search/"><i class="fas fa-search"></i> Search</a>
+            <a href="/filter/"><i class="fas fa-filter"></i> Filter</a>
+            <a href="/admin/"><i class="fas fa-cog"></i> Django Admin</a>
         </div>
     </div>
 
     <div class="container">
         <!-- System Status Overview -->
         <div class="status-card">
-            <div class="status-header">System Status Overview</div>
+            <div class="status-header">
+                <i class="fas fa-tachometer-alt"></i>
+                System Status Overview
+                <button class="btn btn-sm btn-primary ms-auto" onclick="refreshStatus()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
             <div class="metrics-grid">
                 <div class="metric metric-success">
                     <div class="metric-value" id="total-stocks">
                         <span class="loading-spinner"></span>
                     </div>
-                    <div class="metric-label">Total Stocks</div>
+                    <div class="metric-label"><i class="fas fa-chart-bar"></i> Total Stocks</div>
                 </div>
                 <div class="metric" id="unsent-metric">
                     <div class="metric-value" id="unsent-notifications">
                         <span class="loading-spinner"></span>
                     </div>
-                    <div class="metric-label">Unsent Notifications</div>
+                    <div class="metric-label"><i class="fas fa-bell"></i> Unsent Notifications</div>
                 </div>
                 <div class="metric metric-success">
                     <div class="metric-value" id="success-rate">
                         <span class="loading-spinner"></span>
                     </div>
-                    <div class="metric-label">Success Rate</div>
+                    <div class="metric-label"><i class="fas fa-check-circle"></i> Success Rate</div>
                 </div>
                 <div class="metric">
                     <div class="metric-value" id="last-update" style="font-size: 1.2rem;">
                         <span class="loading-spinner"></span>
                     </div>
-                    <div class="metric-label">Last Update</div>
+                    <div class="metric-label"><i class="fas fa-clock"></i> Last Update</div>
                 </div>
                 <div class="metric metric-success">
                     <div class="metric-value" id="system-status">
                         <span class="status-indicator status-online"></span>Online
                     </div>
-                    <div class="metric-label">System Status</div>
+                    <div class="metric-label"><i class="fas fa-server"></i> System Status</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="total-news">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="metric-label"><i class="fas fa-newspaper"></i> News Articles</div>
                 </div>
             </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="status-card">
-            <div class="status-header">⚡ Quick Actions</div>
+            <div class="status-header">
+                <i class="fas fa-bolt"></i> Quick Actions
+            </div>
             <div class="btn-group">
-                <button class="btn btn-primary" onclick="runQuickTest()">
-                    🧪 Quick Test (5 stocks)
+                <button class="btn btn-primary" onclick="loadNasdaqData()">
+                    <i class="fas fa-download"></i> Load NASDAQ Data
                 </button>
-                <button class="btn btn-success" onclick="runWorkflow()">
-                    🚀 Run Complete Workflow
+                <button class="btn btn-success" onclick="updateStockData()">
+                    <i class="fas fa-sync"></i> Update Stock Prices
                 </button>
-                <button class="btn btn-info" onclick="exportData()">
-                    📤 Export Data
+                <button class="btn btn-warning" onclick="scrapeNews()">
+                    <i class="fas fa-newspaper"></i> Scrape News
                 </button>
-                <button class="btn btn-warning" onclick="testNotifications()">
-                    📧 Test Notifications
+                <button class="btn btn-primary" onclick="sendNotifications()">
+                    <i class="fas fa-paper-plane"></i> Send Notifications
                 </button>
-                <button class="btn btn-secondary" onclick="refreshStatus()">
-                    🔄 Refresh Status
+                <button class="btn btn-success" onclick="optimizeDatabase()">
+                    <i class="fas fa-database"></i> Optimize Database
                 </button>
             </div>
         </div>
 
-        <!-- Advanced Configuration -->
-        <div class="form-section">
-            <div class="status-header">⚙️ Advanced Configuration</div>
-            <form id="configForm">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label">Batch Size</label>
-                        <input type="number" class="form-control" id="batch-size" value="30" min="5" max="100">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Max Workers</label>
-                        <input type="number" class="form-control" id="max-workers" value="3" min="1" max="10">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Delay Min (sec)</label>
-                        <input type="number" step="0.1" class="form-control" id="delay-min" value="1.5" min="0.5" max="10">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Delay Max (sec)</label>
-                        <input type="number" step="0.1" class="form-control" id="delay-max" value="3.5" min="1" max="20">
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="use-cache" checked>
-                            <label class="form-check-label" for="use-cache">
-                                Enable Caching
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="dry-run-notifications">
-                            <label class="form-check-label" for="dry-run-notifications">
-                                Dry Run (Test Mode)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-primary mt-3" onclick="runCustomWorkflow()">
-                    🚀 Run Custom Workflow
-                </button>
-            </form>
-        </div>
-
-        <!-- Alternative API Status -->
+        <!-- Recent News -->
         <div class="status-card">
-            <div class="status-header">🔌 Alternative API Providers</div>
-            <div id="api-providers">
-                <div class="text-muted">Loading API provider status...</div>
+            <div class="status-header">
+                <i class="fas fa-newspaper"></i> Recent News
+                <button class="btn btn-sm btn-primary ms-auto" onclick="refreshNews()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            <div id="news-container">
+                <div class="text-center">
+                    <span class="loading-spinner"></span> Loading news...
+                </div>
             </div>
         </div>
 
-        <!-- Real-time Logs -->
+        <!-- System Logs -->
         <div class="status-card">
-            <div class="status-header">📋 Real-time Execution Logs</div>
-            <div class="log-container" id="logs">
-                <div class="text-muted">Logs will appear here when operations are running...</div>
+            <div class="status-header">
+                <i class="fas fa-terminal"></i> System Logs
+                <button class="btn btn-sm btn-warning ms-auto" onclick="clearLogs()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
             </div>
-            <button class="btn btn-outline-secondary btn-sm mt-2" onclick="clearLogs()">Clear Logs</button>
-        </div>
-
-        <!-- Progress Indicator -->
-        <div id="progress-container" style="display: none;">
-            <div class="status-card">
-                <div class="status-header">⏳ Operation Progress</div>
-                <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                         id="progress-bar" role="progressbar" style="width: 0%"></div>
-                </div>
-                <div class="mt-2">
-                    <small id="progress-text">Initializing...</small>
-                </div>
+            <div class="log-container" id="log-container">
+                <div>🚀 Stock Scanner Admin Dashboard initialized...</div>
+                <div>📊 Waiting for system status...</div>
             </div>
         </div>
-
-        <!-- Alert Container -->
-        <div id="alert-container"></div>
     </div>
 
     <script>
-        // Global state
-        let currentOperation = null;
-        let logUpdateInterval = null;
-
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            refreshStatus();
-            loadApiProviders();
-        });
-
-        function showAlert(message, type = 'info') {
-            const alertContainer = document.getElementById('alert-container');
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            alertContainer.appendChild(alertDiv);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
-        }
-
-        function showProgress(show = true) {
-            document.getElementById('progress-container').style.display = show ? 'block' : 'none';
-            if (!show) {
-                document.getElementById('progress-bar').style.width = '0%';
+        // Enhanced error handling and WordPress compatibility
+        function safeNumber(value) {
+            if (value === null || value === undefined || isNaN(value)) {
+                return 0;
             }
-        }
-
-        function updateProgress(percent, text) {
-            document.getElementById('progress-bar').style.width = percent + '%';
-            document.getElementById('progress-text').textContent = text;
+            return Number(value);
         }
 
         function addLog(message) {
-            const logsContainer = document.getElementById('logs');
+            const logContainer = document.getElementById('log-container');
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
-            logEntry.innerHTML = `<span class="text-muted">[${timestamp}]</span> ${message}`;
-            logsContainer.appendChild(logEntry);
-            logsContainer.scrollTop = logsContainer.scrollHeight;
-        }
-
-        function clearLogs() {
-            document.getElementById('logs').innerHTML = '<div class="text-muted">Logs cleared.</div>';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
         async function refreshStatus() {
             try {
                 addLog('🔄 Refreshing system status...');
                 const response = await fetch('/api/admin/status/');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 // Safe number formatting with null checks
-                const totalStocks = data.total_stocks || 0;
-                const unsentNotifications = data.unsent_notifications || 0;
+                const totalStocks = safeNumber(data.total_stocks);
+                const unsentNotifications = safeNumber(data.unsent_notifications);
+                const successRate = safeNumber(data.success_rate);
+                const totalNews = safeNumber(data.total_news);
                 
                 document.getElementById('total-stocks').textContent = totalStocks.toLocaleString();
                 document.getElementById('unsent-notifications').textContent = unsentNotifications.toLocaleString();
-                document.getElementById('success-rate').textContent = (data.success_rate || 0) + '%';
+                document.getElementById('success-rate').textContent = successRate + '%';
                 document.getElementById('last-update').textContent = data.last_update || 'Never';
+                document.getElementById('total-news').textContent = totalNews.toLocaleString();
                 
                 // Update metric colors based on values
                 const unsentMetric = document.getElementById('unsent-metric');
-                if (data.unsent_notifications > 100) {
-                    unsentMetric.className = 'metric metric-warning';
-                } else if (data.unsent_notifications > 500) {
+                if (unsentNotifications > 500) {
                     unsentMetric.className = 'metric metric-danger';
+                } else if (unsentNotifications > 100) {
+                    unsentMetric.className = 'metric metric-warning';
                 } else {
                     unsentMetric.className = 'metric metric-success';
                 }
                 
-                addLog('✅ Status refreshed successfully');
+                addLog(`✅ Status updated: ${totalStocks} stocks, ${unsentNotifications} pending notifications`);
+                
             } catch (error) {
-                addLog('❌ Failed to refresh status: ' + error.message);
-                showAlert('Failed to refresh status', 'danger');
+                addLog(`❌ Failed to refresh status: ${error.message}`);
+                console.error('Status refresh error:', error);
+                
+                // Set fallback values
+                document.getElementById('total-stocks').textContent = '0';
+                document.getElementById('unsent-notifications').textContent = '0';
+                document.getElementById('success-rate').textContent = '0%';
+                document.getElementById('last-update').textContent = 'Error';
+                document.getElementById('total-news').textContent = '0';
             }
         }
 
-        async function loadApiProviders() {
+        async function refreshNews() {
             try {
-                const response = await fetch('/api/admin/api-providers/');
-                const providers = await response.json();
-                
-                const container = document.getElementById('api-providers');
-                container.innerHTML = '';
-                
-                Object.entries(providers).forEach(([name, status]) => {
-                    const providerDiv = document.createElement('div');
-                    providerDiv.className = 'metric ' + (status.configured ? 'metric-success' : 'metric-warning');
-                    providerDiv.innerHTML = `
-                        <strong>${name}</strong><br>
-                        <small>${status.configured ? '✅ Configured' : '⚠️ Not configured'} - ${status.rate_limit}</small>
-                    `;
-                    container.appendChild(providerDiv);
-                });
-            } catch (error) {
-                document.getElementById('api-providers').innerHTML = 
-                    '<div class="text-danger">Failed to load API provider status</div>';
-            }
-        }
-
-        async function executeCommand(command, params = {}) {
-            showProgress(true);
-            updateProgress(10, 'Initializing...');
-            
-            try {
-                addLog(`🚀 Starting: ${command}`);
-                const response = await fetch('/api/admin/execute/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command, params })
-                });
+                addLog('📰 Refreshing news...');
+                const response = await fetch('/api/news/recent/');
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                updateProgress(50, 'Processing...');
-                const result = await response.json();
+                const data = await response.json();
+                const newsContainer = document.getElementById('news-container');
                 
-                updateProgress(100, 'Completed');
-                addLog(`✅ ${command} completed successfully`);
-                addLog(`📊 Result: ${result.message}`);
+                if (data.articles && data.articles.length > 0) {
+                    newsContainer.innerHTML = data.articles.map(article => `
+                        <div class="news-item">
+                            <div class="news-title">${article.headline || 'No title'}</div>
+                            <div class="news-meta">
+                                <span class="sentiment-badge sentiment-${article.sentiment_grade || 'N/A'}">
+                                    ${article.sentiment_grade || 'N/A'}
+                                </span>
+                                ${article.published_date || 'Unknown date'}
+                                ${article.mentioned_tickers ? '• Tickers: ' + article.mentioned_tickers.join(', ') : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    newsContainer.innerHTML = '<div class="text-center text-muted">No recent news available</div>';
+                }
                 
-                setTimeout(() => {
-                    showProgress(false);
-                    refreshStatus();
-                }, 1000);
-                
-                showAlert(result.message, 'success');
+                addLog(`✅ Loaded ${data.articles ? data.articles.length : 0} news articles`);
                 
             } catch (error) {
-                updateProgress(100, 'Failed');
-                addLog(`❌ ${command} failed: ${error.message}`);
-                showAlert(`Operation failed: ${error.message}`, 'danger');
-                setTimeout(() => showProgress(false), 2000);
+                addLog(`❌ Failed to refresh news: ${error.message}`);
+                document.getElementById('news-container').innerHTML = 
+                    '<div class="text-center text-danger">Failed to load news</div>';
             }
         }
 
-        function runQuickTest() {
-            executeCommand('quick_test', {
-                batch_size: 5,
-                max_workers: 1,
-                use_cache: true,
-                dry_run: true
-            });
+        async function executeCommand(command, endpoint, successMessage) {
+            try {
+                addLog(`🔄 ${command}...`);
+                const response = await fetch(endpoint, { method: 'POST' });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addLog(`✅ ${successMessage}: ${data.message || 'Success'}`);
+                
+                // Refresh status after command
+                setTimeout(refreshStatus, 1000);
+                
+            } catch (error) {
+                addLog(`❌ ${command} failed: ${error.message}`);
+            }
         }
 
-        function runWorkflow() {
-            executeCommand('workflow', {
-                batch_size: parseInt(document.getElementById('batch-size').value),
-                max_workers: parseInt(document.getElementById('max-workers').value),
-                use_cache: document.getElementById('use-cache').checked,
-                delay_range: [
-                    parseFloat(document.getElementById('delay-min').value),
-                    parseFloat(document.getElementById('delay-max').value)
-                ]
-            });
+        // Command functions
+        function loadNasdaqData() {
+            executeCommand('Loading NASDAQ data', '/api/admin/load-nasdaq/', 'NASDAQ data loaded');
         }
 
-        function runCustomWorkflow() {
-            const params = {
-                batch_size: parseInt(document.getElementById('batch-size').value),
-                max_workers: parseInt(document.getElementById('max-workers').value),
-                use_cache: document.getElementById('use-cache').checked,
-                dry_run: document.getElementById('dry-run-notifications').checked,
-                delay_range: [
-                    parseFloat(document.getElementById('delay-min').value),
-                    parseFloat(document.getElementById('delay-max').value)
-                ]
-            };
-            executeCommand('custom_workflow', params);
+        function updateStockData() {
+            executeCommand('Updating stock data', '/api/admin/update-stocks/', 'Stock data updated');
         }
 
-        function exportData() {
-            executeCommand('export_data', { format: 'web' });
+        function scrapeNews() {
+            executeCommand('Scraping news', '/api/admin/scrape-news/', 'News scraped');
         }
 
-        function testNotifications() {
-            executeCommand('test_notifications', { dry_run: true });
+        function sendNotifications() {
+            executeCommand('Sending notifications', '/api/admin/send-notifications/', 'Notifications sent');
         }
+
+        function optimizeDatabase() {
+            executeCommand('Optimizing database', '/api/admin/optimize-db/', 'Database optimized');
+        }
+
+        function clearLogs() {
+            document.getElementById('log-container').innerHTML = 
+                '<div>🗑️ Logs cleared</div>';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('🚀 Stock Scanner Admin Dashboard loaded');
+            refreshStatus();
+            refreshNews();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(refreshStatus, 30000);
+            setInterval(refreshNews, 60000);
+        });
+
+        // WordPress compatibility - expose functions globally
+        window.stockScannerAdmin = {
+            refreshStatus,
+            refreshNews,
+            loadNasdaqData,
+            updateStockData,
+            scrapeNews,
+            sendNotifications,
+            optimizeDatabase,
+            clearLogs
+        };
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
