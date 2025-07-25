@@ -64,8 +64,8 @@ DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
         'NAME': os.environ.get('DB_NAME', 'stockscanner_db'),
-        'USER': os.environ.get('DB_USER', 'stockscanner'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScaner2010'),
+            'USER': os.environ.get('DB_USER', 'django_user'),
+    'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
         'PORT': os.environ.get('DB_PORT', '3306'),
         'OPTIONS': {

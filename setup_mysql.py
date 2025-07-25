@@ -35,8 +35,8 @@ def main():
             updated_lines.append('DB_ENGINE=django.db.backends.mysql\n')
         elif line.strip().startswith('# DB_NAME=stockscanner_db'):
             updated_lines.append('DB_NAME=stockscanner_db\n')
-        elif line.strip().startswith('# DB_USER=stockscanner') or line.strip().startswith('DB_USER=stockscanner'):
-            updated_lines.append('DB_USER=stockscanner\n')
+        elif line.strip().startswith('# DB_USER=root') or line.strip().startswith('DB_USER=root'):
+            updated_lines.append('DB_USER=root\n')
         elif line.strip().startswith('# DB_PASSWORD=StockScaner2010') or line.strip().startswith('DB_PASSWORD='):
             updated_lines.append(f'DB_PASSWORD={password}\n')
         elif line.strip().startswith('# DB_HOST=127.0.0.1') or line.strip().startswith('DB_HOST=127.0.0.1'):
