@@ -17,36 +17,53 @@ class StockScannerUsageTracker {
     // Usage limits per membership level (per day)
     private $usage_limits = array(
         'free' => array(
-            'api_calls' => 100,
-            'stock_searches' => 20,
-            'news_articles' => 50,
-            'concurrent_requests' => 2,
-            'priority' => 1
+            'api_calls' => 50,
+            'stock_searches' => 10,
+            'news_articles' => 25,
+            'concurrent_requests' => 1,
+            'priority' => 1,
+            'price' => 0
+        ),
+        'basic' => array(
+            'api_calls' => 1000,
+            'stock_searches' => 200,
+            'news_articles' => 500,
+            'concurrent_requests' => 3,
+            'priority' => 2,
+            'price' => 15
         ),
         'premium' => array(
-            'api_calls' => 2500,
-            'stock_searches' => 500,
-            'news_articles' => 1000,
-            'concurrent_requests' => 5,
-            'priority' => 2
+            'api_calls' => 5000,
+            'stock_searches' => 1000,
+            'news_articles' => 2500,
+            'concurrent_requests' => 7,
+            'priority' => 3,
+            'price' => 49
         ),
         'professional' => array(
-            'api_calls' => 10000,
-            'stock_searches' => 2000,
-            'news_articles' => 5000,
-            'concurrent_requests' => 10,
-            'priority' => 3
+            'api_calls' => 20000,
+            'stock_searches' => 5000,
+            'news_articles' => 10000,
+            'concurrent_requests' => 15,
+            'priority' => 4,
+            'price' => 149
         )
     );
     
     // System resource thresholds
     private $resource_thresholds = array(
-        'cpu_warning' => 70,     // 70% CPU usage
-        'cpu_critical' => 85,    // 85% CPU usage
-        'memory_warning' => 80,  // 80% memory usage
-        'memory_critical' => 90, // 90% memory usage
-        'disk_warning' => 85,    // 85% disk usage
-        'disk_critical' => 95    // 95% disk usage
+        'cpu_warning' => 60,     // 60% CPU usage
+        'cpu_critical' => 80,    // 80% CPU usage
+        'cpu_emergency' => 95,   // 95% CPU usage - block all but professional
+        'memory_warning' => 70,  // 70% memory usage
+        'memory_critical' => 85, // 85% memory usage
+        'memory_emergency' => 95, // 95% memory usage - block all but professional
+        'disk_warning' => 80,    // 80% disk usage
+        'disk_critical' => 90,   // 90% disk usage
+        'disk_emergency' => 98,  // 98% disk usage - emergency mode
+        'api_requests_warning' => 1000,   // 1000 requests per minute
+        'api_requests_critical' => 2000,  // 2000 requests per minute
+        'api_requests_emergency' => 3000  // 3000 requests per minute
     );
     
     public function __construct() {
@@ -241,52 +258,164 @@ class StockScannerUsageTracker {
         );
     }
     
-    /**
-     * Handle resource constraints based on user membership level
-     */
-    private function handle_resource_constraint($user_id, $action_type, $system_status) {
-        $membership_level = $this->get_user_membership_level($user_id);
-        $priority = $this->usage_limits[$membership_level]['priority'];
-        
-        // Critical system state - block all free users, limit premium users
-        if ($system_status['alert_level'] === 'critical') {
-            if ($membership_level === 'free') {
-                return array(
-                    'allowed' => false,
-                    'reason' => 'system_overload',
-                    'message' => 'System is currently overloaded. Free users are temporarily restricted. Please upgrade to Premium for priority access or try again later.',
-                    'retry_after' => 300, // 5 minutes
-                    'upgrade_url' => '/premium-plans/',
-                    'system_status' => $system_status
-                );
-            } elseif ($membership_level === 'premium' && rand(1, 100) > 70) {
-                return array(
-                    'allowed' => false,
-                    'reason' => 'system_overload',
-                    'message' => 'System is under heavy load. Premium users may experience delays. Professional users have priority access.',
-                    'retry_after' => 60, // 1 minute
-                    'upgrade_url' => '/premium-plans/',
-                    'system_status' => $system_status
-                );
+            /**
+         * Handle resource constraints based on user membership level with progressive scaling
+         */
+        private function handle_resource_constraint($user_id, $action_type, $system_status) {
+            $membership_level = $this->get_user_membership_level($user_id);
+            $priority = $this->usage_limits[$membership_level]['priority'];
+            $alert_level = $system_status['alert_level'];
+            
+            // Emergency system state - only allow Professional users
+            if ($alert_level === 'emergency') {
+                if ($membership_level !== 'professional') {
+                    $block_message = $this->get_emergency_block_message($membership_level);
+                    return array(
+                        'allowed' => false,
+                        'reason' => 'system_emergency',
+                        'message' => $block_message['message'],
+                        'retry_after' => $block_message['retry_after'],
+                        'upgrade_url' => '/premium-plans/',
+                        'system_status' => $system_status,
+                        'emergency_mode' => true
+                    );
+                }
             }
+            
+            // Critical system state - progressive blocking
+            if ($alert_level === 'critical') {
+                $block_chance = $this->get_critical_block_chance($membership_level);
+                
+                if ($membership_level === 'free' || rand(1, 100) <= $block_chance) {
+                    $block_message = $this->get_critical_block_message($membership_level);
+                    return array(
+                        'allowed' => false,
+                        'reason' => 'system_overload',
+                        'message' => $block_message['message'],
+                        'retry_after' => $block_message['retry_after'],
+                        'upgrade_url' => '/premium-plans/',
+                        'system_status' => $system_status
+                    );
+                }
+            }
+            
+            // Warning system state - throttle lower tiers
+            if ($alert_level === 'warning') {
+                $throttle_chance = $this->get_warning_throttle_chance($membership_level);
+                
+                if (rand(1, 100) <= $throttle_chance) {
+                    $throttle_message = $this->get_warning_throttle_message($membership_level);
+                    return array(
+                        'allowed' => false,
+                        'reason' => 'system_busy',
+                        'message' => $throttle_message['message'],
+                        'retry_after' => $throttle_message['retry_after'],
+                        'upgrade_url' => '/premium-plans/',
+                        'system_status' => $system_status
+                    );
+                }
+            }
+            
+            return array('allowed' => true);
         }
         
-        // Warning system state - throttle free users
-        if ($system_status['alert_level'] === 'warning') {
-            if ($membership_level === 'free' && rand(1, 100) > 50) {
-                return array(
-                    'allowed' => false,
-                    'reason' => 'system_busy',
-                    'message' => 'System is busy. Free users may experience delays. Upgrade to Premium for priority access.',
-                    'retry_after' => 120, // 2 minutes
-                    'upgrade_url' => '/premium-plans/',
-                    'system_status' => $system_status
-                );
-            }
+        /**
+         * Get emergency block message based on membership level
+         */
+        private function get_emergency_block_message($membership_level) {
+            $messages = array(
+                'free' => array(
+                    'message' => 'System is in emergency mode due to extreme load. Only Professional subscribers ($149/month) have access during emergencies. Please upgrade or try again in 30 minutes.',
+                    'retry_after' => 1800 // 30 minutes
+                ),
+                'basic' => array(
+                    'message' => 'System emergency: Only Professional subscribers have priority access. Basic plan users are temporarily blocked. Upgrade to Professional ($149/month) for guaranteed access.',
+                    'retry_after' => 900 // 15 minutes
+                ),
+                'premium' => array(
+                    'message' => 'System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($149/month) have priority access during emergencies.',
+                    'retry_after' => 600 // 10 minutes
+                )
+            );
+            
+            return $messages[$membership_level] ?? $messages['free'];
         }
         
-        return array('allowed' => true);
-    }
+        /**
+         * Get critical block chance based on membership level
+         */
+        private function get_critical_block_chance($membership_level) {
+            $chances = array(
+                'free' => 100,        // Always block free users
+                'basic' => 80,        // Block 80% of basic users
+                'premium' => 40,      // Block 40% of premium users
+                'professional' => 10  // Block 10% of professional users
+            );
+            
+            return $chances[$membership_level] ?? 100;
+        }
+        
+        /**
+         * Get critical block message based on membership level
+         */
+        private function get_critical_block_message($membership_level) {
+            $messages = array(
+                'free' => array(
+                    'message' => 'System overload: Free users are blocked during high load. Upgrade to Basic ($15/month) for priority access, or try again in 10 minutes.',
+                    'retry_after' => 600
+                ),
+                'basic' => array(
+                    'message' => 'High system load: Basic users may be temporarily restricted. Upgrade to Premium ($49/month) for better access during peak times.',
+                    'retry_after' => 300
+                ),
+                'premium' => array(
+                    'message' => 'System under heavy load: Even Premium users may experience restrictions. Professional users ($149/month) have guaranteed access.',
+                    'retry_after' => 120
+                ),
+                'professional' => array(
+                    'message' => 'System under heavy load: Professional users have priority access but may experience delays.',
+                    'retry_after' => 60
+                )
+            );
+            
+            return $messages[$membership_level] ?? $messages['free'];
+        }
+        
+        /**
+         * Get warning throttle chance based on membership level
+         */
+        private function get_warning_throttle_chance($membership_level) {
+            $chances = array(
+                'free' => 60,         // Throttle 60% of free users
+                'basic' => 30,        // Throttle 30% of basic users
+                'premium' => 10,      // Throttle 10% of premium users
+                'professional' => 0   // Never throttle professional users
+            );
+            
+            return $chances[$membership_level] ?? 60;
+        }
+        
+        /**
+         * Get warning throttle message based on membership level
+         */
+        private function get_warning_throttle_message($membership_level) {
+            $messages = array(
+                'free' => array(
+                    'message' => 'System is busy. Free users may experience delays. Upgrade to Basic ($15/month) for better performance.',
+                    'retry_after' => 180
+                ),
+                'basic' => array(
+                    'message' => 'System busy: Basic users may experience occasional delays. Upgrade to Premium ($49/month) for priority access.',
+                    'retry_after' => 90
+                ),
+                'premium' => array(
+                    'message' => 'System busy: Premium users have priority but may experience minor delays during peak times.',
+                    'retry_after' => 30
+                )
+            );
+            
+            return $messages[$membership_level] ?? $messages['free'];
+        }
     
     /**
      * Check usage limits for a user
@@ -538,24 +667,35 @@ class StockScannerUsageTracker {
     }
     
     /**
-     * Determine system alert level
+     * Determine system alert level with emergency thresholds
      */
     private function determine_alert_level($stats) {
         $cpu = $stats['cpu_usage'];
         $memory = $stats['memory_usage'];
         $disk = $stats['disk_usage'];
+        $api_requests = $stats['api_requests_per_minute'] ?? 0;
+        
+        // Emergency level - extreme resource usage
+        if ($cpu >= $this->resource_thresholds['cpu_emergency'] ||
+            $memory >= $this->resource_thresholds['memory_emergency'] ||
+            $disk >= $this->resource_thresholds['disk_emergency'] ||
+            $api_requests >= $this->resource_thresholds['api_requests_emergency']) {
+            return 'emergency';
+        }
         
         // Critical level
         if ($cpu >= $this->resource_thresholds['cpu_critical'] ||
             $memory >= $this->resource_thresholds['memory_critical'] ||
-            $disk >= $this->resource_thresholds['disk_critical']) {
+            $disk >= $this->resource_thresholds['disk_critical'] ||
+            $api_requests >= $this->resource_thresholds['api_requests_critical']) {
             return 'critical';
         }
         
         // Warning level
         if ($cpu >= $this->resource_thresholds['cpu_warning'] ||
             $memory >= $this->resource_thresholds['memory_warning'] ||
-            $disk >= $this->resource_thresholds['disk_warning']) {
+            $disk >= $this->resource_thresholds['disk_warning'] ||
+            $api_requests >= $this->resource_thresholds['api_requests_warning']) {
             return 'warning';
         }
         
@@ -573,9 +713,14 @@ class StockScannerUsageTracker {
         // Log alert
         error_log("Stock Scanner System Alert [{$alert_level}]: " . json_encode($stats));
         
-        // Send notifications if critical
-        if ($alert_level === 'critical') {
+        // Send notifications for critical and emergency alerts
+        if ($alert_level === 'critical' || $alert_level === 'emergency') {
             $this->send_admin_alert($alert_level, $stats);
+        }
+        
+        // Send immediate emergency notifications
+        if ($alert_level === 'emergency') {
+            $this->send_emergency_notifications($stats);
         }
         
         // Update system status
@@ -587,7 +732,8 @@ class StockScannerUsageTracker {
      */
     private function send_admin_alert($alert_level, $stats) {
         $admin_email = get_option('admin_email');
-        $subject = "Stock Scanner System Alert: {$alert_level}";
+        $urgency = $alert_level === 'emergency' ? 'URGENT' : 'ALERT';
+        $subject = "Stock Scanner System {$urgency}: {$alert_level}";
         
         $message = "System resource alert detected:\n\n";
         $message .= "Alert Level: {$alert_level}\n";
@@ -597,9 +743,98 @@ class StockScannerUsageTracker {
         $message .= "Active Connections: {$stats['active_connections']}\n";
         $message .= "API Requests/min: {$stats['api_requests_per_minute']}\n";
         $message .= "Timestamp: {$stats['timestamp']}\n\n";
+        
+        if ($alert_level === 'emergency') {
+            $message .= "EMERGENCY: Only Professional users have access. All other users are blocked.\n";
+            $message .= "Immediate action required to restore service.\n\n";
+        }
+        
         $message .= "Please check system resources immediately.";
         
         wp_mail($admin_email, $subject, $message);
+    }
+    
+    /**
+     * Send emergency notifications via multiple channels
+     */
+    private function send_emergency_notifications($stats) {
+        // Log emergency to WordPress error log
+        error_log("EMERGENCY: Stock Scanner system in emergency mode - only Professional users allowed");
+        
+        // Try to send Slack notification if webhook is configured
+        $slack_webhook = get_option('stock_scanner_slack_webhook');
+        if ($slack_webhook) {
+            $this->send_slack_emergency_alert($slack_webhook, $stats);
+        }
+        
+        // Try to send Discord notification if webhook is configured
+        $discord_webhook = get_option('stock_scanner_discord_webhook');
+        if ($discord_webhook) {
+            $this->send_discord_emergency_alert($discord_webhook, $stats);
+        }
+        
+        // Set emergency flag in database
+        update_option('stock_scanner_emergency_mode', array(
+            'active' => true,
+            'started' => current_time('mysql'),
+            'stats' => $stats
+        ));
+    }
+    
+    /**
+     * Send Slack emergency alert
+     */
+    private function send_slack_emergency_alert($webhook_url, $stats) {
+        $payload = array(
+            'text' => '🚨 STOCK SCANNER EMERGENCY 🚨',
+            'attachments' => array(
+                array(
+                    'color' => 'danger',
+                    'title' => 'System Emergency - Only Professional Users Allowed',
+                    'fields' => array(
+                        array('title' => 'CPU Usage', 'value' => $stats['cpu_usage'] . '%', 'short' => true),
+                        array('title' => 'Memory Usage', 'value' => $stats['memory_usage'] . '%', 'short' => true),
+                        array('title' => 'Disk Usage', 'value' => $stats['disk_usage'] . '%', 'short' => true),
+                        array('title' => 'API Requests/min', 'value' => $stats['api_requests_per_minute'], 'short' => true)
+                    ),
+                    'footer' => 'Stock Scanner Monitoring',
+                    'ts' => time()
+                )
+            )
+        );
+        
+        wp_remote_post($webhook_url, array(
+            'body' => json_encode($payload),
+            'headers' => array('Content-Type' => 'application/json')
+        ));
+    }
+    
+    /**
+     * Send Discord emergency alert
+     */
+    private function send_discord_emergency_alert($webhook_url, $stats) {
+        $payload = array(
+            'content' => '🚨 **STOCK SCANNER EMERGENCY** 🚨',
+            'embeds' => array(
+                array(
+                    'title' => 'System Emergency - Only Professional Users Allowed',
+                    'color' => 15158332, // Red color
+                    'fields' => array(
+                        array('name' => 'CPU Usage', 'value' => $stats['cpu_usage'] . '%', 'inline' => true),
+                        array('name' => 'Memory Usage', 'value' => $stats['memory_usage'] . '%', 'inline' => true),
+                        array('name' => 'Disk Usage', 'value' => $stats['disk_usage'] . '%', 'inline' => true),
+                        array('name' => 'API Requests/min', 'value' => $stats['api_requests_per_minute'], 'inline' => true)
+                    ),
+                    'timestamp' => date('c'),
+                    'footer' => array('text' => 'Stock Scanner Monitoring')
+                )
+            )
+        );
+        
+        wp_remote_post($webhook_url, array(
+            'body' => json_encode($payload),
+            'headers' => array('Content-Type' => 'application/json')
+        ));
     }
     
     /**
@@ -609,7 +844,21 @@ class StockScannerUsageTracker {
         global $wpdb;
         
         $alert_level = $this->determine_alert_level($stats);
-        $system_status = $alert_level === 'none' ? 'normal' : ($alert_level === 'critical' ? 'overloaded' : 'busy');
+        $system_status = 'normal';
+        
+        switch ($alert_level) {
+            case 'emergency':
+                $system_status = 'emergency';
+                break;
+            case 'critical':
+                $system_status = 'overloaded';
+                break;
+            case 'warning':
+                $system_status = 'busy';
+                break;
+            default:
+                $system_status = 'normal';
+        }
         
         $wpdb->insert(
             $this->system_stats_table,
