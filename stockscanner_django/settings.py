@@ -97,60 +97,60 @@ print("Linux/Windows MySQL setup - using native mysqlclient driver")
 # Use DATABASE_URL environment variable for production
 if os.environ.get('DATABASE_URL'):
     try:
-    import dj_database_url
-from urllib.parse import quote_plus
+        import dj_database_url
+        from urllib.parse import quote_plus
 
-database_url = os.environ.get('DATABASE_URL')
+        database_url = os.environ.get('DATABASE_URL')
 
-# Parse the database URL and detect the database type
-DATABASES['default'] = dj_database_url.parse(database_url)
+        # Parse the database URL and detect the database type
+        DATABASES['default'] = dj_database_url.parse(database_url)
 
-# Auto-detect database engine from URL
-if database_url.startswith('postgresql://'):
-DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
-# PostgreSQL Windows/Git Bash optimizations
-DATABASES['default']['OPTIONS'] = {
-'connect_timeout': 10,
-'options': '-c default_transaction_isolation=read_committed'
-}
-# Ensure password authentication works on Windows
-if 'HOST' not in DATABASES['default'] or DATABASES['default']['HOST'] in ['localhost', '127.0.0.1']:
-    DATABASES['default']['HOST'] = '127.0.0.1'
-print(f"SUCCESS: Using PostgreSQL database")
-elif database_url.startswith('mysql://'):
-DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
-# MySQL production optimizations
-DATABASES['default']['OPTIONS'] = {
-'charset': 'utf8mb4',
-'sql_mode': 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO',
-'isolation_level': 'READ COMMITTED',
-}
-# Connection pooling for production
-DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
-DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
-print(f"SUCCESS: Using MySQL database with production optimizations (Linux optimized)")
-else:
-    # Default to PostgreSQL for backward compatibility
-DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
-print(f"SUCCESS: Using PostgreSQL database (default)")
-
-except ImportError:
-    print("Warning: dj_database_url not installed. Using SQLite for development.")
+        # Auto-detect database engine from URL
+        if database_url.startswith('postgresql://'):
+            DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+            # PostgreSQL Windows/Git Bash optimizations
+            DATABASES['default']['OPTIONS'] = {
+                'connect_timeout': 10,
+                'options': '-c default_transaction_isolation=read_committed'
+            }
+            # Ensure password authentication works on Windows
+            if 'HOST' not in DATABASES['default'] or DATABASES['default']['HOST'] in ['localhost', '127.0.0.1']:
+                DATABASES['default']['HOST'] = '127.0.0.1'
+            print(f"SUCCESS: Using PostgreSQL database")
+        elif database_url.startswith('mysql://'):
+            DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
+            # MySQL production optimizations
+            DATABASES['default']['OPTIONS'] = {
+                'charset': 'utf8mb4',
+                'sql_mode': 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO',
+                'isolation_level': 'READ COMMITTED',
+            }
+            # Connection pooling for production
+            DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
+            DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
+            print(f"SUCCESS: Using MySQL database with production optimizations (Linux optimized)")
+        else:
+            # Default to PostgreSQL for backward compatibility
+            DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+            print(f"SUCCESS: Using PostgreSQL database (default)")
+                    
+    except ImportError:
+        print("Warning: dj_database_url not installed. Using SQLite for development.")
 
 # Alternative database configuration for Windows/Git Bash
 if os.environ.get('DB_ENGINE') and not os.environ.get('DATABASE_URL'):
     DATABASES['default'] = {
-'ENGINE': os.environ.get('DB_ENGINE'),
-'NAME': os.environ.get('DB_NAME'),
-'USER': os.environ.get('DB_USER'),
-'PASSWORD': os.environ.get('DB_PASSWORD'),
-'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-'PORT': os.environ.get('DB_PORT', '5432'),
-'OPTIONS': {
-'connect_timeout': 10,
-}
-}
-print(f"SUCCESS: Using {os.environ.get('DB_ENGINE')} with explicit settings")
+        'ENGINE': os.environ.get('DB_ENGINE'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
+    }
+    print(f"SUCCESS: Using {os.environ.get('DB_ENGINE')} with explicit settings")
 
 
 # Password validation
@@ -201,13 +201,13 @@ CELERY_ENABLED = os.environ.get('CELERY_ENABLED', 'false').lower() == 'true'
 
 if CELERY_ENABLED and celery_broker_url:
     CELERY_BROKER_URL = celery_broker_url
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_BACKEND = celery_broker_url
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_BACKEND = celery_broker_url
 else:
     # Development mode - disable Celery
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_BROKER_URL = None
 
 
@@ -282,29 +282,29 @@ CORS_ALLOW_METHODS = [
 # Cache Configuration for API responses
 redis_url = os.environ.get('REDIS_URL')
 if redis_url and ('://' in redis_url):
-# Production Redis cache
-CACHES = {
-'default': {
-'BACKEND': 'django_redis.cache.RedisCache',
-'LOCATION': redis_url,
-'OPTIONS': {
-'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-}
-}
-}
+    # Production Redis cache
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': redis_url,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        }
+    }
 else:
     # Development local memory cache
-CACHES = {
-'default': {
-'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-'LOCATION': 'stock-scanner-cache',
-'TIMEOUT': 300, # 5 minutes default
-'OPTIONS': {
-'MAX_ENTRIES': 1000,
-'CULL_FREQUENCY': 3,
-}
-}
-}
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'stock-scanner-cache',
+            'TIMEOUT': 300, # 5 minutes default
+            'OPTIONS': {
+                                 'MAX_ENTRIES': 1000,
+                 'CULL_FREQUENCY': 3,
+             }
+        }
+    }
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -312,12 +312,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Production Security Settings
 if not DEBUG:
     # SSL/HTTPS settings for production
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # HSTS (HTTP Strict Transport Security)
 SECURE_HSTS_SECONDS = 31536000 # 1 year
