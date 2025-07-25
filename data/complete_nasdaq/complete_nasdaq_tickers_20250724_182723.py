@@ -1187,36 +1187,36 @@ SOURCES_USED = ['NASDAQ FTP', 'Alpha Vantage', 'Finviz']
 GENERATION_DATE = "2025-07-24 18:27:23"
 
 def get_all_nasdaq_tickers():
-"""Return all NASDAQ ticker symbols"""
-return COMPLETE_NASDAQ_TICKERS.copy()
+    """Return all NASDAQ ticker symbols"""
+    return COMPLETE_NASDAQ_TICKERS.copy()
 
-def get_ticker_count():
-"""Get total number of tickers"""
-return TOTAL_TICKERS
+    def get_ticker_count():
+        """Get total number of tickers"""
+        return TOTAL_TICKERS
 
-def is_valid_nasdaq_ticker(symbol):
-"""Check if a ticker symbol is in the NASDAQ list"""
-return symbol.upper() in COMPLETE_NASDAQ_TICKERS
+        def is_valid_nasdaq_ticker(symbol):
+            """Check if a ticker symbol is in the NASDAQ list"""
+            return symbol.upper() in COMPLETE_NASDAQ_TICKERS
 
-def search_nasdaq_tickers(query):
-"""Search for tickers containing the query string"""
-query = query.upper()
-return [ticker for ticker in COMPLETE_NASDAQ_TICKERS if query in ticker]
+            def search_nasdaq_tickers(query):
+                """Search for tickers containing the query string"""
+                query = query.upper()
+                return [ticker for ticker in COMPLETE_NASDAQ_TICKERS if query in ticker]
 
-def get_statistics():
-"""Get generation statistics"""
-return {
-'total_tickers': TOTAL_TICKERS,
-'sources_used': SOURCES_USED,
-'generation_date': GENERATION_DATE
-}
+                def get_statistics():
+                    """Get generation statistics"""
+                    return {
+                    'total_tickers': TOTAL_TICKERS,
+                    'sources_used': SOURCES_USED,
+                    'generation_date': GENERATION_DATE
+                    }
 
 # Sample tickers
-SAMPLE_TICKERS = COMPLETE_NASDAQ_TICKERS[:20]
+                    SAMPLE_TICKERS = COMPLETE_NASDAQ_TICKERS[:20]
 
-if __name__ == "__main__":
-print(f" Complete NASDAQ Ticker List")
-print(f" Total tickers: {get_ticker_count():,}")
-print(f" Sources: {', '.join(SOURCES_USED)}")
-print(f" Sample: {', '.join(SAMPLE_TICKERS)}")
-print(f" Ready for Stock Scanner integration!")
+                    if __name__ == "__main__":
+                        print(f" Complete NASDAQ Ticker List")
+                        print(f" Total tickers: {get_ticker_count():,}")
+                        print(f" Sources: {', '.join(SOURCES_USED)}")
+                        print(f" Sample: {', '.join(SAMPLE_TICKERS)}")
+                        print(f" Ready for Stock Scanner integration!")

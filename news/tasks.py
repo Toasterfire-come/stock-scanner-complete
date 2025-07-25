@@ -6,6 +6,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def update_news_feed():
-logger.info("Running hourly news scrape...")
-scraper.main()
-logger.info("News feed updated.")
+    logger.info("Running hourly news scrape...")
+    scraper.main()
+    logger.info("News feed updated.")

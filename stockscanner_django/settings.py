@@ -28,7 +28,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.6.200.155', 'retailtradescanner.c
 # Add additional hosts from environment
 additional_hosts = os.environ.get('ADDITIONAL_HOSTS', '')
 if additional_hosts:
-ALLOWED_HOSTS.extend([host.strip() for host in additional_hosts.split(',') if host.strip()])
+    ALLOWED_HOSTS.extend([host.strip() for host in additional_hosts.split(',') if host.strip()])
 
 
 # Application definition
@@ -96,8 +96,8 @@ print("Linux/Windows MySQL setup - using native mysqlclient driver")
 
 # Use DATABASE_URL environment variable for production
 if os.environ.get('DATABASE_URL'):
-try:
-import dj_database_url
+    try:
+    import dj_database_url
 from urllib.parse import quote_plus
 
 database_url = os.environ.get('DATABASE_URL')
@@ -115,7 +115,7 @@ DATABASES['default']['OPTIONS'] = {
 }
 # Ensure password authentication works on Windows
 if 'HOST' not in DATABASES['default'] or DATABASES['default']['HOST'] in ['localhost', '127.0.0.1']:
-DATABASES['default']['HOST'] = '127.0.0.1'
+    DATABASES['default']['HOST'] = '127.0.0.1'
 print(f"SUCCESS: Using PostgreSQL database")
 elif database_url.startswith('mysql://'):
 DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
@@ -130,16 +130,16 @@ DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300
 DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
 print(f"SUCCESS: Using MySQL database with production optimizations (Linux optimized)")
 else:
-# Default to PostgreSQL for backward compatibility
+    # Default to PostgreSQL for backward compatibility
 DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
 print(f"SUCCESS: Using PostgreSQL database (default)")
 
 except ImportError:
-print("Warning: dj_database_url not installed. Using SQLite for development.")
+    print("Warning: dj_database_url not installed. Using SQLite for development.")
 
 # Alternative database configuration for Windows/Git Bash
 if os.environ.get('DB_ENGINE') and not os.environ.get('DATABASE_URL'):
-DATABASES['default'] = {
+    DATABASES['default'] = {
 'ENGINE': os.environ.get('DB_ENGINE'),
 'NAME': os.environ.get('DB_NAME'),
 'USER': os.environ.get('DB_USER'),
@@ -200,12 +200,12 @@ celery_broker_url = os.environ.get('CELERY_BROKER_URL')
 CELERY_ENABLED = os.environ.get('CELERY_ENABLED', 'false').lower() == 'true'
 
 if CELERY_ENABLED and celery_broker_url:
-CELERY_BROKER_URL = celery_broker_url
+    CELERY_BROKER_URL = celery_broker_url
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_BACKEND = celery_broker_url
 else:
-# Development mode - disable Celery
+    # Development mode - disable Celery
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_BROKER_URL = None
@@ -293,7 +293,7 @@ CACHES = {
 }
 }
 else:
-# Development local memory cache
+    # Development local memory cache
 CACHES = {
 'default': {
 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -311,7 +311,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Production Security Settings
 if not DEBUG:
-# SSL/HTTPS settings for production
+    # SSL/HTTPS settings for production
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
@@ -330,10 +330,10 @@ X_FRAME_OPTIONS = 'DENY'
 # Ensure logs directory exists and handle errors gracefully
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 try:
-os.makedirs(LOGS_DIR, exist_ok=True)
+    os.makedirs(LOGS_DIR, exist_ok=True)
 USE_FILE_LOGGING = True
 except (OSError, PermissionError):
-# If we can't create logs directory, only use console logging
+    # If we can't create logs directory, only use console logging
 USE_FILE_LOGGING = False
 
 # Logging Configuration
@@ -347,7 +347,7 @@ LOGGING_HANDLERS = {
 
 # Add file handler only if we can write to logs directory
 if USE_FILE_LOGGING:
-LOGGING_HANDLERS['file'] = {
+    LOGGING_HANDLERS['file'] = {
 'level': 'INFO',
 'class': 'logging.FileHandler',
 'filename': os.path.join(LOGS_DIR, 'django.log'),
@@ -397,7 +397,7 @@ FINNHUB_KEYS = []
 for i in range(1, 3):
 key = os.environ.get(f'FINNHUB_API_KEY_{i}')
 if key:
-FINNHUB_KEYS.append(key)
+    FINNHUB_KEYS.append(key)
 
 # WordPress Integration
 WORDPRESS_URL = os.environ.get('WORDPRESS_URL', '')
@@ -406,8 +406,8 @@ WORDPRESS_APP_PASSWORD = os.environ.get('WORDPRESS_APP_PASSWORD', '')
 
 # Windows Git Bash PyMySQL compatibility
 try:
-import pymysql
+    import pymysql
 pymysql.install_as_MySQLdb()
 print("SUCCESS: PyMySQL configured for Windows compatibility")
 except ImportError:
-print("WARNING: PyMySQL not available, using default MySQL driver")
+    print("WARNING: PyMySQL not available, using default MySQL driver")

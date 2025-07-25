@@ -3,4 +3,4 @@ from django.core.management import call_command
 
 @shared_task
 def run_stock_import():
-call_command('import_stock_data')
+    call_command('import_stock_data')

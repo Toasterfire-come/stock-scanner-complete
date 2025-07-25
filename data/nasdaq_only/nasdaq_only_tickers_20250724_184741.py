@@ -36,37 +36,37 @@ EXCHANGE = "NASDAQ"
 GENERATION_DATE = "2025-07-24 18:47:41"
 
 def get_nasdaq_only_tickers():
-"""Return NASDAQ-only ticker symbols"""
-return NASDAQ_ONLY_TICKERS.copy()
+    """Return NASDAQ-only ticker symbols"""
+    return NASDAQ_ONLY_TICKERS.copy()
 
-def get_nasdaq_ticker_count():
-"""Get total number of NASDAQ tickers"""
-return TOTAL_NASDAQ_TICKERS
+    def get_nasdaq_ticker_count():
+        """Get total number of NASDAQ tickers"""
+        return TOTAL_NASDAQ_TICKERS
 
-def is_nasdaq_ticker(symbol):
-"""Check if a ticker symbol is NASDAQ-listed"""
-return symbol.upper() in NASDAQ_ONLY_TICKERS
+        def is_nasdaq_ticker(symbol):
+            """Check if a ticker symbol is NASDAQ-listed"""
+            return symbol.upper() in NASDAQ_ONLY_TICKERS
 
-def search_nasdaq_tickers(query):
-"""Search for NASDAQ tickers containing the query string"""
-query = query.upper()
-return [ticker for ticker in NASDAQ_ONLY_TICKERS if query in ticker]
+            def search_nasdaq_tickers(query):
+                """Search for NASDAQ tickers containing the query string"""
+                query = query.upper()
+                return [ticker for ticker in NASDAQ_ONLY_TICKERS if query in ticker]
 
-def get_nasdaq_statistics():
-"""Get NASDAQ generation statistics"""
-return {
-'total_tickers': TOTAL_NASDAQ_TICKERS,
-'exchange': EXCHANGE,
-'generation_date': GENERATION_DATE,
-'source': 'NASDAQ FTP - nasdaqlisted.txt ONLY'
-}
+                def get_nasdaq_statistics():
+                    """Get NASDAQ generation statistics"""
+                    return {
+                    'total_tickers': TOTAL_NASDAQ_TICKERS,
+                    'exchange': EXCHANGE,
+                    'generation_date': GENERATION_DATE,
+                    'source': 'NASDAQ FTP - nasdaqlisted.txt ONLY'
+                    }
 
 # Sample NASDAQ tickers
-SAMPLE_NASDAQ_TICKERS = NASDAQ_ONLY_TICKERS[:20]
+                    SAMPLE_NASDAQ_TICKERS = NASDAQ_ONLY_TICKERS[:20]
 
-if __name__ == "__main__":
-print(f" NASDAQ-Only Ticker List")
-print(f" Total NASDAQ tickers: {get_nasdaq_ticker_count():,}")
-print(f" Exchange: {EXCHANGE} ONLY")
-print(f" Sample: {', '.join(SAMPLE_NASDAQ_TICKERS)}")
-print(f" Ready for Stock Scanner integration!")
+                    if __name__ == "__main__":
+                        print(f" NASDAQ-Only Ticker List")
+                        print(f" Total NASDAQ tickers: {get_nasdaq_ticker_count():,}")
+                        print(f" Exchange: {EXCHANGE} ONLY")
+                        print(f" Sample: {', '.join(SAMPLE_NASDAQ_TICKERS)}")
+                        print(f" Ready for Stock Scanner integration!")
