@@ -108,6 +108,14 @@ if os.environ.get('DATABASE_URL'):
         # Auto-detect database engine from URL
         if database_url.startswith('postgresql://'):
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+            # PostgreSQL Windows/Git Bash optimizations
+            DATABASES['default']['OPTIONS'] = {
+                'connect_timeout': 10,
+                'options': '-c default_transaction_isolation=read_committed'
+            }
+            # Ensure password authentication works on Windows
+            if 'HOST' not in DATABASES['default'] or DATABASES['default']['HOST'] in ['localhost', '127.0.0.1']:
+                DATABASES['default']['HOST'] = '127.0.0.1'
             print(f"SUCCESS: Using PostgreSQL database")
         elif database_url.startswith('mysql://'):
             DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
@@ -128,10 +136,21 @@ if os.environ.get('DATABASE_URL'):
             
     except ImportError:
         print("Warning: dj_database_url not installed. Using SQLite for development.")
-        print("Install with: pip install dj-database-url")
-    except Exception as e:
-        print(f"Warning: Error parsing DATABASE_URL: {e}")
-        print("Using SQLite for development.")
+
+# Alternative database configuration for Windows/Git Bash
+if os.environ.get('DB_ENGINE') and not os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = {
+        'ENGINE': os.environ.get('DB_ENGINE'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
+    }
+    print(f"SUCCESS: Using {os.environ.get('DB_ENGINE')} with explicit settings")
 
 
 # Password validation
