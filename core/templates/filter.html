@@ -155,19 +155,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${data.map(stock => `
+                                    ${data.map(stock => {
+                                        // Safe number formatting with null checks
+                                        const volumeToday = stock.volume_today ? parseInt(stock.volume_today) : 0;
+                                        const marketCap = stock.market_cap ? parseInt(stock.market_cap) : 0;
+                                        return `
                                         <tr>
                                             <td><strong>${stock.ticker || 'N/A'}</strong></td>
                                             <td>${stock.company_name || 'N/A'}</td>
                                             <td>$${parseFloat(stock.current_price || 0).toFixed(2)}</td>
-                                            <td>${parseInt(stock.volume_today || 0).toLocaleString()}</td>
+                                            <td>${volumeToday.toLocaleString()}</td>
                                             <td>${parseFloat(stock.dvav || 0).toFixed(2)}</td>
                                             <td>${parseFloat(stock.dvsa || 0).toFixed(2)}</td>
                                             <td>${parseFloat(stock.pe_ratio || 0).toFixed(2)}</td>
-                                            <td>${parseInt(stock.market_cap || 0).toLocaleString()}</td>
+                                            <td>${marketCap.toLocaleString()}</td>
                                             <td><small>${stock.note || 'N/A'}</small></td>
                                         </tr>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </tbody>
                             </table>
                         </div>
