@@ -59,27 +59,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
-# Database configuration - Default to SQLite for development
+# Database configuration - PostgreSQL
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# Check for PostgreSQL configuration (only if password is provided)
-if os.environ.get('DB_ENGINE') and os.environ.get('DB_PASSWORD'):
-    DATABASES['default'] = {
-        'ENGINE': os.environ.get('DB_ENGINE'),
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
         'NAME': os.environ.get('DB_NAME', 'stockscanner_db'),
         'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScaner2010'),
         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
     }
-    print(f"Using PostgreSQL database: {os.environ.get('DB_NAME', 'stockscanner_db')}")
-else:
-    print("Using SQLite database for development")
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
