@@ -44,7 +44,7 @@ GIT_BASH_SETUP_GUIDE.md # Detailed setup instructions
 ## What This Setup Includes
 
 **Django Framework** - Modern web application backend 
-**MySQL/SQLite Database** - Flexible database support 
+**MySQL Database** - Production-ready MySQL database support 
 **yfinance Integration** - Real-time stock data (Yahoo Finance) 
 **NASDAQ-Only Tickers** - Focus on NASDAQ securities 
 **News Sentiment Analysis** - NLTK-powered sentiment scoring 
@@ -57,7 +57,7 @@ GIT_BASH_SETUP_GUIDE.md # Detailed setup instructions
 
 - **Windows**: Git Bash installed
 - **Python**: 3.8+ (accessible from Git Bash)
-- **Database**: SQLite (development) or MySQL (production)
+- **Database**: MySQL with user 'stockscanner' and password 'StockScaner2010'
 - **Memory**: 2GB+ RAM recommended
 
 ## Key Features

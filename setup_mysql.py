@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple PostgreSQL Setup Script
+Simple MySQL Setup Script
 Prompts for password and updates .env file
 """
 
@@ -9,11 +9,11 @@ import getpass
 from pathlib import Path
 
 def main():
-    print("PostgreSQL Setup for Stock Scanner")
+    print("MySQL Setup for Stock Scanner")
     print("=" * 40)
     
-    # Get PostgreSQL password
-    password = getpass.getpass("Enter your PostgreSQL password: ")
+    # Get MySQL password
+    password = getpass.getpass("Enter your MySQL password: ")
     
     if not password:
         print("No password entered. Using SQLite instead.")
@@ -31,18 +31,18 @@ def main():
     # Update the .env file
     updated_lines = []
     for line in lines:
-        if line.strip().startswith('# DB_ENGINE=django.db.backends.postgresql'):
-            updated_lines.append('DB_ENGINE=django.db.backends.postgresql\n')
+        if line.strip().startswith('# DB_ENGINE=django.db.backends.mysql') or line.strip().startswith('DB_ENGINE=django.db.backends.mysql'):
+            updated_lines.append('DB_ENGINE=django.db.backends.mysql\n')
         elif line.strip().startswith('# DB_NAME=stockscanner_db'):
             updated_lines.append('DB_NAME=stockscanner_db\n')
-        elif line.strip().startswith('# DB_USER=postgres'):
-            updated_lines.append('DB_USER=postgres\n')
-        elif line.strip().startswith('# DB_PASSWORD=your_postgresql_password_here'):
+        elif line.strip().startswith('# DB_USER=stockscanner') or line.strip().startswith('DB_USER=stockscanner'):
+            updated_lines.append('DB_USER=stockscanner\n')
+        elif line.strip().startswith('# DB_PASSWORD=StockScaner2010') or line.strip().startswith('DB_PASSWORD='):
             updated_lines.append(f'DB_PASSWORD={password}\n')
-        elif line.strip().startswith('# DB_HOST=127.0.0.1'):
+        elif line.strip().startswith('# DB_HOST=127.0.0.1') or line.strip().startswith('DB_HOST=127.0.0.1'):
             updated_lines.append('DB_HOST=127.0.0.1\n')
-        elif line.strip().startswith('# DB_PORT=5432'):
-            updated_lines.append('DB_PORT=5432\n')
+        elif line.strip().startswith('# DB_PORT=3306') or line.strip().startswith('DB_PORT=3306'):
+            updated_lines.append('DB_PORT=3306\n')
         else:
             updated_lines.append(line)
     
@@ -50,7 +50,7 @@ def main():
     with open(env_file, 'w') as f:
         f.writelines(updated_lines)
     
-    print("✅ PostgreSQL configuration updated in .env file")
+    print("✅ MySQL configuration updated in .env file")
     print("🚀 You can now run: python manage.py runserver")
     print("\n💡 To switch back to SQLite, comment out the DB_* lines in .env")
 
