@@ -14,6 +14,10 @@ urlpatterns = [
     # Admin dashboard
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     
+    # WordPress data admin pages
+    path('wordpress-stocks/', views.wordpress_stocks_page, name='wordpress_stocks_page'),
+    path('wordpress-news/', views.wordpress_news_page, name='wordpress_news_page'),
+    
     # Admin API endpoints
     path('api/admin/status/', admin_api_views.admin_status, name='admin_status'),
     path('api/admin/load-nasdaq/', admin_api_views.load_nasdaq_data, name='load_nasdaq'),

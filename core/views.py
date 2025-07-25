@@ -322,3 +322,11 @@ def subscription_form(request, category):
         'endpoint': config['endpoint'],
         'category': category
     })
+
+def wordpress_stocks_page(request):
+    """Admin page to view WordPress stock data"""
+    return render(request, "wordpress_stocks.html")
+
+def wordpress_news_page(request):
+    """Admin page to view WordPress news data"""
+    return render(request, "wordpress_news.html")
