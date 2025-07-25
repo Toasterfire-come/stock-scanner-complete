@@ -760,6 +760,34 @@
     {
       "severity": "major",
       "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_only.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand, CommandError",
+      "line": 19
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_only.py",
+      "message": "Django import but Django not available: from django.db import transaction",
+      "line": 20
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_only.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 21
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_only.py",
+      "message": "Django import but Django not available: from django.db.models import Count",
+      "line": 268
+    },
+    {
+      "severity": "major",
+      "category": "imports",
       "file": "/workspace/stocks/management/commands/setup_memberships.py",
       "message": "Django import but Django not available: from django.core.management.base import BaseCommand",
       "line": 6
@@ -770,6 +798,27 @@
       "file": "/workspace/stocks/management/commands/setup_memberships.py",
       "message": "Django import but Django not available: from django.contrib.auth.models import User",
       "line": 7
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_tickers.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand, CommandError",
+      "line": 17
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_tickers.py",
+      "message": "Django import but Django not available: from django.db import transaction",
+      "line": 18
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_nasdaq_tickers.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 19
     },
     {
       "severity": "major",
@@ -847,6 +896,27 @@
       "file": "/workspace/stocks/management/commands/import_stock_data.py",
       "message": "Django import but Django not available: from django.utils.timezone import now, make_aware",
       "line": 15
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_complete_nasdaq.py",
+      "message": "Django import but Django not available: from django.core.management.base import BaseCommand, CommandError",
+      "line": 20
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_complete_nasdaq.py",
+      "message": "Django import but Django not available: from django.db import transaction",
+      "line": 21
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/stocks/management/commands/load_complete_nasdaq.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 22
     },
     {
       "severity": "major",
@@ -1145,6 +1215,34 @@
     {
       "severity": "major",
       "category": "imports",
+      "file": "/workspace/tools/nasdaq_ticker_updater.py",
+      "message": "Django import but Django not available: import django",
+      "line": 28
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/nasdaq_ticker_updater.py",
+      "message": "Django import but Django not available: import django",
+      "line": 36
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/nasdaq_ticker_updater.py",
+      "message": "Django import but Django not available: from django.db import transaction, connection",
+      "line": 40
+    },
+    {
+      "severity": "major",
+      "category": "imports",
+      "file": "/workspace/tools/nasdaq_ticker_updater.py",
+      "message": "Django import but Django not available: from django.utils import timezone",
+      "line": 41
+    },
+    {
+      "severity": "major",
+      "category": "imports",
       "file": "/workspace/tools/django/run_migrations.py",
       "message": "Django import but Django not available: import django",
       "line": 9
@@ -1361,6 +1459,13 @@
     },
     {
       "severity": "major",
+      "category": "structure",
+      "file": "project_root",
+      "message": "Missing entry points: START_HERE.bat",
+      "line": null
+    },
+    {
+      "severity": "major",
       "category": "security",
       "file": "/workspace/tools/database/fix_postgresql_permissions.py",
       "message": "Hardcoded password",
@@ -1396,16 +1501,16 @@
     },
     {
       "severity": "major",
-      "category": "security",
-      "file": "/workspace/.env",
-      "message": "ALLOWED_HOSTS allows all hosts",
+      "category": "imports",
+      "file": "requirements",
+      "message": "Cannot import django (Django framework)",
       "line": null
     },
     {
       "severity": "major",
       "category": "imports",
       "file": "requirements",
-      "message": "Cannot import django (Django framework)",
+      "message": "Cannot import requests (HTTP requests)",
       "line": null
     },
     {
@@ -1433,752 +1538,17 @@
     },
     {
       "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
+      "category": "structure",
+      "file": "project_root",
+      "message": "Root directory has many scripts: check_production_ready.py, fix_identified_issues.py, PROJECT_CLEANUP.py, comprehensive_bug_check.py",
       "line": null
     },
     {
       "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
+      "category": "documentation",
+      "file": "/workspace/README.md",
+      "message": "README missing sections: prerequisites",
       "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 30
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 34
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 38
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 42
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 66
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 68
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 70
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/START_HERE.bat",
-      "message": "Consider adding error handling",
-      "line": null
-    },
-    {
-      "severity": "minor",
-      "category": "batch",
-      "file": "/workspace/setup/windows/setup.bat",
-      "message": "Consider quoting paths with spaces",
-      "line": 123
     },
     {
       "severity": "minor",
@@ -2196,12 +1566,12 @@
     }
   ],
   "passed_checks": [
+    "Syntax check: check_production_ready.py",
+    "Syntax check: fix_identified_issues.py",
     "Syntax check: PROJECT_CLEANUP.py",
     "Syntax check: manage.py",
     "Syntax check: comprehensive_bug_check.py",
-    "Syntax check: setup_redis_windows.py",
     "Syntax check: install_missing_packages.py",
-    "Syntax check: windows_fix_install.py",
     "Syntax check: fix_migration_conflicts.py",
     "Syntax check: check_syntax.py",
     "Syntax check: fix_env_urls.py",
@@ -2237,11 +1607,14 @@
     "Syntax check: __init__.py",
     "Syntax check: __init__.py",
     "Syntax check: send_stock_notifications.py",
+    "Syntax check: load_nasdaq_only.py",
     "Syntax check: setup_memberships.py",
+    "Syntax check: load_nasdaq_tickers.py",
     "Syntax check: export_stock_data.py",
     "Syntax check: import_stock_data_optimized.py",
     "Syntax check: update_stocks_yfinance.py",
     "Syntax check: import_stock_data.py",
+    "Syntax check: load_complete_nasdaq.py",
     "Syntax check: optimize_database.py",
     "Syntax check: __init__.py",
     "Syntax check: stock_workflow.py",
@@ -2265,7 +1638,6 @@
     "Syntax check: send_stock_emails.py",
     "Syntax check: __init__.py",
     "Syntax check: install_windows_safe.py",
-    "Syntax check: windows_complete_setup.py",
     "Syntax check: setup_mysql_production_complete.py",
     "Syntax check: enhanced_filter_logic.py",
     "Syntax check: admin_api_views.py",
@@ -2279,6 +1651,12 @@
     "Syntax check: __init__.py",
     "Syntax check: 0001_initial.py",
     "Syntax check: __init__.py",
+    "Syntax check: nasdaq_tickers_comprehensive.py",
+    "Syntax check: nasdaq_only_tickers_20250724_184741.py",
+    "Syntax check: complete_nasdaq_tickers_20250724_182723.py",
+    "Syntax check: nasdaq_only_downloader.py",
+    "Syntax check: complete_nasdaq_downloader.py",
+    "Syntax check: nasdaq_ticker_updater.py",
     "Syntax check: run_migrations.py",
     "Syntax check: test_django_startup.py",
     "Syntax check: switch_to_sqlite.py",
@@ -2286,7 +1664,6 @@
     "Syntax check: fix_django_settings_error.py",
     "Syntax check: fix_migrations_windows.py",
     "Syntax check: fix_postgresql_permissions.py",
-    "Syntax check: windows_bug_check.py",
     "Syntax check: common.py",
     "Syntax check: tasks.py",
     "Syntax check: scraper.py",
@@ -2305,25 +1682,9 @@
     "Requirements check: requirements.txt",
     "Requirements check: setup/requirements/requirements-minimal.txt",
     "Requirements check: setup/requirements/requirements-windows.txt",
-    "Batch script check: START_HERE.bat",
-    "Batch script check: SIMPLE_START.bat",
-    "Batch script check: setup.bat",
-    "Batch script check: emergency_setup_windows.bat",
-    "Batch script check: setup_mysql_windows.bat",
-    "Batch script check: start_app.bat",
-    "Batch script check: setup_database.bat",
-    "Batch script check: fix_migrations.bat",
-    "Batch script check: fix_database_issues.bat",
-    "Batch script check: test_system.bat",
-    "Batch script check: fix_numpy_windows.bat",
-    "Batch script check: fix_windows_compiler_issues.bat",
     "All required directories present",
-    "All main entry points present",
-    "Root directory is clean",
     "Main documentation files present",
-    "README has essential sections",
-    "Caching configuration found",
-    "Import test: requests"
+    "Caching configuration found"
   ],
   "overall_result": false
 }
