@@ -32,7 +32,7 @@ class StockScannerUsageTracker {
             'priority' => 2,
             'price' => 15
         ),
-        'premium' => array(
+        'pro' => array(
             'api_calls' => 5000,
             'stock_searches' => 1000,
             'news_articles' => 2500,
@@ -40,7 +40,7 @@ class StockScannerUsageTracker {
             'priority' => 3,
             'price' => 30
         ),
-        'professional' => array(
+        'enterprise' => array(
             'api_calls' => 20000,
             'stock_searches' => 5000,
             'news_articles' => 10000,
@@ -266,9 +266,9 @@ class StockScannerUsageTracker {
             $priority = $this->usage_limits[$membership_level]['priority'];
             $alert_level = $system_status['alert_level'];
             
-            // Emergency system state - only allow Professional users
-            if ($alert_level === 'emergency') {
-                if ($membership_level !== 'professional') {
+                    // Emergency system state - only allow Enterprise users
+        if ($alert_level === 'emergency') {
+            if ($membership_level !== 'enterprise') {
                     $block_message = $this->get_emergency_block_message($membership_level);
                     return array(
                         'allowed' => false,
@@ -325,15 +325,15 @@ class StockScannerUsageTracker {
         private function get_emergency_block_message($membership_level) {
             $messages = array(
                 'free' => array(
-                    'message' => 'System is in emergency mode due to extreme load. Only Professional subscribers ($100/month) have access during emergencies. Please upgrade or try again in 30 minutes.',
+                    'message' => 'System is in emergency mode due to extreme load. Only Enterprise subscribers ($100/month) have access during emergencies. Please upgrade or try again in 30 minutes.',
                     'retry_after' => 1800 // 30 minutes
                 ),
                 'basic' => array(
-                    'message' => 'System emergency: Only Professional subscribers have priority access. Basic plan users are temporarily blocked. Upgrade to Professional ($100/month) for guaranteed access.',
+                    'message' => 'System emergency: Only Enterprise subscribers have priority access. Basic plan users are temporarily blocked. Upgrade to Enterprise ($100/month) for guaranteed access.',
                     'retry_after' => 900 // 15 minutes
                 ),
-                'premium' => array(
-                    'message' => 'System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($100/month) have priority access during emergencies.',
+                'pro' => array(
+                    'message' => 'System emergency: Even Pro users are temporarily restricted due to extreme load. Enterprise subscribers ($100/month) have priority access during emergencies.',
                     'retry_after' => 600 // 10 minutes
                 )
             );
@@ -348,8 +348,8 @@ class StockScannerUsageTracker {
             $chances = array(
                 'free' => 100,        // Always block free users
                 'basic' => 80,        // Block 80% of basic users
-                'premium' => 40,      // Block 40% of premium users
-                'professional' => 10  // Block 10% of professional users
+                'pro' => 40,          // Block 40% of pro users
+                'enterprise' => 10    // Block 10% of enterprise users
             );
             
             return $chances[$membership_level] ?? 100;
@@ -365,15 +365,15 @@ class StockScannerUsageTracker {
                     'retry_after' => 600
                 ),
                 'basic' => array(
-                    'message' => 'High system load: Basic users may be temporarily restricted. Upgrade to Premium ($30/month) for better access during peak times.',
+                    'message' => 'High system load: Basic users may be temporarily restricted. Upgrade to Pro ($30/month) for better access during peak times.',
                     'retry_after' => 300
                 ),
-                'premium' => array(
-                    'message' => 'System under heavy load: Even Premium users may experience restrictions. Professional users ($100/month) have guaranteed access.',
+                'pro' => array(
+                    'message' => 'System under heavy load: Even Pro users may experience restrictions. Enterprise users ($100/month) have guaranteed access.',
                     'retry_after' => 120
                 ),
-                'professional' => array(
-                    'message' => 'System under heavy load: Professional users have priority access but may experience delays.',
+                'enterprise' => array(
+                    'message' => 'System under heavy load: Enterprise users have priority access but may experience delays.',
                     'retry_after' => 60
                 )
             );
@@ -388,8 +388,8 @@ class StockScannerUsageTracker {
             $chances = array(
                 'free' => 60,         // Throttle 60% of free users
                 'basic' => 30,        // Throttle 30% of basic users
-                'premium' => 10,      // Throttle 10% of premium users
-                'professional' => 0   // Never throttle professional users
+                'pro' => 10,          // Throttle 10% of pro users
+                'enterprise' => 0     // Never throttle enterprise users
             );
             
             return $chances[$membership_level] ?? 60;
@@ -405,11 +405,11 @@ class StockScannerUsageTracker {
                     'retry_after' => 180
                 ),
                 'basic' => array(
-                    'message' => 'System busy: Basic users may experience occasional delays. Upgrade to Premium ($30/month) for priority access.',
+                    'message' => 'System busy: Basic users may experience occasional delays. Upgrade to Pro ($30/month) for priority access.',
                     'retry_after' => 90
                 ),
-                'premium' => array(
-                    'message' => 'System busy: Premium users have priority but may experience minor delays during peak times.',
+                'pro' => array(
+                    'message' => 'System busy: Pro users have priority but may experience minor delays during peak times.',
                     'retry_after' => 30
                 )
             );
@@ -745,7 +745,7 @@ class StockScannerUsageTracker {
         $message .= "Timestamp: {$stats['timestamp']}\n\n";
         
         if ($alert_level === 'emergency') {
-            $message .= "EMERGENCY: Only Professional users have access. All other users are blocked.\n";
+            $message .= "EMERGENCY: Only Enterprise users have access. All other users are blocked.\n";
             $message .= "Immediate action required to restore service.\n\n";
         }
         
@@ -759,7 +759,7 @@ class StockScannerUsageTracker {
      */
     private function send_emergency_notifications($stats) {
         // Log emergency to WordPress error log
-        error_log("EMERGENCY: Stock Scanner system in emergency mode - only Professional users allowed");
+        error_log("EMERGENCY: Stock Scanner system in emergency mode - only Enterprise users allowed");
         
         // Try to send Slack notification if webhook is configured
         $slack_webhook = get_option('stock_scanner_slack_webhook');
@@ -785,12 +785,12 @@ class StockScannerUsageTracker {
      * Send Slack emergency alert
      */
     private function send_slack_emergency_alert($webhook_url, $stats) {
-        $payload = array(
-            'text' => '🚨 STOCK SCANNER EMERGENCY 🚨',
-            'attachments' => array(
-                array(
-                    'color' => 'danger',
-                    'title' => 'System Emergency - Only Professional Users Allowed',
+                    $payload = array(
+                'text' => '🚨 STOCK SCANNER EMERGENCY 🚨',
+                'attachments' => array(
+                    array(
+                        'color' => 'danger',
+                        'title' => 'System Emergency - Only Enterprise Users Allowed',
                     'fields' => array(
                         array('title' => 'CPU Usage', 'value' => $stats['cpu_usage'] . '%', 'short' => true),
                         array('title' => 'Memory Usage', 'value' => $stats['memory_usage'] . '%', 'short' => true),
@@ -813,11 +813,11 @@ class StockScannerUsageTracker {
      * Send Discord emergency alert
      */
     private function send_discord_emergency_alert($webhook_url, $stats) {
-        $payload = array(
-            'content' => '🚨 **STOCK SCANNER EMERGENCY** 🚨',
-            'embeds' => array(
-                array(
-                    'title' => 'System Emergency - Only Professional Users Allowed',
+                    $payload = array(
+                'content' => '🚨 **STOCK SCANNER EMERGENCY** 🚨',
+                'embeds' => array(
+                    array(
+                        'title' => 'System Emergency - Only Enterprise Users Allowed',
                     'color' => 15158332, // Red color
                     'fields' => array(
                         array('name' => 'CPU Usage', 'value' => $stats['cpu_usage'] . '%', 'inline' => true),

@@ -22,7 +22,7 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **Priority Level**: 2
 - **System Load Handling**: Blocked during critical/emergency loads
 
-### Premium Tier ($30/month)
+### Pro Tier ($30/month)
 - **API Calls**: 5,000 per day
 - **Stock Searches**: 1,000 per day
 - **News Articles**: 2,500 per day
@@ -30,7 +30,7 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **Priority Level**: 3
 - **System Load Handling**: Minimal restrictions, blocked only during emergency
 
-### Professional Tier ($100/month)
+### Enterprise Tier ($100/month)
 - **API Calls**: 20,000 per day
 - **Stock Searches**: 5,000 per day
 - **News Articles**: 10,000 per day
@@ -55,8 +55,8 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **User Impact**: 
   - Free users: 60% chance of throttling (3-minute delay)
   - Basic users: 30% chance of throttling (1.5-minute delay)
-  - Premium users: 10% chance of throttling (30-second delay)
-  - Professional users: No throttling
+  - Pro users: 10% chance of throttling (30-second delay)
+- Enterprise users: No throttling
 
 ### Critical (Orange)
 - **CPU**: 80-94%
@@ -66,8 +66,8 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **User Impact**:
   - Free users: 100% blocked (10-minute delay)
   - Basic users: 80% blocked (5-minute delay)
-  - Premium users: 40% blocked (2-minute delay)
-  - Professional users: 10% blocked (1-minute delay)
+  - Pro users: 40% blocked (2-minute delay)
+- Enterprise users: 10% blocked (1-minute delay)
 
 ### Emergency (Red)
 - **CPU**: ≥ 95%
@@ -77,8 +77,8 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **User Impact**:
   - Free users: 100% blocked (30-minute delay)
   - Basic users: 100% blocked (15-minute delay)
-  - Premium users: 100% blocked (10-minute delay)
-  - Professional users: Full access with possible minor delays
+  - Pro users: 100% blocked (10-minute delay)
+- Enterprise users: Full access with possible minor delays
 
 ## Progressive Blocking Logic
 
@@ -105,10 +105,10 @@ Users receive clear, actionable messages when blocked:
 > "System is busy. Free users may experience delays. Upgrade to Basic ($15/month) for better performance."
 
 #### Basic Users (Critical Level)
-> "High system load: Basic users may be temporarily restricted. Upgrade to Premium ($30/month) for better access during peak times."
+> "High system load: Basic users may be temporarily restricted. Upgrade to Pro ($30/month) for better access during peak times."
 
-#### Premium Users (Emergency Level)
-> "System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($100/month) have priority access during emergencies."
+#### Pro Users (Emergency Level)
+> "System emergency: Even Pro users are temporarily restricted due to extreme load. Enterprise subscribers ($100/month) have priority access during emergencies."
 
 ## Emergency Mode Features
 
@@ -127,9 +127,9 @@ When emergency mode activates, administrators receive:
 4. **WordPress error log entries**
 5. **Database emergency flags**
 
-### Professional-Only Access
+### Enterprise-Only Access
 During emergencies:
-- Only Professional subscribers can access the system
+- Only Enterprise subscribers can access the system
 - All API endpoints check membership before processing
 - Clear upgrade messages shown to blocked users
 - Automatic retry suggestions with timeframes
