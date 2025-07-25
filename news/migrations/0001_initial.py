@@ -12,11 +12,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='CoreSetting',
+            name='NewsArticle',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('key', models.CharField(max_length=100, unique=True)),
-                ('value', models.TextField()),
+                ('title', models.CharField(max_length=500)),
+                ('url', models.URLField()),
+                ('source', models.CharField(max_length=100)),
+                ('published_at', models.DateTimeField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
         ),
