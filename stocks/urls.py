@@ -1,5 +1,5 @@
 from django.urls import path
-from . import api_views, analytics_views, admin_dashboard, portfolio_api_views, market_analysis_views, comprehensive_api_views, page_endpoints, advanced_features
+from . import api_views, analytics_views, admin_dashboard, portfolio_api_views, market_analysis_views, comprehensive_api_views, page_endpoints, advanced_features, wordpress_api, simple_api
 try:
     from . import paywall_api_views
     PAYWALL_AVAILABLE = True
@@ -9,6 +9,18 @@ except ImportError:
 app_name = 'stocks_api'
 
 urlpatterns = [
+    # Simple WordPress API endpoints (no database required - for testing)
+    path('api/simple/status/', simple_api.simple_status_api, name='simple_status'),
+    path('api/simple/stocks/', simple_api.simple_stocks_api, name='simple_stocks'),
+    path('api/simple/stocks/<str:ticker>/', simple_api.simple_stock_detail_api, name='simple_stock_detail'),
+    path('api/simple/news/', simple_api.simple_news_api, name='simple_news'),
+    
+    # WordPress-specific API endpoints (requires database)
+    path('api/wordpress/stocks/', wordpress_api.wordpress_stocks_api, name='wordpress_stocks'),
+    path('api/wordpress/stocks/<str:ticker>/', wordpress_api.wordpress_stock_detail_api, name='wordpress_stock_detail'),
+    path('api/wordpress/news/', wordpress_api.wordpress_news_api, name='wordpress_news'),
+    path('api/wordpress/status/', wordpress_api.wordpress_status_api, name='wordpress_status'),
+    
     # REST API endpoints for WordPress integration
     path('api/stocks/', api_views.stock_list_api, name='stock_list'),
     path('api/stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail'),
