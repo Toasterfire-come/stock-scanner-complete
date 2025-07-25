@@ -189,8 +189,17 @@ def run_django_setup():
             result = subprocess.run(command.split(), capture_output=True, text=True, timeout=60)
             if result.returncode == 0:
                 print(f"SUCCESS: {description} completed")
+                if result.stdout:
+                    print(f"Output: {result.stdout.strip()}")
             else:
-                print(f"WARNING: {description} had issues: {result.stderr}")
+                print(f"WARNING: {description} had issues")
+                if result.stderr:
+                    print(f"Error: {result.stderr.strip()}")
+                if result.stdout:
+                    print(f"Output: {result.stdout.strip()}")
+        except subprocess.TimeoutExpired:
+            print(f"ERROR: {description} timed out after 60 seconds")
+            return False
         except Exception as e:
             print(f"ERROR: {description} failed: {e}")
             return False
@@ -223,7 +232,9 @@ def main():
     # Check if .env already exists
     if Path(".env").exists():
         use_existing = input("\n.env file already exists. Use existing configuration? (y/n): ").strip().lower()
-        if use_existing != 'y':
+        if use_existing == 'y':
+            print("SUCCESS: Using existing .env configuration")
+        else:
             # Get new database credentials
             db_config = get_database_credentials()
             if not db_config:
