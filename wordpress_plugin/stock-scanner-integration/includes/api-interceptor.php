@@ -1104,9 +1104,10 @@ class StockScannerAPIInterceptor {
         $user_level = $this->get_user_membership_level();
         
         $limits = array(
-            'free' => array('searches' => 20, 'api_calls' => 100),
-            'premium' => array('searches' => 500, 'api_calls' => 2500),
-            'professional' => array('searches' => 2000, 'api_calls' => 10000)
+            'free' => array('searches' => 10, 'api_calls' => 50),
+            'basic' => array('searches' => 200, 'api_calls' => 1000),
+            'pro' => array('searches' => 1000, 'api_calls' => 5000),
+            'enterprise' => array('searches' => 5000, 'api_calls' => 20000)
         );
         
         return $limits[$user_level] ?? $limits['free'];

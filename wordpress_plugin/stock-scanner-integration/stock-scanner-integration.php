@@ -232,25 +232,25 @@ class StockScannerIntegration {
     
     private function can_user_access_stock($user_level, $usage) {
         $limits = array(
-            0 => 15,    // Free
-            1 => 15,    // Free
-            2 => 1000,  // Premium
-            3 => 10000  // Professional
+            0 => 50,    // Free
+            1 => 1000,  // Basic
+            2 => 5000,  // Pro
+            3 => 20000  // Enterprise
         );
         
-        $limit = isset($limits[$user_level]) ? $limits[$user_level] : 15;
+        $limit = isset($limits[$user_level]) ? $limits[$user_level] : 50;
         return $usage['monthly'] < $limit;
     }
     
     private function get_usage_limit($user_level) {
         $limits = array(
-            0 => 15,    // Free
-            1 => 15,    // Free
-            2 => 1000,  // Premium
-            3 => 10000  // Professional
+            0 => 50,    // Free
+            1 => 1000,  // Basic
+            2 => 5000,  // Pro
+            3 => 20000  // Enterprise
         );
         
-        return isset($limits[$user_level]) ? $limits[$user_level] : 15;
+        return isset($limits[$user_level]) ? $limits[$user_level] : 50;
     }
     
     private function render_paywall_message($user_level, $usage) {
@@ -265,15 +265,21 @@ class StockScannerIntegration {
                 
                 <div class="membership-options">
                     <div class="membership-tier">
-                        <h4>Premium - $9.99/month</h4>
-                        <p>1,000 stocks per month</p>
-                        <a href="<?php echo pmpro_url('checkout', '?level=2'); ?>" class="btn btn-premium">Upgrade to Premium</a>
+                        <h4>Basic - $15/month</h4>
+                        <p>1,000 API calls per day</p>
+                        <a href="<?php echo pmpro_url('checkout', '?level=1'); ?>" class="btn btn-basic">Upgrade to Basic</a>
                     </div>
                     
                     <div class="membership-tier">
-                        <h4>Professional - $29.99/month</h4>
-                        <p>10,000 stocks per month</p>
-                        <a href="<?php echo pmpro_url('checkout', '?level=3'); ?>" class="btn btn-professional">Upgrade to Professional</a>
+                        <h4>Pro - $30/month</h4>
+                        <p>5,000 API calls per day</p>
+                        <a href="<?php echo pmpro_url('checkout', '?level=2'); ?>" class="btn btn-pro">Upgrade to Pro</a>
+                    </div>
+                    
+                    <div class="membership-tier">
+                        <h4>Enterprise - $100/month</h4>
+                        <p>20,000 API calls per day</p>
+                        <a href="<?php echo pmpro_url('checkout', '?level=3'); ?>" class="btn btn-enterprise">Upgrade to Enterprise</a>
                     </div>
                 </div>
             </div>
@@ -658,7 +664,7 @@ class StockScannerIntegration {
                         
                         <div class="tier-bar" style="margin: 10px 0;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>🥉 Basic ($9.99)</span>
+                                <span>🥉 Basic ($15)</span>
                                 <span class="basic-count">-</span>
                             </div>
                             <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
@@ -668,8 +674,18 @@ class StockScannerIntegration {
                         
                         <div class="tier-bar" style="margin: 10px 0;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>🏆 Professional ($29.99)</span>
-                                <span class="professional-count">-</span>
+                                <span>🥈 Pro ($30)</span>
+                                <span class="pro-count">-</span>
+                            </div>
+                            <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
+                                <div class="pro-bar" style="background: #28a745; height: 100%; border-radius: 10px; width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tier-bar" style="margin: 10px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>🏆 Enterprise ($100)</span>
+                                <span class="enterprise-count">-</span>
                             </div>
                             <div style="background: #e9ecef; height: 20px; border-radius: 10px;">
                                 <div class="professional-bar" style="background: #28a745; height: 100%; border-radius: 10px; width: 0%;"></div>
@@ -822,19 +838,19 @@ function create_stock_scanner_pages() {
                     <div class="pricing-card basic-plan card">
                         <div class="card-header text-center">
                             <h3>🥉 Basic Plan</h3>
-                            <div class="price">$9.99<span>/month</span></div>
+                            <div class="price">$15<span>/month</span></div>
                             <p class="plan-subtitle">Perfect for casual traders</p>
                         </div>
                         <div class="card-body">
                             <ul class="feature-list">
-                                <li>✅ 100 stocks per month</li>
-                                <li>✅ Advanced stock lookup</li>
-                                <li>✅ 15 email list subscriptions</li>
-                                <li>✅ Real-time market news</li>
+                                <li>✅ 1,000 API calls per day</li>
+                                <li>✅ 200 stock searches per day</li>
+                                <li>✅ 500 news articles per day</li>
+                                <li>✅ 3 concurrent requests</li>
+                                <li>✅ Real-time market data</li>
                                 <li>✅ Basic filtering tools</li>
-                                <li>✅ 30-day history</li>
                                 <li>✅ Email support</li>
-                                <li>❌ Custom watchlists</li>
+                                <li>❌ Advanced analytics</li>
                             </ul>
                         </div>
                         <div class="card-footer text-center">
@@ -844,56 +860,56 @@ function create_stock_scanner_pages() {
                         </div>
                     </div>
 
-                    <!-- PROFESSIONAL PLAN -->
-                    <div class="pricing-card professional-plan card popular">
+                    <!-- PRO PLAN -->
+                    <div class="pricing-card pro-plan card popular">
                         <div class="popular-badge">Most Popular</div>
                         <div class="card-header text-center">
-                            <h3>🏆 Professional Plan</h3>
-                            <div class="price">$29.99<span>/month</span></div>
+                            <h3>🥈 Pro Plan</h3>
+                            <div class="price">$30<span>/month</span></div>
                             <p class="plan-subtitle">Ideal for active traders</p>
                         </div>
                         <div class="card-body">
                             <ul class="feature-list">
-                                <li>✅ 1,000 stocks per month</li>
-                                <li>✅ Professional stock analysis</li>
-                                <li>✅ Unlimited email lists</li>
-                                <li>✅ Advanced news filtering</li>
+                                <li>✅ 5,000 API calls per day</li>
+                                <li>✅ 1,000 stock searches per day</li>
+                                <li>✅ 2,500 news articles per day</li>
+                                <li>✅ 7 concurrent requests</li>
+                                <li>✅ Advanced analytics</li>
+                                <li>✅ Priority during system load</li>
                                 <li>✅ Advanced filtering & screening</li>
-                                <li>✅ 1-year historical data</li>
-                                <li>✅ Custom watchlists (10)</li>
                                 <li>✅ Priority email support</li>
                             </ul>
                         </div>
                         <div class="card-footer text-center">
                             <a href="/membership-account/membership-checkout/?level=2" class="btn btn-success btn-lg">
-                                <span>Choose Professional</span>
+                                <span>Choose Pro</span>
                             </a>
                         </div>
                     </div>
 
-                    <!-- EXPERT PLAN -->
-                    <div class="pricing-card expert-plan card premium">
+                    <!-- ENTERPRISE PLAN -->
+                    <div class="pricing-card enterprise-plan card premium">
                         <div class="card-header text-center">
-                            <h3>💎 Expert Plan</h3>
-                            <div class="price">$49.99<span>/month</span></div>
+                            <h3>🏆 Enterprise Plan</h3>
+                            <div class="price">$100<span>/month</span></div>
                             <p class="plan-subtitle">For professional traders</p>
                         </div>
                         <div class="card-body">
                             <ul class="feature-list">
-                                <li>✅ Unlimited stocks</li>
-                                <li>✅ Expert-level analysis</li>
-                                <li>✅ All premium features</li>
-                                <li>✅ Real-time alerts</li>
+                                <li>✅ 20,000 API calls per day</li>
+                                <li>✅ 5,000 stock searches per day</li>
+                                <li>✅ 10,000 news articles per day</li>
+                                <li>✅ 15 concurrent requests</li>
+                                <li>✅ Guaranteed access during emergencies</li>
+                                <li>✅ Priority support</li>
+                                <li>✅ Advanced analytics</li>
                                 <li>✅ API access</li>
-                                <li>✅ 5-year historical data</li>
-                                <li>✅ Unlimited watchlists</li>
-                                <li>✅ Priority phone support</li>
                                 <li>✅ Personal account manager</li>
                             </ul>
                         </div>
                         <div class="card-footer text-center">
                             <a href="/membership-account/membership-checkout/?level=3" class="btn btn-gold btn-lg animate-pulse">
-                                <span>Choose Expert</span>
+                                <span>Choose Enterprise</span>
                             </a>
                         </div>
                     </div>
@@ -1356,7 +1372,7 @@ function create_stock_scanner_pages() {
                     
                     <div class="pricing-plan premium">
                         <h3>⭐ Premium</h3>
-                        <div class="price">$9.99<span>/month</span></div>
+                                                    <div class="price">$15<span>/month</span></div>
                         <ul>
                             <li>✅ 1,000 stocks per month</li>
                             <li>✅ Advanced charts</li>
@@ -1369,7 +1385,7 @@ function create_stock_scanner_pages() {
                     
                     <div class="pricing-plan professional">
                         <h3>💼 Professional</h3>
-                        <div class="price">$29.99<span>/month</span></div>
+                                                    <div class="price">$30<span>/month</span></div>
                         <ul>
                             <li>✅ 10,000 stocks per month</li>
                             <li>✅ API access</li>

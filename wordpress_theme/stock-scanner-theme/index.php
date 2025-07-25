@@ -37,8 +37,8 @@
                             $user_level = $level ? $level->id : 0;
                         }
                         
-                        $level_names = array(0 => 'Free', 1 => 'Free', 2 => 'Premium', 3 => 'Professional');
-                        $level_classes = array(0 => '', 1 => '', 2 => 'premium', 3 => 'professional');
+                        $level_names = array(0 => 'Free', 1 => 'Basic', 2 => 'Pro', 3 => 'Enterprise');
+$level_classes = array(0 => '', 1 => 'basic', 2 => 'pro', 3 => 'enterprise');
                         ?>
                         
                         <span class="membership-badge <?php echo $level_classes[$user_level]; ?>">
@@ -98,7 +98,7 @@
                 
                 <div class="upgrade-notice">
                     <h4>🚀 Ready to track more stocks?</h4>
-                    <p>Upgrade to Premium for 1,000 stocks per month or Professional for unlimited access!</p>
+                    <p>Upgrade to Pro for 5,000 API calls per day or Enterprise for 20,000 API calls per day!</p>
                     <a href="/membership-plans/" class="button-premium">View Plans</a>
                 </div>
             <?php endif; ?>
