@@ -20,6 +20,7 @@ urllib3>=2.0.0
 # ===== TASK QUEUE & SCHEDULING =====
 celery>=5.3.0
 redis>=5.0.0
+schedule>=1.2.0
 
 # ===== ENVIRONMENT & UTILITIES =====
 python-dotenv>=1.0.0
