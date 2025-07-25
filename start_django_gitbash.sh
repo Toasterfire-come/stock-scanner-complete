@@ -31,8 +31,15 @@ python -m pip install -r requirements.txt
 
 # Check if .env file exists
 if [ ! -f ".env" ]; then
-    echo "⚙️ Creating .env file..."
-    cat > .env << 'EOF'
+    echo "⚙️ No .env file found. Setting up database configuration..."
+    echo "🔐 Running interactive database setup..."
+    python setup_database_interactive.py
+    
+    # Check if setup was successful
+    if [ ! -f ".env" ]; then
+        echo "❌ Database setup was cancelled or failed."
+        echo "🔧 Creating basic .env file with SQLite as fallback..."
+        cat > .env << 'EOF'
 DEBUG=True
 SECRET_KEY=django-insecure-gitbash-development-key-change-in-production
 ALLOWED_HOSTS=127.0.0.1,localhost,0.0.0.0
@@ -41,7 +48,8 @@ EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 SCHEDULER_ENABLED=True
 NASDAQ_UPDATE_INTERVAL=10
 EOF
-    echo "📝 Created basic .env file for development"
+        echo "⚠️  Using SQLite for development. Run 'python setup_database_interactive.py' to configure PostgreSQL."
+    fi
 fi
 
 # Run migrations
