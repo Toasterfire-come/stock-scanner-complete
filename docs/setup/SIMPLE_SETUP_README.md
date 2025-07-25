@@ -1,4 +1,4 @@
-# 🚀 Stock Scanner - Simple Setup
+# Stock Scanner - Simple Setup
 
 ## One Command. Everything Works.
 
@@ -16,34 +16,34 @@ That's it!
 
 ---
 
-## 🎯 What It Does Automatically
+## What It Does Automatically
 
 The `SIMPLE_START.bat` file does **EVERYTHING**:
 
-✅ **Checks Python** (tells you to install if missing)  
-✅ **Installs all requirements** (Django, MySQL drivers, etc.)  
-✅ **Sets up MySQL database** (creates production database)  
-✅ **Configures Django** (creates all config files)  
-✅ **Runs migrations** (sets up database tables)  
-✅ **Starts the application** (opens in your browser)
+**Checks Python** (tells you to install if missing) 
+**Installs all requirements** (Django, MySQL drivers, etc.) 
+**Sets up MySQL database** (creates production database) 
+**Configures Django** (creates all config files) 
+**Runs migrations** (sets up database tables) 
+**Starts the application** (opens in your browser)
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 **Only 2 things needed:**
 
 1. **Python 3.8+**
-   - Download: https://python.org/downloads/
-   - ⚠️ **IMPORTANT**: Check "Add Python to PATH" during installation
+- Download: https://python.org/downloads/
+- **IMPORTANT**: Check "Add Python to PATH" during installation
 
 2. **MySQL Server 8.0+**
-   - Download: https://dev.mysql.com/downloads/mysql/
-   - ⚠️ **IMPORTANT**: Set root password to `StockScannerRoot2024!` during installation
+- Download: https://dev.mysql.com/downloads/mysql/
+- **IMPORTANT**: Set root password to `StockScannerRoot2024!` during installation
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```
 1. Download & extract project
@@ -55,14 +55,14 @@ The `SIMPLE_START.bat` file does **EVERYTHING**:
 
 ---
 
-## 🔄 Daily Use
+## Daily Use
 
 After first setup, just run:
 **Double-click: `start_stock_scanner.bat`**
 
 ---
 
-## 💡 If Something Goes Wrong
+## If Something Goes Wrong
 
 **Most common issues:**
 
@@ -75,10 +75,10 @@ After first setup, just run:
 
 ---
 
-## 📞 That's It!
+## That's It!
 
-- ✅ **First time**: Run `SIMPLE_START.bat`
-- ✅ **Every day**: Run `start_stock_scanner.bat`
-- ✅ **Problems**: Run `SIMPLE_START.bat` again
+- **First time**: Run `SIMPLE_START.bat`
+- **Every day**: Run `start_stock_scanner.bat`
+- **Problems**: Run `SIMPLE_START.bat` again
 
 **No complex commands. No confusing options. Just works.**

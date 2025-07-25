@@ -1,6 +1,6 @@
 # 🪟 Stock Scanner - Git Bash Setup for Windows
 
-## 🚀 Quick Start (Single Command)
+## Quick Start (Single Command)
 
 ```bash
 # In Git Bash, navigate to your project and run:
@@ -9,22 +9,22 @@ chmod +x setup_gitbash_complete.sh
 ./setup_gitbash_complete.sh
 ```
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before running the setup, ensure you have:
 
 1. **Python 3.8+** installed
-   - Download from: https://python.org/downloads/
-   - ⚠️ **IMPORTANT**: Check "Add Python to PATH" during installation
+- Download from: https://python.org/downloads/
+- **IMPORTANT**: Check "Add Python to PATH" during installation
 
 2. **MySQL Server 8.0+** installed
-   - Download from: https://dev.mysql.com/downloads/mysql/
-   - Remember your root password
+- Download from: https://dev.mysql.com/downloads/mysql/
+- Remember your root password
 
 3. **Git Bash** installed
-   - Comes with Git for Windows: https://git-scm.com/download/win
+- Comes with Git for Windows: https://git-scm.com/download/win
 
-## 🗂️ Path Navigation in Git Bash
+## Path Navigation in Git Bash
 
 Your Windows path: `C:\Stock-scanner-project\stock-scanner-complete`
 Git Bash path: `/c/Stock-scanner-project/stock-scanner-complete`
@@ -41,21 +41,21 @@ ls -la
 # You should see setup_gitbash_complete.sh
 ```
 
-## 🎯 What the Script Does
+## What the Script Does
 
 The Git Bash setup script automatically:
 
-✅ **Environment Detection** - Detects Windows/Git Bash environment  
-✅ **Prerequisites Check** - Verifies Python, pip, and MySQL  
-✅ **Virtual Environment** - Creates and activates Python venv  
-✅ **Package Installation** - Installs all required packages (with Windows compatibility)  
-✅ **MySQL Configuration** - Sets up database and user  
-✅ **Django Setup** - Configures Django with migrations  
-✅ **NASDAQ Tickers** - Downloads and loads NASDAQ-only tickers  
-✅ **Testing** - Comprehensive system testing  
-✅ **Startup Scripts** - Creates both .bat and .sh startup files  
+**Environment Detection** - Detects Windows/Git Bash environment 
+**Prerequisites Check** - Verifies Python, pip, and MySQL 
+**Virtual Environment** - Creates and activates Python venv 
+**Package Installation** - Installs all required packages (with Windows compatibility) 
+**MySQL Configuration** - Sets up database and user 
+**Django Setup** - Configures Django with migrations 
+**NASDAQ Tickers** - Downloads and loads NASDAQ-only tickers 
+**Testing** - Comprehensive system testing 
+**Startup Scripts** - Creates both .bat and .sh startup files 
 
-## 🔧 Key Differences from Linux Version
+## Key Differences from Linux Version
 
 ### Windows Compatibility Features:
 - **PyMySQL Fallback**: Uses PyMySQL if mysqlclient compilation fails
@@ -68,7 +68,7 @@ The Git Bash setup script automatically:
 - **Linux**: `venv/bin/activate`
 - **Windows Git Bash**: `venv/Scripts/activate`
 
-## 🚀 Complete Setup Process
+## Complete Setup Process
 
 ```bash
 # 1. Open Git Bash and navigate to your project
@@ -87,7 +87,7 @@ chmod +x setup_gitbash_complete.sh
 # OR double-click start_windows.bat
 ```
 
-## 🌐 Startup Options
+## Startup Options
 
 After setup completion, you have multiple ways to start:
 
@@ -111,13 +111,13 @@ source venv/Scripts/activate
 python manage.py runserver
 ```
 
-## 📊 Access Points
+## Access Points
 
 - **Main Application**: http://localhost:8000
 - **Django Admin**: http://localhost:8000/admin
 - **API Endpoint**: http://localhost:8000/api/stocks
 
-## 🔧 Management Commands
+## Management Commands
 
 ```bash
 # Always activate virtual environment first
@@ -135,7 +135,7 @@ python manage.py migrate
 python manage.py collectstatic
 ```
 
-## 🗄️ Database Configuration
+## Database Configuration
 
 The script automatically creates:
 - **Database**: `stock_scanner_nasdaq`
@@ -161,29 +161,29 @@ mysql -u root -pstockscanner2010
 mysql -u stock_scanner -pStockScanner2010 stock_scanner_nasdaq
 ```
 
-## 📁 Project Structure After Setup
+## Project Structure After Setup
 
 ```
 stock-scanner-complete/
-├── 🚀 setup_gitbash_complete.sh    # Main setup script
-├── 🌐 start_windows.bat           # Windows startup
-├── 🌐 start_gitbash.sh            # Git Bash startup
-├── 📊 manage.py                   # Django management
-├── 📋 requirements.txt            # Dependencies
-│
-├── 📂 venv/                       # Virtual environment
-│   └── Scripts/activate           # Windows activation script
-│
-├── 📂 data/nasdaq_only/           # NASDAQ ticker data
-├── 📂 setup/                      # Setup configurations
-│   ├── configs/                   # Installation info
-│   └── scripts/                   # Management scripts
-│
-├── 📂 stocks/                     # Main Django app
-└── 📂 stockscanner_django/        # Django settings
+setup_gitbash_complete.sh # Main setup script
+start_windows.bat # Windows startup
+start_gitbash.sh # Git Bash startup
+manage.py # Django management
+requirements.txt # Dependencies
+
+venv/ # Virtual environment
+Scripts/activate # Windows activation script
+
+data/nasdaq_only/ # NASDAQ ticker data
+setup/ # Setup configurations
+configs/ # Installation info
+scripts/ # Management scripts
+
+stocks/ # Main Django app
+stockscanner_django/ # Django settings
 ```
 
-## ⚠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues:
 
@@ -231,7 +231,7 @@ source venv/Scripts/activate
 - **Installation info**: `cat setup/configs/installation_info.txt`
 - **Django logs**: Check `logs/` directory
 
-## 🎯 Features Included
+## Features Included
 
 ### Core Functionality:
 - **NASDAQ-Only Focus**: Streamlined for NASDAQ securities
@@ -251,37 +251,37 @@ source venv/Scripts/activate
 - **Database Integration**: Seamless loading into Django models
 - **Update Mechanism**: Easy ticker list updates
 
-## 🚀 Production Features
+## Production Features
 
 - **Security**: DEBUG=False, secure SECRET_KEY, proper ALLOWED_HOSTS
 - **Performance**: Connection pooling, database optimization
 - **Logging**: Comprehensive logging system
 - **Error Handling**: Graceful fallbacks for network/compilation issues
 
-## 🎉 Success Indicators
+## Success Indicators
 
 After successful setup, you should see:
 
 ```
-🎉 STOCK SCANNER SETUP COMPLETED SUCCESSFULLY! (Windows Git Bash)
+STOCK SCANNER SETUP COMPLETED SUCCESSFULLY! (Windows Git Bash)
 ===============================================================================
 
-📊 Setup Summary:
-  ✅ Python virtual environment configured
-  ✅ Django application setup
-  ✅ NASDAQ-only tickers loaded
-  ✅ yfinance integration ready
-  ✅ Windows startup scripts created
+Setup Summary:
+Python virtual environment configured
+Django application setup
+NASDAQ-only tickers loaded
+yfinance integration ready
+Windows startup scripts created
 
-🚀 Quick Start Options:
-  Option 1 (Windows): Double-click start_windows.bat
-  Option 2 (Git Bash): ./start_gitbash.sh
-  Option 3 (Manual): source venv/Scripts/activate && python manage.py runserver
+Quick Start Options:
+Option 1 (Windows): Double-click start_windows.bat
+Option 2 (Git Bash): ./start_gitbash.sh
+Option 3 (Manual): source venv/Scripts/activate && python manage.py runserver
 
-🌐 Access: http://localhost:8000
+Access: http://localhost:8000
 ```
 
-## 📞 Support
+## Support
 
 ### Self-Help Resources:
 1. Check logs: `setup.log`
@@ -306,4 +306,4 @@ python manage.py shell -c "from stocks.models import Stock; print(f'NASDAQ: {Sto
 
 ---
 
-**Your Stock Scanner is now ready for Windows development with Git Bash!** 🚀
+**Your Stock Scanner is now ready for Windows development with Git Bash!** 

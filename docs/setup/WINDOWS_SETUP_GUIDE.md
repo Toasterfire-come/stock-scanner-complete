@@ -5,7 +5,7 @@
 
 ---
 
-## 📋 **REQUIREMENTS**
+## **REQUIREMENTS**
 
 - **Windows 10/11**
 - **Python 3.8+** (we recommend Python 3.11 or 3.12)
@@ -14,7 +14,7 @@
 
 ---
 
-## 🚀 **SUPER QUICK START (2 Minutes)**
+## **SUPER QUICK START (2 Minutes)**
 
 ### **One-Click Setup (Recommended)**
 ```cmd
@@ -26,7 +26,7 @@ cd stock-scanner-complete
 setup.bat
 ```
 
-### **🔧 NumPy Compilation Fix (If Needed)**
+### ** NumPy Compilation Fix (If Needed)**
 If you get NumPy compilation errors during setup, run:
 ```cmd
 fix_numpy_windows.bat
@@ -38,16 +38,16 @@ ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang']]
 ```
 
 **That's it!** The setup.bat file handles everything automatically:
-- ✅ Creates virtual environment
-- ✅ Installs all dependencies
-- ✅ Sets up database (MySQL or SQLite)
-- ✅ Fixes migration conflicts
-- ✅ Runs comprehensive tests
-- ✅ Creates admin user (optional)
+- Creates virtual environment
+- Installs all dependencies
+- Sets up database (MySQL or SQLite)
+- Fixes migration conflicts
+- Runs comprehensive tests
+- Creates admin user (optional)
 
 ---
 
-## 📁 **Windows Batch Files**
+## **Windows Batch Files**
 
 | File | Purpose | Usage |
 |------|---------|--------|
@@ -58,7 +58,7 @@ ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang']]
 
 ---
 
-## 🔧 **STEP-BY-STEP SETUP**
+## **STEP-BY-STEP SETUP**
 
 ### **Step 1: Clone Repository**
 ```cmd
@@ -90,7 +90,7 @@ Open browser: **http://localhost:8000**
 
 ---
 
-## 🔧 **DETAILED SETUP**
+## **DETAILED SETUP**
 
 ### **1. Prerequisites Installation**
 
@@ -98,10 +98,10 @@ Open browser: **http://localhost:8000**
 1. Download from: https://python.org/downloads/
 2. **IMPORTANT**: Check "Add Python to PATH" during installation
 3. Verify installation:
-   ```cmd
-   python --version
-   pip --version
-   ```
+```cmd
+python --version
+pip --version
+```
 
 #### **Install Git:**
 1. Download from: https://git-scm.com/download/windows
@@ -139,10 +139,10 @@ python windows_fix_install.py
 ```
 
 **Features:**
-- ✅ Handles Windows compilation issues
-- ✅ Uses binary wheels for data packages
-- ✅ Multiple fallback strategies
-- ✅ Automatic error recovery
+- Handles Windows compilation issues
+- Uses binary wheels for data packages
+- Multiple fallback strategies
+- Automatic error recovery
 
 #### **Option B: Manual Installation**
 ```cmd
@@ -166,35 +166,35 @@ python test_django_startup.py
 
 **Expected output:**
 ```
-🔍 Django Startup Test
+Django Startup Test
 ==============================
-1️⃣ Checking environment...
-   Python: 3.11.x
-   ✅ Environment OK
+1⃣ Checking environment...
+Python: 3.11.x
+Environment OK
 
-2️⃣ Setting Django settings module...
-   ✅ Settings module set
+2⃣ Setting Django settings module...
+Settings module set
 
-3️⃣ Creating logs directory...
-   ✅ Logs directory created
+3⃣ Creating logs directory...
+Logs directory created
 
-4️⃣ Testing Django import...
-   ✅ Django version: 5.1.x
+4⃣ Testing Django import...
+Django version: 5.1.x
 
-5️⃣ Testing settings import...
-   ✅ Settings imported
-   Debug mode: True
+5⃣ Testing settings import...
+Settings imported
+Debug mode: True
 
-6️⃣ Testing Django setup...
-   ✅ Django setup completed
+6⃣ Testing Django setup...
+Django setup completed
 
-7️⃣ Testing management commands...
-   ✅ System check passed
+7⃣ Testing management commands...
+System check passed
 
-8️⃣ Testing database connection...
-   ✅ Database connection successful
+8⃣ Testing database connection...
+Database connection successful
 
-🎉 Django startup test completed successfully!
+Django startup test completed successfully!
 ```
 
 #### **Run Database Migrations:**
@@ -224,28 +224,28 @@ python manage.py runserver
 
 ---
 
-## 🛠️ **TROUBLESHOOTING**
+## **TROUBLESHOOTING**
 
 ### **Common Issues & Solutions**
 
-#### **❌ "ModuleNotFoundError: No module named 'pkg_resources'"**
+#### ** "ModuleNotFoundError: No module named 'pkg_resources'"**
 **Solution:**
 ```cmd
 pip install setuptools wheel
 python windows_fix_install.py
 ```
 
-#### **❌ NumPy compilation errors (C compiler not found)**
+#### ** NumPy compilation errors (C compiler not found)**
 **Solution:**
 ```cmd
 # Use binary wheels only
 pip install --only-binary=all numpy pandas
 ```
 
-#### **❌ "Unable to configure handler 'file'"**
+#### ** "Unable to configure handler 'file'"**
 **Solution:** Fixed automatically by our logging configuration
 
-#### **❌ Virtual environment not activating**
+#### ** Virtual environment not activating**
 **Solution:**
 ```cmd
 # Try PowerShell instead of Command Prompt
@@ -253,14 +253,14 @@ pip install --only-binary=all numpy pandas
 C:\path\to\project\venv\Scripts\activate
 ```
 
-#### **❌ Permission errors during installation**
+#### ** Permission errors during installation**
 **Solution:**
 ```cmd
 # Run as administrator or use user install
 pip install --user -r requirements-windows.txt
 ```
 
-#### **❌ Django migration errors (Celery Beat tables)**
+#### ** Django migration errors (Celery Beat tables)**
 **Solution:**
 ```cmd
 # Use our migration runner (handles order correctly)
@@ -289,52 +289,52 @@ python manage.py migrate
 
 ---
 
-## 📁 **PROJECT STRUCTURE**
+## **PROJECT STRUCTURE**
 
 ```
 stock-scanner-complete/
-├── 📁 core/                 # Main Django app
-├── 📁 stocks/               # Stock data management
-├── 📁 emails/               # Email notifications
-├── 📁 news/                 # News scraping
-├── 📁 stockscanner_django/  # Django project settings
-├── 📄 manage.py             # Django management script
-├── 📄 requirements.txt      # Python packages
-├── 📄 requirements-windows.txt  # Windows-safe packages
-├── 📄 windows_fix_install.py   # Windows installer
-├── 📄 test_django_startup.py   # Django test script
-├── 📄 run_migrations.py        # Migration runner (fixes Celery Beat)
-└── 📄 .env.example         # Environment variables template
+core/ # Main Django app
+stocks/ # Stock data management
+emails/ # Email notifications
+news/ # News scraping
+stockscanner_django/ # Django project settings
+manage.py # Django management script
+requirements.txt # Python packages
+requirements-windows.txt # Windows-safe packages
+windows_fix_install.py # Windows installer
+test_django_startup.py # Django test script
+run_migrations.py # Migration runner (fixes Celery Beat)
+.env.example # Environment variables template
 ```
 
 ---
 
-## ⚙️ **CONFIGURATION**
+## **CONFIGURATION**
 
 ### **Environment Variables**
 
 1. **Copy environment template:**
-   ```cmd
-   copy .env.example .env
-   ```
+```cmd
+copy .env.example .env
+```
 
 2. **Edit .env file** with your API keys:
-   ```
-   # Yahoo Finance (Primary - Free)
-   YFINANCE_RATE_LIMIT=1.0
-   
-   # Finnhub (Backup)
-   FINNHUB_API_KEY_1=your_finnhub_key_here
-   FINNHUB_API_KEY_2=your_second_finnhub_key_here
-   
-   # Database (Development uses SQLite by default)
-   # DATABASE_URL=postgresql://user:pass@localhost/dbname
-   
-   # WordPress Integration (Optional)
-   WORDPRESS_SITE_URL=https://yoursite.com
-   WORDPRESS_USERNAME=your_username
-   WORDPRESS_PASSWORD=your_app_password
-   ```
+```
+# Yahoo Finance (Primary - Free)
+YFINANCE_RATE_LIMIT=1.0
+
+# Finnhub (Backup)
+FINNHUB_API_KEY_1=your_finnhub_key_here
+FINNHUB_API_KEY_2=your_second_finnhub_key_here
+
+# Database (Development uses SQLite by default)
+# DATABASE_URL=postgresql://user:pass@localhost/dbname
+
+# WordPress Integration (Optional)
+WORDPRESS_SITE_URL=https://yoursite.com
+WORDPRESS_USERNAME=your_username
+WORDPRESS_PASSWORD=your_app_password
+```
 
 ### **API Keys Setup**
 
@@ -377,7 +377,7 @@ python -c "from stocks.api_manager import stock_manager; print(stock_manager.get
 
 ---
 
-## 🚀 **DEVELOPMENT WORKFLOW**
+## **DEVELOPMENT WORKFLOW**
 
 ### **Daily Development**
 ```cmd
@@ -414,7 +414,7 @@ python manage.py collectstatic
 
 ---
 
-## 📊 **PERFORMANCE OPTIMIZATION**
+## **PERFORMANCE OPTIMIZATION**
 
 ### **Rate Limiting Optimization**
 ```cmd
@@ -430,7 +430,7 @@ python apply_yfinance_migrations.py
 
 ---
 
-## 🔒 **SECURITY NOTES**
+## **SECURITY NOTES**
 
 - Never commit `.env` file to Git
 - Use strong passwords for database and admin accounts
@@ -440,7 +440,7 @@ python apply_yfinance_migrations.py
 
 ---
 
-## 📞 **SUPPORT**
+## **SUPPORT**
 
 ### **Getting Help**
 
@@ -453,37 +453,37 @@ python apply_yfinance_migrations.py
 
 ```cmd
 # Virtual Environment
-venv\Scripts\activate              # Activate
-venv\Scripts\deactivate           # Deactivate
+venv\Scripts\activate # Activate
+venv\Scripts\deactivate # Deactivate
 
 # Django Management
-python manage.py runserver         # Start development server
-python manage.py migrate          # Apply database migrations
-python manage.py createsuperuser  # Create admin user
-python manage.py collectstatic    # Collect static files
-python manage.py shell           # Django shell
+python manage.py runserver # Start development server
+python manage.py migrate # Apply database migrations
+python manage.py createsuperuser # Create admin user
+python manage.py collectstatic # Collect static files
+python manage.py shell # Django shell
 
 # Package Management
-pip install package_name          # Install package
-pip install -r requirements.txt   # Install from requirements
-pip freeze > requirements.txt     # Save current packages
-pip list                          # List installed packages
+pip install package_name # Install package
+pip install -r requirements.txt # Install from requirements
+pip freeze > requirements.txt # Save current packages
+pip list # List installed packages
 ```
 
 ---
 
-## 🎉 **SUCCESS!**
+## **SUCCESS!**
 
 If you've followed this guide, you should now have:
 
-✅ **Working Django development server**  
-✅ **Stock data API integration**  
-✅ **Database connectivity**  
-✅ **Web interface accessible**  
-✅ **All Windows compatibility issues resolved**  
+**Working Django development server** 
+**Stock data API integration** 
+**Database connectivity** 
+**Web interface accessible** 
+**All Windows compatibility issues resolved** 
 
-**🌐 Access your platform at: http://localhost:8000**
+** Access your platform at: http://localhost:8000**
 
 ---
 
-**Happy coding! 🚀**
+**Happy coding! **

@@ -10,93 +10,93 @@ import sys
 from pathlib import Path
 
 def main():
-    print("🔧 Stock Scanner Database Setup")
-    print("=" * 40)
-    
-    # Check if .env already exists
-    if Path(".env").exists():
-        overwrite = input("\n⚠️  .env file already exists. Overwrite? (y/n): ").strip().lower()
-        if overwrite != 'y':
-            print("❌ Setup cancelled.")
-            return
-    
-    print("\n🐘 PostgreSQL Database Setup")
-    print("-" * 30)
-    
-    # Get database credentials interactively
-    print("Please enter your PostgreSQL database credentials:")
-    
-    host = input("🌐 Database host (default: 127.0.0.1): ").strip() or "127.0.0.1"
-    port = input("🔌 Database port (default: 5432): ").strip() or "5432"
-    database = input("📊 Database name (default: stockscanner_db): ").strip() or "stockscanner_db"
-    username = input("👤 Database username (default: postgres): ").strip() or "postgres"
-    
-    # Get password securely (hidden input)
-    print("🔐 Database password:")
-    password = getpass.getpass("Password: ")
-    
-    if not password:
-        print("❌ Password is required!")
-        return
-    
-    # Confirm password
-    password_confirm = getpass.getpass("Confirm password: ")
-    if password != password_confirm:
-        print("❌ Passwords don't match!")
-        return
-    
-    # Test connection before saving
-    print("\n🔍 Testing database connection...")
-    if test_connection(host, port, database, username, password):
-        print("✅ Database connection successful!")
-        create_env_file(host, port, database, username, password)
-    else:
-        print("❌ Database connection failed!")
-        retry = input("Would you like to try again? (y/n): ").strip().lower()
-        if retry == 'y':
-            main()
-        else:
-            print("Setup cancelled.")
+print(" Stock Scanner Database Setup")
+print("=" * 40)
+
+# Check if .env already exists
+if Path(".env").exists():
+overwrite = input("\n .env file already exists. Overwrite? (y/n): ").strip().lower()
+if overwrite != 'y':
+print(" Setup cancelled.")
+return
+
+print("\n PostgreSQL Database Setup")
+print("-" * 30)
+
+# Get database credentials interactively
+print("Please enter your PostgreSQL database credentials:")
+
+host = input(" Database host (default: 127.0.0.1): ").strip() or "127.0.0.1"
+port = input(" Database port (default: 5432): ").strip() or "5432"
+database = input(" Database name (default: stockscanner_db): ").strip() or "stockscanner_db"
+username = input(" Database username (default: postgres): ").strip() or "postgres"
+
+# Get password securely (hidden input)
+print(" Database password:")
+password = getpass.getpass("Password: ")
+
+if not password:
+print(" Password is required!")
+return
+
+# Confirm password
+password_confirm = getpass.getpass("Confirm password: ")
+if password != password_confirm:
+print(" Passwords don't match!")
+return
+
+# Test connection before saving
+print("\n Testing database connection...")
+if test_connection(host, port, database, username, password):
+print(" Database connection successful!")
+create_env_file(host, port, database, username, password)
+else:
+print(" Database connection failed!")
+retry = input("Would you like to try again? (y/n): ").strip().lower()
+if retry == 'y':
+main()
+else:
+print("Setup cancelled.")
 
 def test_connection(host, port, database, username, password):
-    """Test PostgreSQL connection"""
-    try:
-        import psycopg2
-        
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            database=database,
-            user=username,
-            password=password,
-            connect_timeout=10
-        )
-        
-        cursor = conn.cursor()
-        cursor.execute("SELECT version();")
-        version = cursor.fetchone()
-        print(f"📋 PostgreSQL Version: {version[0][:50]}...")
-        
-        cursor.close()
-        conn.close()
-        return True
-        
-    except ImportError:
-        print("⚠️  psycopg2 not installed. Install with: pip install psycopg2-binary")
-        return False
-    except Exception as e:
-        print(f"❌ Connection error: {e}")
-        print("\n💡 Troubleshooting tips:")
-        print("- Make sure PostgreSQL is running")
-        print("- Check if the database exists")
-        print("- Verify username and password")
-        print("- Check if PostgreSQL accepts connections on the specified host/port")
-        return False
+"""Test PostgreSQL connection"""
+try:
+import psycopg2
+
+conn = psycopg2.connect(
+host=host,
+port=port,
+database=database,
+user=username,
+password=password,
+connect_timeout=10
+)
+
+cursor = conn.cursor()
+cursor.execute("SELECT version();")
+version = cursor.fetchone()
+print(f" PostgreSQL Version: {version[0][:50]}...")
+
+cursor.close()
+conn.close()
+return True
+
+except ImportError:
+print(" psycopg2 not installed. Install with: pip install psycopg2-binary")
+return False
+except Exception as e:
+print(f" Connection error: {e}")
+print("\n Troubleshooting tips:")
+print("- Make sure PostgreSQL is running")
+print("- Check if the database exists")
+print("- Verify username and password")
+print("- Check if PostgreSQL accepts connections on the specified host/port")
+return False
 
 def create_env_file(host, port, database, username, password):
-    """Create .env file with database configuration"""
-    
-    env_content = f"""# =============================================================================
+"""Create .env file with database configuration"""
+
+env_content = f"""# =============================================================================
 # STOCK SCANNER - GIT BASH ENVIRONMENT CONFIGURATION
 # =============================================================================
 # Generated by setup_database_interactive.py
@@ -195,41 +195,41 @@ HEALTH_CHECK_ENABLED=True
 MONITORING_ENABLED=True
 """
 
-    # Write .env file
-    env_path = Path(".env")
-    with open(env_path, "w") as f:
-        f.write(env_content)
-    
-    print(f"\n✅ Created .env file with PostgreSQL configuration")
-    print(f"📁 File location: {env_path.absolute()}")
-    
-    # Show next steps
-    print(f"\n🚀 Next steps:")
-    print("1. Run: python manage.py migrate")
-    print("2. Run: python manage.py createsuperuser")
-    print("3. Run: python manage.py runserver")
-    print("\n🔐 Security Note:")
-    print("Your database password is now stored in .env file.")
-    print("Make sure .env is in your .gitignore to keep it secure!")
+# Write .env file
+env_path = Path(".env")
+with open(env_path, "w") as f:
+f.write(env_content)
+
+print(f"\n Created .env file with PostgreSQL configuration")
+print(f" File location: {env_path.absolute()}")
+
+# Show next steps
+print(f"\n Next steps:")
+print("1. Run: python manage.py migrate")
+print("2. Run: python manage.py createsuperuser")
+print("3. Run: python manage.py runserver")
+print("\n Security Note:")
+print("Your database password is now stored in .env file.")
+print("Make sure .env is in your .gitignore to keep it secure!")
 
 def show_usage():
-    """Show usage instructions"""
-    print("\n📋 Usage:")
-    print("python setup_database_interactive.py")
-    print("\nThis script will:")
-    print("• Prompt for PostgreSQL database credentials")
-    print("• Test the database connection")
-    print("• Create a .env file with your settings")
-    print("• Keep your password secure")
+"""Show usage instructions"""
+print("\n Usage:")
+print("python setup_database_interactive.py")
+print("\nThis script will:")
+print("• Prompt for PostgreSQL database credentials")
+print("• Test the database connection")
+print("• Create a .env file with your settings")
+print("• Keep your password secure")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help', 'help']:
-        show_usage()
-    else:
-        try:
-            main()
-        except KeyboardInterrupt:
-            print("\n\n❌ Setup cancelled by user.")
-        except Exception as e:
-            print(f"\n❌ Error: {e}")
-            print("Please try again or check your PostgreSQL installation.")
+if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help', 'help']:
+show_usage()
+else:
+try:
+main()
+except KeyboardInterrupt:
+print("\n\n Setup cancelled by user.")
+except Exception as e:
+print(f"\n Error: {e}")
+print("Please try again or check your PostgreSQL installation.")

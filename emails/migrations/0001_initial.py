@@ -5,30 +5,30 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    initial = True
+initial = True
 
-    dependencies = []
+dependencies = []
 
-    operations = [
-        migrations.CreateModel(
-            name="StockAlert",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("ticker", models.CharField(max_length=10)),
-                ("note", models.CharField(max_length=255)),
-                ("current_price", models.DecimalField(decimal_places=2, max_digits=10)),
-                ("volume_today", models.BigIntegerField()),
-                ("dvav", models.DecimalField(decimal_places=2, max_digits=10)),
-                ("dvsa", models.DecimalField(decimal_places=2, max_digits=10)),
-                ("sent", models.BooleanField(default=False)),
-            ],
-        ),
-    ]
+operations = [
+migrations.CreateModel(
+name="StockAlert",
+fields=[
+(
+"id",
+models.BigAutoField(
+auto_created=True,
+primary_key=True,
+serialize=False,
+verbose_name="ID",
+),
+),
+("ticker", models.CharField(max_length=10)),
+("note", models.CharField(max_length=255)),
+("current_price", models.DecimalField(decimal_places=2, max_digits=10)),
+("volume_today", models.BigIntegerField()),
+("dvav", models.DecimalField(decimal_places=2, max_digits=10)),
+("dvsa", models.DecimalField(decimal_places=2, max_digits=10)),
+("sent", models.BooleanField(default=False)),
+],
+),
+]

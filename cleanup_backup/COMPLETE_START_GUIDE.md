@@ -1,6 +1,6 @@
-# 🚀 Complete Yahoo Finance API Optimizer Start Guide
+# Complete Yahoo Finance API Optimizer Start Guide
 
-## 📋 Table of Contents
+## Table of Contents
 1. [Prerequisites & System Setup](#prerequisites--system-setup)
 2. [Repository Setup](#repository-setup)
 3. [Environment Configuration](#environment-configuration)
@@ -81,7 +81,7 @@ pip --version
 sudo apt install git
 
 # CentOS/RHEL/Fedora
-sudo dnf install git  # or sudo yum install git
+sudo dnf install git # or sudo yum install git
 ```
 
 #### macOS:
@@ -99,13 +99,13 @@ Download and install from: https://git-scm.com/download/win
 ### Step 4: Verify Prerequisites
 ```bash
 # Check all required tools
-python3 --version    # Should be 3.7+
-pip3 --version       # Should be present
-git --version        # Should be present
+python3 --version # Should be 3.7+
+pip3 --version # Should be present
+git --version # Should be present
 
 # Check internet connectivity
-ping -c 4 google.com  # Linux/macOS
-ping google.com       # Windows
+ping -c 4 google.com # Linux/macOS
+ping google.com # Windows
 ```
 
 ---
@@ -115,8 +115,8 @@ ping google.com       # Windows
 ### Step 5: Clone the Repository
 ```bash
 # Navigate to your desired directory
-cd ~/Projects  # Linux/macOS
-cd C:\Projects  # Windows
+cd ~/Projects # Linux/macOS
+cd C:\Projects # Windows
 
 # Clone the repository
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
@@ -125,8 +125,8 @@ git clone https://github.com/Toasterfire-come/stock-scanner-complete.git
 cd stock-scanner-complete
 
 # Verify you're in the right directory
-ls -la  # Linux/macOS
-dir     # Windows
+ls -la # Linux/macOS
+dir # Windows
 
 # You should see files like README.md, manage.py, requirements.txt
 ```
@@ -147,8 +147,8 @@ yahoo_optimizer_env\Scripts\activate.bat
 yahoo_optimizer_env\Scripts\Activate.ps1
 
 # Verify activation (you should see (yahoo_optimizer_env) in your prompt)
-which python  # Linux/macOS
-where python  # Windows
+which python # Linux/macOS
+where python # Windows
 ```
 
 ### Step 7: Install Required Dependencies
@@ -180,8 +180,8 @@ mkdir -p logs
 mkdir -p results
 
 # Verify directory structure
-ls -la  # Linux/macOS
-dir     # Windows
+ls -la # Linux/macOS
+dir # Windows
 ```
 
 ### Step 9: Set File Permissions (Linux/macOS only)
@@ -201,7 +201,7 @@ import requests
 import json
 import time
 import statistics
-print('✅ All core modules imported successfully')
+print(' All core modules imported successfully')
 "
 ```
 
@@ -222,19 +222,19 @@ python scripts/utils/yahoo_finance_api_optimizer_v2.py
 You should see output like:
 ```
 ======================================================================
-🚀 ENHANCED YAHOO FINANCE API OPTIMIZER v2.0
+ENHANCED YAHOO FINANCE API OPTIMIZER v2.0
 ======================================================================
 Testing 4 delay configurations with 50 requests each
 User Agents: 20 rotating agents
 Test Symbols: 42 symbols
 ======================================================================
 
-📊 TEST 1/4: Delay 0.5s
+TEST 1/4: Delay 0.5s
 --------------------------------------------------
-🌐 Testing direct requests with 0.5s delay, 50 requests...
-   Progress: 1/50 | Success Rate: 100.0%
-   Progress: 10/50 | Success Rate: 90.0%
-   Progress: 20/50 | Success Rate: 85.0%
+Testing direct requests with 0.5s delay, 50 requests...
+Progress: 1/50 | Success Rate: 100.0%
+Progress: 10/50 | Success Rate: 90.0%
+Progress: 20/50 | Success Rate: 85.0%
 ```
 
 ### Step 13: Wait for Completion
@@ -244,8 +244,8 @@ Total expected runtime: 5-10 minutes depending on your internet connection.
 ### Step 14: Check Results Location
 After completion, you'll see:
 ```
-💾 Results saved to: yahoo_finance_api_test_results_20240123_143022.json
-🎉 Testing completed successfully!
+Results saved to: yahoo_finance_api_test_results_20240123_143022.json
+Testing completed successfully!
 ```
 
 ---
@@ -255,14 +255,14 @@ After completion, you'll see:
 ### Step 15: Review the Generated Report
 The optimizer will display a comprehensive report:
 ```
-📈 COMPREHENSIVE TEST RESULTS
+COMPREHENSIVE TEST RESULTS
 ======================================================================
-Delay  0.5s:   78.0% success |  1.45 RPS | Quality: 0.89 | Avg Time:  245ms
-Delay  1.0s:   92.0% success |  0.98 RPS | Quality: 0.91 | Avg Time:  198ms
-Delay  1.5s:   96.0% success |  0.66 RPS | Quality: 0.93 | Avg Time:  167ms
-Delay  2.0s:   98.0% success |  0.49 RPS | Quality: 0.94 | Avg Time:  152ms
+Delay 0.5s: 78.0% success | 1.45 RPS | Quality: 0.89 | Avg Time: 245ms
+Delay 1.0s: 92.0% success | 0.98 RPS | Quality: 0.91 | Avg Time: 198ms
+Delay 1.5s: 96.0% success | 0.66 RPS | Quality: 0.93 | Avg Time: 167ms
+Delay 2.0s: 98.0% success | 0.49 RPS | Quality: 0.94 | Avg Time: 152ms
 
-🏆 OPTIMAL CONFIGURATION
+OPTIMAL CONFIGURATION
 --------------------------------------------------
 Best Delay: 1.5s
 Success Rate: 96.0%
@@ -302,33 +302,33 @@ import time
 import random
 
 class YahooFinanceAPI:
-    def __init__(self, delay=1.5):  # Use your optimal delay
-        self.delay = delay
-        self.session = requests.Session()
-        self.user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            # Add more user agents from the optimizer
-        ]
-    
-    def get_stock_data(self, symbol):
-        # Rotate user agent
-        self.session.headers.update({
-            'User-Agent': random.choice(self.user_agents)
-        })
-        
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-        response = self.session.get(url, timeout=15)
-        
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception(f"API call failed: {response.status_code}")
-    
-    def wait_between_requests(self):
-        time.sleep(self.delay)
+def __init__(self, delay=1.5): # Use your optimal delay
+self.delay = delay
+self.session = requests.Session()
+self.user_agents = [
+'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+# Add more user agents from the optimizer
+]
+
+def get_stock_data(self, symbol):
+# Rotate user agent
+self.session.headers.update({
+'User-Agent': random.choice(self.user_agents)
+})
+
+url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+response = self.session.get(url, timeout=15)
+
+if response.status_code == 200:
+return response.json()
+else:
+raise Exception(f"API call failed: {response.status_code}")
+
+def wait_between_requests(self):
+time.sleep(self.delay)
 
 # Usage example
-api = YahooFinanceAPI(delay=1.5)  # Use your optimal delay
+api = YahooFinanceAPI(delay=1.5) # Use your optimal delay
 data = api.get_stock_data('AAPL')
 api.wait_between_requests()
 ```
@@ -344,26 +344,26 @@ import json
 from datetime import datetime
 
 def test_api_health():
-    try:
-        url = "https://query1.finance.yahoo.com/v8/finance/chart/AAPL"
-        response = requests.get(url, timeout=10)
-        
-        result = {
-            'timestamp': datetime.now().isoformat(),
-            'status_code': response.status_code,
-            'response_time': response.elapsed.total_seconds(),
-            'success': response.status_code == 200
-        }
-        
-        print(json.dumps(result, indent=2))
-        return result['success']
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
+try:
+url = "https://query1.finance.yahoo.com/v8/finance/chart/AAPL"
+response = requests.get(url, timeout=10)
+
+result = {
+'timestamp': datetime.now().isoformat(),
+'status_code': response.status_code,
+'response_time': response.elapsed.total_seconds(),
+'success': response.status_code == 200
+}
+
+print(json.dumps(result, indent=2))
+return result['success']
+
+except Exception as e:
+print(f"Error: {e}")
+return False
 
 if __name__ == "__main__":
-    test_api_health()
+test_api_health()
 EOF
 
 chmod +x monitor_api_health.py
@@ -464,15 +464,15 @@ You can modify the optimizer for your specific needs:
 ```python
 # Edit the script to change default settings
 optimizer = EnhancedYahooAPIOptimizer(
-    timeout=20,          # Increase timeout for slow connections
-    max_retries=5,       # More retries for unreliable connections
-    pool_size=20         # Larger pool for high-volume applications
+timeout=20, # Increase timeout for slow connections
+max_retries=5, # More retries for unreliable connections
+pool_size=20 # Larger pool for high-volume applications
 )
 
 # Custom delay testing
 results = optimizer.run_comprehensive_test(
-    delays=[0.3, 0.7, 1.2, 2.5],  # Your custom delays
-    num_requests=100               # More requests for better accuracy
+delays=[0.3, 0.7, 1.2, 2.5], # Your custom delays
+num_requests=100 # More requests for better accuracy
 )
 ```
 
@@ -497,12 +497,12 @@ chmod +x daily_api_test.sh
 ```python
 # In your Django settings.py
 YAHOO_API_CONFIG = {
-    'delay': 1.5,  # From your test results
-    'timeout': 15,
-    'max_retries': 3,
-    'user_agents': [
-        # Copy user agents from optimizer results
-    ]
+'delay': 1.5, # From your test results
+'timeout': 15,
+'max_retries': 3,
+'user_agents': [
+# Copy user agents from optimizer results
+]
 }
 
 # In your Django app
@@ -511,13 +511,13 @@ import requests
 import time
 
 class YahooFinanceService:
-    def __init__(self):
-        self.config = settings.YAHOO_API_CONFIG
-        self.session = requests.Session()
-    
-    def fetch_stock_data(self, symbol):
-        # Implementation using your optimized settings
-        pass
+def __init__(self):
+self.config = settings.YAHOO_API_CONFIG
+self.session = requests.Session()
+
+def fetch_stock_data(self, symbol):
+# Implementation using your optimized settings
+pass
 ```
 
 ### Step 26: Production Monitoring Setup
@@ -529,44 +529,44 @@ import json
 from datetime import datetime, timedelta
 
 def create_health_report():
-    """Generate API health report"""
-    test_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
-    results = []
-    
-    for symbol in test_symbols:
-        start_time = time.time()
-        try:
-            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-            response = requests.get(url, timeout=10)
-            
-            results.append({
-                'symbol': symbol,
-                'status': 'success' if response.status_code == 200 else 'failed',
-                'response_time': time.time() - start_time,
-                'status_code': response.status_code
-            })
-        except Exception as e:
-            results.append({
-                'symbol': symbol,
-                'status': 'error',
-                'error': str(e),
-                'response_time': time.time() - start_time
-            })
-    
-    return {
-        'timestamp': datetime.now().isoformat(),
-        'overall_health': all(r['status'] == 'success' for r in results),
-        'test_results': results
-    }
+"""Generate API health report"""
+test_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
+results = []
+
+for symbol in test_symbols:
+start_time = time.time()
+try:
+url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+response = requests.get(url, timeout=10)
+
+results.append({
+'symbol': symbol,
+'status': 'success' if response.status_code == 200 else 'failed',
+'response_time': time.time() - start_time,
+'status_code': response.status_code
+})
+except Exception as e:
+results.append({
+'symbol': symbol,
+'status': 'error',
+'error': str(e),
+'response_time': time.time() - start_time
+})
+
+return {
+'timestamp': datetime.now().isoformat(),
+'overall_health': all(r['status'] == 'success' for r in results),
+'test_results': results
+}
 
 if __name__ == "__main__":
-    report = create_health_report()
-    print(json.dumps(report, indent=2))
+report = create_health_report()
+print(json.dumps(report, indent=2))
 ```
 
 ---
 
-## 🎯 Quick Start Summary
+## Quick Start Summary
 
 For users who want to get started immediately:
 
@@ -581,7 +581,7 @@ For users who want to get started immediately:
 
 ---
 
-## 📞 Support
+## Support
 
 If you encounter any issues:
 
@@ -593,7 +593,7 @@ If you encounter any issues:
 
 ---
 
-## 🔄 Updates and Maintenance
+## Updates and Maintenance
 
 ### Keep Your Optimizer Updated:
 ```bash
@@ -614,6 +614,6 @@ python scripts/utils/yahoo_finance_api_optimizer_v2.py
 
 ---
 
-**✅ You're now ready to use the Yahoo Finance API Optimizer in production!**
+** You're now ready to use the Yahoo Finance API Optimizer in production!**
 
 Remember: The optimal delay from your test results is your key to reliable, high-quality data extraction from Yahoo Finance.

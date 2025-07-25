@@ -1,8 +1,8 @@
-# 🚀 Stock Scanner Git Bash Production Guide
+# Stock Scanner Git Bash Production Guide
 
 This guide covers setting up and deploying the Stock Scanner Django application using Git Bash on Windows for both development and production workflows.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - **Windows 10/11** with Git Bash installed
 - **Python 3.8+** accessible from Git Bash
@@ -11,7 +11,7 @@ This guide covers setting up and deploying the Stock Scanner Django application 
 
 ---
 
-## 🖥️ Part 1: Git Bash Development Setup
+## Part 1: Git Bash Development Setup
 
 ### Step 1: Initial Setup
 
@@ -51,7 +51,7 @@ curl http://127.0.0.1:8000/api/simple/status/
 
 ---
 
-## 🌐 Part 2: Git Bash Production Workflow
+## Part 2: Git Bash Production Workflow
 
 ### Option A: Windows Server Production (Git Bash)
 
@@ -71,7 +71,7 @@ ssh administrator@your-windows-server
 
 ```bash
 # On the Windows server, using Git Bash
-cd /c/inetpub/wwwroot/  # or your preferred directory
+cd /c/inetpub/wwwroot/ # or your preferred directory
 git clone https://github.com/Toasterfire-come/stock-scanner-complete.git stockscanner
 cd stockscanner
 
@@ -79,7 +79,7 @@ cd stockscanner
 cp .env.gitbash .env
 
 # Edit .env for production
-nano .env  # or use notepad .env
+nano .env # or use notepad .env
 ```
 
 **Production .env settings:**
@@ -87,7 +87,7 @@ nano .env  # or use notepad .env
 DEBUG=False
 SECRET_KEY=your-super-secret-production-key
 ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com,your-server-ip
-DATABASE_URL=sqlite:///production.db  # or MySQL if available
+DATABASE_URL=sqlite:///production.db # or MySQL if available
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
@@ -105,7 +105,7 @@ source venv/Scripts/activate
 
 # Install dependencies
 pip install -r requirements.txt
-pip install gunicorn  # for production server
+pip install gunicorn # for production server
 
 # Setup database
 python manage.py migrate
@@ -184,7 +184,7 @@ cp .env.gitbash .env
 
 ---
 
-## 🔄 Part 3: Git Bash Development Workflow
+## Part 3: Git Bash Development Workflow
 
 ### Daily Development Routine
 
@@ -242,19 +242,19 @@ print(f'Total stocks: {Stock.objects.count()}')
 
 ---
 
-## 🛠️ Part 4: Git Bash Production Tools
+## Part 4: Git Bash Production Tools
 
 ### Environment Management
 
 ```bash
 # Create different environment files
 cp .env.gitbash .env.development
-cp .env.gitbash .env.staging  
+cp .env.gitbash .env.staging 
 cp .env.gitbash .env.production
 
 # Switch environments
-cp .env.development .env  # for development
-cp .env.production .env   # for production
+cp .env.development .env # for development
+cp .env.production .env # for production
 ```
 
 ### Deployment Scripts
@@ -263,7 +263,7 @@ Create `deploy.sh` for easy deployment:
 
 ```bash
 #!/bin/bash
-echo "🚀 Deploying Stock Scanner..."
+echo " Deploying Stock Scanner..."
 
 # Activate virtual environment
 source venv/Scripts/activate
@@ -283,8 +283,8 @@ python manage.py collectstatic --noinput
 # Test deployment
 python manage.py check --deploy
 
-echo "✅ Deployment complete!"
-echo "🌐 Start server with: python manage.py runserver"
+echo " Deployment complete!"
+echo " Start server with: python manage.py runserver"
 ```
 
 Make it executable:
@@ -299,32 +299,32 @@ Create `monitor.sh`:
 
 ```bash
 #!/bin/bash
-echo "📊 Stock Scanner Status"
+echo " Stock Scanner Status"
 echo "======================="
 
 # Check if server is running
 if curl -s http://127.0.0.1:8000/api/simple/status/ > /dev/null; then
-    echo "✅ Server: Running"
+echo " Server: Running"
 else
-    echo "❌ Server: Not running"
+echo " Server: Not running"
 fi
 
 # Check API endpoints
-echo "🔗 Testing API endpoints:"
-curl -s http://127.0.0.1:8000/api/simple/status/ | jq '.status' || echo "❌ Status API failed"
+echo " Testing API endpoints:"
+curl -s http://127.0.0.1:8000/api/simple/status/ | jq '.status' || echo " Status API failed"
 
 # Check database
 python manage.py shell -c "
 from stocks.models import Stock
-print(f'📊 Stocks in database: {Stock.objects.count()}')
-" 2>/dev/null || echo "❌ Database connection failed"
+print(f' Stocks in database: {Stock.objects.count()}')
+" 2>/dev/null || echo " Database connection failed"
 
 echo "======================="
 ```
 
 ---
 
-## 🌐 Part 5: WordPress Integration (Git Bash)
+## Part 5: WordPress Integration (Git Bash)
 
 ### Local WordPress Testing
 
@@ -334,7 +334,7 @@ echo "======================="
 
 # Test API connection from WordPress
 curl -X POST -d "url=http://127.0.0.1:8000/api/simple/stocks/" \
-  http://your-wordpress-site/wp-admin/admin-ajax.php
+http://your-wordpress-site/wp-admin/admin-ajax.php
 ```
 
 ### Production WordPress Integration
@@ -346,13 +346,13 @@ curl -X POST -d "url=http://127.0.0.1:8000/api/simple/stocks/" \
 # Development
 $api_url = 'http://127.0.0.1:8000/api/simple/';
 
-# Production  
+# Production 
 $api_url = 'https://yourdomain.com/api/simple/';
 ```
 
 ---
 
-## 📊 Part 6: Git Bash Performance Optimization
+## Part 6: Git Bash Performance Optimization
 
 ### Windows-Specific Optimizations
 
@@ -364,10 +364,10 @@ powershell "Get-Counter '\Process(python)\% Processor Time'"
 
 # Optimize Django for Windows
 # Add to settings.py:
-if os.name == 'nt':  # Windows
-    DATABASES['default']['OPTIONS'] = {
-        'timeout': 20,
-    }
+if os.name == 'nt': # Windows
+DATABASES['default']['OPTIONS'] = {
+'timeout': 20,
+}
 ```
 
 ### Git Bash Memory Management
@@ -387,7 +387,7 @@ find . -name "__pycache__" -type d -exec rm -rf {} +
 
 ---
 
-## 🔧 Part 7: Troubleshooting (Git Bash)
+## Part 7: Troubleshooting (Git Bash)
 
 ### Common Git Bash Issues
 
@@ -398,7 +398,7 @@ which python
 which pip
 
 # Fix if needed
-export PATH="/c/Python39:$PATH"  # Adjust for your Python version
+export PATH="/c/Python39:$PATH" # Adjust for your Python version
 ```
 
 **2. Virtual Environment Issues**
@@ -443,7 +443,7 @@ python manage.py migrate
 
 ---
 
-## 🎯 Git Bash Production Checklist
+## Git Bash Production Checklist
 
 ### Development Ready
 - [ ] Git Bash installed and configured
@@ -455,7 +455,7 @@ python manage.py migrate
 - [ ] Development server running on port 8000
 - [ ] API endpoints tested and working
 
-### Production Ready  
+### Production Ready 
 - [ ] Production environment file configured
 - [ ] DEBUG=False in production
 - [ ] SECRET_KEY generated for production
@@ -476,7 +476,7 @@ python manage.py migrate
 
 ---
 
-## 🌟 Git Bash Advantages
+## Git Bash Advantages
 
 ### Why Git Bash for Stock Scanner?
 
@@ -507,16 +507,16 @@ find . -name "*.py"
 
 ---
 
-## 🎉 You're Ready for Git Bash Production!
+## You're Ready for Git Bash Production!
 
 Your Stock Scanner is now optimized for Git Bash development and production workflows:
 
-- ✅ **Development**: One-command setup and testing
-- ✅ **Production**: Multiple deployment options
-- ✅ **WordPress**: Ready for integration
-- ✅ **Monitoring**: Built-in health checks
-- ✅ **Deployment**: Automated scripts and workflows
+- **Development**: One-command setup and testing
+- **Production**: Multiple deployment options
+- **WordPress**: Ready for integration
+- **Monitoring**: Built-in health checks
+- **Deployment**: Automated scripts and workflows
 
-**Start developing**: `./start_django_gitbash.sh`  
-**Deploy to production**: Follow the deployment section for your hosting choice  
+**Start developing**: `./start_django_gitbash.sh` 
+**Deploy to production**: Follow the deployment section for your hosting choice 
 **Integrate with WordPress**: Use the examples in `WORDPRESS_INTEGRATION_GUIDE.md`

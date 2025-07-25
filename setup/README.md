@@ -7,7 +7,7 @@ This directory contains all installation and setup scripts.
 
 ## Windows Setup
 - **windows/** - Windows-specific setup scripts
-- **mysql/** - MySQL database setup scripts  
+- **mysql/** - MySQL database setup scripts 
 - **requirements/** - Python package installation scripts
 
 ## Usage

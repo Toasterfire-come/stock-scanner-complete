@@ -1,8 +1,8 @@
-# 🚀 Stock Scanner - Git Bash Complete
+# Stock Scanner - Git Bash Complete
 
 **One Command Setup: `./start_django_gitbash.sh`**
 
-## 🎯 Quick Start (Git Bash)
+## Quick Start (Git Bash)
 
 ```bash
 # Clone the repository
@@ -18,81 +18,81 @@ cd stock-scanner-complete
 - **Admin Panel**: http://127.0.0.1:8000/admin/
 - **Login**: admin / admin123
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 stock-scanner/
-├── 🚀 start_django_gitbash.sh      # Git Bash setup & launcher (START HERE!)
-├── ⚙️ .env.gitbash                 # Environment template
-├── 📊 manage.py                    # Django management
-├── 📋 requirements.txt             # Dependencies
-│
-├── 📂 stocks/                      # Stock data application
-├── 📂 news/                        # News scraping & sentiment
-├── 📂 core/                        # Core Django functionality
-├── 📂 emails/                      # Email notifications
-├── 📂 data/nasdaq_only/            # NASDAQ ticker data
-├── 📂 wordpress_plugin/            # WordPress integration
-├── 📂 wordpress_theme/             # WordPress theme
-│
-├── 📚 API_ENDPOINTS_AND_COMMANDS.md        # Complete API reference
-├── 📚 GIT_BASH_PRODUCTION_GUIDE.md        # Production deployment
-├── 📚 GIT_BASH_README.md                  # Git Bash setup guide
-└── 📚 GIT_BASH_SETUP_GUIDE.md             # Detailed setup instructions
+start_django_gitbash.sh # Git Bash setup & launcher (START HERE!)
+.env.gitbash # Environment template
+manage.py # Django management
+requirements.txt # Dependencies
+
+stocks/ # Stock data application
+news/ # News scraping & sentiment
+core/ # Core Django functionality
+emails/ # Email notifications
+data/nasdaq_only/ # NASDAQ ticker data
+wordpress_plugin/ # WordPress integration
+wordpress_theme/ # WordPress theme
+
+API_ENDPOINTS_AND_COMMANDS.md # Complete API reference
+GIT_BASH_PRODUCTION_GUIDE.md # Production deployment
+GIT_BASH_README.md # Git Bash setup guide
+GIT_BASH_SETUP_GUIDE.md # Detailed setup instructions
 ```
 
-## 🎯 What This Setup Includes
+## What This Setup Includes
 
-✅ **Django Framework** - Modern web application backend  
-✅ **MySQL/SQLite Database** - Flexible database support  
-✅ **yfinance Integration** - Real-time stock data (Yahoo Finance)  
-✅ **NASDAQ-Only Tickers** - Focus on NASDAQ securities  
-✅ **News Sentiment Analysis** - NLTK-powered sentiment scoring  
-✅ **WordPress Integration** - Plugin & theme for WordPress sites  
-✅ **Automatic Scheduler** - Updates NASDAQ data every 10 minutes  
-✅ **Git Bash Optimized** - Perfect for Windows development  
-✅ **Production Ready** - Complete deployment guide included  
+**Django Framework** - Modern web application backend 
+**MySQL/SQLite Database** - Flexible database support 
+**yfinance Integration** - Real-time stock data (Yahoo Finance) 
+**NASDAQ-Only Tickers** - Focus on NASDAQ securities 
+**News Sentiment Analysis** - NLTK-powered sentiment scoring 
+**WordPress Integration** - Plugin & theme for WordPress sites 
+**Automatic Scheduler** - Updates NASDAQ data every 10 minutes 
+**Git Bash Optimized** - Perfect for Windows development 
+**Production Ready** - Complete deployment guide included 
 
-## 🛠️ System Requirements
+## System Requirements
 
 - **Windows**: Git Bash installed
 - **Python**: 3.8+ (accessible from Git Bash)
 - **Database**: SQLite (development) or MySQL (production)
 - **Memory**: 2GB+ RAM recommended
 
-## 🌟 Key Features
+## Key Features
 
-### 📊 Stock Data Management
+### Stock Data Management
 - Real-time NASDAQ stock prices via Yahoo Finance
 - Historical price tracking and analysis
 - Volume, market cap, and P/E ratio monitoring
 - Automated data updates every 10 minutes
 
-### 📰 News Integration
+### News Integration
 - Automated news scraping from multiple sources
 - Sentiment analysis using NLTK
 - Stock ticker extraction from articles
 - Sentiment scoring (A-F grades)
 
-### 🔔 Alert System
+### Alert System
 - Price-based stock alerts
 - Email notifications
 - User-customizable alert conditions
 - Real-time monitoring
 
-### 🌐 WordPress Integration
+### WordPress Integration
 - Complete WordPress plugin for stock data display
 - Custom WordPress theme
 - API endpoints for external integration
 - SEO-optimized pages
 
-### 🔧 Admin Dashboard
+### Admin Dashboard
 - Comprehensive system status monitoring
 - Manual data update controls
 - User management interface
 - API health monitoring
 
-## 📋 Available Scripts
+## Available Scripts
 
 ### Development Scripts
 - `./start_django_gitbash.sh` - Complete setup and start
@@ -111,11 +111,11 @@ stock-scanner/
 - `./setup_gitbash_complete.sh` - Complete Git Bash setup with MySQL
 - `./git_bash_commands.sh` - Common Git Bash commands
 
-## 🚀 Production Deployment
+## Production Deployment
 
 For production deployment, follow the comprehensive guide:
 
-**📚 [Git Bash Production Guide](GIT_BASH_PRODUCTION_GUIDE.md)**
+** [Git Bash Production Guide](GIT_BASH_PRODUCTION_GUIDE.md)**
 
 Key production features:
 - Nginx + Gunicorn setup
@@ -125,7 +125,7 @@ Key production features:
 - Automated backup strategy
 - Monitoring and logging
 
-## 📖 Documentation
+## Documentation
 
 - **[API Endpoints & Commands](API_ENDPOINTS_AND_COMMANDS.md)** - Complete API reference
 - **[Git Bash Setup Guide](GIT_BASH_SETUP_GUIDE.md)** - Detailed setup instructions
@@ -133,7 +133,7 @@ Key production features:
 - **[Production Guide](GIT_BASH_PRODUCTION_GUIDE.md)** - Production deployment
 - **[Security Checklist](SECURITY_CHECKLIST.md)** - Security best practices
 
-## 🔧 Environment Configuration
+## Environment Configuration
 
 Copy the environment template and customize:
 
@@ -158,7 +158,7 @@ Key environment variables:
 5. Push to branch: `git push origin feature/new-feature`
 6. Submit a pull request
 
-## 📞 Support
+## Support
 
 If you encounter issues:
 
@@ -167,10 +167,10 @@ If you encounter issues:
 3. Check Django logs: `python manage.py check`
 4. Verify environment: `echo $DEBUG` in Git Bash
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**🎉 Ready to start? Run: `./start_django_gitbash.sh`**
+** Ready to start? Run: `./start_django_gitbash.sh`**

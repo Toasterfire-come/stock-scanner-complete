@@ -5,7 +5,7 @@ This directory contains tools for managing the Stock Scanner application.
 ## Database Tools
 - **database/** - Database setup, migration, and troubleshooting tools
 
-## Django Tools  
+## Django Tools 
 - **django/** - Django application management scripts
 
 ## Testing Tools

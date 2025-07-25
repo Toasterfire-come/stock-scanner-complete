@@ -2,13 +2,13 @@
 
 This guide is specifically for Windows users who prefer using Git Bash for development. Git Bash provides a Unix-like command line experience on Windows.
 
-## 🚀 Quick Start with Git Bash
+## Quick Start with Git Bash
 
 ### Prerequisites
 1. **Git for Windows** - Download from [git-scm.com](https://git-scm.com/download/win)
-   - This includes Git Bash automatically
+- This includes Git Bash automatically
 2. **Python 3.8+** - Download from [python.org](https://python.org)
-   - ✅ Make sure to check "Add Python to PATH" during installation
+- Make sure to check "Add Python to PATH" during installation
 3. **MySQL Server** - Download from [MySQL Downloads](https://dev.mysql.com/downloads/mysql/)
 
 ### One-Command Setup
@@ -24,7 +24,7 @@ bash setup_git_bash.sh
 
 That's it! The script will handle everything automatically.
 
-## 🛠️ Manual Setup (Step by Step)
+## Manual Setup (Step by Step)
 
 ### Step 1: Open Git Bash
 - Right-click in your project folder
@@ -66,7 +66,7 @@ start
 start_port 8080
 ```
 
-## 📋 Available Git Bash Commands
+## Available Git Bash Commands
 
 After running `source git_bash_commands.sh`, you get access to these commands:
 
@@ -78,7 +78,7 @@ After running `source git_bash_commands.sh`, you get access to these commands:
 ### Database Commands
 - `create_db` - Create MySQL database and user
 - `test_db` - Test database connection
-- `reset_db` - Reset database (⚠️ WARNING: deletes all data)
+- `reset_db` - Reset database ( WARNING: deletes all data)
 
 ### Django Commands
 - `start` - Start Django development server
@@ -107,7 +107,7 @@ After running `source git_bash_commands.sh`, you get access to these commands:
 ### Help
 - `help_commands` - Show all available commands
 
-## 🔍 Common Git Bash Usage Patterns
+## Common Git Bash Usage Patterns
 
 ### Daily Development Workflow
 ```bash
@@ -171,7 +171,7 @@ migrate
 check_django
 ```
 
-## 🐛 Troubleshooting Git Bash Issues
+## Troubleshooting Git Bash Issues
 
 ### 1. Python Not Found
 **Error**: `python: command not found`
@@ -237,10 +237,10 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
 # Use the Windows-compatible scripts
-bash setup_git_bash.sh  # Instead of the Python scripts
+bash setup_git_bash.sh # Instead of the Python scripts
 ```
 
-## 🔧 Advanced Git Bash Configuration
+## Advanced Git Bash Configuration
 
 ### Auto-load Commands
 Add this to your `~/.bashrc` file to automatically load commands:
@@ -248,7 +248,7 @@ Add this to your `~/.bashrc` file to automatically load commands:
 ```bash
 # Add to ~/.bashrc
 if [[ -f "/path/to/stock-scanner-complete/git_bash_commands.sh" ]]; then
-    source "/path/to/stock-scanner-complete/git_bash_commands.sh"
+source "/path/to/stock-scanner-complete/git_bash_commands.sh"
 fi
 ```
 
@@ -275,7 +275,7 @@ git config user.name "Your Name"
 git config user.email "your.email@example.com"
 ```
 
-## 📁 Git Bash File Paths
+## Git Bash File Paths
 
 Understanding file paths in Git Bash:
 
@@ -288,12 +288,12 @@ Windows: D:\Development\stock-scanner
 Git Bash: /d/Development/stock-scanner
 
 # Current directory shortcuts
-.       # Current directory  
-..      # Parent directory
-~       # Home directory (/c/Users/YourName)
+. # Current directory 
+.. # Parent directory
+~ # Home directory (/c/Users/YourName)
 ```
 
-## 🎯 Best Practices for Git Bash
+## Best Practices for Git Bash
 
 1. **Always use forward slashes** for paths
 2. **Use tab completion** - type first few letters and press Tab
@@ -302,20 +302,20 @@ Git Bash: /d/Development/stock-scanner
 5. **Use `status` command** to check project health regularly
 6. **Commit frequently** with `quick_commit`
 
-## 🚀 Performance Tips
+## Performance Tips
 
 1. **Close unnecessary programs** when running the server
 2. **Use `cleanup` command** regularly to remove cache files
 3. **Monitor database size** - reset if it gets too large during development
 4. **Use `start_port` command** if port 8000 is busy
 
-## 📝 Development Workflow Example
+## Development Workflow Example
 
 ```bash
 # Morning routine
 cd /c/path/to/stock-scanner-complete
 source git_bash_commands.sh
-gl  # git pull
+gl # git pull
 status
 start
 

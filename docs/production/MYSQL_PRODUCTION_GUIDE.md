@@ -98,17 +98,17 @@ The setup script automatically configures:
 
 ```python
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'sql_mode': 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO',
-            'isolation_level': 'READ COMMITTED',
-            'init_command': "SET foreign_key_checks = 0; SET sql_mode='STRICT_TRANS_TABLES'; SET foreign_key_checks = 1;",
-        },
-        'CONN_MAX_AGE': 300,
-        'CONN_HEALTH_CHECKS': True,
-    }
+'default': {
+'ENGINE': 'django.db.backends.mysql',
+'OPTIONS': {
+'charset': 'utf8mb4',
+'sql_mode': 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO',
+'isolation_level': 'READ COMMITTED',
+'init_command': "SET foreign_key_checks = 0; SET sql_mode='STRICT_TRANS_TABLES'; SET foreign_key_checks = 1;",
+},
+'CONN_MAX_AGE': 300,
+'CONN_HEALTH_CHECKS': True,
+}
 }
 ```
 
@@ -159,8 +159,8 @@ mysql -u root -p -e "SHOW STATUS LIKE 'Threads_%';"
 ```bash
 mysql -u root -p -e "
 SELECT 
-    table_schema AS 'Database',
-    ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+table_schema AS 'Database',
+ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
 FROM information_schema.tables 
 WHERE table_schema='stock_scanner_nasdaq'
 GROUP BY table_schema;
