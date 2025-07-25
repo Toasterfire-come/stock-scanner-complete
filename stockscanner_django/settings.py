@@ -59,17 +59,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
-# Database configuration - PostgreSQL
+# Database configuration - MySQL
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
         'NAME': os.environ.get('DB_NAME', 'stockscanner_db'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
+        'USER': os.environ.get('DB_USER', 'stockscanner'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScaner2010'),
         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
         'OPTIONS': {
-            'connect_timeout': 10,
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         }
     }
 }

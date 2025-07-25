@@ -3,12 +3,13 @@
 import os
 import sys
 
-# Configure PyMySQL for Windows MySQL compatibility
+# Configure PyMySQL for MySQL compatibility
 try:
     import pymysql
     pymysql.install_as_MySQLdb()
+    print("PyMySQL configured for MySQL compatibility")
 except ImportError:
-    pass
+    print("PyMySQL not available")
 
 
 def main():
