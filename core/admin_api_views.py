@@ -1,16 +1,16 @@
 import json
 import subprocess
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.management import call_command
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.utils import timezone
 from stocks.models import StockAlert
 from emails.models import EmailSubscription
-from stocks.api_manager import stock_manager
 import io
 import sys
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(["GET"])
 def admin_status(request):
-    """Get system status for admin dashboard"""
+    """Get comprehensive system status for admin dashboard"""
     try:
         # Get database statistics
         total_stocks = StockAlert.objects.count()
@@ -34,42 +34,75 @@ def admin_status(request):
         # Get subscription count
         total_subscriptions = EmailSubscription.objects.filter(is_active=True).count()
         
+        # Get news statistics
+        try:
+            from news.models import NewsArticle
+            total_news = NewsArticle.objects.filter(is_active=True).count()
+            recent_news = NewsArticle.objects.filter(
+                published_date__gte=timezone.now() - timedelta(hours=24),
+                is_active=True
+            ).count()
+        except Exception:
+            total_news = 0
+            recent_news = 0
+        
+        # System health checks
+        system_health = {
+            'database': 'healthy' if total_stocks > 0 else 'warning',
+            'news_scraper': 'healthy' if recent_news > 0 else 'warning',
+            'email_system': 'healthy' if total_subscriptions > 0 else 'info'
+        }
+        
         return JsonResponse({
             'total_stocks': total_stocks,
             'unsent_notifications': unsent_notifications,
             'success_rate': success_rate,
             'last_update': last_update,
             'total_subscriptions': total_subscriptions,
+            'total_news': total_news,
+            'recent_news': recent_news,
+            'system_health': system_health,
             'status': 'success'
         })
         
     except Exception as e:
         logger.error(f"Error getting admin status: {e}")
         return JsonResponse({
+            'total_stocks': 0,
+            'unsent_notifications': 0,
+            'success_rate': 0,
+            'last_update': None,
+            'total_subscriptions': 0,
+            'total_news': 0,
+            'recent_news': 0,
+            'system_health': {'database': 'error', 'news_scraper': 'error', 'email_system': 'error'},
             'error': str(e),
             'status': 'error'
         }, status=500)
 
 @require_http_methods(["GET"])
 def api_providers_status(request):
-    """Get API providers status - Simplified for Yahoo Finance + Finnhub"""
+    """Get API providers status - Simplified for Yahoo Finance"""
     try:
-        # Test API connections
-        connections = stock_manager.test_connection()
-        usage_stats = stock_manager.get_usage_stats()
+        # Test Yahoo Finance connection
+        import yfinance as yf
+        
+        # Test with a simple ticker
+        test_ticker = yf.Ticker("AAPL")
+        test_data = test_ticker.history(period="1d")
+        yahoo_status = 'active' if len(test_data) > 0 else 'inactive'
         
         providers = {
             'yahoo_finance': {
-                'status': 'active' if connections.get('yahoo_finance', False) else 'inactive',
-                'description': 'Yahoo Finance (Primary - Unlimited)',
-                'requests_today': usage_stats['yahoo_finance']['requests_today'],
-                'rate_limit': usage_stats['yahoo_finance']['rate_limit']
+                'status': yahoo_status,
+                'description': 'Yahoo Finance (Primary - Free)',
+                'last_test': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'rate_limit': 'No official limit'
             },
-            'finnhub': {
-                'status': 'active' if connections.get('finnhub', False) else 'inactive',
-                'description': 'Finnhub (Backup)',
-                'accounts': usage_stats['finnhub']['accounts'],
-                'total_available': usage_stats['finnhub']['total_available']
+            'news_scraper': {
+                'status': 'active',
+                'description': 'Yahoo Finance News Scraper',
+                'last_update': timezone.now().strftime('%Y-%m-%d %H:%M:%S')
             }
         }
         
@@ -77,8 +110,11 @@ def api_providers_status(request):
     except Exception as e:
         logger.error(f"Error getting API providers status: {e}")
         return JsonResponse({
-            'error': str(e),
-            'status': 'error'
+            'yahoo_finance': {
+                'status': 'error',
+                'description': 'Yahoo Finance (Primary - Free)',
+                'error': str(e)
+            }
         }, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
