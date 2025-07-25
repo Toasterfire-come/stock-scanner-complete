@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/admin/status/', admin_api_views.admin_status, name='admin_status'),
     path('api/admin/load-nasdaq/', admin_api_views.load_nasdaq_data, name='load_nasdaq'),
     path('api/admin/update-stocks/', admin_api_views.update_stocks, name='update_stocks'),
+    path('api/admin/update-nasdaq-now/', admin_api_views.update_nasdaq_now, name='update_nasdaq_now'),
     path('api/admin/scrape-news/', admin_api_views.scrape_news, name='scrape_news'),
     path('api/admin/send-notifications/', admin_api_views.send_notifications, name='send_notifications'),
     path('api/admin/optimize-db/', admin_api_views.optimize_database, name='optimize_database'),

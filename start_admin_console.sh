@@ -15,10 +15,14 @@ python manage.py migrate --run-syncdb
 
 # Start the Django development server
 echo "🌐 Starting Django server..."
+echo ""
 echo "📱 Admin Dashboard: http://localhost:8000/admin-dashboard/"
 echo "📈 WordPress Stocks: http://localhost:8000/wordpress-stocks/"
 echo "📰 WordPress News: http://localhost:8000/wordpress-news/"
 echo "⚙️ Django Admin: http://localhost:8000/admin/"
+echo ""
+echo "⏰ NASDAQ Data Scheduler: Automatically updates every 10 minutes"
+echo "🔄 First update runs 15 seconds after server start"
 echo ""
 echo "Press Ctrl+C to stop the server"
 

@@ -329,6 +329,18 @@
                     </div>
                     <div class="metric-label"><i class="fas fa-newspaper"></i> News Articles</div>
                 </div>
+                <div class="metric metric-success">
+                    <div class="metric-value" id="scheduler-status">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="metric-label"><i class="fas fa-clock"></i> NASDAQ Scheduler</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="next-run" style="font-size: 1.2rem;">
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="metric-label"><i class="fas fa-calendar-alt"></i> Next Update</div>
+                </div>
             </div>
         </div>
 
@@ -352,6 +364,9 @@
                 </button>
                 <button class="btn btn-success" onclick="optimizeDatabase()">
                     <i class="fas fa-database"></i> Optimize Database
+                </button>
+                <button class="btn btn-primary" onclick="updateNasdaqNow()">
+                    <i class="fas fa-bolt"></i> Update NASDAQ Now
                 </button>
             </div>
         </div>
@@ -427,6 +442,12 @@
                 document.getElementById('last-update').textContent = data.last_update || 'Never';
                 document.getElementById('total-news').textContent = totalNews.toLocaleString();
                 
+                // Update scheduler information
+                const schedulerJobs = safeNumber(data.scheduler_jobs);
+                document.getElementById('scheduler-status').textContent = schedulerJobs > 0 ? 'Active (10min)' : 'Inactive';
+                document.getElementById('next-run').textContent = data.next_scheduled_run ? 
+                    new Date(data.next_scheduled_run).toLocaleTimeString() : 'Not scheduled';
+                
                 // Update metric colors based on values
                 const unsentMetric = document.getElementById('unsent-metric');
                 if (unsentNotifications > 500) {
@@ -449,6 +470,8 @@
                 document.getElementById('success-rate').textContent = '0%';
                 document.getElementById('last-update').textContent = 'Error';
                 document.getElementById('total-news').textContent = '0';
+                document.getElementById('scheduler-status').textContent = 'Error';
+                document.getElementById('next-run').textContent = 'Error';
             }
         }
 
@@ -531,6 +554,10 @@
             executeCommand('Optimizing database', '/api/admin/optimize-db/', 'Database optimized');
         }
 
+        function updateNasdaqNow() {
+            executeCommand('Updating NASDAQ data', '/api/admin/update-nasdaq-now/', 'NASDAQ data updated');
+        }
+
         function clearLogs() {
             document.getElementById('log-container').innerHTML = 
                 '<div>🗑️ Logs cleared</div>';
@@ -556,6 +583,7 @@
             scrapeNews,
             sendNotifications,
             optimizeDatabase,
+            updateNasdaqNow,
             clearLogs
         };
     </script>

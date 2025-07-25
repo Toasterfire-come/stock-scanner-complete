@@ -11,9 +11,9 @@ class StocksConfig(AppConfig):
     def ready(self):
         import stocks.signals
         
-        # Start background data loading and scheduling
-        def delayed_startup():
-            time.sleep(10)  # Wait 10 seconds after startup
+        # Start background scheduler when server starts
+        def start_nasdaq_scheduler():
+            time.sleep(15)  # Wait 15 seconds after server start
             try:
                 from django.core.management import call_command
                 from django.db import connection
@@ -22,20 +22,14 @@ class StocksConfig(AppConfig):
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT 1")
                 
-                print("🚀 Starting automatic NASDAQ data scheduler...")
+                print("🚀 Starting NASDAQ data scheduler (every 10 minutes)...")
                 
-                # Load NASDAQ tickers if none exist (initial load)
-                from .models import StockAlert
-                if StockAlert.objects.count() == 0:
-                    print("📊 Initial NASDAQ data load...")
-                    call_command('load_nasdaq_only')
-                
-                # Define the data update function
+                # Define the NASDAQ update function
                 def update_nasdaq_data():
                     try:
                         print(f"🔄 [{time.strftime('%Y-%m-%d %H:%M:%S')}] Updating NASDAQ stock data...")
                         
-                        # Update stock prices from yfinance
+                        # Update only NASDAQ stock prices
                         call_command('update_stocks_yfinance')
                         
                         # Scrape news data
@@ -47,29 +41,28 @@ class StocksConfig(AppConfig):
                     except Exception as e:
                         print(f"❌ [{time.strftime('%Y-%m-%d %H:%M:%S')}] Error updating NASDAQ data: {e}")
                 
-                # Schedule the job every 10 minutes
+                # Schedule NASDAQ updates every 10 minutes
                 schedule.every(10).minutes.do(update_nasdaq_data)
                 
-                # Run initial update
+                # Run first update immediately
                 update_nasdaq_data()
                 
                 # Start the scheduler loop
                 def run_scheduler():
+                    print("⏰ NASDAQ scheduler started - updates every 10 minutes")
                     while True:
                         schedule.run_pending()
-                        time.sleep(30)  # Check every 30 seconds for pending jobs
+                        time.sleep(30)  # Check every 30 seconds
                 
-                # Start scheduler in a separate thread
+                # Start scheduler in background thread
                 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
                 scheduler_thread.start()
                 
-                print("✅ NASDAQ data scheduler started - updates every 10 minutes")
-                
             except Exception as e:
-                print(f"❌ Error during automatic data loading setup: {e}")
+                print(f"❌ Error starting NASDAQ scheduler: {e}")
         
-        # Run in background thread to avoid blocking startup
-        if not hasattr(self, '_startup_thread_started'):
-            self._startup_thread_started = True
-            thread = threading.Thread(target=delayed_startup, daemon=True)
+        # Start scheduler when server starts (only once)
+        if not hasattr(self, '_scheduler_started'):
+            self._scheduler_started = True
+            thread = threading.Thread(target=start_nasdaq_scheduler, daemon=True)
             thread.start()

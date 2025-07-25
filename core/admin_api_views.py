@@ -13,6 +13,7 @@ from stocks.models import StockAlert
 from emails.models import EmailSubscription
 import io
 import sys
+import schedule
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +47,19 @@ def admin_status(request):
             total_news = 0
             recent_news = 0
         
+        # Get scheduler information
+        scheduler_jobs = len(schedule.jobs)
+        next_run = None
+        if schedule.jobs:
+            next_job = min(schedule.jobs, key=lambda x: x.next_run)
+            next_run = next_job.next_run.strftime('%Y-%m-%d %H:%M:%S') if next_job.next_run else None
+        
         # System health checks
         system_health = {
             'database': 'healthy' if total_stocks > 0 else 'warning',
             'news_scraper': 'healthy' if recent_news > 0 else 'warning',
-            'email_system': 'healthy' if total_subscriptions > 0 else 'info'
+            'email_system': 'healthy' if total_subscriptions > 0 else 'info',
+            'scheduler': 'healthy' if scheduler_jobs > 0 else 'warning'
         }
         
         return JsonResponse({
@@ -61,6 +70,8 @@ def admin_status(request):
             'total_subscriptions': total_subscriptions,
             'total_news': total_news,
             'recent_news': recent_news,
+            'scheduler_jobs': scheduler_jobs,
+            'next_scheduled_run': next_run,
             'system_health': system_health,
             'status': 'success'
         })
@@ -75,7 +86,9 @@ def admin_status(request):
             'total_subscriptions': 0,
             'total_news': 0,
             'recent_news': 0,
-            'system_health': {'database': 'error', 'news_scraper': 'error', 'email_system': 'error'},
+            'scheduler_jobs': 0,
+            'next_scheduled_run': None,
+            'system_health': {'database': 'error', 'news_scraper': 'error', 'email_system': 'error', 'scheduler': 'error'},
             'error': str(e),
             'status': 'error'
         }, status=500)
@@ -273,6 +286,29 @@ def api_providers_status(request):
                 'description': 'Yahoo Finance (Primary - Free)',
                 'error': str(e)
             }
+        }, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def update_nasdaq_now(request):
+    """Manually trigger NASDAQ data update (same as scheduled updates)"""
+    try:
+        # Capture command output
+        output = io.StringIO()
+        call_command('update_nasdaq_now', stdout=output)
+        result = output.getvalue()
+        
+        return JsonResponse({
+            'message': 'NASDAQ data updated successfully',
+            'output': result,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating NASDAQ data: {e}")
+        return JsonResponse({
+            'message': f'Failed to update NASDAQ data: {str(e)}',
+            'status': 'error'
         }, status=500)
 
 # WordPress Integration Endpoints
