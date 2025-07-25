@@ -91,8 +91,8 @@ DATABASES = {
     }
 }
 
-# Linux MySQL setup - using mysqlclient (native MySQL driver)
-print("🐧 Linux MySQL setup - using native mysqlclient driver")
+# MySQL setup - using mysqlclient (native MySQL driver)
+print("Linux/Windows MySQL setup - using native mysqlclient driver")
 
 # Use DATABASE_URL environment variable for production
 if os.environ.get('DATABASE_URL'):
@@ -108,7 +108,7 @@ if os.environ.get('DATABASE_URL'):
         # Auto-detect database engine from URL
         if database_url.startswith('postgresql://'):
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
-            print(f"✅ Using PostgreSQL database")
+            print(f"SUCCESS: Using PostgreSQL database")
         elif database_url.startswith('mysql://'):
             DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
             # MySQL production optimizations
@@ -120,11 +120,11 @@ if os.environ.get('DATABASE_URL'):
             # Connection pooling for production
             DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 300))
             DATABASES['default']['CONN_HEALTH_CHECKS'] = os.environ.get('DB_CONN_HEALTH_CHECKS', 'true').lower() == 'true'
-            print(f"✅ Using MySQL database with production optimizations (Linux optimized)")
+            print(f"SUCCESS: Using MySQL database with production optimizations (Linux optimized)")
         else:
             # Default to PostgreSQL for backward compatibility
             DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
-            print(f"✅ Using PostgreSQL database (default)")
+            print(f"SUCCESS: Using PostgreSQL database (default)")
             
     except ImportError:
         print("Warning: dj_database_url not installed. Using SQLite for development.")
@@ -389,6 +389,6 @@ WORDPRESS_APP_PASSWORD = os.environ.get('WORDPRESS_APP_PASSWORD', '')
 try:
     import pymysql
     pymysql.install_as_MySQLdb()
-    print("✅ PyMySQL configured for Windows compatibility")
+    print("SUCCESS: PyMySQL configured for Windows compatibility")
 except ImportError:
-    print("⚠️  PyMySQL not available, using default MySQL driver")
+    print("WARNING: PyMySQL not available, using default MySQL driver")
