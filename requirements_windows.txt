@@ -1,35 +1,45 @@
 # Windows-specific requirements for Stock Scanner
-# These versions are tested to work together on Windows
+# Updated for Python 3.13 compatibility
 
 # Core Django
-Django==4.2.11
-djangorestframework==3.14.0
-django-cors-headers==4.3.1
+Django>=4.2.11,<5.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.1
 
 # Database
-PyMySQL==1.1.0
-dj-database-url==2.1.0
-python-dotenv==1.0.0
+PyMySQL>=1.1.0
+dj-database-url>=2.1.0
+python-dotenv>=1.0.0
 
 # Stock Market Data
-yfinance==0.2.18
-pandas==2.0.3
-numpy==1.24.3
-requests==2.31.0
+yfinance>=0.2.25
+pandas>=2.3.0
+numpy>=2.0.0
+requests>=2.31.0
 
 # Optional: For better performance
-psutil==5.9.5
+psutil>=5.9.5
 
 # Development tools (optional)
-python-decouple==3.8
+python-decouple>=3.8
 
 # Email support
-django-ses==3.5.0
+django-ses>=3.5.0
 
 # API support
-djangorestframework-simplejwt==5.3.0
+djangorestframework-simplejwt>=5.3.0
 
 # Utilities
-Pillow==10.0.1
-python-dateutil==2.8.2
-pytz==2023.3
+Pillow>=10.0.1
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Security & Crypto
+cryptography>=41.0.0
+
+# Task Queue & Scheduling
+celery>=5.3.0
+redis>=5.0.0
+
+# Text Processing & NLP
+textblob>=0.17.1
