@@ -22,7 +22,7 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **Priority Level**: 2
 - **System Load Handling**: Blocked during critical/emergency loads
 
-### Premium Tier ($49/month)
+### Premium Tier ($30/month)
 - **API Calls**: 5,000 per day
 - **Stock Searches**: 1,000 per day
 - **News Articles**: 2,500 per day
@@ -30,7 +30,7 @@ The Stock Scanner platform implements a sophisticated progressive scaling system
 - **Priority Level**: 3
 - **System Load Handling**: Minimal restrictions, blocked only during emergency
 
-### Professional Tier ($149/month)
+### Professional Tier ($100/month)
 - **API Calls**: 20,000 per day
 - **Stock Searches**: 5,000 per day
 - **News Articles**: 10,000 per day
@@ -105,10 +105,10 @@ Users receive clear, actionable messages when blocked:
 > "System is busy. Free users may experience delays. Upgrade to Basic ($15/month) for better performance."
 
 #### Basic Users (Critical Level)
-> "High system load: Basic users may be temporarily restricted. Upgrade to Premium ($49/month) for better access during peak times."
+> "High system load: Basic users may be temporarily restricted. Upgrade to Premium ($30/month) for better access during peak times."
 
 #### Premium Users (Emergency Level)
-> "System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($149/month) have priority access during emergencies."
+> "System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($100/month) have priority access during emergencies."
 
 ## Emergency Mode Features
 

@@ -38,7 +38,7 @@ class StockScannerUsageTracker {
             'news_articles' => 2500,
             'concurrent_requests' => 7,
             'priority' => 3,
-            'price' => 49
+            'price' => 30
         ),
         'professional' => array(
             'api_calls' => 20000,
@@ -46,7 +46,7 @@ class StockScannerUsageTracker {
             'news_articles' => 10000,
             'concurrent_requests' => 15,
             'priority' => 4,
-            'price' => 149
+            'price' => 100
         )
     );
     
@@ -325,15 +325,15 @@ class StockScannerUsageTracker {
         private function get_emergency_block_message($membership_level) {
             $messages = array(
                 'free' => array(
-                    'message' => 'System is in emergency mode due to extreme load. Only Professional subscribers ($149/month) have access during emergencies. Please upgrade or try again in 30 minutes.',
+                    'message' => 'System is in emergency mode due to extreme load. Only Professional subscribers ($100/month) have access during emergencies. Please upgrade or try again in 30 minutes.',
                     'retry_after' => 1800 // 30 minutes
                 ),
                 'basic' => array(
-                    'message' => 'System emergency: Only Professional subscribers have priority access. Basic plan users are temporarily blocked. Upgrade to Professional ($149/month) for guaranteed access.',
+                    'message' => 'System emergency: Only Professional subscribers have priority access. Basic plan users are temporarily blocked. Upgrade to Professional ($100/month) for guaranteed access.',
                     'retry_after' => 900 // 15 minutes
                 ),
                 'premium' => array(
-                    'message' => 'System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($149/month) have priority access during emergencies.',
+                    'message' => 'System emergency: Even Premium users are temporarily restricted due to extreme load. Professional subscribers ($100/month) have priority access during emergencies.',
                     'retry_after' => 600 // 10 minutes
                 )
             );
@@ -365,11 +365,11 @@ class StockScannerUsageTracker {
                     'retry_after' => 600
                 ),
                 'basic' => array(
-                    'message' => 'High system load: Basic users may be temporarily restricted. Upgrade to Premium ($49/month) for better access during peak times.',
+                    'message' => 'High system load: Basic users may be temporarily restricted. Upgrade to Premium ($30/month) for better access during peak times.',
                     'retry_after' => 300
                 ),
                 'premium' => array(
-                    'message' => 'System under heavy load: Even Premium users may experience restrictions. Professional users ($149/month) have guaranteed access.',
+                    'message' => 'System under heavy load: Even Premium users may experience restrictions. Professional users ($100/month) have guaranteed access.',
                     'retry_after' => 120
                 ),
                 'professional' => array(
@@ -405,7 +405,7 @@ class StockScannerUsageTracker {
                     'retry_after' => 180
                 ),
                 'basic' => array(
-                    'message' => 'System busy: Basic users may experience occasional delays. Upgrade to Premium ($49/month) for priority access.',
+                    'message' => 'System busy: Basic users may experience occasional delays. Upgrade to Premium ($30/month) for priority access.',
                     'retry_after' => 90
                 ),
                 'premium' => array(
