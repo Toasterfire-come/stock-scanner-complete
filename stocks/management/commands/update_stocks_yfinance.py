@@ -1,6 +1,7 @@
 """
 Django Management Command: Update Stock Data using YFinance
 Comprehensive version with multithreading for high-speed processing
+Includes halfway break and scheduling capabilities
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -17,287 +18,263 @@ import threading
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import schedule
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Update comprehensive stock data using YFinance with multithreading'
+    help = 'Update comprehensive stock data using YFinance with multithreading, halfway break, and scheduling'
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--symbols',
             type=str,
-            help='Comma-separated list of stock symbols to update (e.g., AAPL,MSFT,GOOGL)'
+            help='Comma-separated list of stock symbols to update'
         )
         parser.add_argument(
             '--limit',
             type=int,
-            default=3500,
-            help='Maximum number of stocks to update (default: 3500)'
+            default=100,
+            help='Maximum number of stocks to update (default: 100)'
         )
         parser.add_argument(
-            '--threads',
-            type=int,
-            default=7,
-            help='Number of worker threads (default: 7)'
+            '--test-mode',
+            action='store_true',
+            help='Run in test mode (display data without saving to database)'
         )
         parser.add_argument(
             '--delay',
             type=float,
             default=0.1,
-            help='Delay between requests per thread in seconds (default: 0.1)'
+            help='Delay between requests in seconds (default: 0.1)'
         )
         parser.add_argument(
-            '--test-mode',
-            action='store_true',
-            help='Run in test mode (no database updates)'
-        )
-        parser.add_argument(
-            '--verbose',
-            action='store_true',
-            help='Verbose output'
+            '--threads',
+            type=int,
+            default=7,
+            help='Number of concurrent threads (default: 7)'
         )
         parser.add_argument(
             '--batch-size',
             type=int,
-            default=50,
-            help='Batch size for progress updates (default: 50)'
+            default=200,
+            help='Progress update batch size (default: 200)'
+        )
+        parser.add_argument(
+            '--schedule',
+            action='store_true',
+            help='Run the update every 5 minutes continuously'
+        )
+        parser.add_argument(
+            '--halfway-break',
+            type=int,
+            default=60,
+            help='Break duration at halfway point in seconds (default: 60)'
         )
 
     def handle(self, *args, **options):
         """Main command handler"""
         
-        # Set up logging
-        if options['verbose']:
-            logging.basicConfig(level=logging.INFO)
+        if options['schedule']:
+            self._run_scheduler(options)
+        else:
+            self._run_single_update(options)
+
+    def _run_scheduler(self, options):
+        """Run the stock update every 5 minutes"""
+        self.stdout.write(self.style.SUCCESS("🕐 SCHEDULER STARTED - Running stock updates every 5 minutes"))
+        self.stdout.write(f"⚙️  Configuration: {options['threads']} threads, {options['limit']} stocks per run")
+        self.stdout.write(f"⏱️  Halfway break: {options['halfway_break']} seconds")
+        self.stdout.write("🔄 Press Ctrl+C to stop the scheduler\n")
         
-        self.stdout.write(
-            self.style.SUCCESS('🚀 Starting Multithreaded Stock Data Update (YFinance)')
-        )
+        # Schedule the job every 5 minutes
+        schedule.every(5).minutes.do(self._run_single_update, options)
         
-        # Configuration
-        symbols = self._get_symbols(options.get('symbols'))
-        limit = options['limit']
-        threads = options['threads']
-        delay = options['delay']
-        test_mode = options['test_mode']
-        batch_size = options['batch_size']
+        # Run once immediately
+        self.stdout.write(f"🚀 Running initial stock update at {datetime.now().strftime('%H:%M:%S')}")
+        self._run_single_update(options)
         
-        if test_mode:
-            self.stdout.write(
-                self.style.WARNING('⚠️  Running in TEST MODE - no database updates')
-            )
-        
-        # Calculate theoretical throughput
-        theoretical_rate = threads * (60 / delay) if delay > 0 else threads * 600
-        estimated_time = limit / (theoretical_rate / 60) if theoretical_rate > 0 else 0
-        
-        # Display configuration
-        self.stdout.write(f"⚡ Multithreading Configuration:")
-        self.stdout.write(f"   • Symbols: {len(symbols)} stocks")
-        self.stdout.write(f"   • Limit: {limit}")
-        self.stdout.write(f"   • Threads: {threads}")
-        self.stdout.write(f"   • Delay per thread: {delay}s")
-        self.stdout.write(f"   • Theoretical rate: {theoretical_rate:.0f} stocks/min")
-        self.stdout.write(f"   • Estimated time: {estimated_time:.1f} minutes")
-        self.stdout.write(f"   • Test mode: {test_mode}")
-        
-        # Test YFinance connectivity
-        self._test_yfinance_connectivity()
-        
-        # Process stocks with multithreading
         try:
-            results = self._process_stocks_multithreaded(
-                symbols[:limit], threads, delay, test_mode, batch_size
-            )
-            self._display_results(results, threads)
-            
+            while True:
+                schedule.run_pending()
+                time.sleep(1)
         except KeyboardInterrupt:
-            self.stdout.write(self.style.WARNING('\n❌ Update interrupted by user'))
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f'\n❌ Update failed: {e}'))
-            raise CommandError(f'Stock update failed: {e}')
+            self.stdout.write(self.style.WARNING("\n⏹️  Scheduler stopped by user"))
 
-    def _get_symbols(self, symbols_arg):
-        """Get list of symbols to update"""
-        
-        if symbols_arg:
-            # Use provided symbols
-            symbols = [s.strip().upper() for s in symbols_arg.split(',') if s.strip()]
-            self.stdout.write(f"📝 Using provided symbols: {symbols}")
-            return symbols
-        
-        # Extended NASDAQ + Major Exchanges for 3500+ stocks
-        comprehensive_symbols = [
-            # FAANG + Mega Tech
-            'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'TSLA', 'NVDA', 'NFLX',
-            'AMD', 'INTC', 'ORCL', 'CRM', 'ADBE', 'PYPL', 'UBER', 'SHOP', 'ZOOM', 'ROKU',
-            
-            # Major Tech & Software
-            'SQ', 'SNAP', 'PINS', 'COIN', 'RBLX', 'DOCU', 'ZM', 'PTON', 'HOOD', 'CRWD',
-            'DDOG', 'SNOW', 'PLTR', 'NET', 'ZS', 'OKTA', 'TWLO', 'MDB', 'SPLK', 'NOW',
-            
-            # Biotech & Healthcare 
-            'MRNA', 'BNTX', 'GILD', 'AMGN', 'BIIB', 'REGN', 'VRTX', 'ILMN', 'INCY', 'SGEN',
-            'BMRN', 'ALXN', 'CELG', 'EXAS', 'ISRG', 'DXCM', 'VEEV', 'TDOC', 'TECH', 'MEDP',
-            
-            # Semiconductors & Hardware
-            'QCOM', 'AVGO', 'TXN', 'AMAT', 'LRCX', 'KLAC', 'MRVL', 'MCHP', 'ADI', 'SWKS',
-            'QRVO', 'CRUS', 'SLAB', 'MPWR', 'CREE', 'XLNX', 'MXIM', 'CAVM', 'CSCO', 'JNPR',
-            
-            # Consumer & Retail
-            'COST', 'SBUX', 'MAR', 'ABNB', 'EBAY', 'BKNG', 'EXPD', 'FAST', 'DLTR', 'ULTA',
-            'LULU', 'ROST', 'TJX', 'HD', 'LOW', 'WMT', 'TGT', 'BBY', 'AMZN', 'ETSY',
-            
-            # Communication & Media
-            'CMCSA', 'CHTR', 'TMUS', 'VZ', 'T', 'DIS', 'PARA', 'WBD', 'NWSA', 'FOXA',
-            'DISH', 'SIRI', 'LBRDK', 'LBRDA', 'DISCA', 'DISCK', 'VIAC', 'CBS', 'ATVI', 'EA',
-            
-            # Financial Services
-            'FISV', 'PYPL', 'SQ', 'MA', 'V', 'AXP', 'JPM', 'BAC', 'WFC', 'C',
-            'GS', 'MS', 'COF', 'USB', 'PNC', 'TFC', 'MTB', 'FITB', 'HBAN', 'RF',
-            
-            # Automotive & Transportation
-            'TSLA', 'F', 'GM', 'NIO', 'XPEV', 'LI', 'RIVN', 'LCID', 'GOEV', 'NKLA',
-            'UPS', 'FDX', 'UBER', 'LYFT', 'DAL', 'UAL', 'AAL', 'LUV', 'JBLU', 'ALK',
-            
-            # Energy & Materials
-            'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'HAL', 'DVN', 'FANG', 'MPC', 'VLO',
-            'PSX', 'HES', 'APA', 'OXY', 'MRO', 'CNX', 'EQT', 'AR', 'SM', 'HP',
-            
-            # Industrial & Aerospace
-            'BA', 'CAT', 'DE', 'HON', 'LMT', 'RTX', 'GD', 'NOC', 'LHX', 'TDG',
-            'GE', 'MMM', 'UTX', 'ITW', 'EMR', 'ETN', 'PH', 'ROK', 'DOV', 'FLR',
-            
-            # REITs & Utilities
-            'AMT', 'CCI', 'EQIX', 'PLD', 'SPG', 'O', 'WELL', 'AVB', 'EQR', 'UDR',
-            'ESS', 'MAA', 'CPT', 'AIV', 'BXP', 'VTR', 'PEAK', 'FRT', 'REG', 'KIM',
-            
-            # Additional Growth & Emerging
-            'WDAY', 'TEAM', 'MELI', 'SE', 'BABA', 'JD', 'BIDU', 'TCEHY', 'TSM', 'ASML'
-        ]
-        
-        # Extend to 3500+ with additional tickers
-        extended_symbols = comprehensive_symbols * 20  # Repeat to get 3500+
-        
-        self.stdout.write(f"🎯 Using comprehensive stock universe: {len(extended_symbols)} symbols")
-        return extended_symbols[:3500]  # Cap at 3500
-
-    def _test_yfinance_connectivity(self):
-        """Test YFinance connectivity"""
-        
-        self.stdout.write("🔍 Testing YFinance connectivity...")
-        
-        try:
-            # Test with AAPL
-            ticker = yf.Ticker("AAPL")
-            hist = ticker.history(period="1d")
-            
-            if not hist.empty:
-                price = hist['Close'].iloc[-1]
-                self.stdout.write(f"✅ YFinance connected successfully (AAPL: ${price:.2f})")
-            else:
-                self.stdout.write(self.style.WARNING("⚠️  YFinance connected but no data returned"))
-                
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ YFinance connectivity test failed: {e}"))
-            raise CommandError("YFinance is not accessible")
-
-    def _process_stocks_multithreaded(self, symbols, num_threads, delay, test_mode, batch_size):
-        """Process stocks using multithreading for maximum speed"""
-        
-        total_symbols = len(symbols)
-        processed = 0
-        successful = 0
-        failed = 0
-        
-        # Thread-safe counters
-        self.processed_lock = threading.Lock()
-        self.results_lock = threading.Lock()
-        self.successful_count = 0
-        self.failed_count = 0
-        self.processed_count = 0
+    def _run_single_update(self, options):
+        """Run a single stock update with halfway break"""
         
         start_time = time.time()
         
-        self.stdout.write(f"\n⚡ Processing {total_symbols} stocks with {num_threads} threads...")
-        self.stdout.write(f"🎯 Target rate: ~{num_threads * 60 / delay:.0f} stocks/min")
+        # Display configuration
+        self.stdout.write("\n" + "="*70)
+        self.stdout.write(self.style.SUCCESS("🚀 COMPREHENSIVE STOCK UPDATE WITH MULTITHREADING"))
+        self.stdout.write("="*70)
+        self.stdout.write(f"⚙️  Threads: {options['threads']}")
+        self.stdout.write(f"⏱️  Delay per thread: {options['delay']}s")
+        self.stdout.write(f"📊 Batch size: {options['batch_size']}")
+        self.stdout.write(f"⏸️  Halfway break: {options['halfway_break']}s")
+        self.stdout.write(f"🎯 Target stocks: {options['limit']}")
+        self.stdout.write(f"🧪 Test mode: {'ON' if options['test_mode'] else 'OFF'}")
         
-        # Use ThreadPoolExecutor for efficient thread management
+        # Get symbols
+        if options['symbols']:
+            symbols = [s.strip().upper() for s in options['symbols'].split(',')]
+        else:
+            symbols = self._get_nasdaq_symbols(options['limit'])
+        
+        total_symbols = len(symbols)
+        halfway_point = total_symbols // 2
+        
+        self.stdout.write(f"📈 Processing {total_symbols} symbols")
+        self.stdout.write(f"⏸️  Break scheduled after {halfway_point} stocks")
+        
+        # Test connectivity
+        self._test_yfinance_connectivity()
+        
+        # Split symbols into two halves
+        first_half = symbols[:halfway_point]
+        second_half = symbols[halfway_point:]
+        
+        self.stdout.write(f"\n🏁 Starting first half: {len(first_half)} stocks")
+        
+        # Process first half
+        first_results = self._process_stocks_batch(
+            first_half, 
+            options['delay'], 
+            options['test_mode'], 
+            options['threads'],
+            options['batch_size'],
+            batch_name="FIRST HALF"
+        )
+        
+        # Halfway break
+        if second_half:
+            self.stdout.write(f"\n⏸️  HALFWAY BREAK - Pausing for {options['halfway_break']} seconds...")
+            self.stdout.write(f"📊 First half complete: {first_results['successful']}/{first_results['total']} successful")
+            
+            # Countdown timer
+            for remaining in range(options['halfway_break'], 0, -10):
+                self.stdout.write(f"⏰ Resuming in {remaining} seconds...")
+                time.sleep(10)
+            
+            self.stdout.write(f"\n🏁 Starting second half: {len(second_half)} stocks")
+            
+            # Process second half
+            second_results = self._process_stocks_batch(
+                second_half, 
+                options['delay'], 
+                options['test_mode'], 
+                options['threads'],
+                options['batch_size'],
+                batch_name="SECOND HALF"
+            )
+            
+            # Combine results
+            combined_results = {
+                'total': first_results['total'] + second_results['total'],
+                'successful': first_results['successful'] + second_results['successful'],
+                'failed': first_results['failed'] + second_results['failed'],
+                'duration': time.time() - start_time
+            }
+        else:
+            combined_results = first_results
+            combined_results['duration'] = time.time() - start_time
+        
+        # Display final results
+        self._display_final_results(combined_results)
+
+    def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_size, batch_name="BATCH"):
+        """Process a batch of stocks with multithreading"""
+        
+        start_time = time.time()
+        total_symbols = len(symbols)
+        
+        # Thread-safe counters
+        successful = 0
+        failed = 0
+        processed = 0
+        lock = threading.Lock()
+        
+        def update_counters(success):
+            nonlocal successful, failed, processed
+            with lock:
+                if success:
+                    successful += 1
+                else:
+                    failed += 1
+                processed += 1
+        
+        def process_stock(symbol):
+            """Process individual stock in thread"""
+            try:
+                time.sleep(delay)  # Rate limiting
+                
+                # Get comprehensive stock data
+                quote_data = self._get_comprehensive_stock_data(symbol)
+                
+                if not quote_data:
+                    update_counters(False)
+                    return f"❌ {symbol}: No data available"
+                
+                if test_mode:
+                    # Test mode - display comprehensive data
+                    update_counters(True)
+                    return f"✅ {symbol}: ${quote_data['current_price']:.2f} ({quote_data['change_percent']:+.2f}%)"
+                else:
+                    # Production mode - update database
+                    updated = self._update_stock_in_db(symbol, quote_data)
+                    update_counters(updated)
+                    if updated:
+                        return f"✅ {symbol}: ${quote_data['current_price']:.2f} ({quote_data['change_percent']:+.2f}%) - DB Updated"
+                    else:
+                        return f"⚠️  {symbol}: Data retrieved but DB update failed"
+                        
+            except Exception as e:
+                update_counters(False)
+                return f"❌ {symbol}: Error - {e}"
+        
+        # Process with ThreadPoolExecutor
+        self.stdout.write(f"🔄 Processing {batch_name}: {total_symbols} stocks with {num_threads} threads")
+        
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             # Submit all tasks
-            future_to_symbol = {
-                executor.submit(self._process_single_stock, symbol, delay, test_mode): symbol 
-                for symbol in symbols
-            }
+            future_to_symbol = {executor.submit(process_stock, symbol): symbol for symbol in symbols}
             
             # Process completed tasks
-            for future in as_completed(future_to_symbol):
-                symbol = future_to_symbol[future]
-                
+            for i, future in enumerate(as_completed(future_to_symbol), 1):
                 try:
                     result = future.result()
                     
-                    with self.results_lock:
-                        self.processed_count += 1
-                        if result:
-                            self.successful_count += 1
-                        else:
-                            self.failed_count += 1
+                    # Progress update every batch_size stocks
+                    if i % batch_size == 0 or i == total_symbols:
+                        progress = (i / total_symbols) * 100
+                        elapsed = time.time() - start_time
+                        rate = i / elapsed if elapsed > 0 else 0
+                        eta = (total_symbols - i) / rate if rate > 0 else 0
                         
-                        # Progress update
-                        if self.processed_count % batch_size == 0:
-                            elapsed = time.time() - start_time
-                            rate = self.processed_count / elapsed if elapsed > 0 else 0
-                            rate_per_min = rate * 60
-                            eta = (total_symbols - self.processed_count) / rate if rate > 0 else 0
-                            progress = (self.processed_count / total_symbols) * 100
-                            
+                        with lock:
                             self.stdout.write(
-                                f"📊 Progress: {progress:.1f}% ({self.processed_count}/{total_symbols}) | "
-                                f"Rate: {rate_per_min:.0f}/min | "
-                                f"Success: {self.successful_count} | "
-                                f"Failed: {self.failed_count} | "
-                                f"ETA: {eta:.1f}s"
+                                f"📊 {batch_name} Progress: {progress:.1f}% ({i}/{total_symbols}) "
+                                f"✅ {successful} ❌ {failed} | "
+                                f"Rate: {rate:.1f}/s ETA: {eta:.0f}s"
                             )
                 
                 except Exception as e:
-                    with self.results_lock:
-                        self.processed_count += 1
-                        self.failed_count += 1
-                    logger.error(f"Thread error for {symbol}: {e}")
+                    self.stdout.write(f"❌ Thread error: {e}")
+        
+        batch_duration = time.time() - start_time
+        batch_rate = total_symbols / batch_duration if batch_duration > 0 else 0
+        
+        self.stdout.write(f"🏁 {batch_name} Complete: {successful}/{total_symbols} successful in {batch_duration:.1f}s ({batch_rate:.1f}/s)")
         
         return {
             'total': total_symbols,
-            'processed': self.processed_count,
-            'successful': self.successful_count,
-            'failed': self.failed_count,
-            'duration': time.time() - start_time
+            'successful': successful,
+            'failed': failed,
+            'duration': batch_duration
         }
-
-    def _process_single_stock(self, symbol, delay, test_mode):
-        """Process a single stock (thread worker function)"""
-        
-        try:
-            # Thread-specific rate limiting
-            time.sleep(delay)
-            
-            # Get comprehensive stock data
-            quote_data = self._get_comprehensive_stock_data(symbol)
-            
-            if not quote_data:
-                return False
-            
-            if test_mode:
-                # Test mode - just validate data retrieval
-                return True
-            else:
-                # Production mode - update database
-                return self._update_stock_in_db(symbol, quote_data)
-                
-        except Exception as e:
-            logger.error(f"Error processing {symbol}: {e}")
-            return False
 
     def _get_comprehensive_stock_data(self, symbol):
         """Get comprehensive stock data from Yahoo Finance (optimized for threading)"""
@@ -378,7 +355,7 @@ class Command(BaseCommand):
             logger.error(f"Database update failed for {symbol}: {e}")
             return False
 
-    def _display_results(self, results, threads):
+    def _display_final_results(self, results):
         """Display final results with threading metrics"""
         
         self.stdout.write("\n" + "="*70)
@@ -390,14 +367,13 @@ class Command(BaseCommand):
         actual_rate_per_min = actual_rate * 60
         
         self.stdout.write(f"⚡ Threading Performance:")
-        self.stdout.write(f"   • Threads used: {threads}")
         self.stdout.write(f"   • Total stocks: {results['total']}")
         self.stdout.write(f"   • Successful: {results['successful']}")
         self.stdout.write(f"   • Failed: {results['failed']}")
         self.stdout.write(f"   • Success rate: {success_rate:.1f}%")
         self.stdout.write(f"   • Duration: {results['duration']:.1f}s ({results['duration']/60:.2f} min)")
         self.stdout.write(f"   • Actual rate: {actual_rate_per_min:.0f} stocks/min")
-        self.stdout.write(f"   • Threading efficiency: {(actual_rate_per_min/(threads*60/0.1)):.1%}")
+        self.stdout.write(f"   • Threading efficiency: {(actual_rate_per_min/(0.1*60)):.1%}") # Assuming 0.1s delay
         
         if success_rate >= 90:
             self.stdout.write(self.style.SUCCESS("\n🎯 Excellent success rate!"))
@@ -406,5 +382,55 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.ERROR("\n❌ Low success rate - check connectivity"))
         
-        self.stdout.write(f"\n🚀 Multithreading: {threads} threads @ 0.1s delay each")
+        self.stdout.write(f"\n🚀 Multithreading: {0.1}s delay per thread") # Assuming 0.1s delay
         self.stdout.write("✅ High-speed update complete!")
+
+    def _get_nasdaq_symbols(self, limit):
+        """Get NASDAQ symbols for processing"""
+        
+        # Comprehensive NASDAQ symbols list
+        nasdaq_symbols = [
+            'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX', 'ADBE',
+            'CRM', 'INTC', 'AMD', 'QCOM', 'AVGO', 'TXN', 'ORCL', 'CSCO', 'ASML', 'PEP',
+            'COST', 'TMUS', 'CMCSA', 'AMGN', 'HON', 'SBUX', 'INTU', 'ISRG', 'BKNG', 'GILD',
+            'MDLZ', 'ADP', 'REGN', 'VRTX', 'LRCX', 'ATVI', 'FISV', 'CSX', 'ADSK', 'MELI',
+            'KLAC', 'SNPS', 'CDNS', 'ORLY', 'WDAY', 'CHTR', 'MAR', 'FTNT', 'MRVL', 'IDXX',
+            'NXPI', 'DXCM', 'BIIB', 'ILMN', 'KDP', 'EA', 'CTAS', 'FAST', 'VRSK', 'CTSH',
+            'PCAR', 'ODFL', 'PAYX', 'ROST', 'EXC', 'CPRT', 'FANG', 'TEAM', 'CSGP', 'ABNB',
+            'SGEN', 'MRNA', 'ALGN', 'LCID', 'RIVN', 'ZM', 'DOCU', 'PTON', 'ROKU', 'ZS',
+            'OKTA', 'CRWD', 'NET', 'DDOG', 'SNOW', 'PLTR', 'U', 'COIN', 'RBLX', 'HOOD',
+            'SOFI', 'AFRM', 'UPST', 'SQ', 'PYPL', 'SHOP', 'SPOT', 'UBER', 'LYFT', 'DASH',
+            'TWLO', 'DBX', 'BOX', 'CZR', 'PENN', 'DKNG', 'FUBO', 'NKLA', 'PLUG', 'FCEL',
+            'BLNK', 'CHPT', 'QS', 'SPCE', 'OPEN', 'Z', 'ZG', 'REYN', 'EXPE', 'PCLN',
+            'TRIP', 'GRUB', 'MTCH', 'IAC', 'ANGI', 'YELP', 'CARS', 'CVNA', 'VROOM', 'KMX',
+            'LAD', 'AN', 'PAG', 'ABM', 'SHW', 'RPM', 'VMC', 'MLM', 'NUE', 'STLD',
+            'RS', 'CMC', 'X', 'CLF', 'MT', 'TX', 'GGB', 'VALE', 'FCX', 'TECK',
+            'BHP', 'RIO', 'SCCO', 'GOLD', 'NEM', 'AEM', 'KGC', 'EGO', 'AU', 'HMY',
+            'WPM', 'FNV', 'SLW', 'PAAS', 'CDE', 'HL', 'EXK', 'SSRM', 'AGI', 'SAND',
+            'NGD', 'GFI', 'IAG', 'KL', 'AUY', 'MMMM', 'SLV', 'GLD', 'GDXJ', 'GDX',
+            'XLE', 'XOP', 'VDE', 'OIH', 'USO', 'UCO', 'ERX', 'GUSH', 'XES', 'DRIP',
+            'SCO', 'DUG', 'ERY', 'SCC', 'DWTI', 'UWTI', 'OILU', 'OILD', 'BNO', 'UNG'
+        ]
+        
+        # Extend with more NASDAQ symbols to reach the limit
+        if limit > len(nasdaq_symbols):
+            # Add more symbols to reach the limit
+            additional_symbols = [
+                f"SYMB{i:04d}" for i in range(len(nasdaq_symbols), limit)
+            ]
+            nasdaq_symbols.extend(additional_symbols)
+        
+        return nasdaq_symbols[:limit]
+
+    def _test_yfinance_connectivity(self):
+        """Test YFinance connectivity"""
+        try:
+            self.stdout.write("🔍 Testing YFinance connectivity...")
+            test_ticker = yf.Ticker("AAPL")
+            test_data = test_ticker.history(period="1d")
+            if test_data.empty:
+                raise Exception("No data returned")
+            self.stdout.write(self.style.SUCCESS("✅ YFinance connectivity test passed"))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ YFinance connectivity test failed: {e}"))
+            raise CommandError("YFinance is not accessible")
