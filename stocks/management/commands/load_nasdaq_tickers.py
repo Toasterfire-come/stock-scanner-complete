@@ -23,26 +23,26 @@ from stocks.models import Stock
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 try:
-from data.nasdaq_tickers_comprehensive import (
-get_all_tickers, 
-get_stock_scanner_format,
-get_sector_summary,
-NASDAQ_100_TICKERS,
-NYSE_BLUE_CHIPS,
-TECH_GROWTH_TICKERS,
-MAJOR_ETFS,
-CRYPTO_FINTECH_TICKERS,
-MEME_RETAIL_TICKERS,
-EV_CLEAN_ENERGY_TICKERS,
-BIOTECH_HEALTHCARE_TICKERS,
-FINANCIAL_TICKERS,
-ENERGY_TICKERS,
-REIT_TICKERS,
-CONSUMER_TICKERS
-)
+    from data.nasdaq_tickers_comprehensive import (
+        get_all_tickers, 
+        get_stock_scanner_format,
+        get_sector_summary,
+        NASDAQ_100_TICKERS,
+        NYSE_BLUE_CHIPS,
+        TECH_GROWTH_TICKERS,
+        MAJOR_ETFS,
+        CRYPTO_FINTECH_TICKERS,
+        MEME_RETAIL_TICKERS,
+        EV_CLEAN_ENERGY_TICKERS,
+        BIOTECH_HEALTHCARE_TICKERS,
+        FINANCIAL_TICKERS,
+        ENERGY_TICKERS,
+        REIT_TICKERS,
+        CONSUMER_TICKERS
+    )
 except ImportError as e:
-print(f"Error importing ticker data: {e}")
-sys.exit(1)
+    print(f"Error importing ticker data: {e}")
+    sys.exit(1)
 
 class Command(BaseCommand):
 help = 'Load comprehensive NASDAQ ticker list into Stock Scanner database'

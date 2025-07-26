@@ -211,8 +211,8 @@ def update_stock_prices():
     print("=" * 60)
     
     try:
-        # Run the update_stocks command for a few stocks
-        result = subprocess.run([sys.executable, 'manage.py', 'update_stocks', '--limit=10'], 
+        # Run the update_stocks_yfinance command for a few stocks
+        result = subprocess.run([sys.executable, 'manage.py', 'update_stocks_yfinance', '--limit=10'], 
                               capture_output=True, text=True, timeout=60)
         
         if result.returncode == 0:
@@ -287,7 +287,7 @@ def show_final_status():
     
     print("\n📊 MANAGEMENT COMMANDS:")
     print("  python manage.py load_nasdaq_tickers    # Load all NASDAQ stocks")
-    print("  python manage.py update_stocks          # Update stock prices")
+    print("  python manage.py update_stocks_yfinance  # Update stock prices")
     print("  python manage.py fetch_news             # Fetch latest news")
     print("  python manage.py send_notifications     # Send email alerts")
     
