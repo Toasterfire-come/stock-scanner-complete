@@ -1,22 +1,38 @@
 /**
  * Stock Scanner WordPress Integration Styles
- * Modern, responsive styling for stock widgets and paywall
+ * Professional cream & marble styling for stock widgets and paywall
  */
+
+:root {
+    --cream-white: #f8f6f0;
+    --warm-beige: #e8dcc6;
+    --marble-grey: #d4c5b3;
+    --sage-green: #a8b5a0;
+    --deep-sage: #7a8471;
+    --charcoal: #3c3633;
+    --soft-brown: #8b7355;
+    --accent-gold: #c9a961;
+}
 
 /* Stock Widget Container */
 .stock-scanner-widget {
-    background: #ffffff;
-    border: 1px solid #e1e5e9;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(145deg, var(--cream-white), var(--warm-beige));
+    border: 1px solid var(--marble-grey);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 25px 0;
+    box-shadow: 
+        0 8px 16px rgba(60, 54, 51, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    font-family: 'Georgia', 'Times New Roman', serif;
 }
 
 .stock-scanner-widget:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 24px rgba(60, 54, 51, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Stock Header */
@@ -24,27 +40,30 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e1e5e9;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--marble-grey);
 }
 
 .stock-header h3 {
     margin: 0;
-    color: #1a1a1a;
-    font-size: 1.4rem;
-    font-weight: 600;
+    color: var(--deep-sage);
+    font-size: 1.5rem;
+    font-weight: 400;
+    font-family: 'Playfair Display', 'Georgia', serif;
 }
 
 .refresh-btn {
-    background: #007cba;
-    color: white;
+    background: linear-gradient(135deg, var(--sage-green), var(--deep-sage));
+    color: var(--cream-white);
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 10px 18px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
-    transition: background 0.3s ease;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(122, 132, 113, 0.2);
 }
 
 .refresh-btn:hover {

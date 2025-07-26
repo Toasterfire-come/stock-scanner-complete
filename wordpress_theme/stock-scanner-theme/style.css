@@ -5,30 +5,40 @@ Version: 2.0.0
 Author: Stock Scanner Team
 */
 
-/* ===== MODERN CSS VARIABLES ===== */
+/* ===== PROFESSIONAL CREAM & MARBLE CSS VARIABLES ===== */
 :root {
-    /* Primary Brand Colors */
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --warning-gradient: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
-    --gold-gradient: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
-    --silver-gradient: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+    /* Primary Brand Colors - Cream & Marble Palette */
+    --cream-white: #f8f6f0;
+    --warm-beige: #e8dcc6;
+    --marble-grey: #d4c5b3;
+    --sage-green: #a8b5a0;
+    --deep-sage: #7a8471;
+    --charcoal: #3c3633;
+    --soft-brown: #8b7355;
+    --accent-gold: #c9a961;
+    
+    /* Professional Gradients */
+    --primary-gradient: linear-gradient(135deg, var(--cream-white) 0%, var(--warm-beige) 50%, var(--marble-grey) 100%);
+    --secondary-gradient: linear-gradient(135deg, var(--sage-green) 0%, var(--deep-sage) 100%);
+    --success-gradient: linear-gradient(135deg, var(--sage-green) 0%, var(--accent-gold) 100%);
+    --warning-gradient: linear-gradient(135deg, var(--accent-gold) 0%, var(--soft-brown) 100%);
+    --gold-gradient: linear-gradient(135deg, var(--accent-gold) 0%, var(--soft-brown) 100%);
+    --neutral-gradient: linear-gradient(135deg, var(--marble-grey) 0%, var(--warm-beige) 100%);
     
     /* Neutral Colors */
-    --white: #ffffff;
-    --light-gray: #f8fafc;
-    --medium-gray: #e2e8f0;
-    --dark-gray: #2d3748;
-    --text-primary: #1a202c;
-    --text-secondary: #4a5568;
-    --text-muted: #718096;
+    --white: var(--cream-white);
+    --light-gray: var(--warm-beige);
+    --medium-gray: var(--marble-grey);
+    --dark-gray: var(--charcoal);
+    --text-primary: var(--charcoal);
+    --text-secondary: var(--deep-sage);
+    --text-muted: var(--soft-brown);
     
     /* Accent Colors */
-    --success: #48bb78;
-    --danger: #f56565;
-    --warning: #ed8936;
-    --info: #4299e1;
+    --success: var(--sage-green);
+    --danger: #c67b5c;
+    --warning: var(--accent-gold);
+    --info: var(--deep-sage);
     
     /* Shadows & Effects */
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -38,9 +48,9 @@ Author: Stock Scanner Team
     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     
     /* Typography */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-heading: 'Poppins', 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    --font-primary: 'Georgia', 'Times New Roman', serif;
+    --font-heading: 'Playfair Display', 'Georgia', serif;
+    --font-mono: 'Monaco', 'Consolas', monospace;
     
     /* Spacing */
     --spacing-xs: 0.25rem;
