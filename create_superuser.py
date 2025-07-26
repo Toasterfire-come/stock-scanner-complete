@@ -19,7 +19,7 @@ def create_superuser():
     
     # Default credentials
     username = 'admin'
-    email = 'admin@stockscanner.com'
+    email = 'admin@retailstockscanner.com'
     password = 'StockScanner2010'
     
     try:
@@ -60,7 +60,7 @@ def show_login_info():
     print("🌐 Admin URL: http://127.0.0.1:8000/admin/")
     print("👤 Username: admin")
     print("🔑 Password: StockScanner2010")
-    print("📧 Email: admin@stockscanner.com")
+    print("📧 Email: admin@retailstockscanner.com")
     print("="*60)
     print("💡 Save these credentials for future use!")
     print("🚀 Start server: python manage.py runserver")
