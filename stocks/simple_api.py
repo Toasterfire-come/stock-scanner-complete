@@ -12,11 +12,11 @@ import json
 @csrf_exempt
 @require_http_methods(["GET"])
 def simple_status_api(request):
-"""
-Simple status API that works without database
-"""
-try:
-response_data = {
+    """
+    Simple status API that works without database
+    """
+    try:
+        response_data = {
 'success': True,
 'status': 'operational',
 'data': {
