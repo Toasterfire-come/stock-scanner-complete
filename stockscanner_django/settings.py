@@ -129,6 +129,17 @@ CACHES = {
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Stock API Configuration
+YFINANCE_RATE_LIMIT = float(os.environ.get('YFINANCE_RATE_LIMIT', '0.5'))  # 0.5 second delay
+YFINANCE_TIMEOUT = int(os.environ.get('YFINANCE_TIMEOUT', '15'))  # 15 seconds timeout
+YFINANCE_RETRIES = int(os.environ.get('YFINANCE_RETRIES', '3'))  # 3 retries
+
+# Backup API keys (optional)
+FINNHUB_KEYS = [
+    key.strip() for key in os.environ.get('FINNHUB_API_KEYS', '').split(',') 
+    if key.strip()
+]
+
 # Logging
 LOGGING = {
     'version': 1,
