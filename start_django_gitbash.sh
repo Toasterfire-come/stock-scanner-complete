@@ -104,18 +104,52 @@ python manage.py collectstatic --noinput
 echo ""
 echo " Setup complete!"
 echo ""
+
+# Ask if user wants to start the stock data scheduler
+echo "Do you want to start the stock data scheduler? (y/n)"
+echo "The scheduler will update NASDAQ stock data every 5 minutes automatically."
+read -r start_scheduler
+
+if [[ "$start_scheduler" =~ ^[Yy]$ ]]; then
+    echo " Starting stock data scheduler in background..."
+    python start_stock_scheduler.py > stock_scheduler.log 2>&1 &
+    SCHEDULER_PID=$!
+    echo " Scheduler started with PID: $SCHEDULER_PID"
+    echo " Logs available in: stock_scheduler.log"
+    echo ""
+fi
+
 echo " Starting Django development server..."
 echo " Access your application at:"
 echo " Main Dashboard: http://127.0.0.1:8000/"
 echo " Admin Panel: http://127.0.0.1:8000/admin/"
 echo " API Status: http://127.0.0.1:8000/api/admin/status/"
+echo " Stock API: http://127.0.0.1:8000/api/stocks/"
+echo " NASDAQ API: http://127.0.0.1:8000/api/stocks/nasdaq/"
 echo ""
 echo " Login Credentials:"
 echo " Username: admin"
 echo " Password: admin123"
 echo ""
 echo " Press Ctrl+C to stop the server"
+if [[ "$start_scheduler" =~ ^[Yy]$ ]]; then
+    echo " (Note: Stock scheduler will continue running in background)"
+fi
 echo ""
+
+# Cleanup function
+cleanup() {
+    echo ""
+    echo " Stopping Django server..."
+    if [[ "$start_scheduler" =~ ^[Yy]$ ]] && [[ -n "$SCHEDULER_PID" ]]; then
+        echo " Stopping stock scheduler (PID: $SCHEDULER_PID)..."
+        kill $SCHEDULER_PID 2>/dev/null || true
+    fi
+    exit 0
+}
+
+# Set trap for cleanup
+trap cleanup SIGINT SIGTERM
 
 # Start the development server
 echo " Starting server..."
