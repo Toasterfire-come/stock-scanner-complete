@@ -37,16 +37,16 @@ class StockSchedulerManager:
     
     def check_environment(self):
         """Check if the environment is properly set up"""
-        logger.info("🔍 Checking environment setup...")
+        logger.info("[SEARCH] Checking environment setup...")
         
         # Check if manage.py exists
         if not self.manage_py.exists():
-            logger.error(f"❌ manage.py not found at {self.manage_py}")
+            logger.error(f"[ERROR] manage.py not found at {self.manage_py}")
             return False
         
         # Check if virtual environment exists
         if isinstance(self.venv_python, Path) and not self.venv_python.exists():
-            logger.warning("⚠️  Virtual environment not found, using system Python")
+            logger.warning("[WARNING]️  Virtual environment not found, using system Python")
         
         # Check database connection
         try:
@@ -55,22 +55,22 @@ class StockSchedulerManager:
             ], capture_output=True, text=True, timeout=30)
             
             if result.returncode == 0:
-                logger.info("✅ Django environment check passed")
+                logger.info("[SUCCESS] Django environment check passed")
                 return True
             else:
-                logger.error(f"❌ Django check failed: {result.stderr}")
+                logger.error(f"[ERROR] Django check failed: {result.stderr}")
                 return False
                 
         except subprocess.TimeoutExpired:
-            logger.error("❌ Django check timed out")
+            logger.error("[ERROR] Django check timed out")
             return False
         except Exception as e:
-            logger.error(f"❌ Error checking Django environment: {e}")
+            logger.error(f"[ERROR] Error checking Django environment: {e}")
             return False
     
     def run_initial_data_load(self):
         """Run initial NASDAQ data load if needed"""
-        logger.info("📊 Checking if initial data load is needed...")
+        logger.info("[STATS] Checking if initial data load is needed...")
         
         try:
             # Check if we have stock data
@@ -81,30 +81,30 @@ class StockSchedulerManager:
             
             if result.returncode == 0:
                 stock_count = int(result.stdout.strip())
-                logger.info(f"📈 Found {stock_count} stocks in database")
+                logger.info(f"[PROGRESS] Found {stock_count} stocks in database")
                 
                 if stock_count < 50:  # If less than 50 stocks, load NASDAQ data
-                    logger.info("📥 Loading NASDAQ ticker data...")
+                    logger.info("[FETCH] Loading NASDAQ ticker data...")
                     load_result = subprocess.run([
                         str(self.venv_python), str(self.manage_py), 'load_nasdaq_only'
                     ], timeout=300)  # 5 minute timeout
                     
                     if load_result.returncode == 0:
-                        logger.info("✅ NASDAQ data loaded successfully")
+                        logger.info("[SUCCESS] NASDAQ data loaded successfully")
                     else:
-                        logger.warning("⚠️  NASDAQ data load had issues, continuing anyway")
+                        logger.warning("[WARNING]️  NASDAQ data load had issues, continuing anyway")
                 else:
-                    logger.info("✅ Sufficient stock data found, skipping initial load")
+                    logger.info("[SUCCESS] Sufficient stock data found, skipping initial load")
             
         except Exception as e:
-            logger.warning(f"⚠️  Could not check/load initial data: {e}")
+            logger.warning(f"[WARNING]️  Could not check/load initial data: {e}")
     
     def start_scheduler(self):
         """Start the stock data scheduler"""
-        logger.info("🚀 Starting NASDAQ stock data scheduler...")
-        logger.info("🕐 Schedule: Updates every 5 minutes")
-        logger.info("🎯 Target: NASDAQ-listed securities only")
-        logger.info("⚡ Mode: Multithreaded processing")
+        logger.info("[START] Starting NASDAQ stock data scheduler...")
+        logger.info("[TIME] Schedule: Updates every 5 minutes")
+        logger.info("[TARGET] Target: NASDAQ-listed securities only")
+        logger.info("[POWER] Mode: Multithreaded processing")
         
         try:
             # Start the scheduler with startup mode (runs initial update then schedules)
@@ -113,7 +113,7 @@ class StockSchedulerManager:
                 'update_stocks_yfinance', '--startup', '--nasdaq-only'
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             
-            logger.info(f"📅 Scheduler started with PID: {process.pid}")
+            logger.info(f"[DATE] Scheduler started with PID: {process.pid}")
             
             # Monitor the process
             try:
@@ -129,13 +129,13 @@ class StockSchedulerManager:
                     time.sleep(1)
                     
             except KeyboardInterrupt:
-                logger.info("⏹️  Stopping scheduler...")
+                logger.info("[STOP]️  Stopping scheduler...")
                 process.terminate()
                 process.wait()
-                logger.info("✅ Scheduler stopped")
+                logger.info("[SUCCESS] Scheduler stopped")
             
         except Exception as e:
-            logger.error(f"❌ Failed to start scheduler: {e}")
+            logger.error(f"[ERROR] Failed to start scheduler: {e}")
             return False
         
         return True
@@ -167,8 +167,8 @@ WantedBy=multi-user.target
             with open(service_file, 'w') as f:
                 f.write(service_content)
             
-            logger.info(f"✅ Systemd service created at {service_file}")
-            logger.info("🔧 To enable and start the service:")
+            logger.info(f"[SUCCESS] Systemd service created at {service_file}")
+            logger.info("[TOOL] To enable and start the service:")
             logger.info("   sudo systemctl enable stock-scanner.service")
             logger.info("   sudo systemctl start stock-scanner.service")
             logger.info("   sudo systemctl status stock-scanner.service")
@@ -176,11 +176,11 @@ WantedBy=multi-user.target
             return True
             
         except PermissionError:
-            logger.warning("⚠️  Cannot create systemd service (permission denied)")
-            logger.info("💡 Run with sudo to create system service")
+            logger.warning("[WARNING]️  Cannot create systemd service (permission denied)")
+            logger.info("[INFO] Run with sudo to create system service")
             return False
         except Exception as e:
-            logger.error(f"❌ Failed to create systemd service: {e}")
+            logger.error(f"[ERROR] Failed to create systemd service: {e}")
             return False
     
     def create_windows_service(self):
@@ -197,8 +197,8 @@ cd /d "{self.project_root}"
             with open(batch_file, 'w') as f:
                 f.write(batch_content)
             
-            logger.info(f"✅ Windows batch file created at {batch_file}")
-            logger.info("🔧 To create a scheduled task:")
+            logger.info(f"[SUCCESS] Windows batch file created at {batch_file}")
+            logger.info("[TOOL] To create a scheduled task:")
             logger.info("   1. Open Task Scheduler")
             logger.info("   2. Create Basic Task")
             logger.info(f"   3. Set action to run: {batch_file}")
@@ -207,24 +207,24 @@ cd /d "{self.project_root}"
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to create Windows service: {e}")
+            logger.error(f"[ERROR] Failed to create Windows service: {e}")
             return False
 
 def main():
     """Main startup function"""
     print("=" * 70)
-    print("🚀 STOCK SCANNER AUTO-STARTUP")
+    print(">> STOCK SCANNER AUTO-STARTUP")
     print("=" * 70)
-    print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("🎯 Target: NASDAQ-listed securities")
-    print("🕐 Schedule: Every 5 minutes")
+    print(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(">> Target: NASDAQ-listed securities")
+    print(">> Schedule: Every 5 minutes")
     print("=" * 70)
     
     manager = StockSchedulerManager()
     
     # Check environment
     if not manager.check_environment():
-        logger.error("❌ Environment check failed, exiting")
+        logger.error("[ERROR] Environment check failed, exiting")
         sys.exit(1)
     
     # Check command line arguments
@@ -236,7 +236,7 @@ def main():
                 manager.create_systemd_service()
             return
         elif sys.argv[1] == '--check-only':
-            logger.info("✅ Environment check completed successfully")
+            logger.info("[SUCCESS] Environment check completed successfully")
             return
     
     # Run initial data load if needed
@@ -246,7 +246,7 @@ def main():
     success = manager.start_scheduler()
     
     if not success:
-        logger.error("❌ Failed to start scheduler")
+        logger.error("[ERROR] Failed to start scheduler")
         sys.exit(1)
 
 if __name__ == "__main__":
