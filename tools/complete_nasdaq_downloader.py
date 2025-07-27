@@ -43,15 +43,15 @@ class CompleteNasdaqDownloader:
 
     def print_success(self, message: str):
         """Print success message"""
-        print(f"✅ {message}")
+        print(f"[SUCCESS] {message}")
 
     def print_error(self, message: str):
         """Print error message"""
-        print(f"❌ {message}")
+        print(f"[ERROR] {message}")
 
     def print_info(self, message: str):
         """Print info message"""
-        print(f"ℹ️  {message}")
+        print(f"[INFO]  {message}")
 
     def download_nasdaq_tickers(self) -> bool:
         """Download complete NASDAQ ticker list"""
@@ -168,19 +168,19 @@ if __name__ == "__main__":
         """Generate download summary"""
         self.print_header("Complete NASDAQ Download Summary")
         
-        print(f"📊 Total Tickers: {len(self.nasdaq_tickers):,}")
-        print(f"🕐 Downloaded: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"📁 Data Directory: {self.data_dir}")
+        print(f"[STATS] Total Tickers: {len(self.nasdaq_tickers):,}")
+        print(f" Downloaded: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" Data Directory: {self.data_dir}")
         
         if self.errors:
-            print(f"⚠️  Errors: {len(self.errors)}")
+            print(f"[WARNING]  Errors: {len(self.errors)}")
             for error in self.errors[:5]:
-                print(f"   • {error}")
+                print(f"   - {error}")
         
         # Show sample tickers
         if self.nasdaq_tickers:
             sample_tickers = sorted(list(self.nasdaq_tickers))[:20]
-            print(f"\n📄 Sample Tickers:")
+            print(f"\n Sample Tickers:")
             print(f"   {', '.join(sample_tickers)}...")
 
     def run(self) -> bool:
@@ -221,10 +221,10 @@ def main():
         success = downloader.run()
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:
-        print("\n⏹️  Download interrupted by user")
+        print("\n[STOP]  Download interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Download failed: {e}")
+        print(f"\n[ERROR] Download failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

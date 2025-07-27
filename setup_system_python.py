@@ -14,16 +14,16 @@ def check_python_version():
     """Check if Python version is compatible"""
     version = sys.version_info
     if version.major < 3 or (version.major == 3 and version.minor < 8):
-        print(f"❌ Python {version.major}.{version.minor} is too old")
-        print("✅ Please upgrade to Python 3.8 or newer")
+        print(f"[ERROR] Python {version.major}.{version.minor} is too old")
+        print("[INFO] Please upgrade to Python 3.8 or newer")
         return False
     
-    print(f"✅ Python {version.major}.{version.minor}.{version.micro} is compatible")
+    print(f"[SUCCESS] Python {version.major}.{version.minor}.{version.micro} is compatible")
     return True
 
 def install_system_packages():
     """Install required packages in system Python"""
-    print("\n📦 Installing required packages in system Python...")
+    print("\n[INSTALL] Installing required packages in system Python...")
     
     # Required packages
     packages = [
@@ -67,20 +67,20 @@ def install_system_packages():
                     ], capture_output=True, text=True)
             
             if result.returncode == 0:
-                print(f"  ✅ {package} installed successfully")
+                print(f"  [SUCCESS] {package} installed successfully")
                 success_count += 1
             else:
-                print(f"  ❌ {package} failed: {result.stderr.strip()}")
+                print(f"  [ERROR] {package} failed: {result.stderr.strip()}")
                 
         except Exception as e:
-            print(f"  ❌ {package} error: {e}")
+            print(f"  [ERROR] {package} error: {e}")
     
-    print(f"\n📊 Installation Summary: {success_count}/{len(packages)} packages installed")
+    print(f"\n[SUMMARY] Installation Summary: {success_count}/{len(packages)} packages installed")
     return success_count == len(packages)
 
 def setup_environment():
     """Setup environment variables and configuration"""
-    print("\n🔧 Setting up environment configuration...")
+    print("\n[CONFIG] Setting up environment configuration...")
     
     # Set Django settings module
     os.environ['DJANGO_SETTINGS_MODULE'] = 'stockscanner_django.settings'
@@ -89,28 +89,28 @@ def setup_environment():
     if platform.system() == "Windows":
         os.environ['PYTHONIOENCODING'] = 'utf-8'
     
-    print("✅ Environment variables configured")
+    print("[SUCCESS] Environment variables configured")
     return True
 
 def test_django_setup():
     """Test if Django can be imported and configured"""
-    print("\n🧪 Testing Django setup...")
+    print("\n[TEST] Testing Django setup...")
     
     try:
         import django
         django.setup()
-        print("✅ Django imports and setup successful")
+        print("[SUCCESS] Django imports and setup successful")
         return True
     except ImportError:
-        print("❌ Django not available - check installation")
+        print("[ERROR] Django not available - check installation")
         return False
     except Exception as e:
-        print(f"❌ Django setup failed: {e}")
+        print(f"[ERROR] Django setup failed: {e}")
         return False
 
 def create_no_venv_launcher():
     """Create launcher scripts that don't use virtual environments"""
-    print("\n🚀 Creating system Python launchers...")
+    print("\n[CREATE] Creating system Python launchers...")
     
     # Windows batch launcher
     if platform.system() == "Windows":
@@ -132,7 +132,7 @@ pause
         
         with open('start_scheduler_system.bat', 'w') as f:
             f.write(batch_content)
-        print("✅ Created start_scheduler_system.bat")
+        print("[SUCCESS] Created start_scheduler_system.bat")
     
     # Shell script launcher (Linux/Mac/Git Bash)
     shell_content = f'''#!/bin/bash
@@ -156,12 +156,12 @@ export PYTHONIOENCODING=utf-8
     if platform.system() != "Windows":
         os.chmod('start_scheduler_system.sh', 0o755)
     
-    print("✅ Created start_scheduler_system.sh")
+    print("[SUCCESS] Created start_scheduler_system.sh")
     return True
 
 def main():
     """Main setup function"""
-    print("🔧 SYSTEM PYTHON SETUP FOR STOCK SCANNER")
+    print("SYSTEM PYTHON SETUP FOR STOCK SCANNER")
     print("=" * 50)
     print("This will configure the stock scanner to run with system Python")
     print("(no virtual environment required)")
@@ -173,7 +173,7 @@ def main():
     
     # Install packages
     if not install_system_packages():
-        print("\n⚠️  Some packages failed to install")
+        print("\n[WARNING] Some packages failed to install")
         print("You may need to install them manually or run as administrator")
     
     # Setup environment
@@ -186,18 +186,18 @@ def main():
     create_no_venv_launcher()
     
     print("\n" + "=" * 50)
-    print("✅ SYSTEM PYTHON SETUP COMPLETE!")
+    print("[SUCCESS] SYSTEM PYTHON SETUP COMPLETE!")
     print("=" * 50)
-    print("\n🚀 You can now run the scheduler with:")
+    print("\n[RUN] You can now run the scheduler with:")
     if platform.system() == "Windows":
-        print("   • start_scheduler_system.bat (double-click or run)")
-        print("   • python start_stock_scheduler.py")
+        print("   - start_scheduler_system.bat (double-click or run)")
+        print("   - python start_stock_scheduler.py")
     else:
-        print("   • ./start_scheduler_system.sh")
-        print("   • python start_stock_scheduler.py")
+        print("   - ./start_scheduler_system.sh")
+        print("   - python start_stock_scheduler.py")
     
-    print("\n📝 No virtual environment needed!")
-    print("🎯 All dependencies installed in system Python")
+    print("\n[INFO] No virtual environment needed!")
+    print("[INFO] All dependencies installed in system Python")
     
     return True
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n⏹️  Setup interrupted by user")
+        print("\n[STOP] Setup interrupted by user")
     except Exception as e:
-        print(f"\n❌ Setup failed: {e}")
+        print(f"\n[ERROR] Setup failed: {e}")
         sys.exit(1)

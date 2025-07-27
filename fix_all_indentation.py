@@ -18,7 +18,7 @@ def fix_python_indentation(file_path):
         # Try to parse the original file
         try:
             ast.parse(content)
-            print(f"✓ {file_path} - already valid")
+            print(f"[OK] {file_path} - already valid")
             return True
         except SyntaxError:
             pass  # Continue to fix
@@ -78,14 +78,14 @@ def fix_python_indentation(file_path):
             # Write the fixed content
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(fixed_content)
-            print(f"✓ {file_path} - fixed indentation")
+            print(f"[OK] {file_path} - fixed indentation")
             return True
         except SyntaxError as e:
-            print(f"✗ {file_path} - could not auto-fix: {e}")
+            print(f"[FAIL] {file_path} - could not auto-fix: {e}")
             return False
             
     except Exception as e:
-        print(f"✗ {file_path} - error: {e}")
+        print(f"[FAIL] {file_path} - error: {e}")
         return False
 
 def manual_fixes():
@@ -151,9 +151,9 @@ else:
             try:
                 with open(file_path, 'w') as f:
                     f.write(content)
-                print(f"✓ {file_path} - manually fixed")
+                print(f"[OK] {file_path} - manually fixed")
             except Exception as e:
-                print(f"✗ {file_path} - manual fix failed: {e}")
+                print(f"[FAIL] {file_path} - manual fix failed: {e}")
 
 def fix_settings_py():
     """Fix specific issues in settings.py"""
@@ -189,10 +189,10 @@ def fix_settings_py():
         with open(settings_file, 'w') as f:
             f.write(content)
         
-        print("✓ stockscanner_django/settings.py - applied manual fixes")
+        print("[OK] stockscanner_django/settings.py - applied manual fixes")
         
     except Exception as e:
-        print(f"✗ stockscanner_django/settings.py - manual fix failed: {e}")
+        print(f"[FAIL] stockscanner_django/settings.py - manual fix failed: {e}")
 
 def main():
     """Main function to fix all indentation issues"""
@@ -228,8 +228,8 @@ def main():
             error_count += 1
     
     print(f"\nSUMMARY:")
-    print(f"✓ Fixed/Valid: {fixed_count}")
-    print(f"✗ Errors: {error_count}")
+    print(f"[OK] Fixed/Valid: {fixed_count}")
+    print(f"[FAIL] Errors: {error_count}")
     print(f"Total files: {len(python_files)}")
     
     # Test Django after fixes
@@ -239,11 +239,11 @@ def main():
         result = subprocess.run(['python', 'manage.py', 'check'], 
                               capture_output=True, text=True, timeout=30)
         if result.returncode == 0:
-            print("✓ Django configuration is valid!")
+            print("[OK] Django configuration is valid!")
         else:
-            print(f"✗ Django check failed: {result.stderr}")
+            print(f"[FAIL] Django check failed: {result.stderr}")
     except Exception as e:
-        print(f"✗ Django test failed: {e}")
+        print(f"[FAIL] Django test failed: {e}")
 
 if __name__ == "__main__":
     main()

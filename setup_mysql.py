@@ -50,14 +50,14 @@ def main():
     with open(env_file, 'w') as f:
         f.writelines(updated_lines)
     
-    print("✅ MySQL configuration updated in .env file")
-    print("🚀 You can now run: python manage.py runserver")
-    print("\n💡 To switch back to SQLite, comment out the DB_* lines in .env")
+    print("[SUCCESS] MySQL configuration updated in .env file")
+    print("[RUN] You can now run: python manage.py runserver")
+    print("\n[TIP] To switch back to SQLite, comment out the DB_* lines in .env")
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n❌ Setup cancelled by user")
+        print("\n[ERROR] Setup cancelled by user")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] Error: {e}")

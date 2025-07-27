@@ -257,10 +257,10 @@ class BugChecker:
     def run_comprehensive_check(self):
         """Run comprehensive bug check on all Python files"""
         print("="*70)
-        print("🔍 COMPREHENSIVE BUG CHECK AND FIX")
+        print("[SEARCH] COMPREHENSIVE BUG CHECK AND FIX")
         print("="*70)
-        print(f"🕐 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"📁 Project Root: {self.project_root}")
+        print(f" Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" Project Root: {self.project_root}")
         print("="*70)
         
         # Find all Python files
@@ -274,7 +274,7 @@ class BugChecker:
                 if file.endswith('.py'):
                     python_files.append(Path(root) / file)
         
-        print(f"📄 Found {len(python_files)} Python files to check")
+        print(f" Found {len(python_files)} Python files to check")
         
         # Check each file
         all_issues = []
@@ -282,7 +282,7 @@ class BugChecker:
         total_fixes = 0
         
         for file_path in python_files:
-            print(f"\n🔍 Checking: {file_path.relative_to(self.project_root)}")
+            print(f"\n[SEARCH] Checking: {file_path.relative_to(self.project_root)}")
             
             file_issues = self.check_file(file_path)
             
@@ -299,18 +299,18 @@ class BugChecker:
                 # Show issues for this file
                 for category, issues in file_issues.items():
                     if isinstance(issues, list) and issues and category != 'fixes_applied':
-                        print(f"  ⚠️  {category.title()}: {len(issues)} issues")
+                        print(f"  [WARNING]  {category.title()}: {len(issues)} issues")
                         for issue in issues[:3]:  # Show first 3 issues
-                            print(f"    • {issue}")
+                            print(f"    - {issue}")
                         if len(issues) > 3:
-                            print(f"    • ... and {len(issues) - 3} more")
+                            print(f"    - ... and {len(issues) - 3} more")
             
             # Show fixes applied
             if file_issues['fixes_applied']:
                 total_fixes += len(file_issues['fixes_applied'])
-                print(f"  ✅ Applied {len(file_issues['fixes_applied'])} fixes:")
+                print(f"  [SUCCESS] Applied {len(file_issues['fixes_applied'])} fixes:")
                 for fix in file_issues['fixes_applied']:
-                    print(f"    • {fix}")
+                    print(f"    - {fix}")
         
         # Display summary
         self.display_summary(all_issues, total_issues, total_fixes)
@@ -320,17 +320,17 @@ class BugChecker:
     def display_summary(self, all_issues, total_issues, total_fixes):
         """Display comprehensive summary of issues found and fixed"""
         print("\n" + "="*70)
-        print("📊 BUG CHECK SUMMARY")
+        print("[STATS] BUG CHECK SUMMARY")
         print("="*70)
         
         files_with_issues = len(all_issues)
         total_files_checked = len([f for f in self.project_root.rglob('*.py') 
                                  if 'venv' not in str(f) and 'migrations' not in str(f)])
         
-        print(f"📁 Files Checked: {total_files_checked}")
-        print(f"⚠️  Files with Issues: {files_with_issues}")
-        print(f"🐛 Total Issues Found: {total_issues}")
-        print(f"🔧 Total Fixes Applied: {total_fixes}")
+        print(f" Files Checked: {total_files_checked}")
+        print(f"[WARNING]  Files with Issues: {files_with_issues}")
+        print(f" Total Issues Found: {total_issues}")
+        print(f"[CONFIG] Total Fixes Applied: {total_fixes}")
         
         # Categorize issues
         issue_categories = {}
@@ -342,9 +342,9 @@ class BugChecker:
                     issue_categories[category] += len(issues)
         
         if issue_categories:
-            print(f"\n📋 ISSUES BY CATEGORY:")
+            print(f"\n[LIST] ISSUES BY CATEGORY:")
             for category, count in sorted(issue_categories.items(), key=lambda x: x[1], reverse=True):
-                print(f"   • {category.title()}: {count} issues")
+                print(f"   - {category.title()}: {count} issues")
         
         # Priority issues
         critical_files = []
@@ -353,29 +353,29 @@ class BugChecker:
                 critical_files.append(file_issues['file'])
         
         if critical_files:
-            print(f"\n🚨 CRITICAL FILES NEEDING ATTENTION:")
+            print(f"\n CRITICAL FILES NEEDING ATTENTION:")
             for file in critical_files[:5]:  # Show first 5
-                print(f"   • {file}")
+                print(f"   - {file}")
             if len(critical_files) > 5:
-                print(f"   • ... and {len(critical_files) - 5} more")
+                print(f"   - ... and {len(critical_files) - 5} more")
         
         # Recommendations
-        print(f"\n💡 RECOMMENDATIONS:")
+        print(f"\n[TIP] RECOMMENDATIONS:")
         if total_fixes > 0:
-            print(f"   ✅ {total_fixes} issues were automatically fixed")
+            print(f"   [SUCCESS] {total_fixes} issues were automatically fixed")
         if total_issues - total_fixes > 0:
-            print(f"   🔧 {total_issues - total_fixes} issues require manual attention")
+            print(f"   [CONFIG] {total_issues - total_fixes} issues require manual attention")
         if files_with_issues == 0:
-            print("   🎉 No issues found - code quality is excellent!")
+            print("   [SUCCESS] No issues found - code quality is excellent!")
         
-        print("\n🔧 NEXT STEPS:")
+        print("\n[CONFIG] NEXT STEPS:")
         print("   1. Review syntax errors first (if any)")
         print("   2. Check model usage in API files")
         print("   3. Test all endpoints with test scripts")
         print("   4. Run WordPress integration tests")
         
         print("\n" + "="*70)
-        print(f"🕐 Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("="*70)
 
 def main():
@@ -387,20 +387,20 @@ def main():
         
         # Exit with appropriate code
         if any(file_issues['syntax'] for file_issues in all_issues):
-            print("\n❌ CRITICAL: Syntax errors found!")
+            print("\n[ERROR] CRITICAL: Syntax errors found!")
             sys.exit(1)
         elif all_issues:
-            print("\n⚠️  Issues found but no syntax errors")
+            print("\n[WARNING]  Issues found but no syntax errors")
             sys.exit(0)
         else:
-            print("\n✅ No issues found - all systems operational!")
+            print("\n[SUCCESS] No issues found - all systems operational!")
             sys.exit(0)
             
     except KeyboardInterrupt:
-        print("\n⏹️  Bug check interrupted by user")
+        print("\n[STOP]  Bug check interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Bug check failed: {e}")
+        print(f"\n[ERROR] Bug check failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

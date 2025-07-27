@@ -21,13 +21,13 @@ def install_django_extensions():
                               capture_output=True, text=True)
         
         if result.returncode == 0:
-            print("✅ django_extensions installed successfully")
+            print("[SUCCESS] django_extensions installed successfully")
             return True
         else:
-            print(f"❌ Installation failed: {result.stderr}")
-            return False
+                        print(f"[ERROR] Installation failed: {result.stderr}")
+        return False
     except Exception as e:
-        print(f"❌ Error installing django_extensions: {e}")
+        print(f"[ERROR] Error installing django_extensions: {e}")
         return False
 
 def remove_from_settings():
@@ -35,7 +35,7 @@ def remove_from_settings():
     settings_file = Path('stockscanner_django/settings.py')
     
     if not settings_file.exists():
-        print("❌ Settings file not found")
+        print("[ERROR] Settings file not found")
         return False
     
     try:
@@ -56,40 +56,40 @@ def remove_from_settings():
         with open(settings_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(new_lines))
         
-        print("✅ Removed django_extensions from INSTALLED_APPS")
+        print("[SUCCESS] Removed django_extensions from INSTALLED_APPS")
         return True
         
     except Exception as e:
-        print(f"❌ Error modifying settings: {e}")
+        print(f"[ERROR] Error modifying settings: {e}")
         return False
 
 def main():
     """Main fix function"""
-    print("🔧 DJANGO EXTENSIONS DEPENDENCY FIX")
+    print("[CONFIG] DJANGO EXTENSIONS DEPENDENCY FIX")
     print("=" * 50)
     
     # Check environment
     if check_virtual_env():
-        print("📦 Virtual environment detected")
+        print("[INSTALL] Virtual environment detected")
     else:
-        print("⚠️  Not in virtual environment")
+        print("[WARNING]  Not in virtual environment")
     
     # Try to install django_extensions
     print("\n1. Attempting to install django_extensions...")
     if install_django_extensions():
-        print("✅ Fix complete - django_extensions is now available")
+        print("[SUCCESS] Fix complete - django_extensions is now available")
         print("\nYou can now run: python start_stock_scheduler.py")
         return True
     
     # If installation fails, offer to remove it from settings
     print("\n2. Installation failed. Removing from settings...")
     if remove_from_settings():
-        print("✅ Fix complete - django_extensions removed from INSTALLED_APPS")
-        print("\n⚠️  Note: Some Django admin features may not be available")
+        print("[SUCCESS] Fix complete - django_extensions removed from INSTALLED_APPS")
+        print("\n[WARNING]  Note: Some Django admin features may not be available")
         print("You can now run: python start_stock_scheduler.py")
         return True
     
-    print("❌ Unable to fix the issue automatically")
+    print("[ERROR] Unable to fix the issue automatically")
     print("\nManual solutions:")
     print("1. Install in virtual environment: pip install django_extensions")
     print("2. Or manually remove 'django_extensions' from INSTALLED_APPS in settings.py")

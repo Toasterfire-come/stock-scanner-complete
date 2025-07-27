@@ -112,16 +112,16 @@ def placeholder_function():
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(replacement_content)
             
-            print(f"✅ Replaced {file_path.relative_to(self.project_root)}")
+            print(f"[SUCCESS] Replaced {file_path.relative_to(self.project_root)}")
             return True
             
         except Exception as e:
-            print(f"❌ Error replacing {file_path}: {e}")
+            print(f"[ERROR] Error replacing {file_path}: {e}")
             return False
     
     def replace_all_problematic_files(self):
         """Replace all files that have syntax errors"""
-        print("🔄 MASS FILE REPLACEMENT")
+        print(" MASS FILE REPLACEMENT")
         print("="*50)
         
         # List of specific problematic files that are non-essential
@@ -192,8 +192,8 @@ def placeholder_function():
                 if self.replace_file(file_path):
                     replaced_count += 1
         
-        print(f"\n📊 REPLACEMENT RESULTS:")
-        print(f"🔄 Files replaced: {replaced_count}")
+        print(f"\n[STATS] REPLACEMENT RESULTS:")
+        print(f" Files replaced: {replaced_count}")
         
         return replaced_count
 
@@ -203,7 +203,7 @@ def main():
     replaced = replacer.replace_all_problematic_files()
     
     # Final validation
-    print("\n🧪 POST-REPLACEMENT VALIDATION")
+    print("\n[TEST] POST-REPLACEMENT VALIDATION")
     print("="*50)
     
     import ast
@@ -224,19 +224,19 @@ def main():
                     ast.parse(content)
                     valid_count += 1
                 except SyntaxError:
-                    print(f"⚠️  Still has issues: {file_path.relative_to(replacer.project_root)}")
+                    print(f"[WARNING]  Still has issues: {file_path.relative_to(replacer.project_root)}")
     
     success_rate = (valid_count / total_count) * 100 if total_count > 0 else 0
-    print(f"\n📊 FINAL VALIDATION RESULTS:")
-    print(f"✅ Valid files: {valid_count}/{total_count}")
-    print(f"📈 Success rate: {success_rate:.1f}%")
+    print(f"\n[STATS] FINAL VALIDATION RESULTS:")
+    print(f"[SUCCESS] Valid files: {valid_count}/{total_count}")
+    print(f"[UP] Success rate: {success_rate:.1f}%")
     
     if success_rate >= 95:
-        print("🎉 REPOSITORY IS NOW CLEAN!")
+        print("[SUCCESS] REPOSITORY IS NOW CLEAN!")
     elif success_rate >= 90:
-        print("✅ Repository is mostly clean")
+        print("[SUCCESS] Repository is mostly clean")
     else:
-        print("⚠️  Some files still need attention")
+        print("[WARNING]  Some files still need attention")
 
 if __name__ == "__main__":
     main()

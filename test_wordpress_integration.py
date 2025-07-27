@@ -19,9 +19,9 @@ class WordPressIntegrationTester:
         """Test a WordPress-specific endpoint"""
         url = f"{self.base_url}{endpoint}"
         
-        print(f"\n🌐 Testing WordPress: {endpoint}")
+        print(f"\n[WEB] Testing WordPress: {endpoint}")
         if description:
-            print(f"📝 Description: {description}")
+            print(f" Description: {description}")
         
         try:
             start_time = time.time()
@@ -38,8 +38,8 @@ class WordPressIntegrationTester:
                         wordpress_fields = self.validate_wordpress_fields(data, endpoint)
                         count = len(data.get('data', []))
                         
-                        print(f"✅ SUCCESS - Time: {elapsed:.2f}s, Records: {count}")
-                        print(f"📊 WordPress Fields: {wordpress_fields}")
+                        print(f"[SUCCESS] SUCCESS - Time: {elapsed:.2f}s, Records: {count}")
+                        print(f"[STATS] WordPress Fields: {wordpress_fields}")
                         
                         self.results.append({
                             "endpoint": endpoint,
@@ -51,7 +51,7 @@ class WordPressIntegrationTester:
                         return True
                     else:
                         error = data.get('error', 'Unknown error')
-                        print(f"❌ API ERROR - {error}")
+                        print(f"[ERROR] API ERROR - {error}")
                         self.results.append({
                             "endpoint": endpoint,
                             "status": "API_ERROR",
@@ -60,14 +60,14 @@ class WordPressIntegrationTester:
                         return False
                         
                 except json.JSONDecodeError:
-                    print(f"⚠️  NON-JSON RESPONSE")
+                    print(f"[WARNING]  NON-JSON RESPONSE")
                     self.results.append({
                         "endpoint": endpoint,
                         "status": "NON_JSON"
                     })
                     return False
             else:
-                print(f"❌ HTTP ERROR - Status: {response.status_code}")
+                print(f"[ERROR] HTTP ERROR - Status: {response.status_code}")
                 self.results.append({
                     "endpoint": endpoint,
                     "status": "HTTP_ERROR",
@@ -76,7 +76,7 @@ class WordPressIntegrationTester:
                 return False
                 
         except requests.exceptions.RequestException as e:
-            print(f"❌ REQUEST ERROR - {e}")
+            print(f"[ERROR] REQUEST ERROR - {e}")
             self.results.append({
                 "endpoint": endpoint,
                 "status": "REQUEST_ERROR",
@@ -127,14 +127,14 @@ class WordPressIntegrationTester:
     def test_wordpress_compatibility(self):
         """Test WordPress-specific features and compatibility"""
         print("="*70)
-        print("🌐 WORDPRESS INTEGRATION COMPREHENSIVE TESTING")
+        print("[WEB] WORDPRESS INTEGRATION COMPREHENSIVE TESTING")
         print("="*70)
-        print(f"🕐 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"🌐 Base URL: {self.base_url}")
+        print(f" Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"[WEB] Base URL: {self.base_url}")
         print("="*70)
         
         # Test WordPress stock endpoints
-        print("\n📈 TESTING WORDPRESS STOCK ENDPOINTS")
+        print("\n[UP] TESTING WORDPRESS STOCK ENDPOINTS")
         self.test_wordpress_endpoint("/api/wordpress/", description="Main WordPress stock endpoint")
         self.test_wordpress_endpoint("/api/wordpress/stocks/", description="Detailed WordPress stocks")
         self.test_wordpress_endpoint("/api/wordpress/", params={"limit": 5}, description="Limited stock results")
@@ -143,29 +143,29 @@ class WordPressIntegrationTester:
         self.test_wordpress_endpoint("/api/wordpress/stocks/", params={"featured": "true"}, description="Featured stocks")
         
         # Test WordPress news endpoints
-        print("\n📰 TESTING WORDPRESS NEWS ENDPOINTS")
+        print("\n TESTING WORDPRESS NEWS ENDPOINTS")
         self.test_wordpress_endpoint("/api/wordpress/news/", description="WordPress news endpoint")
         self.test_wordpress_endpoint("/api/wordpress/news/", params={"sentiment": "positive"}, description="Positive news filter")
         self.test_wordpress_endpoint("/api/wordpress/news/", params={"limit": 5}, description="Limited news results")
         
         # Test WordPress alerts endpoints
-        print("\n🚨 TESTING WORDPRESS ALERTS ENDPOINTS")
+        print("\n TESTING WORDPRESS ALERTS ENDPOINTS")
         self.test_wordpress_endpoint("/api/wordpress/alerts/", description="WordPress alerts endpoint")
         self.test_wordpress_endpoint("/api/wordpress/alerts/", params={"active": "true"}, description="Active alerts only")
         
         # Test WordPress pagination
-        print("\n📄 TESTING WORDPRESS PAGINATION")
+        print("\n TESTING WORDPRESS PAGINATION")
         self.test_wordpress_endpoint("/api/wordpress/", params={"page": 1, "limit": 10}, description="First page")
         self.test_wordpress_endpoint("/api/wordpress/", params={"page": 2, "limit": 10}, description="Second page")
         
         # Test WordPress filtering
-        print("\n🎛️ TESTING WORDPRESS FILTERING")
+        print("\n[CONTROL] TESTING WORDPRESS FILTERING")
         self.test_wordpress_endpoint("/api/wordpress/", params={"sort": "price"}, description="Sort by price")
         self.test_wordpress_endpoint("/api/wordpress/", params={"sort": "volume"}, description="Sort by volume")
         self.test_wordpress_endpoint("/api/wordpress/", params={"sort": "change"}, description="Sort by change")
         
         # Test WordPress error handling
-        print("\n⚠️ TESTING WORDPRESS ERROR HANDLING")
+        print("\n[WARNING] TESTING WORDPRESS ERROR HANDLING")
         self.test_wordpress_endpoint("/api/wordpress/nonexistent/", description="Invalid endpoint (should fail gracefully)")
         
         # Display results
@@ -174,26 +174,26 @@ class WordPressIntegrationTester:
     def display_wordpress_results(self):
         """Display WordPress-specific test results"""
         print("\n" + "="*70)
-        print("📊 WORDPRESS INTEGRATION TEST RESULTS")
+        print("[STATS] WORDPRESS INTEGRATION TEST RESULTS")
         print("="*70)
         
         passed = sum(1 for r in self.results if r['status'] == 'PASS')
         failed = len(self.results) - passed
         success_rate = (passed / len(self.results)) * 100 if self.results else 0
         
-        print(f"✅ Passed: {passed}")
-        print(f"❌ Failed: {failed}")
-        print(f"📈 Total Tests: {len(self.results)}")
-        print(f"🎯 Success Rate: {success_rate:.1f}%")
+        print(f"[SUCCESS] Passed: {passed}")
+        print(f"[ERROR] Failed: {failed}")
+        print(f"[UP] Total Tests: {len(self.results)}")
+        print(f"[TARGET] Success Rate: {success_rate:.1f}%")
         
         # WordPress-specific metrics
         wordpress_endpoints = [r for r in self.results if '/wordpress/' in r['endpoint']]
         wp_passed = sum(1 for r in wordpress_endpoints if r['status'] == 'PASS')
         wp_success_rate = (wp_passed / len(wordpress_endpoints)) * 100 if wordpress_endpoints else 0
         
-        print(f"\n🌐 WORDPRESS SPECIFIC METRICS:")
-        print(f"   • WordPress Endpoints: {len(wordpress_endpoints)}")
-        print(f"   • WordPress Success Rate: {wp_success_rate:.1f}%")
+        print(f"\n[WEB] WORDPRESS SPECIFIC METRICS:")
+        print(f"   - WordPress Endpoints: {len(wordpress_endpoints)}")
+        print(f"   - WordPress Success Rate: {wp_success_rate:.1f}%")
         
         # Show WordPress field validation
         wordpress_fields_found = set()
@@ -202,34 +202,34 @@ class WordPressIntegrationTester:
                 wordpress_fields_found.update(result['wordpress_fields'])
         
         if wordpress_fields_found:
-            print(f"   • WordPress Fields Detected: {', '.join(sorted(wordpress_fields_found))}")
+            print(f"   - WordPress Fields Detected: {', '.join(sorted(wordpress_fields_found))}")
         
         # Show failed tests
         if failed > 0:
-            print(f"\n❌ FAILED TESTS:")
+            print(f"\n[ERROR] FAILED TESTS:")
             for result in self.results:
                 if result['status'] != 'PASS':
                     endpoint = result['endpoint']
                     status = result['status']
                     error = result.get('error', result.get('status_code', 'Unknown'))
-                    print(f"   • {endpoint} - {status}: {error}")
+                    print(f"   - {endpoint} - {status}: {error}")
         
         # Performance metrics
         pass_results = [r for r in self.results if r['status'] == 'PASS']
         if pass_results:
             avg_time = sum(r['time'] for r in pass_results) / len(pass_results)
-            print(f"\n⚡ PERFORMANCE:")
-            print(f"   • Average Response Time: {avg_time:.3f}s")
+            print(f"\n PERFORMANCE:")
+            print(f"   - Average Response Time: {avg_time:.3f}s")
         
         print("\n" + "="*70)
-        print(f"🕐 Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         if wp_success_rate >= 90:
-            print("🎉 EXCELLENT - WordPress integration fully operational!")
+            print("[SUCCESS] EXCELLENT - WordPress integration fully operational!")
         elif wp_success_rate >= 70:
-            print("⚠️  GOOD - WordPress integration mostly working")
+            print("[WARNING]  GOOD - WordPress integration mostly working")
         else:
-            print("❌ POOR - WordPress integration needs attention")
+            print("[ERROR] POOR - WordPress integration needs attention")
         
         print("="*70)
 
@@ -249,9 +249,9 @@ def main():
     try:
         tester.test_wordpress_compatibility()
     except KeyboardInterrupt:
-        print("\n⏹️  Testing interrupted by user")
+        print("\n[STOP]  Testing interrupted by user")
     except Exception as e:
-        print(f"\n❌ Testing failed with error: {e}")
+        print(f"\n[ERROR] Testing failed with error: {e}")
 
 if __name__ == "__main__":
     main()

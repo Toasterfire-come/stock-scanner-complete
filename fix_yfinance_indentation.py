@@ -61,11 +61,11 @@ def fix_yfinance_indentation():
         with open(file_path, 'w', encoding='utf-8') as f:
             f.writelines(fixed_lines)
         
-        print(f"✅ Fixed indentation in {file_path}")
+        print(f"[SUCCESS] Fixed indentation in {file_path}")
         return True
         
     except Exception as e:
-        print(f"❌ Error fixing {file_path}: {e}")
+        print(f"[ERROR] Error fixing {file_path}: {e}")
         return False
 
 if __name__ == '__main__':

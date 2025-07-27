@@ -205,7 +205,7 @@ class FinalCleanup:
     
     def process_all_files(self):
         """Process all Python files that still have issues"""
-        print("🔧 FINAL REPOSITORY CLEANUP")
+        print("[CONFIG] FINAL REPOSITORY CLEANUP")
         print("="*50)
         
         # Find files that still have syntax issues
@@ -224,16 +224,16 @@ class FinalCleanup:
                     except SyntaxError:
                         problem_files.append(file_path)
         
-        print(f"📄 Found {len(problem_files)} files needing fixes")
+        print(f" Found {len(problem_files)} files needing fixes")
         
         # Process each problem file
         for file_path in problem_files:
-            print(f"🔧 Fixing {file_path.relative_to(self.project_root)}")
+            print(f"[CONFIG] Fixing {file_path.relative_to(self.project_root)}")
             self.create_proper_implementations(file_path)
             self.files_processed += 1
         
-        print(f"\n✅ Processed {self.files_processed} files")
-        print(f"🔧 Applied {self.fixes_applied} fixes")
+        print(f"\n[SUCCESS] Processed {self.files_processed} files")
+        print(f"[CONFIG] Applied {self.fixes_applied} fixes")
 
 def main():
     """Main execution"""
@@ -241,7 +241,7 @@ def main():
     cleanup.process_all_files()
     
     # Final validation
-    print("\n🧪 FINAL VALIDATION")
+    print("\n[TEST] FINAL VALIDATION")
     print("="*50)
     
     valid_count = 0
@@ -261,19 +261,19 @@ def main():
                     ast.parse(content)
                     valid_count += 1
                 except SyntaxError as e:
-                    print(f"⚠️  Still has issues: {file_path.relative_to(cleanup.project_root)}")
+                    print(f"[WARNING]  Still has issues: {file_path.relative_to(cleanup.project_root)}")
     
     success_rate = (valid_count / total_count) * 100 if total_count > 0 else 0
-    print(f"\n📊 FINAL RESULTS:")
-    print(f"✅ Valid files: {valid_count}/{total_count}")
-    print(f"📈 Success rate: {success_rate:.1f}%")
+    print(f"\n[STATS] FINAL RESULTS:")
+    print(f"[SUCCESS] Valid files: {valid_count}/{total_count}")
+    print(f"[UP] Success rate: {success_rate:.1f}%")
     
     if success_rate >= 95:
-        print("🎉 REPOSITORY IS NOW CLEAN!")
+        print("[SUCCESS] REPOSITORY IS NOW CLEAN!")
     elif success_rate >= 90:
-        print("✅ Repository is mostly clean")
+        print("[SUCCESS] Repository is mostly clean")
     else:
-        print("⚠️  Some files still need manual attention")
+        print("[WARNING]  Some files still need manual attention")
 
 if __name__ == "__main__":
     main()

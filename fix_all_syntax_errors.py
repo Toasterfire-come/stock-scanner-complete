@@ -182,7 +182,7 @@ class SyntaxErrorFixer:
                 return True  # File is already valid
             except SyntaxError as e:
                 self.errors_found += 1
-                print(f"🔧 Fixing {file_path.relative_to(self.project_root)}: {e.msg}")
+                print(f"[CONFIG] Fixing {file_path.relative_to(self.project_root)}: {e.msg}")
                 
                 # Apply fixes
                 fixed = False
@@ -197,13 +197,13 @@ class SyntaxErrorFixer:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             new_content = f.read()
                         ast.parse(new_content)
-                        print(f"  ✅ Fixed successfully")
+                        print(f"  [SUCCESS] Fixed successfully")
                         return True
                     except SyntaxError:
-                        print(f"  ⚠️  Partial fix applied, may need manual review")
+                        print(f"  [WARNING]  Partial fix applied, may need manual review")
                         return False
                 else:
-                    print(f"  ❌ Could not auto-fix, manual review needed")
+                    print(f"  [ERROR] Could not auto-fix, manual review needed")
                     return False
                 
         except Exception as e:
@@ -213,10 +213,10 @@ class SyntaxErrorFixer:
     def fix_all_files(self):
         """Fix all Python files in the repository"""
         print("="*70)
-        print("🔧 COMPREHENSIVE SYNTAX ERROR FIXER")
+        print("[CONFIG] COMPREHENSIVE SYNTAX ERROR FIXER")
         print("="*70)
-        print(f"🕐 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"📁 Project Root: {self.project_root}")
+        print(f" Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" Project Root: {self.project_root}")
         print("="*70)
         
         # Find all Python files
@@ -230,7 +230,7 @@ class SyntaxErrorFixer:
                 if file.endswith('.py'):
                     python_files.append(Path(root) / file)
         
-        print(f"📄 Found {len(python_files)} Python files to check")
+        print(f" Found {len(python_files)} Python files to check")
         
         # Process files
         valid_files = 0
@@ -244,39 +244,39 @@ class SyntaxErrorFixer:
     def display_results(self, total_files, valid_files):
         """Display comprehensive results"""
         print("\n" + "="*70)
-        print("📊 SYNTAX ERROR FIX RESULTS")
+        print("[STATS] SYNTAX ERROR FIX RESULTS")
         print("="*70)
         
         invalid_files = total_files - valid_files
         success_rate = (valid_files / total_files) * 100 if total_files > 0 else 0
         
-        print(f"📁 Total Files: {total_files}")
-        print(f"✅ Valid Files: {valid_files}")
-        print(f"❌ Files with Issues: {invalid_files}")
-        print(f"🔧 Files Fixed: {self.files_fixed}")
-        print(f"⚡ Fixes Applied: {self.fixes_applied}")
-        print(f"📈 Success Rate: {success_rate:.1f}%")
+        print(f" Total Files: {total_files}")
+        print(f"[SUCCESS] Valid Files: {valid_files}")
+        print(f"[ERROR] Files with Issues: {invalid_files}")
+        print(f"[CONFIG] Files Fixed: {self.files_fixed}")
+        print(f" Fixes Applied: {self.fixes_applied}")
+        print(f"[UP] Success Rate: {success_rate:.1f}%")
         
         if success_rate >= 95:
-            print(f"\n🎉 EXCELLENT - Repository is nearly bug-free!")
+            print(f"\n[SUCCESS] EXCELLENT - Repository is nearly bug-free!")
         elif success_rate >= 85:
-            print(f"\n✅ GOOD - Most issues resolved")
+            print(f"\n[SUCCESS] GOOD - Most issues resolved")
         elif success_rate >= 70:
-            print(f"\n⚠️  FAIR - Some issues remain")
+            print(f"\n[WARNING]  FAIR - Some issues remain")
         else:
-            print(f"\n❌ POOR - Many issues need manual attention")
+            print(f"\n[ERROR] POOR - Many issues need manual attention")
         
-        print(f"\n💡 NEXT STEPS:")
+        print(f"\n[TIP] NEXT STEPS:")
         if invalid_files > 0:
-            print(f"   • Review {invalid_files} files that couldn't be auto-fixed")
-            print(f"   • Check for complex syntax errors requiring manual fixes")
+            print(f"   - Review {invalid_files} files that couldn't be auto-fixed")
+            print(f"   - Check for complex syntax errors requiring manual fixes")
         else:
-            print(f"   • All files have valid syntax!")
-        print(f"   • Run tests to ensure functionality")
-        print(f"   • Commit fixes to version control")
+            print(f"   - All files have valid syntax!")
+        print(f"   - Run tests to ensure functionality")
+        print(f"   - Commit fixes to version control")
         
         print("\n" + "="*70)
-        print(f"🕐 Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("="*70)
 
 def main():
@@ -288,20 +288,20 @@ def main():
         
         # Exit with appropriate code
         if fixer.errors_found == 0:
-            print("\n✅ No syntax errors found - repository is clean!")
+            print("\n[SUCCESS] No syntax errors found - repository is clean!")
             sys.exit(0)
         elif fixer.files_fixed >= fixer.errors_found * 0.8:
-            print("\n✅ Most syntax errors fixed successfully!")
+            print("\n[SUCCESS] Most syntax errors fixed successfully!")
             sys.exit(0)
         else:
-            print("\n⚠️  Some syntax errors remain - manual review needed")
+            print("\n[WARNING]  Some syntax errors remain - manual review needed")
             sys.exit(1)
             
     except KeyboardInterrupt:
-        print("\n⏹️  Fix process interrupted by user")
+        print("\n[STOP]  Fix process interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Fix process failed: {e}")
+        print(f"\n[ERROR] Fix process failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

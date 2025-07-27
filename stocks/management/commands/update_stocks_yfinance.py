@@ -83,7 +83,7 @@ class Command(BaseCommand):
             logging.basicConfig(level=logging.INFO)
             
         if options['startup']:
-            self.stdout.write(self.style.SUCCESS("🚀 STARTUP MODE: Running initial update then starting scheduler"))
+            self.stdout.write(self.style.SUCCESS("[RUN] STARTUP MODE: Running initial update then starting scheduler"))
             self._run_single_update(options)
             options['schedule'] = True
         
@@ -94,27 +94,27 @@ class Command(BaseCommand):
 
     def _run_scheduler(self, options):
         """Run continuous scheduler every 5 minutes"""
-        self.stdout.write(self.style.SUCCESS("📅 ENHANCED NASDAQ SCHEDULER STARTED"))
+        self.stdout.write(self.style.SUCCESS(" ENHANCED NASDAQ SCHEDULER STARTED"))
         self.stdout.write("=" * 70)
-        self.stdout.write("🕐 Schedule: Every 5 minutes")
-        self.stdout.write("🎯 Target: NASDAQ tickers only")
-        self.stdout.write("🔄 Mode: Continuous updates")
-        self.stdout.write("⚡ Multithreading: Enabled")
-        self.stdout.write("🔄 Press Ctrl+C to stop the scheduler\n")
+        self.stdout.write(" Schedule: Every 5 minutes")
+        self.stdout.write("[TARGET] Target: NASDAQ tickers only")
+        self.stdout.write(" Mode: Continuous updates")
+        self.stdout.write(" Multithreading: Enabled")
+        self.stdout.write(" Press Ctrl+C to stop the scheduler\n")
 
         # Schedule the job every 5 minutes
         schedule.every(5).minutes.do(self._run_single_update, options)
         
         # Show next run time
         next_run = schedule.next_run()
-        self.stdout.write(f"⏰ Next update: {next_run.strftime('%H:%M:%S')}")
+        self.stdout.write(f" Next update: {next_run.strftime('%H:%M:%S')}")
 
         try:
             while True:
                 schedule.run_pending()
                 time.sleep(30)  # Check every 30 seconds
         except KeyboardInterrupt:
-            self.stdout.write(self.style.WARNING("\n⏹️  Scheduler stopped by user"))
+            self.stdout.write(self.style.WARNING("\n[STOP]  Scheduler stopped by user"))
 
     def _run_single_update(self, options):
         """Run a comprehensive single stock update"""
@@ -123,14 +123,14 @@ class Command(BaseCommand):
         
         # Display configuration
         self.stdout.write("\n" + "="*70)
-        self.stdout.write(self.style.SUCCESS("📈 COMPREHENSIVE NASDAQ STOCK UPDATE"))
+        self.stdout.write(self.style.SUCCESS("[UP] COMPREHENSIVE NASDAQ STOCK UPDATE"))
         self.stdout.write("="*70)
-        self.stdout.write(f"⚙️  Threads: {options['threads']}")
-        self.stdout.write(f"⏱️  Delay per thread: {options['delay']}s")
-        self.stdout.write(f"🎯 NASDAQ-only: {options['nasdaq_only']}")
-        self.stdout.write(f"📊 Max stocks: {options['limit']}")
-        self.stdout.write(f"🧪 Test mode: {'ON' if options['test_mode'] else 'OFF'}")
-        self.stdout.write(f"🕐 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        self.stdout.write(f"[SETTINGS]  Threads: {options['threads']}")
+        self.stdout.write(f"[TIME]  Delay per thread: {options['delay']}s")
+        self.stdout.write(f"[TARGET] NASDAQ-only: {options['nasdaq_only']}")
+        self.stdout.write(f"[STATS] Max stocks: {options['limit']}")
+        self.stdout.write(f"[TEST] Test mode: {'ON' if options['test_mode'] else 'OFF'}")
+        self.stdout.write(f" Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         # Get symbols to update
         if options['symbols']:
@@ -139,7 +139,7 @@ class Command(BaseCommand):
             symbols = self._get_nasdaq_symbols(options['limit'], options['nasdaq_only'])
         
         total_symbols = len(symbols)
-        self.stdout.write(f"📈 Processing {total_symbols} symbols")
+        self.stdout.write(f"[UP] Processing {total_symbols} symbols")
         
         # Test yfinance connectivity
         self._test_yfinance_connectivity()
@@ -163,7 +163,7 @@ class Command(BaseCommand):
         if options.get('schedule'):
             next_run = schedule.next_run()
             if next_run:
-                self.stdout.write(f"⏰ Next update: {next_run.strftime('%H:%M:%S')}")
+                self.stdout.write(f" Next update: {next_run.strftime('%H:%M:%S')}")
 
     def _get_nasdaq_symbols(self, limit, nasdaq_only=True):
         """Get NASDAQ ticker symbols from database and NASDAQ ticker list"""
@@ -188,12 +188,12 @@ class Command(BaseCommand):
                 missing_tickers = set(NASDAQ_ONLY_TICKERS) - set(symbols)
                 symbols.extend(list(missing_tickers)[:limit - len(symbols)])
                 
-                self.stdout.write(f"📊 NASDAQ-only mode: {len(NASDAQ_ONLY_TICKERS)} total tickers available")
-                self.stdout.write(f"💾 Found {len(existing_stocks)} existing stocks in database")
-                self.stdout.write(f"➕ Adding {len(missing_tickers)} missing tickers")
+                self.stdout.write(f"[STATS] NASDAQ-only mode: {len(NASDAQ_ONLY_TICKERS)} total tickers available")
+                self.stdout.write(f"[SAVE] Found {len(existing_stocks)} existing stocks in database")
+                self.stdout.write(f" Adding {len(missing_tickers)} missing tickers")
                 
             except ImportError:
-                self.stdout.write(self.style.WARNING("⚠️  NASDAQ ticker list not found, falling back to database"))
+                self.stdout.write(self.style.WARNING("[WARNING]  NASDAQ ticker list not found, falling back to database"))
                 symbols = list(Stock.objects.filter(
                     exchange__iexact='NASDAQ'
                 ).values_list('ticker', flat=True)[:limit])
@@ -302,7 +302,7 @@ class Command(BaseCommand):
                 
                 if test_mode:
                     change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
-                    self.stdout.write(f"✅ {symbol}: ${current_price:.2f} ({change_str})")
+                    self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
                 else:
                     # Save to database
                     stock, created = Stock.objects.update_or_create(
@@ -326,7 +326,7 @@ class Command(BaseCommand):
                 return False
 
         # Execute with thread pool
-        self.stdout.write(f"🚀 Starting {batch_name} with {num_threads} threads...")
+        self.stdout.write(f"[RUN] Starting {batch_name} with {num_threads} threads...")
         
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = [executor.submit(process_symbol, symbol) for symbol in symbols]
@@ -336,7 +336,7 @@ class Command(BaseCommand):
                 if i % 10 == 0 or i == total_symbols:
                     progress = (i / total_symbols) * 100
                     elapsed = time.time() - start_time
-                    self.stdout.write(f"📊 Progress: {i}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
+                    self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
 
         return {
             'total': total_symbols,
@@ -360,11 +360,11 @@ class Command(BaseCommand):
             test_ticker = yf.Ticker("AAPL")
             test_info = test_ticker.info
             if test_info:
-                self.stdout.write("✅ yfinance connectivity test passed")
+                self.stdout.write("[SUCCESS] yfinance connectivity test passed")
             else:
-                self.stdout.write(self.style.WARNING("⚠️  yfinance connectivity test failed"))
+                self.stdout.write(self.style.WARNING("[WARNING]  yfinance connectivity test failed"))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ yfinance connectivity error: {e}"))
+            self.stdout.write(self.style.ERROR(f"[ERROR] yfinance connectivity error: {e}"))
 
     def _display_final_results(self, results):
         """Display comprehensive final results"""
@@ -372,17 +372,17 @@ class Command(BaseCommand):
         success_rate = (results['successful'] / results['total']) * 100 if results['total'] > 0 else 0
         
         self.stdout.write("\n" + "="*70)
-        self.stdout.write(self.style.SUCCESS("📊 UPDATE COMPLETED"))
+        self.stdout.write(self.style.SUCCESS("[STATS] UPDATE COMPLETED"))
         self.stdout.write("="*70)
-        self.stdout.write(f"✅ Successful: {results['successful']}")
-        self.stdout.write(f"❌ Failed: {results['failed']}")
-        self.stdout.write(f"📈 Total processed: {results['total']}")
-        self.stdout.write(f"📊 Success rate: {success_rate:.1f}%")
-        self.stdout.write(f"⏱️  Duration: {duration:.1f} seconds")
-        self.stdout.write(f"⚡ Rate: {results['total']/duration:.1f} stocks/second")
-        self.stdout.write(f"🕐 Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        self.stdout.write(f"[SUCCESS] Successful: {results['successful']}")
+        self.stdout.write(f"[ERROR] Failed: {results['failed']}")
+        self.stdout.write(f"[UP] Total processed: {results['total']}")
+        self.stdout.write(f"[STATS] Success rate: {success_rate:.1f}%")
+        self.stdout.write(f"[TIME]  Duration: {duration:.1f} seconds")
+        self.stdout.write(f" Rate: {results['total']/duration:.1f} stocks/second")
+        self.stdout.write(f" Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         if success_rate < 80:
-            self.stdout.write(self.style.WARNING(f"⚠️  Low success rate: {success_rate:.1f}%"))
+            self.stdout.write(self.style.WARNING(f"[WARNING]  Low success rate: {success_rate:.1f}%"))
         
         self.stdout.write("="*70)

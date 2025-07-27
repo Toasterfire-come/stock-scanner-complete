@@ -40,15 +40,15 @@ def create_database():
         
         # Create database
         cursor.execute("CREATE DATABASE IF NOT EXISTS stock_scanner_nasdaq")
-        print("✓ Database 'stock_scanner_nasdaq' created!")
+        print("[OK] Database 'stock_scanner_nasdaq' created!")
         
         # Verify database exists
         cursor.execute("SHOW DATABASES LIKE 'stock_scanner_nasdaq'")
         result = cursor.fetchone()
         if result:
-            print("✓ Database verified and accessible!")
+            print("[OK] Database verified and accessible!")
         else:
-            print("✗ Database not found after creation")
+            print("[FAIL] Database not found after creation")
             return False
             
         cursor.close()
@@ -56,7 +56,7 @@ def create_database():
         return True
         
     except Exception as e:
-        print(f"✗ Failed to create database: {e}")
+        print(f"[FAIL] Failed to create database: {e}")
         return False
 
 def run_migrations():
@@ -73,7 +73,7 @@ def run_migrations():
             result = subprocess.run([sys.executable, 'manage.py', 'makemigrations', app], 
                                   capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"✓ {app} migrations created")
+                print(f"[OK] {app} migrations created")
             else:
                 print(f"! {app} migrations: {result.stdout}")
         
@@ -82,16 +82,16 @@ def run_migrations():
         result = subprocess.run([sys.executable, 'manage.py', 'migrate'], 
                               capture_output=True, text=True)
         if result.returncode == 0:
-            print("✓ All database tables created successfully!")
+            print("[OK] All database tables created successfully!")
             print(result.stdout)
             return True
         else:
-            print("✗ Migration failed:")
+            print("[FAIL] Migration failed:")
             print(result.stderr)
             return False
             
     except Exception as e:
-        print(f"✗ Failed to run migrations: {e}")
+        print(f"[FAIL] Failed to run migrations: {e}")
         return False
 
 def verify_tables():
@@ -123,19 +123,19 @@ def verify_tables():
         
         print(f"Found {len(tables)} tables in database:")
         for table in sorted(tables):
-            status = "✓" if any(req in table for req in required_tables) else "•"
+            status = "[OK]" if any(req in table for req in required_tables) else "-"
             print(f"  {status} {table}")
         
         missing_tables = [req for req in required_tables if not any(req in table for table in tables)]
         if missing_tables:
-            print(f"\n⚠️  Missing tables: {missing_tables}")
+            print(f"\n[WARNING]  Missing tables: {missing_tables}")
             return False
         else:
-            print("\n✓ All required tables present!")
+            print("\n[OK] All required tables present!")
             return True
             
     except Exception as e:
-        print(f"✗ Failed to verify tables: {e}")
+        print(f"[FAIL] Failed to verify tables: {e}")
         return False
 
 def create_superuser():
@@ -153,7 +153,7 @@ def create_superuser():
         password = 'StockScanner2010'
         
         if User.objects.filter(username=username).exists():
-            print(f"✓ Superuser '{username}' already exists!")
+            print(f"[OK] Superuser '{username}' already exists!")
             user = User.objects.get(username=username)
             print(f"  Username: {user.username}")
             print(f"  Email: {user.email}")
@@ -165,14 +165,14 @@ def create_superuser():
             password=password
         )
         
-        print("✓ Superuser created successfully!")
+        print("[OK] Superuser created successfully!")
         print(f"  Username: {username}")
         print(f"  Email: {email}")
         print(f"  Password: {password}")
         return True
         
     except Exception as e:
-        print(f"✗ Failed to create superuser: {e}")
+        print(f"[FAIL] Failed to create superuser: {e}")
         return False
 
 def load_nasdaq_data():
@@ -187,7 +187,7 @@ def load_nasdaq_data():
                               capture_output=True, text=True, timeout=120)
         
         if result.returncode == 0:
-            print("✓ NASDAQ ticker data loaded successfully!")
+            print("[OK] NASDAQ ticker data loaded successfully!")
             print(result.stdout[-500:])  # Show last 500 chars of output
             return True
         else:
@@ -216,7 +216,7 @@ def update_stock_prices():
                               capture_output=True, text=True, timeout=60)
         
         if result.returncode == 0:
-            print("✓ Sample stock prices updated!")
+            print("[OK] Sample stock prices updated!")
             print(result.stdout)
             return True
         else:
@@ -245,7 +245,7 @@ def test_api_endpoints():
         
         # Check if we have any stocks
         stock_count = Stock.objects.count()
-        print(f"✓ Found {stock_count} stocks in database")
+        print(f"[OK] Found {stock_count} stocks in database")
         
         # Test API view
         factory = RequestFactory()
@@ -254,7 +254,7 @@ def test_api_endpoints():
         response = view.get(request)
         
         if response.status_code == 200:
-            print("✓ WordPress API endpoint working!")
+            print("[OK] WordPress API endpoint working!")
             return True
         else:
             print(f"! API endpoint returned status {response.status_code}")
@@ -268,34 +268,34 @@ def test_api_endpoints():
 def show_final_status():
     """Show final setup status and instructions"""
     print("\n" + "=" * 60)
-    print("🎉 STOCK SCANNER SETUP COMPLETE!")
+    print("[SUCCESS] STOCK SCANNER SETUP COMPLETE!")
     print("=" * 60)
     
-    print("\n📋 ADMIN CREDENTIALS:")
+    print("\n[LIST] ADMIN CREDENTIALS:")
     print("  Username: admin")
     print("  Password: StockScanner2010")
     print("  Email: admin@retailstockscanner.com")
     
-    print("\n🌐 URLs:")
+    print("\n[WEB] URLs:")
     print("  Homepage: http://127.0.0.1:8000/")
     print("  Admin Panel: http://127.0.0.1:8000/admin/")
     print("  WordPress API: http://127.0.0.1:8000/api/wordpress/")
     print("  Stock API: http://127.0.0.1:8000/api/stocks/")
     
-    print("\n🚀 TO START THE SERVER:")
+    print("\n[RUN] TO START THE SERVER:")
     print("  python manage.py runserver")
     
-    print("\n📊 MANAGEMENT COMMANDS:")
+    print("\n[STATS] MANAGEMENT COMMANDS:")
     print("  python manage.py load_nasdaq_tickers    # Load all NASDAQ stocks")
     print("  python manage.py update_stocks_yfinance  # Update stock prices")
     print("  python manage.py fetch_news             # Fetch latest news")
     print("  python manage.py send_notifications     # Send email alerts")
     
-    print("\n✅ Your Stock Scanner is ready to use!")
+    print("\n[SUCCESS] Your Stock Scanner is ready to use!")
 
 def main():
     """Main setup process"""
-    print("🔧 COMPLETE STOCK SCANNER SETUP")
+    print("[CONFIG] COMPLETE STOCK SCANNER SETUP")
     print("Database: stock_scanner_nasdaq")
     print("User: django_user")
     print("Password: StockScanner2010")
@@ -317,16 +317,16 @@ def main():
             if step_func():
                 success_count += 1
             else:
-                print(f"⚠️  {step_name} had issues but continuing...")
+                print(f"[WARNING]  {step_name} had issues but continuing...")
         except Exception as e:
-            print(f"⚠️  {step_name} failed: {e}")
+            print(f"[WARNING]  {step_name} failed: {e}")
     
-    print(f"\n📊 SETUP SUMMARY: {success_count}/{len(steps)} steps completed successfully")
+    print(f"\n[STATS] SETUP SUMMARY: {success_count}/{len(steps)} steps completed successfully")
     
     if success_count >= 4:  # At least database, migrations, tables, and superuser
         show_final_status()
     else:
-        print("❌ Setup incomplete. Please check errors above.")
+        print("[ERROR] Setup incomplete. Please check errors above.")
 
 if __name__ == '__main__':
     main()

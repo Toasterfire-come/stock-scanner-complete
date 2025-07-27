@@ -50,15 +50,15 @@ class NasdaqTickerUpdater:
 
     def print_success(self, message: str):
         """Print success message"""
-        print(f"✅ {message}")
+        print(f"[SUCCESS] {message}")
 
     def print_error(self, message: str):
         """Print error message"""
-        print(f"❌ {message}")
+        print(f"[ERROR] {message}")
 
     def print_info(self, message: str):
         """Print info message"""
-        print(f"ℹ️  {message}")
+        print(f"[INFO]  {message}")
 
     def update_nasdaq_tickers(self) -> bool:
         """Update NASDAQ tickers in database"""
@@ -124,13 +124,13 @@ class NasdaqTickerUpdater:
         """Generate update summary"""
         self.print_header("Update Summary")
         
-        print(f"📊 Tickers Updated: {self.updated_count}")
-        print(f"🕐 Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"[STATS] Tickers Updated: {self.updated_count}")
+        print(f" Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         if self.errors:
-            print(f"⚠️  Errors: {len(self.errors)}")
+            print(f"[WARNING]  Errors: {len(self.errors)}")
             for error in self.errors[:5]:
-                print(f"   • {error}")
+                print(f"   - {error}")
 
     def run(self) -> bool:
         """Run the update process"""
@@ -161,10 +161,10 @@ def main():
         success = updater.run()
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:
-        print("\n⏹️  Update interrupted by user")
+        print("\n[STOP]  Update interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Update failed: {e}")
+        print(f"\n[ERROR] Update failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
