@@ -229,4 +229,23 @@ def main():
         print(f"[ERROR] Startup failed: {e}")
 
 if __name__ == "__main__":
+    import sys
+    
+    # Check for background mode argument
+    background_mode = "--background" in sys.argv or "--daemon" in sys.argv
+    
+    if background_mode:
+        print("[BACKGROUND] Starting Windows Stock Scanner in background mode...")
+        print("[BACKGROUND] Process will run silently - check logs for updates")
+        print("[BACKGROUND] To stop: Use Task Manager to end this Python process")
+        
+        # Minimize console output in background mode
+        import logging
+        logging.getLogger().setLevel(logging.WARNING)
+        
+        # Redirect stdout to log file for background operation
+        log_file = open('windows_scheduler_background.log', 'a')
+        sys.stdout = log_file
+        sys.stderr = log_file
+    
     main()

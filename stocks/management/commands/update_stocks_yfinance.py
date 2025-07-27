@@ -36,8 +36,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--limit',
             type=int,
-            default=500,
-            help='Maximum number of stocks to update (default: 500)'
+            default=3500,
+            help='Maximum number of stocks to update (default: 3500)'
         )
         parser.add_argument(
             '--schedule',
