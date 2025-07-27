@@ -97,7 +97,16 @@ if errorlevel 1 (
     echo 3. No other MySQL services are running
     echo.
     echo Opening XAMPP Control Panel...
-    start "" "%XAMPP_PATH%\xampp-control.exe"
+    if exist "%XAMPP_PATH%\xampp_control.exe" (
+        start "" "%XAMPP_PATH%\xampp_control.exe"
+    ) else if exist "%XAMPP_PATH%\xampp-control.exe" (
+        start "" "%XAMPP_PATH%\xampp-control.exe"
+    ) else if exist "%XAMPP_PATH%\control.exe" (
+        start "" "%XAMPP_PATH%\control.exe"
+    ) else (
+        echo Cannot find XAMPP Control Panel
+        echo Please start XAMPP manually from Start Menu
+    )
     echo.
     echo Start MySQL service and press any key to retry...
     pause > nul
@@ -192,7 +201,8 @@ echo echo Connect: %XAMPP_MYSQL_PATH%\mysql.exe -u root
 echo echo Database: stockscanner
 echo echo.
 echo echo XAMPP Control Panel:
-echo start "" "%XAMPP_PATH%\xampp-control.exe"
+echo if exist "%XAMPP_PATH%\xampp_control.exe" start "" "%XAMPP_PATH%\xampp_control.exe"
+echo if exist "%XAMPP_PATH%\xampp-control.exe" start "" "%XAMPP_PATH%\xampp-control.exe"
 echo pause
 ) > manage_database_xampp.bat
 
@@ -284,7 +294,7 @@ echo - Manage Database: manage_database_xampp.bat
 echo - Test Setup: test_xampp_setup.bat
 echo.
 echo Web Interfaces:
-echo - XAMPP Control: %XAMPP_PATH%\xampp-control.exe
+echo - XAMPP Control: %XAMPP_PATH%\xampp_control.exe (or xampp-control.exe)
 echo - phpMyAdmin: http://localhost/phpmyadmin
 echo - Django Server: http://127.0.0.1:8000/api/wordpress/
 echo - Django Admin: http://127.0.0.1:8000/admin/ (admin/admin123)
