@@ -20,32 +20,32 @@ REM Set environment variables for background operation
 set DJANGO_SETTINGS_MODULE=stockscanner_django.settings
 set PYTHONIOENCODING=utf-8
 
-echo [INFO] Starting Stock Scanner in background mode...
-echo [INFO] The scheduler will run silently in the background
-echo [INFO] Check stock_scheduler.log for status updates
+echo Starting Stock Scanner in background mode...
+echo The scheduler will run silently in the background
+echo Check stock_scheduler.log for status updates
 echo.
 
 REM Check if the script exists and run in background
 if not exist "start_stock_scheduler_windows.py" (
     if exist "start_stock_scheduler.py" (
-        echo [RUN] Using start_stock_scheduler.py (background mode)...
+        echo Using start_stock_scheduler.py (background mode)...
         start /B python start_stock_scheduler.py --background
     ) else (
-        echo [ERROR] Scheduler script not found
+        echo ERROR: Scheduler script not found
         echo Please ensure you are in the correct directory
         pause
         exit /b 1
     )
 ) else (
-    echo [RUN] Using Windows-optimized scheduler (background mode)...
+    echo Using Windows-optimized scheduler (background mode)...
     start /B python start_stock_scheduler_windows.py --background
 )
 
 echo.
-echo [SUCCESS] Stock Scanner started in background
-echo [INFO] Process is running silently - check logs for status
-echo [INFO] Log file: stock_scheduler.log
-echo [INFO] To stop: Use Task Manager to end Python processes
+echo SUCCESS: Stock Scanner started in background
+echo Process is running silently - check logs for status
+echo Log file: stock_scheduler.log
+echo To stop: Use Task Manager to end Python processes
 echo.
 echo Press any key to close this window...
 pause > nul
