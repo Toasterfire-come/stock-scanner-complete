@@ -301,7 +301,8 @@ class Command(BaseCommand):
                     stock_data['dvav'] = Decimal(str(stock_data['volume'] / stock_data['avg_volume_3mon']))
                 
                 if test_mode:
-                    self.stdout.write(f"✅ {symbol}: ${current_price:.2f} ({change_percent:+.2f}% if change_percent else 'N/A'})")
+                    change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
+                    self.stdout.write(f"✅ {symbol}: ${current_price:.2f} ({change_str})")
                 else:
                     # Save to database
                     stock, created = Stock.objects.update_or_create(

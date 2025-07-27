@@ -7,11 +7,11 @@ urlpatterns = [
     # Main API endpoints
     path('', views.index, name='api_index'),
     
-    # Comprehensive Stock API endpoints
+    # Comprehensive Stock API endpoints (order matters - specific before generic)
     path('stocks/', api_views.stock_list_api, name='stock_list_api'),
-    path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_api'),
     path('stocks/nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks_api'),
     path('stocks/search/', api_views.stock_search_api, name='stock_search_api'),
+    path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_api'),
     
     # Market data endpoints
     path('market/stats/', api_views.market_stats_api, name='market_stats_api'),
