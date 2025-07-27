@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class WindowsStockScheduler:
     """Windows-compatible stock scheduler manager"""
 
-        def __init__(self):
+    def __init__(self):
         """Initialize the scheduler"""
         self.project_root = Path(__file__).parent.absolute()
         self.manage_py = self.project_root / 'manage.py'
