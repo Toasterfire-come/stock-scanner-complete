@@ -27,13 +27,9 @@ class StockSchedulerManager:
     def __init__(self):
         self.project_root = Path(__file__).parent.absolute()
         self.manage_py = self.project_root / 'manage.py'
-        self.venv_python = self.project_root / 'venv' / 'Scripts' / 'python.exe'  # Windows
-        if not self.venv_python.exists():
-            self.venv_python = self.project_root / 'venv' / 'bin' / 'python'  # Linux/Mac
-
-        # Use system python if venv not found
-        if not self.venv_python.exists():
-            self.venv_python = 'python'
+        
+        # Always use system Python (no virtual environment)
+        self.venv_python = sys.executable
 
     def check_environment(self):
         """Check if the environment is properly set up"""
@@ -44,9 +40,8 @@ class StockSchedulerManager:
             logger.error(f"[ERROR] manage.py not found at {self.manage_py}")
             return False
 
-        # Check if virtual environment exists
-        if isinstance(self.venv_python, Path) and not self.venv_python.exists():
-            logger.warning("[WARNING]  Virtual environment not found, using system Python")
+        # Using system Python installation
+        logger.info(f"[INFO] Using Python: {self.venv_python}")
 
         # Check database connection
         try:

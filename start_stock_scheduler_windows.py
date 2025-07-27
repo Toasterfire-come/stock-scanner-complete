@@ -28,18 +28,21 @@ logger = logging.getLogger(__name__)
 class WindowsStockScheduler:
     """Windows-compatible stock scheduler manager"""
 
-    def __init__(self):
+        def __init__(self):
         """Initialize the scheduler"""
         self.project_root = Path(__file__).parent.absolute()
         self.manage_py = self.project_root / 'manage.py'
         self.is_running = False
-
+        
         # Windows environment setup
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-
+        
         # Ensure UTF-8 encoding for Windows
         if sys.platform.startswith('win'):
             os.environ['PYTHONIOENCODING'] = 'utf-8'
+        
+        # Always use system Python (no virtual environment required)
+        self.python_executable = sys.executable
 
     def check_django_setup(self):
         """Check if Django is properly configured"""
@@ -57,8 +60,8 @@ class WindowsStockScheduler:
         logger.info("[FETCH] Starting NASDAQ stock data update...")
 
         try:
-            # Use Windows-compatible command execution
-            cmd = [sys.executable, str(self.manage_py), 'update_stocks_yfinance', '--nasdaq-focus']
+            # Use Windows-compatible command execution with system Python
+            cmd = [self.python_executable, str(self.manage_py), 'update_stocks_yfinance', '--nasdaq-focus']
 
             result = subprocess.run(
                 cmd,
