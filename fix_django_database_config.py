@@ -10,7 +10,7 @@ import subprocess
 
 def clear_environment_variables():
     """Clear any existing database environment variables that might conflict"""
-    print("🔧 Clearing conflicting environment variables...")
+    print(">> Clearing conflicting environment variables...")
     
     # List of database environment variables that might conflict
     db_env_vars = [
@@ -26,15 +26,15 @@ def clear_environment_variables():
             cleared.append(f"{var}={old_value}")
     
     if cleared:
-        print(f"✅ Cleared: {', '.join(cleared)}")
+        print(f"SUCCESS: Cleared: {', '.join(cleared)}")
     else:
-        print("✅ No conflicting environment variables found")
+        print("SUCCESS: No conflicting environment variables found")
     
     return len(cleared) > 0
 
 def set_xampp_environment():
     """Set environment variables for XAMPP MySQL"""
-    print("🔧 Setting XAMPP MySQL environment variables...")
+    print(">> Setting XAMPP MySQL environment variables...")
     
     xampp_config = {
         'DB_ENGINE': 'django.db.backends.mysql',
@@ -47,11 +47,11 @@ def set_xampp_environment():
     
     for key, value in xampp_config.items():
         os.environ[key] = value
-        print(f"✅ Set {key}={value}")
+        print(f"SUCCESS: Set {key}={value}")
 
 def test_mysql_connection():
     """Test MySQL connection using command line"""
-    print("🔧 Testing MySQL connection...")
+    print(">> Testing MySQL connection...")
     
     try:
         # Test with XAMPP's MySQL client
@@ -63,17 +63,17 @@ def test_mysql_connection():
             ], capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
-                print("✅ MySQL connection successful")
+                print("SUCCESS: MySQL connection successful")
                 return True
             else:
-                print(f"❌ MySQL connection failed: {result.stderr}")
+                print(f"ERROR: MySQL connection failed: {result.stderr}")
                 return False
         else:
-            print("⚠️  XAMPP MySQL client not found")
+            print("WARNING: XAMPP MySQL client not found")
             return False
             
     except Exception as e:
-        print(f"❌ Connection test error: {e}")
+        print(f"ERROR: Connection test error: {e}")
         return False
 
 def verify_database_exists():
