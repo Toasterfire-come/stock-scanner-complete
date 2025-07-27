@@ -31,6 +31,9 @@ class NasdaqOnlyDownloader:
 """Downloads ONLY NASDAQ ticker list (no other exchanges)"""
 
 def __init__(self):
+    """Placeholder implementation"""
+    pass
+    pass
 self.nasdaq_ftp_url = "ftp://ftp.nasdaqtrader.com/symboldirectory/nasdaqlisted.txt"
 self.data_dir = Path('data/nasdaq_only')
 self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -69,12 +72,14 @@ self.print_step("Downloading NASDAQ-only ticker list...")
 tickers = set()
 
 try:
+    pass
 local_path = self.data_dir / 'nasdaqlisted.txt'
 
 self.print_step("Downloading from official NASDAQ FTP (NASDAQ ONLY)...")
 urllib.request.urlretrieve(self.nasdaq_ftp_url, local_path)
 
 if local_path.exists() and local_path.stat().st_size > 0:
+    pass
 nasdaq_tickers = self.parse_nasdaq_only_file(local_path)
 tickers.update(nasdaq_tickers)
 self.print_success(f"Downloaded {len(nasdaq_tickers):,} NASDAQ-only tickers")
@@ -96,7 +101,9 @@ def parse_nasdaq_only_file(self, file_path: Path) -> Set[str]:
 tickers = set()
 
 try:
+    pass
 with open(file_path, 'r', encoding='utf-8') as f:
+    pass
 content = f.read()
 
 lines = content.strip().split('\n')
@@ -104,6 +111,7 @@ lines = content.strip().split('\n')
 data_lines = [line for line in lines[1:] if not line.startswith('File Creation Time')]
 
 for line in data_lines:
+    pass
 fields = line.split('|')
 if len(fields) >= 8: # NASDAQ file has specific format
 symbol = fields[0].strip()
@@ -185,6 +193,7 @@ tickers = set(nasdaq_core_tickers)
 
 # Add ticker details for fallback
 for ticker in tickers:
+    pass
 self.ticker_details[ticker] = {
 'name': f'{ticker} Corporation',
 'exchange': 'NASDAQ',
@@ -204,6 +213,7 @@ self.print_step("Cleaning and validating NASDAQ ticker symbols...")
 cleaned = set()
 
 for ticker in tickers:
+    pass
 # Basic cleaning
 ticker = ticker.strip().upper()
 
@@ -217,6 +227,7 @@ cleaned.add(ticker)
 
 removed_count = len(tickers) - len(cleaned)
 if removed_count > 0:
+    pass
 self.print_success(f"Cleaned {removed_count:,} invalid tickers")
 
 return cleaned
@@ -250,6 +261,7 @@ NASDAQ_ONLY_TICKERS = [
 
 # Add tickers in rows of 10
 for i in range(0, len(sorted_tickers), 10):
+    pass
 row = sorted_tickers[i:i+10]
 python_content += ' ' + ', '.join(f'"{ticker}"' for ticker in row) + ',\n'
 
@@ -292,6 +304,7 @@ return {{
 SAMPLE_NASDAQ_TICKERS = NASDAQ_ONLY_TICKERS[:20]
 
 if __name__ == "__main__":
+    pass
 print(f" NASDAQ-Only Ticker List")
 print(f" Total NASDAQ tickers: {{get_nasdaq_ticker_count():,}}")
 print(f" Exchange: {{EXCHANGE}} ONLY")
@@ -301,6 +314,7 @@ print(f" Ready for Stock Scanner integration!")
 
 # Write to file
 with open(output_file, 'w', encoding='utf-8') as f:
+    pass
 f.write(python_content)
 
 self.print_success(f"Saved {len(sorted_tickers):,} NASDAQ-only tickers to {output_file}")
@@ -315,10 +329,12 @@ csv_file = self.data_dir / f'nasdaq_only_export_{timestamp}.csv'
 self.print_step(f"Generating NASDAQ-only CSV export...")
 
 with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+    pass
 writer = csv.writer(f)
 writer.writerow(['Symbol', 'Name', 'Exchange', 'Market_Category', 'ETF', 'Source'])
 
 for ticker in sorted(tickers):
+    pass
 details = self.ticker_details.get(ticker, {})
 writer.writerow([
 ticker,
@@ -340,10 +356,12 @@ print(" Source: NASDAQ FTP (excludes NYSE, ARCA, BATS, etc.)")
 print(" Pure NASDAQ exchange securities only")
 
 try:
+    pass
 # Download NASDAQ-only tickers
 nasdaq_tickers = self.download_nasdaq_only()
 
 if not nasdaq_tickers:
+    pass
 self.print_error("No NASDAQ tickers downloaded!")
 return set(), Path()
 
@@ -372,10 +390,13 @@ print(" BATS - Excluded")
 print(" Other exchanges - Excluded")
 
 if self.errors:
+    pass
 print(f"\n WARNINGS ({len(self.errors)}):")
 for error in self.errors[:3]:
+    pass
 print(f" • {error}")
 if len(self.errors) > 3:
+    pass
 print(f" ... and {len(self.errors) - 3} more warnings")
 
 print(f"\n NEXT STEPS:")
@@ -394,9 +415,11 @@ def main():
 downloader = NasdaqOnlyDownloader()
 
 try:
+    pass
 tickers, output_file = downloader.run_nasdaq_only_download()
 
 if tickers:
+    pass
 print(f"\n SUCCESS: Downloaded {len(tickers):,} NASDAQ-only tickers")
 return 0
 else:
@@ -411,4 +434,5 @@ print(f"\n Unexpected error: {e}")
 return 1
 
 if __name__ == "__main__":
+    pass
 sys.exit(main())
