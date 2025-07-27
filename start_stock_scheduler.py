@@ -103,9 +103,10 @@ class StockSchedulerManager:
 
         try:
             # Start the scheduler with startup mode (runs initial update then schedules)
+            # Updated to 3500 stocks limit with enhanced error handling
             process = subprocess.Popen([
                 str(self.venv_python), str(self.manage_py),
-                'update_stocks_yfinance', '--startup', '--nasdaq-only'
+                'update_stocks_yfinance', '--startup', '--nasdaq-only', '--limit', '3500'
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
             logger.info(f"[DATE] Scheduler started with PID: {process.pid}")
@@ -147,7 +148,7 @@ Type=simple
 User={os.getenv('USER', 'root')}
 WorkingDirectory={self.project_root}
 Environment=PYTHONPATH={self.project_root}
-ExecStart={self.venv_python} {self.manage_py} update_stocks_yfinance --startup --nasdaq-only
+ExecStart={self.venv_python} {self.manage_py} update_stocks_yfinance --startup --nasdaq-only --limit 3500
 Restart=always
 RestartSec=30
 StandardOutput=journal
@@ -185,7 +186,7 @@ WantedBy=multi-user.target
             # Create a batch file for Windows Task Scheduler
             batch_content = f"""@echo off
 cd /d "{self.project_root}"
-"{self.venv_python}" "{self.manage_py}" update_stocks_yfinance --startup --nasdaq-only
+"{self.venv_python}" "{self.manage_py}" update_stocks_yfinance --startup --nasdaq-only --limit 3500
 """
 
             batch_file = self.project_root / 'start_stock_scheduler.bat'
