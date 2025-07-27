@@ -688,4 +688,300 @@ def stock_statistics_api(request):
             'error': 'Unable to fetch stock statistics'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def market_stats_api(request):
+    """
+    Get overall market statistics
+    """
+    try:
+        # Get market statistics from database
+        total_stocks = Stock.objects.count()
+        nasdaq_stocks = Stock.objects.filter(exchange='NASDAQ').count()
+        
+        # Calculate market trends
+        gainers = Stock.objects.filter(price_change__gt=0).count()
+        losers = Stock.objects.filter(price_change__lt=0).count()
+        unchanged = Stock.objects.filter(price_change=0).count()
+        
+        # Get top performers
+        top_gainers = Stock.objects.filter(
+            price_change__gt=0
+        ).order_by('-price_change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+        )
+        
+        top_losers = Stock.objects.filter(
+            price_change__lt=0
+        ).order_by('price_change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+        )
+        
+        # Most active by volume
+        most_active = Stock.objects.exclude(
+            volume__isnull=True
+        ).order_by('-volume')[:5].values(
+            'ticker', 'name', 'current_price', 'volume'
+        )
+        
+        stats = {
+            'market_overview': {
+                'total_stocks': total_stocks,
+                'nasdaq_stocks': nasdaq_stocks,
+                'gainers': gainers,
+                'losers': losers,
+                'unchanged': unchanged
+            },
+            'top_gainers': list(top_gainers),
+            'top_losers': list(top_losers),
+            'most_active': list(most_active),
+            'last_updated': timezone.now().isoformat()
+        }
+        
+        return Response(stats, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Market stats API error: {e}")
+        return Response(
+            {'error': 'Failed to retrieve market statistics'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def filter_stocks_api(request):
+    """
+    Filter stocks based on various criteria
+    """
+    try:
+        queryset = Stock.objects.all()
+        
+        # Apply filters
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        min_volume = request.GET.get('min_volume')
+        max_volume = request.GET.get('max_volume')
+        sector = request.GET.get('sector')
+        exchange = request.GET.get('exchange')
+        
+        if min_price:
+            queryset = queryset.filter(current_price__gte=float(min_price))
+        if max_price:
+            queryset = queryset.filter(current_price__lte=float(max_price))
+        if min_volume:
+            queryset = queryset.filter(volume__gte=int(min_volume))
+        if max_volume:
+            queryset = queryset.filter(volume__lte=int(max_volume))
+        if sector:
+            queryset = queryset.filter(sector__icontains=sector)
+        if exchange:
+            queryset = queryset.filter(exchange__icontains=exchange)
+        
+        # Order by
+        order_by = request.GET.get('order_by', 'ticker')
+        if order_by in ['ticker', 'current_price', 'volume', 'price_change_percent']:
+            queryset = queryset.order_by(order_by)
+        
+        # Pagination
+        limit = int(request.GET.get('limit', 100))
+        offset = int(request.GET.get('offset', 0))
+        
+        stocks = queryset[offset:offset + limit]
+        
+        result = []
+        for stock in stocks:
+            result.append({
+                'ticker': stock.ticker,
+                'name': stock.name,
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change': format_decimal_safe(stock.price_change),
+                'price_change_percent': format_decimal_safe(stock.price_change_percent),
+                'volume': stock.volume,
+                'market_cap': format_decimal_safe(stock.market_cap),
+                'sector': stock.sector,
+                'exchange': stock.exchange
+            })
+        
+        return Response({
+            'stocks': result,
+            'total_count': queryset.count(),
+            'filters_applied': {
+                'min_price': min_price,
+                'max_price': max_price,
+                'min_volume': min_volume,
+                'max_volume': max_volume,
+                'sector': sector,
+                'exchange': exchange
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Filter stocks API error: {e}")
+        return Response(
+            {'error': 'Failed to filter stocks'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def realtime_stock_api(request, ticker):
+    """
+    Get real-time stock data using yfinance
+    """
+    try:
+        # Get real-time data from yfinance
+        stock = yf.Ticker(ticker.upper())
+        info = stock.info
+        history = stock.history(period="1d", interval="1m")
+        
+        if history.empty:
+            return Response(
+                {'error': f'No real-time data available for {ticker}'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        latest = history.iloc[-1]
+        
+        data = {
+            'ticker': ticker.upper(),
+            'company_name': info.get('longName', 'Unknown'),
+            'current_price': float(latest['Close']),
+            'open_price': float(latest['Open']),
+            'high_price': float(latest['High']),
+            'low_price': float(latest['Low']),
+            'volume': int(latest['Volume']),
+            'market_cap': info.get('marketCap'),
+            'pe_ratio': info.get('trailingPE'),
+            'dividend_yield': info.get('dividendYield'),
+            'last_updated': timezone.now().isoformat(),
+            'market_status': 'open' if info.get('regularMarketTime') else 'closed'
+        }
+        
+        return Response(data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Real-time stock API error for {ticker}: {e}")
+        return Response(
+            {'error': f'Failed to retrieve real-time data for {ticker}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def trending_stocks_api(request):
+    """
+    Get trending stocks based on volume and price changes
+    """
+    try:
+        # Get top trending by volume
+        high_volume_stocks = Stock.objects.exclude(
+            volume__isnull=True
+        ).order_by('-volume')[:10]
+        
+        # Get top gainers
+        top_gainers = Stock.objects.filter(
+            price_change_percent__gt=0
+        ).order_by('-price_change_percent')[:10]
+        
+        # Get most active (high volume + significant price movement)
+        most_active = Stock.objects.exclude(
+            volume__isnull=True,
+            price_change_percent__isnull=True
+        ).filter(
+            volume__gt=1000000  # High volume threshold
+        ).order_by('-volume')[:10]
+        
+        def format_stock_data(stocks):
+            return [{
+                'ticker': stock.ticker,
+                'name': stock.name,
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change': format_decimal_safe(stock.price_change),
+                'price_change_percent': format_decimal_safe(stock.price_change_percent),
+                'volume': stock.volume,
+                'market_cap': format_decimal_safe(stock.market_cap)
+            } for stock in stocks]
+        
+        trending_data = {
+            'high_volume': format_stock_data(high_volume_stocks),
+            'top_gainers': format_stock_data(top_gainers),
+            'most_active': format_stock_data(most_active),
+            'last_updated': timezone.now().isoformat()
+        }
+        
+        return Response(trending_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Trending stocks API error: {e}")
+        return Response(
+            {'error': 'Failed to retrieve trending stocks'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_alert_api(request):
+    """
+    Create a new stock price alert
+    """
+    try:
+        data = json.loads(request.body)
+        
+        required_fields = ['ticker', 'target_price', 'condition', 'email']
+        for field in required_fields:
+            if field not in data:
+                return Response(
+                    {'error': f'Missing required field: {field}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Validate condition
+        if data['condition'] not in ['above', 'below']:
+            return Response(
+                {'error': 'Condition must be "above" or "below"'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if stock exists
+        try:
+            stock = Stock.objects.get(ticker=data['ticker'].upper())
+        except Stock.DoesNotExist:
+            return Response(
+                {'error': f'Stock {data["ticker"]} not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Create alert
+        alert = StockAlert.objects.create(
+            stock=stock,
+            target_price=Decimal(str(data['target_price'])),
+            condition=data['condition'],
+            email=data['email'],
+            is_active=True
+        )
+        
+        return Response({
+            'alert_id': alert.id,
+            'message': f'Alert created for {stock.ticker}',
+            'details': {
+                'ticker': stock.ticker,
+                'target_price': float(alert.target_price),
+                'condition': alert.condition,
+                'email': alert.email,
+                'created_at': alert.created_at.isoformat()
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except json.JSONDecodeError:
+        return Response(
+            {'error': 'Invalid JSON data'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        logger.error(f"Create alert API error: {e}")
+        return Response(
+            {'error': 'Failed to create alert'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 # Helper functions - moved to utils for better organization
