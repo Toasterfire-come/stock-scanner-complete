@@ -37,23 +37,7 @@ echo [STEP 2] Downloading XAMPP installer...
 if exist "xampp-installer.exe" del "xampp-installer.exe"
 
 echo Downloading XAMPP (this may take several minutes)...
-powershell -Command "& {
-    $ProgressPreference = 'SilentlyContinue'
-    try {
-        Write-Host 'Downloading XAMPP installer...'
-        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/xampp/files/XAMPP Windows/8.2.12/xampp-windows-x64-8.2.12-0-VS16-installer.exe/download' -OutFile 'xampp-installer.exe'
-        Write-Host 'SUCCESS: XAMPP installer downloaded'
-    } catch {
-        Write-Host 'ERROR: Download failed, trying alternative...'
-        try {
-            Invoke-WebRequest -Uri 'https://www.apachefriends.org/xampp-files/8.2.12/xampp-windows-x64-8.2.12-0-VS16-installer.exe' -OutFile 'xampp-installer.exe'
-            Write-Host 'SUCCESS: XAMPP installer downloaded from alternative source'
-        } catch {
-            Write-Host 'ERROR: All downloads failed'
-            exit 1
-        }
-    }
-}"
+powershell -Command "try { $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://sourceforge.net/projects/xampp/files/XAMPP Windows/8.2.12/xampp-windows-x64-8.2.12-0-VS16-installer.exe/download' -OutFile 'xampp-installer.exe'; Write-Host 'SUCCESS: XAMPP installer downloaded' } catch { Write-Host 'ERROR: Download failed, trying alternative...'; try { Invoke-WebRequest -Uri 'https://www.apachefriends.org/xampp-files/8.2.12/xampp-windows-x64-8.2.12-0-VS16-installer.exe' -OutFile 'xampp-installer.exe'; Write-Host 'SUCCESS: Downloaded from alternative source' } catch { Write-Host 'ERROR: All downloads failed'; exit 1 } }"
 
 if not exist "xampp-installer.exe" (
     echo ERROR: Failed to download XAMPP installer
@@ -164,52 +148,7 @@ echo SUCCESS: Python packages installed
 echo.
 
 echo [STEP 8] Updating Django settings for XAMPP...
-python -c "
-import os
-import re
-
-settings_file = 'stockscanner_django/settings.py'
-if os.path.exists(settings_file):
-    with open(settings_file, 'r') as f:
-        content = f.read()
-    
-    # Update database configuration for XAMPP (no password by default)
-    db_config = '''DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'stockscanner',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'use_unicode': True,
-            'init_command': \"SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1\",
-            'autocommit': True,
-            'connect_timeout': 60,
-            'read_timeout': 300,
-            'write_timeout': 300,
-        },
-        'CONN_MAX_AGE': 0,
-        'ATOMIC_REQUESTS': True,
-    }
-}'''
-    
-    # Replace existing DATABASES configuration
-    content = re.sub(r'DATABASES\s*=\s*\{[^}]*\}[^}]*\}', db_config, content, flags=re.DOTALL)
-    
-    # Add pymysql import if not present
-    if 'import pymysql' not in content:
-        content = 'import pymysql\npymysql.install_as_MySQLdb()\n\n' + content
-    
-    with open(settings_file, 'w') as f:
-        f.write(content)
-    
-    print('SUCCESS: Django settings updated for XAMPP')
-else:
-    print('ERROR: Django settings file not found')
-"
+python -c "import os; import re; settings_file = 'stockscanner_django/settings.py'; content = open(settings_file).read() if os.path.exists(settings_file) else ''; db_config = '''DATABASES = {\n    'default': {\n        'ENGINE': 'django.db.backends.mysql',\n        'NAME': 'stockscanner',\n        'USER': 'root',\n        'PASSWORD': '',\n        'HOST': 'localhost',\n        'PORT': '3306',\n        'OPTIONS': {\n            'charset': 'utf8mb4',\n            'use_unicode': True,\n            'init_command': \"SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1\",\n            'autocommit': True,\n            'connect_timeout': 60,\n            'read_timeout': 300,\n            'write_timeout': 300,\n        },\n        'CONN_MAX_AGE': 0,\n        'ATOMIC_REQUESTS': True,\n    }\n}'''; content = re.sub(r'DATABASES\s*=\s*\{[^}]*\}[^}]*\}', db_config, content, flags=re.DOTALL); content = 'import pymysql\npymysql.install_as_MySQLdb()\n\n' + content if 'import pymysql' not in content else content; open(settings_file, 'w').write(content); print('SUCCESS: Django settings updated for XAMPP')"
 echo.
 
 echo [STEP 9] Creating XAMPP-specific batch files...
@@ -264,17 +203,7 @@ echo @echo off
 echo echo Testing XAMPP Setup...
 echo set DJANGO_SETTINGS_MODULE=stockscanner_django.settings
 echo set PATH=%%PATH%%;%XAMPP_MYSQL_PATH%
-echo python -c "
-echo import os
-echo os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'^)
-echo import django
-echo django.setup(^)
-echo from stocks.models import Stock
-echo print(f'SUCCESS: Database has {Stock.objects.count(^)} stocks'^)
-echo if Stock.objects.exists(^):
-echo     sample = Stock.objects.first(^)
-echo     print(f'Sample: {sample.ticker} - {sample.name}'^)
-echo "
+echo python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'); import django; django.setup(); from stocks.models import Stock; print(f'SUCCESS: Database has {Stock.objects.count()} stocks'); sample = Stock.objects.first(); print(f'Sample: {sample.ticker} - {sample.name}' if sample else 'No sample data')"
 echo pause
 ) > test_xampp_setup.bat
 
@@ -328,121 +257,12 @@ echo SUCCESS: Database schema created
 echo.
 
 echo [STEP 11] Creating sample data and admin user...
-python -c "
-import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-import django
-django.setup()
-
-from stocks.models import Stock
-from django.contrib.auth.models import User
-from decimal import Decimal
-from django.utils import timezone
-
-print('Setting up admin user and sample data...')
-
-# Create admin user
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-    print('SUCCESS: Admin user created (admin/admin123)')
-else:
-    print('INFO: Admin user already exists')
-
-# Create sample stocks
-if Stock.objects.count() == 0:
-    sample_stocks = [
-        {
-            'ticker': 'AAPL', 'name': 'Apple Inc.',
-            'current_price': Decimal('150.25'), 'price_change': Decimal('2.50'),
-            'price_change_percent': Decimal('1.69'), 'volume': 50000000,
-            'market_cap': Decimal('2500000000000'), 'sector': 'Technology',
-            'industry': 'Consumer Electronics', 'exchange': 'NASDAQ',
-            'last_updated': timezone.now()
-        },
-        {
-            'ticker': 'GOOGL', 'name': 'Alphabet Inc.',
-            'current_price': Decimal('2750.80'), 'price_change': Decimal('-15.20'),
-            'price_change_percent': Decimal('-0.55'), 'volume': 25000000,
-            'market_cap': Decimal('1800000000000'), 'sector': 'Technology',
-            'industry': 'Internet Software & Services', 'exchange': 'NASDAQ',
-            'last_updated': timezone.now()
-        },
-        {
-            'ticker': 'TSLA', 'name': 'Tesla, Inc.',
-            'current_price': Decimal('245.75'), 'price_change': Decimal('8.25'),
-            'price_change_percent': Decimal('3.47'), 'volume': 75000000,
-            'market_cap': Decimal('780000000000'), 'sector': 'Consumer Discretionary',
-            'industry': 'Auto Manufacturers', 'exchange': 'NASDAQ',
-            'last_updated': timezone.now()
-        },
-        {
-            'ticker': 'MSFT', 'name': 'Microsoft Corporation',
-            'current_price': Decimal('378.50'), 'price_change': Decimal('4.75'),
-            'price_change_percent': Decimal('1.27'), 'volume': 30000000,
-            'market_cap': Decimal('2800000000000'), 'sector': 'Technology',
-            'industry': 'Software', 'exchange': 'NASDAQ',
-            'last_updated': timezone.now()
-        },
-        {
-            'ticker': 'AMZN', 'name': 'Amazon.com, Inc.',
-            'current_price': Decimal('145.80'), 'price_change': Decimal('-2.30'),
-            'price_change_percent': Decimal('-1.55'), 'volume': 40000000,
-            'market_cap': Decimal('1500000000000'), 'sector': 'Consumer Discretionary',
-            'industry': 'Internet Retail', 'exchange': 'NASDAQ',
-            'last_updated': timezone.now()
-        }
-    ]
-    
-    for stock_data in sample_stocks:
-        Stock.objects.create(**stock_data)
-    
-    print(f'SUCCESS: Created {len(sample_stocks)} sample stocks')
-else:
-    print(f'INFO: Database already has {Stock.objects.count()} stocks')
-
-print(f'Final database status: {Stock.objects.count()} stocks total')
-"
+python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'); import django; django.setup(); from stocks.models import Stock; from django.contrib.auth.models import User; from decimal import Decimal; from django.utils import timezone; print('Setting up admin user and sample data...'); User.objects.create_superuser('admin', 'admin@example.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('INFO: Admin user already exists'); stocks_created = 0 if Stock.objects.count() == 0 else Stock.objects.count(); sample_stocks = [{'ticker': 'AAPL', 'name': 'Apple Inc.', 'current_price': Decimal('150.25'), 'price_change': Decimal('2.50'), 'price_change_percent': Decimal('1.69'), 'volume': 50000000, 'market_cap': Decimal('2500000000000'), 'sector': 'Technology', 'industry': 'Consumer Electronics', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'GOOGL', 'name': 'Alphabet Inc.', 'current_price': Decimal('2750.80'), 'price_change': Decimal('-15.20'), 'price_change_percent': Decimal('-0.55'), 'volume': 25000000, 'market_cap': Decimal('1800000000000'), 'sector': 'Technology', 'industry': 'Internet Software & Services', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'TSLA', 'name': 'Tesla, Inc.', 'current_price': Decimal('245.75'), 'price_change': Decimal('8.25'), 'price_change_percent': Decimal('3.47'), 'volume': 75000000, 'market_cap': Decimal('780000000000'), 'sector': 'Consumer Discretionary', 'industry': 'Auto Manufacturers', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'MSFT', 'name': 'Microsoft Corporation', 'current_price': Decimal('378.50'), 'price_change': Decimal('4.75'), 'price_change_percent': Decimal('1.27'), 'volume': 30000000, 'market_cap': Decimal('2800000000000'), 'sector': 'Technology', 'industry': 'Software', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'AMZN', 'name': 'Amazon.com, Inc.', 'current_price': Decimal('145.80'), 'price_change': Decimal('-2.30'), 'price_change_percent': Decimal('-1.55'), 'volume': 40000000, 'market_cap': Decimal('1500000000000'), 'sector': 'Consumer Discretionary', 'industry': 'Internet Retail', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}] if stocks_created == 0 else []; [Stock.objects.create(**stock_data) for stock_data in sample_stocks] if sample_stocks else None; print(f'SUCCESS: Created {len(sample_stocks)} sample stocks' if sample_stocks else f'INFO: Database already has {Stock.objects.count()} stocks'); print(f'Final database status: {Stock.objects.count()} stocks total')"
 echo.
 
 echo [STEP 12] Final testing and verification...
 echo Testing complete XAMPP setup...
-python -c "
-import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-import django
-django.setup()
-
-from stocks.models import Stock
-from django.db import connection
-
-# Test database connection
-try:
-    with connection.cursor() as cursor:
-        cursor.execute('SELECT COUNT(*) FROM stocks_stock')
-        count = cursor.fetchone()[0]
-        print(f'SUCCESS: Database connection working - {count} stocks')
-        
-        # Test table structure
-        cursor.execute('DESCRIBE stocks_stock')
-        columns = [row[0] for row in cursor.fetchall()]
-        required_fields = ['ticker', 'name', 'current_price', 'sector', 'exchange']
-        
-        for field in required_fields:
-            if field in columns:
-                print(f'SUCCESS: Field {field} exists')
-            else:
-                print(f'ERROR: Field {field} missing')
-        
-        # Test sample data
-        aapl = Stock.objects.filter(ticker='AAPL').first()
-        if aapl:
-            print(f'SUCCESS: Found AAPL - {aapl.name} at ${aapl.current_price}')
-        
-        print('SUCCESS: All XAMPP database tests passed')
-        
-except Exception as e:
-    print(f'ERROR: Database test failed - {e}')
-"
+python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'); import django; django.setup(); from stocks.models import Stock; from django.db import connection; print('Testing database functionality...'); stock_count = Stock.objects.count(); print(f'SUCCESS: Database connection working - {stock_count} stocks'); aapl = Stock.objects.filter(ticker='AAPL').first(); print(f'SUCCESS: Found AAPL - {aapl.name} at ${aapl.current_price}' if aapl else 'WARNING: AAPL not found'); sample = Stock.objects.first(); [print(f'SUCCESS: Field {field} = {getattr(sample, field, None)}' if getattr(sample, field, None) is not None else f'WARNING: Field {field} is None') for field in ['ticker', 'name', 'current_price', 'sector', 'exchange']] if sample else None; print('SUCCESS: All XAMPP database tests passed')"
 echo.
 
 echo ========================================
