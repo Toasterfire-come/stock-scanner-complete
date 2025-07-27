@@ -3,6 +3,12 @@
 import os
 import sys
 
+# Add XAMPP MySQL to PATH if it exists
+XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
+if os.path.exists(XAMPP_MYSQL_PATH) and XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
+    os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
+    print(f"INFO: Added XAMPP MySQL to PATH: {XAMPP_MYSQL_PATH}")
+
 # Configure PyMySQL for MySQL compatibility
 try:
     import pymysql

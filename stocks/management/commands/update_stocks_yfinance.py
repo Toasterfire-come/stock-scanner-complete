@@ -22,6 +22,12 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 
+# Add XAMPP MySQL to PATH if it exists
+XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
+if os.path.exists(XAMPP_MYSQL_PATH) and XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
+    os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
+    print(f"INFO: Added XAMPP MySQL to PATH for stock updates: {XAMPP_MYSQL_PATH}")
+
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):

@@ -9,6 +9,17 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# XAMPP Auto-Detection and Configuration
+XAMPP_PATH = r"C:\xampp"
+XAMPP_MYSQL_PATH = os.path.join(XAMPP_PATH, "mysql", "bin")
+IS_XAMPP_AVAILABLE = os.path.exists(XAMPP_PATH) and os.path.exists(XAMPP_MYSQL_PATH)
+
+if IS_XAMPP_AVAILABLE:
+    print("INFO: XAMPP detected - configuring for XAMPP MySQL")
+    # Add XAMPP MySQL to PATH
+    if XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
+        os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
@@ -60,21 +71,48 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
-# Database configuration - MySQL
-DATABASES = {
-    'default': {
-        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
-        'NAME': os.environ.get('DB_NAME', 'stock_scanner_nasdaq'),
-        'USER': os.environ.get('DB_USER', 'django_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+# Database configuration - Auto-detect XAMPP or use environment settings
+if IS_XAMPP_AVAILABLE:
+    # XAMPP Configuration (no password by default)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'stockscanner'),
+            'USER': os.environ.get('DB_USER', 'root'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # XAMPP default: no password
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'use_unicode': True,
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1",
+                'autocommit': True,
+                'connect_timeout': 60,
+                'read_timeout': 300,
+                'write_timeout': 300,
+            },
+            'CONN_MAX_AGE': 0,
+            'ATOMIC_REQUESTS': True,
         }
     }
-}
+    print("INFO: Using XAMPP MySQL configuration")
+else:
+    # Standard MySQL configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+            'NAME': os.environ.get('DB_NAME', 'stock_scanner_nasdaq'),
+            'USER': os.environ.get('DB_USER', 'django_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
+            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
+        }
+    }
+    print("INFO: Using standard MySQL configuration")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
