@@ -23,6 +23,7 @@ import os
 from pathlib import Path
 import random
 import requests
+from proxy_manager import ProxyManager
 
 # Add XAMPP MySQL to PATH if it exists
 XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
@@ -234,7 +235,7 @@ class Command(BaseCommand):
         return symbols[:limit]
 
     def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH"):
-        """Process stocks in batches with proxy rotation and comprehensive data collection"""
+        """Process stocks in batches with advanced proxy rotation and comprehensive data collection"""
         import math
         start_time = time.time()
         total_symbols = len(symbols)
@@ -244,8 +245,11 @@ class Command(BaseCommand):
         failed = 0
         processed = 0
         lock = threading.Lock()
-        proxy_list = self._get_free_proxies()
-        proxy_index = 0
+        
+        # Initialize advanced proxy manager
+        proxy_manager = ProxyManager(min_proxies=100, max_proxies=200)
+        proxy_manager.reset_run()  # Reset for new run
+        
         def update_counters(success, count=1):
             nonlocal successful, failed, processed
             with lock:
@@ -254,13 +258,7 @@ class Command(BaseCommand):
                     successful += count
                 else:
                     failed += count
-        def get_next_proxy():
-            nonlocal proxy_index
-            if not proxy_list:
-                return None
-            proxy = proxy_list[proxy_index % len(proxy_list)]
-            proxy_index += 1
-            return proxy
+        
         def patch_yfinance_proxy(proxy):
             import yfinance
             if proxy:
@@ -273,26 +271,50 @@ class Command(BaseCommand):
             else:
                 import yfinance
                 yfinance.shared._requests = requests.Session()
+        
         for batch_num, batch in enumerate(batches, 1):
-            proxy = get_next_proxy()
+            # Get next available proxy (never reused in this run)
+            proxy = proxy_manager.get_next_proxy()
+            if not proxy:
+                self.stdout.write(f"[PROXY ERROR] No more proxies available for batch {batch_num}. Skipping batch.")
+                update_counters(False, len(batch))
+                continue
+            
             patch_yfinance_proxy(proxy)
+            self.stdout.write(f"[PROXY] Using proxy {batch_num}: {proxy}")
+            
             try:
                 time.sleep(random.uniform(0.7, 2.0))
                 data = None
+                proxy_failed = False
+                
                 for attempt in range(3):
                     try:
                         data = yf.download(batch, period="5d", group_by='ticker', threads=False)
                         break
                     except Exception as e:
-                        if attempt < 2:
-                            proxy = get_next_proxy()
-                            patch_yfinance_proxy(proxy)
-                            time.sleep(random.uniform(2, 5))
+                        err_str = str(e).lower()
+                        if 'too many requests' in err_str or 'rate limit' in err_str or 'timeout' in err_str:
+                            # Mark current proxy as failed
+                            proxy_manager.mark_proxy_failed(proxy)
+                            
+                            # Get new proxy
+                            proxy = proxy_manager.get_next_proxy()
+                            if proxy:
+                                patch_yfinance_proxy(proxy)
+                                self.stdout.write(f"[PROXY SWITCH] Switched to: {proxy}")
+                                time.sleep(random.uniform(2, 5))
+                            else:
+                                proxy_failed = True
+                                break
                         else:
-                            self.stdout.write(f"[PROXY ERROR] All proxies failed for batch {batch}. Skipping batch.")
-                if data is None or data.empty:
+                            # Non-proxy error, don't retry
+                            break
+                
+                if proxy_failed or data is None or data.empty:
                     update_counters(False, len(batch))
                     continue
+                
                 for symbol in batch:
                     try:
                         if symbol not in data or data[symbol].empty:
@@ -302,6 +324,7 @@ class Command(BaseCommand):
                                 stock.save()
                             update_counters(False)
                             continue
+                        
                         hist = data[symbol]
                         current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
                         if current_price is None or pd.isna(current_price):
@@ -311,6 +334,7 @@ class Command(BaseCommand):
                                 stock.save()
                             update_counters(False)
                             continue
+                        
                         price_change_today = None
                         change_percent = None
                         if len(hist) > 1:
@@ -318,6 +342,7 @@ class Command(BaseCommand):
                             if not pd.isna(prev_price) and prev_price > 0:
                                 price_change_today = current_price - prev_price
                                 change_percent = (price_change_today / prev_price) * 100
+                        
                         stock_data = {
                             'ticker': symbol,
                             'symbol': symbol,
@@ -325,9 +350,11 @@ class Command(BaseCommand):
                             'price_change_today': self._safe_decimal(price_change_today),
                             'change_percent': self._safe_decimal(change_percent),
                         }
+                        
                         for k, v in list(stock_data.items()):
                             if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
                                 stock_data[k] = None
+                        
                         if test_mode:
                             change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
                             self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
@@ -341,7 +368,9 @@ class Command(BaseCommand):
                                     stock=stock,
                                     price=current_price
                                 )
+                        
                         update_counters(True)
+                        
                     except Exception as e:
                         err_str = str(e).lower()
                         if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found']):
@@ -351,15 +380,26 @@ class Command(BaseCommand):
                                 stock.save()
                         self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
                         update_counters(False)
+                
             except Exception as e:
                 self.stdout.write(f"[BATCH ERROR] Batch {batch_num} failed: {e}")
                 update_counters(False, len(batch))
+            
+            # Pause every 100 tickers and show proxy stats
             if batch_num % 10 == 0:
+                stats = proxy_manager.get_proxy_stats()
                 self.stdout.write(f"[PAUSE] Pausing for 60s after {batch_num*batch_size} tickers...")
+                self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                 time.sleep(60)
+            
             progress = (batch_num * batch_size) / total_symbols * 100
             elapsed = time.time() - start_time
             self.stdout.write(f"[STATS] Progress: {min(batch_num*batch_size, total_symbols)}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
+        
+        # Final proxy stats
+        final_stats = proxy_manager.get_proxy_stats()
+        self.stdout.write(f"[FINAL PROXY STATS] Total: {final_stats['total_working']}, Used: {final_stats['used_in_run']}")
+        
         return {
             'total': total_symbols,
             'successful': successful,
@@ -413,10 +453,5 @@ class Command(BaseCommand):
         self.stdout.write("="*70)
 
     def _get_free_proxies(self):
-        """Fetch a list of free proxies from a public proxy list"""
-        try:
-            resp = requests.get('https://www.proxy-list.download/api/v1/get?type=https')
-            proxies = [f'http://{line.strip()}' for line in resp.text.splitlines() if line.strip()]
-            return proxies[:20]  # Use up to 20 proxies
-        except Exception:
-            return []
+        """Legacy method - now handled by ProxyManager"""
+        return []
