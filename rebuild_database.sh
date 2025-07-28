@@ -5,7 +5,9 @@ set -e
 
 # Load environment variables if .env exists
 if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+    set -a
+    source <(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env)
+    set +a
 fi
 
 # Set defaults if not set
