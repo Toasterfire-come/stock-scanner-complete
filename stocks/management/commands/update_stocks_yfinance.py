@@ -21,6 +21,7 @@ import schedule
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
+import random
 
 # Add XAMPP MySQL to PATH if it exists
 XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
@@ -255,99 +256,123 @@ class Command(BaseCommand):
         def process_symbol(symbol):
             """Process a single symbol with comprehensive data collection"""
             try:
-                time.sleep(delay)  # Rate limiting
-                
-                # Get comprehensive stock data
-                ticker_obj = yf.Ticker(symbol)
-                info = ticker_obj.info
-                hist = ticker_obj.history(period="5d")
-                
-                if hist.empty or not info:
-                    update_counters(False)
-                    return False
-                
-                # Get current price data
-                current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
-                if current_price is None or pd.isna(current_price):
-                    update_counters(False)
-                    return False
-                
-                # Calculate price changes
-                price_change_today = None
-                change_percent = None
-                if len(hist) > 1:
-                    prev_price = hist['Close'].iloc[-2]
-                    if not pd.isna(prev_price) and prev_price > 0:
-                        price_change_today = current_price - prev_price
-                        change_percent = (price_change_today / prev_price) * 100
-
-                # Extract comprehensive data from info
-                stock_data = {
-                    'ticker': symbol,
-                    'symbol': symbol,
-                    'company_name': info.get('longName') or info.get('shortName', ''),
-                    'name': info.get('longName') or info.get('shortName', ''),
-                    'exchange': info.get('exchange', 'NASDAQ'),
-                    
-                    # Price data
-                    'current_price': Decimal(str(current_price)) if current_price else None,
-                    'price_change_today': Decimal(str(price_change_today)) if price_change_today else None,
-                    'change_percent': Decimal(str(change_percent)) if change_percent else None,
-                    
-                    # Bid/Ask data
-                    'bid_price': self._safe_decimal(info.get('bid')),
-                    'ask_price': self._safe_decimal(info.get('ask')),
-                    'days_low': self._safe_decimal(info.get('dayLow')),
-                    'days_high': self._safe_decimal(info.get('dayHigh')),
-                    
-                    # Volume data
-                    'volume': info.get('volume'),
-                    'volume_today': info.get('volume'),
-                    'avg_volume_3mon': info.get('averageVolume'),
-                    'shares_available': info.get('sharesOutstanding'),
-                    
-                    # Market data
-                    'market_cap': info.get('marketCap'),
-                    
-                    # Financial ratios
-                    'pe_ratio': self._safe_decimal(info.get('trailingPE')),
-                    'dividend_yield': self._safe_decimal(info.get('dividendYield')),
-                    'earnings_per_share': self._safe_decimal(info.get('trailingEps')),
-                    'book_value': self._safe_decimal(info.get('bookValue')),
-                    'price_to_book': self._safe_decimal(info.get('priceToBook')),
-                    
-                    # 52-week range
-                    'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')),
-                    'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')),
-                    
-                    # Target
-                    'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
-                }
-                
-                # Calculate DVAV (Day Volume over Average Volume)
-                if stock_data['volume'] and stock_data['avg_volume_3mon']:
-                    stock_data['dvav'] = Decimal(str(stock_data['volume'] / stock_data['avg_volume_3mon']))
-                
-                if test_mode:
-                    change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
-                    self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
-                else:
-                    # Save to database
-                    stock, created = Stock.objects.update_or_create(
-                        ticker=symbol,
-                        defaults=stock_data
-                    )
-                    
-                    # Save price history
-                    if current_price:
-                        StockPrice.objects.create(
-                            stock=stock,
-                            price=current_price
-                        )
-                
-                update_counters(True)
-                return True
-                
+                # Add random delay between 0.3 and 0.7 seconds
+                time.sleep(random.uniform(0.3, 0.7))
+                retry = False
+                for attempt in range(2):  # Try up to 2 times if rate limited
+                    try:
+                        # Get comprehensive stock data
+                        ticker_obj = yf.Ticker(symbol)
+                        info = ticker_obj.info
+                        hist = ticker_obj.history(period="5d")
+                        if hist.empty or not info:
+                            # Mark as inactive if no data
+                            stock = Stock.objects.filter(ticker=symbol).first()
+                            if stock:
+                                stock.is_active = False
+                                stock.save()
+                            update_counters(False)
+                            return False
+                        # Get current price data
+                        current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
+                        if current_price is None or pd.isna(current_price):
+                            stock = Stock.objects.filter(ticker=symbol).first()
+                            if stock:
+                                stock.is_active = False
+                                stock.save()
+                            update_counters(False)
+                            return False
+                        # Calculate price changes
+                        price_change_today = None
+                        change_percent = None
+                        if len(hist) > 1:
+                            prev_price = hist['Close'].iloc[-2]
+                            if not pd.isna(prev_price) and prev_price > 0:
+                                price_change_today = current_price - prev_price
+                                change_percent = (price_change_today / prev_price) * 100
+                        # Extract comprehensive data from info
+                        stock_data = {
+                            'ticker': symbol,
+                            'symbol': symbol,
+                            'company_name': info.get('longName') or info.get('shortName', ''),
+                            'name': info.get('longName') or info.get('shortName', ''),
+                            'exchange': info.get('exchange', 'NASDAQ'),
+                            # Price data
+                            'current_price': self._safe_decimal(current_price),
+                            'price_change_today': self._safe_decimal(price_change_today),
+                            'change_percent': self._safe_decimal(change_percent),
+                            # Bid/Ask data
+                            'bid_price': self._safe_decimal(info.get('bid')),
+                            'ask_price': self._safe_decimal(info.get('ask')),
+                            'days_low': self._safe_decimal(info.get('dayLow')),
+                            'days_high': self._safe_decimal(info.get('dayHigh')),
+                            # Volume data
+                            'volume': info.get('volume'),
+                            'volume_today': info.get('volume'),
+                            'avg_volume_3mon': info.get('averageVolume'),
+                            'shares_available': info.get('sharesOutstanding'),
+                            # Market data
+                            'market_cap': info.get('marketCap'),
+                            # Financial ratios
+                            'pe_ratio': self._safe_decimal(info.get('trailingPE')),
+                            'dividend_yield': self._safe_decimal(info.get('dividendYield')),
+                            'earnings_per_share': self._safe_decimal(info.get('trailingEps')),
+                            'book_value': self._safe_decimal(info.get('bookValue')),
+                            'price_to_book': self._safe_decimal(info.get('priceToBook')),
+                            # 52-week range
+                            'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')),
+                            'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')),
+                            # Target
+                            'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
+                        }
+                        # Calculate DVAV (Day Volume over Average Volume)
+                        if stock_data['volume'] and stock_data['avg_volume_3mon']:
+                            try:
+                                dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
+                                if dvav_val.is_infinite() or dvav_val.is_nan():
+                                    stock_data['dvav'] = None
+                                else:
+                                    stock_data['dvav'] = dvav_val
+                            except Exception:
+                                stock_data['dvav'] = None
+                        # Check for any invalid values (Infinity, NaN, etc.)
+                        for k, v in list(stock_data.items()):
+                            if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
+                                stock_data[k] = None
+                        if test_mode:
+                            change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
+                            self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
+                        else:
+                            # Save to database
+                            stock, created = Stock.objects.update_or_create(
+                                ticker=symbol,
+                                defaults=stock_data
+                            )
+                            # Save price history
+                            if current_price:
+                                StockPrice.objects.create(
+                                    stock=stock,
+                                    price=current_price
+                                )
+                        update_counters(True)
+                        return True
+                    except Exception as e:
+                        err_str = str(e).lower()
+                        if 'too many requests' in err_str or 'rate limit' in err_str:
+                            if not retry:
+                                retry = True
+                                time.sleep(random.uniform(5, 10))  # Wait longer before retry
+                                continue
+                        # Mark as inactive if delisted or no data
+                        if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found']):
+                            stock = Stock.objects.filter(ticker=symbol).first()
+                            if stock:
+                                stock.is_active = False
+                                stock.save()
+                        logger.error(f"Error processing {symbol}: {e}")
+                        update_counters(False)
+                        return False
+                return False
             except Exception as e:
                 logger.error(f"Error processing {symbol}: {e}")
                 update_counters(False)
@@ -374,12 +399,15 @@ class Command(BaseCommand):
         }
 
     def _safe_decimal(self, value):
-        """Safely convert value to Decimal"""
+        """Safely convert value to Decimal, skip Infinity/NaN"""
         if value is None or pd.isna(value):
             return None
         try:
-            return Decimal(str(value))
-        except (ValueError, TypeError):
+            d = Decimal(str(value))
+            if d.is_infinite() or d.is_nan():
+                return None
+            return d
+        except (ValueError, TypeError, Exception):
             return None
 
     def _test_yfinance_connectivity(self):
