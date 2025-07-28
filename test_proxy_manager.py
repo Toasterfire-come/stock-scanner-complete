@@ -12,21 +12,21 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from proxy_manager import ProxyManager
-    print("✅ Successfully imported ProxyManager")
+    print("SUCCESS: Successfully imported ProxyManager")
 except ImportError as e:
-    print(f"❌ Failed to import ProxyManager: {e}")
+    print(f"ERROR: Failed to import ProxyManager: {e}")
     print("Installing required packages...")
     os.system("pip install requests")
     try:
         from proxy_manager import ProxyManager
-        print("✅ Successfully imported ProxyManager after installing requests")
+        print("SUCCESS: Successfully imported ProxyManager after installing requests")
     except ImportError as e:
-        print(f"❌ Still failed to import: {e}")
+        print(f"ERROR: Still failed to import: {e}")
         sys.exit(1)
 
 def test_proxy_manager():
     """Test the proxy manager functionality"""
-    print("\n🧪 Testing Proxy Manager")
+    print("\nTESTING Proxy Manager")
     print("=" * 50)
     
     # Create proxy manager with smaller pool for testing
@@ -37,7 +37,7 @@ def test_proxy_manager():
     print(f"   Found {count} working proxies")
     
     if count == 0:
-        print("⚠️ No proxies found. This is normal for testing.")
+        print("WARNING: No proxies found. This is normal for testing.")
         print("   The proxy manager will work when run with the full stock update.")
         return
     
@@ -73,8 +73,8 @@ def test_proxy_manager():
     reset_stats = manager.get_proxy_stats()
     print(f"   After reset - used in run: {reset_stats['used_in_run']}")
     
-    print("\n✅ Proxy Manager test completed successfully!")
-    print("\n📝 To use with stock updates:")
+    print("\nSUCCESS: Proxy Manager test completed successfully!")
+    print("\nNEXT: To use with stock updates:")
     print("   python3 manage.py update_stocks_yfinance --nasdaq-only --limit 100")
 
 if __name__ == "__main__":

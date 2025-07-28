@@ -42,13 +42,13 @@ class ProxyManager:
     def ensure_sufficient_proxies(self):
         """Ensure we have enough working proxies"""
         if len(self.working_proxies) < self.min_proxies:
-            self.logger.info(f"🔍 Need more proxies. Current: {len(self.working_proxies)}, Required: {self.min_proxies}")
+            self.logger.info(f"NEED MORE PROXIES: Current: {len(self.working_proxies)}, Required: {self.min_proxies}")
             self.refresh_proxy_pool(force=True)
         
         if len(self.working_proxies) == 0:
-            self.logger.warning("⚠️ No working proxies found. Will run without proxies.")
+            self.logger.warning("WARNING: No working proxies found. Will run without proxies.")
         else:
-            self.logger.info(f"✅ Ready with {len(self.working_proxies)} working proxies")
+            self.logger.info(f"READY: {len(self.working_proxies)} working proxies available")
     
     def get_proxy_sources(self):
         """Get list of proxy sources"""
@@ -147,7 +147,7 @@ class ProxyManager:
         if target_count is None:
             target_count = self.min_proxies
             
-        self.logger.info(f"🔍 Finding {target_count} working proxies...")
+        self.logger.info(f"FINDING {target_count} working proxies...")
         
         # Fetch from all sources
         all_proxies = set()
@@ -161,11 +161,11 @@ class ProxyManager:
                 try:
                     proxies = future.result()
                     all_proxies.update(proxies)
-                    self.logger.info(f"✅ Fetched {len(proxies)} proxies from {source}")
+                    self.logger.info(f"SUCCESS: Fetched {len(proxies)} proxies from {source}")
                 except Exception as e:
-                    self.logger.warning(f"❌ Failed to fetch from {source}: {e}")
+                    self.logger.warning(f"FAILED: Could not fetch from {source}: {e}")
         
-        self.logger.info(f"📊 Total unique proxies found: {len(all_proxies)}")
+        self.logger.info(f"TOTAL: {len(all_proxies)} unique proxies found")
         
         # Test proxies
         working_proxies = []
@@ -177,12 +177,12 @@ class ProxyManager:
                 try:
                     if future.result():
                         working_proxies.append(proxy)
-                        self.logger.info(f"✅ Working proxy: {proxy}")
+                        self.logger.info(f"WORKING: {proxy}")
                         
                         if len(working_proxies) >= target_count:
                             break
                 except Exception as e:
-                    self.logger.debug(f"❌ Failed proxy: {proxy}")
+                    self.logger.debug(f"FAILED: {proxy}")
         
         return working_proxies
     
@@ -197,7 +197,7 @@ class ProxyManager:
                 self.last_refresh is None or
                 current_time - self.last_refresh > self.refresh_interval):
                 
-                self.logger.info("🔄 Refreshing proxy pool...")
+                self.logger.info("REFRESHING proxy pool...")
                 
                 # Find new working proxies
                 new_proxies = self.find_working_proxies(self.max_proxies)
@@ -218,7 +218,7 @@ class ProxyManager:
                 # Save to file
                 self.save_proxies()
                 
-                self.logger.info(f"✅ Proxy pool refreshed: {len(self.working_proxies)} working proxies")
+                self.logger.info(f"SUCCESS: Proxy pool refreshed: {len(self.working_proxies)} working proxies")
             
             return len(self.working_proxies)
     
@@ -236,7 +236,7 @@ class ProxyManager:
             
             # If all proxies used, clear used list and start over
             if len(self.used_proxies) >= len(self.working_proxies):
-                self.logger.warning("⚠️ All proxies used, clearing used list")
+                self.logger.warning("WARNING: All proxies used, clearing used list")
                 self.used_proxies.clear()
                 
                 # Try to get first available
@@ -252,11 +252,11 @@ class ProxyManager:
         with self.lock:
             if proxy in self.working_proxies:
                 self.working_proxies.remove(proxy)
-                self.logger.warning(f"❌ Removed failed proxy: {proxy}")
+                self.logger.warning(f"REMOVED failed proxy: {proxy}")
                 
                 # If we're running low, refresh
                 if len(self.working_proxies) < self.min_proxies // 2:
-                    self.logger.info("🔄 Running low on proxies, triggering refresh...")
+                    self.logger.info("RUNNING LOW on proxies, triggering refresh...")
                     threading.Thread(target=self.refresh_proxy_pool, args=(True,)).start()
     
     def get_proxy_stats(self):
@@ -281,10 +281,10 @@ class ProxyManager:
             with open(self.proxy_file, 'w') as f:
                 json.dump(data, f, indent=2)
                 
-            self.logger.info(f"💾 Saved {len(self.working_proxies)} proxies to {self.proxy_file}")
+            self.logger.info(f"SAVED {len(self.working_proxies)} proxies to {self.proxy_file}")
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to save proxies: {e}")
+            self.logger.error(f"FAILED to save proxies: {e}")
     
     def load_proxies(self):
         """Load working proxies from file"""
@@ -298,11 +298,11 @@ class ProxyManager:
                 if last_refresh_str:
                     self.last_refresh = datetime.fromisoformat(last_refresh_str)
                 
-                self.logger.info(f"📂 Loaded {len(self.working_proxies)} proxies from {self.proxy_file}")
+                self.logger.info(f"LOADED {len(self.working_proxies)} proxies from {self.proxy_file}")
                 
                 # Validate loaded proxies
                 if self.working_proxies:
-                    self.logger.info("🔍 Validating loaded proxies...")
+                    self.logger.info("VALIDATING loaded proxies...")
                     valid_proxies = []
                     with ThreadPoolExecutor(max_workers=10) as executor:
                         future_to_proxy = {executor.submit(self.test_proxy, proxy): proxy for proxy in self.working_proxies}
@@ -313,17 +313,17 @@ class ProxyManager:
                                 valid_proxies.append(proxy)
                     
                     self.working_proxies = valid_proxies
-                    self.logger.info(f"✅ Validated {len(self.working_proxies)} proxies")
+                    self.logger.info(f"VALIDATED {len(self.working_proxies)} proxies")
                 
         except Exception as e:
-            self.logger.error(f"❌ Failed to load proxies: {e}")
+            self.logger.error(f"FAILED to load proxies: {e}")
             self.working_proxies = []
     
     def reset_run(self):
         """Reset used proxies for a new run"""
         with self.lock:
             self.used_proxies.clear()
-            self.logger.info("🔄 Reset proxy usage for new run")
+            self.logger.info("RESET proxy usage for new run")
 
     def get_proxy_for_ticker(self, ticker_number):
         """Get proxy for a specific ticker number, switching every 200 tickers"""
@@ -337,26 +337,26 @@ class ProxyManager:
                 proxy = self.get_next_proxy()
                 if proxy:
                     self.current_proxy = proxy
-                    self.logger.info(f"🔄 Switched to proxy {ticker_number//self.switch_interval + 1}: {proxy}")
+                    self.logger.info(f"SWITCHED: Proxy {ticker_number//self.switch_interval + 1}: {proxy}")
                 else:
-                    self.logger.warning("⚠️ No more proxies available, running without proxy")
+                    self.logger.warning("WARNING: No more proxies available, running without proxy")
                     self.current_proxy = None
             
             return self.current_proxy
 
 def main():
     """Test the proxy manager"""
-    print("🔧 Proxy Manager Test")
+    print("PROXY MANAGER TEST")
     print("=" * 50)
     
     manager = ProxyManager(min_proxies=50, max_proxies=100)
     
     # Refresh proxy pool
     count = manager.refresh_proxy_pool(force=True)
-    print(f"✅ Found {count} working proxies")
+    print(f"SUCCESS: Found {count} working proxies")
     
     # Test getting proxies
-    print("\n🧪 Testing proxy retrieval:")
+    print("\nTESTING proxy retrieval:")
     for i in range(10):
         proxy = manager.get_next_proxy()
         if proxy:
@@ -366,11 +366,11 @@ def main():
     
     # Show stats
     stats = manager.get_proxy_stats()
-    print(f"\n📊 Stats: {stats}")
+    print(f"\nSTATS: {stats}")
     
     # Reset for new run
     manager.reset_run()
-    print("🔄 Reset for new run")
+    print("RESET for new run")
 
 if __name__ == "__main__":
     main()
