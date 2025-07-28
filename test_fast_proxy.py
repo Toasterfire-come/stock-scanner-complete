@@ -35,7 +35,7 @@ def test_fast_proxy_finder():
     print("1. Testing proxy discovery...")
     start_time = time.time()
     
-    working_proxies = finder.find_working_proxies_fast(target_count=20)
+    working_proxies = finder.find_working_proxies_fast(target_count=None)
     
     elapsed = time.time() - start_time
     print(f"   Found {len(working_proxies)} working proxies in {elapsed:.1f} seconds")

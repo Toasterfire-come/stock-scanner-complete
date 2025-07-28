@@ -142,7 +142,10 @@ class FastProxyFinder:
     
     def find_working_proxies_fast(self, target_count=100):
         """Find working proxies quickly with optimized methods"""
-        self.logger.info(f"FAST PROXY FINDER: Target {target_count} working proxies")
+        if target_count is None:
+            self.logger.info("FAST PROXY FINDER: Finding all available working proxies")
+        else:
+            self.logger.info(f"FAST PROXY FINDER: Target {target_count} working proxies")
         
         # Fetch from all sources concurrently
         all_proxies = set()
@@ -182,11 +185,14 @@ class FastProxyFinder:
                     if future.result():
                         with self.lock:
                             working_proxies.append(proxy)
-                            self.logger.info(f"WORKING: {proxy} ({len(working_proxies)}/{target_count})")
-                            
-                            if len(working_proxies) >= target_count:
-                                self.logger.info(f"REACHED TARGET: {target_count} working proxies")
-                                break
+                            if target_count is None:
+                                self.logger.info(f"WORKING: {proxy} (Total: {len(working_proxies)})")
+                            else:
+                                self.logger.info(f"WORKING: {proxy} ({len(working_proxies)}/{target_count})")
+                                
+                                if len(working_proxies) >= target_count:
+                                    self.logger.info(f"REACHED TARGET: {target_count} working proxies")
+                                    break
                 except Exception as e:
                     self.logger.debug(f"Failed proxy: {proxy}")
         
