@@ -15,6 +15,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 import logging
+from fast_proxy_finder import FastProxyFinder
 
 class ProxyManager:
     def __init__(self, min_proxies=100, max_proxies=200, test_timeout=10):
@@ -143,47 +144,17 @@ class ProxyManager:
             return False
     
     def find_working_proxies(self, target_count=None):
-        """Find working proxies from multiple sources"""
+        """Find working proxies using fast proxy finder"""
         if target_count is None:
             target_count = self.min_proxies
             
-        self.logger.info(f"FINDING {target_count} working proxies...")
+        self.logger.info(f"FINDING {target_count} working proxies using fast finder...")
         
-        # Fetch from all sources
-        all_proxies = set()
-        sources = self.get_proxy_sources()
+        # Use fast proxy finder
+        fast_finder = FastProxyFinder(timeout=5, max_workers=100)
+        working_proxies = fast_finder.find_working_proxies_fast(target_count)
         
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            future_to_source = {executor.submit(self.fetch_proxies_from_source, source): source for source in sources}
-            
-            for future in as_completed(future_to_source):
-                source = future_to_source[future]
-                try:
-                    proxies = future.result()
-                    all_proxies.update(proxies)
-                    self.logger.info(f"SUCCESS: Fetched {len(proxies)} proxies from {source}")
-                except Exception as e:
-                    self.logger.warning(f"FAILED: Could not fetch from {source}: {e}")
-        
-        self.logger.info(f"TOTAL: {len(all_proxies)} unique proxies found")
-        
-        # Test proxies
-        working_proxies = []
-        with ThreadPoolExecutor(max_workers=20) as executor:
-            future_to_proxy = {executor.submit(self.test_proxy, proxy): proxy for proxy in all_proxies}
-            
-            for future in as_completed(future_to_proxy):
-                proxy = future_to_proxy[future]
-                try:
-                    if future.result():
-                        working_proxies.append(proxy)
-                        self.logger.info(f"WORKING: {proxy}")
-                        
-                        if len(working_proxies) >= target_count:
-                            break
-                except Exception as e:
-                    self.logger.debug(f"FAILED: {proxy}")
-        
+        self.logger.info(f"FAST FINDER: Found {len(working_proxies)} working proxies")
         return working_proxies
     
     def refresh_proxy_pool(self, force=False):
