@@ -27,14 +27,29 @@ class ProxyManager:
         self.proxy_file = Path("working_proxies.json")
         self.last_refresh = None
         self.refresh_interval = timedelta(hours=6)  # Refresh every 6 hours
+        self.switch_interval = 200  # Switch proxy every 200 tickers
+        self.current_proxy = None
+        self.ticker_count = 0
         
         # Setup logging
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
-        # Load existing proxies
+        # Load existing proxies and ensure we have enough
         self.load_proxies()
+        self.ensure_sufficient_proxies()
         
+    def ensure_sufficient_proxies(self):
+        """Ensure we have enough working proxies"""
+        if len(self.working_proxies) < self.min_proxies:
+            self.logger.info(f"🔍 Need more proxies. Current: {len(self.working_proxies)}, Required: {self.min_proxies}")
+            self.refresh_proxy_pool(force=True)
+        
+        if len(self.working_proxies) == 0:
+            self.logger.warning("⚠️ No working proxies found. Will run without proxies.")
+        else:
+            self.logger.info(f"✅ Ready with {len(self.working_proxies)} working proxies")
+    
     def get_proxy_sources(self):
         """Get list of proxy sources"""
         return [
@@ -309,6 +324,25 @@ class ProxyManager:
         with self.lock:
             self.used_proxies.clear()
             self.logger.info("🔄 Reset proxy usage for new run")
+
+    def get_proxy_for_ticker(self, ticker_number):
+        """Get proxy for a specific ticker number, switching every 200 tickers"""
+        with self.lock:
+            # Switch proxy every 200 tickers
+            if (ticker_number % self.switch_interval == 0 or 
+                self.current_proxy is None or 
+                self.current_proxy in self.used_proxies):
+                
+                # Get next available proxy
+                proxy = self.get_next_proxy()
+                if proxy:
+                    self.current_proxy = proxy
+                    self.logger.info(f"🔄 Switched to proxy {ticker_number//self.switch_interval + 1}: {proxy}")
+                else:
+                    self.logger.warning("⚠️ No more proxies available, running without proxy")
+                    self.current_proxy = None
+            
+            return self.current_proxy
 
 def main():
     """Test the proxy manager"""

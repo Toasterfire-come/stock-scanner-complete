@@ -235,12 +235,10 @@ class Command(BaseCommand):
         return symbols[:limit]
 
     def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH"):
-        """Process stocks in batches with advanced proxy rotation and comprehensive data collection"""
+        """Process stocks individually with proxy switching every 200 tickers"""
         import math
         start_time = time.time()
         total_symbols = len(symbols)
-        batch_size = 10  # Number of tickers per batch
-        batches = [symbols[i:i+batch_size] for i in range(0, total_symbols, batch_size)]
         successful = 0
         failed = 0
         processed = 0
@@ -250,14 +248,14 @@ class Command(BaseCommand):
         proxy_manager = ProxyManager(min_proxies=100, max_proxies=200)
         proxy_manager.reset_run()  # Reset for new run
         
-        def update_counters(success, count=1):
+        def update_counters(success):
             nonlocal successful, failed, processed
             with lock:
-                processed += count
+                processed += 1
                 if success:
-                    successful += count
+                    successful += 1
                 else:
-                    failed += count
+                    failed += 1
         
         def patch_yfinance_proxy(proxy):
             import yfinance
@@ -272,60 +270,34 @@ class Command(BaseCommand):
                 import yfinance
                 yfinance.shared._requests = requests.Session()
         
-        for batch_num, batch in enumerate(batches, 1):
-            # Get next available proxy (never reused in this run)
-            proxy = proxy_manager.get_next_proxy()
-            if not proxy:
-                self.stdout.write(f"[PROXY ERROR] No more proxies available for batch {batch_num}. Skipping batch.")
-                update_counters(False, len(batch))
-                continue
-            
-            patch_yfinance_proxy(proxy)
-            self.stdout.write(f"[PROXY] Using proxy {batch_num}: {proxy}")
-            
+        def process_symbol(symbol, ticker_number):
+            """Process a single symbol with comprehensive data collection"""
             try:
+                # Get proxy for this ticker (switches every 200)
+                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                patch_yfinance_proxy(proxy)
+                
+                # Add random delay between 0.7 and 2.0 seconds
                 time.sleep(random.uniform(0.7, 2.0))
-                data = None
-                proxy_failed = False
                 
-                for attempt in range(3):
+                retry = False
+                for attempt in range(3):  # Try up to 3 times if rate limited
                     try:
-                        data = yf.download(batch, period="5d", group_by='ticker', threads=False)
-                        break
-                    except Exception as e:
-                        err_str = str(e).lower()
-                        if 'too many requests' in err_str or 'rate limit' in err_str or 'timeout' in err_str:
-                            # Mark current proxy as failed
-                            proxy_manager.mark_proxy_failed(proxy)
-                            
-                            # Get new proxy
-                            proxy = proxy_manager.get_next_proxy()
-                            if proxy:
-                                patch_yfinance_proxy(proxy)
-                                self.stdout.write(f"[PROXY SWITCH] Switched to: {proxy}")
-                                time.sleep(random.uniform(2, 5))
-                            else:
-                                proxy_failed = True
-                                break
-                        else:
-                            # Non-proxy error, don't retry
-                            break
-                
-                if proxy_failed or data is None or data.empty:
-                    update_counters(False, len(batch))
-                    continue
-                
-                for symbol in batch:
-                    try:
-                        if symbol not in data or data[symbol].empty:
+                        # Get comprehensive stock data using individual ticker method
+                        ticker_obj = yf.Ticker(symbol)
+                        info = ticker_obj.info
+                        hist = ticker_obj.history(period="5d")
+                        
+                        if hist.empty or not info:
+                            # Mark as inactive if no data
                             stock = Stock.objects.filter(ticker=symbol).first()
                             if stock:
                                 stock.is_active = False
                                 stock.save()
                             update_counters(False)
-                            continue
+                            return False
                         
-                        hist = data[symbol]
+                        # Get current price data
                         current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
                         if current_price is None or pd.isna(current_price):
                             stock = Stock.objects.filter(ticker=symbol).first()
@@ -333,8 +305,9 @@ class Command(BaseCommand):
                                 stock.is_active = False
                                 stock.save()
                             update_counters(False)
-                            continue
+                            return False
                         
+                        # Calculate price changes
                         price_change_today = None
                         change_percent = None
                         if len(hist) > 1:
@@ -343,14 +316,61 @@ class Command(BaseCommand):
                                 price_change_today = current_price - prev_price
                                 change_percent = (price_change_today / prev_price) * 100
                         
+                        # Extract comprehensive data from info
                         stock_data = {
                             'ticker': symbol,
                             'symbol': symbol,
+                            'company_name': info.get('longName') or info.get('shortName', ''),
+                            'name': info.get('longName') or info.get('shortName', ''),
+                            'exchange': info.get('exchange', 'NASDAQ'),
+                            
+                            # Price data
                             'current_price': self._safe_decimal(current_price),
                             'price_change_today': self._safe_decimal(price_change_today),
                             'change_percent': self._safe_decimal(change_percent),
+                            
+                            # Bid/Ask data
+                            'bid_price': self._safe_decimal(info.get('bid')),
+                            'ask_price': self._safe_decimal(info.get('ask')),
+                            'days_low': self._safe_decimal(info.get('dayLow')),
+                            'days_high': self._safe_decimal(info.get('dayHigh')),
+                            
+                            # Volume data
+                            'volume': info.get('volume'),
+                            'volume_today': info.get('volume'),
+                            'avg_volume_3mon': info.get('averageVolume'),
+                            'shares_available': info.get('sharesOutstanding'),
+                            
+                            # Market data
+                            'market_cap': info.get('marketCap'),
+                            
+                            # Financial ratios
+                            'pe_ratio': self._safe_decimal(info.get('trailingPE')),
+                            'dividend_yield': self._safe_decimal(info.get('dividendYield')),
+                            'earnings_per_share': self._safe_decimal(info.get('trailingEps')),
+                            'book_value': self._safe_decimal(info.get('bookValue')),
+                            'price_to_book': self._safe_decimal(info.get('priceToBook')),
+                            
+                            # 52-week range
+                            'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')),
+                            'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')),
+                            
+                            # Target
+                            'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
                         }
                         
+                        # Calculate DVAV (Day Volume over Average Volume)
+                        if stock_data['volume'] and stock_data['avg_volume_3mon']:
+                            try:
+                                dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
+                                if dvav_val.is_infinite() or dvav_val.is_nan():
+                                    stock_data['dvav'] = None
+                                else:
+                                    stock_data['dvav'] = dvav_val
+                            except Exception:
+                                stock_data['dvav'] = None
+                        
+                        # Check for any invalid values (Infinity, NaN, etc.)
                         for k, v in list(stock_data.items()):
                             if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
                                 stock_data[k] = None
@@ -359,10 +379,13 @@ class Command(BaseCommand):
                             change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
                             self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
                         else:
+                            # Save to database
                             stock, created = Stock.objects.update_or_create(
                                 ticker=symbol,
                                 defaults=stock_data
                             )
+                            
+                            # Save price history
                             if current_price:
                                 StockPrice.objects.create(
                                     stock=stock,
@@ -370,31 +393,55 @@ class Command(BaseCommand):
                                 )
                         
                         update_counters(True)
+                        return True
                         
                     except Exception as e:
                         err_str = str(e).lower()
+                        if 'too many requests' in err_str or 'rate limit' in err_str:
+                            if not retry:
+                                retry = True
+                                # Mark current proxy as failed
+                                if proxy:
+                                    proxy_manager.mark_proxy_failed(proxy)
+                                time.sleep(random.uniform(5, 10))  # Wait longer before retry
+                                continue
+                        
+                        # Mark as inactive if delisted or no data
                         if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found']):
                             stock = Stock.objects.filter(ticker=symbol).first()
                             if stock:
                                 stock.is_active = False
                                 stock.save()
+                        
                         self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
                         update_counters(False)
+                        return False
+                
+                return False
                 
             except Exception as e:
-                self.stdout.write(f"[BATCH ERROR] Batch {batch_num} failed: {e}")
-                update_counters(False, len(batch))
+                self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                update_counters(False)
+                return False
+        
+        # Process symbols individually
+        self.stdout.write(f"[RUN] Starting {batch_name} with individual ticker processing...")
+        
+        for i, symbol in enumerate(symbols, 1):
+            process_symbol(symbol, i)
             
-            # Pause every 100 tickers and show proxy stats
-            if batch_num % 10 == 0:
+            # Show progress every 10 tickers
+            if i % 10 == 0 or i == total_symbols:
+                progress = (i / total_symbols) * 100
+                elapsed = time.time() - start_time
+                self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
+            
+            # Pause and show proxy stats every 100 tickers
+            if i % 100 == 0:
                 stats = proxy_manager.get_proxy_stats()
-                self.stdout.write(f"[PAUSE] Pausing for 60s after {batch_num*batch_size} tickers...")
+                self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
                 self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                 time.sleep(60)
-            
-            progress = (batch_num * batch_size) / total_symbols * 100
-            elapsed = time.time() - start_time
-            self.stdout.write(f"[STATS] Progress: {min(batch_num*batch_size, total_symbols)}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
         
         # Final proxy stats
         final_stats = proxy_manager.get_proxy_stats()
