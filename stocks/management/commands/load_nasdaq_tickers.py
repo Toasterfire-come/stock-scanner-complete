@@ -82,12 +82,7 @@ class Command(BaseCommand):
                         symbol=ticker_data['symbol'],
                         defaults={
                             'name': ticker_data['name'],
-                            'sector': ticker_data['sector'],
-                            'industry': 'Unknown',
-                            'exchange': ticker_data['exchange'],
-                            'is_active': True,
-                            'created_at': timezone.now(),
-                            'updated_at': timezone.now()
+                            'exchange': ticker_data['exchange']
                         }
                     )
                     
