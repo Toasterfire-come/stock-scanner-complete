@@ -176,30 +176,52 @@ class Command(BaseCommand):
         symbols = []
         
         if nasdaq_only:
-            # Load NASDAQ-only tickers from data file
+            # Load NASDAQ-only tickers from COMPLETE dataset (5,390+ tickers)
             try:
-                sys.path.append(str(Path(__file__).parent.parent.parent.parent / 'data' / 'nasdaq_only'))
-                from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
+                import csv
+                csv_file = Path(__file__).parent.parent.parent.parent / 'data' / 'complete_nasdaq' / 'complete_nasdaq_export_20250724_182723.csv'
                 
-                # Get existing stocks from database that are NASDAQ-listed
-                existing_stocks = Stock.objects.filter(
-                    ticker__in=NASDAQ_ONLY_TICKERS,
-                    exchange__iexact='NASDAQ'
-                ).values_list('ticker', flat=True)
+                if csv_file.exists():
+                    nasdaq_tickers = []
+                    with open(csv_file, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            if row.get('Exchange', '').upper() == 'NASDAQ':
+                                symbol = row.get('Symbol', '').strip()
+                                if symbol and len(symbol) <= 5:  # Filter out weird symbols
+                                    nasdaq_tickers.append(symbol)
+                    
+                    self.stdout.write(f"[STATS] NASDAQ-only mode: {len(nasdaq_tickers):,} total NASDAQ tickers available")
+                    
+                    # Get existing stocks from database that are NASDAQ-listed
+                    existing_stocks = Stock.objects.filter(
+                        ticker__in=nasdaq_tickers,
+                        exchange__iexact='NASDAQ'
+                    ).values_list('ticker', flat=True)
+                    
+                    # Start with existing stocks
+                    symbols.extend(list(existing_stocks))
+                    
+                    # Add missing NASDAQ tickers
+                    missing_tickers = set(nasdaq_tickers) - set(symbols)
+                    remaining_limit = limit - len(symbols)
+                    symbols.extend(list(missing_tickers)[:remaining_limit])
+                    
+                    self.stdout.write(f"[SAVE] Found {len(existing_stocks)} existing NASDAQ stocks in database")
+                    self.stdout.write(f"[UPDATE] Adding {min(len(missing_tickers), remaining_limit)} new NASDAQ tickers")
+                    self.stdout.write(f"[TARGET] Processing {len(symbols)} NASDAQ stocks (limit: {limit})")
+                    
+                else:
+                    # Fallback to small NASDAQ list
+                    self.stdout.write(self.style.WARNING("[WARNING] Complete NASDAQ CSV not found, using small list"))
+                    sys.path.append(str(Path(__file__).parent.parent.parent.parent / 'data' / 'nasdaq_only'))
+                    from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
+                    symbols = NASDAQ_ONLY_TICKERS[:limit]
+                    self.stdout.write(f"[FALLBACK] Using {len(symbols)} tickers from small NASDAQ list")
                 
-                # Start with existing stocks
-                symbols.extend(list(existing_stocks))
-                
-                # Add missing NASDAQ tickers that should be in database
-                missing_tickers = set(NASDAQ_ONLY_TICKERS) - set(symbols)
-                symbols.extend(list(missing_tickers)[:limit - len(symbols)])
-                
-                self.stdout.write(f"[STATS] NASDAQ-only mode: {len(NASDAQ_ONLY_TICKERS)} total tickers available")
-                self.stdout.write(f"[SAVE] Found {len(existing_stocks)} existing stocks in database")
-                self.stdout.write(f" Adding {len(missing_tickers)} missing tickers")
-                
-            except ImportError:
-                self.stdout.write(self.style.WARNING("[WARNING]  NASDAQ ticker list not found, falling back to database"))
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f"[ERROR] Failed to load NASDAQ tickers: {e}"))
+                self.stdout.write(self.style.WARNING("[FALLBACK] Using database stocks only"))
                 symbols = list(Stock.objects.filter(
                     exchange__iexact='NASDAQ'
                 ).values_list('ticker', flat=True)[:limit])
