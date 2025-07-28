@@ -49,14 +49,15 @@ class Command(BaseCommand):
                         symbol = row.get('Symbol', '').strip()
                         name = row.get('Name', '').strip()
                         sector = row.get('Sector', '').strip() or 'Unknown'
-                        
-                        if symbol and len(symbol) <= 5:  # Filter out weird symbols
-                            nasdaq_tickers.append({
-                                'symbol': symbol,
-                                'name': name,
-                                'sector': sector,
-                                'exchange': 'NASDAQ'
-                            })
+                        # Skip empty or invalid symbols
+                        if not symbol or len(symbol) > 5:
+                            continue
+                        nasdaq_tickers.append({
+                            'symbol': symbol,
+                            'name': name,
+                            'sector': sector,
+                            'exchange': 'NASDAQ'
+                        })
             
             self.stdout.write(f"[LOAD] Found {len(nasdaq_tickers):,} NASDAQ ticker symbols")
             
@@ -81,30 +82,30 @@ class Command(BaseCommand):
                     stock, created = Stock.objects.get_or_create(
                         symbol=ticker_data['symbol'],
                         defaults={
+                            'ticker': ticker_data['symbol'],
                             'name': ticker_data['name'],
+                            'company_name': ticker_data['name'],
                             'exchange': ticker_data['exchange']
                         }
                     )
-                    
+                    # Always force update fields (no --update-existing required)
+                    stock.ticker = ticker_data['symbol']
+                    stock.symbol = ticker_data['symbol']
+                    stock.name = ticker_data['name']
+                    stock.company_name = ticker_data['name']
+                    stock.sector = ticker_data['sector']
+                    stock.exchange = ticker_data['exchange']
+                    stock.is_active = True
+                    stock.updated_at = timezone.now()
+                    stock.save()
                     if created:
                         created_count += 1
                         if created_count % 100 == 0:
                             self.stdout.write(f"[CREATE] Created {created_count} new stock records...")
                     else:
-                        if options['update_existing']:
-                            # Update existing record
-                            stock.name = ticker_data['name']
-                            stock.sector = ticker_data['sector']
-                            stock.exchange = ticker_data['exchange']
-                            stock.is_active = True
-                            stock.updated_at = timezone.now()
-                            stock.save()
-                            updated_count += 1
-                            if updated_count % 100 == 0:
-                                self.stdout.write(f"[UPDATE] Updated {updated_count} existing stock records...")
-                        else:
-                            skipped_count += 1
-                
+                        updated_count += 1
+                        if updated_count % 100 == 0:
+                            self.stdout.write(f"[UPDATE] Updated {updated_count} existing stock records...")
                 except Exception as e:
                     self.stdout.write(self.style.WARNING(f"[WARNING] Failed to process {ticker_data['symbol']}: {e}"))
                     continue
@@ -114,10 +115,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("[RESULTS] NASDAQ TICKER LOADING COMPLETE"))
         self.stdout.write(self.style.SUCCESS("=" * 70))
         self.stdout.write(f"[SUCCESS] Created new stocks: {created_count:,}")
-        if options['update_existing']:
-            self.stdout.write(f"[SUCCESS] Updated existing stocks: {updated_count:,}")
-        else:
-            self.stdout.write(f"[INFO] Skipped existing stocks: {skipped_count:,}")
+        self.stdout.write(f"[SUCCESS] Updated existing stocks: {updated_count:,}")
         self.stdout.write(f"[TOTAL] Total NASDAQ stocks in database: {Stock.objects.filter(exchange__iexact='NASDAQ').count():,}")
         
         # Verify database state
@@ -131,7 +129,7 @@ class Command(BaseCommand):
         self.stdout.write(f"[STATS] NASDAQ percentage: {(nasdaq_stocks/total_stocks*100):.1f}%")
         
         self.stdout.write(self.style.SUCCESS("=" * 70))
-        self.stdout.write(self.style.SUCCESS("✅ NASDAQ TICKER LIST UPDATED TO MAXIMUM!"))
-        self.stdout.write(self.style.SUCCESS("🎯 Ready to update stock data with:"))
+        self.stdout.write(self.style.SUCCESS("NASDAQ TICKER LIST UPDATED TO MAXIMUM!"))
+        self.stdout.write(self.style.SUCCESS("Ready to update stock data with:"))
         self.stdout.write(self.style.SUCCESS(f"   python3 manage.py update_stocks_yfinance --nasdaq-only --limit {nasdaq_stocks}"))
         self.stdout.write(self.style.SUCCESS("=" * 70))
