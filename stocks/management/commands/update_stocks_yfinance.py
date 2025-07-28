@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import random
+import requests
 
 # Add XAMPP MySQL to PATH if it exists
 XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
@@ -233,47 +234,75 @@ class Command(BaseCommand):
         return symbols[:limit]
 
     def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH"):
-        """Process stocks with multithreading and comprehensive data collection"""
-        
+        """Process stocks in batches with proxy rotation and comprehensive data collection"""
+        import math
         start_time = time.time()
         total_symbols = len(symbols)
-        
-        # Thread-safe counters
+        batch_size = 10  # Number of tickers per batch
+        batches = [symbols[i:i+batch_size] for i in range(0, total_symbols, batch_size)]
         successful = 0
         failed = 0
         processed = 0
         lock = threading.Lock()
-        
-        def update_counters(success):
+        proxy_list = self._get_free_proxies()
+        proxy_index = 0
+        def update_counters(success, count=1):
             nonlocal successful, failed, processed
             with lock:
-                processed += 1
+                processed += count
                 if success:
-                    successful += 1
+                    successful += count
                 else:
-                    failed += 1
-
-        def process_symbol(symbol):
-            """Process a single symbol with comprehensive data collection"""
+                    failed += count
+        def get_next_proxy():
+            nonlocal proxy_index
+            if not proxy_list:
+                return None
+            proxy = proxy_list[proxy_index % len(proxy_list)]
+            proxy_index += 1
+            return proxy
+        def patch_yfinance_proxy(proxy):
+            import yfinance
+            if proxy:
+                session = requests.Session()
+                session.proxies = {
+                    'http': proxy,
+                    'https': proxy
+                }
+                yfinance.shared._requests = session
+            else:
+                import yfinance
+                yfinance.shared._requests = requests.Session()
+        for batch_num, batch in enumerate(batches, 1):
+            proxy = get_next_proxy()
+            patch_yfinance_proxy(proxy)
             try:
-                # Add random delay between 0.3 and 0.7 seconds
-                time.sleep(random.uniform(0.3, 0.7))
-                retry = False
-                for attempt in range(2):  # Try up to 2 times if rate limited
+                time.sleep(random.uniform(0.7, 2.0))
+                data = None
+                for attempt in range(3):
                     try:
-                        # Get comprehensive stock data
-                        ticker_obj = yf.Ticker(symbol)
-                        info = ticker_obj.info
-                        hist = ticker_obj.history(period="5d")
-                        if hist.empty or not info:
-                            # Mark as inactive if no data
+                        data = yf.download(batch, period="5d", group_by='ticker', threads=False)
+                        break
+                    except Exception as e:
+                        if attempt < 2:
+                            proxy = get_next_proxy()
+                            patch_yfinance_proxy(proxy)
+                            time.sleep(random.uniform(2, 5))
+                        else:
+                            self.stdout.write(f"[PROXY ERROR] All proxies failed for batch {batch}. Skipping batch.")
+                if data is None or data.empty:
+                    update_counters(False, len(batch))
+                    continue
+                for symbol in batch:
+                    try:
+                        if symbol not in data or data[symbol].empty:
                             stock = Stock.objects.filter(ticker=symbol).first()
                             if stock:
                                 stock.is_active = False
                                 stock.save()
                             update_counters(False)
-                            return False
-                        # Get current price data
+                            continue
+                        hist = data[symbol]
                         current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
                         if current_price is None or pd.isna(current_price):
                             stock = Stock.objects.filter(ticker=symbol).first()
@@ -281,8 +310,7 @@ class Command(BaseCommand):
                                 stock.is_active = False
                                 stock.save()
                             update_counters(False)
-                            return False
-                        # Calculate price changes
+                            continue
                         price_change_today = None
                         change_percent = None
                         if len(hist) > 1:
@@ -290,52 +318,13 @@ class Command(BaseCommand):
                             if not pd.isna(prev_price) and prev_price > 0:
                                 price_change_today = current_price - prev_price
                                 change_percent = (price_change_today / prev_price) * 100
-                        # Extract comprehensive data from info
                         stock_data = {
                             'ticker': symbol,
                             'symbol': symbol,
-                            'company_name': info.get('longName') or info.get('shortName', ''),
-                            'name': info.get('longName') or info.get('shortName', ''),
-                            'exchange': info.get('exchange', 'NASDAQ'),
-                            # Price data
                             'current_price': self._safe_decimal(current_price),
                             'price_change_today': self._safe_decimal(price_change_today),
                             'change_percent': self._safe_decimal(change_percent),
-                            # Bid/Ask data
-                            'bid_price': self._safe_decimal(info.get('bid')),
-                            'ask_price': self._safe_decimal(info.get('ask')),
-                            'days_low': self._safe_decimal(info.get('dayLow')),
-                            'days_high': self._safe_decimal(info.get('dayHigh')),
-                            # Volume data
-                            'volume': info.get('volume'),
-                            'volume_today': info.get('volume'),
-                            'avg_volume_3mon': info.get('averageVolume'),
-                            'shares_available': info.get('sharesOutstanding'),
-                            # Market data
-                            'market_cap': info.get('marketCap'),
-                            # Financial ratios
-                            'pe_ratio': self._safe_decimal(info.get('trailingPE')),
-                            'dividend_yield': self._safe_decimal(info.get('dividendYield')),
-                            'earnings_per_share': self._safe_decimal(info.get('trailingEps')),
-                            'book_value': self._safe_decimal(info.get('bookValue')),
-                            'price_to_book': self._safe_decimal(info.get('priceToBook')),
-                            # 52-week range
-                            'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')),
-                            'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')),
-                            # Target
-                            'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
                         }
-                        # Calculate DVAV (Day Volume over Average Volume)
-                        if stock_data['volume'] and stock_data['avg_volume_3mon']:
-                            try:
-                                dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
-                                if dvav_val.is_infinite() or dvav_val.is_nan():
-                                    stock_data['dvav'] = None
-                                else:
-                                    stock_data['dvav'] = dvav_val
-                            except Exception:
-                                stock_data['dvav'] = None
-                        # Check for any invalid values (Infinity, NaN, etc.)
                         for k, v in list(stock_data.items()):
                             if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
                                 stock_data[k] = None
@@ -343,54 +332,34 @@ class Command(BaseCommand):
                             change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
                             self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
                         else:
-                            # Save to database
                             stock, created = Stock.objects.update_or_create(
                                 ticker=symbol,
                                 defaults=stock_data
                             )
-                            # Save price history
                             if current_price:
                                 StockPrice.objects.create(
                                     stock=stock,
                                     price=current_price
                                 )
                         update_counters(True)
-                        return True
                     except Exception as e:
                         err_str = str(e).lower()
-                        if 'too many requests' in err_str or 'rate limit' in err_str:
-                            if not retry:
-                                retry = True
-                                time.sleep(random.uniform(5, 10))  # Wait longer before retry
-                                continue
-                        # Mark as inactive if delisted or no data
                         if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found']):
                             stock = Stock.objects.filter(ticker=symbol).first()
                             if stock:
                                 stock.is_active = False
                                 stock.save()
-                        logger.error(f"Error processing {symbol}: {e}")
+                        self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
                         update_counters(False)
-                        return False
-                return False
             except Exception as e:
-                logger.error(f"Error processing {symbol}: {e}")
-                update_counters(False)
-                return False
-
-        # Execute with thread pool
-        self.stdout.write(f"[RUN] Starting {batch_name} with {num_threads} threads...")
-        
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(process_symbol, symbol) for symbol in symbols]
-            
-            # Monitor progress
-            for i, future in enumerate(as_completed(futures), 1):
-                if i % 10 == 0 or i == total_symbols:
-                    progress = (i / total_symbols) * 100
-                    elapsed = time.time() - start_time
-                    self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
-
+                self.stdout.write(f"[BATCH ERROR] Batch {batch_num} failed: {e}")
+                update_counters(False, len(batch))
+            if batch_num % 10 == 0:
+                self.stdout.write(f"[PAUSE] Pausing for 60s after {batch_num*batch_size} tickers...")
+                time.sleep(60)
+            progress = (batch_num * batch_size) / total_symbols * 100
+            elapsed = time.time() - start_time
+            self.stdout.write(f"[STATS] Progress: {min(batch_num*batch_size, total_symbols)}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
         return {
             'total': total_symbols,
             'successful': successful,
@@ -442,3 +411,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"[WARNING]  Low success rate: {success_rate:.1f}%"))
         
         self.stdout.write("="*70)
+
+    def _get_free_proxies(self):
+        """Fetch a list of free proxies from a public proxy list"""
+        try:
+            resp = requests.get('https://www.proxy-list.download/api/v1/get?type=https')
+            proxies = [f'http://{line.strip()}' for line in resp.text.splitlines() if line.strip()]
+            return proxies[:20]  # Use up to 20 proxies
+        except Exception:
+            return []
