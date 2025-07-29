@@ -110,36 +110,23 @@ class ProxyManager:
         return []
     
     def test_proxy(self, proxy):
-        """Test if a proxy is working"""
+        """Test if a proxy is working by making a request to Yahoo Finance"""
         try:
             proxies = {
                 'http': proxy,
                 'https': proxy
             }
-            
-            # Test with multiple URLs
-            test_urls = [
-                'http://httpbin.org/ip',
-                'https://httpbin.org/ip',
-                'http://ip-api.com/json',
-                'https://api.ipify.org?format=json'
-            ]
-            
-            for url in test_urls:
-                try:
-                    response = requests.get(
-                        url, 
-                        proxies=proxies, 
-                        timeout=self.test_timeout,
-                        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-                    )
-                    if response.status_code == 200:
-                        return True
-                except:
-                    continue
-            
+            # Use a Yahoo Finance endpoint for AAPL summary (public, no auth required)
+            yfinance_url = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=price'
+            response = requests.get(
+                yfinance_url,
+                proxies=proxies,
+                timeout=self.test_timeout,
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            )
+            if response.status_code == 200:
+                return True
             return False
-            
         except Exception:
             return False
     
