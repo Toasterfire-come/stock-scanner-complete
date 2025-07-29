@@ -67,8 +67,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--threads',
             type=int,
-            default=10,
-            help='Number of concurrent threads (default: 10)'
+            default=20,
+            help='Number of concurrent threads (default: 20)'
         )
         parser.add_argument(
             '--delay',
@@ -397,8 +397,8 @@ class Command(BaseCommand):
                     proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
                 patch_yfinance_proxy(proxy)
                 
-                # Add minimal delay to avoid overwhelming the API
-                time.sleep(random.uniform(0.1, 0.3))
+                # Minimal delay to avoid overwhelming the API
+                time.sleep(random.uniform(0.02, 0.05))
                 
                 retry = False
                 for attempt in range(3):  # Try up to 3 times if rate limited
@@ -593,37 +593,64 @@ class Command(BaseCommand):
                 update_counters(False)
                 return False
 
+        # Use ThreadPoolExecutor for true parallel processing
+        self.stdout.write(f"[THREADS] Using {num_threads} threads for parallel processing")
+        self.stdout.flush()
+        
         try:
-            for i, symbol in enumerate(symbols, 1):
-                try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+                # Submit all tasks
+                future_to_symbol = {}
+                for i, symbol in enumerate(symbols, 1):
                     if stop_flag.is_set():
                         break
-                    if i <= 5:
-                        self.stdout.write(f"[PROCESSING] {i}/{total_symbols}: {symbol}")
+                    future = executor.submit(process_symbol, symbol, i)
+                    future_to_symbol[future] = (symbol, i)
+                
+                # Process completed tasks
+                completed = 0
+                for future in concurrent.futures.as_completed(future_to_symbol):
+                    if stop_flag.is_set():
+                        break
+                        
+                    symbol, i = future_to_symbol[future]
+                    completed += 1
+                    
+                    try:
+                        result = future.result(timeout=15)
+                        if completed <= 10:  # Show first 10 results
+                            self.stdout.write(f"[RESULT] {symbol}: {'SUCCESS' if result else 'FAILED'}")
+                            self.stdout.flush()
+                    except concurrent.futures.TimeoutError:
+                        self.stdout.write(f"[TIMEOUT] {symbol} timed out")
                         self.stdout.flush()
-                    self.stdout.write(f"[DEBUG] Before processing {symbol}")
-                    self.stdout.flush()
-                    result = process_symbol_with_timeout(symbol, i, timeout=15)
-                    self.stdout.write(f"[DEBUG] After processing {symbol} - Result: {result}")
-                    self.stdout.flush()
-                    if i % 10 == 0 or i == total_symbols:
-                        progress_percent = (i / total_symbols) * 100
+                        update_counters(False)
+                    except Exception as e:
+                        self.stdout.write(f"[ERROR] {symbol}: {e}")
+                        self.stdout.flush()
+                        update_counters(False)
+                    
+                    # Update progress
+                    progress['current'] = completed
+                    
+                    # Show progress every 50 completed tasks
+                    if completed % 50 == 0 or completed == total_symbols:
+                        progress_percent = (completed / total_symbols) * 100
                         elapsed = time.time() - start_time
-                        self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
+                        rate = completed / elapsed if elapsed > 0 else 0
+                        self.stdout.write(f"[STATS] Progress: {completed}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed - {rate:.1f} symbols/sec")
                         self.stdout.flush()
-                    if i % 200 == 0:
+                    
+                    # Pause every 500 symbols
+                    if completed % 500 == 0 and completed > 0:
                         if proxy_manager:
                             stats = proxy_manager.get_proxy_stats()
-                            self.stdout.write(f"[PAUSE] Pausing for 30s after {i} tickers...")
+                            self.stdout.write(f"[PAUSE] Pausing for 30s after {completed} tickers...")
                             self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                         else:
-                            self.stdout.write(f"[PAUSE] Pausing for 30s after {i} tickers... (no proxy)")
+                            self.stdout.write(f"[PAUSE] Pausing for 30s after {completed} tickers... (no proxy)")
                         self.stdout.flush()
                         time.sleep(30)
-                except Exception as e:
-                    self.stdout.write(f"[LOOP ERROR] Error processing symbol {symbol} (iteration {i}): {e}")
-                    self.stdout.flush()
-                    continue
         except KeyboardInterrupt:
             self.stdout.write("\n[STOP] Keyboard interrupt detected. Stopping gracefully...")
             self.stdout.write(f"[STOP] Processed {progress['current']} out of {total_symbols} symbols")
