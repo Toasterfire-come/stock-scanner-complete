@@ -86,6 +86,11 @@ class Command(BaseCommand):
             action='store_true',
             help='Enable verbose logging'
         )
+        parser.add_argument(
+            '--no-proxy',
+            action='store_true',
+            help='Disable proxy usage (run without proxies)'
+        )
 
     def handle(self, *args, **options):
         if options['verbose']:
@@ -159,7 +164,7 @@ class Command(BaseCommand):
         self.stdout.flush()
         
         # Process the symbols
-        results = self._process_stocks_batch(symbols, options['delay'], options['test_mode'], options['threads'], "NASDAQ UPDATE")
+        results = self._process_stocks_batch(symbols, options['delay'], options['test_mode'], options['threads'], "NASDAQ UPDATE", options.get('no_proxy', False))
         
         # Calculate final duration
         results['duration'] = time.time() - start_time
@@ -238,15 +243,21 @@ class Command(BaseCommand):
         
         return symbols[:limit]
 
-    def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH"):
+    def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH", no_proxy=False):
         """Process stocks with comprehensive data collection and proxy support"""
         start_time = time.time()
         total_symbols = len(symbols)
         successful = 0
         failed = 0
         
-        # Initialize proxy manager
-        proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
+        # Initialize proxy manager only if not disabled
+        proxy_manager = None
+        if not no_proxy:
+            proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
+            self.stdout.write(f"[PROXY] Proxy manager initialized")
+        else:
+            self.stdout.write(f"[PROXY] Proxy usage disabled")
+        self.stdout.flush()
         
         # Add signal handler for graceful shutdown
         import signal
@@ -288,8 +299,10 @@ class Command(BaseCommand):
         def process_symbol(symbol, ticker_number):
             """Process a single symbol with comprehensive data collection"""
             try:
-                # Get proxy for this ticker (switches every 200)
-                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
+                proxy = None
+                if proxy_manager:
+                    proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
                 patch_yfinance_proxy(proxy)
                 
                 # Add random delay between 0.7 and 2.0 seconds
@@ -521,9 +534,12 @@ class Command(BaseCommand):
                         self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
                         self.stdout.flush()
                     if i % 100 == 0:
-                        stats = proxy_manager.get_proxy_stats()
-                        self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
-                        self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
+                        if proxy_manager:
+                            stats = proxy_manager.get_proxy_stats()
+                            self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
+                            self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
+                        else:
+                            self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers... (no proxy)")
                         self.stdout.flush()
                         time.sleep(60)
                 except Exception as e:
@@ -550,8 +566,11 @@ class Command(BaseCommand):
             progress_thread.join(timeout=2)  # Wait max 2 seconds
         
         # Final proxy stats
-        final_stats = proxy_manager.get_proxy_stats()
-        self.stdout.write(f"[FINAL PROXY STATS] Total: {final_stats['total_working']}, Used: {final_stats['used_in_run']}")
+        if proxy_manager:
+            final_stats = proxy_manager.get_proxy_stats()
+            self.stdout.write(f"[FINAL PROXY STATS] Total: {final_stats['total_working']}, Used: {final_stats['used_in_run']}")
+        else:
+            self.stdout.write(f"[FINAL PROXY STATS] No proxy used")
         self.stdout.flush()
         
         return {
