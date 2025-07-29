@@ -91,6 +91,11 @@ class Command(BaseCommand):
             action='store_true',
             help='Disable proxy usage (run without proxies)'
         )
+        parser.add_argument(
+            '--filter-delisted',
+            action='store_true',
+            help='Pre-filter delisted symbols before processing (faster processing)'
+        )
 
     def handle(self, *args, **options):
         if options['verbose']:
@@ -152,11 +157,15 @@ class Command(BaseCommand):
         else:
             symbols = self._get_nasdaq_symbols(options['limit'], options['nasdaq_only'])
         
-        total_symbols = len(symbols)
-        self.stdout.write(f"[UP] Processing {total_symbols} symbols")
-        
         # Test yfinance connectivity
         self._test_yfinance_connectivity()
+        
+        # Pre-filter delisted symbols if requested
+        if options.get('filter_delisted', False):
+            symbols = self._filter_delisted_symbols(symbols, sample_size=100)
+        
+        total_symbols = len(symbols)
+        self.stdout.write(f"[UP] Processing {total_symbols} symbols")
         
         # Add immediate progress indicator
         self.stdout.write(f"[READY] Starting to process {total_symbols} symbols...")
@@ -242,6 +251,87 @@ class Command(BaseCommand):
             symbols = list(Stock.objects.all().values_list('ticker', flat=True)[:limit])
         
         return symbols[:limit]
+
+    def _filter_delisted_symbols(self, symbols, sample_size=100):
+        """Pre-filter symbols to remove delisted/invalid ones"""
+        if not symbols:
+            return []
+        
+        self.stdout.write(f"[FILTER] Pre-filtering {len(symbols)} symbols to remove delisted ones...")
+        self.stdout.write(f"[FILTER] Testing first {min(sample_size, len(symbols))} symbols...")
+        self.stdout.flush()
+        
+        valid_symbols = []
+        delisted_symbols = []
+        
+        # Test symbols in batches for efficiency
+        test_symbols = symbols[:sample_size]
+        
+        for i, symbol in enumerate(test_symbols, 1):
+            try:
+                # Quick test with minimal delay
+                time.sleep(0.05)  # Very fast testing
+                
+                ticker_obj = yf.Ticker(symbol)
+                info = ticker_obj.info
+                hist = ticker_obj.history(period="1d")
+                
+                if hist.empty or not info:
+                    delisted_symbols.append(symbol)
+                    if i <= 20:  # Show first 20 delisted
+                        self.stdout.write(f"[DELISTED] {symbol}: No data found")
+                else:
+                    valid_symbols.append(symbol)
+                    if i <= 10:  # Show first 10 valid
+                        price = hist['Close'].iloc[-1]
+                        self.stdout.write(f"[VALID] {symbol}: ${price:.2f}")
+                
+                # Progress update every 20 symbols
+                if i % 20 == 0:
+                    self.stdout.write(f"[FILTER PROGRESS] {i}/{len(test_symbols)} - Valid: {len(valid_symbols)}, Delisted: {len(delisted_symbols)}")
+                    self.stdout.flush()
+                    
+            except Exception as e:
+                delisted_symbols.append(symbol)
+                error_msg = str(e).lower()
+                if any(x in error_msg for x in ['no data found', 'delisted', '404', 'not found']):
+                    if i <= 20:  # Show first 20 errors
+                        self.stdout.write(f"[DELISTED] {symbol}: {e}")
+                else:
+                    if i <= 20:  # Show first 20 errors
+                        self.stdout.write(f"[ERROR] {symbol}: {e}")
+        
+        # Calculate statistics
+        if test_symbols:
+            valid_percentage = len(valid_symbols) / len(test_symbols)
+            delisted_percentage = len(delisted_symbols) / len(test_symbols)
+            
+            self.stdout.write(f"[FILTER STATS] Tested: {len(test_symbols)} symbols")
+            self.stdout.write(f"[FILTER STATS] Valid: {len(valid_symbols)} ({valid_percentage*100:.1f}%)")
+            self.stdout.write(f"[FILTER STATS] Delisted: {len(delisted_symbols)} ({delisted_percentage*100:.1f}%)")
+            self.stdout.flush()
+            
+            # Estimate total valid symbols in full list
+            estimated_valid = int(len(symbols) * valid_percentage)
+            estimated_delisted = len(symbols) - estimated_valid
+            
+            self.stdout.write(f"[FILTER ESTIMATE] Full list: {len(symbols):,} symbols")
+            self.stdout.write(f"[FILTER ESTIMATE] Expected valid: ~{estimated_valid:,} symbols")
+            self.stdout.write(f"[FILTER ESTIMATE] Expected delisted: ~{estimated_delisted:,} symbols")
+            self.stdout.flush()
+            
+            # Return only valid symbols from the test, plus remaining untested symbols
+            # This gives us a cleaner list to process
+            remaining_symbols = symbols[sample_size:]
+            final_symbols = valid_symbols + remaining_symbols
+            
+            self.stdout.write(f"[FILTER RESULT] Returning {len(final_symbols)} symbols for processing")
+            self.stdout.write(f"[FILTER RESULT] Includes {len(valid_symbols)} pre-validated + {len(remaining_symbols)} untested")
+            self.stdout.flush()
+            
+            return final_symbols
+            
+        return symbols
 
     def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH", no_proxy=False):
         """Process stocks with comprehensive data collection and proxy support"""
