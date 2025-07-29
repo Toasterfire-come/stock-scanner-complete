@@ -282,6 +282,8 @@ class Command(BaseCommand):
                 else:
                     failed += 1
                 processed += 1
+                # Update progress safely
+                progress['current'] = processed
         
         def patch_yfinance_proxy(proxy):
             import yfinance
@@ -311,34 +313,10 @@ class Command(BaseCommand):
                 retry = False
                 for attempt in range(3):  # Try up to 3 times if rate limited
                     try:
-                        # Add timeout for yfinance operations
-                        import signal
-                        
-                        def timeout_handler(signum, frame):
-                            raise TimeoutError(f"Timeout processing {symbol}")
-                        
-                        # Set timeout for this operation (30 seconds)
-                        signal.signal(signal.SIGALRM, timeout_handler)
-                        signal.alarm(30)
-                        
-                        try:
-                            # Get comprehensive stock data using individual ticker method
-                            ticker_obj = yf.Ticker(symbol)
-                            info = ticker_obj.info
-                            hist = ticker_obj.history(period="5d")
-                            
-                            # Clear the alarm
-                            signal.alarm(0)
-                            
-                        except TimeoutError:
-                            signal.alarm(0)
-                            self.stdout.write(f"[TIMEOUT] {symbol} timed out, skipping...")
-                            self.stdout.flush()
-                            update_counters(False)
-                            return False
-                        except KeyboardInterrupt:
-                            signal.alarm(0)
-                            raise  # Re-raise to be caught by outer handler
+                        # Get comprehensive stock data using individual ticker method
+                        ticker_obj = yf.Ticker(symbol)
+                        info = ticker_obj.info
+                        hist = ticker_obj.history(period="5d")
                         
                         if hist.empty or not info:
                             # Mark as inactive if no data
@@ -504,15 +482,21 @@ class Command(BaseCommand):
         import concurrent.futures
         
         def process_symbol_with_timeout(symbol, ticker_number, timeout=30):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(process_symbol, symbol, ticker_number)
-                try:
+            """Process symbol with timeout using ThreadPoolExecutor"""
+            try:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(process_symbol, symbol, ticker_number)
                     return future.result(timeout=timeout)
-                except concurrent.futures.TimeoutError:
-                    self.stdout.write(f"[TIMEOUT] {symbol} timed out after {timeout}s, skipping...")
-                    self.stdout.flush()
-                    update_counters(False)
-                    return False
+            except concurrent.futures.TimeoutError:
+                self.stdout.write(f"[TIMEOUT] {symbol} timed out after {timeout}s, skipping...")
+                self.stdout.flush()
+                update_counters(False)
+                return False
+            except Exception as e:
+                self.stdout.write(f"[TIMEOUT ERROR] {symbol}: {e}")
+                self.stdout.flush()
+                update_counters(False)
+                return False
 
         try:
             for i, symbol in enumerate(symbols, 1):
@@ -524,10 +508,9 @@ class Command(BaseCommand):
                         self.stdout.flush()
                     self.stdout.write(f"[DEBUG] Before processing {symbol}")
                     self.stdout.flush()
-                    process_symbol_with_timeout(symbol, i, timeout=30)
-                    self.stdout.write(f"[DEBUG] After processing {symbol}")
+                    result = process_symbol_with_timeout(symbol, i, timeout=30)
+                    self.stdout.write(f"[DEBUG] After processing {symbol} - Result: {result}")
                     self.stdout.flush()
-                    progress['current'] = i
                     if i % 10 == 0 or i == total_symbols:
                         progress_percent = (i / total_symbols) * 100
                         elapsed = time.time() - start_time

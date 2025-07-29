@@ -127,7 +127,14 @@ class ProxyManager:
             if response.status_code == 200:
                 return True
             return False
-        except Exception:
+        except requests.exceptions.Timeout:
+            self.logger.debug(f"Proxy {proxy} timed out")
+            return False
+        except requests.exceptions.ConnectionError:
+            self.logger.debug(f"Proxy {proxy} connection error")
+            return False
+        except Exception as e:
+            self.logger.debug(f"Proxy {proxy} error: {e}")
             return False
     
     def find_working_proxies(self, target_count=None):
@@ -285,6 +292,9 @@ class ProxyManager:
 
     def get_proxy_for_ticker(self, ticker_number):
         """Get proxy for a specific ticker number, switching every 200 tickers"""
+        if not self.working_proxies:
+            return None
+            
         with self.lock:
             # Switch proxy every 200 tickers
             if (ticker_number % self.switch_interval == 0 or 
