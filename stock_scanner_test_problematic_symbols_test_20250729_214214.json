@@ -1,0 +1,87 @@
+{
+  "start_time": "2025-07-29T21:42:07.955549",
+  "symbols_processed": 8,
+  "successful": 3,
+  "failed": 0,
+  "timeouts": 0,
+  "delisted": 5,
+  "errors": 0,
+  "stock_data": [
+    {
+      "symbol": "AAPL",
+      "company_name": "Apple Inc.",
+      "current_price": 211.27000427246094,
+      "price_change_today": -2.779998779296875,
+      "change_percent": -1.2987613826964834,
+      "volume": 48540908,
+      "market_cap": 3155486572544,
+      "pe_ratio": 32.9081,
+      "exchange": "NMS",
+      "processing_time": 0.5770516395568848,
+      "timestamp": "2025-07-29T21:42:13.744699"
+    },
+    {
+      "symbol": "MSFT",
+      "company_name": "Microsoft Corporation",
+      "current_price": 512.5700073242188,
+      "price_change_today": 0.07000732421875,
+      "change_percent": 0.013659965701219513,
+      "volume": 16192670,
+      "market_cap": 3809697071104,
+      "pe_ratio": 39.6726,
+      "exchange": "NMS",
+      "processing_time": 0.5833396911621094,
+      "timestamp": "2025-07-29T21:42:14.329992"
+    },
+    {
+      "symbol": "GOOGL",
+      "company_name": "Alphabet Inc.",
+      "current_price": 195.75,
+      "price_change_today": 3.1699981689453125,
+      "change_percent": 1.646068199607905,
+      "volume": 40618608,
+      "market_cap": 2372039606272,
+      "pe_ratio": 20.86887,
+      "exchange": "NMS",
+      "processing_time": 0.4094846248626709,
+      "timestamp": "2025-07-29T21:42:14.741205"
+    }
+  ],
+  "processing_times": [
+    0.5770516395568848,
+    0.5833396911621094,
+    0.4094846248626709
+  ],
+  "errors_list": [
+    {
+      "symbol": "AAPGV",
+      "error": "No data found, possibly delisted",
+      "processing_time": 1.0315043926239014
+    },
+    {
+      "symbol": "ABST",
+      "error": "No data found, possibly delisted",
+      "processing_time": 1.0265886783599854
+    },
+    {
+      "symbol": "ACHL",
+      "error": "No data found, possibly delisted",
+      "processing_time": 1.0307896137237549
+    },
+    {
+      "symbol": "ACST",
+      "error": "No data found, possibly delisted",
+      "processing_time": 0.9869875907897949
+    },
+    {
+      "symbol": "ADAL",
+      "error": "No data found, possibly delisted",
+      "processing_time": 0.8928065299987793
+    }
+  ],
+  "end_time": "2025-07-29T21:42:14.743135",
+  "total_duration": 6.548775911331177,
+  "average_processing_time": 0.5232919851938883,
+  "success_rate": 37.5,
+  "stocks_per_minute": 73.29614060689852
+}
