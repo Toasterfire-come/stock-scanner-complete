@@ -307,8 +307,8 @@ class Command(BaseCommand):
                     proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
                 patch_yfinance_proxy(proxy)
                 
-                # Add random delay between 0.7 and 2.0 seconds
-                time.sleep(random.uniform(0.7, 2.0))
+                # Add minimal delay to avoid overwhelming the API
+                time.sleep(random.uniform(0.1, 0.3))
                 
                 retry = False
                 for attempt in range(3):  # Try up to 3 times if rate limited
@@ -324,6 +324,8 @@ class Command(BaseCommand):
                             if stock:
                                 stock.is_active = False
                                 stock.save()
+                            self.stdout.write(f"[DELISTED] {symbol}: No data found, marking inactive")
+                            self.stdout.flush()
                             update_counters(False)
                             return False
                         
@@ -437,13 +439,16 @@ class Command(BaseCommand):
                                 continue
                         
                         # Mark as inactive if delisted or no data
-                        if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found']):
+                        if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
                             stock = Stock.objects.filter(ticker=symbol).first()
                             if stock:
                                 stock.is_active = False
                                 stock.save()
-                        
-                        self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                            self.stdout.write(f"[DELISTED] {symbol}: {e}")
+                            self.stdout.flush()
+                        else:
+                            self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                            self.stdout.flush()
                         update_counters(False)
                         return False
                 
@@ -481,7 +486,7 @@ class Command(BaseCommand):
 
         import concurrent.futures
         
-        def process_symbol_with_timeout(symbol, ticker_number, timeout=30):
+        def process_symbol_with_timeout(symbol, ticker_number, timeout=15):
             """Process symbol with timeout using ThreadPoolExecutor"""
             try:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
@@ -508,7 +513,7 @@ class Command(BaseCommand):
                         self.stdout.flush()
                     self.stdout.write(f"[DEBUG] Before processing {symbol}")
                     self.stdout.flush()
-                    result = process_symbol_with_timeout(symbol, i, timeout=30)
+                    result = process_symbol_with_timeout(symbol, i, timeout=15)
                     self.stdout.write(f"[DEBUG] After processing {symbol} - Result: {result}")
                     self.stdout.flush()
                     if i % 10 == 0 or i == total_symbols:
@@ -516,15 +521,15 @@ class Command(BaseCommand):
                         elapsed = time.time() - start_time
                         self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
                         self.stdout.flush()
-                    if i % 100 == 0:
+                    if i % 200 == 0:
                         if proxy_manager:
                             stats = proxy_manager.get_proxy_stats()
-                            self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
+                            self.stdout.write(f"[PAUSE] Pausing for 30s after {i} tickers...")
                             self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                         else:
-                            self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers... (no proxy)")
+                            self.stdout.write(f"[PAUSE] Pausing for 30s after {i} tickers... (no proxy)")
                         self.stdout.flush()
-                        time.sleep(60)
+                        time.sleep(30)
                 except Exception as e:
                     self.stdout.write(f"[LOOP ERROR] Error processing symbol {symbol} (iteration {i}): {e}")
                     self.stdout.flush()
