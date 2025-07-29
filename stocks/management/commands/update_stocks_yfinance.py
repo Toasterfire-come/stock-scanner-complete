@@ -167,6 +167,11 @@ class Command(BaseCommand):
         # Display final results
         self._display_final_results(results)
         
+        # Check if interrupted
+        if results.get('interrupted', False):
+            self.stdout.write(self.style.WARNING(f"[INTERRUPTED] Script stopped by user after {results['duration']:.1f} seconds"))
+            return
+        
         # Schedule next run info if in scheduler mode
         if options.get('schedule'):
             next_run = schedule.next_run()
@@ -234,27 +239,38 @@ class Command(BaseCommand):
         return symbols[:limit]
 
     def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH"):
-        """Process stocks individually with proxy switching every 200 tickers"""
-        import math
+        """Process stocks with comprehensive data collection and proxy support"""
         start_time = time.time()
         total_symbols = len(symbols)
         successful = 0
         failed = 0
-        processed = 0
+        
+        # Initialize proxy manager
+        proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
+        
+        # Add signal handler for graceful shutdown
+        import signal
+        stop_flag = threading.Event()
         lock = threading.Lock()
+        processed = 0
         
-        # Initialize advanced proxy manager
-        proxy_manager = ProxyManager(min_proxies=100, max_proxies=200)
-        proxy_manager.reset_run()  # Reset for new run
+        def signal_handler(signum, frame):
+            stop_flag.set()
+            self.stdout.write("\n[STOP] Signal received. Stopping gracefully...")
+            self.stdout.flush()
         
+        # Register signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
         def update_counters(success):
             nonlocal successful, failed, processed
             with lock:
-                processed += 1
                 if success:
                     successful += 1
                 else:
                     failed += 1
+                processed += 1
         
         def patch_yfinance_proxy(proxy):
             import yfinance
@@ -307,6 +323,9 @@ class Command(BaseCommand):
                             self.stdout.flush()
                             update_counters(False)
                             return False
+                        except KeyboardInterrupt:
+                            signal.alarm(0)
+                            raise  # Re-raise to be caught by outer handler
                         
                         if hist.empty or not info:
                             # Mark as inactive if no data
@@ -449,16 +468,15 @@ class Command(BaseCommand):
         self.stdout.flush()  # Force output
 
         progress = {'current': 0}
-        stop_progress = threading.Event()
         
         def print_progress():
-            while not stop_progress.is_set():
+            while not stop_flag.is_set():
                 try:
                     percent = (progress['current'] / total_symbols) * 100
                     elapsed = time.time() - start_time
                     self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
                     self.stdout.flush()  # Force output
-                    stop_progress.wait(5)
+                    stop_flag.wait(5)
                 except Exception as e:
                     self.stdout.write(f"[PROGRESS ERROR] {e}")
                     break
@@ -470,37 +488,57 @@ class Command(BaseCommand):
         self.stdout.write(f"[START] Beginning to process {total_symbols} symbols...")
         self.stdout.flush()
 
-        for i, symbol in enumerate(symbols, 1):
-            try:
-                # Add immediate feedback for first few symbols
-                if i <= 5:
-                    self.stdout.write(f"[PROCESSING] {i}/{total_symbols}: {symbol}")
-                    self.stdout.flush()
-                
-                process_symbol(symbol, i)
-                progress['current'] = i
-                
-                # Show progress every 10 tickers (existing)
-                if i % 10 == 0 or i == total_symbols:
-                    progress_percent = (i / total_symbols) * 100
-                    elapsed = time.time() - start_time
-                    self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
-                    self.stdout.flush()
-                
-                # Pause and show proxy stats every 100 tickers (existing)
-                if i % 100 == 0:
-                    stats = proxy_manager.get_proxy_stats()
-                    self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
-                    self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
-                    self.stdout.flush()
-                    time.sleep(60)
+        try:
+            for i, symbol in enumerate(symbols, 1):
+                try:
+                    # Check for keyboard interrupt
+                    if stop_flag.is_set():
+                        break
+                        
+                    # Add immediate feedback for first few symbols
+                    if i <= 5:
+                        self.stdout.write(f"[PROCESSING] {i}/{total_symbols}: {symbol}")
+                        self.stdout.flush()
                     
-            except Exception as e:
-                self.stdout.write(f"[LOOP ERROR] Error processing symbol {symbol} (iteration {i}): {e}")
-                self.stdout.flush()
-                continue
+                    process_symbol(symbol, i)
+                    progress['current'] = i
+                    
+                    # Show progress every 10 tickers (existing)
+                    if i % 10 == 0 or i == total_symbols:
+                        progress_percent = (i / total_symbols) * 100
+                        elapsed = time.time() - start_time
+                        self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
+                        self.stdout.flush()
+                    
+                    # Pause and show proxy stats every 100 tickers (existing)
+                    if i % 100 == 0:
+                        stats = proxy_manager.get_proxy_stats()
+                        self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
+                        self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
+                        self.stdout.flush()
+                        time.sleep(60)
+                        
+                except Exception as e:
+                    self.stdout.write(f"[LOOP ERROR] Error processing symbol {symbol} (iteration {i}): {e}")
+                    self.stdout.flush()
+                    continue
+                    
+        except KeyboardInterrupt:
+            self.stdout.write("\n[STOP] Keyboard interrupt detected. Stopping gracefully...")
+            self.stdout.write(f"[STOP] Processed {progress['current']} out of {total_symbols} symbols")
+            self.stdout.flush()
+            stop_flag.set()
+            if progress_thread.is_alive():
+                progress_thread.join(timeout=2)
+            return {
+                'total': progress['current'],
+                'successful': successful,
+                'failed': failed,
+                'duration': time.time() - start_time,
+                'interrupted': True
+            }
 
-        stop_progress.set()
+        stop_flag.set()
         if progress_thread.is_alive():
             progress_thread.join(timeout=2)  # Wait max 2 seconds
         
