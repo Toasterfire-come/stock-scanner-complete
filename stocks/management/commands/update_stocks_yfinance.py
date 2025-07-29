@@ -153,14 +153,13 @@ class Command(BaseCommand):
         # Test yfinance connectivity
         self._test_yfinance_connectivity()
         
-        # Process stocks with multithreading
-        results = self._process_stocks_batch(
-            symbols, 
-            options['delay'], 
-            options['test_mode'], 
-            options['threads'],
-            batch_name="NASDAQ UPDATE"
-        )
+        # Add immediate progress indicator
+        self.stdout.write(f"[READY] Starting to process {total_symbols} symbols...")
+        self.stdout.write(f"[FIRST] First 5 symbols: {', '.join(symbols[:5])}")
+        self.stdout.flush()
+        
+        # Process the symbols
+        results = self._process_stocks_batch(symbols, options['delay'], options['test_mode'], options['threads'], "NASDAQ UPDATE")
         
         # Calculate final duration
         results['duration'] = time.time() - start_time
@@ -283,10 +282,31 @@ class Command(BaseCommand):
                 retry = False
                 for attempt in range(3):  # Try up to 3 times if rate limited
                     try:
-                        # Get comprehensive stock data using individual ticker method
-                        ticker_obj = yf.Ticker(symbol)
-                        info = ticker_obj.info
-                        hist = ticker_obj.history(period="5d")
+                        # Add timeout for yfinance operations
+                        import signal
+                        
+                        def timeout_handler(signum, frame):
+                            raise TimeoutError(f"Timeout processing {symbol}")
+                        
+                        # Set timeout for this operation (30 seconds)
+                        signal.signal(signal.SIGALRM, timeout_handler)
+                        signal.alarm(30)
+                        
+                        try:
+                            # Get comprehensive stock data using individual ticker method
+                            ticker_obj = yf.Ticker(symbol)
+                            info = ticker_obj.info
+                            hist = ticker_obj.history(period="5d")
+                            
+                            # Clear the alarm
+                            signal.alarm(0)
+                            
+                        except TimeoutError:
+                            signal.alarm(0)
+                            self.stdout.write(f"[TIMEOUT] {symbol} timed out, skipping...")
+                            self.stdout.flush()
+                            update_counters(False)
+                            return False
                         
                         if hist.empty or not info:
                             # Mark as inactive if no data
@@ -426,39 +446,68 @@ class Command(BaseCommand):
         
         # Process symbols individually
         self.stdout.write(f"[RUN] Starting {batch_name} with individual ticker processing...")
+        self.stdout.flush()  # Force output
 
         progress = {'current': 0}
         stop_progress = threading.Event()
+        
         def print_progress():
             while not stop_progress.is_set():
-                percent = (progress['current'] / total_symbols) * 100
-                elapsed = time.time() - start_time
-                self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
-                stop_progress.wait(5)
-        progress_thread = threading.Thread(target=print_progress)
+                try:
+                    percent = (progress['current'] / total_symbols) * 100
+                    elapsed = time.time() - start_time
+                    self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
+                    self.stdout.flush()  # Force output
+                    stop_progress.wait(5)
+                except Exception as e:
+                    self.stdout.write(f"[PROGRESS ERROR] {e}")
+                    break
+        
+        progress_thread = threading.Thread(target=print_progress, daemon=True)
         progress_thread.start()
 
+        # Add immediate feedback
+        self.stdout.write(f"[START] Beginning to process {total_symbols} symbols...")
+        self.stdout.flush()
+
         for i, symbol in enumerate(symbols, 1):
-            process_symbol(symbol, i)
-            progress['current'] = i
-            # Show progress every 10 tickers (existing)
-            if i % 10 == 0 or i == total_symbols:
-                progress_percent = (i / total_symbols) * 100
-                elapsed = time.time() - start_time
-                self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
-            # Pause and show proxy stats every 100 tickers (existing)
-            if i % 100 == 0:
-                stats = proxy_manager.get_proxy_stats()
-                self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
-                self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
-                time.sleep(60)
+            try:
+                # Add immediate feedback for first few symbols
+                if i <= 5:
+                    self.stdout.write(f"[PROCESSING] {i}/{total_symbols}: {symbol}")
+                    self.stdout.flush()
+                
+                process_symbol(symbol, i)
+                progress['current'] = i
+                
+                # Show progress every 10 tickers (existing)
+                if i % 10 == 0 or i == total_symbols:
+                    progress_percent = (i / total_symbols) * 100
+                    elapsed = time.time() - start_time
+                    self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
+                    self.stdout.flush()
+                
+                # Pause and show proxy stats every 100 tickers (existing)
+                if i % 100 == 0:
+                    stats = proxy_manager.get_proxy_stats()
+                    self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
+                    self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
+                    self.stdout.flush()
+                    time.sleep(60)
+                    
+            except Exception as e:
+                self.stdout.write(f"[LOOP ERROR] Error processing symbol {symbol} (iteration {i}): {e}")
+                self.stdout.flush()
+                continue
 
         stop_progress.set()
-        progress_thread.join()
+        if progress_thread.is_alive():
+            progress_thread.join(timeout=2)  # Wait max 2 seconds
         
         # Final proxy stats
         final_stats = proxy_manager.get_proxy_stats()
         self.stdout.write(f"[FINAL PROXY STATS] Total: {final_stats['total_working']}, Used: {final_stats['used_in_run']}")
+        self.stdout.flush()
         
         return {
             'total': total_symbols,
