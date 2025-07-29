@@ -426,22 +426,35 @@ class Command(BaseCommand):
         
         # Process symbols individually
         self.stdout.write(f"[RUN] Starting {batch_name} with individual ticker processing...")
-        
+
+        progress = {'current': 0}
+        stop_progress = threading.Event()
+        def print_progress():
+            while not stop_progress.is_set():
+                percent = (progress['current'] / total_symbols) * 100
+                elapsed = time.time() - start_time
+                self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
+                stop_progress.wait(5)
+        progress_thread = threading.Thread(target=print_progress)
+        progress_thread.start()
+
         for i, symbol in enumerate(symbols, 1):
             process_symbol(symbol, i)
-            
-            # Show progress every 10 tickers
+            progress['current'] = i
+            # Show progress every 10 tickers (existing)
             if i % 10 == 0 or i == total_symbols:
-                progress = (i / total_symbols) * 100
+                progress_percent = (i / total_symbols) * 100
                 elapsed = time.time() - start_time
-                self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
-            
-            # Pause and show proxy stats every 100 tickers
+                self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
+            # Pause and show proxy stats every 100 tickers (existing)
             if i % 100 == 0:
                 stats = proxy_manager.get_proxy_stats()
                 self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
                 self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                 time.sleep(60)
+
+        stop_progress.set()
+        progress_thread.join()
         
         # Final proxy stats
         final_stats = proxy_manager.get_proxy_stats()
