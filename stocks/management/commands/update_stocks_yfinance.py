@@ -488,41 +488,48 @@ class Command(BaseCommand):
         self.stdout.write(f"[START] Beginning to process {total_symbols} symbols...")
         self.stdout.flush()
 
+        import concurrent.futures
+        
+        def process_symbol_with_timeout(symbol, ticker_number, timeout=30):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(process_symbol, symbol, ticker_number)
+                try:
+                    return future.result(timeout=timeout)
+                except concurrent.futures.TimeoutError:
+                    self.stdout.write(f"[TIMEOUT] {symbol} timed out after {timeout}s, skipping...")
+                    self.stdout.flush()
+                    update_counters(False)
+                    return False
+
         try:
             for i, symbol in enumerate(symbols, 1):
                 try:
-                    # Check for keyboard interrupt
                     if stop_flag.is_set():
                         break
-                        
-                    # Add immediate feedback for first few symbols
                     if i <= 5:
                         self.stdout.write(f"[PROCESSING] {i}/{total_symbols}: {symbol}")
                         self.stdout.flush()
-                    
-                    process_symbol(symbol, i)
+                    self.stdout.write(f"[DEBUG] Before processing {symbol}")
+                    self.stdout.flush()
+                    process_symbol_with_timeout(symbol, i, timeout=30)
+                    self.stdout.write(f"[DEBUG] After processing {symbol}")
+                    self.stdout.flush()
                     progress['current'] = i
-                    
-                    # Show progress every 10 tickers (existing)
                     if i % 10 == 0 or i == total_symbols:
                         progress_percent = (i / total_symbols) * 100
                         elapsed = time.time() - start_time
                         self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed")
                         self.stdout.flush()
-                    
-                    # Pause and show proxy stats every 100 tickers (existing)
                     if i % 100 == 0:
                         stats = proxy_manager.get_proxy_stats()
                         self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
                         self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                         self.stdout.flush()
                         time.sleep(60)
-                        
                 except Exception as e:
                     self.stdout.write(f"[LOOP ERROR] Error processing symbol {symbol} (iteration {i}): {e}")
                     self.stdout.flush()
                     continue
-                    
         except KeyboardInterrupt:
             self.stdout.write("\n[STOP] Keyboard interrupt detected. Stopping gracefully...")
             self.stdout.write(f"[STOP] Processed {progress['current']} out of {total_symbols} symbols")
