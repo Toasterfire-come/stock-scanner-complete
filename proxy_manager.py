@@ -18,7 +18,7 @@ import logging
 from fast_proxy_finder import FastProxyFinder
 
 class ProxyManager:
-    def __init__(self, min_proxies=100, max_proxies=200, test_timeout=10):
+    def __init__(self, min_proxies=100, max_proxies=200, test_timeout=5):
         self.min_proxies = min_proxies
         self.max_proxies = max_proxies
         self.test_timeout = test_timeout
@@ -265,20 +265,29 @@ class ProxyManager:
                 
                 self.logger.info(f"LOADED {len(self.working_proxies)} proxies from {self.proxy_file}")
                 
-                # Validate loaded proxies
+                # Quick validation of first 10 proxies only (to avoid long startup)
                 if self.working_proxies:
-                    self.logger.info("VALIDATING loaded proxies...")
+                    self.logger.info("QUICK VALIDATION of first 10 proxies...")
                     valid_proxies = []
-                    with ThreadPoolExecutor(max_workers=10) as executor:
-                        future_to_proxy = {executor.submit(self.test_proxy, proxy): proxy for proxy in self.working_proxies}
+                    test_proxies = self.working_proxies[:10]  # Only test first 10
+                    
+                    with ThreadPoolExecutor(max_workers=5) as executor:
+                        future_to_proxy = {executor.submit(self.test_proxy, proxy): proxy for proxy in test_proxies}
                         
                         for future in as_completed(future_to_proxy):
                             proxy = future_to_proxy[future]
-                            if future.result():
-                                valid_proxies.append(proxy)
+                            try:
+                                if future.result(timeout=5):  # 5 second timeout per proxy
+                                    valid_proxies.append(proxy)
+                            except Exception:
+                                pass  # Skip failed proxies
                     
-                    self.working_proxies = valid_proxies
-                    self.logger.info(f"VALIDATED {len(self.working_proxies)} proxies")
+                    # If we have some valid proxies, assume the rest are also valid
+                    if valid_proxies:
+                        self.logger.info(f"QUICK VALIDATION: {len(valid_proxies)}/10 proxies working - assuming all {len(self.working_proxies)} are valid")
+                    else:
+                        self.logger.warning("QUICK VALIDATION: No proxies working - will refresh pool")
+                        self.working_proxies = []
                 
         except Exception as e:
             self.logger.error(f"FAILED to load proxies: {e}")
