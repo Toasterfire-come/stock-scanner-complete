@@ -274,17 +274,33 @@ class Command(BaseCommand):
                 
                 ticker_obj = yf.Ticker(symbol)
                 info = ticker_obj.info
-                hist = ticker_obj.history(period="1d")
                 
-                if hist.empty or not info:
+                # Try multiple periods to be more lenient
+                hist = None
+                for period in ["5d", "1mo", "3mo"]:
+                    try:
+                        hist = ticker_obj.history(period=period)
+                        if not hist.empty:
+                            break
+                    except:
+                        continue
+                
+                # Check if we have any data and basic info
+                has_data = hist is not None and not hist.empty
+                has_info = info and len(info) > 5  # Basic check for meaningful info
+                
+                if not has_data and not has_info:
                     delisted_symbols.append(symbol)
                     if i <= 20:  # Show first 20 delisted
                         self.stdout.write(f"[DELISTED] {symbol}: No data found")
                 else:
                     valid_symbols.append(symbol)
                     if i <= 10:  # Show first 10 valid
-                        price = hist['Close'].iloc[-1]
-                        self.stdout.write(f"[VALID] {symbol}: ${price:.2f}")
+                        if has_data:
+                            price = hist['Close'].iloc[-1]
+                            self.stdout.write(f"[VALID] {symbol}: ${price:.2f}")
+                        else:
+                            self.stdout.write(f"[VALID] {symbol}: Info only")
                 
                 # Progress update every 20 symbols
                 if i % 20 == 0:
@@ -406,10 +422,23 @@ class Command(BaseCommand):
                         # Get comprehensive stock data using individual ticker method
                         ticker_obj = yf.Ticker(symbol)
                         info = ticker_obj.info
-                        hist = ticker_obj.history(period="5d")
                         
-                        if hist.empty or not info:
-                            # Mark as inactive if no data
+                        # Try multiple periods to get historical data
+                        hist = None
+                        for period in ["5d", "1mo", "3mo"]:
+                            try:
+                                hist = ticker_obj.history(period=period)
+                                if not hist.empty:
+                                    break
+                            except:
+                                continue
+                        
+                        # Check if we have any meaningful data
+                        has_data = hist is not None and not hist.empty
+                        has_info = info and len(info) > 5
+                        
+                        if not has_data and not has_info:
+                            # Mark as inactive if no data at all
                             stock = Stock.objects.filter(ticker=symbol).first()
                             if stock:
                                 stock.is_active = False
@@ -419,22 +448,23 @@ class Command(BaseCommand):
                             update_counters(False)
                             return False
                         
-                        # Get current price data
-                        current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
-                        if current_price is None or pd.isna(current_price):
-                            stock = Stock.objects.filter(ticker=symbol).first()
-                            if stock:
-                                stock.is_active = False
-                                stock.save()
-                            update_counters(False)
-                            return False
+                        # Get current price data if available
+                        current_price = None
+                        if has_data:
+                            current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
+                            if current_price is None or pd.isna(current_price):
+                                current_price = None  # Will use info data instead
+                        
+                        # Fallback to info data for current price
+                        if current_price is None and has_info:
+                            current_price = info.get('currentPrice') or info.get('regularMarketPrice')
                         
                         # Calculate price changes
                         price_change_today = None
                         change_percent = None
-                        if len(hist) > 1:
+                        if has_data and len(hist) > 1:
                             prev_price = hist['Close'].iloc[-2]
-                            if not pd.isna(prev_price) and prev_price > 0:
+                            if not pd.isna(prev_price) and prev_price > 0 and current_price:
                                 price_change_today = current_price - prev_price
                                 change_percent = (price_change_today / prev_price) * 100
                         
