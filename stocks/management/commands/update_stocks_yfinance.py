@@ -511,7 +511,7 @@ class Command(BaseCommand):
                 # Calculate price changes
                 price_change_today = None
                 change_percent = None
-                        if has_data and len(hist) > 1:
+                if has_data and len(hist) > 1:
                     try:
                         prev_price = hist['Close'].iloc[-2]
                         if not pd.isna(prev_price) and prev_price > 0 and current_price:
