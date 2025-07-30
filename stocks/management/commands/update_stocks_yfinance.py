@@ -163,6 +163,9 @@ class Command(BaseCommand):
         # Pre-filter delisted symbols if requested
         if options.get('filter_delisted', False):
             symbols = self._filter_delisted_symbols(symbols, sample_size=100)
+        else:
+            self.stdout.write(f"[INFO] Skipping delisted filtering - processing all {len(symbols)} symbols")
+            self.stdout.flush()
         
         total_symbols = len(symbols)
         self.stdout.write(f"[UP] Processing {total_symbols} symbols")
@@ -270,37 +273,68 @@ class Command(BaseCommand):
         for i, symbol in enumerate(test_symbols, 1):
             try:
                 # Quick test with minimal delay
-                time.sleep(0.05)  # Very fast testing
+                time.sleep(0.1)  # Slightly longer delay to avoid rate limiting
                 
+                # Use a more robust approach
                 ticker_obj = yf.Ticker(symbol)
-                info = ticker_obj.info
                 
-                # Try multiple periods to be more lenient
+                # Try to get basic info first
+                try:
+                    info = ticker_obj.info
+                    has_info = info and isinstance(info, dict) and len(info) > 3
+                except:
+                    has_info = False
+                
+                # Try to get historical data with multiple approaches
+                has_data = False
                 hist = None
-                for period in ["5d", "1mo", "3mo"]:
+                
+                # Method 1: Try different periods
+                for period in ["1d", "5d", "1mo"]:
                     try:
-                        hist = ticker_obj.history(period=period)
-                        if not hist.empty:
+                        hist = ticker_obj.history(period=period, timeout=10)
+                        if hist is not None and not hist.empty and len(hist) > 0:
+                            has_data = True
                             break
-                    except:
+                    except Exception as e:
                         continue
                 
-                # Check if we have any data and basic info
-                has_data = hist is not None and not hist.empty
-                has_info = info and len(info) > 5  # Basic check for meaningful info
+                # Method 2: Try getting just the latest price
+                if not has_data:
+                    try:
+                        latest = ticker_obj.history(period="1d", interval="1d", timeout=10)
+                        if latest is not None and not latest.empty:
+                            has_data = True
+                            hist = latest
+                    except:
+                        pass
                 
+                # Method 3: Check if symbol exists at all
                 if not has_data and not has_info:
-                    delisted_symbols.append(symbol)
-                    if i <= 20:  # Show first 20 delisted
-                        self.stdout.write(f"[DELISTED] {symbol}: No data found")
-                else:
+                    try:
+                        # Try a simple quote request
+                        quote = ticker_obj.quote_type
+                        if quote:
+                            has_info = True
+                    except:
+                        pass
+                
+                # Determine if symbol is valid
+                if has_data or has_info:
                     valid_symbols.append(symbol)
                     if i <= 10:  # Show first 10 valid
                         if has_data:
-                            price = hist['Close'].iloc[-1]
-                            self.stdout.write(f"[VALID] {symbol}: ${price:.2f}")
+                            try:
+                                price = hist['Close'].iloc[-1]
+                                self.stdout.write(f"[VALID] {symbol}: ${price:.2f}")
+                            except:
+                                self.stdout.write(f"[VALID] {symbol}: Data available")
                         else:
                             self.stdout.write(f"[VALID] {symbol}: Info only")
+                else:
+                    delisted_symbols.append(symbol)
+                    if i <= 20:  # Show first 20 delisted
+                        self.stdout.write(f"[DELISTED] {symbol}: No data found")
                 
                 # Progress update every 20 symbols
                 if i % 20 == 0:
@@ -308,14 +342,10 @@ class Command(BaseCommand):
                     self.stdout.flush()
                     
             except Exception as e:
+                # If we get any error, assume it's delisted
                 delisted_symbols.append(symbol)
-                error_msg = str(e).lower()
-                if any(x in error_msg for x in ['no data found', 'delisted', '404', 'not found']):
-                    if i <= 20:  # Show first 20 errors
-                        self.stdout.write(f"[DELISTED] {symbol}: {e}")
-                else:
-                    if i <= 20:  # Show first 20 errors
-                        self.stdout.write(f"[ERROR] {symbol}: {e}")
+                if i <= 20:  # Show first 20 errors
+                    self.stdout.write(f"[DELISTED] {symbol}: Error - {str(e)[:50]}")
         
         # Calculate statistics
         if test_symbols:
@@ -327,6 +357,12 @@ class Command(BaseCommand):
             self.stdout.write(f"[FILTER STATS] Delisted: {len(delisted_symbols)} ({delisted_percentage*100:.1f}%)")
             self.stdout.flush()
             
+            # If we found very few valid symbols, the filtering might be too strict
+            if valid_percentage < 0.1:  # Less than 10% valid
+                self.stdout.write(f"[WARNING] Very low valid rate ({valid_percentage*100:.1f}%). Returning all symbols without filtering.")
+                self.stdout.flush()
+                return symbols
+            
             # Estimate total valid symbols in full list
             estimated_valid = int(len(symbols) * valid_percentage)
             estimated_delisted = len(symbols) - estimated_valid
@@ -337,7 +373,6 @@ class Command(BaseCommand):
             self.stdout.flush()
             
             # Return only valid symbols from the test, plus remaining untested symbols
-            # This gives us a cleaner list to process
             remaining_symbols = symbols[sample_size:]
             final_symbols = valid_symbols + remaining_symbols
             
@@ -414,67 +449,84 @@ class Command(BaseCommand):
                 patch_yfinance_proxy(proxy)
                 
                 # Minimal delay to avoid overwhelming the API
-                time.sleep(random.uniform(0.02, 0.05))
+                time.sleep(random.uniform(0.05, 0.1))
                 
-                retry = False
-                for attempt in range(3):  # Try up to 3 times if rate limited
+                # Try multiple approaches to get data
+                ticker_obj = yf.Ticker(symbol)
+                info = None
+                hist = None
+                current_price = None
+                
+                # Approach 1: Try to get basic info
+                try:
+                    info = ticker_obj.info
+                except:
+                    pass
+                
+                # Approach 2: Try to get historical data with multiple periods
+                for period in ["1d", "5d", "1mo"]:
                     try:
-                        # Get comprehensive stock data using individual ticker method
-                        ticker_obj = yf.Ticker(symbol)
-                        info = ticker_obj.info
-                        
-                        # Try multiple periods to get historical data
-                        hist = None
-                        for period in ["5d", "1mo", "3mo"]:
+                        hist = ticker_obj.history(period=period, timeout=15)
+                        if hist is not None and not hist.empty and len(hist) > 0:
                             try:
-                                hist = ticker_obj.history(period=period)
-                                if not hist.empty:
+                                current_price = hist['Close'].iloc[-1]
+                                if current_price is not None and not pd.isna(current_price):
                                     break
                             except:
                                 continue
-                        
-                        # Check if we have any meaningful data
-                        has_data = hist is not None and not hist.empty
-                        has_info = info and len(info) > 5
-                        
-                        if not has_data and not has_info:
-                            # Mark as inactive if no data at all
-                            stock = Stock.objects.filter(ticker=symbol).first()
-                            if stock:
-                                stock.is_active = False
-                                stock.save()
-                            self.stdout.write(f"[DELISTED] {symbol}: No data found, marking inactive")
-                            self.stdout.flush()
-                            update_counters(False)
-                            return False
-                        
-                        # Get current price data if available
-                        current_price = None
-                        if has_data:
-                            current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
-                            if current_price is None or pd.isna(current_price):
-                                current_price = None  # Will use info data instead
-                        
-                        # Fallback to info data for current price
-                        if current_price is None and has_info:
-                            current_price = info.get('currentPrice') or info.get('regularMarketPrice')
+                    except:
+                        continue
+                
+                # Approach 3: Try to get current price from info if historical failed
+                if current_price is None and info:
+                    try:
+                        current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
+                    except:
+                        pass
+                
+                # Approach 4: Try a simple quote request
+                if current_price is None:
+                    try:
+                        quote = ticker_obj.quote_type
+                        if quote:
+                            # If we can get quote type, symbol exists
+                            pass
+                    except:
+                        pass
+                
+                # Determine if we have enough data to process
+                has_data = hist is not None and not hist.empty
+                has_info = info and isinstance(info, dict) and len(info) > 3
+                has_price = current_price is not None and not pd.isna(current_price)
+                
+                if not has_data and not has_info:
+                    # Mark as inactive if no data at all
+                    stock = Stock.objects.filter(ticker=symbol).first()
+                    if stock:
+                        stock.is_active = False
+                        stock.save()
+                    update_counters(False)
+                    return False
                         
                         # Calculate price changes
                         price_change_today = None
                         change_percent = None
                         if has_data and len(hist) > 1:
-                            prev_price = hist['Close'].iloc[-2]
-                            if not pd.isna(prev_price) and prev_price > 0 and current_price:
-                                price_change_today = current_price - prev_price
-                                change_percent = (price_change_today / prev_price) * 100
+                            try:
+                                prev_price = hist['Close'].iloc[-2]
+                                if not pd.isna(prev_price) and prev_price > 0 and current_price:
+                                    price_change_today = current_price - prev_price
+                                    change_percent = (price_change_today / prev_price) * 100
+                            except:
+                                pass
                         
-                        # Extract comprehensive data from info
+                        # Extract comprehensive data from info (with safe fallbacks)
                         stock_data = {
                             'ticker': symbol,
                             'symbol': symbol,
-                            'company_name': info.get('longName') or info.get('shortName', ''),
-                            'name': info.get('longName') or info.get('shortName', ''),
-                            'exchange': info.get('exchange', 'NASDAQ'),
+                            'company_name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                            'name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                            'exchange': info.get('exchange', 'NASDAQ') if info else 'NASDAQ',
                             
                             # Price data
                             'current_price': self._safe_decimal(current_price),
