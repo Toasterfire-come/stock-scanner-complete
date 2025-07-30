@@ -67,14 +67,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--threads',
             type=int,
-            default=20,
-            help='Number of concurrent threads (default: 20)'
+            default=100,
+            help='Number of concurrent threads (default: 100)'
         )
         parser.add_argument(
             '--delay',
             type=float,
-            default=0.1,
-            help='Delay between requests in seconds (default: 0.1)'
+            default=0.01,
+            help='Delay between requests in seconds (default: 0.01)'
         )
         parser.add_argument(
             '--test-mode',
@@ -273,7 +273,7 @@ class Command(BaseCommand):
         for i, symbol in enumerate(test_symbols, 1):
             try:
                 # Quick test with minimal delay
-                time.sleep(0.1)  # Slightly longer delay to avoid rate limiting
+                time.sleep(0.02)  # Minimal delay for speed
                 
                 # Use a more robust approach
                 ticker_obj = yf.Ticker(symbol)
@@ -292,7 +292,7 @@ class Command(BaseCommand):
                 # Method 1: Try different periods
                 for period in ["1d", "5d", "1mo"]:
                     try:
-                        hist = ticker_obj.history(period=period, timeout=10)
+                        hist = ticker_obj.history(period=period, timeout=5)
                         if hist is not None and not hist.empty and len(hist) > 0:
                             has_data = True
                             break
@@ -449,7 +449,7 @@ class Command(BaseCommand):
                 patch_yfinance_proxy(proxy)
                 
                 # Minimal delay to avoid overwhelming the API
-                time.sleep(random.uniform(0.05, 0.1))
+                time.sleep(random.uniform(0.01, 0.02))
                 
                 # Try multiple approaches to get data
                 ticker_obj = yf.Ticker(symbol)
@@ -466,7 +466,7 @@ class Command(BaseCommand):
                 # Approach 2: Try to get historical data with multiple periods
                 for period in ["1d", "5d", "1mo"]:
                     try:
-                        hist = ticker_obj.history(period=period, timeout=15)
+                        hist = ticker_obj.history(period=period, timeout=8)
                         if hist is not None and not hist.empty and len(hist) > 0:
                             try:
                                 current_price = hist['Close'].iloc[-1]
@@ -644,7 +644,7 @@ class Command(BaseCommand):
                     elapsed = time.time() - start_time
                     self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
                     self.stdout.flush()  # Force output
-                    stop_flag.wait(5)
+                    stop_flag.wait(10)
                 except Exception as e:
                     self.stdout.write(f"[PROGRESS ERROR] {e}")
                     break
@@ -699,7 +699,7 @@ class Command(BaseCommand):
                     completed += 1
                     
                     try:
-                        result = future.result(timeout=15)
+                        result = future.result(timeout=8)
                         if completed <= 10:  # Show first 10 results
                             self.stdout.write(f"[RESULT] {symbol}: {'SUCCESS' if result else 'FAILED'}")
                             self.stdout.flush()
@@ -715,24 +715,24 @@ class Command(BaseCommand):
                     # Update progress
                     progress['current'] = completed
                     
-                    # Show progress every 50 completed tasks
-                    if completed % 50 == 0 or completed == total_symbols:
+                                            # Show progress every 100 completed tasks
+                        if completed % 100 == 0 or completed == total_symbols:
                         progress_percent = (completed / total_symbols) * 100
                         elapsed = time.time() - start_time
                         rate = completed / elapsed if elapsed > 0 else 0
                         self.stdout.write(f"[STATS] Progress: {completed}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed - {rate:.1f} symbols/sec")
                         self.stdout.flush()
                     
-                    # Pause every 500 symbols
-                    if completed % 500 == 0 and completed > 0:
+                                            # Pause every 1000 symbols
+                        if completed % 1000 == 0 and completed > 0:
                         if proxy_manager:
                             stats = proxy_manager.get_proxy_stats()
-                            self.stdout.write(f"[PAUSE] Pausing for 30s after {completed} tickers...")
+                            self.stdout.write(f"[PAUSE] Pausing for 10s after {completed} tickers...")
                             self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
                         else:
-                            self.stdout.write(f"[PAUSE] Pausing for 30s after {completed} tickers... (no proxy)")
+                            self.stdout.write(f"[PAUSE] Pausing for 10s after {completed} tickers... (no proxy)")
                         self.stdout.flush()
-                        time.sleep(30)
+                        time.sleep(10)
         except KeyboardInterrupt:
             self.stdout.write("\n[STOP] Keyboard interrupt detected. Stopping gracefully...")
             self.stdout.write(f"[STOP] Processed {progress['current']} out of {total_symbols} symbols")
