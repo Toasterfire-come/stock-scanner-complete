@@ -706,16 +706,16 @@ class Command(BaseCommand):
                     # Update progress
                     progress['current'] = completed
                     
-                                            # Show progress every 100 completed tasks
-                        if completed % 100 == 0 or completed == total_symbols:
+                    # Show progress every 100 completed tasks
+                    if completed % 100 == 0 or completed == total_symbols:
                         progress_percent = (completed / total_symbols) * 100
                         elapsed = time.time() - start_time
                         rate = completed / elapsed if elapsed > 0 else 0
                         self.stdout.write(f"[STATS] Progress: {completed}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed - {rate:.1f} symbols/sec")
                         self.stdout.flush()
                     
-                                            # Pause every 1000 symbols
-                        if completed % 1000 == 0 and completed > 0:
+                    # Pause every 1000 symbols
+                    if completed % 1000 == 0 and completed > 0:
                         if proxy_manager:
                             stats = proxy_manager.get_proxy_stats()
                             self.stdout.write(f"[PAUSE] Pausing for 10s after {completed} tickers...")
