@@ -265,29 +265,10 @@ class ProxyManager:
                 
                 self.logger.info(f"LOADED {len(self.working_proxies)} proxies from {self.proxy_file}")
                 
-                # Quick validation of first 10 proxies only (to avoid long startup)
+                # Skip validation on load - assume proxies are valid to avoid delays
                 if self.working_proxies:
-                    self.logger.info("QUICK VALIDATION of first 10 proxies...")
-                    valid_proxies = []
-                    test_proxies = self.working_proxies[:10]  # Only test first 10
-                    
-                    with ThreadPoolExecutor(max_workers=5) as executor:
-                        future_to_proxy = {executor.submit(self.test_proxy, proxy): proxy for proxy in test_proxies}
-                        
-                        for future in as_completed(future_to_proxy):
-                            proxy = future_to_proxy[future]
-                            try:
-                                if future.result(timeout=5):  # 5 second timeout per proxy
-                                    valid_proxies.append(proxy)
-                            except Exception:
-                                pass  # Skip failed proxies
-                    
-                    # If we have some valid proxies, assume the rest are also valid
-                    if valid_proxies:
-                        self.logger.info(f"QUICK VALIDATION: {len(valid_proxies)}/10 proxies working - assuming all {len(self.working_proxies)} are valid")
-                    else:
-                        self.logger.warning("QUICK VALIDATION: No proxies working - will refresh pool")
-                        self.working_proxies = []
+                    self.logger.info(f"LOADED {len(self.working_proxies)} proxies - skipping validation for speed")
+                    # Don't clear the proxies - let them be tested during actual use
                 
         except Exception as e:
             self.logger.error(f"FAILED to load proxies: {e}")

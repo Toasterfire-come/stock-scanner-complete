@@ -400,8 +400,23 @@ class Command(BaseCommand):
             try:
                 proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
                 stats = proxy_manager.get_proxy_stats()
-                self.stdout.write(f"[PROXY] Proxy manager initialized with {stats['total_working']} working proxies")
-                self.stdout.write(f"[PROXY] Available: {stats['available']}, Used: {stats['used_in_run']}")
+                if stats['total_working'] > 0:
+                    self.stdout.write(f"[PROXY] Proxy manager initialized with {stats['total_working']} working proxies")
+                    self.stdout.write(f"[PROXY] Available: {stats['available']}, Used: {stats['used_in_run']}")
+                else:
+                    self.stdout.write(f"[PROXY] No proxies available initially - will try to refresh during run")
+                    # Try to refresh the proxy pool
+                    try:
+                        count = proxy_manager.refresh_proxy_pool(force=True)
+                        if count > 0:
+                            stats = proxy_manager.get_proxy_stats()
+                            self.stdout.write(f"[PROXY] Refreshed pool: {stats['total_working']} working proxies")
+                        else:
+                            self.stdout.write(f"[PROXY] Failed to refresh proxy pool - continuing without proxies")
+                            proxy_manager = None
+                    except Exception as refresh_error:
+                        self.stdout.write(f"[PROXY] Refresh failed: {refresh_error} - continuing without proxies")
+                        proxy_manager = None
             except Exception as e:
                 self.stdout.write(f"[PROXY ERROR] Failed to initialize proxy manager: {e}")
                 self.stdout.write(f"[PROXY] Continuing without proxies")
@@ -459,12 +474,20 @@ class Command(BaseCommand):
         def process_symbol(symbol, ticker_number):
             """Process a single symbol with comprehensive data collection"""
             try:
-                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
+                                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
                 proxy = None
                 if proxy_manager:
                     proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
-                    if proxy and ticker_number <= 5:  # Show proxy info for first 5 tickers
+                    if proxy and ticker_number <= 5: # Show proxy info for first 5 tickers
                         self.stdout.write(f"[PROXY] {symbol}: Using proxy {proxy}")
+                    elif not proxy and ticker_number % 100 == 0:  # Try to refresh every 100 tickers if no proxies
+                        try:
+                            count = proxy_manager.refresh_proxy_pool(force=True)
+                            if count > 0:
+                                self.stdout.write(f"[PROXY] Refreshed pool during run: {count} new proxies")
+                                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                        except Exception as e:
+                            pass  # Silently continue without proxy
                 patch_yfinance_proxy(proxy)
                 
                 # Minimal delay to avoid overwhelming the API
