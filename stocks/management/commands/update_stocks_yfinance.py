@@ -520,48 +520,48 @@ class Command(BaseCommand):
                     except:
                         pass
                 
-                # Extract comprehensive data from info (with safe fallbacks)
+                                # Extract comprehensive data from info (with safe fallbacks)
                 stock_data = {
-                            'ticker': symbol,
-                            'symbol': symbol,
-                            'company_name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
-                            'name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
-                            'exchange': info.get('exchange', 'NASDAQ') if info else 'NASDAQ',
-                            
-                            # Price data
-                            'current_price': self._safe_decimal(current_price),
-                            'price_change_today': self._safe_decimal(price_change_today),
-                            'change_percent': self._safe_decimal(change_percent),
-                            
-                            # Bid/Ask data
-                            'bid_price': self._safe_decimal(info.get('bid')),
-                            'ask_price': self._safe_decimal(info.get('ask')),
-                            'days_low': self._safe_decimal(info.get('dayLow')),
-                            'days_high': self._safe_decimal(info.get('dayHigh')),
-                            
-                            # Volume data
-                            'volume': info.get('volume'),
-                            'volume_today': info.get('volume'),
-                            'avg_volume_3mon': info.get('averageVolume'),
-                            'shares_available': info.get('sharesOutstanding'),
-                            
-                            # Market data
-                            'market_cap': info.get('marketCap'),
-                            
-                            # Financial ratios
-                            'pe_ratio': self._safe_decimal(info.get('trailingPE')),
-                            'dividend_yield': self._safe_decimal(info.get('dividendYield')),
-                            'earnings_per_share': self._safe_decimal(info.get('trailingEps')),
-                            'book_value': self._safe_decimal(info.get('bookValue')),
-                            'price_to_book': self._safe_decimal(info.get('priceToBook')),
-                            
-                            # 52-week range
-                            'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')),
-                            'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')),
-                            
-                            # Target
-                            'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
-                        }
+                    'ticker': symbol,
+                    'symbol': symbol,
+                    'company_name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                    'name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                    'exchange': info.get('exchange', 'NASDAQ') if info else 'NASDAQ',
+                    
+                    # Price data
+                    'current_price': self._safe_decimal(current_price),
+                    'price_change_today': self._safe_decimal(price_change_today),
+                    'change_percent': self._safe_decimal(change_percent),
+                    
+                    # Bid/Ask data
+                    'bid_price': self._safe_decimal(info.get('bid') if info else None),
+                    'ask_price': self._safe_decimal(info.get('ask') if info else None),
+                    'days_low': self._safe_decimal(info.get('dayLow') if info else None),
+                    'days_high': self._safe_decimal(info.get('dayHigh') if info else None),
+                    
+                    # Volume data
+                    'volume': info.get('volume') if info else None,
+                    'volume_today': info.get('volume') if info else None,
+                    'avg_volume_3mon': info.get('averageVolume') if info else None,
+                    'shares_available': info.get('sharesOutstanding') if info else None,
+                    
+                    # Market data
+                    'market_cap': info.get('marketCap') if info else None,
+                    
+                    # Financial ratios
+                    'pe_ratio': self._safe_decimal(info.get('trailingPE') if info else None),
+                    'dividend_yield': self._safe_decimal(info.get('dividendYield') if info else None),
+                    'earnings_per_share': self._safe_decimal(info.get('trailingEps') if info else None),
+                    'book_value': self._safe_decimal(info.get('bookValue') if info else None),
+                    'price_to_book': self._safe_decimal(info.get('priceToBook') if info else None),
+                    
+                    # 52-week range
+                    'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow') if info else None),
+                    'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh') if info else None),
+                    
+                    # Target
+                    'one_year_target': self._safe_decimal(info.get('targetMeanPrice') if info else None),
+                }
                         
                 # Calculate DVAV (Day Volume over Average Volume)
                 if stock_data['volume'] and stock_data['avg_volume_3mon']:
@@ -601,12 +601,14 @@ class Command(BaseCommand):
                 
             except Exception as e:
                 err_str = str(e).lower()
-                if 'too many requests' in err_str or 'rate limit' in err_str:
+                if 'too many requests' in err_str or 'rate limit' in err_str or '401' in err_str:
                     # Mark current proxy as failed
                     if proxy and proxy_manager:
                         proxy_manager.mark_proxy_failed(proxy)
                     self.stdout.write(f"[RATE LIMIT] {symbol}: {e}")
                     self.stdout.flush()
+                    # Add a small delay for rate limiting
+                    time.sleep(random.uniform(0.5, 1.0))
                 else:
                     # Mark as inactive if delisted or no data
                     if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
