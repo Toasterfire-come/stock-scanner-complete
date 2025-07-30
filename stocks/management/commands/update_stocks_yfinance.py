@@ -507,21 +507,21 @@ class Command(BaseCommand):
                         stock.save()
                     update_counters(False)
                     return False
-                        
-                        # Calculate price changes
-                        price_change_today = None
-                        change_percent = None
+                
+                # Calculate price changes
+                price_change_today = None
+                change_percent = None
                         if has_data and len(hist) > 1:
-                            try:
-                                prev_price = hist['Close'].iloc[-2]
-                                if not pd.isna(prev_price) and prev_price > 0 and current_price:
-                                    price_change_today = current_price - prev_price
-                                    change_percent = (price_change_today / prev_price) * 100
-                            except:
-                                pass
-                        
-                        # Extract comprehensive data from info (with safe fallbacks)
-                        stock_data = {
+                    try:
+                        prev_price = hist['Close'].iloc[-2]
+                        if not pd.isna(prev_price) and prev_price > 0 and current_price:
+                            price_change_today = current_price - prev_price
+                            change_percent = (price_change_today / prev_price) * 100
+                    except:
+                        pass
+                
+                # Extract comprehensive data from info (with safe fallbacks)
+                stock_data = {
                             'ticker': symbol,
                             'symbol': symbol,
                             'company_name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
@@ -563,71 +563,62 @@ class Command(BaseCommand):
                             'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
                         }
                         
-                        # Calculate DVAV (Day Volume over Average Volume)
-                        if stock_data['volume'] and stock_data['avg_volume_3mon']:
-                            try:
-                                dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
-                                if dvav_val.is_infinite() or dvav_val.is_nan():
-                                    stock_data['dvav'] = None
-                                else:
-                                    stock_data['dvav'] = dvav_val
-                            except Exception:
-                                stock_data['dvav'] = None
-                        
-                        # Check for any invalid values (Infinity, NaN, etc.)
-                        for k, v in list(stock_data.items()):
-                            if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
-                                stock_data[k] = None
-                        
-                        if test_mode:
-                            change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
-                            self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
+                # Calculate DVAV (Day Volume over Average Volume)
+                if stock_data['volume'] and stock_data['avg_volume_3mon']:
+                    try:
+                        dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
+                        if dvav_val.is_infinite() or dvav_val.is_nan():
+                            stock_data['dvav'] = None
                         else:
-                            # Save to database
-                            stock, created = Stock.objects.update_or_create(
-                                ticker=symbol,
-                                defaults=stock_data
-                            )
-                            
-                            # Save price history
-                            if current_price:
-                                StockPrice.objects.create(
-                                    stock=stock,
-                                    price=current_price
-                                )
-                        
-                        update_counters(True)
-                        return True
-                        
-                    except Exception as e:
-                        err_str = str(e).lower()
-                        if 'too many requests' in err_str or 'rate limit' in err_str:
-                            if not retry:
-                                retry = True
-                                # Mark current proxy as failed
-                                if proxy:
-                                    proxy_manager.mark_proxy_failed(proxy)
-                                time.sleep(random.uniform(5, 10))  # Wait longer before retry
-                                continue
-                        
-                        # Mark as inactive if delisted or no data
-                        if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
-                            stock = Stock.objects.filter(ticker=symbol).first()
-                            if stock:
-                                stock.is_active = False
-                                stock.save()
-                            self.stdout.write(f"[DELISTED] {symbol}: {e}")
-                            self.stdout.flush()
-                        else:
-                            self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
-                            self.stdout.flush()
-                        update_counters(False)
-                        return False
+                            stock_data['dvav'] = dvav_val
+                    except Exception:
+                        stock_data['dvav'] = None
                 
-                return False
+                # Check for any invalid values (Infinity, NaN, etc.)
+                for k, v in list(stock_data.items()):
+                    if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
+                        stock_data[k] = None
+                
+                if test_mode:
+                    change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
+                    self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
+                else:
+                    # Save to database
+                    stock, created = Stock.objects.update_or_create(
+                        ticker=symbol,
+                        defaults=stock_data
+                    )
+                    
+                    # Save price history
+                    if current_price:
+                        StockPrice.objects.create(
+                            stock=stock,
+                            price=current_price
+                        )
+                
+                update_counters(True)
+                return True
                 
             except Exception as e:
-                self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                err_str = str(e).lower()
+                if 'too many requests' in err_str or 'rate limit' in err_str:
+                    # Mark current proxy as failed
+                    if proxy and proxy_manager:
+                        proxy_manager.mark_proxy_failed(proxy)
+                    self.stdout.write(f"[RATE LIMIT] {symbol}: {e}")
+                    self.stdout.flush()
+                else:
+                    # Mark as inactive if delisted or no data
+                    if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
+                        stock = Stock.objects.filter(ticker=symbol).first()
+                        if stock:
+                            stock.is_active = False
+                            stock.save()
+                        self.stdout.write(f"[DELISTED] {symbol}: {e}")
+                        self.stdout.flush()
+                    else:
+                        self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                        self.stdout.flush()
                 update_counters(False)
                 return False
         
