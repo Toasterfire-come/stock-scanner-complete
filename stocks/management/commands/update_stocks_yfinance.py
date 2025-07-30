@@ -474,7 +474,13 @@ class Command(BaseCommand):
                                     break
                             except:
                                 continue
-                    except:
+                    except Exception as e:
+                        # Only log the first error for each symbol to reduce noise
+                        if period == "1d":
+                            err_str = str(e).lower()
+                            if any(x in err_str for x in ['no data found', 'delisted', '404']):
+                                # Don't log repeated delisted messages
+                                pass
                         continue
                 
                 # Approach 3: Try to get current price from info if historical failed
