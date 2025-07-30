@@ -55,35 +55,35 @@ def test_single_proxy(symbol, proxy):
                 current_price = info.get('currentPrice') or info.get('regularMarketPrice')
             
             if current_price and not pd.isna(current_price):
-                print(f"✅ {symbol}: ${current_price:.2f} via {proxy}")
+                print(f"SUCCESS: {symbol}: ${current_price:.2f} via {proxy}")
                 return True
         
-        print(f"❌ {symbol}: No valid data via {proxy}")
+        print(f"ERROR: {symbol}: No valid data via {proxy}")
         return False
         
     except Exception as e:
-        print(f"❌ {symbol}: Error via {proxy} - {str(e)[:50]}")
+        print(f"ERROR: {symbol}: Error via {proxy} - {str(e)[:50]}")
         return False
 
 def main():
-    print("🔍 QUICK PROXY TEST")
+    print("QUICK PROXY TEST")
     print("=" * 40)
     
     # Test symbols
     symbols = ['AAPL', 'MSFT', 'GOOGL']
     
     # Initialize proxy manager
-    print("\n📡 Loading proxies...")
+    print("\nLoading proxies...")
     try:
         proxy_manager = ProxyManager()
         stats = proxy_manager.get_proxy_stats()
-        print(f"✅ Loaded {stats['total_working']} proxies")
+        print(f"SUCCESS: Loaded {stats['total_working']} proxies")
     except Exception as e:
-        print(f"❌ Proxy manager failed: {e}")
+        print(f"ERROR: Proxy manager failed: {e}")
         return
     
     # Test each symbol with different proxies
-    print(f"\n🧪 Testing {len(symbols)} symbols...")
+    print(f"\nTesting {len(symbols)} symbols...")
     successful = 0
     total_tests = 0
     
@@ -97,20 +97,20 @@ def main():
             time.sleep(0.1)  # Small delay
     
     # Results
-    print(f"\n📊 Results: {successful}/{total_tests} successful ({successful/total_tests*100:.1f}%)")
+    print(f"\nResults: {successful}/{total_tests} successful ({successful/total_tests*100:.1f}%)")
     
     # Test without proxy for comparison
-    print(f"\n🌐 Testing without proxy...")
+    print(f"\nTesting without proxy...")
     try:
         yfinance.shared._requests = requests.Session()
         ticker = yf.Ticker("AAPL")
         info = ticker.info
         if info:
-            print("✅ Direct connection works")
+            print("SUCCESS: Direct connection works")
         else:
-            print("❌ Direct connection failed")
+            print("ERROR: Direct connection failed")
     except Exception as e:
-        print(f"❌ Direct connection error: {str(e)[:50]}")
+        print(f"ERROR: Direct connection error: {str(e)[:50]}")
 
 if __name__ == "__main__":
     main()
