@@ -394,8 +394,15 @@ class Command(BaseCommand):
         # Initialize proxy manager only if not disabled
         proxy_manager = None
         if not no_proxy:
-            proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
-            self.stdout.write(f"[PROXY] Proxy manager initialized")
+            try:
+                proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
+                stats = proxy_manager.get_proxy_stats()
+                self.stdout.write(f"[PROXY] Proxy manager initialized with {stats['total_working']} working proxies")
+                self.stdout.write(f"[PROXY] Available: {stats['available']}, Used: {stats['used_in_run']}")
+            except Exception as e:
+                self.stdout.write(f"[PROXY ERROR] Failed to initialize proxy manager: {e}")
+                self.stdout.write(f"[PROXY] Continuing without proxies")
+                proxy_manager = None
         else:
             self.stdout.write(f"[PROXY] Proxy usage disabled")
         self.stdout.flush()
@@ -429,14 +436,21 @@ class Command(BaseCommand):
         def patch_yfinance_proxy(proxy):
             import yfinance
             if proxy:
-                session = requests.Session()
-                session.proxies = {
-                    'http': proxy,
-                    'https': proxy
-                }
-                yfinance.shared._requests = session
+                try:
+                    session = requests.Session()
+                    session.proxies = {
+                        'http': proxy,
+                        'https': proxy
+                    }
+                    # Set headers to avoid detection
+                    session.headers.update({
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    })
+                    yfinance.shared._requests = session
+                except Exception as e:
+                    self.stdout.write(f"[PROXY ERROR] Failed to set proxy {proxy}: {e}")
+                    yfinance.shared._requests = requests.Session()
             else:
-                import yfinance
                 yfinance.shared._requests = requests.Session()
         
         def process_symbol(symbol, ticker_number):
@@ -446,6 +460,8 @@ class Command(BaseCommand):
                 proxy = None
                 if proxy_manager:
                     proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                    if proxy and ticker_number <= 5:  # Show proxy info for first 5 tickers
+                        self.stdout.write(f"[PROXY] {symbol}: Using proxy {proxy}")
                 patch_yfinance_proxy(proxy)
                 
                 # Minimal delay to avoid overwhelming the API
