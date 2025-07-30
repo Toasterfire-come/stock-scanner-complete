@@ -158,7 +158,10 @@ class Command(BaseCommand):
             symbols = self._get_nasdaq_symbols(options['limit'], options['nasdaq_only'])
         
         # Test yfinance connectivity
-        self._test_yfinance_connectivity()
+        connectivity_ok = self._test_yfinance_connectivity()
+        if not connectivity_ok:
+            self.stdout.write("[INFO] Proceeding with limited connectivity - individual requests may still work")
+        self.stdout.flush()
         
         # Pre-filter delisted symbols if requested
         if options.get('filter_delisted', False):
@@ -631,6 +634,15 @@ class Command(BaseCommand):
                     self.stdout.flush()
                     # Add a small delay for rate limiting
                     time.sleep(random.uniform(0.5, 1.0))
+                elif 'could not resolve host' in err_str or 'dns' in err_str:
+                    # Network connectivity issue
+                    self.stdout.write(f"[NETWORK] {symbol}: DNS resolution failed")
+                    self.stdout.flush()
+                    # Don't mark as failed, just skip
+                elif 'timeout' in err_str:
+                    # Timeout issue
+                    self.stdout.write(f"[TIMEOUT] {symbol}: Request timed out")
+                    self.stdout.flush()
                 else:
                     # Mark as inactive if delisted or no data
                     if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
@@ -795,16 +807,30 @@ class Command(BaseCommand):
             return None
 
     def _test_yfinance_connectivity(self):
-        """Test yfinance API connectivity"""
+        """Test yfinance API connectivity with fallback"""
         try:
+            # Try direct connectivity test first
             test_ticker = yf.Ticker("AAPL")
             test_info = test_ticker.info
             if test_info:
                 self.stdout.write("[SUCCESS] yfinance connectivity test passed")
+                return True
             else:
-                self.stdout.write(self.style.WARNING("[WARNING]  yfinance connectivity test failed"))
+                self.stdout.write(self.style.WARNING("[WARNING] yfinance connectivity test failed - no data returned"))
+                return False
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"[ERROR] yfinance connectivity error: {e}"))
+            error_str = str(e).lower()
+            if 'could not resolve host' in error_str or 'dns' in error_str:
+                self.stdout.write(self.style.WARNING("[WARNING] DNS resolution failed - this may be a network issue"))
+                self.stdout.write(self.style.WARNING("[WARNING] Continuing anyway - yfinance may work with different endpoints"))
+                return False
+            elif 'timeout' in error_str:
+                self.stdout.write(self.style.WARNING("[WARNING] yfinance connectivity timeout - continuing anyway"))
+                return False
+            else:
+                self.stdout.write(self.style.WARNING(f"[WARNING] yfinance connectivity error: {e}"))
+                self.stdout.write(self.style.WARNING("[WARNING] Continuing anyway - individual requests may still work"))
+                return False
 
     def _display_final_results(self, results):
         """Display comprehensive final results"""
