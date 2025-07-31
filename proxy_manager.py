@@ -56,7 +56,11 @@ class ProxyManager:
         return [
             # Free proxy APIs
             "https://www.proxy-list.download/api/v1/get?type=https",
+            "https://www.proxy-list.download/api/v1/get?type=http",
             "https://api.proxyscrape.com/v2/?request=get&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all",
+            "https://api.proxyscrape.com/v2/?request=get&protocol=https&timeout=10000&country=all&ssl=all&anonymity=all",
+            
+            # GitHub sources (most reliable)
             "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
             "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
             "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
@@ -68,6 +72,20 @@ class ProxyManager:
             "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt",
             "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/https.txt",
+            
+            # Additional GitHub sources
+            "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
+            "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
+            "https://raw.githubusercontent.com/almroot/proxylist/master/list.txt",
+            "https://raw.githubusercontent.com/zevtyardt/proxy-list/main/http.txt",
+            "https://raw.githubusercontent.com/zevtyardt/proxy-list/main/https.txt",
+            "https://raw.githubusercontent.com/rdavydov/proxy-list/main/proxies_anonymous/http.txt",
+            "https://raw.githubusercontent.com/rdavydov/proxy-list/main/proxies_anonymous/https.txt",
+            "https://raw.githubusercontent.com/Anonym0usWork1221/Proxy/main/http.txt",
+            "https://raw.githubusercontent.com/Anonym0usWork1221/Proxy/main/https.txt",
+            "https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list",
+            
+            # Public proxy lists
             "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
             "https://raw.githubusercontent.com/saschazesiger/Free-Proxies/master/proxies.txt",
             "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/http.txt",
