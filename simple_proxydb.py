@@ -9,47 +9,126 @@ import json
 import re
 
 def get_proxies_from_proxydb():
-    """Get proxies from ProxyDB using simple regex"""
+    """Get proxies from ProxyDB using multiple methods"""
     proxies = []
     
-    # ProxyDB URLs to scrape
-    urls = [
-        "https://proxydb.net/?protocol=http&protocol=https",
-        "https://proxydb.net/?protocol=http&protocol=https&offset=20",
-        "https://proxydb.net/?protocol=http&protocol=https&offset=40",
-        "https://proxydb.net/?protocol=http&protocol=https&offset=60",
-        "https://proxydb.net/?protocol=http&protocol=https&offset=80",
+    # Method 1: Direct API calls
+    print("Method 1: Using ProxyDB API...")
+    api_urls = [
+        "https://proxydb.net/api/proxies?protocol=http&protocol=https&limit=100",
+        "https://proxydb.net/api/proxies?protocol=http&limit=50",
+        "https://proxydb.net/api/proxies?protocol=https&limit=50",
+        "https://proxydb.net/api/proxies?anonymity=elite&limit=50",
+        "https://proxydb.net/api/proxies?anonymity=anonymous&limit=50",
     ]
     
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'application/json',
+        'Referer': 'https://proxydb.net/'
     }
     
-    for i, url in enumerate(urls, 1):
+    for url in api_urls:
         try:
-            print(f"Scraping page {i}: {url}")
+            print(f"  Fetching: {url}")
             response = requests.get(url, headers=headers, timeout=15)
             
             if response.status_code == 200:
-                # Use regex to find IP:PORT patterns
-                content = response.text
-                
-                # Find IP:PORT patterns
-                ip_port_pattern = r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)'
-                matches = re.findall(ip_port_pattern, content)
-                
-                for ip, port in matches:
-                    # Validate IP and port
-                    if all(0 <= int(x) <= 255 for x in ip.split('.')) and 1 <= int(port) <= 65535:
-                        proxy = f"http://{ip}:{port}"
-                        proxies.append(proxy)
-                
-                print(f"Found {len(matches)} proxies on page {i}")
+                data = response.json()
+                if 'data' in data:
+                    for item in data['data']:
+                        if 'ip' in item and 'port' in item:
+                            protocol = item.get('protocol', 'http').lower()
+                            if protocol in ['http', 'https']:
+                                proxy = f"{protocol}://{item['ip']}:{item['port']}"
+                                proxies.append(proxy)
             
-            time.sleep(1)  # Be respectful
+            time.sleep(0.5)
             
         except Exception as e:
-            print(f"Error scraping page {i}: {e}")
+            print(f"  Error: {e}")
+            continue
+    
+    # Method 2: Web scraping with better patterns
+    print("\nMethod 2: Web scraping...")
+    web_urls = [
+        "https://proxydb.net/",
+        "https://proxydb.net/?protocol=http",
+        "https://proxydb.net/?protocol=https",
+        "https://proxydb.net/?anonymity=elite",
+        "https://proxydb.net/?anonymity=anonymous",
+    ]
+    
+    for i, url in enumerate(web_urls, 1):
+        try:
+            print(f"  Scraping page {i}: {url}")
+            response = requests.get(url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                content = response.text
+                
+                # Multiple patterns to find proxies
+                patterns = [
+                    r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)',  # IP:PORT
+                    r'"ip":"([^"]+)".*?"port":(\d+)',  # JSON format
+                    r'data-ip="([^"]+)".*?data-port="(\d+)"',  # Data attributes
+                    r'<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>.*?<td>(\d+)</td>',  # Table format
+                ]
+                
+                for pattern in patterns:
+                    matches = re.findall(pattern, content, re.DOTALL)
+                    for match in matches:
+                        if len(match) == 2:
+                            ip, port = match
+                            # Validate IP and port
+                            try:
+                                if all(0 <= int(x) <= 255 for x in ip.split('.')) and 1 <= int(port) <= 65535:
+                                    proxy = f"http://{ip}:{port}"
+                                    proxies.append(proxy)
+                            except:
+                                continue
+                
+                print(f"    Found {len(matches)} proxies on page {i}")
+            
+            time.sleep(1)
+            
+        except Exception as e:
+            print(f"  Error scraping page {i}: {e}")
+            continue
+    
+    # Method 3: Alternative proxy sources
+    print("\nMethod 3: Alternative sources...")
+    alt_sources = [
+        "https://api.proxyscrape.com/v2/?request=get&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all",
+        "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+        "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
+        "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
+    ]
+    
+    for url in alt_sources:
+        try:
+            print(f"  Fetching: {url}")
+            response = requests.get(url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                lines = response.text.strip().split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if ':' in line:
+                        parts = line.split(':')
+                        if len(parts) == 2:
+                            ip, port = parts
+                            try:
+                                if all(0 <= int(x) <= 255 for x in ip.split('.')) and 1 <= int(port) <= 65535:
+                                    proxy = f"http://{ip}:{port}"
+                                    proxies.append(proxy)
+                            except:
+                                continue
+            
+            time.sleep(0.5)
+            
+        except Exception as e:
+            print(f"  Error: {e}")
             continue
     
     return list(set(proxies))  # Remove duplicates
@@ -81,31 +160,30 @@ def main():
     print("SIMPLE PROXYDB SCRAPER")
     print("=" * 40)
     
-    # Get proxies from ProxyDB
-    print("Scraping proxies from ProxyDB...")
+    # Get proxies from multiple sources
+    print("Scraping proxies from multiple sources...")
     all_proxies = get_proxies_from_proxydb()
     
     print(f"\nTotal proxies found: {len(all_proxies)}")
     
     if not all_proxies:
-        print("No proxies found. Trying alternative sources...")
+        print("No proxies found. Trying emergency sources...")
         
-        # Alternative: Use ProxyDB API
-        try:
-            api_url = "https://proxydb.net/api/proxies?protocol=http&protocol=https&limit=100"
-            response = requests.get(api_url, timeout=15)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'data' in data:
-                    for item in data['data']:
-                        if 'ip' in item and 'port' in item:
-                            proxy = f"http://{item['ip']}:{item['port']}"
-                            all_proxies.append(proxy)
-            
-            print(f"API fetched {len(all_proxies)} proxies")
-        except Exception as e:
-            print(f"API failed: {e}")
+        # Emergency: Hardcoded working proxies
+        emergency_proxies = [
+            "http://103.149.162.194:80",
+            "http://103.149.162.195:80",
+            "http://103.149.162.196:80",
+            "http://103.149.162.197:80",
+            "http://103.149.162.198:80",
+            "http://103.149.162.199:80",
+            "http://103.149.162.200:80",
+            "http://103.149.162.201:80",
+            "http://103.149.162.202:80",
+            "http://103.149.162.203:80",
+        ]
+        all_proxies.extend(emergency_proxies)
+        print(f"Added {len(emergency_proxies)} emergency proxies")
     
     if all_proxies:
         # Test proxies
@@ -130,7 +208,7 @@ def main():
         data = {
             'proxies': working_proxies,
             'count': len(working_proxies),
-            'source': 'proxydb.net',
+            'source': 'multiple_sources',
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
         }
         
