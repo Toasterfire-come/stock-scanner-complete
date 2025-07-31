@@ -215,8 +215,8 @@ def main():
     print("=" * 50)
     
     # Configuration
-    limit = 50  # Number of stocks to process
-    num_threads = 10
+    limit = 20  # Reduced for testing
+    num_threads = 5  # Reduced for testing
     use_proxies = True
     
     print(f"Configuration:")
@@ -249,17 +249,9 @@ def main():
             print(f"ERROR: Proxy manager failed: {e}")
             proxy_manager = None
     
-    # Test connectivity
-    print("\nTesting yfinance connectivity...")
-    try:
-        test_ticker = yf.Ticker("AAPL")
-        test_info = test_ticker.info
-        if test_info:
-            print("SUCCESS: yfinance connectivity test passed")
-        else:
-            print("WARNING: yfinance connectivity test failed")
-    except Exception as e:
-        print(f"ERROR: yfinance connectivity error: {e}")
+    # Skip connectivity test to avoid hanging
+    print("\nSkipping connectivity test to avoid delays...")
+    print("Will test connectivity during actual stock processing")
     
     # Process stocks
     print(f"\nStarting to process {len(symbols)} symbols...")
@@ -271,16 +263,22 @@ def main():
     results = []
     
     # Use ThreadPoolExecutor for parallel processing
+    print("Submitting tasks to thread pool...")
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         future_to_symbol = {}
         for i, symbol in enumerate(symbols, 1):
             future = executor.submit(process_symbol, symbol, i, proxy_manager)
             future_to_symbol[future] = symbol
         
+        print(f"Submitted {len(symbols)} tasks. Processing...")
+        completed = 0
+        
         for future in as_completed(future_to_symbol):
             symbol = future_to_symbol[future]
+            completed += 1
+            
             try:
-                result = future.result(timeout=15)
+                result = future.result(timeout=10)  # Reduced timeout
                 if result:
                     successful += 1
                     results.append(result)
@@ -289,6 +287,10 @@ def main():
             except Exception as e:
                 print(f"[TIMEOUT] {symbol}: {e}")
                 failed += 1
+            
+            # Show progress every 5 completed
+            if completed % 5 == 0 or completed == len(symbols):
+                print(f"[PROGRESS] {completed}/{len(symbols)} completed ({successful} successful, {failed} failed)")
     
     elapsed = time.time() - start_time
     
