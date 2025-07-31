@@ -12,41 +12,41 @@ def main():
     print("=" * 30)
     
     print("Step 1: Testing imports...")
-    print("✓ Imports successful")
+    print("SUCCESS: Imports successful")
     
     print("\nStep 2: Testing proxy manager...")
     try:
         proxy_manager = ProxyManager()
         stats = proxy_manager.get_proxy_stats()
-        print(f"✓ Proxy manager loaded: {stats['total_working']} proxies")
+        print(f"SUCCESS: Proxy manager loaded: {stats['total_working']} proxies")
     except Exception as e:
-        print(f"✗ Proxy manager failed: {e}")
+        print(f"ERROR: Proxy manager failed: {e}")
         return
     
     print("\nStep 3: Testing yfinance import...")
     try:
-        print("✓ yfinance imported successfully")
+        print("SUCCESS: yfinance imported successfully")
     except Exception as e:
-        print(f"✗ yfinance import failed: {e}")
+        print(f"ERROR: yfinance import failed: {e}")
         return
     
     print("\nStep 4: Testing basic yfinance call...")
     try:
         print("  Creating ticker object...")
         ticker = yf.Ticker("AAPL")
-        print("  ✓ Ticker object created")
+        print("  SUCCESS: Ticker object created")
         
         print("  Getting info...")
         info = ticker.info
-        print("  ✓ Info retrieved")
+        print("  SUCCESS: Info retrieved")
         
         if info:
-            print(f"  ✓ AAPL price: ${info.get('currentPrice', 'N/A')}")
+            print(f"  SUCCESS: AAPL price: ${info.get('currentPrice', 'N/A')}")
         else:
-            print("  ⚠ No info returned")
+            print("  WARNING: No info returned")
             
     except Exception as e:
-        print(f"✗ yfinance test failed: {e}")
+        print(f"ERROR: yfinance test failed: {e}")
         return
     
     print("\nStep 5: Testing proxy with yfinance...")
@@ -67,15 +67,15 @@ def main():
             
             print("  Setting yfinance session...")
             yfinance.shared._requests = session
-            print("  ✓ Session set")
+            print("  SUCCESS: Session set")
             
             print("  Testing with proxy...")
             ticker2 = yf.Ticker("MSFT")
             info2 = ticker2.info
-            print("  ✓ Proxy test successful")
+            print("  SUCCESS: Proxy test successful")
             
     except Exception as e:
-        print(f"✗ Proxy test failed: {e}")
+        print(f"ERROR: Proxy test failed: {e}")
     
     print("\nDEBUG COMPLETED!")
 
