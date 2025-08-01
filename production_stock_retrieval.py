@@ -302,11 +302,11 @@ def process_symbol(symbol, ticker_number, proxy_manager, timeout=10, save_to_db=
                 logger.error(f"Database save failed for {symbol}: {db_error}")
                 result['db_saved'] = False
         
-        logger.info(f"✅ {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')}")
+        logger.info(f"SUCCESS {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')}")
         return result
         
     except Exception as e:
-        logger.error(f"❌ {symbol}: {e}")
+        logger.error(f"ERROR {symbol}: {e}")
         return None
 
 def main():
@@ -325,14 +325,14 @@ def main():
     print("=" * 60)
     
     # Load NYSE symbols
-    print(f"\n📊 Loading NYSE symbols from {args.csv}...")
+    print(f"\nLoading NYSE symbols from {args.csv}...")
     symbols = load_nyse_symbols(args.csv, args.test)
     
     if not symbols:
-        print("❌ No symbols loaded. Exiting.")
+        print("ERROR: No symbols loaded. Exiting.")
         return
     
-    print(f"📈 Processing {len(symbols)} symbols...")
+    print(f"Processing {len(symbols)} symbols...")
     
     # Initialize proxy manager
     proxy_manager = None
@@ -341,24 +341,24 @@ def main():
             proxy_manager = ProxyManager()
             stats = proxy_manager.get_proxy_stats()
             if stats['total_working'] > 0:
-                print(f"✅ Loaded {stats['total_working']} proxies")
+                print(f"SUCCESS: Loaded {stats['total_working']} proxies")
             else:
-                print("⚠️  No proxies available - trying to refresh...")
+                print("WARNING: No proxies available - trying to refresh...")
                 count = proxy_manager.refresh_proxy_pool(force=True)
                 if count > 0:
                     stats = proxy_manager.get_proxy_stats()
-                    print(f"✅ Refreshed pool - {stats['total_working']} proxies")
+                    print(f"SUCCESS: Refreshed pool - {stats['total_working']} proxies")
                 else:
-                    print("⚠️  No proxies available - continuing without proxies")
+                    print("WARNING: No proxies available - continuing without proxies")
                     proxy_manager = None
         except Exception as e:
-            print(f"❌ Proxy manager failed: {e}")
+            print(f"ERROR: Proxy manager failed: {e}")
             proxy_manager = None
     else:
-        print("🚫 Proxy usage disabled")
+        print("DISABLED: Proxy usage disabled")
     
     # Process stocks
-    print(f"\n🚀 Starting to process {len(symbols)} symbols...")
+    print(f"\nStarting to process {len(symbols)} symbols...")
     print("=" * 60)
     
     start_time = time.time()
@@ -402,15 +402,15 @@ def main():
     print("\n" + "=" * 60)
     print("SCAN RESULTS")
     print("=" * 60)
-    print(f"✅ SUCCESSFUL: {successful}")
-    print(f"❌ FAILED: {failed}")
-    print(f"📊 SUCCESS RATE: {(successful/len(symbols)*100):.1f}%")
-    print(f"⏱️  TIME: {elapsed:.2f}s")
-    print(f"🚀 RATE: {len(symbols)/elapsed:.2f} symbols/sec")
+    print(f"SUCCESSFUL: {successful}")
+    print(f"FAILED: {failed}")
+    print(f"SUCCESS RATE: {(successful/len(symbols)*100):.1f}%")
+    print(f"TIME: {elapsed:.2f}s")
+    print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
     
     if proxy_manager:
         final_stats = proxy_manager.get_proxy_stats()
-        print(f"🌐 PROXY STATS: {final_stats}")
+        print(f"PROXY STATS: {final_stats}")
     
     # Save results to JSON if requested
     if results and args.output:
@@ -436,25 +436,25 @@ def main():
         with open(args.output, 'w') as f:
             json.dump(output_data, f, indent=2, default=str)
         
-        print(f"\n✅ Results saved to {args.output}")
+        print(f"\nSUCCESS: Results saved to {args.output}")
     
     # Show database stats if saving to DB
     if args.save:
         try:
             total_stocks = Stock.objects.count()
-            print(f"\n📊 Database Stats:")
+            print(f"\nDatabase Stats:")
             print(f"  Total stocks in DB: {total_stocks}")
             print(f"  New stocks added: {successful}")
         except Exception as e:
-            print(f"⚠️  Could not get database stats: {e}")
+            print(f"WARNING: Could not get database stats: {e}")
     
     # Show some sample results
     if results:
-        print(f"\n📋 Sample Results:")
+        print(f"\nSample Results:")
         for i, stock in enumerate(results[:5]):
             print(f"  {i+1}. {stock['symbol']}: ${stock.get('current_price', 'N/A')} - {stock.get('company_name', 'N/A')}")
     
-    print("\n🎯 Scan completed!")
+    print("\nScan completed!")
 
 if __name__ == "__main__":
     main()
