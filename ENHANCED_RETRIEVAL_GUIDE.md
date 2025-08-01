@@ -23,7 +23,7 @@ Both scripts support the following arguments:
 ### Core Arguments
 - `-noproxy`: Disable proxy usage (default: proxies enabled)
 - `-test`: Test mode - process only first 100 tickers (default: all tickers)
-- `-threads <number>`: Number of threads (default: 10)
+- `-threads <number>`: Number of threads (default: 30)
 - `-timeout <seconds>`: Request timeout in seconds (default: 10)
 - `-csv <file>`: NYSE CSV file path (default: `flat-ui__data-Fri Aug 01 2025.csv`)
 - `-output <file>`: Output JSON file (default: auto-generated timestamp)
@@ -93,7 +93,7 @@ python production_stock_retrieval.py -test -save -noproxy
 - **Fallback**: Continues without proxies if none available
 
 ### 3. Multi-threading
-- **Default**: 10 threads for parallel processing
+- **Default**: 30 threads for parallel processing
 - **Customizable**: Use `-threads` argument to adjust
 - **Optimization**: Automatic timeout management
 
@@ -123,7 +123,7 @@ Each stock processed includes:
     "test_mode": false,
     "use_proxies": true,
     "save_to_db": false,
-    "threads": 10,
+    "threads": 30,
     "timeout": 10,
     "total_symbols": 5000,
     "successful": 4850,
@@ -169,7 +169,7 @@ python enhanced_stock_retrieval.py -test -noproxy -threads 5 -timeout 8
 
 #### For Production
 ```bash
-python production_stock_retrieval.py -save -threads 15 -timeout 12
+python production_stock_retrieval.py -save -threads 30 -timeout 12
 ```
 
 #### For High-Volume Processing

@@ -36,7 +36,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script')
     parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=10, help='Number of threads (default: 10)')
+    parser.add_argument('-threads', type=int, default=30, help='Number of threads (default: 30)')
     parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
     parser.add_argument('-csv', type=str, default='flat-ui__data-Fri Aug 01 2025.csv', 
                        help='NYSE CSV file path (default: flat-ui__data-Fri Aug 01 2025.csv)')
