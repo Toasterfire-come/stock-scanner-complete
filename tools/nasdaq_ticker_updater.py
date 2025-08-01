@@ -27,6 +27,7 @@ import requests
 import json
 import time
 from datetime import datetime
+from proxy_manager import ProxyManager  # Add this import
 
 class NasdaqTickerUpdater:
     """Updates NASDAQ ticker information in the database"""
@@ -41,6 +42,7 @@ class NasdaqTickerUpdater:
         }
         self.updated_count = 0
         self.errors = []
+        self.proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
 
     def print_header(self, title: str):
         """Print formatted header"""
@@ -63,42 +65,52 @@ class NasdaqTickerUpdater:
     def update_nasdaq_tickers(self) -> bool:
         """Update NASDAQ tickers in database"""
         self.print_header("Updating NASDAQ Tickers")
-        
         try:
             # Get current tickers from database
             existing_tickers = set(Stock.objects.values_list('ticker', flat=True))
             self.print_info(f"Found {len(existing_tickers)} existing tickers in database")
-            
-            # Fetch latest NASDAQ data
             params = {
                 'tableonly': 'true',
                 'limit': '10000',
                 'offset': '0',
                 'exchange': 'NASDAQ'
             }
-            
             self.print_info("Fetching latest NASDAQ data...")
-            response = requests.get(self.base_url, headers=self.headers, params=params, timeout=30)
-            
-            if response.status_code != 200:
-                self.print_error(f"API request failed: {response.status_code}")
+            attempt = 0
+            max_attempts = 5
+            ticker_number = 0  # For proxy rotation
+            while attempt < max_attempts:
+                proxy = self.proxy_manager.get_proxy_for_ticker(ticker_number)
+                proxies = {'http': proxy, 'https': proxy} if proxy else None
+                try:
+                    response = requests.get(self.base_url, headers=self.headers, params=params, timeout=30, proxies=proxies)
+                    if response.status_code == 200:
+                        break
+                    else:
+                        self.print_error(f"API request failed: {response.status_code}")
+                        if proxy:
+                            self.proxy_manager.mark_proxy_failed(proxy)
+                        attempt += 1
+                        ticker_number += 1
+                except Exception as e:
+                    self.print_error(f"Request error: {e}")
+                    if proxy:
+                        self.proxy_manager.mark_proxy_failed(proxy)
+                    attempt += 1
+                    ticker_number += 1
+            else:
+                self.print_error("All proxy attempts failed.")
                 return False
-            
             data = response.json()
-            
             if 'data' not in data or 'rows' not in data['data']:
                 self.print_error("Unexpected API response format")
                 return False
-            
             rows = data['data']['rows']
-            
             # Update existing tickers
             for row in rows:
                 if 'symbol' in row:
                     ticker = row['symbol'].strip().upper()
-                    
                     if ticker in existing_tickers:
-                        # Update existing stock
                         try:
                             stock = Stock.objects.get(ticker=ticker)
                             stock.company_name = row.get('name', stock.company_name)
@@ -112,10 +124,8 @@ class NasdaqTickerUpdater:
                             continue
                         except Exception as e:
                             self.errors.append(f"Error updating {ticker}: {e}")
-            
             self.print_success(f"Updated {self.updated_count} NASDAQ tickers")
             return True
-            
         except Exception as e:
             self.print_error(f"Failed to update NASDAQ tickers: {e}")
             return False
