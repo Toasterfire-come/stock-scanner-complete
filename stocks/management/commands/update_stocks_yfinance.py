@@ -34,7 +34,7 @@ if os.path.exists(XAMPP_MYSQL_PATH) and XAMPP_MYSQL_PATH not in os.environ.get('
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Enhanced stock data update with 5-minute auto-scheduler and NASDAQ focus'
+    help = 'Enhanced stock data update with 5-minute auto-scheduler and NYSE focus'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -45,8 +45,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--limit',
             type=int,
-            default=3300,
-            help='Maximum number of stocks to update (default: 3300 for NASDAQ)'
+            default=1000,
+            help='Maximum number of stocks to update (default: 1000 for NYSE)'
         )
         parser.add_argument(
             '--schedule',
@@ -59,10 +59,10 @@ class Command(BaseCommand):
             help='Run initial startup update then start scheduler'
         )
         parser.add_argument(
-            '--nasdaq-only',
+            '--nyse-only',
             action='store_true',
             default=True,
-            help='Update only NASDAQ-listed tickers (default: True)'
+            help='Update only NYSE-listed tickers (default: True)'
         )
         parser.add_argument(
             '--threads',
@@ -113,10 +113,10 @@ class Command(BaseCommand):
 
     def _run_scheduler(self, options):
         """Run continuous scheduler every 5 minutes"""
-        self.stdout.write(self.style.SUCCESS(" ENHANCED NASDAQ SCHEDULER STARTED"))
+        self.stdout.write(self.style.SUCCESS(" ENHANCED NYSE SCHEDULER STARTED"))
         self.stdout.write("=" * 70)
         self.stdout.write(" Schedule: Every 5 minutes")
-        self.stdout.write("[TARGET] Target: NASDAQ tickers only")
+        self.stdout.write("[TARGET] Target: NYSE tickers only")
         self.stdout.write(" Mode: Continuous updates")
         self.stdout.write(" Multithreading: Enabled")
         self.stdout.write(" Press Ctrl+C to stop the scheduler\n")
@@ -142,11 +142,11 @@ class Command(BaseCommand):
         
         # Display configuration
         self.stdout.write("\n" + "="*70)
-        self.stdout.write(self.style.SUCCESS("[UP] COMPREHENSIVE NASDAQ STOCK UPDATE"))
+        self.stdout.write(self.style.SUCCESS("[UP] COMPREHENSIVE NYSE STOCK UPDATE"))
         self.stdout.write("="*70)
         self.stdout.write(f"[SETTINGS]  Threads: {options['threads']}")
         self.stdout.write(f"[TIME]  Delay per thread: {options['delay']}s")
-        self.stdout.write(f"[TARGET] NASDAQ-only: {options['nasdaq_only']}")
+        self.stdout.write(f"[TARGET] NYSE-only: {options['nyse_only']}")
         self.stdout.write(f"[STATS] Max stocks: {options['limit']}")
         self.stdout.write(f"[TEST] Test mode: {'ON' if options['test_mode'] else 'OFF'}")
         self.stdout.write(f" Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -155,7 +155,7 @@ class Command(BaseCommand):
         if options['symbols']:
             symbols = [s.strip().upper() for s in options['symbols'].split(',')]
         else:
-            symbols = self._get_nasdaq_symbols(options['limit'], options['nasdaq_only'])
+            symbols = self._get_nyse_symbols(options['limit'], options['nyse_only'])
         
         # Test yfinance connectivity
         connectivity_ok = self._test_yfinance_connectivity()
@@ -179,7 +179,7 @@ class Command(BaseCommand):
         self.stdout.flush()
         
         # Process the symbols
-        results = self._process_stocks_batch(symbols, options['delay'], options['test_mode'], options['threads'], "NASDAQ UPDATE", options.get('no_proxy', False))
+        results = self._process_stocks_batch(symbols, options['delay'], options['test_mode'], options['threads'], "NYSE UPDATE", options.get('no_proxy', False))
         
         # Calculate final duration
         results['duration'] = time.time() - start_time
@@ -198,68 +198,59 @@ class Command(BaseCommand):
             if next_run:
                 self.stdout.write(f" Next update: {next_run.strftime('%H:%M:%S')}")
 
-    def _get_nasdaq_symbols(self, limit, nasdaq_only=True):
-        """Get NASDAQ ticker symbols - corrected to use actual NASDAQ count (~3,300)"""
+    def _get_nyse_symbols(self, limit, nyse_only=True):
+        """Get NYSE ticker symbols from otherlisted.txt data"""
         symbols = []
         
-        if nasdaq_only:
-            # Try to load curated NASDAQ tickers (actual count ~3,300)
+        if nyse_only:
+            # Try to load NYSE tickers from the parsed data
             try:
                 import json
                 
-                # Try curated NASDAQ list first
-                curated_file = Path('curated_nasdaq_tickers.json')
-                if curated_file.exists():
-                    with open(curated_file, 'r') as f:
+                # Try NYSE stocks list first
+                nyse_file = Path('nyse_stocks.json')
+                if nyse_file.exists():
+                    with open(nyse_file, 'r') as f:
                         data = json.load(f)
-                        nasdaq_tickers = data.get('tickers', [])
+                        nyse_tickers = data.get('tickers', [])
                     
-                    self.stdout.write(f"[STATS] NASDAQ-only mode: {len(nasdaq_tickers):,} curated NASDAQ tickers available")
+                    self.stdout.write(f"[STATS] NYSE-only mode: {len(nyse_tickers):,} NYSE tickers available")
                     
-                    # Get existing stocks from database that are NASDAQ-listed
+                    # Get existing stocks from database that are NYSE-listed
                     existing_stocks = Stock.objects.filter(
-                        ticker__in=nasdaq_tickers,
-                        exchange__iexact='NASDAQ'
+                        ticker__in=nyse_tickers,
+                        exchange__iexact='NYSE'
                     ).values_list('ticker', flat=True)
                     
                     # Start with existing stocks
                     symbols.extend(list(existing_stocks))
                     
-                    # Add missing NASDAQ tickers
-                    missing_tickers = set(nasdaq_tickers) - set(symbols)
+                    # Add missing NYSE tickers
+                    missing_tickers = set(nyse_tickers) - set(symbols)
                     remaining_limit = limit - len(symbols)
                     symbols.extend(list(missing_tickers)[:remaining_limit])
                     
-                    self.stdout.write(f"[SAVE] Found {len(existing_stocks)} existing NASDAQ stocks in database")
-                    self.stdout.write(f"[UPDATE] Adding {min(len(missing_tickers), remaining_limit)} new NASDAQ tickers")
-                    self.stdout.write(f"[TARGET] Processing {len(symbols)} NASDAQ stocks (limit: {limit})")
+                    self.stdout.write(f"[SAVE] Found {len(existing_stocks)} existing NYSE stocks in database")
+                    self.stdout.write(f"[UPDATE] Adding {min(len(missing_tickers), remaining_limit)} new NYSE tickers")
+                    self.stdout.write(f"[TARGET] Processing {len(symbols)} NYSE stocks (limit: {limit})")
                     
                 else:
-                    # Fallback to major NASDAQ tickers
-                    self.stdout.write(self.style.WARNING("[WARNING] Curated NASDAQ list not found, using major NASDAQ tickers"))
+                    # Fallback to major NYSE tickers
+                    self.stdout.write(self.style.WARNING("[WARNING] NYSE list not found, using major NYSE tickers"))
                     
-                    # Major NASDAQ tickers (top 100)
-                    major_nasdaq = [
-                        'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'ADBE', 'CRM',
-                        'PYPL', 'INTC', 'AMD', 'ORCL', 'CSCO', 'QCOM', 'TXN', 'AVGO', 'MU', 'ADP',
-                        'INTU', 'ISRG', 'REGN', 'VRTX', 'GILD', 'AMGN', 'BIIB', 'ILMN', 'MELI', 'JD',
-                        'BIDU', 'NTES', 'PDD', 'TME', 'NIO', 'XPEV', 'LI', 'BABA', 'TCEHY', 'JD',
-                        'ATVI', 'EA', 'TTWO', 'ZNGA', 'U', 'RBLX', 'SKLZ', 'PLTK', 'GME', 'ENPH',
-                        'SEDG', 'RUN', 'SPWR', 'FSLR', 'JKS', 'CSIQ', 'DQ', 'SOL', 'MAXN', 'TLRY',
-                        'CGC', 'ACB', 'APHA', 'CRON', 'HEXO', 'OGI', 'SNDL', 'SPCE', 'RKLB', 'ASTS',
-                        'COIN', 'MSTR', 'RIOT', 'MARA', 'HUT', 'BITF', 'CLSK', 'ARBK', 'WULF', 'CORZ',
-                        'PLTR', 'AI', 'PATH', 'CRWD', 'OKTA', 'ZS', 'NET', 'SNOW', 'DDOG', 'S',
-                        'PANW', 'FTNT', 'DDD', 'SSYS', 'XONE', 'PRLB', 'DM', 'NNDM', 'IRBT', 'ROK'
+                    # Major NYSE tickers (top 100)
+                    major_nyse = [
+                        'A', 'AA', 'AACT', 'AAM', 'AAMI', 'AAP', 'AAT', 'AAUC', 'AB', 'ABBV', 'ABCB', 'ABEV', 'ABG', 'ABM', 'ABR', 'ABT', 'AC', 'ACA', 'ACCO', 'ACCS', 'ACEL', 'ACHR', 'ACI', 'ACM', 'ACN', 'ACP', 'ACR', 'ACRE', 'ACU', 'ACV', 'ACVA', 'ADC', 'ADCT', 'ADM', 'ADNT', 'ADT', 'ADX', 'AEE', 'AEF', 'AEFC', 'AEG', 'AEM', 'AEO', 'AEON', 'AER', 'AES', 'AESI', 'AFB', 'AFG', 'AFGB', 'AFGC', 'AFGD', 'AFGE', 'AG', 'AGCO', 'AGD', 'AGI', 'AGL', 'AGM', 'AGN', 'AGO', 'AGR', 'AGRO', 'AGS', 'AGX', 'AHH', 'AHL', 'AHT', 'AI', 'AIG', 'AIN', 'AIR', 'AIT', 'AJG', 'AJRD', 'AKA', 'AKO.A', 'AKO.B', 'AKR', 'AL', 'ALB', 'ALC', 'ALE', 'ALG', 'ALIT', 'ALK', 'ALL', 'ALLE', 'ALLY', 'ALSN', 'ALT', 'ALTG', 'ALV', 'ALX', 'AM', 'AMC', 'AME', 'AMG', 'AMH', 'AMK', 'AMN', 'AMP', 'AMR', 'AMT', 'AMX', 'AN', 'ANET', 'ANF', 'ANSS', 'ANTM', 'AON', 'AOS', 'APA', 'APD', 'APH', 'APLE', 'APO', 'APTV', 'AR', 'ARCH', 'ARCO', 'ARD', 'ARE', 'ARES', 'ARG', 'ARI', 'ARL', 'ARMK', 'ARNC', 'ARW', 'ASB', 'ASGN', 'ASH', 'ASIX', 'ASPN', 'ATCO', 'ATEN', 'ATGE', 'ATH', 'ATI', 'ATKR', 'ATO', 'ATR', 'ATSG', 'ATU', 'ATUS', 'ATVI', 'AVB', 'AVD', 'AVK', 'AVLR', 'AVNS', 'AVNT', 'AVT', 'AVY', 'AVYA', 'AWF', 'AWI', 'AWK', 'AWP', 'AWR', 'AX', 'AXL', 'AXP', 'AXR', 'AXS', 'AYI', 'AYX', 'AZEK', 'AZO', 'AZUL', 'BA', 'BABA', 'BAC', 'BAH', 'BAK', 'BALY', 'BAM', 'BANC', 'BAP', 'BAX', 'BB', 'BBD', 'BBDO', 'BBL', 'BBN', 'BBU', 'BBVA', 'BBW', 'BBY', 'BC', 'BCE', 'BCH', 'BCS', 'BDC', 'BDJ', 'BDN', 'BDX', 'BE', 'BEN', 'BF.A', 'BF.B', 'BFAM', 'BFS', 'BFZ', 'BG', 'BGB', 'BGH', 'BGR', 'BGS', 'BGT', 'BGX', 'BGY', 'BH', 'BHC', 'BHE', 'BHK', 'BHLB', 'BHP', 'BHV', 'BIF', 'BIG', 'BIO', 'BIP', 'BIT', 'BJ', 'BK', 'BKD', 'BKE', 'BKH', 'BKI', 'BKN', 'BKR', 'BKT', 'BLD', 'BLK', 'BLL', 'BLW', 'BLX', 'BMA', 'BME', 'BMEZ', 'BMI', 'BMO', 'BMY', 'BNED', 'BNS', 'BNY', 'BOE', 'BOH', 'BOX', 'BP', 'BPY', 'BR', 'BRBR', 'BRC', 'BRFS', 'BRK.A', 'BRK.B', 'BRO', 'BRT', 'BRX', 'BSAC', 'BSBR', 'BSL', 'BSM', 'BSMX', 'BST', 'BSTZ', 'BSX', 'BTI', 'BTO', 'BTT', 'BTU', 'BTZ', 'BUD', 'BUI', 'BURL', 'BV', 'BVN', 'BW', 'BWA', 'BWG', 'BWXT', 'BX', 'BXC', 'BXG', 'BXMT', 'BXMX', 'BXP', 'BXS', 'BYD', 'BYM', 'BZH', 'C', 'CAE', 'CAF', 'CAG', 'CAH', 'CAJ', 'CAL', 'CALX', 'CARR', 'CARS', 'CAT', 'CB', 'CBB', 'CBD', 'CBH', 'CBL', 'CBOE', 'CBRE', 'CBT', 'CBU', 'CBZ', 'CC', 'CCEP', 'CCH', 'CCI', 'CCJ', 'CCK', 'CCL', 'CCM', 'CCO', 'CCS', 'CCU', 'CCX', 'CCZ', 'CDAY', 'CDE', 'CDR', 'CE', 'CEA', 'CEE', 'CEIX', 'CELP', 'CEM', 'CEN', 'CEO', 'CEPU', 'CEQP', 'CF', 'CFG', 'CFR', 'CFX', 'CGA', 'CGC', 'CHA', 'CHCT', 'CHD', 'CHE', 'CHGG', 'CHH', 'CHK', 'CHL', 'CHPT', 'CHS', 'CHT', 'CHUY', 'CI', 'CIA', 'CIB', 'CIEN', 'CIG', 'CII', 'CIM', 'CINR', 'CIO', 'CIR', 'CIT', 'CKH', 'CL', 'CLB', 'CLDR', 'CLDT', 'CLF', 'CLGX', 'CLH', 'CLI', 'CLR', 'CLS', 'CLW', 'CLX', 'CMA', 'CMC', 'CMCM', 'CME', 'CMG', 'CMI', 'CMP', 'CMRE', 'CMS', 'CMU', 'CNA', 'CNC', 'CNHI', 'CNI', 'CNK', 'CNO', 'CNP', 'CNQ', 'CNR', 'CNS', 'CNX', 'CODI', 'COF', 'COG', 'COLD', 'COO', 'COP', 'COR', 'COTY', 'CP', 'CPA', 'CPB', 'CPE', 'CPF', 'CPG', 'CPK', 'CPLG', 'CPRI', 'CPS', 'CPSI', 'CPT', 'CR', 'CRC', 'CRD.A', 'CRD.B', 'CRH', 'CRI', 'CRK', 'CRL', 'CRM', 'CRS', 'CRT', 'CRY', 'CS', 'CSCO', 'CSL', 'CSV', 'CTA', 'CTB', 'CTBB', 'CTDD', 'CTL', 'CTLT', 'CTO', 'CTR', 'CTRA', 'CTS', 'CTSH', 'CTT', 'CTVA', 'CTY', 'CUB', 'CUBE', 'CUK', 'CULP', 'CURO', 'CUZ', 'CVA', 'CVBF', 'CVE', 'CVEO', 'CVG', 'CVI', 'CVNA', 'CVS', 'CVX', 'CW', 'CWEN', 'CWH', 'CWK', 'CWT', 'CX', 'CXE', 'CXH', 'CXO', 'CXP', 'CXW', 'CYD', 'CYH', 'CZZ', 'D', 'DAC', 'DAL', 'DAN', 'DAR', 'DAVA', 'DB', 'DBD', 'DBI', 'DBL', 'DCF', 'DCI', 'DCO', 'DCP', 'DCT', 'DD', 'DDD', 'DDS', 'DE', 'DEA', 'DECK', 'DEI', 'DELL', 'DEO', 'DESP', 'DFIN', 'DFS', 'DG', 'DGX', 'DHF', 'DHI', 'DHR', 'DHT', 'DHX', 'DIAX', 'DIN', 'DIS', 'DK', 'DKL', 'DKS', 'DLB', 'DLNG', 'DLR', 'DLX', 'DM', 'DMO', 'DNB', 'DNOW', 'DNZ', 'DO', 'DOC', 'DOCU', 'DOOR', 'DOV', 'DOW', 'DPG', 'DPZ', 'DQ', 'DRD', 'DRH', 'DRI', 'DRQ', 'DS', 'DSL', 'DSM', 'DSU', 'DSX', 'DT', 'DTE', 'DTF', 'DUK', 'DUKB', 'DV', 'DVN', 'DWIN', 'DX', 'DXB', 'DY', 'E', 'EAF', 'EAI', 'EARN', 'EAT', 'EB', 'EBF', 'EBR', 'EBS', 'EC', 'ECC', 'ECL', 'ECOM', 'ED', 'EDF', 'EDI', 'EDN', 'EDU', 'EE', 'EEA', 'EEX', 'EFC', 'EFR', 'EFT', 'EFX', 'EG', 'EGP', 'EGY', 'EHC', 'EIC', 'EIX', 'EL', 'EME', 'EMF', 'EMN', 'EMR', 'ENB', 'ENBL', 'ENIA', 'ENIC', 'ENJ', 'ENLC', 'ENO', 'ENPH', 'ENR', 'ENS', 'ENV', 'ENVA', 'ENZ', 'EOCC', 'EOG', 'EOI', 'EOS', 'EPAM', 'EPC', 'EPD', 'EPR', 'EPRT', 'EQC', 'EQH', 'EQR', 'ES', 'ESE', 'ESNT', 'ESRT', 'ESS', 'ESTC', 'ET', 'ETG', 'ETH', 'ETJ', 'ETN', 'ETO', 'ETR', 'ETRN', 'ETV', 'ETW', 'ETX', 'ETY', 'EURN', 'EV', 'EVA', 'EVC', 'EVF', 'EVG', 'EVH', 'EVN', 'EVR', 'EVRI', 'EVT', 'EVTC', 'EW', 'EXC', 'EXD', 'EXG', 'EXK', 'EXP', 'EXPR', 'EXR', 'EXTN', 'F', 'FAF', 'FAM', 'FBC', 'FBHS', 'FBP', 'FC', 'FCAU', 'FCF', 'FCN', 'FCPT', 'FCT', 'FCX', 'FDEU', 'FDP', 'FDS', 'FDX', 'FE', 'FEDU', 'FENG', 'FEO', 'FET', 'FF', 'FFA', 'FFC', 'FFG', 'FGB', 'FHI', 'FHN', 'FI', 'FICO', 'FIF', 'FINS', 'FIS', 'FIV', 'FIX', 'FL', 'FLC', 'FLNG', 'FLO', 'FLR', 'FLS', 'FLT', 'FLY', 'FMC', 'FMN', 'FMS', 'FMX', 'FMY', 'FN', 'FND', 'FNF', 'FOE', 'FOR', 'FOUR', 'FPF', 'FPH', 'FPI', 'FR', 'FRA', 'FRC', 'FRO', 'FRT', 'FSB', 'FSD', 'FSK', 'FSLY', 'FSM', 'FSS', 'FTCH', 'FTI', 'FTK', 'FTS', 'FTV', 'FUL', 'FUN', 'FVRR', 'G', 'GAB', 'GAM', 'GATX', 'GBL', 'GBX', 'GCI', 'GCO', 'GD', 'GDDY', 'GDO', 'GDOT', 'GDV', 'GE', 'GEF', 'GEL', 'GEN', 'GEO', 'GES', 'GF', 'GFF', 'GFI', 'GFL', 'GFY', 'GGB', 'GGG', 'GGM', 'GGT', 'GGZ', 'GHC', 'GHG', 'GHL', 'GHM', 'GHSI', 'GIB', 'GIL', 'GIS', 'GJH', 'GJO', 'GJP', 'GJR', 'GJS', 'GJT', 'GJV', 'GKOS', 'GL', 'GLW', 'GM', 'GME', 'GMED', 'GMS', 'GNK', 'GNL', 'GNRC', 'GNT', 'GNW', 'GOF', 'GOL', 'GPC', 'GPI', 'GPJA', 'GPK', 'GPM', 'GPMT', 'GPN', 'GPOR', 'GPRK', 'GPS', 'GRC', 'GRUB', 'GS', 'GSBD', 'GSK', 'GTN', 'GTS', 'GTY', 'GUT', 'GVA', 'GWB', 'GWRE', 'GWW', 'GYC', 'H', 'HAE', 'HAL', 'HASI', 'HAYW', 'HBM', 'HCA', 'HCC', 'HCI', 'HCXY', 'HD', 'HE', 'HEI', 'HEP', 'HES', 'HFC', 'HGV', 'HHC', 'HI', 'HIG', 'HII', 'HIO', 'HL', 'HLF', 'HLI', 'HLT', 'HMC', 'HMLP', 'HMN', 'HMY', 'HNGR', 'HNI', 'HOG', 'HOME', 'HON', 'HOV', 'HP', 'HPE', 'HPF', 'HPI', 'HPP', 'HPQ', 'HPS', 'HQH', 'HQL', 'HR', 'HRB', 'HRC', 'HRI', 'HRL', 'HRTG', 'HSBC', 'HSC', 'HSY', 'HT', 'HTA', 'HTD', 'HTFA', 'HTGC', 'HTH', 'HTY', 'HUBB', 'HUM', 'HUN', 'HUYA', 'HVT', 'HWM', 'HY', 'HYB', 'HYI', 'HYT', 'HZN', 'HZO', 'IAA', 'IAG', 'IBM', 'ICD', 'ICE', 'ICL', 'IDA', 'IDE', 'IDT', 'IEX', 'IFF', 'IGA', 'IGD', 'IGI', 'IGR', 'IGT', 'IHG', 'IHS', 'IIF', 'IIM', 'IMAX', 'ING', 'INGR', 'INSI', 'INSP', 'INT', 'IP', 'IPG', 'IPHI', 'IPI', 'IQV', 'IR', 'IRM', 'IRT', 'ISD', 'IT', 'ITGR', 'ITT', 'ITW', 'IVC', 'IVR', 'IVZ', 'J', 'JBL', 'JBLU', 'JBT', 'JCI', 'JEF', 'JELD', 'JHG', 'JHI', 'JHS', 'JHX', 'JILL', 'JKHY', 'JKS', 'JLL', 'JMM', 'JNJ', 'JNPR', 'JOE', 'JOF', 'JP', 'JPM', 'JPS', 'JPT', 'JQC', 'JRI', 'JRO', 'JRS', 'JSD', 'JT', 'JWN', 'K', 'KAI', 'KAMN', 'KB', 'KBH', 'KBR', 'KDMN', 'KDP', 'KEM', 'KEX', 'KEY', 'KEYS', 'KFS', 'KFY', 'KGC', 'KIM', 'KKR', 'KL', 'KMB', 'KMF', 'KMI', 'KMPR', 'KMT', 'KMX', 'KN', 'KNL', 'KNX', 'KO', 'KOF', 'KOP', 'KOS', 'KR', 'KRC', 'KREF', 'KRG', 'KRO', 'KRP', 'KSM', 'KSS', 'KSU', 'KT', 'KTB', 'KWR', 'L', 'LAD', 'LADR', 'LAIX', 'LAZ', 'LB', 'LBRT', 'LC', 'LCI', 'LCII', 'LDL', 'LDOS', 'LDP', 'LEA', 'LEE', 'LEG', 'LEN', 'LEVI', 'LFC', 'LGI', 'LH', 'LHX', 'LII', 'LIN', 'LIVN', 'LKQ', 'LLY', 'LMND', 'LMT', 'LNC', 'LND', 'LNN', 'LOAN', 'LOCK', 'LOW', 'LPG', 'LPI', 'LPL', 'LPX', 'LRN', 'LSI', 'LTC', 'LTHM', 'LUB', 'LUMN', 'LUV', 'LVS', 'LW', 'LXP', 'LXU', 'LYB', 'LYG', 'LYV', 'LZB', 'M', 'MA', 'MAA', 'MAC', 'MAN', 'MANU', 'MAS', 'MATX', 'MCD', 'MCI', 'MCK', 'MCN', 'MCO', 'MCR', 'MCS', 'MCY', 'MD', 'MDC', 'MDLA', 'MDLQ', 'MDLX', 'MDLY', 'MDP', 'MDT', 'MDU', 'MET', 'MFA', 'MFC', 'MFD', 'MFG', 'MFGP', 'MFL', 'MFM', 'MFO', 'MFT', 'MFV', 'MG', 'MGA', 'MGF', 'MGM', 'MGP', 'MGR', 'MGU', 'MGY', 'MHD', 'MHF', 'MHI', 'MHK', 'MHN', 'MHNC', 'MHO', 'MIC', 'MIN', 'MIT', 'MITT', 'MIXT', 'MIY', 'MKC', 'MKL', 'MLI', 'MLM', 'MLP', 'MLR', 'MMC', 'MMD', 'MMI', 'MMM', 'MMP', 'MMS', 'MMT', 'MMU', 'MN', 'MNP', 'MNR', 'MO', 'MOR', 'MOS', 'MOV', 'MPA', 'MPC', 'MPLX', 'MPV', 'MPW', 'MPX', 'MQT', 'MQY', 'MRK', 'MRO', 'MS', 'MSA', 'MSB', 'MSC', 'MSD', 'MSGE', 'MSGN', 'MSI', 'MSM', 'MT', 'MTB', 'MTD', 'MTDR', 'MTG', 'MTH', 'MTN', 'MTOR', 'MTR', 'MTRN', 'MTW', 'MTX', 'MTZ', 'MUA', 'MUC', 'MUE', 'MUFG', 'MUI', 'MUJ', 'MUR', 'MUSA', 'MUX', 'MVF', 'MVO', 'MVT', 'MWA', 'MX', 'MXE', 'MXF', 'MXI', 'MYC', 'MYD', 'MYE', 'MYF', 'MYI', 'MYJ', 'MYN', 'MYOV', 'MZA', 'NAC', 'NAD', 'NAN', 'NAT', 'NAV', 'NAZ', 'NBB', 'NBR', 'NC', 'NCA', 'NCR', 'NDP', 'NE', 'NEA', 'NEE', 'NEM', 'NEP', 'NET', 'NEU', 'NFG', 'NFH', 'NFJ', 'NGG', 'NGL', 'NGS', 'NGVC', 'NHA', 'NHF', 'NHI', 'NI', 'NID', 'NIE', 'NIM', 'NJR', 'NKE', 'NKG', 'NKX', 'NL', 'NLS', 'NLSN', 'NLY', 'NM', 'NMAI', 'NMCO', 'NMFC', 'NMI', 'NMM', 'NMR', 'NMS', 'NMT', 'NMZ', 'NNA', 'NNI', 'NNN', 'NOC', 'NOMD', 'NOV', 'NOVT', 'NOW', 'NP', 'NPK', 'NPO', 'NPTN', 'NPV', 'NQP', 'NR', 'NRE', 'NRG', 'NRK', 'NRP', 'NRT', 'NRUC', 'NRZ', 'NSA', 'NSC', 'NSP', 'NSS', 'NTB', 'NTCO', 'NTG', 'NTR', 'NTRS', 'NTZ', 'NUE', 'NUO', 'NUS', 'NUV', 'NUW', 'NVG', 'NVO', 'NVR', 'NVRO', 'NVS', 'NVST', 'NVT', 'NVTA', 'NWN', 'NWSA', 'NWS', 'NX', 'NXC', 'NXJ', 'NXN', 'NXP', 'NXQ', 'NXR', 'NYC', 'NYCB', 'NYT', 'NZF', 'O', 'OAK', 'OC', 'OCFT', 'OCN', 'ODC', 'OEC', 'OFC', 'OFG', 'OGS', 'OHI', 'OI', 'OIA', 'OII', 'OIS', 'OKE', 'OLN', 'OMC', 'OMF', 'ONB', 'ONE', 'OR', 'ORA', 'ORAN', 'ORC', 'ORCC', 'ORCL', 'ORI', 'ORN', 'OSK', 'OUT', 'OVV', 'OXM', 'OXY', 'PAC', 'PACW', 'PAG', 'PAI', 'PANW', 'PAR', 'PAYC', 'PB', 'PBA', 'PBF', 'PBI', 'PCF', 'PCG', 'PCI', 'PCK', 'PCM', 'PCN', 'PCQ', 'PDI', 'PDM', 'PDS', 'PDT', 'PEB', 'PEG', 'PEI', 'PEN', 'PEO', 'PER', 'PFE', 'PFGC', 'PFL', 'PFN', 'PFO', 'PFS', 'PFSI', 'PG', 'PGC', 'PGP', 'PGR', 'PGRE', 'PGTI', 'PGZ', 'PH', 'PHD', 'PHG', 'PHI', 'PHK', 'PHM', 'PHR', 'PHT', 'PHX', 'PIC', 'PII', 'PIM', 'PINE', 'PING', 'PINS', 'PIPR', 'PJC', 'PJT', 'PK', 'PKE', 'PKG', 'PKI', 'PKO', 'PKX', 'PLD', 'PLNT', 'PLOW', 'PLT', 'PM', 'PMF', 'PML', 'PMM', 'PMO', 'PMT', 'PMX', 'PNC', 'PNF', 'PNI', 'PNM', 'PNR', 'PNW', 'POL', 'POST', 'PPG', 'PPL', 'PPR', 'PPT', 'PRGO', 'PRH', 'PRI', 'PRLB', 'PRS', 'PRSP', 'PRT', 'PRU', 'PSA', 'PSB', 'PSF', 'PSN', 'PSO', 'PSTG', 'PSTL', 'PSX', 'PTR', 'PTY', 'PUK', 'PUMP', 'PVH', 'PVL', 'PWR', 'PXD', 'PYN', 'PYS', 'PYT', 'PZC', 'PZN', 'QD', 'QEP', 'QGEN', 'QRVO', 'R', 'RA', 'RACE', 'RAD', 'RBA', 'RBC', 'RBS', 'RC', 'RCA', 'RCB', 'RCI', 'RCL', 'RCS', 'RDN', 'RDY', 'RE', 'RELX', 'RENN', 'RES', 'REV', 'REVG', 'REX', 'REXR', 'REZI', 'RF', 'RFL', 'RFP', 'RGA', 'RGR', 'RGS', 'RH', 'RHI', 'RHP', 'RIG', 'RIO', 'RIV', 'RJF', 'RL', 'RLI', 'RLJ', 'RLX', 'RM', 'RMAX', 'RMD', 'RMI', 'RMM', 'RMP', 'RMT', 'RNG', 'RNP', 'RNR', 'RNST', 'ROC', 'ROG', 'ROK', 'ROL', 'ROP', 'ROYT', 'RPAI', 'RPL', 'RPM', 'RPT', 'RQI', 'RRC', 'RRD', 'RS', 'RSF', 'RSG', 'RTX', 'RVI', 'RVLV', 'RWT', 'RXN', 'RY', 'RYAM', 'RYB', 'RYI', 'RYN', 'RZA', 'RZB', 'SAF', 'SAFE', 'SAH', 'SAIC', 'SAIL', 'SALT', 'SAM', 'SAN', 'SAP', 'SAVE', 'SB', 'SBE', 'SBH', 'SBI', 'SBLK', 'SBNY', 'SBR', 'SBS', 'SBSW', 'SC', 'SCCO', 'SCD', 'SCE', 'SCHW', 'SCI', 'SCL', 'SCM', 'SCS', 'SCU', 'SCVX', 'SCWX', 'SCX', 'SD', 'SDRL', 'SE', 'SEAS', 'SEE', 'SEM', 'SES', 'SF', 'SFB', 'SFE', 'SFL', 'SFTW', 'SGEN', 'SGFY', 'SGU', 'SHAK', 'SHG', 'SHI', 'SHO', 'SHOP', 'SHW', 'SID', 'SIG', 'SII', 'SITC', 'SIX', 'SJI', 'SJM', 'SJR', 'SJT', 'SJW', 'SKM', 'SKT', 'SKX', 'SLB', 'SLCA', 'SLF', 'SLG', 'SLM', 'SM', 'SMAR', 'SMFG', 'SMG', 'SMLP', 'SMP', 'SNA', 'SNAP', 'SNN', 'SNP', 'SNR', 'SNV', 'SNX', 'SO', 'SOGO', 'SOI', 'SOL', 'SON', 'SONY', 'SPB', 'SPE', 'SPG', 'SPGI', 'SPH', 'SPL', 'SPR', 'SPT', 'SPXC', 'SPXX', 'SQ', 'SR', 'SRC', 'SRF', 'SRI', 'SRV', 'SSD', 'SSP', 'SSTK', 'ST', 'STAG', 'STAR', 'STC', 'STE', 'STG', 'STK', 'STL', 'STM', 'STN', 'STOR', 'STT', 'STWD', 'STX', 'STZ', 'SU', 'SUI', 'SUM', 'SUN', 'SUP', 'SUZ', 'SWCH', 'SWI', 'SWK', 'SWM', 'SWN', 'SWT', 'SWX', 'SWZ', 'SXC', 'SXI', 'SXT', 'SYF', 'SYK', 'SYX', 'SYY', 'T', 'TAC', 'TAK', 'TAL', 'TAP', 'TARO', 'TBB', 'TBC', 'TBI', 'TCI', 'TCO', 'TCP', 'TCRR', 'TCRW', 'TCRZ', 'TD', 'TDC', 'TDE', 'TDF', 'TDG', 'TDI', 'TDJ', 'TDOC', 'TDS', 'TDW', 'TDY', 'TEAF', 'TECK', 'TEF', 'TEL', 'TEN', 'TEO', 'TEVA', 'TFC', 'TFFP', 'TFX', 'TG', 'TGH', 'TGI', 'TGT', 'THC', 'THG', 'THO', 'THQ', 'THR', 'THS', 'TIF', 'TISI', 'TJX', 'TK', 'TKC', 'TKR', 'TLK', 'TLYS', 'TM', 'TME', 'TMHC', 'TMO', 'TMST', 'TNC', 'TNET', 'TNK', 'TNP', 'TOL', 'TORC', 'TOST', 'TPB', 'TPC', 'TPH', 'TPL', 'TPR', 'TPRE', 'TPVG', 'TPX', 'TR', 'TRAK', 'TRC', 'TREC', 'TREX', 'TRGP', 'TRI', 'TRN', 'TRNO', 'TROW', 'TRP', 'TRQ', 'TRTN', 'TRU', 'TRV', 'TS', 'TSCO', 'TSE', 'TSI', 'TSLA', 'TSLX', 'TSN', 'TSQ', 'TSU', 'TT', 'TTC', 'TTD', 'TTE', 'TTI', 'TTM', 'TTP', 'TU', 'TUP', 'TV', 'TVC', 'TVE', 'TW', 'TWI', 'TWLO', 'TWN', 'TWO', 'TWTR', 'TX', 'TXT', 'TY', 'TYG', 'TYL', 'UA', 'UAA', 'UAL', 'UAN', 'UBA', 'UBER', 'UBS', 'UDR', 'UE', 'UFS', 'UGI', 'UGP', 'UHS', 'UHT', 'UI', 'UIS', 'UL', 'UMC', 'UMH', 'UNF', 'UNFI', 'UNH', 'UNM', 'UNP', 'UNT', 'UNVR', 'UPS', 'URI', 'USA', 'USAC', 'USB', 'USDP', 'USFD', 'USM', 'USNA', 'USPH', 'USX', 'UTF', 'UTI', 'UTL', 'UTZ', 'UVE', 'UVV', 'UWMC', 'UZA', 'UZB', 'UZC', 'V', 'VAC', 'VAL', 'VALE', 'VAPO', 'VAR', 'VBF', 'VCIF', 'VCO', 'VCRA', 'VCV', 'VEC', 'VEDL', 'VEEV', 'VET', 'VFC', 'VGI', 'VGM', 'VGR', 'VHI', 'VICI', 'VIPS', 'VIST', 'VIV', 'VJET', 'VKQ', 'VLO', 'VLRS', 'VLT', 'VMC', 'VMI', 'VMO', 'VMW', 'VNCE', 'VNE', 'VNO', 'VNT', 'VOC', 'VOYA', 'VPG', 'VPV', 'VRA', 'VRE', 'VSH', 'VSLR', 'VST', 'VSTO', 'VTN', 'VTR', 'VTRS', 'VVI', 'VVR', 'VVV', 'VZ', 'W', 'WAB', 'WAL', 'WAT', 'WBA', 'WBS', 'WCC', 'WCN', 'WD', 'WDR', 'WEC', 'WELL', 'WES', 'WEX', 'WF', 'WFC', 'WGO', 'WH', 'WHR', 'WIA', 'WIT', 'WIW', 'WK', 'WLK', 'WLKP', 'WLL', 'WM', 'WMB', 'WMC', 'WMK', 'WMS', 'WMT', 'WNC', 'WOR', 'WOW', 'WPC', 'WPX', 'WRB', 'WRK', 'WSM', 'WSO', 'WST', 'WTBA', 'WTI', 'WTM', 'WTRG', 'WTS', 'WTTR', 'WU', 'WWE', 'WWW', 'WY', 'WYND', 'X', 'XEC', 'XEL', 'XFLT', 'XHR', 'XIN', 'XL', 'XLNX', 'XOM', 'XPO', 'XRAY', 'XRX', 'XYF', 'XYL', 'Y', 'YELP', 'YETI', 'YEXT', 'YUM', 'YUMC', 'ZBH', 'ZBRA', 'ZEN', 'ZIM', 'ZION', 'ZTO', 'ZTS', 'ZUO'
                     ]
                     
-                    symbols = major_nasdaq[:limit]
-                    self.stdout.write(f"[FALLBACK] Using {len(symbols)} major NASDAQ tickers")
+                    symbols = major_nyse[:limit]
+                    self.stdout.write(f"[FALLBACK] Using {len(symbols)} major NYSE tickers")
                 
             except Exception as e:
-                self.stdout.write(self.style.WARNING(f"[ERROR] Failed to load NASDAQ tickers: {e}"))
+                self.stdout.write(self.style.WARNING(f"[ERROR] Failed to load NYSE tickers: {e}"))
                 self.stdout.write(self.style.WARNING("[FALLBACK] Using database stocks only"))
                 symbols = list(Stock.objects.filter(
-                    exchange__iexact='NASDAQ'
+                    exchange__iexact='NYSE'
                 ).values_list('ticker', flat=True)[:limit])
         else:
             # Get all stocks from database
@@ -601,7 +592,7 @@ class Command(BaseCommand):
                     'avg_volume': self._safe_decimal(info.get('averageVolume')) if info else None,
                     'pe_ratio': self._safe_decimal(info.get('trailingPE')) if info else None,
                     'dividend_yield': self._safe_decimal(info.get('dividendYield')) if info else None,
-                    'exchange': info.get('exchange', 'NASDAQ') if info else 'NASDAQ',
+                    'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
                     'currency': info.get('currency', 'USD') if info else 'USD',
                     'country': info.get('country', 'US') if info else 'US',
                     'is_active': True,
