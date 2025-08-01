@@ -45,8 +45,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--limit',
             type=int,
-            default=3500,
-            help='Maximum number of stocks to update (default: 3500)'
+            default=3300,
+            help='Maximum number of stocks to update (default: 3300 for NASDAQ)'
         )
         parser.add_argument(
             '--schedule',
@@ -199,26 +199,22 @@ class Command(BaseCommand):
                 self.stdout.write(f" Next update: {next_run.strftime('%H:%M:%S')}")
 
     def _get_nasdaq_symbols(self, limit, nasdaq_only=True):
-        """Get NASDAQ ticker symbols from database and NASDAQ ticker list"""
+        """Get NASDAQ ticker symbols - corrected to use actual NASDAQ count (~3,300)"""
         symbols = []
         
         if nasdaq_only:
-            # Load NASDAQ-only tickers from COMPLETE dataset (5,390+ tickers)
+            # Try to load curated NASDAQ tickers (actual count ~3,300)
             try:
-                import csv
-                csv_file = Path(__file__).parent.parent.parent.parent / 'data' / 'complete_nasdaq' / 'complete_nasdaq_export_20250724_182723.csv'
+                import json
                 
-                if csv_file.exists():
-                    nasdaq_tickers = []
-                    with open(csv_file, 'r', encoding='utf-8') as f:
-                        reader = csv.DictReader(f)
-                        for row in reader:
-                            if row.get('Exchange', '').upper() == 'NASDAQ':
-                                symbol = row.get('Symbol', '').strip()
-                                if symbol and len(symbol) <= 5:  # Filter out weird symbols
-                                    nasdaq_tickers.append(symbol)
+                # Try curated NASDAQ list first
+                curated_file = Path('curated_nasdaq_tickers.json')
+                if curated_file.exists():
+                    with open(curated_file, 'r') as f:
+                        data = json.load(f)
+                        nasdaq_tickers = data.get('tickers', [])
                     
-                    self.stdout.write(f"[STATS] NASDAQ-only mode: {len(nasdaq_tickers):,} total NASDAQ tickers available")
+                    self.stdout.write(f"[STATS] NASDAQ-only mode: {len(nasdaq_tickers):,} curated NASDAQ tickers available")
                     
                     # Get existing stocks from database that are NASDAQ-listed
                     existing_stocks = Stock.objects.filter(
@@ -239,12 +235,25 @@ class Command(BaseCommand):
                     self.stdout.write(f"[TARGET] Processing {len(symbols)} NASDAQ stocks (limit: {limit})")
                     
                 else:
-                    # Fallback to small NASDAQ list
-                    self.stdout.write(self.style.WARNING("[WARNING] Complete NASDAQ CSV not found, using small list"))
-                    sys.path.append(str(Path(__file__).parent.parent.parent.parent / 'data' / 'nasdaq_only'))
-                    from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
-                    symbols = NASDAQ_ONLY_TICKERS[:limit]
-                    self.stdout.write(f"[FALLBACK] Using {len(symbols)} tickers from small NASDAQ list")
+                    # Fallback to major NASDAQ tickers
+                    self.stdout.write(self.style.WARNING("[WARNING] Curated NASDAQ list not found, using major NASDAQ tickers"))
+                    
+                    # Major NASDAQ tickers (top 100)
+                    major_nasdaq = [
+                        'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'ADBE', 'CRM',
+                        'PYPL', 'INTC', 'AMD', 'ORCL', 'CSCO', 'QCOM', 'TXN', 'AVGO', 'MU', 'ADP',
+                        'INTU', 'ISRG', 'REGN', 'VRTX', 'GILD', 'AMGN', 'BIIB', 'ILMN', 'MELI', 'JD',
+                        'BIDU', 'NTES', 'PDD', 'TME', 'NIO', 'XPEV', 'LI', 'BABA', 'TCEHY', 'JD',
+                        'ATVI', 'EA', 'TTWO', 'ZNGA', 'U', 'RBLX', 'SKLZ', 'PLTK', 'GME', 'ENPH',
+                        'SEDG', 'RUN', 'SPWR', 'FSLR', 'JKS', 'CSIQ', 'DQ', 'SOL', 'MAXN', 'TLRY',
+                        'CGC', 'ACB', 'APHA', 'CRON', 'HEXO', 'OGI', 'SNDL', 'SPCE', 'RKLB', 'ASTS',
+                        'COIN', 'MSTR', 'RIOT', 'MARA', 'HUT', 'BITF', 'CLSK', 'ARBK', 'WULF', 'CORZ',
+                        'PLTR', 'AI', 'PATH', 'CRWD', 'OKTA', 'ZS', 'NET', 'SNOW', 'DDOG', 'S',
+                        'PANW', 'FTNT', 'DDD', 'SSYS', 'XONE', 'PRLB', 'DM', 'NNDM', 'IRBT', 'ROK'
+                    ]
+                    
+                    symbols = major_nasdaq[:limit]
+                    self.stdout.write(f"[FALLBACK] Using {len(symbols)} major NASDAQ tickers")
                 
             except Exception as e:
                 self.stdout.write(self.style.WARNING(f"[ERROR] Failed to load NASDAQ tickers: {e}"))
