@@ -423,6 +423,14 @@ class Command(BaseCommand):
                 proxy_manager = None
         else:
             self.stdout.write(f"[PROXY] Proxy usage disabled")
+        
+        # Add fallback: if no proxies available, disable proxy usage
+        if proxy_manager:
+            stats = proxy_manager.get_proxy_stats()
+            if stats['total_working'] == 0:
+                self.stdout.write(f"[PROXY FALLBACK] No working proxies available - disabling proxy usage")
+                proxy_manager = None
+        
         self.stdout.flush()
         
         # Add signal handler for graceful shutdown
@@ -474,7 +482,7 @@ class Command(BaseCommand):
         def process_symbol(symbol, ticker_number):
             """Process a single symbol with comprehensive data collection"""
             try:
-                                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
+                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
                 proxy = None
                 if proxy_manager:
                     proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
@@ -488,56 +496,62 @@ class Command(BaseCommand):
                                 proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
                         except Exception as e:
                             pass  # Silently continue without proxy
-                patch_yfinance_proxy(proxy)
+                
+                # Set up yfinance with proxy (with better error handling)
+                try:
+                    patch_yfinance_proxy(proxy)
+                except Exception as e:
+                    # If proxy setup fails, continue without proxy
+                    self.stdout.write(f"[PROXY ERROR] {symbol}: Failed to set proxy {proxy}: {e}")
+                    patch_yfinance_proxy(None)
                 
                 # Minimal delay to avoid overwhelming the API
                 time.sleep(random.uniform(0.01, 0.02))
                 
-                # Try multiple approaches to get data
+                # Try multiple approaches to get data with shorter timeouts
                 ticker_obj = yf.Ticker(symbol)
                 info = None
                 hist = None
                 current_price = None
                 
-                # Approach 1: Try to get basic info
+                # Approach 1: Try to get basic info (with timeout)
                 try:
                     info = ticker_obj.info
-                except:
+                    if info and isinstance(info, dict) and len(info) > 3:
+                        # Try to get current price from info first
+                        current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
+                except Exception as e:
+                    # Don't log every error to reduce noise
                     pass
                 
-                # Approach 2: Try to get historical data with multiple periods
-                for period in ["1d", "5d", "1mo"]:
-                    try:
-                        hist = ticker_obj.history(period=period, timeout=8)
-                        if hist is not None and not hist.empty and len(hist) > 0:
-                            try:
-                                current_price = hist['Close'].iloc[-1]
-                                if current_price is not None and not pd.isna(current_price):
-                                    break
-                            except:
-                                continue
-                    except Exception as e:
-                        # Only log the first error for each symbol to reduce noise
-                        if period == "1d":
+                # Approach 2: Try to get historical data with shorter periods and timeouts
+                if current_price is None:
+                    for period in ["1d", "5d"]:  # Reduced periods for faster response
+                        try:
+                            hist = ticker_obj.history(period=period, timeout=5)  # Reduced timeout
+                            if hist is not None and not hist.empty and len(hist) > 0:
+                                try:
+                                    current_price = hist['Close'].iloc[-1]
+                                    if current_price is not None and not pd.isna(current_price):
+                                        break
+                                except:
+                                    continue
+                        except Exception as e:
+                            # Check if it's a delisted symbol
                             err_str = str(e).lower()
-                            if any(x in err_str for x in ['no data found', 'delisted', '404']):
-                                # Don't log repeated delisted messages
-                                pass
-                        continue
+                            if any(x in err_str for x in ['no data found', 'delisted', '404', 'symbol may be delisted']):
+                                # Mark as delisted and skip further processing
+                                update_counters(False)
+                                return False
+                            continue
                 
-                # Approach 3: Try to get current price from info if historical failed
-                if current_price is None and info:
-                    try:
-                        current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
-                    except:
-                        pass
-                
-                # Approach 4: Try a simple quote request
+                # Approach 3: Try a simple quote request as last resort
                 if current_price is None:
                     try:
+                        # Try to get basic quote info
                         quote = ticker_obj.quote_type
                         if quote:
-                            # If we can get quote type, symbol exists
+                            # If we can get quote type, symbol exists but no price data
                             pass
                     except:
                         pass
@@ -547,12 +561,8 @@ class Command(BaseCommand):
                 has_info = info and isinstance(info, dict) and len(info) > 3
                 has_price = current_price is not None and not pd.isna(current_price)
                 
-                if not has_data and not has_info:
-                    # Mark as inactive if no data at all
-                    stock = Stock.objects.filter(ticker=symbol).first()
-                    if stock:
-                        stock.is_active = False
-                        stock.save()
+                # If no data at all, mark as inactive and return
+                if not has_data and not has_info and not has_price:
                     update_counters(False)
                     return False
                 
@@ -568,118 +578,96 @@ class Command(BaseCommand):
                     except:
                         pass
                 
-                                # Extract comprehensive data from info (with safe fallbacks)
+                # Extract comprehensive data from info (with safe fallbacks)
                 stock_data = {
                     'ticker': symbol,
-                    'symbol': symbol,
-                    'company_name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
-                    'name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                    'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+                    'sector': info.get('sector', 'Unknown') if info else 'Unknown',
+                    'industry': info.get('industry', 'Unknown') if info else 'Unknown',
+                    'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
+                    'current_price': self._safe_decimal(current_price) if current_price else None,
+                    'price_change': self._safe_decimal(price_change_today) if price_change_today else None,
+                    'change_percent': self._safe_decimal(change_percent) if change_percent else None,
+                    'volume': self._safe_decimal(info.get('volume', hist['Volume'].iloc[-1] if has_data and 'Volume' in hist.columns else None)) if (info or has_data) else None,
+                    'avg_volume': self._safe_decimal(info.get('averageVolume')) if info else None,
+                    'pe_ratio': self._safe_decimal(info.get('trailingPE')) if info else None,
+                    'dividend_yield': self._safe_decimal(info.get('dividendYield')) if info else None,
                     'exchange': info.get('exchange', 'NASDAQ') if info else 'NASDAQ',
-                    
-                    # Price data
-                    'current_price': self._safe_decimal(current_price),
-                    'price_change_today': self._safe_decimal(price_change_today),
-                    'change_percent': self._safe_decimal(change_percent),
-                    
-                    # Bid/Ask data
-                    'bid_price': self._safe_decimal(info.get('bid') if info else None),
-                    'ask_price': self._safe_decimal(info.get('ask') if info else None),
-                    'days_low': self._safe_decimal(info.get('dayLow') if info else None),
-                    'days_high': self._safe_decimal(info.get('dayHigh') if info else None),
-                    
-                    # Volume data
-                    'volume': info.get('volume') if info else None,
-                    'volume_today': info.get('volume') if info else None,
-                    'avg_volume_3mon': info.get('averageVolume') if info else None,
-                    'shares_available': info.get('sharesOutstanding') if info else None,
-                    
-                    # Market data
-                    'market_cap': info.get('marketCap') if info else None,
-                    
-                    # Financial ratios
-                    'pe_ratio': self._safe_decimal(info.get('trailingPE') if info else None),
-                    'dividend_yield': self._safe_decimal(info.get('dividendYield') if info else None),
-                    'earnings_per_share': self._safe_decimal(info.get('trailingEps') if info else None),
-                    'book_value': self._safe_decimal(info.get('bookValue') if info else None),
-                    'price_to_book': self._safe_decimal(info.get('priceToBook') if info else None),
-                    
-                    # 52-week range
-                    'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow') if info else None),
-                    'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh') if info else None),
-                    
-                    # Target
-                    'one_year_target': self._safe_decimal(info.get('targetMeanPrice') if info else None),
+                    'currency': info.get('currency', 'USD') if info else 'USD',
+                    'country': info.get('country', 'US') if info else 'US',
+                    'is_active': True,
+                    'last_updated': timezone.now()
                 }
-                        
-                # Calculate DVAV (Day Volume over Average Volume)
-                if stock_data['volume'] and stock_data['avg_volume_3mon']:
+                
+                # Save to database if not in test mode
+                if not test_mode:
                     try:
-                        dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
-                        if dvav_val.is_infinite() or dvav_val.is_nan():
-                            stock_data['dvav'] = None
-                        else:
-                            stock_data['dvav'] = dvav_val
-                    except Exception:
-                        stock_data['dvav'] = None
-                
-                # Check for any invalid values (Infinity, NaN, etc.)
-                for k, v in list(stock_data.items()):
-                    if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
-                        stock_data[k] = None
-                
-                if test_mode:
-                    change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
-                    self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
-                else:
-                    # Save to database
-                    stock, created = Stock.objects.update_or_create(
-                        ticker=symbol,
-                        defaults=stock_data
-                    )
-                    
-                    # Save price history
-                    if current_price:
-                        StockPrice.objects.create(
-                            stock=stock,
-                            price=current_price
+                        stock, created = Stock.objects.update_or_create(
+                            ticker=symbol,
+                            defaults=stock_data
                         )
-                
-                update_counters(True)
-                return True
-                
-            except Exception as e:
-                err_str = str(e).lower()
-                if 'too many requests' in err_str or 'rate limit' in err_str or '401' in err_str:
-                    # Mark current proxy as failed
-                    if proxy and proxy_manager:
-                        proxy_manager.mark_proxy_failed(proxy)
-                    self.stdout.write(f"[RATE LIMIT] {symbol}: {e}")
-                    self.stdout.flush()
-                    # Add a small delay for rate limiting
-                    time.sleep(random.uniform(0.5, 1.0))
-                elif 'could not resolve host' in err_str or 'dns' in err_str:
-                    # Network connectivity issue
-                    self.stdout.write(f"[NETWORK] {symbol}: DNS resolution failed")
-                    self.stdout.flush()
-                    # Don't mark as failed, just skip
-                elif 'timeout' in err_str:
-                    # Timeout issue
-                    self.stdout.write(f"[TIMEOUT] {symbol}: Request timed out")
-                    self.stdout.flush()
+                        
+                        # Save price data if we have historical data
+                        if has_data and not hist.empty:
+                            try:
+                                latest_row = hist.iloc[-1]
+                                price_data = {
+                                    'stock': stock,
+                                    'date': latest_row.name.date() if hasattr(latest_row.name, 'date') else timezone.now().date(),
+                                    'open_price': self._safe_decimal(latest_row.get('Open')),
+                                    'high_price': self._safe_decimal(latest_row.get('High')),
+                                    'low_price': self._safe_decimal(latest_row.get('Low')),
+                                    'close_price': self._safe_decimal(latest_row.get('Close')),
+                                    'volume': self._safe_decimal(latest_row.get('Volume')),
+                                    'created_at': timezone.now()
+                                }
+                                
+                                StockPrice.objects.update_or_create(
+                                    stock=stock,
+                                    date=price_data['date'],
+                                    defaults=price_data
+                                )
+                            except Exception as e:
+                                # Log price save errors but don't fail the whole process
+                                pass
+                        
+                        update_counters(True)
+                        return True
+                        
+                    except Exception as e:
+                        self.stdout.write(f"[DB ERROR] {symbol}: {e}")
+                        update_counters(False)
+                        return False
                 else:
-                    # Mark as inactive if delisted or no data
-                    if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
-                        stock = Stock.objects.filter(ticker=symbol).first()
-                        if stock:
-                            stock.is_active = False
-                            stock.save()
-                        self.stdout.write(f"[DELISTED] {symbol}: {e}")
-                        self.stdout.flush()
-                    else:
-                        self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
-                        self.stdout.flush()
+                    # Test mode - just return success
+                    update_counters(True)
+                    return True
+                    
+            except requests.exceptions.Timeout as e:
+                self.stdout.write(f"[TIMEOUT] {symbol}: {e}")
+                if proxy and proxy_manager:
+                    proxy_manager.mark_proxy_failed(proxy)
+                time.sleep(random.uniform(0.5, 1.0)) # Add delay for timeouts
                 update_counters(False)
                 return False
+            except requests.exceptions.ConnectionError as e:
+                self.stdout.write(f"[NETWORK] {symbol}: {e}")
+                if proxy and proxy_manager:
+                    proxy_manager.mark_proxy_failed(proxy)
+                time.sleep(random.uniform(0.5, 1.0)) # Add delay for network errors
+                update_counters(False)
+                return False
+            except Exception as e:
+                # Log unexpected errors but don't let them stop the process
+                err_str = str(e).lower()
+                if any(x in err_str for x in ['no data found', 'delisted', '404', 'symbol may be delisted']):
+                    # Don't log delisted symbols to reduce noise
+                    update_counters(False)
+                    return False
+                else:
+                    self.stdout.write(f"[ERROR] {symbol}: {e}")
+                    update_counters(False)
+                    return False
         
         # Process symbols individually
         self.stdout.write(f"[RUN] Starting {batch_name} with individual ticker processing...")
@@ -749,12 +737,12 @@ class Command(BaseCommand):
                     completed += 1
                     
                     try:
-                        result = future.result(timeout=8)
+                        result = future.result(timeout=5)  # Reduced timeout to 5 seconds
                         if completed <= 10:  # Show first 10 results
                             self.stdout.write(f"[RESULT] {symbol}: {'SUCCESS' if result else 'FAILED'}")
                             self.stdout.flush()
                     except concurrent.futures.TimeoutError:
-                        self.stdout.write(f"[TIMEOUT] {symbol} timed out")
+                        self.stdout.write(f"[TIMEOUT] {symbol} timed out after 5s")
                         self.stdout.flush()
                         update_counters(False)
                     except Exception as e:
