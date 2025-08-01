@@ -67,14 +67,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--threads',
             type=int,
-            default=10,
-            help='Number of concurrent threads (default: 10)'
+            default=100,
+            help='Number of concurrent threads (default: 100)'
         )
         parser.add_argument(
             '--delay',
             type=float,
-            default=0.1,
-            help='Delay between requests in seconds (default: 0.1)'
+            default=0.01,
+            help='Delay between requests in seconds (default: 0.01)'
         )
         parser.add_argument(
             '--test-mode',
@@ -85,6 +85,16 @@ class Command(BaseCommand):
             '--verbose',
             action='store_true',
             help='Enable verbose logging'
+        )
+        parser.add_argument(
+            '--no-proxy',
+            action='store_true',
+            help='Disable proxy usage (run without proxies)'
+        )
+        parser.add_argument(
+            '--filter-delisted',
+            action='store_true',
+            help='Pre-filter delisted symbols before processing (faster processing)'
         )
 
     def handle(self, *args, **options):
@@ -147,26 +157,40 @@ class Command(BaseCommand):
         else:
             symbols = self._get_nasdaq_symbols(options['limit'], options['nasdaq_only'])
         
+        # Test yfinance connectivity
+        connectivity_ok = self._test_yfinance_connectivity()
+        if not connectivity_ok:
+            self.stdout.write("[INFO] Proceeding with limited connectivity - individual requests may still work")
+        self.stdout.flush()
+        
+        # Pre-filter delisted symbols if requested
+        if options.get('filter_delisted', False):
+            symbols = self._filter_delisted_symbols(symbols, sample_size=100)
+        else:
+            self.stdout.write(f"[INFO] Skipping delisted filtering - processing all {len(symbols)} symbols")
+            self.stdout.flush()
+        
         total_symbols = len(symbols)
         self.stdout.write(f"[UP] Processing {total_symbols} symbols")
         
-        # Test yfinance connectivity
-        self._test_yfinance_connectivity()
+        # Add immediate progress indicator
+        self.stdout.write(f"[READY] Starting to process {total_symbols} symbols...")
+        self.stdout.write(f"[FIRST] First 5 symbols: {', '.join(symbols[:5])}")
+        self.stdout.flush()
         
-        # Process stocks with multithreading
-        results = self._process_stocks_batch(
-            symbols, 
-            options['delay'], 
-            options['test_mode'], 
-            options['threads'],
-            batch_name="NASDAQ UPDATE"
-        )
+        # Process the symbols
+        results = self._process_stocks_batch(symbols, options['delay'], options['test_mode'], options['threads'], "NASDAQ UPDATE", options.get('no_proxy', False))
         
         # Calculate final duration
         results['duration'] = time.time() - start_time
         
         # Display final results
         self._display_final_results(results)
+        
+        # Check if interrupted
+        if results.get('interrupted', False):
+            self.stdout.write(self.style.WARNING(f"[INTERRUPTED] Script stopped by user after {results['duration']:.1f} seconds"))
+            return
         
         # Schedule next run info if in scheduler mode
         if options.get('schedule'):
@@ -234,218 +258,557 @@ class Command(BaseCommand):
         
         return symbols[:limit]
 
-    def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH"):
-        """Process stocks individually with proxy switching every 200 tickers"""
-        import math
+    def _filter_delisted_symbols(self, symbols, sample_size=100):
+        """Pre-filter symbols to remove delisted/invalid ones"""
+        if not symbols:
+            return []
+        
+        self.stdout.write(f"[FILTER] Pre-filtering {len(symbols)} symbols to remove delisted ones...")
+        self.stdout.write(f"[FILTER] Testing first {min(sample_size, len(symbols))} symbols...")
+        self.stdout.flush()
+        
+        valid_symbols = []
+        delisted_symbols = []
+        
+        # Test symbols in batches for efficiency
+        test_symbols = symbols[:sample_size]
+        
+        for i, symbol in enumerate(test_symbols, 1):
+            try:
+                # Quick test with minimal delay
+                time.sleep(0.02)  # Minimal delay for speed
+                
+                # Use a more robust approach
+                ticker_obj = yf.Ticker(symbol)
+                
+                # Try to get basic info first
+                try:
+                    info = ticker_obj.info
+                    has_info = info and isinstance(info, dict) and len(info) > 3
+                except:
+                    has_info = False
+                
+                # Try to get historical data with multiple approaches
+                has_data = False
+                hist = None
+                
+                # Method 1: Try different periods
+                for period in ["1d", "5d", "1mo"]:
+                    try:
+                        hist = ticker_obj.history(period=period, timeout=5)
+                        if hist is not None and not hist.empty and len(hist) > 0:
+                            has_data = True
+                            break
+                    except Exception as e:
+                        continue
+                
+                # Method 2: Try getting just the latest price
+                if not has_data:
+                    try:
+                        latest = ticker_obj.history(period="1d", interval="1d", timeout=10)
+                        if latest is not None and not latest.empty:
+                            has_data = True
+                            hist = latest
+                    except:
+                        pass
+                
+                # Method 3: Check if symbol exists at all
+                if not has_data and not has_info:
+                    try:
+                        # Try a simple quote request
+                        quote = ticker_obj.quote_type
+                        if quote:
+                            has_info = True
+                    except:
+                        pass
+                
+                # Determine if symbol is valid
+                if has_data or has_info:
+                    valid_symbols.append(symbol)
+                    if i <= 10:  # Show first 10 valid
+                        if has_data:
+                            try:
+                                price = hist['Close'].iloc[-1]
+                                self.stdout.write(f"[VALID] {symbol}: ${price:.2f}")
+                            except:
+                                self.stdout.write(f"[VALID] {symbol}: Data available")
+                        else:
+                            self.stdout.write(f"[VALID] {symbol}: Info only")
+                else:
+                    delisted_symbols.append(symbol)
+                    if i <= 20:  # Show first 20 delisted
+                        self.stdout.write(f"[DELISTED] {symbol}: No data found")
+                
+                # Progress update every 20 symbols
+                if i % 20 == 0:
+                    self.stdout.write(f"[FILTER PROGRESS] {i}/{len(test_symbols)} - Valid: {len(valid_symbols)}, Delisted: {len(delisted_symbols)}")
+                    self.stdout.flush()
+                    
+            except Exception as e:
+                # If we get any error, assume it's delisted
+                delisted_symbols.append(symbol)
+                if i <= 20:  # Show first 20 errors
+                    self.stdout.write(f"[DELISTED] {symbol}: Error - {str(e)[:50]}")
+        
+        # Calculate statistics
+        if test_symbols:
+            valid_percentage = len(valid_symbols) / len(test_symbols)
+            delisted_percentage = len(delisted_symbols) / len(test_symbols)
+            
+            self.stdout.write(f"[FILTER STATS] Tested: {len(test_symbols)} symbols")
+            self.stdout.write(f"[FILTER STATS] Valid: {len(valid_symbols)} ({valid_percentage*100:.1f}%)")
+            self.stdout.write(f"[FILTER STATS] Delisted: {len(delisted_symbols)} ({delisted_percentage*100:.1f}%)")
+            self.stdout.flush()
+            
+            # If we found very few valid symbols, the filtering might be too strict
+            if valid_percentage < 0.1:  # Less than 10% valid
+                self.stdout.write(f"[WARNING] Very low valid rate ({valid_percentage*100:.1f}%). Returning all symbols without filtering.")
+                self.stdout.flush()
+                return symbols
+            
+            # Estimate total valid symbols in full list
+            estimated_valid = int(len(symbols) * valid_percentage)
+            estimated_delisted = len(symbols) - estimated_valid
+            
+            self.stdout.write(f"[FILTER ESTIMATE] Full list: {len(symbols):,} symbols")
+            self.stdout.write(f"[FILTER ESTIMATE] Expected valid: ~{estimated_valid:,} symbols")
+            self.stdout.write(f"[FILTER ESTIMATE] Expected delisted: ~{estimated_delisted:,} symbols")
+            self.stdout.flush()
+            
+            # Return only valid symbols from the test, plus remaining untested symbols
+            remaining_symbols = symbols[sample_size:]
+            final_symbols = valid_symbols + remaining_symbols
+            
+            self.stdout.write(f"[FILTER RESULT] Returning {len(final_symbols)} symbols for processing")
+            self.stdout.write(f"[FILTER RESULT] Includes {len(valid_symbols)} pre-validated + {len(remaining_symbols)} untested")
+            self.stdout.flush()
+            
+            return final_symbols
+            
+        return symbols
+
+    def _process_stocks_batch(self, symbols, delay, test_mode, num_threads, batch_name="BATCH", no_proxy=False):
+        """Process stocks with comprehensive data collection and proxy support"""
         start_time = time.time()
         total_symbols = len(symbols)
         successful = 0
         failed = 0
-        processed = 0
+        
+        # Initialize proxy manager only if not disabled
+        proxy_manager = None
+        if not no_proxy:
+            try:
+                proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
+                stats = proxy_manager.get_proxy_stats()
+                if stats['total_working'] > 0:
+                    self.stdout.write(f"[PROXY] Proxy manager initialized with {stats['total_working']} working proxies")
+                    self.stdout.write(f"[PROXY] Available: {stats['available']}, Used: {stats['used_in_run']}")
+                else:
+                    self.stdout.write(f"[PROXY] No proxies available initially - will try to refresh during run")
+                    # Try to refresh the proxy pool
+                    try:
+                        count = proxy_manager.refresh_proxy_pool(force=True)
+                        if count > 0:
+                            stats = proxy_manager.get_proxy_stats()
+                            self.stdout.write(f"[PROXY] Refreshed pool: {stats['total_working']} working proxies")
+                        else:
+                            self.stdout.write(f"[PROXY] Failed to refresh proxy pool - continuing without proxies")
+                            proxy_manager = None
+                    except Exception as refresh_error:
+                        self.stdout.write(f"[PROXY] Refresh failed: {refresh_error} - continuing without proxies")
+                        proxy_manager = None
+            except Exception as e:
+                self.stdout.write(f"[PROXY ERROR] Failed to initialize proxy manager: {e}")
+                self.stdout.write(f"[PROXY] Continuing without proxies")
+                proxy_manager = None
+        else:
+            self.stdout.write(f"[PROXY] Proxy usage disabled")
+        self.stdout.flush()
+        
+        # Add signal handler for graceful shutdown
+        import signal
+        stop_flag = threading.Event()
         lock = threading.Lock()
+        processed = 0
         
-        # Initialize advanced proxy manager
-        proxy_manager = ProxyManager(min_proxies=100, max_proxies=200)
-        proxy_manager.reset_run()  # Reset for new run
+        def signal_handler(signum, frame):
+            stop_flag.set()
+            self.stdout.write("\n[STOP] Signal received. Stopping gracefully...")
+            self.stdout.flush()
         
+        # Register signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
         def update_counters(success):
             nonlocal successful, failed, processed
             with lock:
-                processed += 1
                 if success:
                     successful += 1
                 else:
                     failed += 1
+                processed += 1
+                # Update progress safely
+                progress['current'] = processed
         
         def patch_yfinance_proxy(proxy):
             import yfinance
             if proxy:
-                session = requests.Session()
-                session.proxies = {
-                    'http': proxy,
-                    'https': proxy
-                }
-                yfinance.shared._requests = session
+                try:
+                    session = requests.Session()
+                    session.proxies = {
+                        'http': proxy,
+                        'https': proxy
+                    }
+                    # Set headers to avoid detection
+                    session.headers.update({
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    })
+                    yfinance.shared._requests = session
+                except Exception as e:
+                    self.stdout.write(f"[PROXY ERROR] Failed to set proxy {proxy}: {e}")
+                    yfinance.shared._requests = requests.Session()
             else:
-                import yfinance
                 yfinance.shared._requests = requests.Session()
         
         def process_symbol(symbol, ticker_number):
             """Process a single symbol with comprehensive data collection"""
             try:
-                # Get proxy for this ticker (switches every 200)
-                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
+                proxy = None
+                if proxy_manager:
+                    proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                    if proxy and ticker_number <= 5: # Show proxy info for first 5 tickers
+                        self.stdout.write(f"[PROXY] {symbol}: Using proxy {proxy}")
+                    elif not proxy and ticker_number % 100 == 0:  # Try to refresh every 100 tickers if no proxies
+                        try:
+                            count = proxy_manager.refresh_proxy_pool(force=True)
+                            if count > 0:
+                                self.stdout.write(f"[PROXY] Refreshed pool during run: {count} new proxies")
+                                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                        except Exception as e:
+                            pass  # Silently continue without proxy
                 patch_yfinance_proxy(proxy)
                 
-                # Add random delay between 0.7 and 2.0 seconds
-                time.sleep(random.uniform(0.7, 2.0))
+                # Minimal delay to avoid overwhelming the API
+                time.sleep(random.uniform(0.01, 0.02))
                 
-                retry = False
-                for attempt in range(3):  # Try up to 3 times if rate limited
+                # Try multiple approaches to get data
+                ticker_obj = yf.Ticker(symbol)
+                info = None
+                hist = None
+                current_price = None
+                
+                # Approach 1: Try to get basic info
+                try:
+                    info = ticker_obj.info
+                except:
+                    pass
+                
+                # Approach 2: Try to get historical data with multiple periods
+                for period in ["1d", "5d", "1mo"]:
                     try:
-                        # Get comprehensive stock data using individual ticker method
-                        ticker_obj = yf.Ticker(symbol)
-                        info = ticker_obj.info
-                        hist = ticker_obj.history(period="5d")
-                        
-                        if hist.empty or not info:
-                            # Mark as inactive if no data
-                            stock = Stock.objects.filter(ticker=symbol).first()
-                            if stock:
-                                stock.is_active = False
-                                stock.save()
-                            update_counters(False)
-                            return False
-                        
-                        # Get current price data
-                        current_price = hist['Close'].iloc[-1] if len(hist) > 0 else None
-                        if current_price is None or pd.isna(current_price):
-                            stock = Stock.objects.filter(ticker=symbol).first()
-                            if stock:
-                                stock.is_active = False
-                                stock.save()
-                            update_counters(False)
-                            return False
-                        
-                        # Calculate price changes
-                        price_change_today = None
-                        change_percent = None
-                        if len(hist) > 1:
-                            prev_price = hist['Close'].iloc[-2]
-                            if not pd.isna(prev_price) and prev_price > 0:
-                                price_change_today = current_price - prev_price
-                                change_percent = (price_change_today / prev_price) * 100
-                        
-                        # Extract comprehensive data from info
-                        stock_data = {
-                            'ticker': symbol,
-                            'symbol': symbol,
-                            'company_name': info.get('longName') or info.get('shortName', ''),
-                            'name': info.get('longName') or info.get('shortName', ''),
-                            'exchange': info.get('exchange', 'NASDAQ'),
-                            
-                            # Price data
-                            'current_price': self._safe_decimal(current_price),
-                            'price_change_today': self._safe_decimal(price_change_today),
-                            'change_percent': self._safe_decimal(change_percent),
-                            
-                            # Bid/Ask data
-                            'bid_price': self._safe_decimal(info.get('bid')),
-                            'ask_price': self._safe_decimal(info.get('ask')),
-                            'days_low': self._safe_decimal(info.get('dayLow')),
-                            'days_high': self._safe_decimal(info.get('dayHigh')),
-                            
-                            # Volume data
-                            'volume': info.get('volume'),
-                            'volume_today': info.get('volume'),
-                            'avg_volume_3mon': info.get('averageVolume'),
-                            'shares_available': info.get('sharesOutstanding'),
-                            
-                            # Market data
-                            'market_cap': info.get('marketCap'),
-                            
-                            # Financial ratios
-                            'pe_ratio': self._safe_decimal(info.get('trailingPE')),
-                            'dividend_yield': self._safe_decimal(info.get('dividendYield')),
-                            'earnings_per_share': self._safe_decimal(info.get('trailingEps')),
-                            'book_value': self._safe_decimal(info.get('bookValue')),
-                            'price_to_book': self._safe_decimal(info.get('priceToBook')),
-                            
-                            # 52-week range
-                            'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')),
-                            'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')),
-                            
-                            # Target
-                            'one_year_target': self._safe_decimal(info.get('targetMeanPrice')),
-                        }
-                        
-                        # Calculate DVAV (Day Volume over Average Volume)
-                        if stock_data['volume'] and stock_data['avg_volume_3mon']:
+                        hist = ticker_obj.history(period=period, timeout=8)
+                        if hist is not None and not hist.empty and len(hist) > 0:
                             try:
-                                dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
-                                if dvav_val.is_infinite() or dvav_val.is_nan():
-                                    stock_data['dvav'] = None
-                                else:
-                                    stock_data['dvav'] = dvav_val
-                            except Exception:
-                                stock_data['dvav'] = None
-                        
-                        # Check for any invalid values (Infinity, NaN, etc.)
-                        for k, v in list(stock_data.items()):
-                            if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
-                                stock_data[k] = None
-                        
-                        if test_mode:
-                            change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
-                            self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
-                        else:
-                            # Save to database
-                            stock, created = Stock.objects.update_or_create(
-                                ticker=symbol,
-                                defaults=stock_data
-                            )
-                            
-                            # Save price history
-                            if current_price:
-                                StockPrice.objects.create(
-                                    stock=stock,
-                                    price=current_price
-                                )
-                        
-                        update_counters(True)
-                        return True
-                        
-                    except Exception as e:
-                        err_str = str(e).lower()
-                        if 'too many requests' in err_str or 'rate limit' in err_str:
-                            if not retry:
-                                retry = True
-                                # Mark current proxy as failed
-                                if proxy:
-                                    proxy_manager.mark_proxy_failed(proxy)
-                                time.sleep(random.uniform(5, 10))  # Wait longer before retry
+                                current_price = hist['Close'].iloc[-1]
+                                if current_price is not None and not pd.isna(current_price):
+                                    break
+                            except:
                                 continue
-                        
-                        # Mark as inactive if delisted or no data
-                        if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found']):
-                            stock = Stock.objects.filter(ticker=symbol).first()
-                            if stock:
-                                stock.is_active = False
-                                stock.save()
-                        
-                        self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
-                        update_counters(False)
-                        return False
+                    except Exception as e:
+                        # Only log the first error for each symbol to reduce noise
+                        if period == "1d":
+                            err_str = str(e).lower()
+                            if any(x in err_str for x in ['no data found', 'delisted', '404']):
+                                # Don't log repeated delisted messages
+                                pass
+                        continue
                 
-                return False
+                # Approach 3: Try to get current price from info if historical failed
+                if current_price is None and info:
+                    try:
+                        current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
+                    except:
+                        pass
+                
+                # Approach 4: Try a simple quote request
+                if current_price is None:
+                    try:
+                        quote = ticker_obj.quote_type
+                        if quote:
+                            # If we can get quote type, symbol exists
+                            pass
+                    except:
+                        pass
+                
+                # Determine if we have enough data to process
+                has_data = hist is not None and not hist.empty
+                has_info = info and isinstance(info, dict) and len(info) > 3
+                has_price = current_price is not None and not pd.isna(current_price)
+                
+                if not has_data and not has_info:
+                    # Mark as inactive if no data at all
+                    stock = Stock.objects.filter(ticker=symbol).first()
+                    if stock:
+                        stock.is_active = False
+                        stock.save()
+                    update_counters(False)
+                    return False
+                
+                # Calculate price changes
+                price_change_today = None
+                change_percent = None
+                if has_data and len(hist) > 1:
+                    try:
+                        prev_price = hist['Close'].iloc[-2]
+                        if not pd.isna(prev_price) and prev_price > 0 and current_price:
+                            price_change_today = current_price - prev_price
+                            change_percent = (price_change_today / prev_price) * 100
+                    except:
+                        pass
+                
+                                # Extract comprehensive data from info (with safe fallbacks)
+                stock_data = {
+                    'ticker': symbol,
+                    'symbol': symbol,
+                    'company_name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                    'name': info.get('longName') if info else '' or info.get('shortName') if info else '' or symbol,
+                    'exchange': info.get('exchange', 'NASDAQ') if info else 'NASDAQ',
+                    
+                    # Price data
+                    'current_price': self._safe_decimal(current_price),
+                    'price_change_today': self._safe_decimal(price_change_today),
+                    'change_percent': self._safe_decimal(change_percent),
+                    
+                    # Bid/Ask data
+                    'bid_price': self._safe_decimal(info.get('bid') if info else None),
+                    'ask_price': self._safe_decimal(info.get('ask') if info else None),
+                    'days_low': self._safe_decimal(info.get('dayLow') if info else None),
+                    'days_high': self._safe_decimal(info.get('dayHigh') if info else None),
+                    
+                    # Volume data
+                    'volume': info.get('volume') if info else None,
+                    'volume_today': info.get('volume') if info else None,
+                    'avg_volume_3mon': info.get('averageVolume') if info else None,
+                    'shares_available': info.get('sharesOutstanding') if info else None,
+                    
+                    # Market data
+                    'market_cap': info.get('marketCap') if info else None,
+                    
+                    # Financial ratios
+                    'pe_ratio': self._safe_decimal(info.get('trailingPE') if info else None),
+                    'dividend_yield': self._safe_decimal(info.get('dividendYield') if info else None),
+                    'earnings_per_share': self._safe_decimal(info.get('trailingEps') if info else None),
+                    'book_value': self._safe_decimal(info.get('bookValue') if info else None),
+                    'price_to_book': self._safe_decimal(info.get('priceToBook') if info else None),
+                    
+                    # 52-week range
+                    'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow') if info else None),
+                    'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh') if info else None),
+                    
+                    # Target
+                    'one_year_target': self._safe_decimal(info.get('targetMeanPrice') if info else None),
+                }
+                        
+                # Calculate DVAV (Day Volume over Average Volume)
+                if stock_data['volume'] and stock_data['avg_volume_3mon']:
+                    try:
+                        dvav_val = Decimal(str(stock_data['volume'])) / Decimal(str(stock_data['avg_volume_3mon']))
+                        if dvav_val.is_infinite() or dvav_val.is_nan():
+                            stock_data['dvav'] = None
+                        else:
+                            stock_data['dvav'] = dvav_val
+                    except Exception:
+                        stock_data['dvav'] = None
+                
+                # Check for any invalid values (Infinity, NaN, etc.)
+                for k, v in list(stock_data.items()):
+                    if isinstance(v, Decimal) and (v.is_infinite() or v.is_nan()):
+                        stock_data[k] = None
+                
+                if test_mode:
+                    change_str = f"{change_percent:+.2f}%" if change_percent else "N/A"
+                    self.stdout.write(f"[SUCCESS] {symbol}: ${current_price:.2f} ({change_str})")
+                else:
+                    # Save to database
+                    stock, created = Stock.objects.update_or_create(
+                        ticker=symbol,
+                        defaults=stock_data
+                    )
+                    
+                    # Save price history
+                    if current_price:
+                        StockPrice.objects.create(
+                            stock=stock,
+                            price=current_price
+                        )
+                
+                update_counters(True)
+                return True
                 
             except Exception as e:
-                self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                err_str = str(e).lower()
+                if 'too many requests' in err_str or 'rate limit' in err_str or '401' in err_str:
+                    # Mark current proxy as failed
+                    if proxy and proxy_manager:
+                        proxy_manager.mark_proxy_failed(proxy)
+                    self.stdout.write(f"[RATE LIMIT] {symbol}: {e}")
+                    self.stdout.flush()
+                    # Add a small delay for rate limiting
+                    time.sleep(random.uniform(0.5, 1.0))
+                elif 'could not resolve host' in err_str or 'dns' in err_str:
+                    # Network connectivity issue
+                    self.stdout.write(f"[NETWORK] {symbol}: DNS resolution failed")
+                    self.stdout.flush()
+                    # Don't mark as failed, just skip
+                elif 'timeout' in err_str:
+                    # Timeout issue
+                    self.stdout.write(f"[TIMEOUT] {symbol}: Request timed out")
+                    self.stdout.flush()
+                else:
+                    # Mark as inactive if delisted or no data
+                    if any(x in err_str for x in ['no data found', 'delisted', 'no price data found', 'not found', '404']):
+                        stock = Stock.objects.filter(ticker=symbol).first()
+                        if stock:
+                            stock.is_active = False
+                            stock.save()
+                        self.stdout.write(f"[DELISTED] {symbol}: {e}")
+                        self.stdout.flush()
+                    else:
+                        self.stdout.write(f"[ERROR] Error processing {symbol}: {e}")
+                        self.stdout.flush()
                 update_counters(False)
                 return False
         
         # Process symbols individually
         self.stdout.write(f"[RUN] Starting {batch_name} with individual ticker processing...")
+        self.stdout.flush()  # Force output
+
+        progress = {'current': 0}
         
-        for i, symbol in enumerate(symbols, 1):
-            process_symbol(symbol, i)
-            
-            # Show progress every 10 tickers
-            if i % 10 == 0 or i == total_symbols:
-                progress = (i / total_symbols) * 100
-                elapsed = time.time() - start_time
-                self.stdout.write(f"[STATS] Progress: {i}/{total_symbols} ({progress:.1f}%) - {elapsed:.1f}s elapsed")
-            
-            # Pause and show proxy stats every 100 tickers
-            if i % 100 == 0:
-                stats = proxy_manager.get_proxy_stats()
-                self.stdout.write(f"[PAUSE] Pausing for 60s after {i} tickers...")
-                self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
-                time.sleep(60)
+        def print_progress():
+            while not stop_flag.is_set():
+                try:
+                    percent = (progress['current'] / total_symbols) * 100
+                    elapsed = time.time() - start_time
+                    self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
+                    self.stdout.flush()  # Force output
+                    stop_flag.wait(10)
+                except Exception as e:
+                    self.stdout.write(f"[PROGRESS ERROR] {e}")
+                    break
+        
+        progress_thread = threading.Thread(target=print_progress, daemon=True)
+        progress_thread.start()
+
+        # Add immediate feedback
+        self.stdout.write(f"[START] Beginning to process {total_symbols} symbols...")
+        self.stdout.flush()
+
+        import concurrent.futures
+        
+        def process_symbol_with_timeout(symbol, ticker_number, timeout=15):
+            """Process symbol with timeout using ThreadPoolExecutor"""
+            try:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(process_symbol, symbol, ticker_number)
+                    return future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                self.stdout.write(f"[TIMEOUT] {symbol} timed out after {timeout}s, skipping...")
+                self.stdout.flush()
+                update_counters(False)
+                return False
+            except Exception as e:
+                self.stdout.write(f"[TIMEOUT ERROR] {symbol}: {e}")
+                self.stdout.flush()
+                update_counters(False)
+                return False
+
+        # Use ThreadPoolExecutor for true parallel processing
+        self.stdout.write(f"[THREADS] Using {num_threads} threads for parallel processing")
+        self.stdout.flush()
+        
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+                # Submit all tasks
+                future_to_symbol = {}
+                for i, symbol in enumerate(symbols, 1):
+                    if stop_flag.is_set():
+                        break
+                    future = executor.submit(process_symbol, symbol, i)
+                    future_to_symbol[future] = (symbol, i)
+                
+                # Process completed tasks
+                completed = 0
+                for future in concurrent.futures.as_completed(future_to_symbol):
+                    if stop_flag.is_set():
+                        break
+                        
+                    symbol, i = future_to_symbol[future]
+                    completed += 1
+                    
+                    try:
+                        result = future.result(timeout=8)
+                        if completed <= 10:  # Show first 10 results
+                            self.stdout.write(f"[RESULT] {symbol}: {'SUCCESS' if result else 'FAILED'}")
+                            self.stdout.flush()
+                    except concurrent.futures.TimeoutError:
+                        self.stdout.write(f"[TIMEOUT] {symbol} timed out")
+                        self.stdout.flush()
+                        update_counters(False)
+                    except Exception as e:
+                        self.stdout.write(f"[ERROR] {symbol}: {e}")
+                        self.stdout.flush()
+                        update_counters(False)
+                    
+                    # Update progress
+                    progress['current'] = completed
+                    
+                    # Show progress every 100 completed tasks
+                    if completed % 100 == 0 or completed == total_symbols:
+                        progress_percent = (completed / total_symbols) * 100
+                        elapsed = time.time() - start_time
+                        rate = completed / elapsed if elapsed > 0 else 0
+                        self.stdout.write(f"[STATS] Progress: {completed}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed - {rate:.1f} symbols/sec")
+                        self.stdout.flush()
+                    
+                    # Pause every 1000 symbols
+                    if completed % 1000 == 0 and completed > 0:
+                        if proxy_manager:
+                            stats = proxy_manager.get_proxy_stats()
+                            self.stdout.write(f"[PAUSE] Pausing for 10s after {completed} tickers...")
+                            self.stdout.write(f"[PROXY STATS] Working: {stats['total_working']}, Used: {stats['used_in_run']}, Available: {stats['available']}")
+                        else:
+                            self.stdout.write(f"[PAUSE] Pausing for 10s after {completed} tickers... (no proxy)")
+                        self.stdout.flush()
+                        time.sleep(10)
+        except KeyboardInterrupt:
+            self.stdout.write("\n[STOP] Keyboard interrupt detected. Stopping gracefully...")
+            self.stdout.write(f"[STOP] Processed {progress['current']} out of {total_symbols} symbols")
+            self.stdout.flush()
+            stop_flag.set()
+            if progress_thread.is_alive():
+                progress_thread.join(timeout=2)
+            return {
+                'total': progress['current'],
+                'successful': successful,
+                'failed': failed,
+                'duration': time.time() - start_time,
+                'interrupted': True
+            }
+
+        stop_flag.set()
+        if progress_thread.is_alive():
+            progress_thread.join(timeout=2)  # Wait max 2 seconds
         
         # Final proxy stats
-        final_stats = proxy_manager.get_proxy_stats()
-        self.stdout.write(f"[FINAL PROXY STATS] Total: {final_stats['total_working']}, Used: {final_stats['used_in_run']}")
+        if proxy_manager:
+            final_stats = proxy_manager.get_proxy_stats()
+            self.stdout.write(f"[FINAL PROXY STATS] Total: {final_stats['total_working']}, Used: {final_stats['used_in_run']}")
+        else:
+            self.stdout.write(f"[FINAL PROXY STATS] No proxy used")
+        self.stdout.flush()
         
         return {
             'total': total_symbols,
@@ -467,16 +830,30 @@ class Command(BaseCommand):
             return None
 
     def _test_yfinance_connectivity(self):
-        """Test yfinance API connectivity"""
+        """Test yfinance API connectivity with fallback"""
         try:
+            # Try direct connectivity test first
             test_ticker = yf.Ticker("AAPL")
             test_info = test_ticker.info
             if test_info:
                 self.stdout.write("[SUCCESS] yfinance connectivity test passed")
+                return True
             else:
-                self.stdout.write(self.style.WARNING("[WARNING]  yfinance connectivity test failed"))
+                self.stdout.write(self.style.WARNING("[WARNING] yfinance connectivity test failed - no data returned"))
+                return False
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"[ERROR] yfinance connectivity error: {e}"))
+            error_str = str(e).lower()
+            if 'could not resolve host' in error_str or 'dns' in error_str:
+                self.stdout.write(self.style.WARNING("[WARNING] DNS resolution failed - this may be a network issue"))
+                self.stdout.write(self.style.WARNING("[WARNING] Continuing anyway - yfinance may work with different endpoints"))
+                return False
+            elif 'timeout' in error_str:
+                self.stdout.write(self.style.WARNING("[WARNING] yfinance connectivity timeout - continuing anyway"))
+                return False
+            else:
+                self.stdout.write(self.style.WARNING(f"[WARNING] yfinance connectivity error: {e}"))
+                self.stdout.write(self.style.WARNING("[WARNING] Continuing anyway - individual requests may still work"))
+                return False
 
     def _display_final_results(self, results):
         """Display comprehensive final results"""

@@ -1,0 +1,1 @@
+import requests, json; proxies = requests.get("https://api.proxyscrape.com/v2/?request=get&protocol=http&timeout=5000&country=all&ssl=no&anonymity=all").text.split(); working = []; [working.append(f"http://{p}") for p in proxies[:100] if ":" in p]; json.dump({"proxies": working}, open("new_proxies.json", "w")); print(f"Saved {len(working)} proxies")

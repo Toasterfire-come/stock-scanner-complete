@@ -18,7 +18,7 @@ import logging
 from fast_proxy_finder import FastProxyFinder
 
 class ProxyManager:
-    def __init__(self, min_proxies=100, max_proxies=200, test_timeout=10):
+    def __init__(self, min_proxies=100, max_proxies=200, test_timeout=5):
         self.min_proxies = min_proxies
         self.max_proxies = max_proxies
         self.test_timeout = test_timeout
@@ -56,7 +56,11 @@ class ProxyManager:
         return [
             # Free proxy APIs
             "https://www.proxy-list.download/api/v1/get?type=https",
+            "https://www.proxy-list.download/api/v1/get?type=http",
             "https://api.proxyscrape.com/v2/?request=get&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all",
+            "https://api.proxyscrape.com/v2/?request=get&protocol=https&timeout=10000&country=all&ssl=all&anonymity=all",
+            
+            # GitHub sources (most reliable)
             "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
             "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
             "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt",
@@ -68,6 +72,20 @@ class ProxyManager:
             "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt",
             "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/https.txt",
+            
+            # Additional GitHub sources
+            "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
+            "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
+            "https://raw.githubusercontent.com/almroot/proxylist/master/list.txt",
+            "https://raw.githubusercontent.com/zevtyardt/proxy-list/main/http.txt",
+            "https://raw.githubusercontent.com/zevtyardt/proxy-list/main/https.txt",
+            "https://raw.githubusercontent.com/rdavydov/proxy-list/main/proxies_anonymous/http.txt",
+            "https://raw.githubusercontent.com/rdavydov/proxy-list/main/proxies_anonymous/https.txt",
+            "https://raw.githubusercontent.com/Anonym0usWork1221/Proxy/main/http.txt",
+            "https://raw.githubusercontent.com/Anonym0usWork1221/Proxy/main/https.txt",
+            "https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list",
+            
+            # Public proxy lists
             "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
             "https://raw.githubusercontent.com/saschazesiger/Free-Proxies/master/proxies.txt",
             "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/http.txt",
@@ -110,37 +128,31 @@ class ProxyManager:
         return []
     
     def test_proxy(self, proxy):
-        """Test if a proxy is working"""
+        """Test if a proxy is working by making a request to Yahoo Finance"""
         try:
             proxies = {
                 'http': proxy,
                 'https': proxy
             }
-            
-            # Test with multiple URLs
-            test_urls = [
-                'http://httpbin.org/ip',
-                'https://httpbin.org/ip',
-                'http://ip-api.com/json',
-                'https://api.ipify.org?format=json'
-            ]
-            
-            for url in test_urls:
-                try:
-                    response = requests.get(
-                        url, 
-                        proxies=proxies, 
-                        timeout=self.test_timeout,
-                        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-                    )
-                    if response.status_code == 200:
-                        return True
-                except:
-                    continue
-            
+            # Use a Yahoo Finance endpoint for AAPL summary (public, no auth required)
+            yfinance_url = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=price'
+            response = requests.get(
+                yfinance_url,
+                proxies=proxies,
+                timeout=self.test_timeout,
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            )
+            if response.status_code == 200:
+                return True
             return False
-            
-        except Exception:
+        except requests.exceptions.Timeout:
+            self.logger.debug(f"Proxy {proxy} timed out")
+            return False
+        except requests.exceptions.ConnectionError:
+            self.logger.debug(f"Proxy {proxy} connection error")
+            return False
+        except Exception as e:
+            self.logger.debug(f"Proxy {proxy} error: {e}")
             return False
     
     def find_working_proxies(self, target_count=None):
@@ -271,20 +283,10 @@ class ProxyManager:
                 
                 self.logger.info(f"LOADED {len(self.working_proxies)} proxies from {self.proxy_file}")
                 
-                # Validate loaded proxies
+                # Skip validation on load - assume proxies are valid to avoid delays
                 if self.working_proxies:
-                    self.logger.info("VALIDATING loaded proxies...")
-                    valid_proxies = []
-                    with ThreadPoolExecutor(max_workers=10) as executor:
-                        future_to_proxy = {executor.submit(self.test_proxy, proxy): proxy for proxy in self.working_proxies}
-                        
-                        for future in as_completed(future_to_proxy):
-                            proxy = future_to_proxy[future]
-                            if future.result():
-                                valid_proxies.append(proxy)
-                    
-                    self.working_proxies = valid_proxies
-                    self.logger.info(f"VALIDATED {len(self.working_proxies)} proxies")
+                    self.logger.info(f"LOADED {len(self.working_proxies)} proxies - skipping validation for speed")
+                    # Don't clear the proxies - let them be tested during actual use
                 
         except Exception as e:
             self.logger.error(f"FAILED to load proxies: {e}")
@@ -298,6 +300,9 @@ class ProxyManager:
 
     def get_proxy_for_ticker(self, ticker_number):
         """Get proxy for a specific ticker number, switching every 200 tickers"""
+        if not self.working_proxies:
+            return None
+            
         with self.lock:
             # Switch proxy every 200 tickers
             if (ticker_number % self.switch_interval == 0 or 
