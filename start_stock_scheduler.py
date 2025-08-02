@@ -13,8 +13,7 @@ from pathlib import Path
 from datetime import datetime
 import schedule
 import threading
-import django
-from django.core.management import execute_from_command_line
+# Django imports removed to avoid ImproperlyConfigured error
 
 # Add XAMPP MySQL to PATH if it exists
 XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
@@ -84,7 +83,7 @@ class StockSchedulerManager:
         """Start the stock data scheduler"""
         logger.info("[START] Starting NASDAQ stock data scheduler...")
         logger.info("[TIME] Schedule: Updates every 3 minutes")
-        logger.info("[TARGET] Target: NASDAQ-listed securities only")
+        logger.info("[TARGET] Target: NYSE-listed securities only")
         logger.info("[POWER] Mode: Multithreaded processing")
         logger.info("[PID] Process ID: %s", os.getpid())
         logger.info("[TIME] Started at: %s", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -94,7 +93,7 @@ class StockSchedulerManager:
             # Updated to 3500 stocks limit with enhanced error handling
             process = subprocess.Popen([
                 str(self.venv_python), str(self.manage_py),
-                'update_stocks_yfinance', '--startup', '--limit', '3500'
+                'update_stocks_yfinance', '--startup', '--limit', '3500', '--threads', '30'
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
             logger.info(f"[DATE] Scheduler started with PID: {process.pid}")
@@ -206,7 +205,7 @@ def main():
     logger.info(">> STOCK SCANNER AUTO-STARTUP")
     logger.info("=" * 70)
     logger.info(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info(">> Target: NASDAQ-listed securities")
+            logger.info(">> Target: NYSE-listed securities")
     logger.info(">> Schedule: Every 3 minutes")
     logger.info("=" * 70)
 
