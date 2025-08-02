@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Stock Retrieval Script - WORKING VERSION (No Proxy Manager)
+Enhanced Stock Retrieval Script - WORKING VERSION (Direct Proxy Loading)
 Uses entire NYSE CSV, filters delisted stocks, supports production settings
 Command line options: -noproxy, -test (100 first tickers), -threads, -timeout
 """
@@ -57,7 +57,62 @@ def parse_arguments():
                        help='Output JSON file (default: auto-generated timestamp)')
     parser.add_argument('-max-symbols', type=int, default=None, 
                        help='Maximum number of symbols to process (for testing)')
+    parser.add_argument('-proxy-file', type=str, default='working_proxies.json',
+                       help='Proxy JSON file path (default: working_proxies.json)')
     return parser.parse_args()
+
+def load_proxies_direct(proxy_file):
+    """Load proxies directly from JSON file without validation"""
+    try:
+        with open(proxy_file, 'r') as f:
+            proxy_data = json.load(f)
+        
+        # Extract proxy list from the JSON structure
+        if isinstance(proxy_data, dict):
+            # Try different possible keys
+            if 'proxies' in proxy_data:
+                proxies = proxy_data['proxies']
+            elif 'working_proxies' in proxy_data:
+                proxies = proxy_data['working_proxies']
+            else:
+                # Assume the entire dict is the proxy list
+                proxies = list(proxy_data.values()) if proxy_data else []
+        elif isinstance(proxy_data, list):
+            proxies = proxy_data
+        else:
+            proxies = []
+        
+        # Filter out None/empty values
+        proxies = [p for p in proxies if p and isinstance(p, str)]
+        
+        logger.info(f"Loaded {len(proxies)} proxies directly from {proxy_file}")
+        return proxies
+        
+    except FileNotFoundError:
+        logger.warning(f"Proxy file not found: {proxy_file}")
+        return []
+    except Exception as e:
+        logger.error(f"Error loading proxies: {e}")
+        return []
+
+def patch_yfinance_proxy(proxy):
+    """Patch yfinance to use proxy"""
+    if not proxy:
+        return
+        
+    try:
+        session = requests.Session()
+        session.proxies = {
+            'http': proxy,
+            'https': proxy
+        }
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        })
+        import yfinance.shared
+        yfinance.shared._requests = session
+    except Exception as e:
+        logger.error(f"Failed to set proxy {proxy}: {e}")
 
 def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     """Load NYSE symbols from CSV file, filtering delisted stocks"""
@@ -114,7 +169,7 @@ def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     
     return symbols
 
-def process_symbol(symbol, ticker_number, timeout=8):
+def process_symbol(symbol, ticker_number, proxies, timeout=8):
     """Process a single symbol with comprehensive data collection"""
     global shutdown_flag
     
@@ -122,6 +177,15 @@ def process_symbol(symbol, ticker_number, timeout=8):
         return None
         
     try:
+        # Get proxy for this ticker (if available)
+        proxy = None
+        if proxies and len(proxies) > 0:
+            proxy = proxies[ticker_number % len(proxies)]
+            if ticker_number <= 5:  # Show proxy info for first 5 tickers
+                logger.info(f"{symbol}: Using proxy {proxy}")
+        
+        patch_yfinance_proxy(proxy)
+        
         # Minimal delay to avoid rate limiting
         time.sleep(random.uniform(0.01, 0.02))
         
@@ -236,11 +300,13 @@ def main():
     
     args = parse_arguments()
     
-    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION")
+    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
     print("=" * 60)
     print(f"Configuration:")
     print(f"  CSV File: {args.csv}")
     print(f"  Test Mode: {args.test}")
+    print(f"  Use Proxies: {not args.noproxy}")
+    print(f"  Proxy File: {args.proxy_file}")
     print(f"  Threads: {args.threads}")
     print(f"  Timeout: {args.timeout}s")
     print(f"  Max Symbols: {args.max_symbols or 'All'}")
@@ -255,6 +321,18 @@ def main():
         return
     
     print(f"Processing {len(symbols)} symbols...")
+    
+    # Load proxies directly (without validation)
+    proxies = []
+    if not args.noproxy:
+        print(f"Loading proxies from {args.proxy_file}...")
+        proxies = load_proxies_direct(args.proxy_file)
+        if proxies:
+            print(f"SUCCESS: Loaded {len(proxies)} proxies (no validation)")
+        else:
+            print("WARNING: No proxies loaded - continuing without proxies")
+    else:
+        print("DISABLED: Proxy usage disabled")
     
     # Process stocks
     print(f"\nStarting to process {len(symbols)} symbols...")
@@ -274,7 +352,7 @@ def main():
             for i, symbol in enumerate(symbols, 1):
                 if shutdown_flag:
                     break
-                future = executor.submit(process_symbol, symbol, i, args.timeout)
+                future = executor.submit(process_symbol, symbol, i, proxies, args.timeout)
                 future_to_symbol[future] = symbol
             
             print(f"Submitted {len(future_to_symbol)} tasks. Processing...")
@@ -330,6 +408,9 @@ def main():
     if elapsed > 0:
         print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
     
+    if proxies:
+        print(f"PROXY STATS: Used {len(proxies)} proxies (no validation)")
+    
     # Save results
     if results:
         if args.output:
@@ -344,6 +425,9 @@ def main():
                 'timestamp': datetime.now().isoformat(),
                 'csv_file': args.csv,
                 'test_mode': args.test,
+                'use_proxies': not args.noproxy,
+                'proxy_file': args.proxy_file,
+                'proxies_loaded': len(proxies),
                 'threads': args.threads,
                 'timeout': args.timeout,
                 'max_symbols': args.max_symbols,
