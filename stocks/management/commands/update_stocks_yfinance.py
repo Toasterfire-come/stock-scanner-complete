@@ -33,6 +33,14 @@ if os.path.exists(XAMPP_MYSQL_PATH) and XAMPP_MYSQL_PATH not in os.environ.get('
     os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
     print(f"INFO: Added XAMPP MySQL to PATH for stock updates: {XAMPP_MYSQL_PATH}")
 
+# Configure PyMySQL for MySQL compatibility
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    print("PyMySQL configured for MySQL compatibility")
+except ImportError:
+    print("PyMySQL not available")
+
 logger = logging.getLogger(__name__)
 
 # Global flag for graceful shutdown

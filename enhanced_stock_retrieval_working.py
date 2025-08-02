@@ -26,7 +26,7 @@ from decimal import Decimal
 
 # Django imports for database integration
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stock_scanner.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
 django.setup()
 
 from django.utils import timezone
