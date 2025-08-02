@@ -38,16 +38,6 @@ logger = logging.getLogger(__name__)
 # Global flag for graceful shutdown
 shutdown_flag = False
 
-def signal_handler(signum, frame):
-    """Handle interrupt signals gracefully"""
-    global shutdown_flag
-    print("\nReceived interrupt signal. Shutting down gracefully...")
-    shutdown_flag = True
-
-# Register signal handlers
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
-
 class Command(BaseCommand):
     help = 'Enhanced stock data update with 3-minute auto-scheduler and NYSE focus - WORKING VERSION'
 
@@ -123,6 +113,16 @@ class Command(BaseCommand):
         """Main command handler"""
         global shutdown_flag
         
+        # Set up signal handlers for this command
+        def signal_handler(signum, frame):
+            global shutdown_flag
+            self.stdout.write("\nReceived interrupt signal. Shutting down gracefully...")
+            shutdown_flag = True
+        
+        # Register signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
         if options['schedule']:
             self._run_scheduler(options)
         elif options['startup']:
@@ -188,7 +188,12 @@ class Command(BaseCommand):
         else:
             # Use the working approach from enhanced_stock_retrieval_working.py
             csv_file = options['csv']
-            symbols = self.load_nyse_symbols(csv_file, test_mode=False, max_symbols=options['limit'])
+            try:
+                symbols = self.load_nyse_symbols(csv_file, test_mode=False, max_symbols=options['limit'])
+            except Exception as e:
+                self.stdout.write(f"ERROR: Failed to load symbols from {csv_file}: {e}")
+                self.stdout.write("Falling back to test symbols...")
+                symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA']  # Fallback symbols
         
         if not symbols:
             self.stdout.write("ERROR: No symbols loaded. Exiting.")
@@ -401,6 +406,7 @@ class Command(BaseCommand):
         """Process a single symbol with comprehensive data collection and Django integration"""
         global shutdown_flag
         
+        # Check shutdown flag at the start
         if shutdown_flag:
             return None
             
@@ -469,44 +475,46 @@ class Command(BaseCommand):
                 self.stdout.write(f"[NO DATA] {symbol}: No data available")
                 return None
             
-            # Extract comprehensive data with better PE ratio and dividend yield handling
-            stock_data = {
-                'symbol': symbol,
-                'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                'current_price': self._safe_decimal(current_price) if current_price else None,
-                'previous_close': self._safe_decimal(info.get('previousClose')) if info else None,
-                'open_price': self._safe_decimal(info.get('regularMarketOpen')) if info else None,
-                'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
-                'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
-                'volume': self._safe_decimal(info.get('volume')) if info else None,
-                'volume_today': self._safe_decimal(info.get('volume')) if info else None,
-                'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
-                'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
-                'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
-                'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
-                'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
-                'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
-                'beta': self._safe_decimal(info.get('beta')) if info else None,
-                'exchange': info.get('exchange') if info else None,
-                'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
-                'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
-                'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
-                'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
-                'price_change_today': None,
-                'change_percent': None,
-                'price_change_week': None,
-                'price_change_month': None,
-                'price_change_year': None,
-                'pe_change_3mon': None,
-                'market_cap_change_3mon': None,
-                'bid_price': None,
-                'ask_price': None,
-                'bid_ask_spread': None,
-                'shares_available': None,
-                'dvav': None,
-                'last_updated': timezone.now(),
-                'created_at': timezone.now()
-            }
+                         # Extract comprehensive data with better PE ratio and dividend yield handling
+             stock_data = {
+                 'ticker': symbol,  # Use ticker as the primary key
+                 'symbol': symbol,   # Keep symbol for compatibility
+                 'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+                 'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+                 'current_price': self._safe_decimal(current_price) if current_price else None,
+                 'previous_close': self._safe_decimal(info.get('previousClose')) if info else None,
+                 'open_price': self._safe_decimal(info.get('regularMarketOpen')) if info else None,
+                 'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
+                 'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
+                 'volume': self._safe_decimal(info.get('volume')) if info else None,
+                 'volume_today': self._safe_decimal(info.get('volume')) if info else None,
+                 'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
+                 'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
+                 'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
+                 'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
+                 'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
+                 'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
+                 'beta': self._safe_decimal(info.get('beta')) if info else None,
+                 'exchange': info.get('exchange') if info else None,
+                 'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
+                 'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
+                 'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
+                 'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
+                 'price_change_today': None,
+                 'change_percent': None,
+                 'price_change_week': None,
+                 'price_change_month': None,
+                 'price_change_year': None,
+                 'pe_change_3mon': None,
+                 'market_cap_change_3mon': None,
+                 'bid_price': None,
+                 'ask_price': None,
+                 'bid_ask_spread': None,
+                 'shares_available': None,
+                 'dvav': None,
+                 'last_updated': timezone.now(),
+                 'created_at': timezone.now()
+             }
             
             # Calculate price changes if historical data available
             if has_data and len(hist) > 1:
@@ -531,21 +539,19 @@ class Command(BaseCommand):
             
             # Save to database if not in test mode
             if not test_mode:
-                try:
-                    # Create or update Stock object
-                    stock, created = Stock.objects.update_or_create(
-                        symbol=symbol,
-                        defaults=stock_data
-                    )
+                                 try:
+                     # Create or update Stock object
+                     stock, created = Stock.objects.update_or_create(
+                         ticker=symbol,  # Use ticker as the lookup field
+                         defaults=stock_data
+                     )
                     
-                    # Create StockPrice record
-                    if stock_data.get('current_price'):
-                        StockPrice.objects.create(
-                            stock=stock,
-                            price=stock_data['current_price'],
-                            volume=stock_data.get('volume_today'),
-                            date=timezone.now()
-                        )
+                                         # Create StockPrice record
+                     if stock_data.get('current_price'):
+                         StockPrice.objects.create(
+                             stock=stock,
+                             price=stock_data['current_price']
+                         )
                     
                     # Log successful data extraction (only every 50th success to reduce noise)
                     if ticker_number % 50 == 0:
@@ -598,7 +604,9 @@ class Command(BaseCommand):
             with ThreadPoolExecutor(max_workers=num_threads) as executor:
                 future_to_symbol = {}
                 for i, symbol in enumerate(symbols, 1):
+                    # Check shutdown flag before submitting each task
                     if shutdown_flag:
+                        self.stdout.write("Shutdown requested. Cancelling task submission...")
                         break
                     future = executor.submit(self.process_symbol, symbol, i, proxies, timeout, test_mode)
                     future_to_symbol[future] = symbol
