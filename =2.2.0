@@ -1,5 +1,0 @@
-Collecting mysqlclient
-  Using cached mysqlclient-2.2.7-cp313-cp313-win_amd64.whl.metadata (4.8 kB)
-Using cached mysqlclient-2.2.7-cp313-cp313-win_amd64.whl (208 kB)
-Installing collected packages: mysqlclient
-Successfully installed mysqlclient-2.2.7

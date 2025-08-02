@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import List, Dict, Set, Optional, Tuple
 import re
 from io import StringIO
+from proxy_manager import ProxyManager  # Add this import
 
 class CompleteNasdaqDownloader:
     """Downloads complete NASDAQ ticker list from multiple sources"""
@@ -34,6 +35,7 @@ class CompleteNasdaqDownloader:
         self.nasdaq_tickers = set()
         self.ticker_details = {}
         self.errors = []
+        self.proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
 
     def print_header(self, title: str):
         """Print formatted header"""
@@ -66,10 +68,30 @@ class CompleteNasdaqDownloader:
             }
             
             self.print_info("Fetching complete NASDAQ ticker data from API...")
-            response = requests.get(self.base_url, headers=self.headers, params=params, timeout=30)
-            
-            if response.status_code != 200:
-                self.print_error(f"API request failed: {response.status_code}")
+            attempt = 0
+            max_attempts = 5
+            ticker_number = 0  # For proxy rotation
+            while attempt < max_attempts:
+                proxy = self.proxy_manager.get_proxy_for_ticker(ticker_number)
+                proxies = {'http': proxy, 'https': proxy} if proxy else None
+                try:
+                    response = requests.get(self.base_url, headers=self.headers, params=params, timeout=30, proxies=proxies)
+                    if response.status_code == 200:
+                        break
+                    else:
+                        self.print_error(f"API request failed: {response.status_code}")
+                        if proxy:
+                            self.proxy_manager.mark_proxy_failed(proxy)
+                        attempt += 1
+                        ticker_number += 1
+                except Exception as e:
+                    self.print_error(f"Request error: {e}")
+                    if proxy:
+                        self.proxy_manager.mark_proxy_failed(proxy)
+                    attempt += 1
+                    ticker_number += 1
+            else:
+                self.print_error("All proxy attempts failed.")
                 return False
             
             data = response.json()
