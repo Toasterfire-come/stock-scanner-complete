@@ -86,6 +86,8 @@ class StockSchedulerManager:
         logger.info("[TIME] Schedule: Updates every 3 minutes")
         logger.info("[TARGET] Target: NASDAQ-listed securities only")
         logger.info("[POWER] Mode: Multithreaded processing")
+        logger.info("[PID] Process ID: %s", os.getpid())
+        logger.info("[TIME] Started at: %s", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         try:
             # Start the scheduler with startup mode (runs initial update then schedules)
@@ -194,13 +196,13 @@ cd /d "{self.project_root}"
 
 def main():
     """Main startup function"""
-    print("=" * 70)
-    print(">> STOCK SCANNER AUTO-STARTUP")
-    print("=" * 70)
-    print(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(">> Target: NASDAQ-listed securities")
-    print(">> Schedule: Every 3 minutes")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info(">> STOCK SCANNER AUTO-STARTUP")
+    logger.info("=" * 70)
+    logger.info(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(">> Target: NASDAQ-listed securities")
+    logger.info(">> Schedule: Every 3 minutes")
+    logger.info("=" * 70)
 
     manager = StockSchedulerManager()
 
@@ -239,12 +241,19 @@ if __name__ == "__main__":
     
     if background_mode:
         print("[BACKGROUND] Starting Stock Scanner in background mode...")
-        print("[BACKGROUND] Process will run silently - check stock_scheduler.log for updates")
+        print("[BACKGROUND] Process will run silently - check stock_scheduler_background.log for updates")
         print("[BACKGROUND] To stop: Use Task Manager to end this Python process")
         
-        # Minimize console output in background mode
+        # Set up proper logging for background mode
         import logging
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('stock_scheduler_background.log', mode='a'),
+                logging.StreamHandler()
+            ]
+        )
         
         # Redirect stdout to log file for background operation
         log_file = open('stock_scheduler_background.log', 'a')
