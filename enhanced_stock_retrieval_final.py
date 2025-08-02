@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Enhanced Stock Retrieval Script
+Enhanced Stock Retrieval Script - FINAL WORKING VERSION
 Uses entire NYSE CSV, filters delisted stocks, supports production settings
-Command line options: -noproxy, -test (100 first tickers)
+Command line options: -noproxy, -test (100 first tickers), -threads, -timeout
 """
 
 import os
@@ -14,30 +14,44 @@ import csv
 import argparse
 import yfinance as yf
 import pandas as pd
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 import requests
 from proxy_manager import ProxyManager
 from datetime import datetime
 import logging
+import signal
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('enhanced_stock_retrieval.log'),
+        logging.FileHandler('enhanced_stock_retrieval_final.log'),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
 
+# Global flag for graceful shutdown
+shutdown_flag = False
+
+def signal_handler(signum, frame):
+    """Handle interrupt signals gracefully"""
+    global shutdown_flag
+    print("\nReceived interrupt signal. Shutting down gracefully...")
+    shutdown_flag = True
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 def parse_arguments():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script')
+    parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script - FINAL')
     parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=30, help='Number of threads (default: 30)')
-    parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
+    parser.add_argument('-threads', type=int, default=10, help='Number of threads (default: 10)')
+    parser.add_argument('-timeout', type=int, default=8, help='Request timeout in seconds (default: 8)')
     parser.add_argument('-csv', type=str, default='flat-ui__data-Fri Aug 01 2025.csv', 
                        help='NYSE CSV file path (default: flat-ui__data-Fri Aug 01 2025.csv)')
     parser.add_argument('-output', type=str, default=None, 
@@ -119,15 +133,24 @@ def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     
     return symbols
 
-def process_symbol(symbol, ticker_number, proxy_manager, timeout=10):
+def process_symbol(symbol, ticker_number, proxy_manager, timeout=8):
     """Process a single symbol with comprehensive data collection"""
+    global shutdown_flag
+    
+    if shutdown_flag:
+        return None
+        
     try:
         # Get proxy for this ticker
         proxy = None
         if proxy_manager:
-            proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
-            if proxy and ticker_number <= 5:  # Show proxy info for first 5 tickers
-                logger.info(f"{symbol}: Using proxy {proxy}")
+            try:
+                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
+                if proxy and ticker_number <= 5:  # Show proxy info for first 5 tickers
+                    logger.info(f"{symbol}: Using proxy {proxy}")
+            except Exception as e:
+                logger.warning(f"Proxy error for {symbol}: {e}")
+                proxy = None
         
         patch_yfinance_proxy(proxy)
         
@@ -241,9 +264,11 @@ def process_symbol(symbol, ticker_number, proxy_manager, timeout=10):
 
 def main():
     """Main function"""
+    global shutdown_flag
+    
     args = parse_arguments()
     
-    print("ENHANCED STOCK RETRIEVAL SCRIPT")
+    print("ENHANCED STOCK RETRIEVAL SCRIPT - FINAL WORKING VERSION")
     print("=" * 60)
     print(f"Configuration:")
     print(f"  CSV File: {args.csv}")
@@ -251,6 +276,7 @@ def main():
     print(f"  Use Proxies: {not args.noproxy}")
     print(f"  Threads: {args.threads}")
     print(f"  Timeout: {args.timeout}s")
+    print(f"  Max Symbols: {args.max_symbols or 'All'}")
     print("=" * 60)
     
     # Load NYSE symbols
@@ -303,6 +329,8 @@ def main():
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             future_to_symbol = {}
             for i, symbol in enumerate(symbols, 1):
+                if shutdown_flag:
+                    break
                 future = executor.submit(process_symbol, symbol, i, proxy_manager, args.timeout)
                 future_to_symbol[future] = symbol
             
@@ -310,6 +338,10 @@ def main():
             completed = 0
             
             for future in as_completed(future_to_symbol):
+                if shutdown_flag:
+                    print("Shutdown requested. Cancelling remaining tasks...")
+                    break
+                    
                 symbol = future_to_symbol[future]
                 completed += 1
                 
@@ -337,6 +369,7 @@ def main():
     
     except KeyboardInterrupt:
         print("\nInterrupted by user. Shutting down gracefully...")
+        shutdown_flag = True
     except Exception as e:
         print(f"ERROR: Thread pool execution failed: {e}")
     
@@ -348,13 +381,18 @@ def main():
     print("=" * 60)
     print(f"SUCCESSFUL: {successful}")
     print(f"FAILED: {failed}")
-    print(f"SUCCESS RATE: {(successful/len(symbols)*100):.1f}%")
+    if len(symbols) > 0:
+        print(f"SUCCESS RATE: {(successful/len(symbols)*100):.1f}%")
     print(f"TIME: {elapsed:.2f}s")
-    print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
+    if elapsed > 0:
+        print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
     
     if proxy_manager:
-        final_stats = proxy_manager.get_proxy_stats()
-        print(f"PROXY STATS: {final_stats}")
+        try:
+            final_stats = proxy_manager.get_proxy_stats()
+            print(f"PROXY STATS: {final_stats}")
+        except:
+            pass
     
     # Save results
     if results:
@@ -363,7 +401,7 @@ def main():
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             mode = "test" if args.test else "full"
-            filename = f"enhanced_stock_retrieval_{mode}_{timestamp}.json"
+            filename = f"enhanced_stock_retrieval_final_{mode}_{timestamp}.json"
         
         output_data = {
             'scan_info': {
@@ -373,27 +411,31 @@ def main():
                 'use_proxies': not args.noproxy,
                 'threads': args.threads,
                 'timeout': args.timeout,
+                'max_symbols': args.max_symbols,
                 'total_symbols': len(symbols),
                 'successful': successful,
                 'failed': failed,
-                'success_rate': f"{(successful/len(symbols)*100):.1f}%",
+                'success_rate': f"{(successful/len(symbols)*100):.1f}%" if len(symbols) > 0 else "0%",
                 'elapsed_time': f"{elapsed:.2f}s",
-                'rate': f"{len(symbols)/elapsed:.2f} symbols/sec"
+                'rate': f"{len(symbols)/elapsed:.2f} symbols/sec" if elapsed > 0 else "0 symbols/sec"
             },
             'stocks': results
         }
         
-        with open(filename, 'w') as f:
-            json.dump(output_data, f, indent=2, default=str)
-        
-        print(f"\nSUCCESS: Results saved to {filename}")
-        print(f"Total stocks processed: {len(results)}")
-        
-        # Show some sample results
-        if results:
-            print(f"\nSample Results:")
-            for i, stock in enumerate(results[:5]):
-                print(f"  {i+1}. {stock['symbol']}: ${stock.get('current_price', 'N/A')} - {stock.get('company_name', 'N/A')}")
+        try:
+            with open(filename, 'w') as f:
+                json.dump(output_data, f, indent=2, default=str)
+            
+            print(f"\nSUCCESS: Results saved to {filename}")
+            print(f"Total stocks processed: {len(results)}")
+            
+            # Show some sample results
+            if results:
+                print(f"\nSample Results:")
+                for i, stock in enumerate(results[:5]):
+                    print(f"  {i+1}. {stock['symbol']}: ${stock.get('current_price', 'N/A')} - {stock.get('company_name', 'N/A')}")
+        except Exception as e:
+            print(f"ERROR: Failed to save results: {e}")
     else:
         print("\nWARNING: No results to save")
     
