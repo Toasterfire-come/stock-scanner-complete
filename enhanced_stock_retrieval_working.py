@@ -309,44 +309,44 @@ def process_symbol(symbol, ticker_number, proxies, timeout=10, test_mode=False, 
             logger.warning(f"{symbol}: No data available")
             return None
         
-                     # Extract comprehensive data with better PE ratio and dividend yield handling
-             stock_data = {
-                 'ticker': symbol,  # Use ticker as the primary key
-                 'symbol': symbol,   # Keep symbol for compatibility
-                 'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                 'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                 'current_price': _safe_decimal(current_price) if current_price else None,
-                 'price_change_today': None,
-                 'price_change_week': None,
-                 'price_change_month': None,
-                 'price_change_year': None,
-                 'change_percent': None,
-                 'bid_price': None,
-                 'ask_price': None,
-                 'bid_ask_spread': '',  # Empty string instead of None for CharField
-                 'days_range': '',  # Empty string instead of None for CharField
-                 'days_low': _safe_decimal(info.get('dayLow')) if info else None,
-                 'days_high': _safe_decimal(info.get('dayHigh')) if info else None,
-                 'volume': _safe_decimal(info.get('volume')) if info else None,
-                 'volume_today': _safe_decimal(info.get('volume')) if info else None,
-                 'avg_volume_3mon': _safe_decimal(info.get('averageVolume')) if info else None,
-                 'dvav': None,
-                 'shares_available': None,
-                 'market_cap': _safe_decimal(info.get('marketCap')) if info else None,
-                 'market_cap_change_3mon': None,
-                 'pe_ratio': _safe_decimal(_extract_pe_ratio(info)) if info else None,
-                 'pe_change_3mon': None,
-                 'dividend_yield': _safe_decimal(_extract_dividend_yield(info)) if info else None,
-                 'one_year_target': _safe_decimal(info.get('targetMeanPrice')) if info else None,
-                 'week_52_low': _safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
-                 'week_52_high': _safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
-                 'earnings_per_share': _safe_decimal(info.get('trailingEps')) if info else None,
-                 'book_value': _safe_decimal(info.get('bookValue')) if info else None,
-                 'price_to_book': _safe_decimal(info.get('priceToBook')) if info else None,
-                 'exchange': info.get('exchange') if info else None,
-                 'last_updated': timezone.now(),
-                 'created_at': timezone.now()
-             }
+                # Extract comprehensive data with better PE ratio and dividend yield handling
+        stock_data = {
+            'ticker': symbol,  # Use ticker as the primary key
+            'symbol': symbol,   # Keep symbol for compatibility
+            'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+            'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+            'current_price': _safe_decimal(current_price) if current_price else None,
+            'price_change_today': None,
+            'price_change_week': None,
+            'price_change_month': None,
+            'price_change_year': None,
+            'change_percent': None,
+            'bid_price': None,
+            'ask_price': None,
+            'bid_ask_spread': '',  # Empty string instead of None for CharField
+            'days_range': '',  # Empty string instead of None for CharField
+            'days_low': _safe_decimal(info.get('dayLow')) if info else None,
+            'days_high': _safe_decimal(info.get('dayHigh')) if info else None,
+            'volume': _safe_decimal(info.get('volume')) if info else None,
+            'volume_today': _safe_decimal(info.get('volume')) if info else None,
+            'avg_volume_3mon': _safe_decimal(info.get('averageVolume')) if info else None,
+            'dvav': None,
+            'shares_available': None,
+            'market_cap': _safe_decimal(info.get('marketCap')) if info else None,
+            'market_cap_change_3mon': None,
+            'pe_ratio': _safe_decimal(_extract_pe_ratio(info)) if info else None,
+            'pe_change_3mon': None,
+            'dividend_yield': _safe_decimal(_extract_dividend_yield(info)) if info else None,
+            'one_year_target': _safe_decimal(info.get('targetMeanPrice')) if info else None,
+            'week_52_low': _safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
+            'week_52_high': _safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
+            'earnings_per_share': _safe_decimal(info.get('trailingEps')) if info else None,
+            'book_value': _safe_decimal(info.get('bookValue')) if info else None,
+            'price_to_book': _safe_decimal(info.get('priceToBook')) if info else None,
+            'exchange': info.get('exchange') if info else None,
+            'last_updated': timezone.now(),
+            'created_at': timezone.now()
+        }
         
         # Calculate price changes if historical data available
         if has_data and len(hist) > 1:
