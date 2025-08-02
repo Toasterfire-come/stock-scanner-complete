@@ -608,6 +608,11 @@ class Command(BaseCommand):
                                 # Log price save errors but don't fail the whole process
                                 pass
                         
+                        # Log successful data extraction
+                        pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                        dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                        self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                        
                         update_counters(True)
                         return True
                         
@@ -616,7 +621,11 @@ class Command(BaseCommand):
                         update_counters(False)
                         return False
                 else:
-                    # Test mode - just return success
+                    # Test mode - log the data without saving
+                    pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                    dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                    self.stdout.write(f"[TEST] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                    
                     update_counters(True)
                     return True
                     
