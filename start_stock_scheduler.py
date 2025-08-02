@@ -78,14 +78,25 @@ class StockSchedulerManager:
         logger.info("[STATS] Checking if initial data load is needed...")
 
         try:
-            # Check if we have stock data
+            # Check if we have stock data - use a more robust approach
             result = subprocess.run([
                 str(self.venv_python), str(self.manage_py), 'shell', '-c',
-                'from stocks.models import Stock; print(Stock.objects.count())'
+                'from stocks.models import Stock; count = Stock.objects.count(); print(f"STOCK_COUNT:{count}")'
             ], capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
-                stock_count = int(result.stdout.strip())
+                # Parse the output to find the stock count
+                output_lines = result.stdout.strip().split('\n')
+                stock_count = 0
+                
+                for line in output_lines:
+                    if line.startswith('STOCK_COUNT:'):
+                        try:
+                            stock_count = int(line.split(':')[1])
+                            break
+                        except (ValueError, IndexError):
+                            continue
+                
                 logger.info(f"[PROGRESS] Found {stock_count} stocks in database")
 
                 if stock_count < 50:  # If less than 50 stocks, load NASDAQ data
@@ -103,6 +114,7 @@ class StockSchedulerManager:
 
         except Exception as e:
             logger.warning(f"[WARNING]  Could not check/load initial data: {e}")
+            logger.info("[INFO] Continuing without initial data load check")
 
     def start_scheduler(self):
         """Start the stock data scheduler"""
