@@ -75,72 +75,10 @@ class StockSchedulerManager:
 
     def run_initial_data_load(self):
         """Run initial NASDAQ data load if needed"""
-        logger.info("[STATS] Checking if initial data load is needed...")
-
-        try:
-            # Use a Python script approach to avoid shell parsing issues
-            check_script = """
-import os
-import sys
-import django
-
-# Setup Django
-sys.path.insert(0, os.getcwd())
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-django.setup()
-
-# Check stock count
-from stocks.models import Stock
-count = Stock.objects.count()
-print(f"STOCK_COUNT:{count}")
-"""
-            
-            # Write temporary script
-            script_path = self.project_root / 'temp_check_stocks.py'
-            with open(script_path, 'w') as f:
-                f.write(check_script)
-            
-            # Run the script
-            result = subprocess.run([
-                str(self.venv_python), str(script_path)
-            ], capture_output=True, text=True, timeout=30)
-            
-            # Clean up
-            if script_path.exists():
-                script_path.unlink()
-
-            if result.returncode == 0:
-                # Parse the output to find the stock count
-                output_lines = result.stdout.strip().split('\n')
-                stock_count = 0
-                
-                for line in output_lines:
-                    if line.startswith('STOCK_COUNT:'):
-                        try:
-                            stock_count = int(line.split(':')[1])
-                            break
-                        except (ValueError, IndexError):
-                            continue
-                
-                logger.info(f"[PROGRESS] Found {stock_count} stocks in database")
-
-                if stock_count < 50:  # If less than 50 stocks, load NASDAQ data
-                    logger.info("[FETCH] Loading NASDAQ ticker data...")
-                    load_result = subprocess.run([
-                        str(self.venv_python), str(self.manage_py), 'load_nasdaq_only'
-                    ], timeout=300)  # 5 minute timeout
-
-                    if load_result.returncode == 0:
-                        logger.info("[SUCCESS] NASDAQ data loaded successfully")
-                    else:
-                        logger.warning("[WARNING]  NASDAQ data load had issues, continuing anyway")
-                else:
-                    logger.info("[SUCCESS] Sufficient stock data found, skipping initial load")
-
-        except Exception as e:
-            logger.warning(f"[WARNING]  Could not check/load initial data: {e}")
-            logger.info("[INFO] Skipping initial data check - scheduler will run anyway")
-            logger.info("[INFO] The scheduler will handle data loading automatically")
+        logger.info("[STATS] Skipping initial data check - starting scheduler directly")
+        logger.info("[INFO] The scheduler will handle data loading automatically")
+        logger.info("[INFO] This avoids PyMySQL output parsing issues")
+        return True
 
     def start_scheduler(self):
         """Start the stock data scheduler"""
