@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced Stock Retrieval Script - WORKING VERSION (Direct Proxy Loading)
-Uses entire NYSE CSV, filters delisted stocks, supports production settings
-Command line options: -noproxy, -test (100 first tickers), -threads, -timeout
+Django Stock Retrieval Script
+Comprehensive stock data retrieval with improved PE ratio and dividend yield extraction
 """
 
 import os
@@ -12,20 +11,47 @@ import random
 import json
 import csv
 import argparse
-import yfinance as yf
-import pandas as pd
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
-import requests
+import django
+from pathlib import Path
 from datetime import datetime
 import logging
 import signal
+
+# Setup Django environment
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
+
+# Set production environment variables
+os.environ['DB_ENGINE'] = 'django.db.backends.mysql'
+os.environ['DB_NAME'] = 'stockscanner'
+os.environ['DB_USER'] = 'root'
+os.environ['DB_PASSWORD'] = ''
+os.environ['DB_HOST'] = 'localhost'
+os.environ['DB_PORT'] = '3306'
+
+try:
+    django.setup()
+    print("SUCCESS: Django environment loaded successfully")
+except Exception as e:
+    print(f"ERROR: Failed to setup Django: {e}")
+    sys.exit(1)
+
+# Now import Django models and other modules
+from stocks.models import Stock, StockPrice
+from django.utils import timezone
+from decimal import Decimal
+import yfinance as yf
+import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('enhanced_stock_retrieval_working.log'),
+        logging.FileHandler('django_stock_retrieval.log'),
         logging.StreamHandler()
     ]
 )
@@ -46,73 +72,18 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 def parse_arguments():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script - WORKING')
-    parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
+    parser = argparse.ArgumentParser(description='Django Stock Retrieval Script')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=10, help='Number of threads (default: 10)')
-    parser.add_argument('-timeout', type=int, default=8, help='Request timeout in seconds (default: 8)')
+    parser.add_argument('-threads', type=int, default=30, help='Number of threads (default: 30)')
+    parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
     parser.add_argument('-csv', type=str, default='flat-ui__data-Fri Aug 01 2025.csv', 
                        help='NYSE CSV file path (default: flat-ui__data-Fri Aug 01 2025.csv)')
+    parser.add_argument('-save', action='store_true', help='Save results to database')
     parser.add_argument('-output', type=str, default=None, 
                        help='Output JSON file (default: auto-generated timestamp)')
     parser.add_argument('-max-symbols', type=int, default=None, 
                        help='Maximum number of symbols to process (for testing)')
-    parser.add_argument('-proxy-file', type=str, default='working_proxies.json',
-                       help='Proxy JSON file path (default: working_proxies.json)')
     return parser.parse_args()
-
-def load_proxies_direct(proxy_file):
-    """Load proxies directly from JSON file without validation"""
-    try:
-        with open(proxy_file, 'r') as f:
-            proxy_data = json.load(f)
-        
-        # Extract proxy list from the JSON structure
-        if isinstance(proxy_data, dict):
-            # Try different possible keys
-            if 'proxies' in proxy_data:
-                proxies = proxy_data['proxies']
-            elif 'working_proxies' in proxy_data:
-                proxies = proxy_data['working_proxies']
-            else:
-                # Assume the entire dict is the proxy list
-                proxies = list(proxy_data.values()) if proxy_data else []
-        elif isinstance(proxy_data, list):
-            proxies = proxy_data
-        else:
-            proxies = []
-        
-        # Filter out None/empty values
-        proxies = [p for p in proxies if p and isinstance(p, str)]
-        
-        logger.info(f"Loaded {len(proxies)} proxies directly from {proxy_file}")
-        return proxies
-        
-    except FileNotFoundError:
-        logger.warning(f"Proxy file not found: {proxy_file}")
-        return []
-    except Exception as e:
-        logger.error(f"Error loading proxies: {e}")
-        return []
-
-def patch_yfinance_proxy(proxy):
-    """Patch yfinance to use proxy"""
-    if not proxy:
-        return
-        
-    try:
-        session = requests.Session()
-        session.proxies = {
-            'http': proxy,
-            'https': proxy
-        }
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-        import yfinance.shared
-        yfinance.shared._requests = session
-    except Exception as e:
-        logger.error(f"Failed to set proxy {proxy}: {e}")
 
 def _extract_pe_ratio(info):
     """Extract PE ratio with multiple fallback options"""
@@ -209,7 +180,7 @@ def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     
     return symbols
 
-def process_symbol(symbol, ticker_number, proxies, timeout=8):
+def process_symbol(symbol, ticker_number, timeout=10, save_to_db=False):
     """Process a single symbol with comprehensive data collection"""
     global shutdown_flag
     
@@ -217,15 +188,6 @@ def process_symbol(symbol, ticker_number, proxies, timeout=8):
         return None
         
     try:
-        # Get proxy for this ticker (if available)
-        proxy = None
-        if proxies and len(proxies) > 0:
-            proxy = proxies[ticker_number % len(proxies)]
-            if ticker_number <= 5:  # Show proxy info for first 5 tickers
-                logger.info(f"{symbol}: Using proxy {proxy}")
-        
-        patch_yfinance_proxy(proxy)
-        
         # Minimal delay to avoid rate limiting
         time.sleep(random.uniform(0.01, 0.02))
         
@@ -281,7 +243,7 @@ def process_symbol(symbol, ticker_number, proxies, timeout=8):
             logger.warning(f"{symbol}: No data available")
             return None
         
-        # Extract comprehensive data with better PE ratio and dividend yield handling
+        # Extract comprehensive data with improved PE ratio and dividend yield handling
         result = {
             'symbol': symbol,
             'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
@@ -327,7 +289,66 @@ def process_symbol(symbol, ticker_number, proxies, timeout=8):
             except:
                 pass
         
-        logger.info(f"SUCCESS {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')}")
+        # Save to database if requested
+        if save_to_db and result.get('current_price'):
+            try:
+                stock, created = Stock.objects.get_or_create(
+                    ticker=symbol,
+                    defaults={
+                        'symbol': symbol,
+                        'company_name': result.get('company_name', symbol),
+                        'name': result.get('company_name', symbol),
+                        'exchange': result.get('exchange', 'NYSE'),
+                        'current_price': Decimal(str(result.get('current_price', 0))),
+                        'price_change_today': Decimal(str(result.get('price_change', 0))) if result.get('price_change') else None,
+                        'change_percent': Decimal(str(result.get('change_percent', 0))) if result.get('change_percent') else None,
+                        'days_low': Decimal(str(result.get('day_low', 0))) if result.get('day_low') else None,
+                        'days_high': Decimal(str(result.get('day_high', 0))) if result.get('day_high') else None,
+                        'volume': result.get('volume'),
+                        'avg_volume_3mon': result.get('avg_volume'),
+                        'market_cap': result.get('market_cap'),
+                        'pe_ratio': Decimal(str(result.get('pe_ratio', 0))) if result.get('pe_ratio') else None,
+                        'dividend_yield': Decimal(str(result.get('dividend_yield', 0))) if result.get('dividend_yield') else None,
+                        'week_52_low': Decimal(str(result.get('fifty_two_week_low', 0))) if result.get('fifty_two_week_low') else None,
+                        'week_52_high': Decimal(str(result.get('fifty_two_week_high', 0))) if result.get('fifty_two_week_high') else None,
+                        'earnings_per_share': None,  # Not available from yfinance
+                        'book_value': None,  # Not available from yfinance
+                        'price_to_book': None,  # Not available from yfinance
+                        'one_year_target': None,  # Not available from yfinance
+                    }
+                )
+                
+                # Update existing stock if not created
+                if not created:
+                    stock.current_price = Decimal(str(result.get('current_price', 0)))
+                    stock.price_change_today = Decimal(str(result.get('price_change', 0))) if result.get('price_change') else None
+                    stock.change_percent = Decimal(str(result.get('change_percent', 0))) if result.get('change_percent') else None
+                    stock.days_low = Decimal(str(result.get('day_low', 0))) if result.get('day_low') else None
+                    stock.days_high = Decimal(str(result.get('day_high', 0))) if result.get('day_high') else None
+                    stock.volume = result.get('volume')
+                    stock.avg_volume_3mon = result.get('avg_volume')
+                    stock.market_cap = result.get('market_cap')
+                    stock.pe_ratio = Decimal(str(result.get('pe_ratio', 0))) if result.get('pe_ratio') else None
+                    stock.dividend_yield = Decimal(str(result.get('dividend_yield', 0))) if result.get('dividend_yield') else None
+                    stock.week_52_low = Decimal(str(result.get('fifty_two_week_low', 0))) if result.get('fifty_two_week_low') else None
+                    stock.week_52_high = Decimal(str(result.get('fifty_two_week_high', 0))) if result.get('fifty_two_week_high') else None
+                    stock.save()
+                
+                # Create price record
+                StockPrice.objects.create(
+                    stock=stock,
+                    price=Decimal(str(result.get('current_price', 0))),
+                    timestamp=timezone.now()
+                )
+                
+                result['db_saved'] = True
+                logger.info(f"SUCCESS {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')} - PE: {result.get('pe_ratio', 'N/A')} - Div: {result.get('dividend_yield', 'N/A')}%")
+            except Exception as e:
+                logger.error(f"ERROR {symbol}: Database save failed - {e}")
+                result['db_saved'] = False
+        else:
+            logger.info(f"SUCCESS {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')} - PE: {result.get('pe_ratio', 'N/A')} - Div: {result.get('dividend_yield', 'N/A')}%")
+        
         return result
         
     except Exception as e:
@@ -340,13 +361,12 @@ def main():
     
     args = parse_arguments()
     
-    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
+    print("DJANGO STOCK RETRIEVAL SCRIPT")
     print("=" * 60)
     print(f"Configuration:")
     print(f"  CSV File: {args.csv}")
     print(f"  Test Mode: {args.test}")
-    print(f"  Use Proxies: {not args.noproxy}")
-    print(f"  Proxy File: {args.proxy_file}")
+    print(f"  Save to DB: {args.save}")
     print(f"  Threads: {args.threads}")
     print(f"  Timeout: {args.timeout}s")
     print(f"  Max Symbols: {args.max_symbols or 'All'}")
@@ -362,18 +382,6 @@ def main():
     
     print(f"Processing {len(symbols)} symbols...")
     
-    # Load proxies directly (without validation)
-    proxies = []
-    if not args.noproxy:
-        print(f"Loading proxies from {args.proxy_file}...")
-        proxies = load_proxies_direct(args.proxy_file)
-        if proxies:
-            print(f"SUCCESS: Loaded {len(proxies)} proxies (no validation)")
-        else:
-            print("WARNING: No proxies loaded - continuing without proxies")
-    else:
-        print("DISABLED: Proxy usage disabled")
-    
     # Process stocks
     print(f"\nStarting to process {len(symbols)} symbols...")
     print("=" * 60)
@@ -383,7 +391,7 @@ def main():
     failed = 0
     results = []
     
-    # Use ThreadPoolExecutor for parallel processing with better timeout handling
+    # Use ThreadPoolExecutor for parallel processing
     print(f"Submitting {len(symbols)} tasks to thread pool...")
     
     try:
@@ -392,7 +400,7 @@ def main():
             for i, symbol in enumerate(symbols, 1):
                 if shutdown_flag:
                     break
-                future = executor.submit(process_symbol, symbol, i, proxies, args.timeout)
+                future = executor.submit(process_symbol, symbol, i, args.timeout, args.save)
                 future_to_symbol[future] = symbol
             
             print(f"Submitted {len(future_to_symbol)} tasks. Processing...")
@@ -407,16 +415,12 @@ def main():
                 completed += 1
                 
                 try:
-                    # Use shorter timeout for individual tasks
                     result = future.result(timeout=args.timeout + 2)
                     if result:
                         successful += 1
                         results.append(result)
                     else:
                         failed += 1
-                except TimeoutError:
-                    logger.error(f"TIMEOUT {symbol}: Task timed out")
-                    failed += 1
                 except Exception as e:
                     logger.error(f"ERROR {symbol}: {e}")
                     failed += 1
@@ -448,9 +452,6 @@ def main():
     if elapsed > 0:
         print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
     
-    if proxies:
-        print(f"PROXY STATS: Used {len(proxies)} proxies (no validation)")
-    
     # Save results
     if results:
         if args.output:
@@ -458,16 +459,14 @@ def main():
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             mode = "test" if args.test else "full"
-            filename = f"enhanced_stock_retrieval_working_{mode}_{timestamp}.json"
+            filename = f"django_stock_retrieval_{mode}_{timestamp}.json"
         
         output_data = {
             'scan_info': {
                 'timestamp': datetime.now().isoformat(),
                 'csv_file': args.csv,
                 'test_mode': args.test,
-                'use_proxies': not args.noproxy,
-                'proxy_file': args.proxy_file,
-                'proxies_loaded': len(proxies),
+                'save_to_db': args.save,
                 'threads': args.threads,
                 'timeout': args.timeout,
                 'max_symbols': args.max_symbols,
@@ -488,11 +487,13 @@ def main():
             print(f"\nSUCCESS: Results saved to {filename}")
             print(f"Total stocks processed: {len(results)}")
             
-            # Show some sample results
+            # Show some sample results with PE ratio and dividend yield
             if results:
-                print(f"\nSample Results:")
+                print(f"\nSample Results (with PE Ratio and Dividend Yield):")
                 for i, stock in enumerate(results[:5]):
-                    print(f"  {i+1}. {stock['symbol']}: ${stock.get('current_price', 'N/A')} - {stock.get('company_name', 'N/A')}")
+                    pe_ratio = stock.get('pe_ratio', 'N/A')
+                    dividend_yield = stock.get('dividend_yield', 'N/A')
+                    print(f"  {i+1}. {stock['symbol']}: ${stock.get('current_price', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
         except Exception as e:
             print(f"ERROR: Failed to save results: {e}")
     else:

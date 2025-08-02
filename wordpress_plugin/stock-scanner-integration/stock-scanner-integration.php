@@ -70,6 +70,9 @@ class StockScannerIntegration {
         add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
         add_action('pmpro_checkout_preheader', array($this, 'detect_user_location'));
         add_filter('pmpro_checkout_order', array($this, 'add_tax_to_order'), 10, 1);
+        
+        // Include PayPal integration
+        require_once plugin_dir_path(__FILE__) . 'includes/class-paypal-integration.php';
     }
     
     public function init() {
@@ -83,12 +86,22 @@ class StockScannerIntegration {
     
     public function enqueue_scripts() {
         wp_enqueue_script('stock-scanner-js', plugin_dir_url(__FILE__) . 'assets/stock-scanner.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_script('paypal-integration', plugin_dir_url(__FILE__) . 'assets/paypal-integration.js', array('jquery'), '1.0.0', true);
         wp_enqueue_style('stock-scanner-css', plugin_dir_url(__FILE__) . 'assets/stock-scanner.css', array(), '1.0.0');
         
         // Localize script for AJAX
         wp_localize_script('stock-scanner-js', 'stock_scanner_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('stock_scanner_nonce')
+        ));
+        
+        // Localize PayPal script
+        wp_localize_script('paypal-integration', 'paypalConfig', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('paypal_nonce'),
+            'clientId' => get_option('paypal_client_id', ''),
+            'successUrl' => get_option('paypal_return_url', ''),
+            'cancelUrl' => get_option('paypal_cancel_url', '')
         ));
     }
     
@@ -187,8 +200,9 @@ class StockScannerIntegration {
         $limits = array(
             0 => 15,    // Free
             1 => 15,    // Free
-            2 => 1000,  // Premium
-            3 => 10000  // Professional
+            2 => 1000,  // Bronze
+            3 => 5000,  // Silver
+            4 => 10000  // Gold
         );
         
         $limit = isset($limits[$user_level]) ? $limits[$user_level] : 15;
@@ -199,8 +213,9 @@ class StockScannerIntegration {
         $limits = array(
             0 => 15,    // Free
             1 => 15,    // Free
-            2 => 1000,  // Premium
-            3 => 10000  // Professional
+            2 => 1000,  // Bronze
+            3 => 5000,  // Silver
+            4 => 10000  // Gold
         );
         
         return isset($limits[$user_level]) ? $limits[$user_level] : 15;
@@ -218,15 +233,21 @@ class StockScannerIntegration {
                 
                 <div class="membership-options">
                     <div class="membership-tier">
-                        <h4>Premium - $9.99/month</h4>
+                        <h4>Bronze - $14.99/month</h4>
                         <p>1,000 stocks per month</p>
-                        <a href="<?php echo pmpro_url('checkout', '?level=2'); ?>" class="btn btn-premium">Upgrade to Premium</a>
+                        <a href="<?php echo pmpro_url('checkout', '?level=2'); ?>" class="btn btn-bronze">Upgrade to Bronze</a>
                     </div>
                     
                     <div class="membership-tier">
-                        <h4>Professional - $29.99/month</h4>
+                        <h4>Silver - $29.99/month</h4>
+                        <p>5,000 stocks per month</p>
+                        <a href="<?php echo pmpro_url('checkout', '?level=3'); ?>" class="btn btn-silver">Upgrade to Silver</a>
+                    </div>
+                    
+                    <div class="membership-tier">
+                        <h4>Gold - $59.99/month</h4>
                         <p>10,000 stocks per month</p>
-                        <a href="<?php echo pmpro_url('checkout', '?level=3'); ?>" class="btn btn-professional">Upgrade to Professional</a>
+                        <a href="<?php echo pmpro_url('checkout', '?level=4'); ?>" class="btn btn-gold">Upgrade to Gold</a>
                     </div>
                 </div>
             </div>
