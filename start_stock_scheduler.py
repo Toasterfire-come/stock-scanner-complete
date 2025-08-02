@@ -75,39 +75,15 @@ class StockSchedulerManager:
 
     def run_initial_data_load(self):
         """Run initial NASDAQ data load if needed"""
-        logger.info("[STATS] Checking if initial data load is needed...")
-
-        try:
-            # Check if we have stock data
-            result = subprocess.run([
-                str(self.venv_python), str(self.manage_py), 'shell', '-c',
-                'from stocks.models import Stock; print(Stock.objects.count())'
-            ], capture_output=True, text=True, timeout=30)
-
-            if result.returncode == 0:
-                stock_count = int(result.stdout.strip())
-                logger.info(f"[PROGRESS] Found {stock_count} stocks in database")
-
-                if stock_count < 50:  # If less than 50 stocks, load NASDAQ data
-                    logger.info("[FETCH] Loading NASDAQ ticker data...")
-                    load_result = subprocess.run([
-                        str(self.venv_python), str(self.manage_py), 'load_nasdaq_only'
-                    ], timeout=300)  # 5 minute timeout
-
-                    if load_result.returncode == 0:
-                        logger.info("[SUCCESS] NASDAQ data loaded successfully")
-                    else:
-                        logger.warning("[WARNING]  NASDAQ data load had issues, continuing anyway")
-                else:
-                    logger.info("[SUCCESS] Sufficient stock data found, skipping initial load")
-
-        except Exception as e:
-            logger.warning(f"[WARNING]  Could not check/load initial data: {e}")
+        logger.info("[STATS] Skipping initial data check - starting scheduler directly")
+        logger.info("[INFO] The scheduler will handle data loading automatically")
+        logger.info("[INFO] This avoids PyMySQL output parsing issues")
+        return True
 
     def start_scheduler(self):
         """Start the stock data scheduler"""
         logger.info("[START] Starting NASDAQ stock data scheduler...")
-        logger.info("[TIME] Schedule: Updates every 5 minutes")
+        logger.info("[TIME] Schedule: Updates every 3 minutes")
         logger.info("[TARGET] Target: NASDAQ-listed securities only")
         logger.info("[POWER] Mode: Multithreaded processing")
 
@@ -223,7 +199,7 @@ def main():
     print("=" * 70)
     print(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(">> Target: NASDAQ-listed securities")
-    print(">> Schedule: Every 5 minutes")
+    print(">> Schedule: Every 3 minutes")
     print("=" * 70)
 
     manager = StockSchedulerManager()
