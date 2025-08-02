@@ -1,6 +1,6 @@
 """
 Django Management Command: Enhanced Stock Data Update using YFinance
-Auto-scheduler every 5 minutes with NASDAQ-only focus and comprehensive data retrieval
+Auto-scheduler every 3 minutes with NASDAQ-only focus and comprehensive data retrieval
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -34,7 +34,7 @@ if os.path.exists(XAMPP_MYSQL_PATH) and XAMPP_MYSQL_PATH not in os.environ.get('
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Enhanced stock data update with 5-minute auto-scheduler and NYSE focus'
+    help = 'Enhanced stock data update with 3-minute auto-scheduler and NYSE focus'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--schedule',
             action='store_true',
-            help='Run scheduler mode (updates every 5 minutes continuously)'
+            help='Run scheduler mode (updates every 3 minutes continuously)'
         )
         parser.add_argument(
             '--startup',
@@ -112,17 +112,17 @@ class Command(BaseCommand):
             self._run_single_update(options)
 
     def _run_scheduler(self, options):
-        """Run continuous scheduler every 5 minutes"""
+        """Run continuous scheduler every 3 minutes"""
         self.stdout.write(self.style.SUCCESS(" ENHANCED NYSE SCHEDULER STARTED"))
         self.stdout.write("=" * 70)
-        self.stdout.write(" Schedule: Every 5 minutes")
+        self.stdout.write(" Schedule: Every 3 minutes")
         self.stdout.write("[TARGET] Target: NYSE tickers only")
         self.stdout.write(" Mode: Continuous updates")
         self.stdout.write(" Multithreading: Enabled")
         self.stdout.write(" Press Ctrl+C to stop the scheduler\n")
 
-        # Schedule the job every 5 minutes
-        schedule.every(5).minutes.do(self._run_single_update, options)
+        # Schedule the job every 3 minutes
+        schedule.every(3).minutes.do(self._run_single_update, options)
         
         # Show next run time
         next_run = schedule.next_run()

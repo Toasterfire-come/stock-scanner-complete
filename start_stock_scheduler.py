@@ -107,7 +107,7 @@ class StockSchedulerManager:
     def start_scheduler(self):
         """Start the stock data scheduler"""
         logger.info("[START] Starting NASDAQ stock data scheduler...")
-        logger.info("[TIME] Schedule: Updates every 5 minutes")
+        logger.info("[TIME] Schedule: Updates every 3 minutes")
         logger.info("[TARGET] Target: NASDAQ-listed securities only")
         logger.info("[POWER] Mode: Multithreaded processing")
 
@@ -223,7 +223,7 @@ def main():
     print("=" * 70)
     print(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(">> Target: NASDAQ-listed securities")
-    print(">> Schedule: Every 5 minutes")
+    print(">> Schedule: Every 3 minutes")
     print("=" * 70)
 
     manager = StockSchedulerManager()
