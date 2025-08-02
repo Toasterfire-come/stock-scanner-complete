@@ -403,7 +403,14 @@ class Command(BaseCommand):
                 if proxy_file.exists():
                     with open(proxy_file, 'r') as f:
                         proxy_data = json.load(f)
-                        proxies = [proxy['proxy'] for proxy in proxy_data if proxy.get('proxy')]
+                        # Handle different JSON structures
+                        if isinstance(proxy_data, list):
+                            proxies = [proxy['proxy'] for proxy in proxy_data if isinstance(proxy, dict) and proxy.get('proxy')]
+                        elif isinstance(proxy_data, dict):
+                            # If it's a dict with proxy list
+                            proxies = proxy_data.get('proxies', [])
+                        else:
+                            proxies = []
                     self.stdout.write(f"[PROXY] Loaded {len(proxies)} proxies from working_proxies.json")
                     self.stdout.write(f"[PROXY] Skipping validation for speed")
                 else:
