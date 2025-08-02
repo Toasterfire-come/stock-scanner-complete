@@ -67,8 +67,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--threads',
             type=int,
-            default=100,
-            help='Number of concurrent threads (default: 100)'
+            default=30,
+            help='Number of concurrent threads (default: 30)'
         )
         parser.add_argument(
             '--delay',
@@ -478,7 +478,7 @@ class Command(BaseCommand):
                 proxy = None
                 if proxies and len(proxies) > 0:
                     proxy = proxies[ticker_number % len(proxies)]  # Rotate through proxies
-                    if ticker_number <= 5: # Show proxy info for first 5 tickers
+                    if ticker_number <= 3: # Show proxy info for first 3 tickers only
                         self.stdout.write(f"[PROXY] {symbol}: Using proxy {proxy}")
                 
                 # Set up yfinance with proxy (with better error handling)
@@ -619,10 +619,11 @@ class Command(BaseCommand):
                                 # Log price save errors but don't fail the whole process
                                 pass
                         
-                        # Log successful data extraction
-                        pe_ratio = stock_data.get('pe_ratio', 'N/A')
-                        dividend_yield = stock_data.get('dividend_yield', 'N/A')
-                        self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                        # Log successful data extraction (only every 10th success to reduce noise)
+                        if ticker_number % 10 == 0:
+                            pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                            dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                            self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
                         
                         update_counters(True)
                         return True
@@ -632,10 +633,11 @@ class Command(BaseCommand):
                         update_counters(False)
                         return False
                 else:
-                    # Test mode - log the data without saving
-                    pe_ratio = stock_data.get('pe_ratio', 'N/A')
-                    dividend_yield = stock_data.get('dividend_yield', 'N/A')
-                    self.stdout.write(f"[TEST] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                    # Test mode - log the data without saving (only every 10th to reduce noise)
+                    if ticker_number % 10 == 0:
+                        pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                        dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                        self.stdout.write(f"[TEST] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
                     
                     update_counters(True)
                     return True
