@@ -72,6 +72,46 @@ def parse_arguments():
                        help='Output JSON file (default: auto-generated timestamp)')
     return parser.parse_args()
 
+def _extract_pe_ratio(info):
+    """Extract PE ratio with multiple fallback options"""
+    if not info:
+        return None
+    
+    # Try multiple PE ratio fields
+    pe_fields = ['trailingPE', 'forwardPE', 'priceToBook', 'priceToSalesTrailing12Months']
+    
+    for field in pe_fields:
+        value = info.get(field)
+        if value is not None and value != 0 and not pd.isna(value):
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                continue
+    
+    return None
+
+def _extract_dividend_yield(info):
+    """Extract dividend yield with proper formatting"""
+    if not info:
+        return None
+    
+    # Try multiple dividend yield fields
+    dividend_fields = ['dividendYield', 'fiveYearAvgDividendYield', 'trailingAnnualDividendYield']
+    
+    for field in dividend_fields:
+        value = info.get(field)
+        if value is not None and not pd.isna(value):
+            try:
+                # Convert to percentage if it's a decimal
+                if isinstance(value, float) and value < 1:
+                    return float(value * 100)
+                else:
+                    return float(value)
+            except (ValueError, TypeError):
+                continue
+    
+    return None
+
 def patch_yfinance_proxy(proxy):
     """Patch yfinance to use proxy"""
     if not proxy:
@@ -198,7 +238,7 @@ def process_symbol(symbol, ticker_number, proxy_manager, timeout=10, save_to_db=
             logger.warning(f"{symbol}: No data available")
             return None
         
-        # Extract comprehensive data
+        # Extract comprehensive data with improved PE ratio and dividend yield handling
         result = {
             'symbol': symbol,
             'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
@@ -210,8 +250,8 @@ def process_symbol(symbol, ticker_number, proxy_manager, timeout=10, save_to_db=
             'volume': info.get('volume') if info else None,
             'avg_volume': info.get('averageVolume') if info else None,
             'market_cap': info.get('marketCap') if info else None,
-            'pe_ratio': info.get('trailingPE') if info else None,
-            'dividend_yield': info.get('dividendYield') if info else None,
+            'pe_ratio': _extract_pe_ratio(info),
+            'dividend_yield': _extract_dividend_yield(info),
             'fifty_two_week_low': info.get('fiftyTwoWeekLow') if info else None,
             'fifty_two_week_high': info.get('fiftyTwoWeekHigh') if info else None,
             'beta': info.get('beta') if info else None,
