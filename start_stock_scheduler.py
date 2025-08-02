@@ -98,16 +98,22 @@ class StockSchedulerManager:
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
             logger.info(f"[DATE] Scheduler started with PID: {process.pid}")
+            logger.info("[INFO] Waiting for scheduler to start processing...")
 
             # Monitor the process
             try:
+                logger.info("[MONITOR] Monitoring scheduler output...")
                 while True:
                     output = process.stdout.readline()
                     if output:
-                        print(output.strip())
+                        output_line = output.strip()
+                        if output_line:  # Only log non-empty lines
+                            logger.info(f"[SCHEDULER] {output_line}")
+                            print(f"[SCHEDULER] {output_line}")  # Also print to console
 
                     # Check if process is still running
                     if process.poll() is not None:
+                        logger.warning("[WARNING] Scheduler process ended unexpectedly")
                         break
 
                     time.sleep(1)
