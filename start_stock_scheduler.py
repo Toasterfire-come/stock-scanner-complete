@@ -205,7 +205,7 @@ def main():
     logger.info(">> STOCK SCANNER AUTO-STARTUP")
     logger.info("=" * 70)
     logger.info(f">> Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            logger.info(">> Target: NYSE-listed securities")
+    logger.info(">> Target: NYSE-listed securities")
     logger.info(">> Schedule: Every 3 minutes")
     logger.info("=" * 70)
 
