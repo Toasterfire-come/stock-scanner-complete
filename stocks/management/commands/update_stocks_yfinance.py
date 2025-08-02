@@ -619,8 +619,8 @@ class Command(BaseCommand):
                                 # Log price save errors but don't fail the whole process
                                 pass
                         
-                        # Log successful data extraction (only every 10th success to reduce noise)
-                        if ticker_number % 10 == 0:
+                        # Log successful data extraction (only every 50th success to reduce noise)
+                        if ticker_number % 50 == 0:
                             pe_ratio = stock_data.get('pe_ratio', 'N/A')
                             dividend_yield = stock_data.get('dividend_yield', 'N/A')
                             self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
@@ -633,8 +633,8 @@ class Command(BaseCommand):
                         update_counters(False)
                         return False
                 else:
-                    # Test mode - log the data without saving (only every 10th to reduce noise)
-                    if ticker_number % 10 == 0:
+                    # Test mode - log the data without saving (only every 50th to reduce noise)
+                    if ticker_number % 50 == 0:
                         pe_ratio = stock_data.get('pe_ratio', 'N/A')
                         dividend_yield = stock_data.get('dividend_yield', 'N/A')
                         self.stdout.write(f"[TEST] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
@@ -681,7 +681,7 @@ class Command(BaseCommand):
                     elapsed = time.time() - start_time
                     self.stdout.write(f"[PROGRESS] {progress['current']}/{total_symbols} ({percent:.1f}%) - {elapsed:.1f}s elapsed")
                     self.stdout.flush()  # Force output
-                    stop_flag.wait(10)
+                    stop_flag.wait(30)
                 except Exception as e:
                     self.stdout.write(f"[PROGRESS ERROR] {e}")
                     break
@@ -737,7 +737,7 @@ class Command(BaseCommand):
                     
                     try:
                         result = future.result(timeout=5)  # Reduced timeout to 5 seconds
-                        if completed <= 10:  # Show first 10 results
+                        if completed <= 5:  # Show first 5 results
                             self.stdout.write(f"[RESULT] {symbol}: {'SUCCESS' if result else 'FAILED'}")
                             self.stdout.flush()
                     except concurrent.futures.TimeoutError:
@@ -752,16 +752,16 @@ class Command(BaseCommand):
                     # Update progress
                     progress['current'] = completed
                     
-                    # Show progress every 100 completed tasks
-                    if completed % 100 == 0 or completed == total_symbols:
+                    # Show progress every 200 completed tasks
+                    if completed % 200 == 0 or completed == total_symbols:
                         progress_percent = (completed / total_symbols) * 100
                         elapsed = time.time() - start_time
                         rate = completed / elapsed if elapsed > 0 else 0
                         self.stdout.write(f"[STATS] Progress: {completed}/{total_symbols} ({progress_percent:.1f}%) - {elapsed:.1f}s elapsed - {rate:.1f} symbols/sec")
                         self.stdout.flush()
                     
-                    # Pause every 1000 symbols
-                    if completed % 1000 == 0 and completed > 0:
+                    # Pause every 2000 symbols
+                    if completed % 2000 == 0 and completed > 0:
                         if proxy_manager:
                             stats = proxy_manager.get_proxy_stats()
                             self.stdout.write(f"[PAUSE] Pausing for 10s after {completed} tickers...")
