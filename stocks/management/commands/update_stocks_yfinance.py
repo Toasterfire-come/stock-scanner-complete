@@ -562,25 +562,29 @@ class Command(BaseCommand):
                     except:
                         pass
                 
-                # Extract comprehensive data from info (with safe fallbacks)
+                # Extract comprehensive data from info (with safe fallbacks) - only use fields that exist in the model
                 stock_data = {
                     'ticker': symbol,
+                    'symbol': symbol,  # Keep for compatibility
+                    'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
                     'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                    'sector': info.get('sector', 'Unknown') if info else 'Unknown',
-                    'industry': info.get('industry', 'Unknown') if info else 'Unknown',
-                    'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
+                    'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
                     'current_price': self._safe_decimal(current_price) if current_price else None,
-                    'price_change': self._safe_decimal(price_change_today) if price_change_today else None,
+                    'price_change_today': self._safe_decimal(price_change_today) if price_change_today else None,
                     'change_percent': self._safe_decimal(change_percent) if change_percent else None,
+                    'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
+                    'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
                     'volume': self._safe_decimal(info.get('volume', hist['Volume'].iloc[-1] if has_data and 'Volume' in hist.columns else None)) if (info or has_data) else None,
-                    'avg_volume': self._safe_decimal(info.get('averageVolume')) if info else None,
+                    'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
+                    'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
                     'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
                     'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
-                    'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
-                    'currency': info.get('currency', 'USD') if info else 'USD',
-                    'country': info.get('country', 'US') if info else 'US',
-                    'is_active': True,
-                    'last_updated': timezone.now()
+                    'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
+                    'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
+                    'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
+                    'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
+                    'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
+                    'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
                 }
                 
                 # Save to database if not in test mode
