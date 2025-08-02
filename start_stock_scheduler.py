@@ -93,7 +93,7 @@ class StockSchedulerManager:
             # Updated to 3500 stocks limit with enhanced error handling
             process = subprocess.Popen([
                 str(self.venv_python), str(self.manage_py),
-                'update_stocks_yfinance', '--startup', '--limit', '3500', '--threads', '30'
+                'update_stocks_yfinance', '--startup', '--limit', '3500', '--threads', '30', '--timeout', '8'
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
             logger.info(f"[DATE] Scheduler started with PID: {process.pid}")
