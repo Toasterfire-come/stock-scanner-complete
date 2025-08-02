@@ -200,8 +200,9 @@ class StockScannerIntegration {
         $limits = array(
             0 => 15,    // Free
             1 => 15,    // Free
-            2 => 1000,  // Premium
-            3 => 10000  // Professional
+            2 => 1000,  // Bronze
+            3 => 5000,  // Silver
+            4 => 10000  // Gold
         );
         
         $limit = isset($limits[$user_level]) ? $limits[$user_level] : 15;
@@ -212,8 +213,9 @@ class StockScannerIntegration {
         $limits = array(
             0 => 15,    // Free
             1 => 15,    // Free
-            2 => 1000,  // Premium
-            3 => 10000  // Professional
+            2 => 1000,  // Bronze
+            3 => 5000,  // Silver
+            4 => 10000  // Gold
         );
         
         return isset($limits[$user_level]) ? $limits[$user_level] : 15;
@@ -231,15 +233,21 @@ class StockScannerIntegration {
                 
                 <div class="membership-options">
                     <div class="membership-tier">
-                        <h4>Premium - $9.99/month</h4>
+                        <h4>Bronze - $14.99/month</h4>
                         <p>1,000 stocks per month</p>
-                        <a href="<?php echo pmpro_url('checkout', '?level=2'); ?>" class="btn btn-premium">Upgrade to Premium</a>
+                        <a href="<?php echo pmpro_url('checkout', '?level=2'); ?>" class="btn btn-bronze">Upgrade to Bronze</a>
                     </div>
                     
                     <div class="membership-tier">
-                        <h4>Professional - $29.99/month</h4>
+                        <h4>Silver - $29.99/month</h4>
+                        <p>5,000 stocks per month</p>
+                        <a href="<?php echo pmpro_url('checkout', '?level=3'); ?>" class="btn btn-silver">Upgrade to Silver</a>
+                    </div>
+                    
+                    <div class="membership-tier">
+                        <h4>Gold - $59.99/month</h4>
                         <p>10,000 stocks per month</p>
-                        <a href="<?php echo pmpro_url('checkout', '?level=3'); ?>" class="btn btn-professional">Upgrade to Professional</a>
+                        <a href="<?php echo pmpro_url('checkout', '?level=4'); ?>" class="btn btn-gold">Upgrade to Gold</a>
                     </div>
                 </div>
             </div>

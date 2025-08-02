@@ -183,14 +183,12 @@
      */
     function updatePlanDisplay(plan, billingCycle) {
         const prices = {
-            'bronze_monthly': 9.99,
-            'bronze_annual': 95.88,
-            'silver_monthly': 19.99,
-            'silver_annual': 191.88,
-            'gold_monthly': 39.99,
-            'gold_annual': 383.88,
-            'platinum_monthly': 79.99,
-            'platinum_annual': 767.88
+            'bronze_monthly': 14.99,
+            'bronze_annual': 143.88,
+            'silver_monthly': 29.99,
+            'silver_annual': 287.88,
+            'gold_monthly': 59.99,
+            'gold_annual': 575.88
         };
         
         const key = plan + '_' + billingCycle;

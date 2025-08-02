@@ -29,12 +29,11 @@ if (!defined('ABSPATH')) {
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label for="membership-plan" class="form-label">Select Plan</label>
-                                <select id="membership-plan" class="form-select plan-selector">
-                                    <option value="bronze">Bronze Plan</option>
-                                    <option value="silver">Silver Plan</option>
-                                    <option value="gold">Gold Plan</option>
-                                    <option value="platinum">Platinum Plan</option>
-                                </select>
+                                                                    <select id="membership-plan" class="form-select plan-selector">
+                                        <option value="bronze">Bronze Plan</option>
+                                        <option value="silver">Silver Plan</option>
+                                        <option value="gold">Gold Plan</option>
+                                    </select>
                             </div>
                             <div class="col-md-6">
                                 <label for="billing-cycle" class="form-label">Billing Cycle</label>
@@ -53,7 +52,7 @@ if (!defined('ABSPATH')) {
                                         <span id="plan-name">Bronze Monthly</span>
                                     </h5>
                                     <div class="price-display">
-                                        <span class="h3 text-primary">$<span id="plan-price">9.99</span></span>
+                                        <span class="h3 text-primary">$<span id="plan-price">14.99</span></span>
                                         <span class="text-muted" id="billing-period">/month</span>
                                     </div>
                                     <div class="plan-features mt-3">
@@ -248,14 +247,12 @@ if (!defined('ABSPATH')) {
 <script>
 // Plan pricing data
 const planPrices = {
-    'bronze_monthly': 9.99,
-    'bronze_annual': 95.88,
-    'silver_monthly': 19.99,
-    'silver_annual': 191.88,
-    'gold_monthly': 39.99,
-    'gold_annual': 383.88,
-    'platinum_monthly': 79.99,
-    'platinum_annual': 767.88
+    'bronze_monthly': 14.99,
+    'bronze_annual': 143.88,
+    'silver_monthly': 29.99,
+    'silver_annual': 287.88,
+    'gold_monthly': 59.99,
+    'gold_annual': 575.88
 };
 
 // Update plan display when selections change
