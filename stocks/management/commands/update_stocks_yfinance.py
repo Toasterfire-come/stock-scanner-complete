@@ -394,42 +394,27 @@ class Command(BaseCommand):
         successful = 0
         failed = 0
         
-        # Initialize proxy manager only if not disabled
-        proxy_manager = None
+        # Load proxies directly from JSON file (non-validating approach)
+        proxies = []
         if not no_proxy:
             try:
-                proxy_manager = ProxyManager(min_proxies=50, max_proxies=200)
-                stats = proxy_manager.get_proxy_stats()
-                if stats['total_working'] > 0:
-                    self.stdout.write(f"[PROXY] Proxy manager initialized with {stats['total_working']} working proxies")
-                    self.stdout.write(f"[PROXY] Available: {stats['available']}, Used: {stats['used_in_run']}")
+                import json
+                proxy_file = Path('working_proxies.json')
+                if proxy_file.exists():
+                    with open(proxy_file, 'r') as f:
+                        proxy_data = json.load(f)
+                        proxies = [proxy['proxy'] for proxy in proxy_data if proxy.get('proxy')]
+                    self.stdout.write(f"[PROXY] Loaded {len(proxies)} proxies from working_proxies.json")
+                    self.stdout.write(f"[PROXY] Skipping validation for speed")
                 else:
-                    self.stdout.write(f"[PROXY] No proxies available initially - will try to refresh during run")
-                    # Try to refresh the proxy pool
-                    try:
-                        count = proxy_manager.refresh_proxy_pool(force=True)
-                        if count > 0:
-                            stats = proxy_manager.get_proxy_stats()
-                            self.stdout.write(f"[PROXY] Refreshed pool: {stats['total_working']} working proxies")
-                        else:
-                            self.stdout.write(f"[PROXY] Failed to refresh proxy pool - continuing without proxies")
-                            proxy_manager = None
-                    except Exception as refresh_error:
-                        self.stdout.write(f"[PROXY] Refresh failed: {refresh_error} - continuing without proxies")
-                        proxy_manager = None
+                    self.stdout.write(f"[PROXY] No working_proxies.json found - running without proxies")
             except Exception as e:
-                self.stdout.write(f"[PROXY ERROR] Failed to initialize proxy manager: {e}")
+                self.stdout.write(f"[PROXY ERROR] Failed to load proxies: {e}")
                 self.stdout.write(f"[PROXY] Continuing without proxies")
-                proxy_manager = None
         else:
             self.stdout.write(f"[PROXY] Proxy usage disabled")
         
-        # Add fallback: if no proxies available, disable proxy usage
-        if proxy_manager:
-            stats = proxy_manager.get_proxy_stats()
-            if stats['total_working'] == 0:
-                self.stdout.write(f"[PROXY FALLBACK] No working proxies available - disabling proxy usage")
-                proxy_manager = None
+        proxy_manager = None  # We'll use direct proxy list instead
         
         self.stdout.flush()
         
@@ -482,20 +467,12 @@ class Command(BaseCommand):
         def process_symbol(symbol, ticker_number):
             """Process a single symbol with comprehensive data collection"""
             try:
-                # Get proxy for this ticker (switches every 200) - only if proxy manager exists
+                # Get proxy for this ticker from direct proxy list
                 proxy = None
-                if proxy_manager:
-                    proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
-                    if proxy and ticker_number <= 5: # Show proxy info for first 5 tickers
+                if proxies and len(proxies) > 0:
+                    proxy = proxies[ticker_number % len(proxies)]  # Rotate through proxies
+                    if ticker_number <= 5: # Show proxy info for first 5 tickers
                         self.stdout.write(f"[PROXY] {symbol}: Using proxy {proxy}")
-                    elif not proxy and ticker_number % 100 == 0:  # Try to refresh every 100 tickers if no proxies
-                        try:
-                            count = proxy_manager.refresh_proxy_pool(force=True)
-                            if count > 0:
-                                self.stdout.write(f"[PROXY] Refreshed pool during run: {count} new proxies")
-                                proxy = proxy_manager.get_proxy_for_ticker(ticker_number)
-                        except Exception as e:
-                            pass  # Silently continue without proxy
                 
                 # Set up yfinance with proxy (with better error handling)
                 try:
@@ -590,8 +567,8 @@ class Command(BaseCommand):
                     'change_percent': self._safe_decimal(change_percent) if change_percent else None,
                     'volume': self._safe_decimal(info.get('volume', hist['Volume'].iloc[-1] if has_data and 'Volume' in hist.columns else None)) if (info or has_data) else None,
                     'avg_volume': self._safe_decimal(info.get('averageVolume')) if info else None,
-                    'pe_ratio': self._safe_decimal(info.get('trailingPE')) if info else None,
-                    'dividend_yield': self._safe_decimal(info.get('dividendYield')) if info else None,
+                    'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
+                    'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
                     'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
                     'currency': info.get('currency', 'USD') if info else 'USD',
                     'country': info.get('country', 'US') if info else 'US',
@@ -804,6 +781,46 @@ class Command(BaseCommand):
             'failed': failed,
             'duration': time.time() - start_time
         }
+
+    def _extract_pe_ratio(self, info):
+        """Extract PE ratio with multiple fallback options"""
+        if not info:
+            return None
+        
+        # Try multiple PE ratio fields
+        pe_fields = ['trailingPE', 'forwardPE', 'priceToBook', 'priceToSalesTrailing12Months']
+        
+        for field in pe_fields:
+            value = info.get(field)
+            if value is not None and value != 0 and not pd.isna(value):
+                try:
+                    return float(value)
+                except (ValueError, TypeError):
+                    continue
+        
+        return None
+
+    def _extract_dividend_yield(self, info):
+        """Extract dividend yield with proper formatting"""
+        if not info:
+            return None
+        
+        # Try multiple dividend yield fields
+        dividend_fields = ['dividendYield', 'fiveYearAvgDividendYield', 'trailingAnnualDividendYield']
+        
+        for field in dividend_fields:
+            value = info.get(field)
+            if value is not None and not pd.isna(value):
+                try:
+                    # Convert to percentage if it's a decimal
+                    if isinstance(value, float) and value < 1:
+                        return float(value * 100)
+                    else:
+                        return float(value)
+                except (ValueError, TypeError):
+                    continue
+        
+        return None
 
     def _safe_decimal(self, value):
         """Safely convert value to Decimal, skip Infinity/NaN"""
