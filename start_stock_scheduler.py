@@ -78,11 +78,36 @@ class StockSchedulerManager:
         logger.info("[STATS] Checking if initial data load is needed...")
 
         try:
-            # Check if we have stock data - use a more robust approach
+            # Use a Python script approach to avoid shell parsing issues
+            check_script = """
+import os
+import sys
+import django
+
+# Setup Django
+sys.path.insert(0, os.getcwd())
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
+django.setup()
+
+# Check stock count
+from stocks.models import Stock
+count = Stock.objects.count()
+print(f"STOCK_COUNT:{count}")
+"""
+            
+            # Write temporary script
+            script_path = self.project_root / 'temp_check_stocks.py'
+            with open(script_path, 'w') as f:
+                f.write(check_script)
+            
+            # Run the script
             result = subprocess.run([
-                str(self.venv_python), str(self.manage_py), 'shell', '-c',
-                'from stocks.models import Stock; count = Stock.objects.count(); print(f"STOCK_COUNT:{count}")'
+                str(self.venv_python), str(script_path)
             ], capture_output=True, text=True, timeout=30)
+            
+            # Clean up
+            if script_path.exists():
+                script_path.unlink()
 
             if result.returncode == 0:
                 # Parse the output to find the stock count
@@ -114,7 +139,8 @@ class StockSchedulerManager:
 
         except Exception as e:
             logger.warning(f"[WARNING]  Could not check/load initial data: {e}")
-            logger.info("[INFO] Continuing without initial data load check")
+            logger.info("[INFO] Skipping initial data check - scheduler will run anyway")
+            logger.info("[INFO] The scheduler will handle data loading automatically")
 
     def start_scheduler(self):
         """Start the stock data scheduler"""
