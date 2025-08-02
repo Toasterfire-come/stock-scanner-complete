@@ -70,6 +70,9 @@ class StockScannerIntegration {
         add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
         add_action('pmpro_checkout_preheader', array($this, 'detect_user_location'));
         add_filter('pmpro_checkout_order', array($this, 'add_tax_to_order'), 10, 1);
+        
+        // Include PayPal integration
+        require_once plugin_dir_path(__FILE__) . 'includes/class-paypal-integration.php';
     }
     
     public function init() {
@@ -83,12 +86,22 @@ class StockScannerIntegration {
     
     public function enqueue_scripts() {
         wp_enqueue_script('stock-scanner-js', plugin_dir_url(__FILE__) . 'assets/stock-scanner.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_script('paypal-integration', plugin_dir_url(__FILE__) . 'assets/paypal-integration.js', array('jquery'), '1.0.0', true);
         wp_enqueue_style('stock-scanner-css', plugin_dir_url(__FILE__) . 'assets/stock-scanner.css', array(), '1.0.0');
         
         // Localize script for AJAX
         wp_localize_script('stock-scanner-js', 'stock_scanner_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('stock_scanner_nonce')
+        ));
+        
+        // Localize PayPal script
+        wp_localize_script('paypal-integration', 'paypalConfig', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('paypal_nonce'),
+            'clientId' => get_option('paypal_client_id', ''),
+            'successUrl' => get_option('paypal_return_url', ''),
+            'cancelUrl' => get_option('paypal_cancel_url', '')
         ));
     }
     
