@@ -1,6 +1,6 @@
 """
-Enhanced Yahoo Finance News Scraper
-Focuses only on Yahoo Finance news with comprehensive rating system
+Yahoo Finance News Scraper ONLY
+Focuses exclusively on Yahoo Finance RSS feeds with comprehensive rating
 """
 
 import requests
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class YahooFinanceNewsScraper:
-    """Enhanced Yahoo Finance News Scraper with comprehensive rating"""
+    """Yahoo Finance News Scraper ONLY - No other sources"""
     
     def __init__(self):
         """Initialize the scraper with headers and session"""
@@ -32,7 +32,7 @@ class YahooFinanceNewsScraper:
             'Upgrade-Insecure-Requests': '1',
         })
         
-        # Yahoo Finance RSS feeds
+        # Yahoo Finance RSS feeds ONLY
         self.yahoo_feeds = [
             'https://feeds.finance.yahoo.com/rss/2.0/headline',
             'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC',
@@ -203,11 +203,11 @@ class YahooFinanceNewsScraper:
             return 4
     
     def scrape_yahoo_finance_rss(self, feed_url: str, limit: int = 50) -> List[Dict]:
-        """Scrape Yahoo Finance RSS feed"""
+        """Scrape Yahoo Finance RSS feed ONLY"""
         articles = []
         
         try:
-            logger.info(f"Scraping RSS feed: {feed_url}")
+            logger.info(f"Scraping Yahoo Finance RSS feed: {feed_url}")
             feed = feedparser.parse(feed_url)
             
             for i, entry in enumerate(feed.entries[:limit]):
@@ -249,18 +249,18 @@ class YahooFinanceNewsScraper:
                     articles.append(article)
                     
                 except Exception as e:
-                    logger.error(f"Error processing RSS entry {i}: {e}")
+                    logger.error(f"Error processing Yahoo Finance RSS entry {i}: {e}")
                     continue
             
-            logger.info(f"Successfully scraped {len(articles)} articles from {feed_url}")
+            logger.info(f"Successfully scraped {len(articles)} articles from Yahoo Finance feed: {feed_url}")
             
         except Exception as e:
-            logger.error(f"Error scraping RSS feed {feed_url}: {e}")
+            logger.error(f"Error scraping Yahoo Finance RSS feed {feed_url}: {e}")
         
         return articles
     
     def scrape_all_yahoo_feeds(self, limit_per_feed: int = 50) -> List[Dict]:
-        """Scrape all Yahoo Finance RSS feeds"""
+        """Scrape all Yahoo Finance RSS feeds ONLY"""
         all_articles = []
         
         logger.info(f"Starting Yahoo Finance news scraping from {len(self.yahoo_feeds)} feeds...")
@@ -271,7 +271,7 @@ class YahooFinanceNewsScraper:
                 all_articles.extend(articles)
                 time.sleep(1)  # Be respectful to servers
             except Exception as e:
-                logger.error(f"Error scraping feed {feed_url}: {e}")
+                logger.error(f"Error scraping Yahoo Finance feed {feed_url}: {e}")
                 continue
         
         # Remove duplicates based on URL
@@ -283,7 +283,7 @@ class YahooFinanceNewsScraper:
                 unique_articles.append(article)
                 seen_urls.add(article['url'])
         
-        logger.info(f"Total unique articles scraped: {len(unique_articles)}")
+        logger.info(f"Total unique Yahoo Finance articles scraped: {len(unique_articles)}")
         return unique_articles
     
     def save_to_database(self, articles: List[Dict]) -> int:
@@ -295,13 +295,13 @@ class YahooFinanceNewsScraper:
         skipped_count = 0
         error_count = 0
         
-        logger.info(f"Attempting to save {len(articles)} articles to database...")
+        logger.info(f"Attempting to save {len(articles)} Yahoo Finance articles to database...")
         
         for i, article_data in enumerate(articles):
             try:
                 # Validate required fields
                 if not article_data.get('title') or not article_data.get('url'):
-                    logger.warning(f"Skipping article {i}: Missing title or URL")
+                    logger.warning(f"Skipping Yahoo Finance article {i}: Missing title or URL")
                     skipped_count += 1
                     continue
                 
@@ -341,10 +341,10 @@ class YahooFinanceNewsScraper:
                 
                 saved_count += 1
                 if saved_count % 10 == 0:
-                    logger.info(f"Saved {saved_count} articles so far...")
+                    logger.info(f"Saved {saved_count} Yahoo Finance articles so far...")
                 
             except Exception as e:
-                logger.error(f"Error saving article {i}: {e}")
+                logger.error(f"Error saving Yahoo Finance article {i}: {e}")
                 error_count += 1
                 continue
         
@@ -352,7 +352,7 @@ class YahooFinanceNewsScraper:
         return saved_count
 
 def run_yahoo_news_scraper():
-    """Main function to run the Yahoo Finance news scraper"""
+    """Main function to run the Yahoo Finance news scraper ONLY"""
     scraper = YahooFinanceNewsScraper()
     
     # Scrape articles
