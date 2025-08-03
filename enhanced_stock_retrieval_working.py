@@ -3,6 +3,7 @@
 Enhanced Stock Retrieval Script - WORKING VERSION (Direct Proxy Loading)
 Uses entire NYSE CSV, filters delisted stocks, supports production settings
 Command line options: -noproxy, -test (100 first tickers), -threads, -timeout
+Runs every 3 minutes in background with database integration
 """
 
 import os
@@ -19,6 +20,17 @@ import requests
 from datetime import datetime
 import logging
 import signal
+import schedule
+import threading
+from decimal import Decimal
+
+# Django imports for database integration
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
+django.setup()
+
+from django.utils import timezone
+from stocks.models import Stock, StockPrice
 
 # Setup logging
 logging.basicConfig(
@@ -49,8 +61,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script - WORKING')
     parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=10, help='Number of threads (default: 10)')
-    parser.add_argument('-timeout', type=int, default=8, help='Request timeout in seconds (default: 8)')
+    parser.add_argument('-threads', type=int, default=15, help='Number of threads (default: 15)')
+    parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
     parser.add_argument('-csv', type=str, default='flat-ui__data-Fri Aug 01 2025.csv', 
                        help='NYSE CSV file path (default: flat-ui__data-Fri Aug 01 2025.csv)')
     parser.add_argument('-output', type=str, default=None, 
@@ -59,7 +71,23 @@ def parse_arguments():
                        help='Maximum number of symbols to process (for testing)')
     parser.add_argument('-proxy-file', type=str, default='working_proxies.json',
                        help='Proxy JSON file path (default: working_proxies.json)')
+    parser.add_argument('-schedule', action='store_true', help='Run in scheduler mode (every 3 minutes)')
+    parser.add_argument('-save-to-db', action='store_true', default=True, help='Save results to database (default: True)')
     return parser.parse_args()
+
+def _safe_decimal(value):
+    """Safely convert value to Decimal, skip Infinity/NaN"""
+    if value is None or pd.isna(value):
+        return None
+    try:
+        if isinstance(value, (int, float)):
+            if pd.isna(value) or value == float('inf') or value == float('-inf'):
+                return None
+            return Decimal(str(value))
+        else:
+            return Decimal(str(value))
+    except (ValueError, TypeError, OverflowError):
+        return None
 
 def load_proxies_direct(proxy_file):
     """Load proxies directly from JSON file without validation"""
@@ -209,8 +237,8 @@ def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     
     return symbols
 
-def process_symbol(symbol, ticker_number, proxies, timeout=8):
-    """Process a single symbol with comprehensive data collection"""
+def process_symbol(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True):
+    """Process a single symbol with comprehensive data collection and database integration"""
     global shutdown_flag
     
     if shutdown_flag:
@@ -281,29 +309,43 @@ def process_symbol(symbol, ticker_number, proxies, timeout=8):
             logger.warning(f"{symbol}: No data available")
             return None
         
-        # Extract comprehensive data with better PE ratio and dividend yield handling
-        result = {
-            'symbol': symbol,
+                # Extract comprehensive data with better PE ratio and dividend yield handling
+        stock_data = {
+            'ticker': symbol,  # Use ticker as the primary key
+            'symbol': symbol,   # Keep symbol for compatibility
             'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-            'current_price': float(current_price) if current_price else None,
-            'previous_close': info.get('previousClose') if info else None,
-            'open_price': info.get('regularMarketOpen') if info else None,
-            'day_low': info.get('dayLow') if info else None,
-            'day_high': info.get('dayHigh') if info else None,
-            'volume': info.get('volume') if info else None,
-            'avg_volume': info.get('averageVolume') if info else None,
-            'market_cap': info.get('marketCap') if info else None,
-            'pe_ratio': _extract_pe_ratio(info),
-            'dividend_yield': _extract_dividend_yield(info),
-            'fifty_two_week_low': info.get('fiftyTwoWeekLow') if info else None,
-            'fifty_two_week_high': info.get('fiftyTwoWeekHigh') if info else None,
-            'beta': info.get('beta') if info else None,
-            'sector': info.get('sector') if info else None,
-            'industry': info.get('industry') if info else None,
+            'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+            'current_price': _safe_decimal(current_price) if current_price else None,
+            'price_change_today': None,
+            'price_change_week': None,
+            'price_change_month': None,
+            'price_change_year': None,
+            'change_percent': None,
+            'bid_price': None,
+            'ask_price': None,
+            'bid_ask_spread': '',  # Empty string instead of None for CharField
+            'days_range': '',  # Empty string instead of None for CharField
+            'days_low': _safe_decimal(info.get('dayLow')) if info else None,
+            'days_high': _safe_decimal(info.get('dayHigh')) if info else None,
+            'volume': _safe_decimal(info.get('volume')) if info else None,
+            'volume_today': _safe_decimal(info.get('volume')) if info else None,
+            'avg_volume_3mon': _safe_decimal(info.get('averageVolume')) if info else None,
+            'dvav': None,
+            'shares_available': None,
+            'market_cap': _safe_decimal(info.get('marketCap')) if info else None,
+            'market_cap_change_3mon': None,
+            'pe_ratio': _safe_decimal(_extract_pe_ratio(info)) if info else None,
+            'pe_change_3mon': None,
+            'dividend_yield': _safe_decimal(_extract_dividend_yield(info)) if info else None,
+            'one_year_target': _safe_decimal(info.get('targetMeanPrice')) if info else None,
+            'week_52_low': _safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
+            'week_52_high': _safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
+            'earnings_per_share': _safe_decimal(info.get('trailingEps')) if info else None,
+            'book_value': _safe_decimal(info.get('bookValue')) if info else None,
+            'price_to_book': _safe_decimal(info.get('priceToBook')) if info else None,
             'exchange': info.get('exchange') if info else None,
-            'currency': info.get('currency') if info else None,
-            'country': info.get('country') if info else None,
-            'timestamp': datetime.now().isoformat()
+            'last_updated': timezone.now(),
+            'created_at': timezone.now()
         }
         
         # Calculate price changes if historical data available
@@ -314,50 +356,73 @@ def process_symbol(symbol, ticker_number, proxies, timeout=8):
                 if current and previous:
                     change = current - previous
                     change_percent = (change / previous) * 100
-                    result['price_change'] = float(change)
-                    result['change_percent'] = float(change_percent)
+                    stock_data['price_change_today'] = _safe_decimal(change)
+                    stock_data['change_percent'] = _safe_decimal(change_percent)
             except:
                 pass
         
         # Add volume analysis
-        if result.get('volume') and result.get('avg_volume'):
+        if stock_data.get('volume') and stock_data.get('avg_volume_3mon'):
             try:
-                volume_ratio = result['volume'] / result['avg_volume']
-                result['volume_ratio'] = float(volume_ratio)
+                volume_ratio = stock_data['volume'] / stock_data['avg_volume_3mon']
+                stock_data['dvav'] = _safe_decimal(volume_ratio)
             except:
                 pass
         
-        logger.info(f"SUCCESS {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')}")
-        return result
+        # Save to database if requested
+        if save_to_db and not test_mode:
+            try:
+                # Create or update Stock object
+                stock, created = Stock.objects.update_or_create(
+                    ticker=symbol,  # Use ticker as the lookup field
+                    defaults=stock_data
+                )
+                
+                # Create StockPrice record
+                if stock_data.get('current_price'):
+                    StockPrice.objects.create(
+                        stock=stock,
+                        price=stock_data['current_price']
+                    )
+                
+                # Log successful data extraction (only every 50th success to reduce noise)
+                if ticker_number % 50 == 0:
+                    pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                    dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                    logger.info(f"SUCCESS {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('company_name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                
+                return stock_data
+                
+            except Exception as e:
+                logger.error(f"DB ERROR {symbol}: {e}")
+                return None
+        else:
+            # Test mode - log the data without saving (only every 50th to reduce noise)
+            if ticker_number % 50 == 0:
+                pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                logger.info(f"TEST {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('company_name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+            
+            return stock_data
         
     except Exception as e:
         logger.error(f"ERROR {symbol}: {e}")
         return None
 
-def main():
-    """Main function"""
+def run_stock_update(args):
+    """Run a single stock update cycle"""
     global shutdown_flag
     
-    args = parse_arguments()
-    
-    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
-    print("=" * 60)
-    print(f"Configuration:")
-    print(f"  CSV File: {args.csv}")
-    print(f"  Test Mode: {args.test}")
-    print(f"  Use Proxies: {not args.noproxy}")
-    print(f"  Proxy File: {args.proxy_file}")
-    print(f"  Threads: {args.threads}")
-    print(f"  Timeout: {args.timeout}s")
-    print(f"  Max Symbols: {args.max_symbols or 'All'}")
-    print("=" * 60)
+    print(f"\n{'='*60}")
+    print(f"STOCK UPDATE CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{'='*60}")
     
     # Load NYSE symbols
-    print(f"\nLoading NYSE symbols from {args.csv}...")
+    print(f"Loading NYSE symbols from {args.csv}...")
     symbols = load_nyse_symbols(args.csv, args.test, args.max_symbols)
     
     if not symbols:
-        print("ERROR: No symbols loaded. Exiting.")
+        print("ERROR: No symbols loaded. Skipping cycle.")
         return
     
     print(f"Processing {len(symbols)} symbols...")
@@ -375,7 +440,7 @@ def main():
         print("DISABLED: Proxy usage disabled")
     
     # Process stocks
-    print(f"\nStarting to process {len(symbols)} symbols...")
+    print(f"Starting to process {len(symbols)} symbols...")
     print("=" * 60)
     
     start_time = time.time()
@@ -392,7 +457,7 @@ def main():
             for i, symbol in enumerate(symbols, 1):
                 if shutdown_flag:
                     break
-                future = executor.submit(process_symbol, symbol, i, proxies, args.timeout)
+                future = executor.submit(process_symbol, symbol, i, proxies, args.timeout, args.test, args.save_to_db)
                 future_to_symbol[future] = symbol
             
             print(f"Submitted {len(future_to_symbol)} tasks. Processing...")
@@ -438,7 +503,7 @@ def main():
     
     # Results
     print("\n" + "=" * 60)
-    print("SCAN RESULTS")
+    print("CYCLE RESULTS")
     print("=" * 60)
     print(f"SUCCESSFUL: {successful}")
     print(f"FAILED: {failed}")
@@ -451,54 +516,52 @@ def main():
     if proxies:
         print(f"PROXY STATS: Used {len(proxies)} proxies (no validation)")
     
-    # Save results
-    if results:
-        if args.output:
-            filename = args.output
-        else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            mode = "test" if args.test else "full"
-            filename = f"enhanced_stock_retrieval_working_{mode}_{timestamp}.json"
+    if args.save_to_db and not args.test:
+        print(f"DATABASE: Saved {successful} stocks to database")
+    
+    print(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 60)
+
+def main():
+    """Main function"""
+    global shutdown_flag
+    
+    args = parse_arguments()
+    
+    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
+    print("=" * 60)
+    print(f"Configuration:")
+    print(f"  CSV File: {args.csv}")
+    print(f"  Test Mode: {args.test}")
+    print(f"  Use Proxies: {not args.noproxy}")
+    print(f"  Proxy File: {args.proxy_file}")
+    print(f"  Threads: {args.threads}")
+    print(f"  Timeout: {args.timeout}s")
+    print(f"  Max Symbols: {args.max_symbols or 'All'}")
+    print(f"  Save to DB: {args.save_to_db}")
+    print(f"  Schedule Mode: {args.schedule}")
+    print("=" * 60)
+    
+    if args.schedule:
+        print(f"\nSCHEDULER MODE: Running every 3 minutes")
+        print(f"Press Ctrl+C to stop the scheduler")
+        print("=" * 60)
         
-        output_data = {
-            'scan_info': {
-                'timestamp': datetime.now().isoformat(),
-                'csv_file': args.csv,
-                'test_mode': args.test,
-                'use_proxies': not args.noproxy,
-                'proxy_file': args.proxy_file,
-                'proxies_loaded': len(proxies),
-                'threads': args.threads,
-                'timeout': args.timeout,
-                'max_symbols': args.max_symbols,
-                'total_symbols': len(symbols),
-                'successful': successful,
-                'failed': failed,
-                'success_rate': f"{(successful/len(symbols)*100):.1f}%" if len(symbols) > 0 else "0%",
-                'elapsed_time': f"{elapsed:.2f}s",
-                'rate': f"{len(symbols)/elapsed:.2f} symbols/sec" if elapsed > 0 else "0 symbols/sec"
-            },
-            'stocks': results
-        }
+        # Schedule the job to run every 3 minutes
+        schedule.every(3).minutes.do(run_stock_update, args)
         
         try:
-            with open(filename, 'w') as f:
-                json.dump(output_data, f, indent=2, default=str)
-            
-            print(f"\nSUCCESS: Results saved to {filename}")
-            print(f"Total stocks processed: {len(results)}")
-            
-            # Show some sample results
-            if results:
-                print(f"\nSample Results:")
-                for i, stock in enumerate(results[:5]):
-                    print(f"  {i+1}. {stock['symbol']}: ${stock.get('current_price', 'N/A')} - {stock.get('company_name', 'N/A')}")
-        except Exception as e:
-            print(f"ERROR: Failed to save results: {e}")
+            while True:
+                schedule.run_pending()
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\nScheduler stopped by user")
+            shutdown_flag = True
     else:
-        print("\nWARNING: No results to save")
+        # Run single update
+        run_stock_update(args)
     
-    print("\nScan completed!")
+    print("\nScript completed!")
 
 if __name__ == "__main__":
     main()
