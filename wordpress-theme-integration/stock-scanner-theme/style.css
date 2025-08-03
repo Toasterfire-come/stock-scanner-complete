@@ -1,0 +1,11 @@
+/*
+Theme Name: Stock Scanner
+Description: A modern WordPress theme for stock market data and news, integrated with Django API
+Author: Stock Scanner Team
+Version: 1.0.0
+License: GPL v2 or later
+Text Domain: stock-scanner
+*/
+
+/* Import the main stylesheet */
+@import url('css/stock-scanner.css');
