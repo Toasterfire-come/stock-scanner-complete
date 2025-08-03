@@ -31,9 +31,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'corsheaders',
-    'django_extensions',
+    # 'rest_framework',  # Temporarily disabled for testing
+    # 'corsheaders',  # Temporarily disabled for testing
+    # 'django_extensions',  # Temporarily disabled for testing
     'stocks',
     'emails',
     'core',
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',  # Temporarily disabled for testing
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
