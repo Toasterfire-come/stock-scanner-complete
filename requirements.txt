@@ -35,6 +35,11 @@ python-dotenv>=1.0.0
 # ===== TEXT PROCESSING & NLP =====
 textblob>=0.17.1
 
+# ===== NEWS SCRAPING =====
+feedparser>=6.0.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
 # ===== DATA PROCESSING (OPTIONAL) =====
 # These are optional and will be installed if available
 numpy>=1.24.0
