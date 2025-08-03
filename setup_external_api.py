@@ -26,7 +26,7 @@ def update_django_settings():
     settings_file = "stockscanner_django/settings.py"
     
     if not os.path.exists(settings_file):
-        print("❌ Django settings file not found!")
+        print("ERROR: Django settings file not found!")
         return False
     
     # Read current settings
@@ -35,7 +35,7 @@ def update_django_settings():
     
     # Get local IP
     local_ip = get_local_ip()
-    print(f"📍 Your local IP: {local_ip}")
+    print(f"Your local IP: {local_ip}")
     
     # Update ALLOWED_HOSTS
     if '0.0.0.0' not in content:
@@ -51,9 +51,9 @@ def update_django_settings():
         with open(settings_file, 'w') as f:
             f.write('\n'.join(lines))
         
-        print("✅ Updated ALLOWED_HOSTS for external access")
+        print("SUCCESS: Updated ALLOWED_HOSTS for external access")
     else:
-        print("✅ ALLOWED_HOSTS already configured for external access")
+        print("SUCCESS: ALLOWED_HOSTS already configured for external access")
     
     return True
 
@@ -62,18 +62,18 @@ def test_api_access():
     try:
         response = requests.get("http://localhost:8000/api/simple/stocks/", timeout=5)
         if response.status_code == 200:
-            print("✅ API is accessible locally")
+            print("SUCCESS: API is accessible locally")
             return True
         else:
-            print(f"❌ API returned status code: {response.status_code}")
+            print(f"ERROR: API returned status code: {response.status_code}")
             return False
     except requests.exceptions.RequestException as e:
-        print(f"❌ API not accessible: {e}")
+        print(f"ERROR: API not accessible: {e}")
         return False
 
 def start_django_server():
     """Start Django server for external access"""
-    print("\n🚀 Starting Django server for external access...")
+    print("\nStarting Django server for external access...")
     print("Press Ctrl+C to stop the server")
     
     try:
@@ -82,44 +82,44 @@ def start_django_server():
             sys.executable, "manage.py", "runserver", "0.0.0.0:8000"
         ])
     except KeyboardInterrupt:
-        print("\n⏹️ Server stopped")
+        print("\nServer stopped")
 
 def main():
     """Main setup function"""
-    print("🔧 Django API External Access Setup")
+    print("Django API External Access Setup")
     print("=" * 40)
     
     # Step 1: Update settings
-    print("\n1️⃣ Updating Django settings...")
+    print("\n1. Updating Django settings...")
     if not update_django_settings():
         return
     
     # Step 2: Check if Django is running
-    print("\n2️⃣ Testing API access...")
+    print("\n2. Testing API access...")
     if not test_api_access():
-        print("\n💡 Starting Django server...")
+        print("\nStarting Django server...")
         start_django_server()
         return
     
     # Step 3: Get connection info
     local_ip = get_local_ip()
-    print(f"\n3️⃣ Connection Information:")
+    print(f"\n3. Connection Information:")
     print(f"   Local API URL: http://localhost:8000/api")
     print(f"   External API URL: http://{local_ip}:8000/api")
     print(f"   WordPress Plugin URL: http://{local_ip}:8000/api")
     
     # Step 4: Instructions
-    print(f"\n4️⃣ Next Steps:")
-    print(f"   📝 Update WordPress plugin settings:")
+    print(f"\n4. Next Steps:")
+    print(f"   Update WordPress plugin settings:")
     print(f"      API URL: http://{local_ip}:8000/api")
-    print(f"   🔧 Configure router port forwarding:")
+    print(f"   Configure router port forwarding:")
     print(f"      External Port: 8000")
     print(f"      Internal IP: {local_ip}")
     print(f"      Internal Port: 8000")
-    print(f"   🧪 Test connection in WordPress admin")
+    print(f"   Test connection in WordPress admin")
     
     # Step 5: Start server
-    print(f"\n5️⃣ Starting server for external access...")
+    print(f"\n5. Starting server for external access...")
     start_django_server()
 
 if __name__ == "__main__":
