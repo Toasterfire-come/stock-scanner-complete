@@ -131,48 +131,29 @@ class NewsScraper:
         return articles
     
     def scrape_yahoo_finance_latest(self, limit: int = 100) -> List[Dict]:
-        """Scrape latest news from Yahoo Finance"""
+        """Scrape latest news from Yahoo Finance RSS feed"""
         articles = []
         
         try:
-            url = "https://finance.yahoo.com/topic/latest-news/"
-            response = self.session.get(url, timeout=10)
-            response.raise_for_status()
+            # Use RSS feed instead of web scraping for reliability
+            feed_url = "https://feeds.finance.yahoo.com/rss/2.0/headline"
+            feed = feedparser.parse(feed_url)
             
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Find news articles
-            news_items = soup.find_all('h3', class_='Mb(5px)')[:limit]
-            
-            for item in news_items:
+            for entry in feed.entries[:limit]:
                 try:
-                    link = item.find('a')
-                    if not link:
-                        continue
-                        
-                    title = link.get_text(strip=True)
-                    article_url = 'https://finance.yahoo.com' + link.get('href', '')
-                    
-                    # Get summary from parent container
-                    summary = ""
-                    parent = item.find_parent('div', class_='Ov(h)')
-                    if parent:
-                        summary_elem = parent.find('p')
-                        if summary_elem:
-                            summary = summary_elem.get_text(strip=True)
-                    
-                    text = f"{title} {summary}"
+                    # Extract tickers from title and description
+                    text = f"{entry.title} {entry.description}"
                     tickers = self.extract_tickers(text)
                     
                     article = {
-                        'title': title,
-                        'summary': summary,
-                        'url': article_url,
+                        'title': entry.title,
+                        'summary': entry.description,
+                        'url': entry.link,
                         'source': 'Yahoo Finance Latest',
                         'published_date': timezone.now(),
                         'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(text),
-                        'sentiment_grade': self.get_sentiment_grade(text)
+                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
+                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
                     }
                     articles.append(article)
                     
@@ -186,48 +167,29 @@ class NewsScraper:
         return articles
     
     def scrape_yahoo_finance_earnings(self, limit: int = 100) -> List[Dict]:
-        """Scrape earnings news from Yahoo Finance"""
+        """Scrape earnings news from Yahoo Finance RSS feed"""
         articles = []
         
         try:
-            url = "https://finance.yahoo.com/topic/earnings/"
-            response = self.session.get(url, timeout=10)
-            response.raise_for_status()
+            # Use earnings-focused RSS feed
+            feed_url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=earnings"
+            feed = feedparser.parse(feed_url)
             
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Find earnings articles
-            news_items = soup.find_all('h3', class_='Mb(5px)')[:limit]
-            
-            for item in news_items:
+            for entry in feed.entries[:limit]:
                 try:
-                    link = item.find('a')
-                    if not link:
-                        continue
-                        
-                    title = link.get_text(strip=True)
-                    article_url = 'https://finance.yahoo.com' + link.get('href', '')
-                    
-                    # Get summary from parent container
-                    summary = ""
-                    parent = item.find_parent('div', class_='Ov(h)')
-                    if parent:
-                        summary_elem = parent.find('p')
-                        if summary_elem:
-                            summary = summary_elem.get_text(strip=True)
-                    
-                    text = f"{title} {summary}"
+                    # Extract tickers from title and description
+                    text = f"{entry.title} {entry.description}"
                     tickers = self.extract_tickers(text)
                     
                     article = {
-                        'title': title,
-                        'summary': summary,
-                        'url': article_url,
+                        'title': entry.title,
+                        'summary': entry.description,
+                        'url': entry.link,
                         'source': 'Yahoo Finance Earnings',
                         'published_date': timezone.now(),
                         'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(text),
-                        'sentiment_grade': self.get_sentiment_grade(text)
+                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
+                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
                     }
                     articles.append(article)
                     
@@ -722,12 +684,14 @@ class NewsScraper:
         
         for source_func in sources:
             try:
+                logger.info(f"Starting to scrape from {source_func.__name__}...")
                 articles = source_func(limit_per_source)
                 all_articles.extend(articles)
-                logger.info(f"Scraped {len(articles)} articles from {source_func.__name__}")
+                logger.info(f"Successfully scraped {len(articles)} articles from {source_func.__name__}")
                 time.sleep(0.5)  # Be respectful to servers
             except Exception as e:
                 logger.error(f"Error scraping {source_func.__name__}: {e}")
+                continue
         
         logger.info(f"Total articles scraped: {len(all_articles)}")
         return all_articles
@@ -738,11 +702,22 @@ class NewsScraper:
         from .models import NewsArticle, NewsSource
         
         saved_count = 0
+        skipped_count = 0
+        error_count = 0
         
-        for article_data in articles:
+        logger.info(f"Attempting to save {len(articles)} articles to database...")
+        
+        for i, article_data in enumerate(articles):
             try:
+                # Validate required fields
+                if not article_data.get('title') or not article_data.get('url'):
+                    logger.warning(f"Skipping article {i}: Missing title or URL")
+                    skipped_count += 1
+                    continue
+                
                 # Check if article already exists
                 if NewsArticle.objects.filter(url=article_data['url']).exists():
+                    skipped_count += 1
                     continue
                 
                 # Get or create news source
@@ -751,27 +726,40 @@ class NewsScraper:
                     defaults={'url': 'https://example.com', 'is_active': True}
                 )
                 
+                # Ensure sentiment_score is a valid Decimal
+                sentiment_score = article_data.get('sentiment_score')
+                if sentiment_score is not None:
+                    try:
+                        from decimal import Decimal
+                        sentiment_score = Decimal(str(sentiment_score))
+                    except:
+                        sentiment_score = None
+                
                 # Create article
                 article = NewsArticle.objects.create(
                     title=article_data['title'][:500],  # Respect field limits
-                    summary=article_data['summary'],
+                    summary=article_data.get('summary', '')[:1000],  # Limit summary length
                     url=article_data['url'],
                     source=article_data['source'],
                     news_source=source,
                     published_date=article_data['published_date'],
                     published_at=article_data['published_date'],
-                    sentiment_score=article_data['sentiment_score'],
-                    sentiment_grade=article_data['sentiment_grade'],
-                    mentioned_tickers=article_data['mentioned_tickers']
+                    sentiment_score=sentiment_score,
+                    sentiment_grade=article_data.get('sentiment_grade', 'C'),
+                    mentioned_tickers=article_data.get('mentioned_tickers', '')[:500]  # Limit ticker length
                 )
                 
                 saved_count += 1
+                if saved_count % 10 == 0:
+                    logger.info(f"Saved {saved_count} articles so far...")
                 
             except Exception as e:
-                logger.error(f"Error saving article: {e}")
+                logger.error(f"Error saving article {i}: {e}")
+                logger.error(f"Article data: {article_data}")
+                error_count += 1
                 continue
         
-        logger.info(f"Saved {saved_count} new articles to database")
+        logger.info(f"Database save complete: {saved_count} saved, {skipped_count} skipped, {error_count} errors")
         return saved_count
 
 def run_news_scraper():
