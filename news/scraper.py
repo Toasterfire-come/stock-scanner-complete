@@ -34,6 +34,16 @@ class NewsScraper:
                 'url': 'https://feeds.finance.yahoo.com/rss/2.0/headline',
                 'type': 'rss'
             },
+            'yahoo_finance_latest': {
+                'name': 'Yahoo Finance Latest News',
+                'url': 'https://finance.yahoo.com/topic/latest-news/',
+                'type': 'web'
+            },
+            'yahoo_finance_earnings': {
+                'name': 'Yahoo Finance Earnings',
+                'url': 'https://finance.yahoo.com/topic/earnings/',
+                'type': 'web'
+            },
             'yahoo_finance_market': {
                 'name': 'Yahoo Finance Market',
                 'url': 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC,^DJI,^IXIC',
@@ -117,6 +127,116 @@ class NewsScraper:
                     
         except Exception as e:
             logger.error(f"Error scraping Yahoo Finance: {e}")
+            
+        return articles
+    
+    def scrape_yahoo_finance_latest(self, limit: int = 100) -> List[Dict]:
+        """Scrape latest news from Yahoo Finance"""
+        articles = []
+        
+        try:
+            url = "https://finance.yahoo.com/topic/latest-news/"
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Find news articles
+            news_items = soup.find_all('h3', class_='Mb(5px)')[:limit]
+            
+            for item in news_items:
+                try:
+                    link = item.find('a')
+                    if not link:
+                        continue
+                        
+                    title = link.get_text(strip=True)
+                    article_url = 'https://finance.yahoo.com' + link.get('href', '')
+                    
+                    # Get summary from parent container
+                    summary = ""
+                    parent = item.find_parent('div', class_='Ov(h)')
+                    if parent:
+                        summary_elem = parent.find('p')
+                        if summary_elem:
+                            summary = summary_elem.get_text(strip=True)
+                    
+                    text = f"{title} {summary}"
+                    tickers = self.extract_tickers(text)
+                    
+                    article = {
+                        'title': title,
+                        'summary': summary,
+                        'url': article_url,
+                        'source': 'Yahoo Finance Latest',
+                        'published_date': timezone.now(),
+                        'mentioned_tickers': ','.join(tickers) if tickers else '',
+                        'sentiment_score': self.analyze_sentiment(text),
+                        'sentiment_grade': self.get_sentiment_grade(text)
+                    }
+                    articles.append(article)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing Yahoo Finance Latest article: {e}")
+                    continue
+                    
+        except Exception as e:
+            logger.error(f"Error scraping Yahoo Finance Latest: {e}")
+            
+        return articles
+    
+    def scrape_yahoo_finance_earnings(self, limit: int = 100) -> List[Dict]:
+        """Scrape earnings news from Yahoo Finance"""
+        articles = []
+        
+        try:
+            url = "https://finance.yahoo.com/topic/earnings/"
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Find earnings articles
+            news_items = soup.find_all('h3', class_='Mb(5px)')[:limit]
+            
+            for item in news_items:
+                try:
+                    link = item.find('a')
+                    if not link:
+                        continue
+                        
+                    title = link.get_text(strip=True)
+                    article_url = 'https://finance.yahoo.com' + link.get('href', '')
+                    
+                    # Get summary from parent container
+                    summary = ""
+                    parent = item.find_parent('div', class_='Ov(h)')
+                    if parent:
+                        summary_elem = parent.find('p')
+                        if summary_elem:
+                            summary = summary_elem.get_text(strip=True)
+                    
+                    text = f"{title} {summary}"
+                    tickers = self.extract_tickers(text)
+                    
+                    article = {
+                        'title': title,
+                        'summary': summary,
+                        'url': article_url,
+                        'source': 'Yahoo Finance Earnings',
+                        'published_date': timezone.now(),
+                        'mentioned_tickers': ','.join(tickers) if tickers else '',
+                        'sentiment_score': self.analyze_sentiment(text),
+                        'sentiment_grade': self.get_sentiment_grade(text)
+                    }
+                    articles.append(article)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing Yahoo Finance Earnings article: {e}")
+                    continue
+                    
+        except Exception as e:
+            logger.error(f"Error scraping Yahoo Finance Earnings: {e}")
             
         return articles
     
@@ -468,58 +588,114 @@ class NewsScraper:
         return articles
     
     def extract_tickers(self, text: str) -> List[str]:
-        """Extract stock tickers from text"""
+        """Extract stock tickers from text with enhanced detection"""
         tickers = set()
         
-        # Find ticker patterns
-        matches = self.ticker_pattern.findall(text)
-        for match in matches:
-            ticker = match[0] or match[1]  # Handle both $AAPL and AAPL patterns
-            if ticker and len(ticker) <= 5:
-                tickers.add(ticker.upper())
+        # Enhanced ticker patterns
+        patterns = [
+            r'\$([A-Z]{1,5})',  # $AAPL
+            r'\b([A-Z]{1,5})\b',  # AAPL
+            r'\b([A-Z]{1,5})\.(?:TO|V|N|O|PK)\b',  # Canadian/International
+            r'\b([A-Z]{1,5})\.(?:NASDAQ|NYSE|AMEX)\b',  # Exchange specific
+        ]
         
-        # Common stock words that might indicate tickers
-        stock_words = ['stock', 'shares', 'trading', 'market', 'investor']
-        words = text.upper().split()
-        for word in words:
-            if len(word) <= 5 and word.isalpha() and word not in stock_words:
-                # Basic validation - could be enhanced
-                tickers.add(word)
+        for pattern in patterns:
+            matches = re.findall(pattern, text.upper())
+            for match in matches:
+                ticker = match if isinstance(match, str) else match[0]
+                if ticker and len(ticker) <= 5 and ticker.isalpha():
+                    # Filter out common words that aren't tickers
+                    if ticker not in ['THE', 'AND', 'FOR', 'ARE', 'YOU', 'ALL', 'NEW', 'TOP', 'CEO', 'CFO', 'CTO']:
+                        tickers.add(ticker.upper())
+        
+        # Major stock tickers to look for specifically
+        major_tickers = [
+            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'JPM', 'JNJ',
+            'V', 'PG', 'UNH', 'HD', 'MA', 'BAC', 'XOM', 'PFE', 'ABT', 'KO', 'PEP', 'TMO',
+            'COST', 'AVGO', 'MRK', 'WMT', 'ACN', 'DHR', 'NEE', 'LLY', 'UNP', 'RTX', 'HON',
+            'QCOM', 'LMT', 'BMY', 'TXN', 'AMGN', 'PM', 'ORCL', 'ADBE', 'CRM', 'NFLX', 'PYPL'
+        ]
+        
+        # Check for major tickers in text
+        text_upper = text.upper()
+        for ticker in major_tickers:
+            if ticker in text_upper:
+                tickers.add(ticker)
         
         return list(tickers)
     
     def analyze_sentiment(self, text: str) -> Optional[float]:
-        """Basic sentiment analysis"""
+        """Enhanced sentiment analysis for stock price impact"""
         text_lower = text.lower()
         
-        # Positive words
-        positive_words = ['up', 'gain', 'rise', 'positive', 'bullish', 'growth', 'profit', 'earnings', 'beat', 'surge']
-        # Negative words
-        negative_words = ['down', 'loss', 'fall', 'negative', 'bearish', 'decline', 'miss', 'drop', 'crash']
+        # Strong positive indicators (A grade)
+        strong_positive = [
+            'beat', 'surge', 'soar', 'jump', 'rally', 'bullish', 'breakout', 'record high',
+            'earnings beat', 'revenue beat', 'guidance raise', 'upgrade', 'buy rating',
+            'positive outlook', 'strong growth', 'profit increase', 'dividend increase',
+            'stock split', 'buyback', 'acquisition', 'merger', 'partnership'
+        ]
         
-        positive_count = sum(1 for word in positive_words if word in text_lower)
-        negative_count = sum(1 for word in negative_words if word in text_lower)
+        # Moderate positive indicators (B grade)
+        moderate_positive = [
+            'up', 'gain', 'rise', 'positive', 'growth', 'profit', 'earnings', 'revenue',
+            'improve', 'better', 'strong', 'solid', 'stable', 'recovery', 'bounce',
+            'optimistic', 'favorable', 'support', 'buy', 'hold', 'outperform'
+        ]
         
-        if positive_count == 0 and negative_count == 0:
+        # Neutral indicators (C grade)
+        neutral_words = [
+            'maintain', 'stable', 'steady', 'unchanged', 'hold', 'neutral', 'mixed',
+            'balance', 'maintain', 'consistent', 'flat', 'sideways'
+        ]
+        
+        # Moderate negative indicators (D grade)
+        moderate_negative = [
+            'down', 'fall', 'decline', 'drop', 'negative', 'weak', 'lower', 'reduce',
+            'decrease', 'loss', 'miss', 'disappoint', 'concern', 'risk', 'sell',
+            'underperform', 'downgrade', 'cut', 'reduce'
+        ]
+        
+        # Strong negative indicators (F grade)
+        strong_negative = [
+            'crash', 'plunge', 'collapse', 'bearish', 'breakdown', 'record low',
+            'earnings miss', 'revenue miss', 'guidance cut', 'downgrade', 'sell rating',
+            'negative outlook', 'weak growth', 'loss increase', 'dividend cut',
+            'bankruptcy', 'delisting', 'fraud', 'scandal', 'investigation'
+        ]
+        
+        # Count occurrences
+        strong_pos_count = sum(1 for word in strong_positive if word in text_lower)
+        moderate_pos_count = sum(1 for word in moderate_positive if word in text_lower)
+        neutral_count = sum(1 for word in neutral_words if word in text_lower)
+        moderate_neg_count = sum(1 for word in moderate_negative if word in text_lower)
+        strong_neg_count = sum(1 for word in strong_negative if word in text_lower)
+        
+        # Weighted scoring
+        total_score = (strong_pos_count * 2) + moderate_pos_count - moderate_neg_count - (strong_neg_count * 2)
+        total_words = strong_pos_count + moderate_pos_count + neutral_count + moderate_neg_count + strong_neg_count
+        
+        if total_words == 0:
             return 0.0
         
-        sentiment = (positive_count - negative_count) / (positive_count + negative_count)
-        return round(sentiment, 4)
+        # Normalize to -1 to 1 range
+        sentiment = total_score / (total_words * 2)
+        return round(max(-1.0, min(1.0, sentiment)), 4)
     
     def get_sentiment_grade(self, text: str) -> str:
-        """Get sentiment grade (A-F)"""
+        """Get sentiment grade (A-F) based on stock price impact"""
         sentiment = self.analyze_sentiment(text)
         
-        if sentiment >= 0.6:
-            return 'A'  # Very positive
-        elif sentiment >= 0.2:
-            return 'B'  # Positive
-        elif sentiment >= -0.2:
-            return 'C'  # Neutral
-        elif sentiment >= -0.6:
-            return 'D'  # Negative
+        if sentiment >= 0.4:
+            return 'A'  # Strong positive - likely to boost stock price
+        elif sentiment >= 0.1:
+            return 'B'  # Moderate positive - good for stock price
+        elif sentiment >= -0.1:
+            return 'C'  # Neutral - minimal impact on stock price
+        elif sentiment >= -0.4:
+            return 'D'  # Moderate negative - bad for stock price
         else:
-            return 'F'  # Very negative
+            return 'F'  # Strong negative - likely to hurt stock price
     
     def scrape_all_sources(self, limit_per_source: int = 50) -> List[Dict]:
         """Scrape news from all sources"""
@@ -530,6 +706,8 @@ class NewsScraper:
         # Scrape from each source
         sources = [
             self.scrape_yahoo_finance,
+            self.scrape_yahoo_finance_latest,
+            self.scrape_yahoo_finance_earnings,
             self.scrape_yahoo_finance_market,
             self.scrape_reuters,
             self.scrape_reuters_markets,
