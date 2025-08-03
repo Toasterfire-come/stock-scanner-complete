@@ -16,8 +16,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--limit',
             type=int,
-            default=20,
-            help='Number of articles per source (default: 20)'
+            default=50,
+            help='Number of articles per source (default: 50)'
         )
         parser.add_argument(
             '--sources',

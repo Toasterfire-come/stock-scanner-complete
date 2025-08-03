@@ -39,7 +39,7 @@ def run_news_scrape():
         print(f"{'='*60}")
         
         # Scrape articles
-        articles = scraper.scrape_all_sources(limit_per_source=20)
+        articles = scraper.scrape_all_sources(limit_per_source=50)
         
         # Save to database
         saved_count = scraper.save_to_database(articles)
@@ -83,7 +83,7 @@ def main():
     parser = argparse.ArgumentParser(description='Financial News Scraper')
     parser.add_argument('--schedule', action='store_true', help='Run on schedule (every 30 minutes)')
     parser.add_argument('--test', action='store_true', help='Test mode - scrape fewer articles')
-    parser.add_argument('--limit', type=int, default=20, help='Articles per source (default: 20)')
+    parser.add_argument('--limit', type=int, default=50, help='Articles per source (default: 50)')
     
     args = parser.parse_args()
     
