@@ -408,8 +408,18 @@ class StockScannerPlugin {
      */
     public function admin_page() {
         if (isset($_POST['submit'])) {
+            // Save API settings
             update_option('stock_scanner_api_url', sanitize_url($_POST['api_url']));
             $this->api_url = get_option('stock_scanner_api_url');
+            
+            // Save PayPal settings
+            update_option('paypal_mode', sanitize_text_field($_POST['paypal_mode']));
+            update_option('paypal_client_id', sanitize_text_field($_POST['paypal_client_id']));
+            update_option('paypal_client_secret', sanitize_text_field($_POST['paypal_client_secret']));
+            update_option('paypal_webhook_url', sanitize_url($_POST['paypal_webhook_url']));
+            update_option('paypal_return_url', sanitize_url($_POST['paypal_return_url']));
+            update_option('paypal_cancel_url', sanitize_url($_POST['paypal_cancel_url']));
+            
             echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
         }
         
@@ -417,6 +427,7 @@ class StockScannerPlugin {
         <div class="wrap">
             <h1>Stock Scanner Settings</h1>
             <form method="post">
+                <h2>API Configuration</h2>
                 <table class="form-table">
                     <tr>
                         <th scope="row">
@@ -432,6 +443,66 @@ class StockScannerPlugin {
                         </td>
                     </tr>
                 </table>
+                
+                <h2>PayPal Configuration</h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">PayPal Mode</th>
+                        <td>
+                            <select name="paypal_mode">
+                                <option value="sandbox" <?php selected(get_option('paypal_mode', 'sandbox'), 'sandbox'); ?>>Sandbox (Testing)</option>
+                                <option value="live" <?php selected(get_option('paypal_mode', 'sandbox'), 'live'); ?>>Live (Production)</option>
+                            </select>
+                            <p class="description">Use Sandbox for testing, Live for production</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Client ID</th>
+                        <td>
+                            <input type="text" name="paypal_client_id" 
+                                   value="<?php echo esc_attr(get_option('paypal_client_id')); ?>" 
+                                   class="regular-text" />
+                            <p class="description">Your PayPal App Client ID from the Developer Dashboard</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Client Secret</th>
+                        <td>
+                            <input type="password" name="paypal_client_secret" 
+                                   value="<?php echo esc_attr(get_option('paypal_client_secret')); ?>" 
+                                   class="regular-text" />
+                            <p class="description">Your PayPal App Client Secret from the Developer Dashboard</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Webhook URL</th>
+                        <td>
+                            <input type="url" name="paypal_webhook_url" 
+                                   value="<?php echo esc_attr(get_option('paypal_webhook_url')); ?>" 
+                                   class="regular-text" />
+                            <p class="description">Set this URL in your PayPal Developer Dashboard: <?php echo home_url('/wp-json/stock-scanner/v1/paypal-webhook'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Return URL</th>
+                        <td>
+                            <input type="url" name="paypal_return_url" 
+                                   value="<?php echo esc_attr(get_option('paypal_return_url')); ?>" 
+                                   class="regular-text" />
+                            <p class="description">URL where users return after successful payment</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Cancel URL</th>
+                        <td>
+                            <input type="url" name="paypal_cancel_url" 
+                                   value="<?php echo esc_attr(get_option('paypal_cancel_url')); ?>" 
+                                   class="regular-text" />
+                            <p class="description">URL where users return after cancelled payment</p>
+                        </td>
+                    </tr>
+                </table>
+                
                 <?php submit_button(); ?>
             </form>
             
@@ -458,7 +529,16 @@ class StockScannerPlugin {
      * Admin init
      */
     public function admin_init() {
+        // Register API settings
         register_setting('stock_scanner_settings', 'stock_scanner_api_url');
+        
+        // Register PayPal settings
+        register_setting('stock_scanner_settings', 'paypal_mode');
+        register_setting('stock_scanner_settings', 'paypal_client_id');
+        register_setting('stock_scanner_settings', 'paypal_client_secret');
+        register_setting('stock_scanner_settings', 'paypal_webhook_url');
+        register_setting('stock_scanner_settings', 'paypal_return_url');
+        register_setting('stock_scanner_settings', 'paypal_cancel_url');
     }
     
     /**

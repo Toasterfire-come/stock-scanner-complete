@@ -76,9 +76,8 @@ class StockScannerPayPalIntegration {
         // Webhook endpoint
         add_action('rest_api_init', array($this, 'register_webhook_endpoint'));
         
-        // Admin hooks
-        add_action('admin_menu', array($this, 'add_paypal_admin_menu'));
-        add_action('admin_init', array($this, 'register_paypal_settings'));
+        // Note: PayPal settings are now integrated into the main Stock Scanner settings page
+        // No separate admin menu needed
     }
     
     /**
@@ -504,87 +503,9 @@ class StockScannerPayPalIntegration {
     }
     
     /**
-     * Add PayPal admin menu
+     * Note: PayPal settings are now integrated into the main Stock Scanner settings page
+     * No separate admin menu needed
      */
-    public function add_paypal_admin_menu() {
-        add_submenu_page(
-            'stock-scanner-settings',
-            'PayPal Settings',
-            'PayPal Settings',
-            'manage_options',
-            'paypal-settings',
-            array($this, 'paypal_settings_page')
-        );
-    }
-    
-    /**
-     * Register PayPal settings
-     */
-    public function register_paypal_settings() {
-        register_setting('paypal_settings', 'paypal_mode');
-        register_setting('paypal_settings', 'paypal_client_id');
-        register_setting('paypal_settings', 'paypal_client_secret');
-        register_setting('paypal_settings', 'paypal_webhook_url');
-        register_setting('paypal_settings', 'paypal_return_url');
-        register_setting('paypal_settings', 'paypal_cancel_url');
-    }
-    
-    /**
-     * PayPal settings page
-     */
-    public function paypal_settings_page() {
-        ?>
-        <div class="wrap">
-            <h1>PayPal Settings</h1>
-            <form method="post" action="options.php">
-                <?php settings_fields('paypal_settings'); ?>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">PayPal Mode</th>
-                        <td>
-                            <select name="paypal_mode">
-                                <option value="sandbox" <?php selected(get_option('paypal_mode'), 'sandbox'); ?>>Sandbox</option>
-                                <option value="live" <?php selected(get_option('paypal_mode'), 'live'); ?>>Live</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Client ID</th>
-                        <td>
-                            <input type="text" name="paypal_client_id" value="<?php echo esc_attr(get_option('paypal_client_id')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Client Secret</th>
-                        <td>
-                            <input type="password" name="paypal_client_secret" value="<?php echo esc_attr(get_option('paypal_client_secret')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Webhook URL</th>
-                        <td>
-                            <input type="url" name="paypal_webhook_url" value="<?php echo esc_attr(get_option('paypal_webhook_url')); ?>" class="regular-text" />
-                            <p class="description">Set this URL in your PayPal Developer Dashboard</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Return URL</th>
-                        <td>
-                            <input type="url" name="paypal_return_url" value="<?php echo esc_attr(get_option('paypal_return_url')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Cancel URL</th>
-                        <td>
-                            <input type="url" name="paypal_cancel_url" value="<?php echo esc_attr(get_option('paypal_cancel_url')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                </table>
-                <?php submit_button(); ?>
-            </form>
-        </div>
-        <?php
-    }
     
     /**
      * Log payment
