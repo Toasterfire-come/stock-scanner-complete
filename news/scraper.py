@@ -1,559 +1,69 @@
 """
-Financial News Scraper
-Pulls news from multiple sources including Yahoo Finance, Reuters, Bloomberg, and more
+Enhanced Yahoo Finance News Scraper
+Focuses only on Yahoo Finance news with comprehensive rating system
 """
 
 import requests
 import feedparser
-from bs4 import BeautifulSoup
-import re
-from datetime import datetime, timedelta
 import time
 import logging
+import re
 from typing import List, Dict, Optional
-import json
-from urllib.parse import urljoin, urlparse
-import yfinance as yf
-from django.utils import timezone
+from datetime import datetime, timezone
+from bs4 import BeautifulSoup
+import urllib.parse
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NewsScraper:
-    """Main news scraper class"""
+class YahooFinanceNewsScraper:
+    """Enhanced Yahoo Finance News Scraper with comprehensive rating"""
     
     def __init__(self):
+        """Initialize the scraper with headers and session"""
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
         })
         
-        # News sources with more feeds
-        self.sources = {
-            'yahoo_finance': {
-                'name': 'Yahoo Finance',
-                'url': 'https://feeds.finance.yahoo.com/rss/2.0/headline',
-                'type': 'rss'
-            },
-            'yahoo_finance_latest': {
-                'name': 'Yahoo Finance Latest News',
-                'url': 'https://finance.yahoo.com/topic/latest-news/',
-                'type': 'web'
-            },
-            'yahoo_finance_earnings': {
-                'name': 'Yahoo Finance Earnings',
-                'url': 'https://finance.yahoo.com/topic/earnings/',
-                'type': 'web'
-            },
-            'yahoo_finance_market': {
-                'name': 'Yahoo Finance Market',
-                'url': 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC,^DJI,^IXIC',
-                'type': 'rss'
-            },
-            'reuters': {
-                'name': 'Reuters',
-                'url': 'https://feeds.reuters.com/reuters/businessNews',
-                'type': 'rss'
-            },
-            'reuters_markets': {
-                'name': 'Reuters Markets',
-                'url': 'https://feeds.reuters.com/reuters/markets',
-                'type': 'rss'
-            },
-            'marketwatch': {
-                'name': 'MarketWatch',
-                'url': 'https://feeds.marketwatch.com/marketwatch/marketpulse/',
-                'type': 'rss'
-            },
-            'marketwatch_top': {
-                'name': 'MarketWatch Top',
-                'url': 'https://feeds.marketwatch.com/marketwatch/topstories/',
-                'type': 'rss'
-            },
-            'cnbc': {
-                'name': 'CNBC',
-                'url': 'https://www.cnbc.com/id/100003114/device/rss/rss.html',
-                'type': 'rss'
-            },
-            'cnbc_markets': {
-                'name': 'CNBC Markets',
-                'url': 'https://www.cnbc.com/id/100006149/device/rss/rss.html',
-                'type': 'rss'
-            },
-            'seeking_alpha': {
-                'name': 'Seeking Alpha',
-                'url': 'https://seekingalpha.com/feed.xml',
-                'type': 'rss'
-            },
-            'investing': {
-                'name': 'Investing.com',
-                'url': 'https://www.investing.com/rss/news_301.rss',
-                'type': 'rss'
-            }
-        }
+        # Yahoo Finance RSS feeds
+        self.yahoo_feeds = [
+            'https://feeds.finance.yahoo.com/rss/2.0/headline',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^DJI',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^IXIC',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^VIX',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^TNX',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=GC=F',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=CL=F',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=DX-Y.NYB',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^FTSE',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^N225',
+            'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GDAXI',
+        ]
         
-        # Stock ticker patterns
-        self.ticker_pattern = re.compile(r'\$([A-Z]{1,5})|([A-Z]{1,5})')
-        
-    def scrape_yahoo_finance(self, limit: int = 100) -> List[Dict]:
-        """Scrape news from Yahoo Finance"""
-        articles = []
-        
-        try:
-            # Yahoo Finance RSS feed
-            feed_url = "https://feeds.finance.yahoo.com/rss/2.0/headline"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    # Extract tickers from title and description
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Yahoo Finance',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Yahoo Finance article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Yahoo Finance: {e}")
-            
-        return articles
-    
-    def scrape_yahoo_finance_latest(self, limit: int = 100) -> List[Dict]:
-        """Scrape latest news from Yahoo Finance RSS feed"""
-        articles = []
-        
-        try:
-            # Use RSS feed instead of web scraping for reliability
-            feed_url = "https://feeds.finance.yahoo.com/rss/2.0/headline"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    # Extract tickers from title and description
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Yahoo Finance Latest',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Yahoo Finance Latest article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Yahoo Finance Latest: {e}")
-            
-        return articles
-    
-    def scrape_yahoo_finance_earnings(self, limit: int = 100) -> List[Dict]:
-        """Scrape earnings news from Yahoo Finance RSS feed"""
-        articles = []
-        
-        try:
-            # Use earnings-focused RSS feed
-            feed_url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=earnings"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    # Extract tickers from title and description
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Yahoo Finance Earnings',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Yahoo Finance Earnings article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Yahoo Finance Earnings: {e}")
-            
-        return articles
-    
-    def scrape_yahoo_finance_market(self, limit: int = 100) -> List[Dict]:
-        """Scrape market news from Yahoo Finance"""
-        articles = []
-        
-        try:
-            feed_url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC,^DJI,^IXIC"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Yahoo Finance Market',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Yahoo Finance Market article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Yahoo Finance Market: {e}")
-            
-        return articles
-    
-    def scrape_reuters(self, limit: int = 100) -> List[Dict]:
-        """Scrape news from Reuters"""
-        articles = []
-        
-        try:
-            feed_url = "https://feeds.reuters.com/reuters/businessNews"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Reuters',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Reuters article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Reuters: {e}")
-            
-        return articles
-    
-    def scrape_reuters_markets(self, limit: int = 100) -> List[Dict]:
-        """Scrape market news from Reuters"""
-        articles = []
-        
-        try:
-            feed_url = "https://feeds.reuters.com/reuters/markets"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Reuters Markets',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Reuters Markets article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Reuters Markets: {e}")
-            
-        return articles
-    
-    def scrape_marketwatch(self, limit: int = 100) -> List[Dict]:
-        """Scrape news from MarketWatch"""
-        articles = []
-        
-        try:
-            feed_url = "https://feeds.marketwatch.com/marketwatch/marketpulse/"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'MarketWatch',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing MarketWatch article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping MarketWatch: {e}")
-            
-        return articles
-    
-    def scrape_marketwatch_top(self, limit: int = 100) -> List[Dict]:
-        """Scrape top stories from MarketWatch"""
-        articles = []
-        
-        try:
-            feed_url = "https://feeds.marketwatch.com/marketwatch/topstories/"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'MarketWatch Top',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing MarketWatch Top article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping MarketWatch Top: {e}")
-            
-        return articles
-    
-    def scrape_cnbc(self, limit: int = 100) -> List[Dict]:
-        """Scrape news from CNBC"""
-        articles = []
-        
-        try:
-            feed_url = "https://www.cnbc.com/id/100003114/device/rss/rss.html"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'CNBC',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing CNBC article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping CNBC: {e}")
-            
-        return articles
-    
-    def scrape_cnbc_markets(self, limit: int = 100) -> List[Dict]:
-        """Scrape market news from CNBC"""
-        articles = []
-        
-        try:
-            feed_url = "https://www.cnbc.com/id/100006149/device/rss/rss.html"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'CNBC Markets',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing CNBC Markets article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping CNBC Markets: {e}")
-            
-        return articles
-    
-    def scrape_seeking_alpha(self, limit: int = 100) -> List[Dict]:
-        """Scrape news from Seeking Alpha"""
-        articles = []
-        
-        try:
-            feed_url = "https://seekingalpha.com/feed.xml"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Seeking Alpha',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Seeking Alpha article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Seeking Alpha: {e}")
-            
-        return articles
-    
-    def scrape_investing(self, limit: int = 100) -> List[Dict]:
-        """Scrape news from Investing.com"""
-        articles = []
-        
-        try:
-            feed_url = "https://www.investing.com/rss/news_301.rss"
-            feed = feedparser.parse(feed_url)
-            
-            for entry in feed.entries[:limit]:
-                try:
-                    text = f"{entry.title} {entry.description}"
-                    tickers = self.extract_tickers(text)
-                    
-                    article = {
-                        'title': entry.title,
-                        'summary': entry.description,
-                        'url': entry.link,
-                        'source': 'Investing.com',
-                        'published_date': timezone.now(),
-                        'mentioned_tickers': ','.join(tickers) if tickers else '',
-                        'sentiment_score': self.analyze_sentiment(entry.title + ' ' + entry.description),
-                        'sentiment_grade': self.get_sentiment_grade(entry.title + ' ' + entry.description)
-                    }
-                    articles.append(article)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing Investing.com article: {e}")
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error scraping Investing.com: {e}")
-            
-        return articles
-    
-    def scrape_yfinance_news(self, limit: int = 100) -> List[Dict]:
-        """Scrape news using yfinance for major stocks"""
-        articles = []
-        
-        # Major stock tickers to get news for
-        major_tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'JPM', 'JNJ', 'V', 'PG', 'UNH', 'HD', 'MA', 'BAC', 'XOM', 'PFE', 'ABT', 'KO']
-        
-        for ticker in major_tickers[:10]:  # Limit to first 10 to avoid too many requests
-            try:
-                stock = yf.Ticker(ticker)
-                news = stock.news
-                
-                for item in news[:limit//len(major_tickers)]:
-                    try:
-                        text = f"{item.get('title', '')} {item.get('summary', '')}"
-                        tickers = self.extract_tickers(text)
-                        
-                        article = {
-                            'title': item.get('title', ''),
-                            'summary': item.get('summary', ''),
-                            'url': item.get('link', ''),
-                            'source': f'YFinance {ticker}',
-                            'published_date': timezone.now(),
-                            'mentioned_tickers': ','.join(tickers) if tickers else ticker,
-                            'sentiment_score': self.analyze_sentiment(text),
-                            'sentiment_grade': self.get_sentiment_grade(text)
-                        }
-                        articles.append(article)
-                        
-                    except Exception as e:
-                        logger.error(f"Error processing yfinance news for {ticker}: {e}")
-                        continue
-                        
-                time.sleep(0.5)  # Be respectful to yfinance
-                
-            except Exception as e:
-                logger.error(f"Error getting yfinance news for {ticker}: {e}")
-                continue
-                
-        return articles
+        # Major stock tickers for detection
+        self.major_tickers = [
+            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'JPM', 'JNJ',
+            'V', 'PG', 'UNH', 'HD', 'MA', 'BAC', 'XOM', 'PFE', 'ABT', 'KO', 'PEP', 'TMO',
+            'COST', 'AVGO', 'MRK', 'WMT', 'ACN', 'DHR', 'NEE', 'LLY', 'UNP', 'RTX', 'HON',
+            'QCOM', 'LMT', 'BMY', 'TXN', 'AMGN', 'PM', 'ORCL', 'ADBE', 'CRM', 'PYPL', 'INTC',
+            'CSCO', 'VZ', 'CMCSA', 'T', 'PFE', 'ABBV', 'CVX', 'KO', 'PEP', 'TMO', 'COST',
+            'AVGO', 'MRK', 'WMT', 'ACN', 'DHR', 'NEE', 'LLY', 'UNP', 'RTX', 'HON', 'QCOM',
+            'LMT', 'BMY', 'TXN', 'AMGN', 'PM', 'ORCL', 'ADBE', 'CRM', 'PYPL', 'INTC', 'CSCO'
+        ]
     
     def extract_tickers(self, text: str) -> List[str]:
-        """Extract stock tickers from text with enhanced detection"""
+        """Enhanced ticker extraction with major stock focus"""
         tickers = set()
         
-        # Enhanced ticker patterns
+        # Enhanced patterns
         patterns = [
             r'\$([A-Z]{1,5})',  # $AAPL
             r'\b([A-Z]{1,5})\b',  # AAPL
@@ -566,21 +76,13 @@ class NewsScraper:
             for match in matches:
                 ticker = match if isinstance(match, str) else match[0]
                 if ticker and len(ticker) <= 5 and ticker.isalpha():
-                    # Filter out common words that aren't tickers
-                    if ticker not in ['THE', 'AND', 'FOR', 'ARE', 'YOU', 'ALL', 'NEW', 'TOP', 'CEO', 'CFO', 'CTO']:
+                    # Filter out common words
+                    if ticker not in ['THE', 'AND', 'FOR', 'ARE', 'YOU', 'ALL', 'NEW', 'TOP', 'CEO', 'CFO', 'CTO', 'USA', 'FED', 'GDP']:
                         tickers.add(ticker.upper())
         
-        # Major stock tickers to look for specifically
-        major_tickers = [
-            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'JPM', 'JNJ',
-            'V', 'PG', 'UNH', 'HD', 'MA', 'BAC', 'XOM', 'PFE', 'ABT', 'KO', 'PEP', 'TMO',
-            'COST', 'AVGO', 'MRK', 'WMT', 'ACN', 'DHR', 'NEE', 'LLY', 'UNP', 'RTX', 'HON',
-            'QCOM', 'LMT', 'BMY', 'TXN', 'AMGN', 'PM', 'ORCL', 'ADBE', 'CRM', 'NFLX', 'PYPL'
-        ]
-        
-        # Check for major tickers in text
+        # Check for major tickers specifically
         text_upper = text.upper()
-        for ticker in major_tickers:
+        for ticker in self.major_tickers:
             if ticker in text_upper:
                 tickers.add(ticker)
         
@@ -595,27 +97,28 @@ class NewsScraper:
             'beat', 'surge', 'soar', 'jump', 'rally', 'bullish', 'breakout', 'record high',
             'earnings beat', 'revenue beat', 'guidance raise', 'upgrade', 'buy rating',
             'positive outlook', 'strong growth', 'profit increase', 'dividend increase',
-            'stock split', 'buyback', 'acquisition', 'merger', 'partnership'
+            'stock split', 'buyback', 'acquisition', 'merger', 'partnership', 'positive',
+            'strong', 'solid', 'recovery', 'bounce', 'optimistic', 'favorable', 'support'
         ]
         
         # Moderate positive indicators (B grade)
         moderate_positive = [
-            'up', 'gain', 'rise', 'positive', 'growth', 'profit', 'earnings', 'revenue',
-            'improve', 'better', 'strong', 'solid', 'stable', 'recovery', 'bounce',
-            'optimistic', 'favorable', 'support', 'buy', 'hold', 'outperform'
+            'up', 'gain', 'rise', 'growth', 'profit', 'earnings', 'revenue',
+            'improve', 'better', 'stable', 'recovery', 'bounce', 'buy', 'hold', 'outperform',
+            'positive', 'strong', 'solid', 'stable', 'recovery', 'bounce', 'optimistic'
         ]
         
         # Neutral indicators (C grade)
         neutral_words = [
             'maintain', 'stable', 'steady', 'unchanged', 'hold', 'neutral', 'mixed',
-            'balance', 'maintain', 'consistent', 'flat', 'sideways'
+            'balance', 'consistent', 'flat', 'sideways', 'maintain', 'report', 'announce'
         ]
         
         # Moderate negative indicators (D grade)
         moderate_negative = [
             'down', 'fall', 'decline', 'drop', 'negative', 'weak', 'lower', 'reduce',
             'decrease', 'loss', 'miss', 'disappoint', 'concern', 'risk', 'sell',
-            'underperform', 'downgrade', 'cut', 'reduce'
+            'underperform', 'downgrade', 'cut', 'reduce', 'negative', 'weak', 'lower'
         ]
         
         # Strong negative indicators (F grade)
@@ -623,7 +126,8 @@ class NewsScraper:
             'crash', 'plunge', 'collapse', 'bearish', 'breakdown', 'record low',
             'earnings miss', 'revenue miss', 'guidance cut', 'downgrade', 'sell rating',
             'negative outlook', 'weak growth', 'loss increase', 'dividend cut',
-            'bankruptcy', 'delisting', 'fraud', 'scandal', 'investigation'
+            'bankruptcy', 'delisting', 'fraud', 'scandal', 'investigation', 'crash',
+            'plunge', 'collapse', 'bearish', 'breakdown', 'record low'
         ]
         
         # Count occurrences
@@ -659,44 +163,130 @@ class NewsScraper:
         else:
             return 'F'  # Strong negative - likely to hurt stock price
     
-    def scrape_all_sources(self, limit_per_source: int = 50) -> List[Dict]:
-        """Scrape news from all sources"""
-        all_articles = []
+    def get_impact_score(self, text: str) -> int:
+        """Get impact score (1-10) based on urgency and importance"""
+        text_lower = text.lower()
         
-        logger.info("Starting news scraping from all sources...")
-        
-        # Scrape from each source
-        sources = [
-            self.scrape_yahoo_finance,
-            self.scrape_yahoo_finance_latest,
-            self.scrape_yahoo_finance_earnings,
-            self.scrape_yahoo_finance_market,
-            self.scrape_reuters,
-            self.scrape_reuters_markets,
-            self.scrape_marketwatch,
-            self.scrape_marketwatch_top,
-            self.scrape_cnbc,
-            self.scrape_cnbc_markets,
-            self.scrape_seeking_alpha,
-            self.scrape_investing,
-            self.scrape_yfinance_news
+        # High impact indicators
+        high_impact = [
+            'breaking', 'urgent', 'exclusive', 'just in', 'live', 'developing',
+            'earnings', 'revenue', 'guidance', 'upgrade', 'downgrade', 'buy', 'sell',
+            'merger', 'acquisition', 'bankruptcy', 'fraud', 'investigation', 'lawsuit',
+            'federal', 'sec', 'regulatory', 'government', 'president', 'fed', 'federal reserve'
         ]
         
-        for source_func in sources:
+        # Medium impact indicators
+        medium_impact = [
+            'report', 'announce', 'release', 'update', 'change', 'plan', 'strategy',
+            'expansion', 'restructuring', 'layoff', 'hire', 'appointment', 'resignation',
+            'partnership', 'deal', 'agreement', 'contract', 'launch', 'product', 'service'
+        ]
+        
+        # Count high impact words
+        high_count = sum(1 for word in high_impact if word in text_lower)
+        medium_count = sum(1 for word in medium_impact if word in text_lower)
+        
+        # Calculate impact score (1-10)
+        if high_count >= 3:
+            return 10
+        elif high_count >= 2:
+            return 9
+        elif high_count >= 1:
+            return 8
+        elif medium_count >= 3:
+            return 7
+        elif medium_count >= 2:
+            return 6
+        elif medium_count >= 1:
+            return 5
+        else:
+            return 4
+    
+    def scrape_yahoo_finance_rss(self, feed_url: str, limit: int = 50) -> List[Dict]:
+        """Scrape Yahoo Finance RSS feed"""
+        articles = []
+        
+        try:
+            logger.info(f"Scraping RSS feed: {feed_url}")
+            feed = feedparser.parse(feed_url)
+            
+            for i, entry in enumerate(feed.entries[:limit]):
+                try:
+                    # Extract basic info
+                    title = entry.get('title', '').strip()
+                    url = entry.get('link', '').strip()
+                    summary = entry.get('summary', '').strip()
+                    
+                    # Parse date
+                    published_date = datetime.now(timezone.utc)
+                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                        published_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    
+                    # Skip if missing essential info
+                    if not title or not url:
+                        continue
+                    
+                    # Analyze sentiment and extract tickers
+                    full_text = f"{title} {summary}"
+                    sentiment_score = self.analyze_sentiment(full_text)
+                    sentiment_grade = self.get_sentiment_grade(full_text)
+                    mentioned_tickers = self.extract_tickers(full_text)
+                    impact_score = self.get_impact_score(full_text)
+                    
+                    article = {
+                        'title': title,
+                        'summary': summary,
+                        'url': url,
+                        'source': 'Yahoo Finance',
+                        'published_date': published_date,
+                        'mentioned_tickers': ', '.join(mentioned_tickers),
+                        'sentiment_score': sentiment_score,
+                        'sentiment_grade': sentiment_grade,
+                        'impact_score': impact_score,
+                        'feed_url': feed_url
+                    }
+                    
+                    articles.append(article)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing RSS entry {i}: {e}")
+                    continue
+            
+            logger.info(f"Successfully scraped {len(articles)} articles from {feed_url}")
+            
+        except Exception as e:
+            logger.error(f"Error scraping RSS feed {feed_url}: {e}")
+        
+        return articles
+    
+    def scrape_all_yahoo_feeds(self, limit_per_feed: int = 50) -> List[Dict]:
+        """Scrape all Yahoo Finance RSS feeds"""
+        all_articles = []
+        
+        logger.info(f"Starting Yahoo Finance news scraping from {len(self.yahoo_feeds)} feeds...")
+        
+        for feed_url in self.yahoo_feeds:
             try:
-                logger.info(f"Starting to scrape from {source_func.__name__}...")
-                articles = source_func(limit_per_source)
+                articles = self.scrape_yahoo_finance_rss(feed_url, limit_per_feed)
                 all_articles.extend(articles)
-                logger.info(f"Successfully scraped {len(articles)} articles from {source_func.__name__}")
-                time.sleep(0.5)  # Be respectful to servers
+                time.sleep(1)  # Be respectful to servers
             except Exception as e:
-                logger.error(f"Error scraping {source_func.__name__}: {e}")
+                logger.error(f"Error scraping feed {feed_url}: {e}")
                 continue
         
-        logger.info(f"Total articles scraped: {len(all_articles)}")
-        return all_articles
+        # Remove duplicates based on URL
+        unique_articles = []
+        seen_urls = set()
+        
+        for article in all_articles:
+            if article['url'] not in seen_urls:
+                unique_articles.append(article)
+                seen_urls.add(article['url'])
+        
+        logger.info(f"Total unique articles scraped: {len(unique_articles)}")
+        return unique_articles
     
-    def save_to_database(self, articles: List[Dict]):
+    def save_to_database(self, articles: List[Dict]) -> int:
         """Save articles to Django database"""
         from django.utils import timezone
         from .models import NewsArticle, NewsSource
@@ -723,7 +313,7 @@ class NewsScraper:
                 # Get or create news source
                 source, created = NewsSource.objects.get_or_create(
                     name=article_data['source'],
-                    defaults={'url': 'https://example.com', 'is_active': True}
+                    defaults={'url': 'https://finance.yahoo.com', 'is_active': True}
                 )
                 
                 # Ensure sentiment_score is a valid Decimal
@@ -737,8 +327,8 @@ class NewsScraper:
                 
                 # Create article
                 article = NewsArticle.objects.create(
-                    title=article_data['title'][:500],  # Respect field limits
-                    summary=article_data.get('summary', '')[:1000],  # Limit summary length
+                    title=article_data['title'][:500],
+                    summary=article_data.get('summary', '')[:1000],
                     url=article_data['url'],
                     source=article_data['source'],
                     news_source=source,
@@ -746,7 +336,7 @@ class NewsScraper:
                     published_at=article_data['published_date'],
                     sentiment_score=sentiment_score,
                     sentiment_grade=article_data.get('sentiment_grade', 'C'),
-                    mentioned_tickers=article_data.get('mentioned_tickers', '')[:500]  # Limit ticker length
+                    mentioned_tickers=article_data.get('mentioned_tickers', '')[:500]
                 )
                 
                 saved_count += 1
@@ -755,28 +345,46 @@ class NewsScraper:
                 
             except Exception as e:
                 logger.error(f"Error saving article {i}: {e}")
-                logger.error(f"Article data: {article_data}")
                 error_count += 1
                 continue
         
         logger.info(f"Database save complete: {saved_count} saved, {skipped_count} skipped, {error_count} errors")
         return saved_count
 
-def run_news_scraper():
-    """Main function to run the news scraper"""
-    scraper = NewsScraper()
+def run_yahoo_news_scraper():
+    """Main function to run the Yahoo Finance news scraper"""
+    scraper = YahooFinanceNewsScraper()
     
     # Scrape articles
-    articles = scraper.scrape_all_sources(limit_per_source=50)
+    articles = scraper.scrape_all_yahoo_feeds(limit_per_feed=50)
     
-    # Save to database
-    saved_count = scraper.save_to_database(articles)
-    
-    print(f"News scraping completed!")
+    # Print results
+    print(f"\n{'='*60}")
+    print("YAHOO FINANCE NEWS SCRAPER RESULTS")
+    print(f"{'='*60}")
     print(f"Articles scraped: {len(articles)}")
-    print(f"Articles saved: {saved_count}")
     
-    return saved_count
+    # Show sentiment distribution
+    grade_counts = {}
+    for article in articles:
+        grade = article.get('sentiment_grade', 'C')
+        grade_counts[grade] = grade_counts.get(grade, 0) + 1
+    
+    print(f"\nSentiment Distribution:")
+    for grade in ['A', 'B', 'C', 'D', 'F']:
+        count = grade_counts.get(grade, 0)
+        percentage = (count / len(articles) * 100) if articles else 0
+        print(f"Grade {grade}: {count} articles ({percentage:.1f}%)")
+    
+    # Show top articles by impact
+    high_impact = [a for a in articles if a.get('impact_score', 0) >= 8]
+    print(f"\nHigh Impact Articles (Score 8+): {len(high_impact)}")
+    
+    # Show articles with major tickers
+    major_ticker_articles = [a for a in articles if any(ticker in a.get('mentioned_tickers', '') for ticker in ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'])]
+    print(f"Articles mentioning major stocks: {len(major_ticker_articles)}")
+    
+    return articles
 
 if __name__ == "__main__":
-    run_news_scraper()
+    run_yahoo_news_scraper()
