@@ -46,7 +46,8 @@ class StockScannerMembershipManager {
             wp_schedule_event(time(), 'daily', 'stock_scanner_daily_reset');
         }
         
-        // Monthly reset of API limits
+        // Monthly reset of API limits - register custom schedule
+        add_filter('cron_schedules', [$this, 'add_monthly_cron_schedule']);
         add_action('stock_scanner_monthly_reset', [$this, 'reset_monthly_limits']);
         if (!wp_next_scheduled('stock_scanner_monthly_reset')) {
             wp_schedule_event(time(), 'monthly', 'stock_scanner_monthly_reset');
@@ -812,6 +813,17 @@ class StockScannerMembershipManager {
             'amount' => 0,
             'status' => 'active'
         ]);
+    }
+    
+    /**
+     * Add monthly cron schedule
+     */
+    public function add_monthly_cron_schedule($schedules) {
+        $schedules['monthly'] = [
+            'interval' => 30 * DAY_IN_SECONDS, // 30 days
+            'display' => __('Once Monthly', 'stock-scanner-pro')
+        ];
+        return $schedules;
     }
     
     /**

@@ -125,9 +125,6 @@ class StockScannerProfessional {
      * Load plugin dependencies
      */
     private function load_dependencies() {
-        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-paypal-integration.php';
-        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-admin-dashboard.php';
-        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-page-manager.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-membership-manager.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-stock-api.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-paypal-integration.php';
@@ -157,6 +154,55 @@ class StockScannerProfessional {
         
         // Add body classes for styling
         add_filter('body_class', [$this, 'add_body_classes']);
+    }
+    
+    /**
+     * Plugin activation
+     */
+    public function activate() {
+        // Create database tables
+        if (class_exists('StockScannerMembershipManager')) {
+            $membership_manager = new StockScannerMembershipManager();
+            $membership_manager->create_database_tables();
+        }
+        
+        if (class_exists('StockScannerSEOAnalytics')) {
+            $analytics = new StockScannerSEOAnalytics();
+            $analytics->create_database_table();
+        }
+        
+        // Create default pages
+        $this->create_default_pages();
+        
+        // Flush rewrite rules
+        flush_rewrite_rules();
+        
+        // Set default options
+        add_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
+        add_option('stock_scanner_version', STOCK_SCANNER_PRO_VERSION);
+    }
+    
+    /**
+     * Plugin deactivation
+     */
+    public function deactivate() {
+        // Clear scheduled events
+        wp_clear_scheduled_hook('stock_scanner_daily_reset');
+        wp_clear_scheduled_hook('stock_scanner_monthly_reset');
+        wp_clear_scheduled_hook('stock_scanner_subscription_check');
+        
+        // Flush rewrite rules
+        flush_rewrite_rules();
+    }
+    
+    /**
+     * Create default pages
+     */
+    private function create_default_pages() {
+        if (class_exists('StockScannerPageManager')) {
+            $page_manager = new StockScannerPageManager();
+            $page_manager->create_all_pages();
+        }
     }
     
     /**
@@ -953,24 +999,22 @@ class StockScannerProfessional {
     }
 }
 
-// Initialize the plugin
-new StockScannerProfessional();
+// Initialize the plugin using singleton
+StockScannerProfessional::getInstance();
 
-// Activation hook
+// Activation/Deactivation hooks
 register_activation_hook(__FILE__, function() {
-    // Set default options
-    add_option('stock_scanner_api_url', 'https://api.yoursite.com/api/v1/');
-    add_option('stock_scanner_api_secret', '');
-    
-    // Create default pages
-    create_stock_scanner_pages();
+    StockScannerProfessional::getInstance()->activate();
+});
+
+register_deactivation_hook(__FILE__, function() {
+    StockScannerProfessional::getInstance()->deactivate();
 });
 
 /**
- * Create default Stock Scanner pages
+ * DEPRECATED: This function has been removed
+ * Pages are now created through StockScannerPageManager class
  */
-function create_stock_scanner_pages() {
-    $pages = array(
         'premium-plans' => array(
             'title' => 'Premium Plans',
             'content' => '
@@ -1785,4 +1829,3 @@ function create_stock_scanner_pages() {
         }
     }
 }
-?>
