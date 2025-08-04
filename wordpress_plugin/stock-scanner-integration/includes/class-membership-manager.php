@@ -46,6 +46,12 @@ class StockScannerMembershipManager {
             wp_schedule_event(time(), 'daily', 'stock_scanner_daily_reset');
         }
         
+        // Monthly reset of API limits
+        add_action('stock_scanner_monthly_reset', [$this, 'reset_monthly_limits']);
+        if (!wp_next_scheduled('stock_scanner_monthly_reset')) {
+            wp_schedule_event(time(), 'monthly', 'stock_scanner_monthly_reset');
+        }
+        
         // Subscription expiry checks
         add_action('stock_scanner_subscription_check', [$this, 'check_expired_subscriptions']);
         if (!wp_next_scheduled('stock_scanner_subscription_check')) {
@@ -82,8 +88,9 @@ class StockScannerMembershipManager {
                     'export_data' => false
                 ],
                 'limits' => [
-                    'api_calls_per_day' => 100,
-                    'api_calls_per_hour' => 10,
+                    'api_calls_per_month' => 100,
+                    'api_calls_per_day' => 10, // Daily subset of monthly limit
+                    'api_calls_per_hour' => 5,
                     'data_retention_days' => 7,
                     'concurrent_sessions' => 1
                 ]
@@ -115,8 +122,9 @@ class StockScannerMembershipManager {
                     'export_data' => true
                 ],
                 'limits' => [
-                    'api_calls_per_day' => 1500,
-                    'api_calls_per_hour' => 100,
+                    'api_calls_per_month' => 1500,
+                    'api_calls_per_day' => 100, // Daily subset of monthly limit
+                    'api_calls_per_hour' => 25,
                     'data_retention_days' => 30,
                     'concurrent_sessions' => 2
                 ]
@@ -148,8 +156,9 @@ class StockScannerMembershipManager {
                     'export_data' => true
                 ],
                 'limits' => [
-                    'api_calls_per_day' => 5000,
-                    'api_calls_per_hour' => 500,
+                    'api_calls_per_month' => 5000,
+                    'api_calls_per_day' => 300, // Daily subset of monthly limit
+                    'api_calls_per_hour' => 50,
                     'data_retention_days' => 90,
                     'concurrent_sessions' => 3
                 ]
@@ -181,6 +190,7 @@ class StockScannerMembershipManager {
                     'export_data' => true
                 ],
                 'limits' => [
+                    'api_calls_per_month' => -1, // unlimited
                     'api_calls_per_day' => -1, // unlimited
                     'api_calls_per_hour' => -1, // unlimited
                     'data_retention_days' => 365,
@@ -337,7 +347,7 @@ class StockScannerMembershipManager {
     }
     
     /**
-     * Check if user can perform action based on limits
+     * Check if user can perform action based on limits (checks monthly limit first)
      */
     public function check_user_limit($limit_type, $user_id = null, $increment = false) {
         if (!$user_id) {
@@ -350,6 +360,17 @@ class StockScannerMembershipManager {
         
         $level = $this->get_user_membership_level($user_id);
         $limits = $this->membership_levels[$level]['limits'] ?? [];
+        
+        // Always check monthly limit first for API calls
+        if (strpos($limit_type, 'api_calls') !== false) {
+            $monthly_limit = $limits['api_calls_per_month'] ?? 0;
+            if ($monthly_limit !== -1) { // Not unlimited
+                $monthly_usage = $this->get_current_usage($user_id, 'api_calls_per_month');
+                if ($monthly_usage >= $monthly_limit) {
+                    return false; // Monthly limit exceeded
+                }
+            }
+        }
         
         if (!isset($limits[$limit_type])) {
             return true; // No limit defined
@@ -379,6 +400,14 @@ class StockScannerMembershipManager {
         $usage_table = $wpdb->prefix . 'stock_scanner_api_usage';
         
         switch ($limit_type) {
+            case 'api_calls_per_month':
+                return (int) $wpdb->get_var($wpdb->prepare("
+                    SELECT COALESCE(SUM(calls_count), 0) 
+                    FROM {$usage_table} 
+                    WHERE user_id = %d 
+                    AND usage_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                ", $user_id));
+                
             case 'api_calls_per_day':
                 return (int) $wpdb->get_var($wpdb->prepare("
                     SELECT COALESCE(SUM(calls_count), 0) 
@@ -786,7 +815,7 @@ class StockScannerMembershipManager {
     }
     
     /**
-     * Reset daily API limits
+     * Reset daily API limits (cleanup old records)
      */
     public function reset_daily_limits() {
         global $wpdb;
@@ -797,6 +826,23 @@ class StockScannerMembershipManager {
             DELETE FROM {$usage_table} 
             WHERE usage_date < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         ");
+    }
+    
+    /**
+     * Reset monthly API limits (cleanup old records beyond monthly period)
+     */
+    public function reset_monthly_limits() {
+        global $wpdb;
+        $usage_table = $wpdb->prefix . 'stock_scanner_api_usage';
+        
+        // Delete usage records older than 60 days (keep 2 months for analytics)
+        $wpdb->query("
+            DELETE FROM {$usage_table} 
+            WHERE usage_date < DATE_SUB(CURDATE(), INTERVAL 60 DAY)
+        ");
+        
+        // Log monthly reset
+        error_log('Stock Scanner: Monthly API limits reset completed');
     }
     
     /**
@@ -853,6 +899,10 @@ class StockScannerMembershipManager {
         return [
             'level' => $level,
             'level_name' => $this->membership_levels[$level]['name'] ?? 'Unknown',
+            'monthly_api_calls' => [
+                'used' => $this->get_current_usage($user_id, 'api_calls_per_month'),
+                'limit' => $limits['api_calls_per_month'] ?? 0
+            ],
             'daily_api_calls' => [
                 'used' => $this->get_current_usage($user_id, 'api_calls_per_day'),
                 'limit' => $limits['api_calls_per_day'] ?? 0

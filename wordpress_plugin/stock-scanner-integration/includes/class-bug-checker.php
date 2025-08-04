@@ -42,12 +42,12 @@ class StockScannerBugChecker {
             
             <div class="notice notice-info">
                 <p><strong>Monthly Subscription Pricing:</strong></p>
-                <ul>
-                    <li><strong>Free:</strong> 100 API calls/day, 10/hour</li>
-                    <li><strong>Bronze ($14.99/month):</strong> 1,500 API calls/day, 100/hour</li>
-                    <li><strong>Silver ($29.99/month):</strong> 5,000 API calls/day, 500/hour</li>
-                    <li><strong>Gold ($69.99/month):</strong> Unlimited API calls</li>
-                </ul>
+                                 <ul>
+                     <li><strong>Free:</strong> 100 API calls/month (10/day, 5/hour)</li>
+                     <li><strong>Bronze ($14.99/month):</strong> 1,500 API calls/month (100/day, 25/hour)</li>
+                     <li><strong>Silver ($29.99/month):</strong> 5,000 API calls/month (300/day, 50/hour)</li>
+                     <li><strong>Gold ($69.99/month):</strong> Unlimited API calls</li>
+                 </ul>
             </div>
             
             <button id="run-bug-check" class="button button-primary">Run Full Bug Check</button>
@@ -337,13 +337,13 @@ class StockScannerBugChecker {
             'gold' => 69.99
         ];
         
-        // Expected API limits
-        $expected_limits = [
-            'free' => ['daily' => 100, 'hourly' => 10],
-            'bronze' => ['daily' => 1500, 'hourly' => 100],
-            'silver' => ['daily' => 5000, 'hourly' => 500],
-            'gold' => ['daily' => -1, 'hourly' => -1] // unlimited
-        ];
+                 // Expected API limits (monthly primary, daily/hourly secondary)
+         $expected_limits = [
+             'free' => ['monthly' => 100, 'daily' => 10, 'hourly' => 5],
+             'bronze' => ['monthly' => 1500, 'daily' => 100, 'hourly' => 25],
+             'silver' => ['monthly' => 5000, 'daily' => 300, 'hourly' => 50],
+             'gold' => ['monthly' => -1, 'daily' => -1, 'hourly' => -1] // unlimited
+         ];
         
         // Check membership manager pricing
         if (class_exists('StockScannerMembershipManager')) {
@@ -367,6 +367,12 @@ class StockScannerBugChecker {
             foreach ($expected_limits as $level => $expected) {
                 if (isset($levels[$level]['limits'])) {
                     $limits = $levels[$level]['limits'];
+                    
+                    if ($limits['api_calls_per_month'] == $expected['monthly']) {
+                        $this->log_success("API monthly limit for {$level}: {$limits['api_calls_per_month']} ✓");
+                    } else {
+                        $this->log_critical_bug("Monthly API limit mismatch for {$level}: expected {$expected['monthly']}, got {$limits['api_calls_per_month']}");
+                    }
                     
                     if ($limits['api_calls_per_day'] == $expected['daily']) {
                         $this->log_success("API daily limit for {$level}: {$limits['api_calls_per_day']} ✓");
@@ -865,13 +871,13 @@ class StockScannerBugChecker {
         
         // Pricing verification section
         echo "<div style='margin-top: 30px; padding: 20px; background: #f0f8ff; border: 2px solid #0073aa;'>";
-        echo "<h3>💰 Current Pricing Structure (Monthly Subscriptions)</h3>";
-        echo "<ul style='list-style-type: none; padding-left: 0;'>";
-        echo "<li><strong>🆓 Free:</strong> \$0/month - 100 API calls/day, 10/hour</li>";
-        echo "<li><strong>🥉 Bronze:</strong> \$14.99/month - 1,500 API calls/day, 100/hour</li>";
-        echo "<li><strong>🥈 Silver:</strong> \$29.99/month - 5,000 API calls/day, 500/hour</li>";
-        echo "<li><strong>🥇 Gold:</strong> \$69.99/month - Unlimited API calls</li>";
-        echo "</ul>";
+                 echo "<h3>💰 Current Pricing Structure (Monthly Subscriptions)</h3>";
+         echo "<ul style='list-style-type: none; padding-left: 0;'>";
+         echo "<li><strong>🆓 Free:</strong> \$0/month - 100 API calls/month (10/day, 5/hour)</li>";
+         echo "<li><strong>🥉 Bronze:</strong> \$14.99/month - 1,500 API calls/month (100/day, 25/hour)</li>";
+         echo "<li><strong>🥈 Silver:</strong> \$29.99/month - 5,000 API calls/month (300/day, 50/hour)</li>";
+         echo "<li><strong>🥇 Gold:</strong> \$69.99/month - Unlimited API calls</li>";
+         echo "</ul>";
         echo "</div>";
         
         echo '</div>';

@@ -45,29 +45,29 @@ class StockScannerAPI {
     }
     
     /**
-     * Initialize rate limits per membership level
+     * Initialize rate limits per membership level (monthly limits)
      */
     private function init_rate_limits() {
         $this->rate_limits = [
             'free' => [
-                'requests_per_minute' => 5,
-                'requests_per_hour' => 10,
-                'requests_per_day' => 100
+                'requests_per_month' => 100,
+                'requests_per_day' => 10,
+                'requests_per_hour' => 5
             ],
             'bronze' => [
-                'requests_per_minute' => 20,
-                'requests_per_hour' => 100,
-                'requests_per_day' => 1500
+                'requests_per_month' => 1500,
+                'requests_per_day' => 100,
+                'requests_per_hour' => 25
             ],
             'silver' => [
-                'requests_per_minute' => 50,
-                'requests_per_hour' => 500,
-                'requests_per_day' => 5000
+                'requests_per_month' => 5000,
+                'requests_per_day' => 300,
+                'requests_per_hour' => 50
             ],
             'gold' => [
-                'requests_per_minute' => -1, // unlimited
-                'requests_per_hour' => -1,   // unlimited
-                'requests_per_day' => -1     // unlimited
+                'requests_per_month' => -1, // unlimited
+                'requests_per_day' => -1,   // unlimited
+                'requests_per_hour' => -1   // unlimited
             ]
         ];
     }
@@ -174,7 +174,7 @@ class StockScannerAPI {
     }
     
     /**
-     * Check rate limits for user
+     * Check rate limits for user (monthly limits take priority)
      */
     private function check_rate_limit($user_id, $membership_level) {
         if (!$this->membership_manager) {
@@ -183,6 +183,13 @@ class StockScannerAPI {
         }
         
         $limits = $this->rate_limits[$membership_level] ?? $this->rate_limits['free'];
+        
+        // Check monthly limit first (most important)
+        if ($limits['requests_per_month'] !== -1) {
+            if (!$this->membership_manager->check_user_limit('api_calls_per_month', $user_id)) {
+                return false;
+            }
+        }
         
         // Check daily limit
         if ($limits['requests_per_day'] !== -1) {
@@ -795,13 +802,17 @@ class StockScannerAPI {
             return [
                 'level' => 'free',
                 'level_name' => 'Free',
-                'daily_api_calls' => [
+                'monthly_api_calls' => [
                     'used' => 0,
                     'limit' => 100
                 ],
-                'hourly_api_calls' => [
+                'daily_api_calls' => [
                     'used' => 0,
                     'limit' => 10
+                ],
+                'hourly_api_calls' => [
+                    'used' => 0,
+                    'limit' => 5
                 ]
             ];
         }

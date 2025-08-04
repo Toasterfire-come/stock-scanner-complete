@@ -332,12 +332,13 @@ class StockScannerAdminDashboard {
                             </span>
                         </td>
                         <td>$<?php echo number_format($user['revenue'], 2); ?></td>
-                        <td>
-                            <?php echo $user['api_usage']['daily']; ?>/<?php echo $user['api_usage']['limit']; ?>
-                            <div class="usage-bar">
-                                <div class="usage-fill" style="width: <?php echo min(100, ($user['api_usage']['daily'] / max($user['api_usage']['limit'], 1)) * 100); ?>%"></div>
-                            </div>
-                        </td>
+                                                 <td>
+                             <strong>Month:</strong> <?php echo $user['api_usage']['monthly']; ?>/<?php echo $user['api_usage']['monthly_limit'] == -1 ? '∞' : $user['api_usage']['monthly_limit']; ?><br>
+                             <strong>Today:</strong> <?php echo $user['api_usage']['daily']; ?>/<?php echo $user['api_usage']['daily_limit'] == -1 ? '∞' : $user['api_usage']['daily_limit']; ?>
+                             <div class="usage-bar">
+                                 <div class="usage-fill" style="width: <?php echo $user['api_usage']['monthly_limit'] == -1 ? 0 : min(100, ($user['api_usage']['monthly'] / max($user['api_usage']['monthly_limit'], 1)) * 100); ?>%"></div>
+                             </div>
+                         </td>
                         <td>
                             <button class="button button-small" onclick="viewUser(<?php echo $user['id']; ?>)">View</button>
                             <button class="button button-small" onclick="editUser(<?php echo $user['id']; ?>)">Edit</button>
@@ -825,8 +826,10 @@ class StockScannerAdminDashboard {
                 'status' => $user->status,
                 'revenue' => $user->amount,
                 'api_usage' => [
+                    'monthly' => $usage_stats['monthly_api_calls']['used'],
+                    'monthly_limit' => $usage_stats['monthly_api_calls']['limit'],
                     'daily' => $usage_stats['daily_api_calls']['used'],
-                    'limit' => $usage_stats['daily_api_calls']['limit']
+                    'daily_limit' => $usage_stats['daily_api_calls']['limit']
                 ]
             ];
         }

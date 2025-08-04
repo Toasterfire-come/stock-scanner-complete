@@ -138,6 +138,7 @@ class StockScannerProfessional {
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-seo-analytics.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-scheduler.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-api-tester.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-bug-checker.php';
     }
     
     /**
