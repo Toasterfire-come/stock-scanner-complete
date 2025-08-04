@@ -91,7 +91,7 @@ class StockScannerMembershipManager {
             
             'bronze' => [
                 'name' => 'Bronze Trader',
-                'price' => 9.99,
+                'price' => 14.99,
                 'billing_cycle' => 'monthly',
                 'stripe_price_id' => 'price_bronze_monthly',
                 'paypal_plan_id' => 'P-BRONZE-MONTHLY',
@@ -115,7 +115,7 @@ class StockScannerMembershipManager {
                     'export_data' => true
                 ],
                 'limits' => [
-                    'api_calls_per_day' => 1000,
+                    'api_calls_per_day' => 1500,
                     'api_calls_per_hour' => 100,
                     'data_retention_days' => 30,
                     'concurrent_sessions' => 2
@@ -124,7 +124,7 @@ class StockScannerMembershipManager {
             
             'silver' => [
                 'name' => 'Silver Pro',
-                'price' => 19.99,
+                'price' => 29.99,
                 'billing_cycle' => 'monthly',
                 'stripe_price_id' => 'price_silver_monthly',
                 'paypal_plan_id' => 'P-SILVER-MONTHLY',
@@ -157,7 +157,7 @@ class StockScannerMembershipManager {
             
             'gold' => [
                 'name' => 'Gold Elite',
-                'price' => 49.99,
+                'price' => 69.99,
                 'billing_cycle' => 'monthly',
                 'stripe_price_id' => 'price_gold_monthly',
                 'paypal_plan_id' => 'P-GOLD-MONTHLY',

@@ -47,7 +47,7 @@ class StockScannerAPI {
             'bronze' => [
                 'requests_per_minute' => 20,
                 'requests_per_hour' => 100,
-                'requests_per_day' => 1000
+                'requests_per_day' => 1500
             ],
             'silver' => [
                 'requests_per_minute' => 50,
