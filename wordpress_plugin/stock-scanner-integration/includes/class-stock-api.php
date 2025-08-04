@@ -13,10 +13,20 @@ class StockScannerAPI {
     private $rate_limits;
     
     public function __construct() {
-        $this->membership_manager = new StockScannerMembershipManager();
+        // Initialize after all classes are loaded
+        add_action('init', [$this, 'init_dependencies'], 11);
         $this->init_api_endpoints();
         $this->init_rate_limits();
         $this->add_hooks();
+    }
+    
+    /**
+     * Initialize dependencies after all classes are loaded
+     */
+    public function init_dependencies() {
+        if (class_exists('StockScannerMembershipManager')) {
+            $this->membership_manager = new StockScannerMembershipManager();
+        }
     }
     
     /**
@@ -83,13 +93,40 @@ class StockScannerAPI {
         add_action('wp_ajax_nopriv_get_stock_news', [$this, 'get_stock_news_ajax']);
         
         add_action('wp_ajax_get_options_data', [$this, 'get_options_data_ajax']);
+        add_action('wp_ajax_nopriv_get_options_data', [$this, 'get_options_data_ajax']);
+        
         add_action('wp_ajax_get_level2_data', [$this, 'get_level2_data_ajax']);
+        add_action('wp_ajax_nopriv_get_level2_data', [$this, 'get_level2_data_ajax']);
+    }
+    
+    /**
+     * Verify nonce for AJAX requests
+     */
+    private function verify_nonce() {
+        $nonce = $_POST['nonce'] ?? $_POST['_wpnonce'] ?? '';
+        if (empty($nonce)) {
+            return false;
+        }
+        return wp_verify_nonce($nonce, 'stock_scanner_nonce');
     }
     
     /**
      * Check if user can make API call
      */
     private function can_make_api_call($user_id, $endpoint_type) {
+        // Check if membership manager is available
+        if (!$this->membership_manager) {
+            // Allow basic access if membership manager is not available
+            if (in_array($endpoint_type, ['options', 'level2'])) {
+                return [
+                    'allowed' => false,
+                    'error' => 'Premium features temporarily unavailable',
+                    'upgrade_required' => true
+                ];
+            }
+            return ['allowed' => true]; // Allow basic features
+        }
+        
         // Check if user is logged in for premium features
         if (!$user_id && in_array($endpoint_type, ['options', 'level2', 'technical_advanced'])) {
             return [
@@ -113,7 +150,7 @@ class StockScannerAPI {
         if (isset($feature_map[$endpoint_type])) {
             $has_feature = $this->membership_manager->user_has_feature($feature_map[$endpoint_type], $user_id);
             
-            if (!$has_feature) {
+            if (!$has_feature && $feature_map[$endpoint_type] !== 'realtime_data') {
                 return [
                     'allowed' => false,
                     'error' => 'This feature requires a premium subscription',
@@ -140,6 +177,11 @@ class StockScannerAPI {
      * Check rate limits for user
      */
     private function check_rate_limit($user_id, $membership_level) {
+        if (!$this->membership_manager) {
+            // Basic rate limiting without membership manager
+            return $this->basic_rate_limit_check($user_id);
+        }
+        
         $limits = $this->rate_limits[$membership_level] ?? $this->rate_limits['free'];
         
         // Check daily limit
@@ -160,9 +202,33 @@ class StockScannerAPI {
     }
     
     /**
+     * Basic rate limiting without membership manager
+     */
+    private function basic_rate_limit_check($user_id) {
+        $cache_key = 'stock_api_basic_limit_' . ($user_id ?: 'guest');
+        $current_count = get_transient($cache_key);
+        
+        if ($current_count === false) {
+            $current_count = 0;
+        }
+        
+        // Allow 50 requests per hour for basic rate limiting
+        if ($current_count >= 50) {
+            return false;
+        }
+        
+        set_transient($cache_key, $current_count + 1, HOUR_IN_SECONDS);
+        return true;
+    }
+    
+    /**
      * Get minimum membership level required for a feature
      */
     private function get_minimum_level_for_feature($feature) {
+        if (!$this->membership_manager) {
+            return 'bronze'; // Default fallback
+        }
+        
         $levels = $this->membership_manager->get_membership_levels();
         
         foreach (['bronze', 'silver', 'gold'] as $level) {
@@ -178,11 +244,26 @@ class StockScannerAPI {
      * Get stock quote with membership validation
      */
     public function get_stock_quote_ajax() {
+        // Verify nonce for security
+        if (!$this->verify_nonce()) {
+            wp_die(json_encode(['success' => false, 'error' => 'Security check failed']));
+        }
+        
         $user_id = get_current_user_id();
         $symbol = sanitize_text_field($_POST['symbol'] ?? '');
         
         if (empty($symbol)) {
             wp_die(json_encode(['success' => false, 'error' => 'Stock symbol is required']));
+        }
+        
+        // Validate symbol format
+        if (!preg_match('/^[A-Z]{1,5}$/', strtoupper($symbol))) {
+            wp_die(json_encode(['success' => false, 'error' => 'Invalid stock symbol format']));
+        }
+        
+        // Check if membership manager is available
+        if (!$this->membership_manager) {
+            wp_die(json_encode(['success' => false, 'error' => 'Service temporarily unavailable']));
         }
         
         // Check permissions
@@ -196,7 +277,9 @@ class StockScannerAPI {
             $quote_data = $this->fetch_stock_quote($symbol, $user_id);
             
             // Increment usage counter
-            $this->membership_manager->check_user_limit('api_calls_per_day', $user_id, true);
+            if ($this->membership_manager) {
+                $this->membership_manager->check_user_limit('api_calls_per_day', $user_id, true);
+            }
             
             wp_die(json_encode([
                 'success' => true,
@@ -217,25 +300,32 @@ class StockScannerAPI {
      * Fetch stock quote from external API
      */
     private function fetch_stock_quote($symbol, $user_id = null) {
-        $membership_level = $this->membership_manager->get_user_membership_level($user_id);
-        $is_realtime = $this->membership_manager->user_has_feature('realtime_data', $user_id);
+        $membership_level = $this->membership_manager ? 
+            $this->membership_manager->get_user_membership_level($user_id) : 'free';
+        $is_realtime = $this->membership_manager ? 
+            $this->membership_manager->user_has_feature('realtime_data', $user_id) : false;
         
         // Mock data for demonstration - replace with actual API call
+        $base_price = 150.25;
+        $price_variation = (rand(-1000, 1000) / 100);
+        $current_price = $base_price + $price_variation;
+        
         $mock_data = [
             'symbol' => strtoupper($symbol),
-            'price' => 150.25 + (rand(-1000, 1000) / 100),
-            'change' => rand(-500, 500) / 100,
-            'change_percent' => rand(-1000, 1000) / 100,
+            'price' => round($current_price, 2),
+            'change' => round($price_variation, 2),
+            'change_percent' => round(($price_variation / $base_price) * 100, 2),
             'volume' => rand(1000000, 50000000),
             'market_cap' => rand(10000000000, 3000000000000),
-            'pe_ratio' => rand(10, 50) + (rand(0, 99) / 100),
-            'high' => 155.75,
-            'low' => 148.30,
-            'open' => 152.10,
-            'previous_close' => 151.80,
+            'pe_ratio' => round(rand(10, 50) + (rand(0, 99) / 100), 2),
+            'high' => round($current_price + rand(1, 5), 2),
+            'low' => round($current_price - rand(1, 5), 2),
+            'open' => round($current_price + rand(-2, 2), 2),
+            'previous_close' => round($base_price, 2),
             'timestamp' => $is_realtime ? time() : (time() - 900), // 15 min delay for free users
             'is_realtime' => $is_realtime,
-            'membership_level' => $membership_level
+            'membership_level' => $membership_level,
+            'market_status' => $this->get_market_status()
         ];
         
         // Add delayed data notice for free users
@@ -250,11 +340,21 @@ class StockScannerAPI {
      * Search stocks with membership validation
      */
     public function search_stocks_ajax() {
+        // Verify nonce for security
+        if (!$this->verify_nonce()) {
+            wp_die(json_encode(['success' => false, 'error' => 'Security check failed']));
+        }
+        
         $user_id = get_current_user_id();
         $query = sanitize_text_field($_POST['query'] ?? '');
         
         if (empty($query)) {
             wp_die(json_encode(['success' => false, 'error' => 'Search query is required']));
+        }
+        
+        // Validate query length
+        if (strlen($query) < 1 || strlen($query) > 50) {
+            wp_die(json_encode(['success' => false, 'error' => 'Search query must be 1-50 characters']));
         }
         
         // Check permissions
@@ -267,7 +367,9 @@ class StockScannerAPI {
             $search_results = $this->search_stocks($query, $user_id);
             
             // Increment usage counter
-            $this->membership_manager->check_user_limit('api_calls_per_day', $user_id, true);
+            if ($this->membership_manager) {
+                $this->membership_manager->check_user_limit('api_calls_per_day', $user_id, true);
+            }
             
             wp_die(json_encode([
                 'success' => true,
@@ -288,7 +390,8 @@ class StockScannerAPI {
      * Search stocks
      */
     private function search_stocks($query, $user_id = null) {
-        $membership_level = $this->membership_manager->get_user_membership_level($user_id);
+        $membership_level = $this->membership_manager ? 
+            $this->membership_manager->get_user_membership_level($user_id) : 'free';
         
         // Mock search results - replace with actual API call
         $mock_results = [
@@ -318,6 +421,12 @@ class StockScannerAPI {
             ]
         ];
         
+        // Filter results based on query
+        $filtered_results = array_filter($mock_results, function($stock) use ($query) {
+            return stripos($stock['symbol'], $query) !== false || 
+                   stripos($stock['name'], $query) !== false;
+        });
+        
         // Limit results based on membership level
         $result_limits = [
             'free' => 5,
@@ -327,15 +436,16 @@ class StockScannerAPI {
         ];
         
         $limit = $result_limits[$membership_level] ?? 5;
-        if ($limit !== -1 && count($mock_results) > $limit) {
-            $mock_results = array_slice($mock_results, 0, $limit);
+        if ($limit !== -1 && count($filtered_results) > $limit) {
+            $filtered_results = array_slice($filtered_results, 0, $limit);
         }
         
         return [
-            'results' => $mock_results,
-            'total_found' => count($mock_results),
+            'results' => array_values($filtered_results),
+            'total_found' => count($filtered_results),
             'membership_level' => $membership_level,
-            'result_limit' => $limit
+            'result_limit' => $limit,
+            'query' => $query
         ];
     }
     
@@ -343,6 +453,11 @@ class StockScannerAPI {
      * Get market data
      */
     public function get_market_data_ajax() {
+        // Verify nonce for security
+        if (!$this->verify_nonce()) {
+            wp_die(json_encode(['success' => false, 'error' => 'Security check failed']));
+        }
+        
         $user_id = get_current_user_id();
         
         // Check permissions
@@ -355,7 +470,9 @@ class StockScannerAPI {
             $market_data = $this->fetch_market_data($user_id);
             
             // Increment usage counter
-            $this->membership_manager->check_user_limit('api_calls_per_day', $user_id, true);
+            if ($this->membership_manager) {
+                $this->membership_manager->check_user_limit('api_calls_per_day', $user_id, true);
+            }
             
             wp_die(json_encode([
                 'success' => true,
@@ -376,7 +493,8 @@ class StockScannerAPI {
      * Fetch market data
      */
     private function fetch_market_data($user_id = null) {
-        $is_realtime = $this->membership_manager->user_has_feature('realtime_data', $user_id);
+        $is_realtime = $this->membership_manager ? 
+            $this->membership_manager->user_has_feature('realtime_data', $user_id) : false;
         
         // Mock market data
         return [
@@ -392,7 +510,8 @@ class StockScannerAPI {
             ],
             'market_status' => $this->get_market_status(),
             'is_realtime' => $is_realtime,
-            'timestamp' => $is_realtime ? time() : (time() - 900)
+            'timestamp' => $is_realtime ? time() : (time() - 900),
+            'data_notice' => $is_realtime ? null : 'Data delayed by 15 minutes. Upgrade for real-time access.'
         ];
     }
     
@@ -670,6 +789,21 @@ class StockScannerAPI {
     public function get_usage_stats($user_id = null) {
         if (!$user_id) {
             $user_id = get_current_user_id();
+        }
+        
+        if (!$this->membership_manager) {
+            return [
+                'level' => 'free',
+                'level_name' => 'Free',
+                'daily_api_calls' => [
+                    'used' => 0,
+                    'limit' => 100
+                ],
+                'hourly_api_calls' => [
+                    'used' => 0,
+                    'limit' => 10
+                ]
+            ];
         }
         
         return $this->membership_manager->get_user_usage_stats($user_id);
