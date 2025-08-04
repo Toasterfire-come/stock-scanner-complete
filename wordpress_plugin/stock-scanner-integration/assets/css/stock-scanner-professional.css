@@ -7,6 +7,7 @@
  * - Seamless navigation animations
  * - Modern responsive design
  * - Professional membership tiers styling
+ * - SEO-optimized content styling
  */
 
 /* ===== CSS VARIABLES - WordPress Admin Colors ===== */
@@ -696,6 +697,143 @@
     height: 1px;
     width: 1px;
     overflow: hidden;
+}
+
+/* ===== SEO CONTENT STYLING ===== */
+
+/* SEO Content Styling */
+.seo-optimized-content {
+    margin: 2rem 0 3rem;
+    background: var(--wp-surface);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--wp-border-light);
+}
+
+.seo-h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--wp-text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.seo-content-body {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--wp-text-primary);
+}
+
+.seo-content-body h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--wp-primary);
+    margin: 2rem 0 1rem;
+    border-bottom: 2px solid var(--wp-primary-light);
+    padding-bottom: 0.5rem;
+}
+
+.seo-content-body h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--wp-text-primary);
+    margin: 1.5rem 0 0.8rem;
+}
+
+.seo-content-body ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.seo-content-body li {
+    margin-bottom: 0.5rem;
+}
+
+.seo-content-body strong {
+    color: var(--wp-primary);
+    font-weight: 600;
+}
+
+.seo-content-body em {
+    color: var(--wp-secondary);
+    font-style: italic;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.benefit-item {
+    background: var(--wp-surface-hover);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--wp-border-light);
+}
+
+.benefit-item h3 {
+    color: var(--wp-primary);
+    margin-bottom: 0.8rem;
+    font-size: 1.2rem;
+}
+
+/* FAQ Section Styling */
+.faq-section {
+    background: var(--wp-background);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-top: 3rem;
+}
+
+.faq-section h2 {
+    text-align: center;
+    color: var(--wp-primary);
+    margin-bottom: 2rem;
+    font-size: 2rem;
+}
+
+.faq-item {
+    background: var(--wp-surface);
+    border: 1px solid var(--wp-border-light);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+    border-color: var(--wp-primary-light);
+    box-shadow: 0 2px 8px rgba(34, 113, 177, 0.1);
+}
+
+.faq-question {
+    background: var(--wp-surface-hover);
+    padding: 1.2rem;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--wp-text-primary);
+    cursor: pointer;
+    border-bottom: 1px solid var(--wp-border-light);
+}
+
+.faq-question:before {
+    content: "❓";
+    margin-right: 0.8rem;
+    color: var(--wp-primary);
+}
+
+.faq-answer {
+    padding: 1.2rem;
+    background: var(--wp-surface);
+}
+
+.faq-answer p {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--wp-text-primary);
 }
 
 /* ===== DARK MODE SUPPORT ===== */

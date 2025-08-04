@@ -130,6 +130,10 @@ class StockScannerProfessional {
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-page-manager.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-stock-api.php';
         require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-membership-manager.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-seo-optimizer.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-seo-sitemap.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-seo-analytics.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-scheduler.php';
     }
     
     /**

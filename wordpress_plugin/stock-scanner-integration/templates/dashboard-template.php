@@ -95,12 +95,26 @@ get_header(); ?>
     <!-- Main Content -->
     <div class="stock-scanner-page-content">
         <div class="stock-scanner-container">
+            <!-- SEO-Optimized Content -->
+            <?php
+            // Add SEO-optimized content for better search rankings
+            if (class_exists('StockScannerSEO')) {
+                $seo_optimizer = new StockScannerSEO();
+                echo '<div class="seo-content-wrapper" style="margin-bottom: 2rem;">';
+                echo $seo_optimizer->get_optimized_content('dashboard');
+                echo '</div>';
+            } else {
+                echo '<h1>Professional Stock Scanner & Market Analysis Dashboard</h1>';
+                echo '<p>Advanced stock scanning platform with real-time market data and AI-powered insights.</p>';
+            }
+            ?>
+            
             <!-- Dashboard Header -->
             <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--wp-spacing-xl);">
                 <div>
-                    <h1 style="margin: 0 0 var(--wp-spacing-sm) 0; color: var(--wp-text-primary); font-size: 28px; font-weight: 600;">
+                    <h2 style="margin: 0 0 var(--wp-spacing-sm) 0; color: var(--wp-text-primary); font-size: 28px; font-weight: 600;">
                         Welcome back, <?php echo esc_html($current_user->display_name); ?>!
-                    </h1>
+                    </h2>
                     <p style="margin: 0; color: var(--wp-text-secondary); font-size: 16px;">
                         Here's your trading overview for today
                     </p>
