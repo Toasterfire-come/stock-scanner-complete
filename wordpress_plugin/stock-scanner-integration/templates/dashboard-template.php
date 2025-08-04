@@ -106,20 +106,32 @@ get_header(); ?>
                     </p>
                 </div>
                 
-                <!-- Membership Status -->
-                <div class="membership-status">
-                    <div class="membership-status-header">
-                        <span class="membership-status-badge <?php echo strtolower($membership_name); ?>">
-                            <?php echo esc_html($membership_name); ?>
-                        </span>
-                        <?php if (is_user_logged_in()): ?>
-                        <div style="margin-left: var(--wp-spacing-md); font-size: 13px; color: var(--wp-text-secondary);">
-                            API Usage: <span class="api-usage-current"><?php echo $user_stats['api_calls_today']; ?></span>/<span class="api-usage-limit"><?php echo $user_stats['api_limit']; ?></span>
-                            <div class="progress-bar" style="width: 100px; margin-top: 4px;">
-                                <div class="progress-bar-fill" style="width: <?php echo ($user_stats['api_calls_today'] / $user_stats['api_limit']) * 100; ?>%;"></div>
-                            </div>
+                <!-- Market Status & Membership -->
+                <div class="dashboard-status">
+                    <!-- Market Status Indicator -->
+                    <div class="market-status" style="margin-bottom: var(--wp-spacing-md);">
+                        <div id="market-status-indicator" style="display: flex; align-items: center; gap: var(--wp-spacing-sm);">
+                            <span class="market-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--wp-error);"></span>
+                            <span class="market-status-text" style="font-size: 13px; font-weight: 500;">Market Status Loading...</span>
                         </div>
-                        <?php endif; ?>
+                        <div id="market-time" style="font-size: 11px; color: var(--wp-text-secondary); margin-top: 2px; font-family: monospace;"></div>
+                    </div>
+                    
+                    <!-- Membership Status -->
+                    <div class="membership-status">
+                        <div class="membership-status-header">
+                            <span class="membership-status-badge <?php echo strtolower($membership_name); ?>">
+                                <?php echo esc_html($membership_name); ?>
+                            </span>
+                            <?php if (is_user_logged_in()): ?>
+                            <div style="margin-left: var(--wp-spacing-md); font-size: 13px; color: var(--wp-text-secondary);">
+                                API Usage: <span class="api-usage-current"><?php echo $user_stats['api_calls_today']; ?></span>/<span class="api-usage-limit"><?php echo $user_stats['api_limit']; ?></span>
+                                <div class="progress-bar" style="width: 100px; margin-top: 4px;">
+                                    <div class="progress-bar-fill" style="width: <?php echo ($user_stats['api_calls_today'] / $user_stats['api_limit']) * 100; ?>%;"></div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -53,6 +53,7 @@
             this.startPeriodicUpdates();
             this.initializeCharts();
             this.setupMembershipComponents();
+            this.updateMarketStatusIndicator();
             
             console.log('Stock Scanner Professional initialized');
         },
@@ -167,6 +168,12 @@
             const $widget = widget.$element;
             
             try {
+                // Check market hours first
+                if (!this.isMarketHours()) {
+                    this.showMarketHoursError($widget, symbol);
+                    return;
+                }
+                
                 // Check cache first
                 const cached = this.getFromCache(symbol);
                 if (cached && Date.now() - cached.timestamp < 60000) { // 1 minute cache
@@ -324,6 +331,11 @@
                     this.updateAllWidgets();
                 }
             }, this.config.updateInterval));
+            
+            // Update market status every minute
+            this.state.updateTimers.set('market-status', setInterval(() => {
+                this.updateMarketStatusIndicator();
+            }, 60000));
         },
         
         /**
@@ -539,6 +551,36 @@
             }
             
             const $results = $form.find('.search-results');
+            
+            // Check if market is open for live data
+            if (!this.isMarketHours()) {
+                const currentTime = this.getCurrentEasternTime();
+                const nextOpen = this.getNextMarketOpen();
+                
+                $results.html(`
+                    <div style="
+                        padding: var(--wp-spacing-md);
+                        background: rgba(219, 166, 23, 0.1);
+                        border: 1px solid var(--wp-warning);
+                        border-radius: var(--wp-radius-sm);
+                        margin-top: var(--wp-spacing-md);
+                    ">
+                        <div style="display: flex; align-items: center; margin-bottom: var(--wp-spacing-sm);">
+                            <span class="dashicons dashicons-clock" style="color: var(--wp-warning); margin-right: 8px;"></span>
+                            <strong style="color: var(--wp-warning);">Market Closed - Limited Search</strong>
+                        </div>
+                        <p style="margin-bottom: var(--wp-spacing-sm); font-size: 13px;">
+                            Stock search is available but live filtering and real-time data are not accessible outside market hours.
+                        </p>
+                        <div style="font-size: 12px; color: var(--wp-text-secondary);">
+                            <strong>Current:</strong> ${currentTime}<br>
+                            <strong>Next Open:</strong> ${nextOpen}
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+            
             $results.html('<div class="loading">Searching...</div>');
             
             try {
@@ -756,6 +798,199 @@
                     $(this).remove();
                 });
             });
+        },
+        
+        /**
+         * Check if current time is within market hours (including pre-market and post-market)
+         */
+        isMarketHours() {
+            const now = new Date();
+            const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+            
+            // Get day of week (0 = Sunday, 6 = Saturday)
+            const dayOfWeek = easternTime.getDay();
+            
+            // Market is closed on weekends
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                return false;
+            }
+            
+            // Get current hour and minutes in Eastern Time
+            const currentHour = easternTime.getHours();
+            const currentMinutes = easternTime.getMinutes();
+            const currentTimeMinutes = currentHour * 60 + currentMinutes;
+            
+            // Market hours (Eastern Time):
+            // Pre-market: 4:00 AM - 9:30 AM
+            // Regular: 9:30 AM - 4:00 PM  
+            // Post-market: 4:00 PM - 8:00 PM
+            const preMarketStart = 4 * 60; // 4:00 AM
+            const postMarketEnd = 20 * 60; // 8:00 PM
+            
+            return currentTimeMinutes >= preMarketStart && currentTimeMinutes <= postMarketEnd;
+        },
+        
+        /**
+         * Get current Eastern Time formatted string
+         */
+        getCurrentEasternTime() {
+            const now = new Date();
+            const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+            
+            return easternTime.toLocaleString('en-US', {
+                timeZone: 'America/New_York',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+            });
+        },
+        
+        /**
+         * Get next market open time
+         */
+        getNextMarketOpen() {
+            const now = new Date();
+            const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+            
+            // Clone the date for manipulation
+            let nextOpen = new Date(easternTime);
+            
+            // If it's weekend, move to Monday
+            const dayOfWeek = nextOpen.getDay();
+            if (dayOfWeek === 0) { // Sunday
+                nextOpen.setDate(nextOpen.getDate() + 1); // Move to Monday
+            } else if (dayOfWeek === 6) { // Saturday
+                nextOpen.setDate(nextOpen.getDate() + 2); // Move to Monday
+            } else {
+                // If we're past 8 PM ET, move to next day
+                const currentHour = nextOpen.getHours();
+                if (currentHour >= 20) {
+                    nextOpen.setDate(nextOpen.getDate() + 1);
+                    // If next day is Saturday, move to Monday
+                    if (nextOpen.getDay() === 6) {
+                        nextOpen.setDate(nextOpen.getDate() + 2);
+                    }
+                }
+            }
+            
+            // Set time to 4:00 AM ET (pre-market open)
+            nextOpen.setHours(4, 0, 0, 0);
+            
+            return nextOpen.toLocaleString('en-US', {
+                timeZone: 'America/New_York',
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        },
+        
+        /**
+         * Show market hours error message
+         */
+        showMarketHoursError($widget, symbol) {
+            const currentTime = this.getCurrentEasternTime();
+            const nextOpen = this.getNextMarketOpen();
+            
+            $widget.find('.stock-data, .stock-widget-details').html(`
+                <div class="market-hours-error" style="
+                    text-align: center;
+                    padding: var(--wp-spacing-lg);
+                    background: rgba(214, 54, 56, 0.1);
+                    border: 1px solid var(--wp-error);
+                    border-radius: var(--wp-radius-md);
+                    color: var(--wp-text-primary);
+                ">
+                    <div style="margin-bottom: var(--wp-spacing-md);">
+                        <span class="dashicons dashicons-clock" style="font-size: 24px; color: var(--wp-error);"></span>
+                    </div>
+                    <h4 style="color: var(--wp-error); margin-bottom: var(--wp-spacing-sm);">
+                        Market Closed - ${symbol}
+                    </h4>
+                    <p style="margin-bottom: var(--wp-spacing-md); line-height: 1.5;">
+                        <strong>Stock filtering and live data are only available during market hours:</strong><br>
+                        Pre-market: 4:00 AM - 9:30 AM ET<br>
+                        Regular Hours: 9:30 AM - 4:00 PM ET<br>
+                        Post-market: 4:00 PM - 8:00 PM ET
+                    </p>
+                    <div style="background: var(--wp-surface); padding: var(--wp-spacing-md); border-radius: var(--wp-radius-sm); margin-bottom: var(--wp-spacing-md);">
+                        <strong>Current Time:</strong><br>
+                        <span style="font-family: monospace; color: var(--wp-text-secondary);">${currentTime}</span>
+                    </div>
+                    <div style="background: var(--wp-background); padding: var(--wp-spacing-md); border-radius: var(--wp-radius-sm); margin-bottom: var(--wp-spacing-md);">
+                        <strong>Next Market Open:</strong><br>
+                        <span style="font-family: monospace; color: var(--wp-primary);">${nextOpen}</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--wp-text-secondary); margin: 0;">
+                        The API does not provide real-time data outside of these hours. 
+                        Historical data and account features remain available 24/7.
+                    </p>
+                </div>
+            `);
+        },
+        
+        /**
+         * Update market status indicator in header
+         */
+        updateMarketStatusIndicator() {
+            const $indicator = $('#market-status-indicator');
+            const $timeDisplay = $('#market-time');
+            
+            if ($indicator.length === 0) return;
+            
+            const isOpen = this.isMarketHours();
+            const currentTime = this.getCurrentEasternTime();
+            const $dot = $indicator.find('.market-status-dot');
+            const $text = $indicator.find('.market-status-text');
+            
+            if (isOpen) {
+                // Market is open
+                const now = new Date();
+                const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+                const currentHour = easternTime.getHours();
+                const currentMinutes = easternTime.getMinutes();
+                const currentTimeMinutes = currentHour * 60 + currentMinutes;
+                
+                // Determine market session
+                const preMarketEnd = 9 * 60 + 30; // 9:30 AM
+                const regularMarketEnd = 16 * 60; // 4:00 PM
+                
+                let sessionText = '';
+                if (currentTimeMinutes < preMarketEnd) {
+                    sessionText = 'Pre-Market Open';
+                    $dot.css('background', 'var(--wp-warning)');
+                } else if (currentTimeMinutes < regularMarketEnd) {
+                    sessionText = 'Market Open';
+                    $dot.css('background', 'var(--wp-success)');
+                } else {
+                    sessionText = 'Post-Market Open';
+                    $dot.css('background', 'var(--wp-warning)');
+                }
+                
+                $text.text(sessionText);
+            } else {
+                // Market is closed
+                $dot.css('background', 'var(--wp-error)');
+                $text.text('Market Closed');
+            }
+            
+            // Update time display
+            $timeDisplay.text(currentTime);
+            
+            // Add tooltip with next open time if market is closed
+            if (!isOpen) {
+                const nextOpen = this.getNextMarketOpen();
+                $indicator.attr('title', `Next market open: ${nextOpen}`);
+            } else {
+                $indicator.removeAttr('title');
+            }
         },
         
         /**
