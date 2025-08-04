@@ -1,11 +1,16 @@
 <?php
 /**
- * Plugin Name: Stock Scanner Integration
+ * Plugin Name: Stock Scanner Professional
  * Plugin URI: https://retailtradescanner.com
- * Description: Creates 19 pages from XML export with live stock widgets, membership paywall, and seamless Django API integration
- * Version: 2.0.0
- * Author: Stock Scanner Team
+ * Description: Professional end-to-end stock scanner with seamless navigation, WordPress admin styling, and comprehensive membership integration
+ * Version: 3.0.0
+ * Author: Stock Scanner Professional Team
  * License: GPL v2 or later
+ * Text Domain: stock-scanner-pro
+ * Domain Path: /languages
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
  */
 
 // Prevent direct access
@@ -13,96 +18,215 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/**
- * PLUGIN FUNCTIONALITY OVERVIEW
- * 
- * This plugin automatically creates 19 pages based on the WordPress XML export:
- * 
- * MAIN TRADING PAGES:
- * - Premium Plans (/premium-plans/) - Gold/Silver/Free comparison with live widgets
- * - Email Stock Lists (/email-stock-lists/) - Subscribe to alert lists
- * - All Stock Alerts (/all-stock-lists/) - Complete stock list collection
- * - Popular Stock Lists (/popular-stock-lists/) - Most subscribed lists
- * - Stock Search (/stock-search/) - Advanced search tools
- * - Personalized Stock Finder (/personalized-stock-finder/) - AI recommendations
- * - News Scrapper (/news-scrapper/) - Financial news aggregation
- * - Filter and Scrapper Pages (/filter-and-scrapper-pages/) - Advanced filtering
- * 
- * MEMBERSHIP & ACCOUNT:
- * - Membership Account (/membership-account/) - Account management
- * - Membership Billing (/membership-billing/) - Payment history
- * - Membership Cancel (/membership-cancel/) - Subscription cancellation
- * - Membership Checkout (/membership-checkout/) - Purchase process
- * - Membership Confirmation (/membership-confirmation/) - Purchase confirmation
- * - Membership Orders (/membership-orders/) - Order history
- * - Membership Levels (/membership-levels/) - Plan comparison
- * - Login (/login/) - User authentication
- * - Your Profile (/your-profile/) - Profile management
- * 
- * LEGAL PAGES:
- * - Terms and Conditions (/terms-and-conditions/)
- * - Privacy Policy (/privacy-policy/)
- * 
- * ADDITIONAL FEATURES:
- * - Live stock widgets on every page
- * - Responsive design matching XML formatting
- * - Membership paywall integration
- * - Complete navigation menu
- * - Django API integration
- */
+// Define plugin constants
+define('STOCK_SCANNER_PRO_VERSION', '3.0.0');
+define('STOCK_SCANNER_PRO_PLUGIN_FILE', __FILE__);
+define('STOCK_SCANNER_PRO_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('STOCK_SCANNER_PRO_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('STOCK_SCANNER_PRO_ASSETS_URL', STOCK_SCANNER_PRO_PLUGIN_URL . 'assets/');
 
-class StockScannerIntegration {
+/**
+ * Main Stock Scanner Professional Class
+ * 
+ * Professional WordPress plugin for end-to-end stock scanning with:
+ * - Seamless page navigation using AJAX
+ * - WordPress admin console styling and color palette
+ * - Professional membership tiers (Free, Bronze, Silver, Gold)
+ * - Real-time stock data integration
+ * - Modern responsive design
+ * - Comprehensive admin dashboard
+ */
+class StockScannerProfessional {
     
+    private static $instance = null;
     private $api_base_url;
     private $api_secret;
+    private $pages_created = false;
     
+    // WordPress admin color palette
+    private $admin_colors = [
+        'primary' => '#2271b1',
+        'primary_hover' => '#135e96',
+        'secondary' => '#646970',
+        'success' => '#00a32a',
+        'warning' => '#dba617',
+        'error' => '#d63638',
+        'background' => '#f0f0f1',
+        'surface' => '#ffffff',
+        'border' => '#c3c4c7',
+        'text_primary' => '#1d2327',
+        'text_secondary' => '#646970'
+    ];
+    
+    /**
+     * Singleton instance
+     */
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Constructor
+     */
     public function __construct() {
+        $this->init_properties();
+        $this->init_hooks();
+        $this->load_dependencies();
+    }
+    
+    /**
+     * Initialize plugin properties
+     */
+    private function init_properties() {
         $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
         $this->api_secret = get_option('stock_scanner_api_secret', '');
-        
-        add_action('init', array($this, 'init'));
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        add_shortcode('stock_scanner', array($this, 'stock_scanner_shortcode'));
-        add_action('admin_menu', array($this, 'admin_menu'));
-        add_action('wp_dashboard_setup', array($this, 'add_dashboard_widget'));
-        
-        // Sales tax hooks
-        add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
-        add_action('pmpro_checkout_preheader', array($this, 'detect_user_location'));
-        add_filter('pmpro_checkout_order', array($this, 'add_tax_to_order'), 10, 1);
-        
-        // Include PayPal integration
-        require_once plugin_dir_path(__FILE__) . 'includes/class-paypal-integration.php';
     }
     
+    /**
+     * Initialize WordPress hooks
+     */
+    private function init_hooks() {
+        // Core hooks
+        add_action('init', [$this, 'init']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+        
+        // Admin hooks
+        add_action('admin_menu', [$this, 'add_admin_menu']);
+        add_action('wp_dashboard_setup', [$this, 'add_dashboard_widget']);
+        add_action('admin_init', [$this, 'register_settings']);
+        
+        // AJAX hooks
+        add_action('wp_ajax_stock_scanner_get_data', [$this, 'ajax_get_stock_data']);
+        add_action('wp_ajax_nopriv_stock_scanner_get_data', [$this, 'ajax_get_stock_data']);
+        add_action('wp_ajax_stock_scanner_load_page', [$this, 'ajax_load_page']);
+        add_action('wp_ajax_nopriv_stock_scanner_load_page', [$this, 'ajax_load_page']);
+        
+        // Shortcodes
+        add_shortcode('stock_scanner', [$this, 'stock_scanner_shortcode']);
+        add_shortcode('stock_navigation', [$this, 'navigation_shortcode']);
+        add_shortcode('membership_status', [$this, 'membership_status_shortcode']);
+        
+        // Membership hooks
+        add_filter('pmpro_tax', [$this, 'calculate_sales_tax'], 10, 3);
+        add_action('pmpro_checkout_preheader', [$this, 'detect_user_location']);
+        add_filter('pmpro_checkout_order', [$this, 'add_tax_to_order'], 10, 1);
+        add_action('pmpro_after_change_membership_level', [$this, 'sync_membership_level'], 10, 2);
+        
+        // Plugin activation/deactivation
+        register_activation_hook(STOCK_SCANNER_PRO_PLUGIN_FILE, [$this, 'activate']);
+        register_deactivation_hook(STOCK_SCANNER_PRO_PLUGIN_FILE, [$this, 'deactivate']);
+    }
+    
+    /**
+     * Load plugin dependencies
+     */
+    private function load_dependencies() {
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-paypal-integration.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-admin-dashboard.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-page-manager.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-stock-api.php';
+        require_once STOCK_SCANNER_PRO_PLUGIN_DIR . 'includes/class-membership-manager.php';
+    }
+    
+    /**
+     * Initialize plugin
+     */
     public function init() {
-        // Register AJAX actions
-        add_action('wp_ajax_get_stock_data', array($this, 'ajax_get_stock_data'));
-        add_action('wp_ajax_nopriv_get_stock_data', array($this, 'ajax_get_stock_data'));
+        // Load text domain
+        load_plugin_textdomain('stock-scanner-pro', false, dirname(plugin_basename(STOCK_SCANNER_PRO_PLUGIN_FILE)) . '/languages');
         
-        // Hook into PMP membership changes
-        add_action('pmpro_after_change_membership_level', array($this, 'sync_membership_level'), 10, 2);
+        // Create pages on first activation
+        if (!$this->pages_created && get_option('stock_scanner_pages_created') !== 'yes') {
+            $this->create_plugin_pages();
+            update_option('stock_scanner_pages_created', 'yes');
+            $this->pages_created = true;
+        }
+        
+        // Add body classes for styling
+        add_filter('body_class', [$this, 'add_body_classes']);
     }
     
-    public function enqueue_scripts() {
-        wp_enqueue_script('stock-scanner-js', plugin_dir_url(__FILE__) . 'assets/stock-scanner.js', array('jquery'), '1.0.0', true);
-        wp_enqueue_script('paypal-integration', plugin_dir_url(__FILE__) . 'assets/paypal-integration.js', array('jquery'), '1.0.0', true);
-        wp_enqueue_style('stock-scanner-css', plugin_dir_url(__FILE__) . 'assets/stock-scanner.css', array(), '1.0.0');
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueue_frontend_assets() {
+        // CSS
+        wp_enqueue_style(
+            'stock-scanner-pro-styles',
+            STOCK_SCANNER_PRO_ASSETS_URL . 'css/stock-scanner-professional.css',
+            [],
+            STOCK_SCANNER_PRO_VERSION
+        );
         
-        // Localize script for AJAX
-        wp_localize_script('stock-scanner-js', 'stock_scanner_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('stock_scanner_nonce')
-        ));
+        // JavaScript
+        wp_enqueue_script(
+            'stock-scanner-pro-main',
+            STOCK_SCANNER_PRO_ASSETS_URL . 'js/stock-scanner-professional.js',
+            ['jquery', 'wp-util'],
+            STOCK_SCANNER_PRO_VERSION,
+            true
+        );
         
-        // Localize PayPal script
-        wp_localize_script('paypal-integration', 'paypalConfig', array(
+        wp_enqueue_script(
+            'stock-scanner-pro-navigation',
+            STOCK_SCANNER_PRO_ASSETS_URL . 'js/seamless-navigation.js',
+            ['jquery', 'stock-scanner-pro-main'],
+            STOCK_SCANNER_PRO_VERSION,
+            true
+        );
+        
+        // Localize scripts
+        wp_localize_script('stock-scanner-pro-main', 'stockScannerPro', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('paypal_nonce'),
-            'clientId' => get_option('paypal_client_id', ''),
-            'successUrl' => get_option('paypal_return_url', ''),
-            'cancelUrl' => get_option('paypal_cancel_url', '')
-        ));
+            'nonce' => wp_create_nonce('stock_scanner_pro_nonce'),
+            'apiUrl' => $this->api_base_url,
+            'colors' => $this->admin_colors,
+            'isLoggedIn' => is_user_logged_in(),
+            'userLevel' => $this->get_user_membership_level(),
+            'translations' => [
+                'loading' => __('Loading...', 'stock-scanner-pro'),
+                'error' => __('Error loading data', 'stock-scanner-pro'),
+                'upgradeRequired' => __('Upgrade required', 'stock-scanner-pro')
+            ]
+        ]);
+    }
+    
+    /**
+     * Enqueue admin assets
+     */
+    public function enqueue_admin_assets($hook) {
+        // Only load on our admin pages
+        if (strpos($hook, 'stock-scanner') === false) {
+            return;
+        }
+        
+        wp_enqueue_style(
+            'stock-scanner-admin',
+            STOCK_SCANNER_PRO_ASSETS_URL . 'css/admin-dashboard.css',
+            ['wp-admin'],
+            STOCK_SCANNER_PRO_VERSION
+        );
+        
+        wp_enqueue_script(
+            'stock-scanner-admin',
+            STOCK_SCANNER_PRO_ASSETS_URL . 'js/admin-dashboard.js',
+            ['jquery', 'wp-util', 'chart-js'],
+            STOCK_SCANNER_PRO_VERSION,
+            true
+        );
+        
+        // Chart.js for analytics
+        wp_enqueue_script(
+            'chart-js',
+            'https://cdn.jsdelivr.net/npm/chart.js',
+            [],
+            '3.9.1',
+            true
+        );
     }
     
     /**
@@ -736,10 +860,92 @@ class StockScannerIntegration {
         </script>
         <?php
     }
+    
+    /**
+     * Create plugin pages with professional structure
+     */
+    private function create_plugin_pages() {
+        $pages = [
+            'stock-scanner-dashboard' => [
+                'title' => 'Stock Scanner Dashboard',
+                'content' => $this->get_dashboard_content(),
+                'template' => 'dashboard'
+            ],
+            'premium-plans' => [
+                'title' => 'Premium Plans',
+                'content' => $this->get_premium_plans_content(),
+                'template' => 'premium-plans'
+            ],
+            'stock-scanner' => [
+                'title' => 'Stock Scanner',
+                'content' => $this->get_stock_scanner_content(),
+                'template' => 'stock-scanner'
+            ],
+            'watchlists' => [
+                'title' => 'My Watchlists',
+                'content' => $this->get_watchlists_content(),
+                'template' => 'watchlists'
+            ],
+            'stock-alerts' => [
+                'title' => 'Stock Alerts',
+                'content' => $this->get_stock_alerts_content(),
+                'template' => 'stock-alerts'
+            ],
+            'market-analysis' => [
+                'title' => 'Market Analysis',
+                'content' => $this->get_market_analysis_content(),
+                'template' => 'market-analysis'
+            ],
+            'news-feed' => [
+                'title' => 'Financial News',
+                'content' => $this->get_news_feed_content(),
+                'template' => 'news-feed'
+            ],
+            'membership-account' => [
+                'title' => 'My Account',
+                'content' => $this->get_account_content(),
+                'template' => 'account'
+            ],
+            'membership-billing' => [
+                'title' => 'Billing & Payments',
+                'content' => $this->get_billing_content(),
+                'template' => 'billing'
+            ]
+        ];
+        
+        foreach ($pages as $slug => $page_data) {
+            $this->create_page($slug, $page_data);
+        }
+    }
+    
+    /**
+     * Create individual page
+     */
+    private function create_page($slug, $data) {
+        $existing_page = get_page_by_path($slug);
+        
+        if (!$existing_page) {
+            $page_data = [
+                'post_title' => $data['title'],
+                'post_content' => $data['content'],
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'post_name' => $slug,
+                'post_author' => 1
+            ];
+            
+            $page_id = wp_insert_post($page_data);
+            
+            if ($page_id) {
+                update_post_meta($page_id, '_stock_scanner_template', $data['template']);
+                update_post_meta($page_id, '_stock_scanner_page', 'yes');
+            }
+        }
+    }
 }
 
 // Initialize the plugin
-new StockScannerIntegration();
+new StockScannerProfessional();
 
 // Activation hook
 register_activation_hook(__FILE__, function() {
