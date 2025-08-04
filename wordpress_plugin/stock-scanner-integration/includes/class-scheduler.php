@@ -28,110 +28,366 @@ class StockScannerScheduler {
     private $market_close_hour = 20; // 8:00 PM ET (post-market)
     private $system_check_interval = 300; // 5 minutes for system checks
     
-    // Process tracking
-    private $stock_process_file;
-    private $news_process_file;
-    private $master_process_file;
+    // Process tracking (using WordPress transients for hosted environment)
     private $log_file;
     private $status_file;
     
-    // Paths
-    private $stock_script_path;
-    private $news_script_path;
-    private $server_start_script;
-    private $django_project_path;
+    // API Configuration for Cloudflare tunnel
+    private $api_base_url;
+    private $api_tunnel_url;
+    
+    // Windows/Hosted environment flags
+    private $is_hosted_environment = true;
+    private $use_wp_cron = true;
     
     public function __construct() {
-        $this->stock_process_file = ABSPATH . 'wp-content/stock_process.pid';
-        $this->news_process_file = ABSPATH . 'wp-content/news_process.pid';
-        $this->master_process_file = ABSPATH . 'wp-content/master_scheduler.pid';
-        $this->log_file = ABSPATH . 'wp-content/scheduler.log';
-        $this->status_file = ABSPATH . 'wp-content/scheduler_status.json';
+        // WordPress-based file paths (hosted environment)
+        $upload_dir = wp_upload_dir();
+        $this->log_file = $upload_dir['basedir'] . '/stock-scanner-logs.txt';
+        $this->status_file = $upload_dir['basedir'] . '/scheduler-status.json';
         
-        // Set script paths
-        $this->stock_script_path = dirname(ABSPATH) . '/enhanced_stock_retrieval_working.py';
-        $this->news_script_path = dirname(ABSPATH) . '/yahoo_news_test.py';
-        $this->server_start_script = dirname(ABSPATH) . '/run_production.sh';
-        $this->django_project_path = dirname(ABSPATH) . '/stockscanner_django';
+        // API Configuration - Set your Cloudflare tunnel URL here
+        $this->api_tunnel_url = get_option('stock_scanner_api_url', 'https://your-tunnel.trycloudflare.com');
+        $this->api_base_url = $this->api_tunnel_url . '/api';
         
-        // Register shutdown function to clean up processes
+        // Initialize WordPress hooks for hosted environment
+        $this->init_wp_cron_hooks();
+        
+        // Register shutdown function
         register_shutdown_function([$this, 'cleanup']);
     }
     
     /**
-     * Start the master scheduler daemon with market hours awareness
+     * Initialize WordPress cron hooks for hosted environment
+     */
+    private function init_wp_cron_hooks() {
+        // Register custom cron intervals
+        add_filter('cron_schedules', [$this, 'add_custom_cron_intervals']);
+        
+        // Register cron hooks
+        add_action('stock_scanner_update_stocks', [$this, 'execute_stock_update']);
+        add_action('stock_scanner_update_news', [$this, 'execute_news_update']);
+        add_action('stock_scanner_system_check', [$this, 'execute_system_check']);
+        add_action('stock_scanner_market_check', [$this, 'execute_market_check']);
+    }
+    
+    /**
+     * Add custom WordPress cron intervals
+     */
+    public function add_custom_cron_intervals($schedules) {
+        $schedules['three_minutes'] = [
+            'interval' => 180,
+            'display' => 'Every 3 Minutes'
+        ];
+        
+        $schedules['five_minutes'] = [
+            'interval' => 300,
+            'display' => 'Every 5 Minutes'
+        ];
+        
+        return $schedules;
+    }
+    
+    /**
+     * Start the scheduler using WordPress cron (hosted environment)
      */
     public function start() {
-        $this->log("Stock Scanner Master Scheduler starting...");
+        $this->log("Stock Scanner Scheduler starting (WordPress Cron)...");
         
-        // Start master scheduler process
-        $pid = pcntl_fork();
+        // Clear any existing scheduled events
+        $this->stop();
         
-        if ($pid == -1) {
-            $this->log("ERROR: Could not fork master scheduler process");
-            return false;
-        } elseif ($pid == 0) {
-            // Child process - run master scheduler
-            $this->run_master_scheduler();
-            exit(0);
-        } else {
-            // Parent process - save PID
-            file_put_contents($this->master_process_file, $pid);
-            $this->log("Master scheduler started with PID: $pid");
-            return $pid;
+        // Check market status first
+        $market_status = $this->get_current_market_status();
+        
+        if ($market_status['is_market_hours']) {
+            // Market is open - start data collection
+            $this->start_data_collection();
+        }
+        
+        // Always schedule market check (runs every 5 minutes)
+        $this->schedule_market_check();
+        
+        // Schedule system checks (every 5 minutes)
+        $this->schedule_system_check();
+        
+        // Update status
+        set_transient('stock_scanner_scheduler_active', true, HOUR_IN_SECONDS);
+        $this->update_status_file($market_status);
+        
+        $this->log("✓ WordPress Cron scheduler started successfully");
+        return true;
+    }
+    
+    /**
+     * Start data collection schedulers
+     */
+    private function start_data_collection() {
+        // Schedule stock updates every 3 minutes
+        if (!wp_next_scheduled('stock_scanner_update_stocks')) {
+            wp_schedule_event(time(), 'three_minutes', 'stock_scanner_update_stocks');
+            $this->log("✓ Stock update scheduler started");
+        }
+        
+        // Schedule news updates every 3 minutes (offset by 90 seconds)
+        if (!wp_next_scheduled('stock_scanner_update_news')) {
+            wp_schedule_event(time() + 90, 'three_minutes', 'stock_scanner_update_news');
+            $this->log("✓ News update scheduler started");
+        }
+        
+        set_transient('stock_scanner_data_collection_active', true, HOUR_IN_SECONDS);
+    }
+    
+    /**
+     * Stop data collection schedulers
+     */
+    private function stop_data_collection() {
+        wp_clear_scheduled_hook('stock_scanner_update_stocks');
+        wp_clear_scheduled_hook('stock_scanner_update_news');
+        delete_transient('stock_scanner_data_collection_active');
+        $this->log("Data collection schedulers stopped");
+    }
+    
+    /**
+     * Schedule market status checks
+     */
+    private function schedule_market_check() {
+        if (!wp_next_scheduled('stock_scanner_market_check')) {
+            wp_schedule_event(time(), 'five_minutes', 'stock_scanner_market_check');
+            $this->log("✓ Market check scheduler started");
         }
     }
     
     /**
-     * Run master scheduler that manages market hours and system startup
+     * Schedule system health checks
      */
-    private function run_master_scheduler() {
-        $this->log("Master scheduler loop started - managing market hours and systems");
+    private function schedule_system_check() {
+        if (!wp_next_scheduled('stock_scanner_system_check')) {
+            wp_schedule_event(time() + 60, 'five_minutes', 'stock_scanner_system_check');
+            $this->log("✓ System check scheduler started");
+        }
+    }
+    
+    /**
+     * Execute stock data update via WordPress cron
+     */
+    public function execute_stock_update() {
+        $start_time = microtime(true);
         
-        while (true) {
-            try {
-                $current_status = $this->get_current_market_status();
-                
-                if ($current_status['is_market_hours']) {
-                    // Market is open - ensure systems are running
-                    if (!$this->are_systems_running()) {
-                        $this->log("Market is open but systems are down - starting up...");
-                        $this->startup_systems();
-                    }
-                    
-                    // Ensure schedulers are running
-                    if (!$this->are_schedulers_running()) {
-                        $this->log("Starting data collection schedulers...");
-                        $this->start_data_schedulers();
-                    }
-                    
-                } else {
-                    // Market is closed - stop data collection but keep master running
-                    if ($this->are_schedulers_running()) {
-                        $this->log("Market closed - stopping data collection schedulers");
-                        $this->stop_data_schedulers();
-                    }
-                    
-                    // If we're close to market open, prepare systems
-                    if ($current_status['minutes_to_open'] <= 30 && $current_status['minutes_to_open'] > 0) {
-                        $this->log("Market opens in {$current_status['minutes_to_open']} minutes - preparing systems");
-                        $this->prepare_for_market_open();
-                    }
-                }
-                
-                // Perform system health checks
-                $this->perform_system_checks();
-                
-                // Update status file
-                $this->update_status_file($current_status);
-                
-                // Sleep for system check interval
-                sleep($this->system_check_interval);
-                
-            } catch (Exception $e) {
-                $this->log("ERROR in master scheduler: " . $e->getMessage());
-                sleep(60); // Wait 1 minute before retrying
+        try {
+            $this->log("Starting stock data update...");
+            
+            // Check if market is open
+            $market_status = $this->get_current_market_status();
+            if (!$market_status['is_market_hours']) {
+                $this->log("Market closed - stopping stock updates");
+                $this->stop_data_collection();
+                return;
             }
+            
+            // Make API call to trigger stock data update
+            $response = $this->call_api_endpoint('/stocks/update/', 'POST');
+            
+            if ($response && isset($response['status']) && $response['status'] === 'success') {
+                $execution_time = microtime(true) - $start_time;
+                $this->log("✓ Stock update completed in " . round($execution_time, 2) . " seconds");
+                
+                // Store last execution time for monitoring
+                set_transient('stock_scanner_last_stock_update', time(), DAY_IN_SECONDS);
+                
+            } else {
+                $this->log("ERROR: Stock update failed - " . ($response['message'] ?? 'Unknown error'));
+            }
+            
+        } catch (Exception $e) {
+            $this->log("ERROR in stock update: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Execute news data update via WordPress cron
+     */
+    public function execute_news_update() {
+        $start_time = microtime(true);
+        
+        try {
+            $this->log("Starting news data update...");
+            
+            // Check if market is open
+            $market_status = $this->get_current_market_status();
+            if (!$market_status['is_market_hours']) {
+                $this->log("Market closed - stopping news updates");
+                $this->stop_data_collection();
+                return;
+            }
+            
+            // Make API call to trigger news data update
+            $response = $this->call_api_endpoint('/news/update/', 'POST');
+            
+            if ($response && isset($response['status']) && $response['status'] === 'success') {
+                $execution_time = microtime(true) - $start_time;
+                $this->log("✓ News update completed in " . round($execution_time, 2) . " seconds");
+                
+                // Store last execution time for monitoring
+                set_transient('stock_scanner_last_news_update', time(), DAY_IN_SECONDS);
+                
+            } else {
+                $this->log("ERROR: News update failed - " . ($response['message'] ?? 'Unknown error'));
+            }
+            
+        } catch (Exception $e) {
+            $this->log("ERROR in news update: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Execute market status check via WordPress cron
+     */
+    public function execute_market_check() {
+        try {
+            $market_status = $this->get_current_market_status();
+            
+            // Check if we need to start or stop data collection
+            $data_collection_active = get_transient('stock_scanner_data_collection_active');
+            
+            if ($market_status['is_market_hours'] && !$data_collection_active) {
+                // Market opened - start data collection
+                $this->log("Market opened - starting data collection");
+                $this->start_data_collection();
+                
+            } elseif (!$market_status['is_market_hours'] && $data_collection_active) {
+                // Market closed - stop data collection
+                $this->log("Market closed - stopping data collection");
+                $this->stop_data_collection();
+            }
+            
+            // Update status file
+            $this->update_status_file($market_status);
+            
+            // Renew scheduler active transient
+            set_transient('stock_scanner_scheduler_active', true, HOUR_IN_SECONDS);
+            
+        } catch (Exception $e) {
+            $this->log("ERROR in market check: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Execute system health check via WordPress cron
+     */
+    public function execute_system_check() {
+        try {
+            $this->log("Running system health check...");
+            
+            $checks = [
+                'api_connectivity' => $this->test_api_connectivity(),
+                'wordpress_health' => $this->check_wordpress_health(),
+                'disk_space' => $this->check_disk_space(),
+                'memory_usage' => $this->check_memory_usage()
+            ];
+            
+            $all_passed = true;
+            foreach ($checks as $check_name => $result) {
+                if (!$result['status']) {
+                    $this->log("WARNING: {$check_name} check failed: {$result['message']}");
+                    $all_passed = false;
+                } else {
+                    $this->log("✓ {$check_name}: {$result['message']}");
+                }
+            }
+            
+            if ($all_passed) {
+                $this->log("✓ All system checks passed");
+            }
+            
+            // Store system health status
+            set_transient('stock_scanner_system_health', $checks, HOUR_IN_SECONDS);
+            
+        } catch (Exception $e) {
+            $this->log("ERROR in system check: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Make API call to Cloudflare tunnel endpoint
+     */
+    private function call_api_endpoint($endpoint, $method = 'GET', $data = null) {
+        $url = $this->api_base_url . $endpoint;
+        
+        $args = [
+            'method' => $method,
+            'timeout' => 30,
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'User-Agent' => 'WordPress Stock Scanner Plugin'
+            ]
+        ];
+        
+        if ($data && $method !== 'GET') {
+            $args['body'] = json_encode($data);
+        }
+        
+        $response = wp_remote_request($url, $args);
+        
+        if (is_wp_error($response)) {
+            $this->log("API Error: " . $response->get_error_message());
+            return false;
+        }
+        
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        
+        if ($status_code >= 200 && $status_code < 300) {
+            return json_decode($body, true);
+        } else {
+            $this->log("API HTTP Error: Status {$status_code}, Body: {$body}");
+            return false;
+        }
+    }
+    
+    /**
+     * Test API connectivity
+     */
+    private function test_api_connectivity() {
+        $response = $this->call_api_endpoint('/health/', 'GET');
+        
+        if ($response) {
+            return [
+                'status' => true,
+                'message' => 'API connectivity OK'
+            ];
+        } else {
+            return [
+                'status' => false,
+                'message' => 'API not reachable via Cloudflare tunnel'
+            ];
+        }
+    }
+    
+    /**
+     * Check WordPress health
+     */
+    private function check_wordpress_health() {
+        try {
+            global $wpdb;
+            $result = $wpdb->get_var("SELECT 1");
+            
+            if ($result == 1) {
+                return [
+                    'status' => true,
+                    'message' => 'WordPress database connection OK'
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'WordPress database connection failed'
+                ];
+            }
+        } catch (Exception $e) {
+            return [
+                'status' => false,
+                'message' => 'WordPress health check error: ' . $e->getMessage()
+            ];
         }
     }
     
@@ -319,57 +575,48 @@ class StockScannerScheduler {
     }
     
     /**
-     * Stop all scheduler processes
+     * Stop the scheduler and all WordPress cron events
      */
     public function stop() {
         $this->log("Stopping Stock Scanner Scheduler...");
         
-        // Stop stock process
-        if (file_exists($this->stock_process_file)) {
-            $stock_pid = (int) file_get_contents($this->stock_process_file);
-            if ($stock_pid > 0) {
-                posix_kill($stock_pid, SIGTERM);
-                $this->log("Terminated stock process PID: $stock_pid");
-            }
-            unlink($this->stock_process_file);
-        }
+        // Clear all scheduled WordPress cron events
+        wp_clear_scheduled_hook('stock_scanner_update_stocks');
+        wp_clear_scheduled_hook('stock_scanner_update_news');
+        wp_clear_scheduled_hook('stock_scanner_system_check');
+        wp_clear_scheduled_hook('stock_scanner_market_check');
         
-        // Stop news process
-        if (file_exists($this->news_process_file)) {
-            $news_pid = (int) file_get_contents($this->news_process_file);
-            if ($news_pid > 0) {
-                posix_kill($news_pid, SIGTERM);
-                $this->log("Terminated news process PID: $news_pid");
-            }
-            unlink($this->news_process_file);
-        }
+        // Clear transients
+        delete_transient('stock_scanner_scheduler_active');
+        delete_transient('stock_scanner_data_collection_active');
+        delete_transient('stock_scanner_last_stock_update');
+        delete_transient('stock_scanner_last_news_update');
+        delete_transient('stock_scanner_system_health');
         
-        $this->log("Scheduler stopped successfully");
+        $this->log("✓ All scheduler events and transients cleared");
+        
+        return true;
     }
     
     /**
      * Check if scheduler is running
      */
     public function is_running() {
-        $stock_running = false;
-        $news_running = false;
+        $scheduler_active = get_transient('stock_scanner_scheduler_active');
+        $data_collection_active = get_transient('stock_scanner_data_collection_active');
         
-        // Check stock process
-        if (file_exists($this->stock_process_file)) {
-            $stock_pid = (int) file_get_contents($this->stock_process_file);
-            $stock_running = $stock_pid > 0 && posix_kill($stock_pid, 0);
-        }
-        
-        // Check news process
-        if (file_exists($this->news_process_file)) {
-            $news_pid = (int) file_get_contents($this->news_process_file);
-            $news_running = $news_pid > 0 && posix_kill($news_pid, 0);
-        }
+        $stock_scheduled = wp_next_scheduled('stock_scanner_update_stocks');
+        $news_scheduled = wp_next_scheduled('stock_scanner_update_news');
+        $market_check_scheduled = wp_next_scheduled('stock_scanner_market_check');
         
         return [
-            'stock' => $stock_running,
-            'news' => $news_running,
-            'both' => $stock_running && $news_running
+            'stock' => $stock_scheduled !== false,
+            'news' => $news_scheduled !== false,
+            'market_check' => $market_check_scheduled !== false,
+            'scheduler_active' => $scheduler_active !== false,
+            'data_collection_active' => $data_collection_active !== false,
+            'any' => $stock_scheduled !== false || $news_scheduled !== false,
+            'both' => $stock_scheduled !== false && $news_scheduled !== false
         ];
     }
     
@@ -385,8 +632,23 @@ class StockScannerScheduler {
             'stock_interval' => $this->stock_interval,
             'news_interval' => $this->news_interval,
             'recent_logs' => $log_content,
-            'log_file' => $this->log_file
+            'log_file' => $this->log_file,
+            'api_url' => $this->api_tunnel_url
         ];
+    }
+    
+    /**
+     * Test execution for system checks
+     */
+    public function test_execution() {
+        $results = [
+            'api_connectivity' => $this->test_api_connectivity(),
+            'wordpress_health' => $this->check_wordpress_health(),
+            'disk_space' => $this->check_disk_space(),
+            'memory_usage' => $this->check_memory_usage()
+        ];
+        
+        return $results;
     }
     
     /**
@@ -485,7 +747,7 @@ class StockScannerScheduler {
      * Get current market status with detailed information
      */
     private function get_current_market_status() {
-        $now = new Date();
+        $now = new DateTime();
         $eastern_time = new DateTime($now->format('Y-m-d H:i:s'), new DateTimeZone('America/New_York'));
         
         $current_hour = (int) $eastern_time->format('H');
