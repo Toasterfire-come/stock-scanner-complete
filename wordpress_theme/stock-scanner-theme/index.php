@@ -1,162 +1,317 @@
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php wp_title('|', true, 'right'); bloginfo('name'); ?></title>
-    <link rel="profile" href="https://gmpg.org/xfn/11">
-    <?php wp_head(); ?>
-</head>
+<?php
+/**
+ * Stock Scanner Theme Main Template
+ * Professional homepage for stock scanning platform
+ */
 
-<body <?php body_class(); ?>>
-    <?php wp_body_open(); ?>
+get_header(); ?>
+
+<div class="stock-scanner-homepage">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Professional Stock Scanner</h1>
+                <p class="hero-subtitle">Advanced stock analysis tools for informed investment decisions</p>
+                <?php if (is_user_logged_in()): ?>
+                    <div class="hero-actions">
+                        <a href="/dashboard/" class="btn btn-primary btn-large">Go to Dashboard</a>
+                        <a href="/stock-scanner/" class="btn btn-secondary btn-large">Start Scanning</a>
+                    </div>
+                <?php else: ?>
+                    <div class="hero-actions">
+                        <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-large">Start Free Trial</a>
+                        <a href="<?php echo wp_login_url(); ?>" class="btn btn-secondary btn-large">Login</a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard for Logged-in Users -->
+    <?php if (is_user_logged_in()): ?>
+        <section class="dashboard-section">
+            <div class="container">
+                <?php echo do_shortcode('[stock_scanner_dashboard]'); ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Powerful Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-time Data</h3>
+                    <p>Get live stock quotes and market data updated in real-time for informed trading decisions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Advanced Scanning</h3>
+                    <p>Use powerful filters and technical indicators to find stocks that match your criteria.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Portfolio Tracking</h3>
+                    <p>Monitor your investments with comprehensive portfolio analysis and performance tracking.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Experience blazing-fast performance with our optimized platform and API integration.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section">
+        <div class="container">
+            <h2 class="section-title">Choose Your Plan</h2>
+            <p class="section-subtitle">Start free and upgrade as you grow</p>
+            <?php echo do_shortcode('[stock_scanner_pricing]'); ?>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Start Scanning?</h2>
+                <p>Join thousands of traders who trust our platform for their stock analysis needs.</p>
+                <?php if (!is_user_logged_in()): ?>
+                    <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-large">Get Started Free</a>
+                <?php else: ?>
+                    <a href="/premium-plans/" class="btn btn-primary btn-large">Upgrade Your Plan</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #2271b1 0%, #135e96 100%);
+    color: white;
+    padding: 80px 0;
+    text-align: center;
+}
+
+.hero-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.hero-title {
+    font-size: 3.5em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.4em;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Dashboard Section */
+.dashboard-section {
+    padding: 60px 0;
+    background: #f8f9fa;
+}
+
+/* Features Section */
+.features-section {
+    padding: 80px 0;
+    background: white;
+}
+
+.section-title {
+    font-size: 2.5em;
+    text-align: center;
+    color: #2271b1;
+    margin-bottom: 20px;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+    margin-bottom: 50px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 40px 30px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    color: #2271b1;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+}
+
+.feature-card p {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Pricing Section */
+.pricing-section {
+    padding: 80px 0;
+    background: #f8f9fa;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #646970 0%, #50575e 100%);
+    color: white;
+    text-align: center;
+}
+
+.cta-content h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.cta-content p {
+    font-size: 1.2em;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 15px 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.btn-large {
+    padding: 18px 40px;
+    font-size: 1.1em;
+}
+
+.btn-primary {
+    background: #2271b1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #135e96;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 113, 177, 0.3);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.btn-secondary:hover {
+    background: white;
+    color: #2271b1;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5em;
+    }
     
-    <header class="site-header">
-        <div class="container">
-            <div class="header-content">
-                <a href="<?php echo home_url(); ?>" class="site-title">
-                    📈 <?php bloginfo('name'); ?>
-                </a>
-                
-                <nav class="main-nav">
-                    <?php
-                    wp_nav_menu(array(
-                        'theme_location' => 'primary',
-                        'menu_class' => 'main-menu',
-                        'fallback_cb' => 'stock_scanner_fallback_menu'
-                    ));
-                    ?>
-                </nav>
-                
-                <div class="user-menu">
-                    <?php if (is_user_logged_in()): ?>
-                        <?php
-                        $user_level = 0;
-                        if (function_exists('pmpro_getMembershipLevelForUser')) {
-                            $level = pmpro_getMembershipLevelForUser(get_current_user_id());
-                            $user_level = $level ? $level->id : 0;
-                        }
-                        
-                        $level_names = array(0 => 'Free', 1 => 'Free', 2 => 'Premium', 3 => 'Professional');
-                        $level_classes = array(0 => '', 1 => '', 2 => 'premium', 3 => 'professional');
-                        ?>
-                        
-                        <span class="membership-badge <?php echo $level_classes[$user_level]; ?>">
-                            <?php echo $level_names[$user_level]; ?>
-                        </span>
-                        
-                        <a href="<?php echo wp_logout_url(home_url()); ?>">Logout</a>
-                    <?php else: ?>
-                        <a href="<?php echo wp_login_url(); ?>">Login</a>
-                        <a href="<?php echo wp_registration_url(); ?>">Sign Up</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </header>
+    .hero-subtitle {
+        font-size: 1.2em;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .section-title {
+        font-size: 2em;
+    }
+    
+    .cta-content h2 {
+        font-size: 2em;
+    }
+}
 
-    <main class="site-main">
-        <div class="container">
-            <?php if (have_posts()): ?>
-                <?php while (have_posts()): the_post(); ?>
-                    <article <?php post_class(); ?>>
-                        <div class="page-header">
-                            <h1 class="page-title"><?php the_title(); ?></h1>
-                            <?php if (get_the_excerpt()): ?>
-                                <p class="page-description"><?php the_excerpt(); ?></p>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="page-content">
-                            <?php the_content(); ?>
-                        </div>
-                    </article>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="page-header">
-                    <h1 class="page-title">Welcome to Stock Scanner</h1>
-                    <p class="page-description">
-                        Get real-time stock data, charts, and alerts. Track your favorite stocks with our powerful dashboard.
-                    </p>
-                </div>
-                
-                <div class="stock-grid">
-                    <div class="stock-row">
-                        <h3>🔥 Popular Stocks</h3>
-                        <?php echo do_shortcode('[stock_scanner symbol="AAPL" show_chart="true" show_details="true"]'); ?>
-                        <?php echo do_shortcode('[stock_scanner symbol="TSLA" show_chart="true" show_details="true"]'); ?>
-                        <?php echo do_shortcode('[stock_scanner symbol="NVDA" show_chart="true" show_details="true"]'); ?>
-                    </div>
-                    
-                    <div class="stock-row">
-                        <h3>📊 Market Indices</h3>
-                        <?php echo do_shortcode('[stock_scanner symbol="SPY" show_chart="true" show_details="true"]'); ?>
-                        <?php echo do_shortcode('[stock_scanner symbol="QQQ" show_chart="true" show_details="true"]'); ?>
-                        <?php echo do_shortcode('[stock_scanner symbol="DIA" show_chart="true" show_details="true"]'); ?>
-                    </div>
-                </div>
-                
-                <div class="upgrade-notice">
-                    <h4>🚀 Ready to track more stocks?</h4>
-                    <p>Upgrade to Premium for 1,000 stocks per month or Professional for unlimited access!</p>
-                    <a href="/membership-plans/" class="button-premium">View Plans</a>
-                </div>
-            <?php endif; ?>
-        </div>
-    </main>
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .hero-title {
+        font-size: 2em;
+    }
+    
+    .features-section,
+    .pricing-section,
+    .cta-section {
+        padding: 60px 0;
+    }
+    
+    .btn-large {
+        padding: 15px 25px;
+        font-size: 1em;
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>
 
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Stock Scanner</h4>
-                    <ul>
-                        <li><a href="/about/">About</a></li>
-                        <li><a href="/contact/">Contact</a></li>
-                        <li><a href="/stock-dashboard/">Dashboard</a></li>
-                        <li><a href="/stock-watchlist/">Watchlist</a></li>
-                        <li><a href="/stock-market-news/">Market News</a></li>
-                        <li><a href="/stock-alerts/">Alerts</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Membership</h4>
-                    <ul>
-                        <li><a href="/membership-plans/">Pricing Plans</a></li>
-                        <li><a href="/membership-account/">My Account</a></li>
-                        <li><a href="/membership-account/membership-checkout/">Upgrade</a></li>
-                        <li><a href="/membership-account/membership-cancel/">Cancel</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Support</h4>
-                    <ul>
-                        <li><a href="/contact/">Contact Us</a></li>
-                        <li><a href="/help/">Help Center</a></li>
-                        <li><a href="/api-docs/">API Documentation</a></li>
-                        <li><a href="/privacy/">Privacy Policy</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="#">Twitter</a></li>
-                        <li><a href="#">LinkedIn</a></li>
-                        <li><a href="#">GitHub</a></li>
-                        <li><a href="#">Discord</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. All rights reserved. | Real-time stock data powered by yfinance</p>
-            </div>
-        </div>
-    </footer>
-
-    <?php wp_footer(); ?>
-</body>
-</html>
+<?php get_footer(); ?>

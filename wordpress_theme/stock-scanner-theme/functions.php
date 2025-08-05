@@ -22,6 +22,7 @@ function stock_scanner_theme_setup() {
     // Register navigation menus
     register_nav_menus(array(
         'primary' => __('Primary Menu', 'stock-scanner'),
+        'footer' => __('Footer Menu', 'stock-scanner'),
     ));
 }
 add_action('after_setup_theme', 'stock_scanner_theme_setup');
@@ -39,13 +40,249 @@ function stock_scanner_scripts() {
     // Enqueue theme JavaScript
     wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.0.0', true);
     
+    // Enqueue plugin integration JavaScript
+    wp_enqueue_script('stock-scanner-plugin-js', get_template_directory_uri() . '/assets/js/plugin-integration.js', array('jquery', 'stock-scanner-js'), '1.0.0', true);
+    
     // Localize script for AJAX
-    wp_localize_script('stock-scanner-js', 'stock_scanner_theme', array(
+    wp_localize_script('stock-scanner-plugin-js', 'stock_scanner_theme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_theme_nonce')
     ));
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
+
+/**
+ * Include plugin integration
+ */
+require_once get_template_directory() . '/inc/plugin-integration.php';
+
+/**
+ * Theme activation - Clear existing pages and create new ones
+ */
+function stock_scanner_theme_activation() {
+    // Clear existing Stock Scanner pages
+    stock_scanner_clear_existing_pages();
+    
+    // Create new pages
+    stock_scanner_create_pages();
+    
+    // Create menus
+    stock_scanner_create_menus();
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
+}
+add_action('after_switch_theme', 'stock_scanner_theme_activation');
+
+/**
+ * Clear existing Stock Scanner pages
+ */
+function stock_scanner_clear_existing_pages() {
+    $page_slugs = array(
+        'dashboard', 'stock-scanner', 'watchlist', 'market-overview', 'account', 
+        'premium-plans', 'payment-success', 'payment-cancelled', 'contact', 
+        'about', 'privacy-policy', 'terms-of-service', 'faq'
+    );
+    
+    foreach ($page_slugs as $slug) {
+        $page = get_page_by_path($slug);
+        if ($page) {
+            wp_delete_post($page->ID, true);
+        }
+    }
+    
+    // Also clear any pages with Stock Scanner in the title
+    $existing_pages = get_posts(array(
+        'post_type' => 'page',
+        'post_status' => 'any',
+        's' => 'Stock Scanner',
+        'posts_per_page' => -1
+    ));
+    
+    foreach ($existing_pages as $page) {
+        wp_delete_post($page->ID, true);
+    }
+}
+
+/**
+ * Create Stock Scanner pages
+ */
+function stock_scanner_create_pages() {
+    $pages = array(
+        array(
+            'title' => 'Dashboard',
+            'slug' => 'dashboard',
+            'content' => '[stock_scanner_dashboard]',
+            'template' => 'page-dashboard.php'
+        ),
+        array(
+            'title' => 'Stock Scanner',
+            'slug' => 'stock-scanner',
+            'content' => '<h2>Stock Scanner</h2><p>Scan and analyze stocks with our powerful tools.</p>[stock_scanner_dashboard]',
+            'template' => 'page-scanner.php'
+        ),
+        array(
+            'title' => 'My Watchlist',
+            'slug' => 'watchlist',
+            'content' => '<h2>My Watchlist</h2><p>Track your favorite stocks and monitor their performance.</p>',
+            'template' => 'page-watchlist.php'
+        ),
+        array(
+            'title' => 'Market Overview',
+            'slug' => 'market-overview',
+            'content' => '<h2>Market Overview</h2><p>Stay updated with the latest market trends and data.</p>',
+            'template' => 'page-market-overview.php'
+        ),
+        array(
+            'title' => 'My Account',
+            'slug' => 'account',
+            'content' => '<h2>Account Management</h2><p>Manage your subscription and account settings.</p>[stock_scanner_dashboard]',
+            'template' => 'page-account.php'
+        ),
+        array(
+            'title' => 'Premium Plans',
+            'slug' => 'premium-plans',
+            'content' => '[stock_scanner_pricing]',
+            'template' => 'page-premium-plans.php'
+        ),
+        array(
+            'title' => 'Payment Success',
+            'slug' => 'payment-success',
+            'content' => '<h2>Payment Successful!</h2><p>Thank you for your purchase. Your account has been upgraded.</p><p><a href="/dashboard/">Go to Dashboard</a></p>',
+            'template' => 'page-payment-success.php'
+        ),
+        array(
+            'title' => 'Payment Cancelled',
+            'slug' => 'payment-cancelled',
+            'content' => '<h2>Payment Cancelled</h2><p>Your payment was cancelled. You can try again anytime.</p><p><a href="/premium-plans/">View Plans</a></p>',
+            'template' => 'page-payment-cancelled.php'
+        ),
+        array(
+            'title' => 'Contact Us',
+            'slug' => 'contact',
+            'content' => '<h2>Contact Us</h2><p>Get in touch with our support team.</p>',
+            'template' => 'page-contact.php'
+        ),
+        array(
+            'title' => 'About Us',
+            'slug' => 'about',
+            'content' => '<h2>About Stock Scanner</h2><p>Professional stock analysis tools for informed investment decisions.</p>',
+            'template' => 'page-about.php'
+        ),
+        array(
+            'title' => 'Privacy Policy',
+            'slug' => 'privacy-policy',
+            'content' => '<h2>Privacy Policy</h2><p>We respect your privacy and protect your personal information.</p>',
+            'template' => 'page-privacy.php'
+        ),
+        array(
+            'title' => 'Terms of Service',
+            'slug' => 'terms-of-service',
+            'content' => '<h2>Terms of Service</h2><p>Terms and conditions for using our service.</p>',
+            'template' => 'page-terms.php'
+        ),
+        array(
+            'title' => 'FAQ',
+            'slug' => 'faq',
+            'content' => '<h2>Frequently Asked Questions</h2><p>Find answers to common questions about our service.</p>',
+            'template' => 'page-faq.php'
+        )
+    );
+    
+    foreach ($pages as $page_data) {
+        $page = array(
+            'post_title' => $page_data['title'],
+            'post_name' => $page_data['slug'],
+            'post_content' => $page_data['content'],
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_author' => 1,
+            'menu_order' => 0
+        );
+        
+        $page_id = wp_insert_post($page);
+        
+        if ($page_id && !is_wp_error($page_id)) {
+            // Set page template if specified
+            if (isset($page_data['template'])) {
+                update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+            }
+        }
+    }
+    
+    // Set homepage to use front-page.php if it exists, otherwise use index.php
+    $homepage = get_page_by_path('dashboard');
+    if ($homepage) {
+        update_option('page_on_front', $homepage->ID);
+        update_option('show_on_front', 'page');
+    }
+}
+
+/**
+ * Create navigation menus
+ */
+function stock_scanner_create_menus() {
+    // Delete existing menus
+    $existing_menus = wp_get_nav_menus();
+    foreach ($existing_menus as $menu) {
+        if (strpos($menu->name, 'Stock Scanner') !== false || 
+            in_array($menu->name, array('Primary Menu', 'Footer Menu'))) {
+            wp_delete_nav_menu($menu->term_id);
+        }
+    }
+    
+    // Create Primary Menu
+    $primary_menu_id = wp_create_nav_menu('Stock Scanner Primary');
+    if (!is_wp_error($primary_menu_id)) {
+        $menu_items = array(
+            array('title' => 'Dashboard', 'url' => '/dashboard/'),
+            array('title' => 'Stock Scanner', 'url' => '/stock-scanner/'),
+            array('title' => 'Watchlist', 'url' => '/watchlist/'),
+            array('title' => 'Market Overview', 'url' => '/market-overview/'),
+            array('title' => 'Premium Plans', 'url' => '/premium-plans/'),
+            array('title' => 'Contact', 'url' => '/contact/')
+        );
+        
+        foreach ($menu_items as $item) {
+            wp_update_nav_menu_item($primary_menu_id, 0, array(
+                'menu-item-title' => $item['title'],
+                'menu-item-url' => home_url($item['url']),
+                'menu-item-status' => 'publish',
+                'menu-item-type' => 'custom'
+            ));
+        }
+        
+        // Assign to primary location
+        $locations = get_theme_mod('nav_menu_locations');
+        $locations['primary'] = $primary_menu_id;
+        set_theme_mod('nav_menu_locations', $locations);
+    }
+    
+    // Create Footer Menu
+    $footer_menu_id = wp_create_nav_menu('Stock Scanner Footer');
+    if (!is_wp_error($footer_menu_id)) {
+        $footer_items = array(
+            array('title' => 'About', 'url' => '/about/'),
+            array('title' => 'Privacy Policy', 'url' => '/privacy-policy/'),
+            array('title' => 'Terms of Service', 'url' => '/terms-of-service/'),
+            array('title' => 'FAQ', 'url' => '/faq/')
+        );
+        
+        foreach ($footer_items as $item) {
+            wp_update_nav_menu_item($footer_menu_id, 0, array(
+                'menu-item-title' => $item['title'],
+                'menu-item-url' => home_url($item['url']),
+                'menu-item-status' => 'publish',
+                'menu-item-type' => 'custom'
+            ));
+        }
+        
+        // Assign to footer location
+        $locations = get_theme_mod('nav_menu_locations');
+        $locations['footer'] = $footer_menu_id;
+        set_theme_mod('nav_menu_locations', $locations);
+    }
+}
 
 /**
  * Fallback menu for when no menu is assigned
@@ -300,6 +537,101 @@ function stock_scanner_options_page() {
 }
 
 /**
+ * Widget areas
+ */
+function stock_scanner_widgets_init() {
+    register_sidebar(array(
+        'name' => __('Footer Widget Area 1', 'stock-scanner'),
+        'id' => 'footer-1',
+        'description' => __('Widgets in this area will be shown in the first footer column.', 'stock-scanner'),
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget' => '</div>',
+        'before_title' => '<h3 class="widget-title">',
+        'after_title' => '</h3>',
+    ));
+    
+    register_sidebar(array(
+        'name' => __('Footer Widget Area 2', 'stock-scanner'),
+        'id' => 'footer-2',
+        'description' => __('Widgets in this area will be shown in the second footer column.', 'stock-scanner'),
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget' => '</div>',
+        'before_title' => '<h3 class="widget-title">',
+        'after_title' => '</h3>',
+    ));
+    
+    register_sidebar(array(
+        'name' => __('Footer Widget Area 3', 'stock-scanner'),
+        'id' => 'footer-3',
+        'description' => __('Widgets in this area will be shown in the third footer column.', 'stock-scanner'),
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget' => '</div>',
+        'before_title' => '<h3 class="widget-title">',
+        'after_title' => '</h3>',
+    ));
+}
+add_action('widgets_init', 'stock_scanner_widgets_init');
+
+/**
+ * Customizer additions
+ */
+function stock_scanner_customize_register($wp_customize) {
+    // Theme Colors Section
+    $wp_customize->add_section('stock_scanner_colors', array(
+        'title' => __('Stock Scanner Colors', 'stock-scanner'),
+        'priority' => 30,
+    ));
+    
+    // Primary Color
+    $wp_customize->add_setting('primary_color', array(
+        'default' => '#2271b1',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ));
+    
+    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'primary_color', array(
+        'label' => __('Primary Color', 'stock-scanner'),
+        'section' => 'stock_scanner_colors',
+        'settings' => 'primary_color',
+    )));
+    
+    // Social Links Section
+    $wp_customize->add_section('stock_scanner_social', array(
+        'title' => __('Social Links', 'stock-scanner'),
+        'priority' => 35,
+    ));
+    
+    // Social Media Links
+    $social_sites = array('twitter', 'facebook', 'linkedin', 'youtube');
+    foreach ($social_sites as $site) {
+        $wp_customize->add_setting($site . '_url', array(
+            'default' => '',
+            'sanitize_callback' => 'esc_url_raw',
+        ));
+        
+        $wp_customize->add_control($site . '_url', array(
+            'label' => sprintf(__('%s URL', 'stock-scanner'), ucfirst($site)),
+            'section' => 'stock_scanner_social',
+            'type' => 'url',
+        ));
+    }
+}
+add_action('customize_register', 'stock_scanner_customize_register');
+
+/**
+ * Add custom body classes
+ */
+function stock_scanner_body_classes($classes) {
+    if (is_user_logged_in() && function_exists('get_user_membership_level')) {
+        $user_id = get_current_user_id();
+        $membership_level = get_user_membership_level($user_id);
+        $classes[] = 'membership-' . $membership_level;
+    }
+    
+    return $classes;
+}
+add_filter('body_class', 'stock_scanner_body_classes');
+
+/**
  * Remove admin bar for non-admins on frontend
  */
 function stock_scanner_remove_admin_bar() {
@@ -335,4 +667,53 @@ function stock_scanner_membership_styles() {
     <?php
 }
 add_action('wp_head', 'stock_scanner_membership_styles');
+
+/**
+ * Add structured data for SEO
+ */
+function stock_scanner_structured_data() {
+    if (is_front_page() || is_home()) {
+        $schema = array(
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => get_bloginfo('name'),
+            'url' => home_url(),
+            'description' => get_bloginfo('description'),
+            'sameAs' => array()
+        );
+        
+        // Add social media links
+        $social_sites = array('twitter', 'facebook', 'linkedin', 'youtube');
+        foreach ($social_sites as $site) {
+            $url = get_theme_mod($site . '_url');
+            if ($url) {
+                $schema['sameAs'][] = $url;
+            }
+        }
+        
+        echo '<script type="application/ld+json">' . json_encode($schema) . '</script>';
+    }
+}
+add_action('wp_head', 'stock_scanner_structured_data');
+
+/**
+ * Add meta tags for SEO and social sharing
+ */
+function stock_scanner_meta_tags() {
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
+    echo '<meta name="theme-color" content="' . get_theme_mod('primary_color', '#2271b1') . '">';
+    
+    // Open Graph tags
+    echo '<meta property="og:site_name" content="' . get_bloginfo('name') . '">';
+    echo '<meta property="og:type" content="website">';
+    echo '<meta property="og:url" content="' . get_permalink() . '">';
+    echo '<meta property="og:title" content="' . get_the_title() . '">';
+    echo '<meta property="og:description" content="' . get_bloginfo('description') . '">';
+    
+    // Twitter Card tags
+    echo '<meta name="twitter:card" content="summary_large_image">';
+    echo '<meta name="twitter:title" content="' . get_the_title() . '">';
+    echo '<meta name="twitter:description" content="' . get_bloginfo('description') . '">';
+}
+add_action('wp_head', 'stock_scanner_meta_tags');
 ?>
