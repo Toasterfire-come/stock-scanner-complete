@@ -1,7 +1,7 @@
 <?php
 /**
- * Stock Scanner Plugin Integration
- * Handles all communication between theme and plugin
+ * Plugin Integration Functions
+ * Enhanced with customer notification system for security alerts
  */
 
 // Prevent direct access
@@ -24,59 +24,61 @@ function get_user_membership_level($user_id = null) {
         $user_id = get_current_user_id();
     }
     
-    if (!is_stock_scanner_plugin_active() || !$user_id) {
+    if (!$user_id) {
         return 'free';
     }
     
-    return get_user_meta($user_id, 'membership_level', true) ?: 'free';
+    $level = get_user_meta($user_id, 'membership_level', true);
+    return $level ?: 'free';
 }
 
 /**
- * Get user API usage
+ * Get user API usage with enhanced security tracking
  */
 function get_user_api_usage($user_id = null) {
     if (!$user_id) {
         $user_id = get_current_user_id();
     }
     
-    if (!is_stock_scanner_plugin_active() || !$user_id) {
-        return array(
-            'monthly_calls' => 0,
-            'daily_calls' => 0,
-            'hourly_calls' => 0,
-            'monthly_limit' => 15
-        );
+    if (!$user_id) {
+        return array('monthly_calls' => 0, 'daily_calls' => 0, 'hourly_calls' => 0, 'monthly_limit' => 15);
     }
     
     global $wpdb;
-    $table_name = $wpdb->prefix . 'stock_scanner_usage';
+    $table = $wpdb->prefix . 'stock_scanner_usage';
     
     $current_month = date('Y-m');
     $current_date = date('Y-m-d');
     $current_hour = date('Y-m-d H:00:00');
     
     $monthly_calls = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND DATE_FORMAT(created_at, '%%Y-%%m') = %s",
+        "SELECT COUNT(*) FROM $table WHERE user_id = %d AND DATE_FORMAT(created_at, '%%Y-%%m') = %s",
         $user_id, $current_month
     ));
     
     $daily_calls = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND DATE(created_at) = %s",
+        "SELECT COUNT(*) FROM $table WHERE user_id = %d AND DATE(created_at) = %s",
         $user_id, $current_date
     ));
     
     $hourly_calls = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND created_at >= %s",
+        "SELECT COUNT(*) FROM $table WHERE user_id = %d AND created_at >= %s",
         $user_id, $current_hour
     ));
     
-    $membership_level = get_user_membership_level($user_id);
-    $limits = get_membership_limits($membership_level);
+    // Get suspicious activity count
+    $suspicious_calls = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table WHERE user_id = %d AND is_suspicious = 1 AND DATE_FORMAT(created_at, '%%Y-%%m') = %s",
+        $user_id, $current_month
+    ));
+    
+    $limits = get_membership_limits(get_user_membership_level($user_id));
     
     return array(
         'monthly_calls' => intval($monthly_calls),
         'daily_calls' => intval($daily_calls),
         'hourly_calls' => intval($hourly_calls),
+        'suspicious_calls' => intval($suspicious_calls),
         'monthly_limit' => $limits['monthly'],
         'daily_limit' => $limits['daily'],
         'hourly_limit' => $limits['hourly']
@@ -84,7 +86,7 @@ function get_user_api_usage($user_id = null) {
 }
 
 /**
- * Get membership limits
+ * Get membership limits with enhanced tracking
  */
 function get_membership_limits($level = 'free') {
     $limits = array(
@@ -98,7 +100,88 @@ function get_membership_limits($level = 'free') {
 }
 
 /**
- * Check if user can make API call
+ * Check if user is banned or restricted
+ */
+function check_user_security_status($user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    if (!$user_id) {
+        return array('status' => 'guest', 'message' => '');
+    }
+    
+    global $wpdb;
+    
+    $subscription = $wpdb->get_row($wpdb->prepare(
+        "SELECT is_banned, ban_reason, banned_at FROM {$wpdb->prefix}stock_scanner_subscriptions WHERE user_id = %d",
+        $user_id
+    ));
+    
+    if ($subscription && $subscription->is_banned) {
+        return array(
+            'status' => 'banned',
+            'message' => $subscription->ban_reason,
+            'banned_at' => $subscription->banned_at
+        );
+    }
+    
+    return array('status' => 'active', 'message' => '');
+}
+
+/**
+ * Get user notifications
+ */
+function get_user_notifications($user_id = null, $unread_only = false) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    if (!$user_id) {
+        return array();
+    }
+    
+    global $wpdb;
+    
+    $where_clause = "user_id = %d";
+    $params = array($user_id);
+    
+    if ($unread_only) {
+        $where_clause .= " AND is_read = 0";
+    }
+    
+    $where_clause .= " AND (expires_at IS NULL OR expires_at > NOW())";
+    
+    $notifications = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}stock_scanner_notifications 
+         WHERE $where_clause 
+         ORDER BY priority DESC, created_at DESC 
+         LIMIT 10",
+        ...$params
+    ));
+    
+    return $notifications ?: array();
+}
+
+/**
+ * Mark notification as read
+ */
+function mark_notification_read($notification_id, $user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    global $wpdb;
+    
+    return $wpdb->update(
+        $wpdb->prefix . 'stock_scanner_notifications',
+        array('is_read' => 1, 'read_at' => current_time('mysql')),
+        array('id' => $notification_id, 'user_id' => $user_id)
+    );
+}
+
+/**
+ * Can user make API call (enhanced with security checks)
  */
 function can_user_make_api_call($user_id = null) {
     if (!$user_id) {
@@ -109,572 +192,634 @@ function can_user_make_api_call($user_id = null) {
         return false;
     }
     
+    // Check if user is banned
+    $security_status = check_user_security_status($user_id);
+    if ($security_status['status'] === 'banned') {
+        return false;
+    }
+    
     $usage = get_user_api_usage($user_id);
-    $membership_level = get_user_membership_level($user_id);
-    $limits = get_membership_limits($membership_level);
+    $level = get_user_membership_level($user_id);
+    $limits = get_membership_limits($level);
     
-    // Check if unlimited (gold)
     if ($limits['monthly'] === -1) {
-        return true;
+        return true; // Unlimited
     }
     
-    // Check monthly limit
-    if ($usage['monthly_calls'] >= $limits['monthly']) {
-        return false;
-    }
-    
-    // Check daily limit
-    if ($usage['daily_calls'] >= $limits['daily']) {
-        return false;
-    }
-    
-    // Check hourly limit
-    if ($usage['hourly_calls'] >= $limits['hourly']) {
-        return false;
-    }
-    
-    return true;
+    return $usage['monthly_calls'] < $limits['monthly'] &&
+           $usage['daily_calls'] < $limits['daily'] &&
+           $usage['hourly_calls'] < $limits['hourly'];
 }
 
 /**
- * Dashboard shortcode
+ * Enhanced dashboard shortcode with security notifications
  */
 function stock_scanner_dashboard_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'show_notifications' => 'true',
+        'show_security_status' => 'true'
+    ), $atts);
+    
     if (!is_user_logged_in()) {
-        return '<p>Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to view your dashboard.</p>';
+        return '<div class="stock-scanner-login-prompt">
+            <h3>📊 Access Your Dashboard</h3>
+            <p>Please log in to access your Stock Scanner dashboard.</p>
+            <a href="' . wp_login_url() . '" class="btn btn-primary">Login</a>
+            <a href="' . wp_registration_url() . '" class="btn btn-outline">Sign Up Free</a>
+        </div>';
     }
     
     $user_id = get_current_user_id();
+    $user = wp_get_current_user();
     $usage = get_user_api_usage($user_id);
     $membership_level = get_user_membership_level($user_id);
-    $limits = get_membership_limits($membership_level);
-    
-    $monthly_percentage = $limits['monthly'] > 0 ? ($usage['monthly_calls'] / $limits['monthly']) * 100 : 0;
-    $daily_percentage = $limits['daily'] > 0 ? ($usage['daily_calls'] / $limits['daily']) * 100 : 0;
+    $security_status = check_user_security_status($user_id);
+    $notifications = get_user_notifications($user_id, true);
     
     ob_start();
     ?>
+    
     <div class="stock-scanner-dashboard">
+        <?php if ($atts['show_notifications'] === 'true' && !empty($notifications)): ?>
+        <!-- Security Notifications -->
+        <div class="dashboard-notifications">
+            <?php foreach ($notifications as $notification): ?>
+            <div class="notification notification-<?php echo esc_attr($notification->type); ?> priority-<?php echo esc_attr($notification->priority); ?>">
+                <div class="notification-header">
+                    <span class="notification-icon">
+                        <?php
+                        switch ($notification->type) {
+                            case 'account_banned': echo '🚫'; break;
+                            case 'rate_limit': echo '⚠️'; break;
+                            case 'security_alert': echo '🛡️'; break;
+                            case 'account_unbanned': echo '✅'; break;
+                            default: echo 'ℹ️';
+                        }
+                        ?>
+                    </span>
+                    <h4><?php echo esc_html($notification->title); ?></h4>
+                    <button class="notification-close" data-notification-id="<?php echo esc_attr($notification->id); ?>">×</button>
+                </div>
+                <div class="notification-content">
+                    <p><?php echo esc_html($notification->message); ?></p>
+                    <small>
+                        <?php echo wp_date('M j, Y H:i', strtotime($notification->created_at)); ?>
+                    </small>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        
+        <?php if ($security_status['status'] === 'banned'): ?>
+        <!-- Account Banned Message -->
+        <div class="security-alert banned-alert">
+            <div class="alert-header">
+                <span class="alert-icon">🚫</span>
+                <h3>Account Suspended</h3>
+            </div>
+            <div class="alert-content">
+                <p><strong>Your account has been suspended.</strong></p>
+                <?php if ($security_status['message']): ?>
+                <p>Reason: <?php echo esc_html($security_status['message']); ?></p>
+                <?php endif; ?>
+                <p>Please <a href="/contact/">contact support</a> if you believe this is an error.</p>
+                <p><small>Suspended on: <?php echo wp_date('M j, Y H:i', strtotime($security_status['banned_at'])); ?></small></p>
+            </div>
+        </div>
+        <?php return ob_get_clean(); endif; ?>
+        
+        <!-- Welcome Section -->
         <div class="dashboard-header">
-            <h2>Your Stock Scanner Dashboard</h2>
-            <div class="membership-badge membership-<?php echo esc_attr($membership_level); ?>">
-                <?php echo ucfirst($membership_level); ?> Member
+            <h2>Welcome back, <?php echo esc_html($user->display_name); ?>! 📈</h2>
+            <div class="membership-status">
+                <span class="membership-badge membership-<?php echo esc_attr($membership_level); ?>">
+                    <?php echo esc_html(ucfirst($membership_level)); ?> Plan
+                </span>
+                <?php if ($atts['show_security_status'] === 'true'): ?>
+                <span class="security-status status-<?php echo esc_attr($security_status['status']); ?>">
+                    <?php
+                    switch ($security_status['status']) {
+                        case 'active': echo '🔒 Secure'; break;
+                        case 'banned': echo '🚫 Suspended'; break;
+                        default: echo '👤 Guest';
+                    }
+                    ?>
+                </span>
+                <?php endif; ?>
             </div>
         </div>
         
+        <!-- Usage Statistics with Security Indicators -->
         <div class="usage-stats">
-            <div class="usage-card">
-                <h3>Monthly Usage</h3>
-                <div class="usage-bar">
-                    <div class="usage-fill" style="width: <?php echo min(100, $monthly_percentage); ?>%"></div>
-                </div>
-                <p>
-                    <?php echo esc_html($usage['monthly_calls']); ?> / 
-                    <?php echo $limits['monthly'] === -1 ? 'Unlimited' : esc_html($limits['monthly']); ?> calls
-                </p>
-                <?php if ($monthly_percentage >= 75 && $limits['monthly'] > 0): ?>
-                    <div class="usage-warning">
-                        <?php if ($monthly_percentage >= 90): ?>
-                            <span class="warning-high">⚠️ Running low on calls!</span>
-                        <?php else: ?>
-                            <span class="warning-medium">⚡ Consider upgrading soon</span>
-                        <?php endif; ?>
+            <h3>📊 Your Usage Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number"><?php echo number_format($usage['monthly_calls']); ?></div>
+                    <div class="stat-label">API Calls This Month</div>
+                    <div class="stat-limit">
+                        Limit: <?php echo $usage['monthly_limit'] === -1 ? '∞' : number_format($usage['monthly_limit']); ?>
                     </div>
-                <?php endif; ?>
-            </div>
-            
-            <div class="usage-card">
-                <h3>Daily Usage</h3>
-                <div class="usage-bar">
-                    <div class="usage-fill" style="width: <?php echo min(100, $daily_percentage); ?>%"></div>
+                    <div class="usage-bar">
+                        <?php 
+                        $percentage = $usage['monthly_limit'] > 0 ? ($usage['monthly_calls'] / $usage['monthly_limit']) * 100 : 0;
+                        $bar_class = $percentage >= 90 ? 'critical' : ($percentage >= 75 ? 'warning' : 'normal');
+                        ?>
+                        <div class="usage-fill usage-<?php echo $bar_class; ?>" style="width: <?php echo min(100, $percentage); ?>%"></div>
+                    </div>
                 </div>
-                <p>
-                    <?php echo esc_html($usage['daily_calls']); ?> / 
-                    <?php echo $limits['daily'] === -1 ? 'Unlimited' : esc_html($limits['daily']); ?> calls today
-                </p>
+                
+                <div class="stat-card">
+                    <div class="stat-number"><?php echo number_format($usage['daily_calls']); ?></div>
+                    <div class="stat-label">Calls Today</div>
+                    <div class="stat-limit">
+                        Limit: <?php echo $usage['daily_limit'] === -1 ? '∞' : number_format($usage['daily_limit']); ?>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-number"><?php echo number_format($usage['hourly_calls']); ?></div>
+                    <div class="stat-label">Calls This Hour</div>
+                    <div class="stat-limit">
+                        Limit: <?php echo $usage['hourly_limit'] === -1 ? '∞' : number_format($usage['hourly_limit']); ?>
+                    </div>
+                </div>
+                
+                <?php if ($usage['suspicious_calls'] > 0): ?>
+                <div class="stat-card security-warning">
+                    <div class="stat-number"><?php echo number_format($usage['suspicious_calls']); ?></div>
+                    <div class="stat-label">⚠️ Flagged Requests</div>
+                    <div class="stat-note">
+                        Some requests were flagged as suspicious. 
+                        <a href="/contact/">Contact support</a> if you think this is an error.
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
         
         <?php if ($membership_level === 'free'): ?>
+        <!-- Upgrade Notice for Free Users -->
         <div class="upgrade-notice">
-            <h3>🚀 Upgrade for More Features</h3>
-            <p>Get more API calls and premium features with our paid plans!</p>
-            <a href="/premium-plans/" class="btn btn-primary">View Plans</a>
+            <h3>🚀 Upgrade Your Plan</h3>
+            <p>You're on the free plan with 15 API calls per month. Upgrade for more features!</p>
+            <a href="/premium-plans/" class="btn btn-primary">View Premium Plans</a>
         </div>
         <?php endif; ?>
         
-        <div class="quick-actions">
-            <h3>Quick Stock Lookup</h3>
-            <div class="stock-lookup">
-                <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL)" maxlength="10">
-                <button id="get-stock-quote" class="btn btn-secondary">Get Quote</button>
+        <!-- Quick Stock Lookup -->
+        <div class="quick-lookup">
+            <h3>🔍 Quick Stock Lookup</h3>
+            <div class="lookup-form">
+                <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL)" maxlength="10" />
+                <button id="get-stock-quote" class="btn btn-primary">Get Quote</button>
             </div>
-            <div id="stock-result"></div>
+            <div id="stock-result" class="stock-result"></div>
         </div>
         
-        <div class="recent-activity">
-            <h3>Recent API Usage</h3>
-            <div id="recent-calls">
-                <p>Loading recent activity...</p>
+        <!-- Recent API Calls -->
+        <div class="recent-calls">
+            <h3>📈 Recent Activity</h3>
+            <div id="recent-calls-list" class="calls-list">
+                <div class="loading">Loading recent activity...</div>
             </div>
         </div>
     </div>
     
     <style>
+    /* Enhanced dashboard styles with security indicators */
     .stock-scanner-dashboard {
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     
+    /* Security Notifications */
+    .dashboard-notifications {
+        margin-bottom: 30px;
+    }
+    
+    .notification {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .notification-rate_limit {
+        border-left: 4px solid #dba617;
+    }
+    
+    .notification-account_banned {
+        border-left: 4px solid #d63638;
+    }
+    
+    .notification-security_alert {
+        border-left: 4px solid #2271b1;
+    }
+    
+    .notification-account_unbanned {
+        border-left: 4px solid #00a32a;
+    }
+    
+    .priority-high {
+        animation: pulse-notification 2s infinite;
+    }
+    
+    @keyframes pulse-notification {
+        0%, 100% { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        50% { box-shadow: 0 4px 12px rgba(214, 54, 56, 0.3); }
+    }
+    
+    .notification-header {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px 10px;
+        background: #f8f9fa;
+    }
+    
+    .notification-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .notification-header h4 {
+        flex: 1;
+        margin: 0;
+        font-size: 1.1rem;
+        color: #1d2327;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #646970;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .notification-close:hover {
+        color: #d63638;
+    }
+    
+    .notification-content {
+        padding: 10px 20px 15px;
+    }
+    
+    .notification-content p {
+        margin: 0 0 10px;
+        line-height: 1.5;
+    }
+    
+    .notification-content small {
+        color: #646970;
+        font-size: 0.9rem;
+    }
+    
+    /* Security Alerts */
+    .security-alert {
+        background: linear-gradient(135deg, #d63638 0%, #b91c1c 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .alert-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+    
+    .alert-icon {
+        font-size: 2rem;
+        margin-right: 10px;
+    }
+    
+    .alert-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+    
+    .alert-content p {
+        margin: 10px 0;
+        line-height: 1.6;
+    }
+    
+    .alert-content a {
+        color: white;
+        text-decoration: underline;
+    }
+    
+    /* Dashboard Header */
     .dashboard-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 30px;
         padding-bottom: 20px;
-        border-bottom: 2px solid #e1e1e1;
+        border-bottom: 1px solid #e1e1e1;
     }
     
-    .membership-badge {
-        padding: 8px 16px;
+    .dashboard-header h2 {
+        margin: 0;
+        color: #1d2327;
+        font-size: 1.8rem;
+    }
+    
+    .membership-status {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .security-status {
+        padding: 4px 12px;
         border-radius: 20px;
-        font-weight: bold;
-        text-transform: uppercase;
-        font-size: 0.9em;
+        font-size: 0.85rem;
+        font-weight: 500;
     }
     
-    .membership-free { background: #e1e1e1; color: #666; }
-    .membership-bronze { background: #cd7f32; color: white; }
-    .membership-silver { background: #c0c0c0; color: #333; }
-    .membership-gold { background: #ffd700; color: #333; }
+    .status-active {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
     
-    .usage-stats {
+    .status-banned {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 20px;
-        margin-bottom: 30px;
+        margin: 20px 0;
     }
     
-    .usage-card {
+    .stat-card {
         background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         border: 1px solid #e1e1e1;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
+    .security-warning {
+        border-color: #dba617;
+        background: #fefce8;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2271b1;
+        margin-bottom: 5px;
+    }
+    
+    .security-warning .stat-number {
+        color: #dba617;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #646970;
+        margin-bottom: 10px;
+    }
+    
+    .stat-limit {
+        font-size: 0.8rem;
+        color: #646970;
+        margin-bottom: 10px;
+    }
+    
+    .stat-note {
+        font-size: 0.8rem;
+        color: #92400e;
+        line-height: 1.4;
+        margin-top: 10px;
+    }
+    
+    .stat-note a {
+        color: #92400e;
+        text-decoration: underline;
+    }
+    
+    /* Usage Bar */
     .usage-bar {
         width: 100%;
-        height: 20px;
-        background: #f0f0f0;
-        border-radius: 10px;
+        height: 6px;
+        background: #e1e1e1;
+        border-radius: 3px;
         overflow: hidden;
-        margin: 10px 0;
+        margin-top: 10px;
     }
     
     .usage-fill {
         height: 100%;
-        background: linear-gradient(90deg, #2271b1 0%, #135e96 100%);
-        border-radius: 10px;
+        border-radius: 3px;
         transition: width 0.3s ease;
     }
     
+    .usage-normal {
+        background: #00a32a;
+    }
+    
     .usage-warning {
-        margin-top: 10px;
-        padding: 8px 12px;
-        border-radius: 4px;
+        background: #dba617;
     }
     
-    .warning-medium {
-        background: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeaa7;
+    .usage-critical {
+        background: #d63638;
     }
     
-    .warning-high {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    
-    .upgrade-notice {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    
-    .quick-actions, .recent-activity {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border: 1px solid #e1e1e1;
-        margin-bottom: 20px;
-    }
-    
-    .stock-lookup {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-    
-    #stock-symbol {
-        flex: 1;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 16px;
-    }
-    
-    .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-primary {
-        background: #2271b1;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background: #135e96;
-    }
-    
-    .btn-secondary {
-        background: #646970;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background: #50575e;
-    }
-    
-    #stock-result {
-        margin-top: 15px;
-        padding: 15px;
-        background: #f9f9f9;
-        border-radius: 4px;
-        border-left: 4px solid #2271b1;
-    }
-    
+    /* Responsive Design */
     @media (max-width: 768px) {
-        .usage-stats {
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .membership-status {
+            flex-wrap: wrap;
+        }
+        
+        .stats-grid {
             grid-template-columns: 1fr;
         }
         
-        .dashboard-header {
-            flex-direction: column;
-            gap: 15px;
-            text-align: center;
+        .notification-header {
+            padding: 12px 15px 8px;
         }
         
-        .stock-lookup {
-            flex-direction: column;
+        .notification-content {
+            padding: 8px 15px 12px;
         }
     }
     </style>
+    
     <?php
     return ob_get_clean();
 }
 add_shortcode('stock_scanner_dashboard', 'stock_scanner_dashboard_shortcode');
 
 /**
- * Pricing table shortcode
+ * Enhanced pricing shortcode (keep existing)
  */
 function stock_scanner_pricing_shortcode($atts) {
-    $user_id = get_current_user_id();
-    $current_level = $user_id ? get_user_membership_level($user_id) : 'free';
+    // Keep existing pricing shortcode implementation
+    $atts = shortcode_atts(array(
+        'highlight' => 'silver'
+    ), $atts);
     
     ob_start();
     ?>
     <div class="pricing-table">
-        <div class="pricing-header">
-            <h2>Choose Your Plan</h2>
-            <p>Select the perfect plan for your stock analysis needs</p>
-        </div>
-        
-        <div class="pricing-grid">
-            <div class="pricing-card <?php echo $current_level === 'free' ? 'current-plan' : ''; ?>">
-                <div class="plan-header">
-                    <h3>Free</h3>
-                    <div class="price">$0<span>/month</span></div>
-                </div>
-                <ul class="features">
-                    <li>✓ 15 API calls/month</li>
-                    <li>✓ Basic stock quotes</li>
-                    <li>✓ Simple charts</li>
-                    <li>✓ Email support</li>
-                </ul>
-                <?php if ($current_level === 'free'): ?>
-                    <button class="btn btn-current" disabled>Current Plan</button>
-                <?php else: ?>
-                    <button class="btn btn-downgrade" data-plan="free">Downgrade</button>
-                <?php endif; ?>
+        <div class="pricing-plan free-plan">
+            <div class="plan-header">
+                <h3>🆓 Free Plan</h3>
+                <div class="price">$0<span>/month</span></div>
             </div>
-            
-            <div class="pricing-card featured <?php echo $current_level === 'bronze' ? 'current-plan' : ''; ?>">
-                <div class="plan-badge">Most Popular</div>
-                <div class="plan-header">
-                    <h3>Bronze</h3>
-                    <div class="price">$9.99<span>/month</span></div>
-                </div>
-                <ul class="features">
-                    <li>✓ 1,500 API calls/month</li>
-                    <li>✓ Real-time quotes</li>
-                    <li>✓ Advanced charts</li>
-                    <li>✓ Technical indicators</li>
-                    <li>✓ Priority support</li>
+            <div class="plan-features">
+                <ul>
+                    <li>✅ 15 API calls per month</li>
+                    <li>✅ Basic stock data</li>
+                    <li>✅ Email support</li>
+                    <li>✅ Community access</li>
                 </ul>
-                <?php if ($current_level === 'bronze'): ?>
-                    <button class="btn btn-current" disabled>Current Plan</button>
-                <?php elseif ($user_id): ?>
-                    <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99">
-                        <?php echo in_array($current_level, ['silver', 'gold']) ? 'Downgrade' : 'Upgrade'; ?>
-                    </button>
-                <?php else: ?>
-                    <button class="btn btn-primary" onclick="window.location.href='<?php echo wp_login_url(); ?>'">Login to Subscribe</button>
-                <?php endif; ?>
             </div>
-            
-            <div class="pricing-card <?php echo $current_level === 'silver' ? 'current-plan' : ''; ?>">
-                <div class="plan-header">
-                    <h3>Silver</h3>
-                    <div class="price">$19.99<span>/month</span></div>
-                </div>
-                <ul class="features">
-                    <li>✓ 5,000 API calls/month</li>
-                    <li>✓ Everything in Bronze</li>
-                    <li>✓ Portfolio tracking</li>
-                    <li>✓ Alerts & notifications</li>
-                    <li>✓ API access</li>
-                </ul>
-                <?php if ($current_level === 'silver'): ?>
-                    <button class="btn btn-current" disabled>Current Plan</button>
-                <?php elseif ($user_id): ?>
-                    <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99">
-                        <?php echo $current_level === 'gold' ? 'Downgrade' : 'Upgrade'; ?>
-                    </button>
-                <?php else: ?>
-                    <button class="btn btn-primary" onclick="window.location.href='<?php echo wp_login_url(); ?>'">Login to Subscribe</button>
-                <?php endif; ?>
-            </div>
-            
-            <div class="pricing-card premium <?php echo $current_level === 'gold' ? 'current-plan' : ''; ?>">
-                <div class="plan-header">
-                    <h3>Gold</h3>
-                    <div class="price">$49.99<span>/month</span></div>
-                </div>
-                <ul class="features">
-                    <li>✓ Unlimited API calls</li>
-                    <li>✓ Everything in Silver</li>
-                    <li>✓ Custom indicators</li>
-                    <li>✓ White-label access</li>
-                    <li>✓ 24/7 phone support</li>
-                </ul>
-                <?php if ($current_level === 'gold'): ?>
-                    <button class="btn btn-current" disabled>Current Plan</button>
-                <?php elseif ($user_id): ?>
-                    <button class="btn btn-premium upgrade-btn" data-plan="gold" data-price="49.99">Upgrade</button>
-                <?php else: ?>
-                    <button class="btn btn-premium" onclick="window.location.href='<?php echo wp_login_url(); ?>'">Login to Subscribe</button>
-                <?php endif; ?>
+            <div class="plan-footer">
+                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-outline">Get Started</a>
             </div>
         </div>
         
-        <div class="pricing-footer">
-            <p>All plans include SSL security, uptime guarantee, and can be cancelled anytime.</p>
-            <div class="security-badges">
-                <span class="badge">🔒 SSL Secured</span>
-                <span class="badge">💳 PayPal Protected</span>
-                <span class="badge">⚡ 99.9% Uptime</span>
+        <div class="pricing-plan bronze-plan">
+            <div class="plan-header">
+                <h3>🥉 Bronze Plan</h3>
+                <div class="price">$9.99<span>/month</span></div>
+            </div>
+            <div class="plan-features">
+                <ul>
+                    <li>✅ 1,500 API calls per month</li>
+                    <li>✅ Advanced stock data</li>
+                    <li>✅ Priority support</li>
+                    <li>✅ Historical data access</li>
+                </ul>
+            </div>
+            <div class="plan-footer">
+                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99">
+                    Upgrade to Bronze
+                </button>
+            </div>
+        </div>
+        
+        <div class="pricing-plan silver-plan <?php echo $atts['highlight'] === 'silver' ? 'highlighted' : ''; ?>">
+            <?php if ($atts['highlight'] === 'silver'): ?>
+            <div class="plan-badge">Most Popular</div>
+            <?php endif; ?>
+            <div class="plan-header">
+                <h3>🥈 Silver Plan</h3>
+                <div class="price">$19.99<span>/month</span></div>
+            </div>
+            <div class="plan-features">
+                <ul>
+                    <li>✅ 5,000 API calls per month</li>
+                    <li>✅ Real-time stock data</li>
+                    <li>✅ Priority support</li>
+                    <li>✅ Advanced analytics</li>
+                    <li>✅ Custom alerts</li>
+                </ul>
+            </div>
+            <div class="plan-footer">
+                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99">
+                    Upgrade to Silver
+                </button>
+            </div>
+        </div>
+        
+        <div class="pricing-plan gold-plan">
+            <div class="plan-header">
+                <h3>🥇 Gold Plan</h3>
+                <div class="price">$49.99<span>/month</span></div>
+            </div>
+            <div class="plan-features">
+                <ul>
+                    <li>✅ Unlimited API calls</li>
+                    <li>✅ Premium stock data</li>
+                    <li>✅ Phone support</li>
+                    <li>✅ Advanced analytics</li>
+                    <li>✅ API access</li>
+                    <li>✅ White-label options</li>
+                </ul>
+            </div>
+            <div class="plan-footer">
+                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="49.99">
+                    Upgrade to Gold
+                </button>
             </div>
         </div>
     </div>
-    
-    <style>
-    .pricing-table {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    
-    .pricing-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    
-    .pricing-header h2 {
-        font-size: 2.5em;
-        color: #2271b1;
-        margin-bottom: 10px;
-    }
-    
-    .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 30px;
-        margin-bottom: 40px;
-    }
-    
-    .pricing-card {
-        background: white;
-        border-radius: 12px;
-        padding: 30px 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border: 2px solid #e1e1e1;
-        position: relative;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .pricing-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-    
-    .pricing-card.featured {
-        border-color: #2271b1;
-        transform: scale(1.05);
-    }
-    
-    .pricing-card.current-plan {
-        border-color: #00a32a;
-        background: linear-gradient(135deg, #f8fff8 0%, #e6f7e6 100%);
-    }
-    
-    .plan-badge {
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #2271b1;
-        color: white;
-        padding: 6px 20px;
-        border-radius: 20px;
-        font-size: 0.9em;
-        font-weight: bold;
-    }
-    
-    .plan-header {
-        text-align: center;
-        margin-bottom: 25px;
-    }
-    
-    .plan-header h3 {
-        font-size: 1.8em;
-        color: #333;
-        margin-bottom: 10px;
-    }
-    
-    .price {
-        font-size: 2.5em;
-        font-weight: bold;
-        color: #2271b1;
-    }
-    
-    .price span {
-        font-size: 0.6em;
-        color: #666;
-    }
-    
-    .features {
-        list-style: none;
-        padding: 0;
-        margin: 0 0 25px 0;
-    }
-    
-    .features li {
-        padding: 8px 0;
-        border-bottom: 1px solid #f0f0f0;
-        color: #555;
-    }
-    
-    .btn {
-        width: 100%;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 6px;
-        font-size: 1.1em;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-    }
-    
-    .btn-primary {
-        background: #2271b1;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background: #135e96;
-    }
-    
-    .btn-premium {
-        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-        color: #333;
-    }
-    
-    .btn-premium:hover {
-        background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-    }
-    
-    .btn-current {
-        background: #00a32a;
-        color: white;
-        cursor: not-allowed;
-    }
-    
-    .btn-downgrade {
-        background: #646970;
-        color: white;
-    }
-    
-    .pricing-footer {
-        text-align: center;
-        color: #666;
-    }
-    
-    .security-badges {
-        margin-top: 20px;
-    }
-    
-    .badge {
-        display: inline-block;
-        background: #f0f0f0;
-        padding: 8px 15px;
-        margin: 0 5px;
-        border-radius: 20px;
-        font-size: 0.9em;
-    }
-    
-    @media (max-width: 768px) {
-        .pricing-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .pricing-card.featured {
-            transform: none;
-        }
-        
-        .pricing-header h2 {
-            font-size: 2em;
-        }
-    }
-    </style>
     <?php
     return ob_get_clean();
 }
 add_shortcode('stock_scanner_pricing', 'stock_scanner_pricing_shortcode');
+
+/**
+ * AJAX: Dismiss notification
+ */
+function handle_dismiss_notification_ajax() {
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    
+    $notification_id = intval($_POST['notification_id'] ?? 0);
+    $user_id = get_current_user_id();
+    
+    if (!$user_id || !$notification_id) {
+        wp_send_json_error('Invalid request');
+    }
+    
+    $result = mark_notification_read($notification_id, $user_id);
+    
+    if ($result) {
+        wp_send_json_success('Notification dismissed');
+    } else {
+        wp_send_json_error('Failed to dismiss notification');
+    }
+}
+add_action('wp_ajax_dismiss_notification', 'handle_dismiss_notification_ajax');
+
+/**
+ * AJAX: Get user notifications
+ */
+function handle_get_notifications_ajax() {
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('Not logged in');
+    }
+    
+    $notifications = get_user_notifications($user_id, true);
+    
+    wp_send_json_success(array(
+        'notifications' => $notifications,
+        'count' => count($notifications)
+    ));
+}
+add_action('wp_ajax_get_notifications', 'handle_get_notifications_ajax');
 
 /**
  * AJAX handler for stock quotes
@@ -682,52 +827,43 @@ add_shortcode('stock_scanner_pricing', 'stock_scanner_pricing_shortcode');
 function handle_stock_quote_ajax() {
     check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
     
-    $user_id = get_current_user_id();
-    if (!$user_id) {
-        wp_send_json_error('Please login to get stock quotes.');
-        return;
-    }
-    
-    if (!can_user_make_api_call($user_id)) {
-        wp_send_json_error('API limit reached. Please upgrade your plan.');
-        return;
-    }
-    
-    $symbol = sanitize_text_field($_POST['symbol']);
+    $symbol = sanitize_text_field($_POST['symbol'] ?? '');
     if (empty($symbol)) {
-        wp_send_json_error('Please provide a stock symbol.');
-        return;
+        wp_send_json_error('Stock symbol is required');
     }
     
-    // Log API usage
-    if (is_stock_scanner_plugin_active()) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'stock_scanner_usage';
-        $wpdb->insert(
-            $table_name,
-            array(
-                'user_id' => $user_id,
-                'endpoint' => 'stock_quote',
-                'symbol' => $symbol,
-                'created_at' => current_time('mysql')
-            )
-        );
+    $user_id = get_current_user_id();
+    if (!can_user_make_api_call($user_id)) {
+        wp_send_json_error(array(
+            'message' => 'API limit reached. Please upgrade your plan for more calls.',
+            'upgrade_url' => '/premium-plans/'
+        ));
     }
     
-    // Mock stock data (replace with real API call)
-    $stock_data = array(
+    // Check security status
+    $security_status = check_user_security_status($user_id);
+    if ($security_status['status'] === 'banned') {
+        wp_send_json_error(array(
+            'message' => 'Account suspended: ' . $security_status['message'],
+            'contact_url' => '/contact/'
+        ));
+    }
+    
+    // Mock stock data
+    $data = array(
         'symbol' => strtoupper($symbol),
         'price' => number_format(rand(10, 500) + (rand(0, 99) / 100), 2),
         'change' => number_format((rand(-10, 10) + (rand(0, 99) / 100)), 2),
         'change_percent' => number_format((rand(-5, 5) + (rand(0, 99) / 100)), 2),
         'volume' => number_format(rand(100000, 10000000)),
-        'timestamp' => current_time('mysql')
+        'timestamp' => current_time('mysql'),
+        'usage_remaining' => get_user_api_usage($user_id)
     );
     
-    wp_send_json_success($stock_data);
+    wp_send_json_success($data);
 }
-add_action('wp_ajax_get_stock_quote', 'handle_stock_quote_ajax');
-add_action('wp_ajax_nopriv_get_stock_quote', 'handle_stock_quote_ajax');
+add_action('wp_ajax_stock_scanner_get_quote', 'handle_stock_quote_ajax');
+add_action('wp_ajax_nopriv_stock_scanner_get_quote', 'handle_stock_quote_ajax');
 
 /**
  * AJAX handler for recent API calls
