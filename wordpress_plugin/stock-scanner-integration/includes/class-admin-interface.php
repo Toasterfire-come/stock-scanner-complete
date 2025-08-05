@@ -100,11 +100,11 @@ class Stock_Scanner_Admin_Interface {
                     </div>
                     
                     <div class="security-card">
-                        <div class="card-icon">🚫</div>
+                        <div class="card-icon">⚠️</div>
                         <div class="card-content">
-                            <h3>Rate Limited IPs</h3>
+                            <h3>Admin Alerts</h3>
                             <span class="card-number">
-                                <?php echo $wpdb->get_var("SELECT COUNT(DISTINCT ip_address) FROM {$wpdb->prefix}stock_scanner_rate_limits WHERE is_blocked = 1"); ?>
+                                <?php echo $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_security WHERE event_type = 'suspicious_user_alert' AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"); ?>
                             </span>
                         </div>
                     </div>
@@ -311,10 +311,27 @@ class Stock_Scanner_Admin_Interface {
                                 <th scope="row">Auto-Ban</th>
                                 <td>
                                     <label>
-                                        <input type="checkbox" name="auto_ban_enabled" value="1" <?php checked($current_settings['auto_ban_enabled']); ?> />
-                                        Enable automatic banning for high bot scores
+                                        <input type="checkbox" name="auto_ban_enabled" value="1" <?php checked($current_settings['auto_ban_enabled']); ?> disabled />
+                                        Enable automatic banning for high bot scores <strong>(DISABLED - Admin Discretion Only)</strong>
                                     </label>
-                                    <p class="description">Automatically ban users with suspicious behavior</p>
+                                    <p class="description">Automatic banning is disabled. Users are flagged for admin review instead.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Auto Rate Limiting</th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="auto_rate_limit_enabled" value="1" <?php checked($current_settings['auto_rate_limit_enabled'] ?? false); ?> />
+                                        Enable automatic rate limiting enforcement
+                                    </label>
+                                    <p class="description">When disabled, rate limits are advisory only and logged for admin review</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Alert Threshold</th>
+                                <td>
+                                    <input type="number" name="alert_threshold" value="<?php echo esc_attr($current_settings['alert_threshold'] ?? 60); ?>" min="1" max="100" />
+                                    <p class="description">Bot score threshold for alerting admins about suspicious users (1-100)</p>
                                 </td>
                             </tr>
                             <tr>
@@ -536,15 +553,18 @@ class Stock_Scanner_Admin_Interface {
                     
                     <div class="bulk-actions-panel">
                         <div class="action-section">
-                            <h3>🚨 Emergency Actions</h3>
+                            <h3>🚨 Admin Actions</h3>
                             <button class="button button-large button-primary" id="bulk-ban-high-bot-score">
-                                Ban All Users with Bot Score > 80%
+                                Review & Ban High Risk Users (Score > 80%)
                             </button>
                             <button class="button button-large" id="bulk-reset-limits">
-                                Reset All Rate Limits
+                                Clear Rate Limit Logs
                             </button>
-                            <button class="button button-large button-secondary" id="bulk-unban-system">
-                                Unban All System-Banned Users
+                            <button class="button button-large button-secondary" id="bulk-unban-all">
+                                Unban All Banned Users
+                            </button>
+                            <button class="button button-large" id="bulk-alert-review">
+                                Review All Suspicious Alerts
                             </button>
                         </div>
                         
@@ -710,14 +730,21 @@ class Stock_Scanner_Admin_Interface {
             'requests_per_hour' => intval($_POST['requests_per_hour']),
             'requests_per_day' => intval($_POST['requests_per_day']),
             'bot_detection_enabled' => isset($_POST['bot_detection_enabled']),
-            'auto_ban_enabled' => isset($_POST['auto_ban_enabled']),
+            'auto_ban_enabled' => false, // Always disabled - admin discretion only
+            'auto_rate_limit_enabled' => isset($_POST['auto_rate_limit_enabled']),
             'bot_score_threshold' => intval($_POST['bot_score_threshold']),
-            'suspicious_threshold' => intval($_POST['suspicious_threshold'])
+            'suspicious_threshold' => intval($_POST['suspicious_threshold']),
+            'alert_threshold' => intval($_POST['alert_threshold'])
         );
         
         update_option('stock_scanner_rate_limits', json_encode($settings));
         
-        echo '<div class="notice notice-success"><p>Rate limiting settings updated successfully!</p></div>';
+        $message = 'Rate limiting settings updated successfully!';
+        if (!$settings['auto_rate_limit_enabled']) {
+            $message .= ' Rate limits are now advisory only and will not automatically block users.';
+        }
+        
+        echo '<div class="notice notice-success"><p>' . $message . '</p></div>';
     }
     
     /**

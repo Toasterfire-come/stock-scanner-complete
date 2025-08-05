@@ -213,15 +213,17 @@ class Stock_Scanner_Integration {
         add_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
         add_option('stock_scanner_version', STOCK_SCANNER_VERSION);
         
-        // Anti-bot and rate limiting settings
+        // Anti-bot and rate limiting settings (admin discretion only)
         add_option('stock_scanner_rate_limits', json_encode(array(
             'requests_per_minute' => 10,
             'requests_per_hour' => 300,
             'requests_per_day' => 1000,
             'bot_detection_enabled' => true,
-            'auto_ban_enabled' => true,
+            'auto_ban_enabled' => false, // Disabled - admin discretion only
+            'auto_rate_limit_enabled' => false, // Disabled - admin discretion only
             'bot_score_threshold' => 75,
-            'suspicious_threshold' => 50
+            'suspicious_threshold' => 50,
+            'alert_threshold' => 60 // Alert admins at this score
         )));
         
         add_option('stock_scanner_bot_patterns', json_encode(array(
@@ -600,12 +602,12 @@ class Stock_Scanner_Integration {
     }
     
     /**
-     * Check if user/IP is rate limited
+     * Check if user/IP is rate limited (admin discretion only)
      */
     private function is_rate_limited($user_id, $ip, $endpoint) {
         global $wpdb;
         
-        // Check if user is banned
+        // Check if user is banned (only if manually banned by admin)
         if ($user_id) {
             $is_banned = $wpdb->get_var($wpdb->prepare(
                 "SELECT is_banned FROM {$wpdb->prefix}stock_scanner_subscriptions WHERE user_id = %d",
@@ -613,24 +615,35 @@ class Stock_Scanner_Integration {
             ));
             
             if ($is_banned) {
-                return array('limited' => true, 'reason' => 'Account banned', 'type' => 'ban');
+                return array('limited' => true, 'reason' => 'Account banned by administrator', 'type' => 'ban');
             }
         }
         
-        // Check rate limits
+        // Check if IP is manually blocked by admin
+        $is_ip_blocked = $wpdb->get_var($wpdb->prepare(
+            "SELECT is_blocked FROM {$wpdb->prefix}stock_scanner_rate_limits 
+             WHERE ip_address = %s AND is_blocked = 1 AND window_end > NOW()",
+            $ip
+        ));
+        
+        if ($is_ip_blocked) {
+            return array('limited' => true, 'reason' => 'IP address blocked by administrator', 'type' => 'ip_block');
+        }
+        
+        // Rate limits are now advisory only - log for admin review but don't block
         $settings = json_decode(get_option('stock_scanner_rate_limits'), true);
         $rates = $this->calculate_request_rates($ip);
         
-        if ($rates['minute'] > $settings['requests_per_minute']) {
-            return array('limited' => true, 'reason' => 'Too many requests per minute', 'type' => 'rate_limit');
-        }
-        
-        if ($rates['hour'] > $settings['requests_per_hour']) {
-            return array('limited' => true, 'reason' => 'Too many requests per hour', 'type' => 'rate_limit');
-        }
-        
-        if ($rates['day'] > $settings['requests_per_day']) {
-            return array('limited' => true, 'reason' => 'Too many requests per day', 'type' => 'rate_limit');
+        // Only alert admin if auto rate limiting is disabled
+        if (!$settings['auto_rate_limit_enabled']) {
+            if ($rates['minute'] > $settings['requests_per_minute'] || 
+                $rates['hour'] > $settings['requests_per_hour'] || 
+                $rates['day'] > $settings['requests_per_day']) {
+                
+                // Log for admin review but don't block
+                $this->log_security_event($ip, 'rate_limit_exceeded_advisory', 'medium', 
+                    "Rate limits exceeded (advisory): {$rates['minute']}/min, {$rates['hour']}/hr, {$rates['day']}/day");
+            }
         }
         
         return array('limited' => false);
@@ -727,39 +740,53 @@ class Stock_Scanner_Integration {
             )
         );
         
-        // Auto-ban if bot score is too high
-        if ($bot_score > 80 && $user_id) {
-            $this->auto_ban_user($user_id, "High bot score: $bot_score");
+        // Alert admin if bot score is too high (no auto-ban)
+        if ($bot_score > 60 && $user_id) {
+            $this->alert_admin_suspicious_user($user_id, $bot_score);
         }
     }
     
     /**
-     * Auto-ban user for suspicious activity
+     * Alert admin about suspicious user activity (no auto-ban)
      */
-    private function auto_ban_user($user_id, $reason) {
+    private function alert_admin_suspicious_user($user_id, $bot_score) {
         global $wpdb;
         
         $settings = json_decode(get_option('stock_scanner_rate_limits'), true);
-        if (!$settings['auto_ban_enabled']) {
+        $alert_threshold = $settings['alert_threshold'] ?? 60;
+        
+        if ($bot_score < $alert_threshold) {
             return;
         }
         
-        $wpdb->update(
-            $wpdb->prefix . 'stock_scanner_subscriptions',
-            array(
-                'is_banned' => 1,
-                'ban_reason' => $reason,
-                'banned_at' => current_time('mysql'),
-                'banned_by' => 0 // System ban
-            ),
-            array('user_id' => $user_id)
+        // Check if we've already alerted about this user recently (within 24 hours)
+        $recent_alert = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}stock_scanner_security 
+             WHERE event_type = 'suspicious_user_alert' AND user_id = %d 
+             AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+            $user_id
+        ));
+        
+        if ($recent_alert) {
+            return; // Already alerted recently
+        }
+        
+        $user = get_user_by('ID', $user_id);
+        $user_info = $user ? $user->user_login . ' (' . $user->user_email . ')' : 'User ID: ' . $user_id;
+        
+        $this->log_security_event($this->get_client_ip(), 'suspicious_user_alert', 'high', 
+            "Suspicious user activity detected - Bot Score: $bot_score - User: $user_info - Requires admin review", array(
+                'user_id' => $user_id,
+                'bot_score' => $bot_score,
+                'user_login' => $user ? $user->user_login : null,
+                'user_email' => $user ? $user->user_email : null,
+                'recommendation' => 'Review user activity and consider manual action if necessary'
+            )
         );
         
-        $this->send_notification($user_id, 'account_banned', 'Account Suspended', 
-            "Your account has been temporarily suspended due to suspicious activity: $reason. Please contact support if you believe this is an error.");
-        
-        $this->log_security_event($this->get_client_ip(), 'auto_ban', 'critical', 
-            "User $user_id auto-banned: $reason");
+        // Send alert notification to user (informational only)
+        $this->send_notification($user_id, 'security_review', 'Account Under Review', 
+            "We've detected some unusual activity patterns on your account. Our security team will review this automatically. Please contact support if you have any concerns.");
     }
     
     /**
