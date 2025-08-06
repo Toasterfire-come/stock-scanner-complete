@@ -1,8 +1,7 @@
-from django.urls import path
+from django.urls import path, include
 from . import views, api_views
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
-from . import portfolio_api, watchlist_api
 
 urlpatterns = [
     # Main API endpoints
@@ -25,30 +24,10 @@ urlpatterns = [
     # Alert management
     path('alerts/create/', api_views.create_alert_api, name='create_alert_api'),
     
-    # Portfolio Management APIs
-    path('portfolio/create/', portfolio_api.create_portfolio, name='create_portfolio'),
-    path('portfolio/add-holding/', portfolio_api.add_holding, name='add_holding'),
-    path('portfolio/sell-holding/', portfolio_api.sell_holding, name='sell_holding'),
-    path('portfolio/list/', portfolio_api.list_portfolios, name='list_portfolios'),
-    path('portfolio/<int:portfolio_id>/performance/', portfolio_api.portfolio_performance, name='portfolio_performance'),
-    path('portfolio/import-csv/', portfolio_api.import_csv, name='import_portfolio_csv'),
-    path('portfolio/alert-roi/', portfolio_api.alert_roi, name='alert_roi'),
-    path('portfolio/<int:portfolio_id>/', portfolio_api.delete_portfolio, name='delete_portfolio'),
-    path('portfolio/<int:portfolio_id>/update/', portfolio_api.update_portfolio, name='update_portfolio'),
-    
-    # Watchlist Management APIs
-    path('watchlist/create/', watchlist_api.create_watchlist, name='create_watchlist'),
-    path('watchlist/add-stock/', watchlist_api.add_stock, name='add_stock_to_watchlist'),
-    path('watchlist/remove-stock/', watchlist_api.remove_stock, name='remove_stock_from_watchlist'),
-    path('watchlist/list/', watchlist_api.list_watchlists, name='list_watchlists'),
-    path('watchlist/<int:watchlist_id>/performance/', watchlist_api.watchlist_performance, name='watchlist_performance'),
-    path('watchlist/<int:watchlist_id>/export/csv/', watchlist_api.export_csv, name='export_watchlist_csv'),
-    path('watchlist/<int:watchlist_id>/export/json/', watchlist_api.export_json, name='export_watchlist_json'),
-    path('watchlist/import/csv/', watchlist_api.import_csv, name='import_watchlist_csv'),
-    path('watchlist/import/json/', watchlist_api.import_json, name='import_watchlist_json'),
-    path('watchlist/<int:watchlist_id>/', watchlist_api.update_watchlist, name='update_watchlist'),
-    path('watchlist/item/<int:item_id>/', watchlist_api.update_watchlist_item, name='update_watchlist_item'),
-    path('watchlist/<int:watchlist_id>/delete/', watchlist_api.delete_watchlist, name='delete_watchlist'),
+    # Modular API endpoints (organized by feature)
+    path('portfolio/', include('stocks.portfolio_urls')),
+    path('watchlist/', include('stocks.watchlist_urls')),
+    path('news/', include('stocks.news_urls')),
     
     # WordPress Integration APIs
     path('wordpress/', WordPressStockView.as_view(), name='wordpress_stocks'),
