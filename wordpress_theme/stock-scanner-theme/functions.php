@@ -149,63 +149,43 @@ function stock_scanner_create_pages() {
         array(
             'title' => 'Stock Lookup',
             'slug' => 'stock-lookup',
-            'content' => '<h2>Stock Quote Lookup</h2><p>Get real-time stock quotes, prices, and basic company information.</p>[stock_lookup_tool]',
+            'content' => '<div class="page-content-wrapper">[stock_lookup_tool]</div>',
             'meta_description' => 'Real-time stock quote lookup with current prices, volume, and basic stock information.',
             'template' => 'page-stock-lookup.php'
         ),
         array(
             'title' => 'Stock News',
             'slug' => 'stock-news',
-            'content' => '<h2>Latest Stock News</h2><p>Stay updated with the latest stock market news and financial analysis.</p>[stock_news_feed]',
+            'content' => '<div class="page-content-wrapper">[stock_news_feed]</div>',
             'meta_description' => 'Latest stock market news, financial analysis, and market updates for informed trading decisions.',
             'template' => 'page-stock-news.php'
         ),
         array(
             'title' => 'Stock Screener',
             'slug' => 'stock-screener',
-            'content' => '<h2>Stock Screener & Filters</h2><p>Advanced stock screening with customizable filters and criteria.</p>[stock_screener_tool]',
+            'content' => '<div class="page-content-wrapper">[stock_screener_tool]</div>',
             'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
             'template' => 'page-stock-screener.php'
         ),
-        array(
-            'title' => 'Technical Analysis',
-            'slug' => 'technical-analysis',
-            'content' => '<h2>Technical Analysis Tools</h2><p>Advanced charting and technical indicators for comprehensive stock analysis.</p>[technical_analysis_tools]',
-            'meta_description' => 'Professional technical analysis tools with advanced charting, indicators, and pattern recognition.',
-            'template' => 'page-technical-analysis.php'
-        ),
-        array(
-            'title' => 'Options Data',
-            'slug' => 'options-data',
-            'content' => '<h2>Options Chain & Analytics</h2><p>Complete options data including chains, Greeks, and volatility analysis.</p>[options_data_viewer]',
-            'meta_description' => 'Comprehensive options data with chains, Greeks, implied volatility, and options analytics.',
-            'template' => 'page-options-data.php'
-        ),
-        array(
-            'title' => 'Level 2 Data',
-            'slug' => 'level2-data',
-            'content' => '<h2>Level 2 Market Data</h2><p>Real-time order book and market depth information for advanced trading.</p>[level2_data_viewer]',
-            'meta_description' => 'Real-time Level 2 market data with order book, market depth, and bid/ask information.',
-            'template' => 'page-level2-data.php'
-        ),
+
         array(
             'title' => 'My Watchlist',
             'slug' => 'watchlist',
-            'content' => '<h2>Stock Watchlist</h2><p>Track your favorite stocks with real-time updates and price alerts.</p>',
+            'content' => '<div class="page-content-wrapper">[stock_watchlist_manager]</div>',
             'meta_description' => 'Manage your stock watchlist with real-time price tracking, alerts, and portfolio monitoring tools.',
             'template' => 'page-watchlist.php'
         ),
         array(
             'title' => 'Market Overview',
             'slug' => 'market-overview',
-            'content' => '<h2>Market Overview</h2><p>Real-time market data and analysis for major indices and trending stocks.</p>',
+            'content' => '<div class="page-content-wrapper">[market_overview_dashboard]</div>',
             'meta_description' => 'Comprehensive market overview with real-time data on major indices, market trends, and stock performance.',
             'template' => 'page-market-overview.php'
         ),
         array(
             'title' => 'My Account',
             'slug' => 'account',
-            'content' => '<h2>Account Management</h2><p>Manage your subscription, view usage statistics, and update account settings.</p>[stock_scanner_dashboard]',
+            'content' => '<div class="page-content-wrapper">[user_account_manager]</div>',
             'meta_description' => 'Manage your Stock Scanner account, subscription plans, and view detailed usage statistics.',
             'template' => 'page-account.php'
         ),
@@ -326,9 +306,6 @@ function stock_scanner_create_menus() {
             array('title' => 'Stock News', 'url' => '/stock-news/', 'icon' => '📰'),
             array('title' => 'Stock Screener', 'url' => '/stock-screener/', 'icon' => '🔎'),
             array('title' => 'Market Overview', 'url' => '/market-overview/', 'icon' => '📈'),
-            array('title' => 'Technical Analysis', 'url' => '/technical-analysis/', 'icon' => '📉'),
-            array('title' => 'Options Data', 'url' => '/options-data/', 'icon' => '💹'),
-            array('title' => 'Level 2 Data', 'url' => '/level2-data/', 'icon' => '📊'),
             array('title' => 'Watchlist', 'url' => '/watchlist/', 'icon' => '📋'),
             array('title' => 'Premium Plans', 'url' => '/premium-plans/', 'icon' => '⭐'),
             array('title' => 'Contact', 'url' => '/contact/', 'icon' => '📞')
@@ -646,6 +623,53 @@ function stock_scanner_head_seo() {
     echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
 }
 add_action('wp_head', 'stock_scanner_head_seo', 1);
+
+/**
+ * Custom navigation walker to hide current page link
+ */
+class Stock_Scanner_Nav_Walker extends Walker_Nav_Menu {
+    function start_el(&$output, $item, $depth = 0, $args = null, $id = 0) {
+        global $wp_query;
+        
+        $current_page = get_queried_object();
+        $current_slug = '';
+        if ($current_page && isset($current_page->post_name)) {
+            $current_slug = $current_page->post_name;
+        }
+        
+        // Skip rendering if this is the current page
+        $item_url = $item->url;
+        if (strpos($item_url, '/' . $current_slug . '/') !== false) {
+            return;
+        }
+        
+        $indent = ($depth) ? str_repeat("\t", $depth) : '';
+        
+        $classes = empty($item->classes) ? array() : (array) $item->classes;
+        $classes[] = 'menu-item-' . $item->ID;
+        
+        $class_names = join(' ', apply_filters('nav_menu_css_class', array_filter($classes), $item, $args));
+        $class_names = $class_names ? ' class="' . esc_attr($class_names) . '"' : '';
+        
+        $id = apply_filters('nav_menu_item_id', 'menu-item-' . $item->ID, $item, $args);
+        $id = $id ? ' id="' . esc_attr($id) . '"' : '';
+        
+        $output .= $indent . '<li' . $id . $class_names .'>';
+        
+        $attributes = ! empty($item->attr_title) ? ' title="' . esc_attr($item->attr_title) .'"' : '';
+        $attributes .= ! empty($item->target) ? ' target="' . esc_attr($item->target ) .'"' : '';
+        $attributes .= ! empty($item->xfn) ? ' rel="' . esc_attr($item->xfn ) .'"' : '';
+        $attributes .= ! empty($item->url) ? ' href="' . esc_attr($item->url ) .'"' : '';
+        
+        $item_output = $args->before ?? '';
+        $item_output .= '<a' . $attributes .'>';
+        $item_output .= ($args->link_before ?? '') . apply_filters('the_title', $item->title, $item->ID) . ($args->link_after ?? '');
+        $item_output .= '</a>';
+        $item_output .= $args->after ?? '';
+        
+        $output .= apply_filters('walker_nav_menu_start_el', $item_output, $item, $depth, $args);
+    }
+}
 
 /**
  * Comprehensive structured data for AI ranking

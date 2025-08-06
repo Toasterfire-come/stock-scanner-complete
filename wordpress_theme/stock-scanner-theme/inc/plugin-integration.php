@@ -688,25 +688,7 @@ function stock_scanner_pricing_shortcode($atts) {
     
     ob_start();
     ?>
-    <div class="pricing-table">
-        <div class="pricing-plan free-plan">
-            <div class="plan-header">
-                <h3>🆓 Free Plan</h3>
-                <div class="price">$0<span>/month</span></div>
-            </div>
-            <div class="plan-features">
-                <ul>
-                    <li>✅ 15 API calls per month</li>
-                    <li>✅ Basic stock data</li>
-                    <li>✅ Email support</li>
-                    <li>✅ Community access</li>
-                </ul>
-            </div>
-            <div class="plan-footer">
-                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-outline">Get Started</a>
-            </div>
-        </div>
-        
+    <div class="pricing-table">        
         <div class="pricing-plan bronze-plan">
             <div class="plan-header">
                 <h3>🥉 Bronze Plan</h3>
@@ -716,12 +698,12 @@ function stock_scanner_pricing_shortcode($atts) {
                 <ul>
                     <li>✅ 1,500 API calls per month</li>
                     <li>✅ Advanced stock data</li>
-                    <li>✅ Priority support</li>
+                    <li>✅ Email support</li>
                     <li>✅ Historical data access</li>
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99">
+                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99" onclick="redirectToPayPal('bronze', '9.99')">
                     Upgrade to Bronze
                 </button>
             </div>
@@ -739,13 +721,13 @@ function stock_scanner_pricing_shortcode($atts) {
                 <ul>
                     <li>✅ 5,000 API calls per month</li>
                     <li>✅ Real-time stock data</li>
-                    <li>✅ Priority support</li>
+                    <li>✅ Email support</li>
                     <li>✅ Advanced analytics</li>
                     <li>✅ Custom alerts</li>
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99">
+                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99" onclick="redirectToPayPal('silver', '19.99')">
                     Upgrade to Silver
                 </button>
             </div>
@@ -767,12 +749,102 @@ function stock_scanner_pricing_shortcode($atts) {
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="49.99">
+                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="49.99" onclick="redirectToPayPal('gold', '49.99')">
                     Upgrade to Gold
                 </button>
             </div>
         </div>
     </div>
+    
+    <!-- Free Plan - Centered Below -->
+    <div class="free-plan-section">
+        <div class="pricing-plan free-plan-centered">
+            <div class="plan-header">
+                <h3>🆓 Free Plan</h3>
+                <div class="price">$0<span>/month</span></div>
+            </div>
+            <div class="plan-features">
+                <div class="limits-grid">
+                    <div class="limit-item">
+                        <span class="limit-number">15</span>
+                        <span class="limit-label">Monthly Calls</span>
+                    </div>
+                    <div class="limit-item">
+                        <span class="limit-number">5</span>
+                        <span class="limit-label">Daily Calls</span>
+                    </div>
+                    <div class="limit-item">
+                        <span class="limit-number">2</span>
+                        <span class="limit-label">Hourly Calls</span>
+                    </div>
+                </div>
+            </div>
+            <div class="plan-footer">
+                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-outline">Get Started Free</a>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    .pricing-table {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .free-plan-section {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+    }
+    
+    .free-plan-centered {
+        max-width: 350px;
+        width: 100%;
+    }
+    
+    .limits-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .limit-item {
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .limit-number {
+        display: block;
+        font-size: 24px;
+        font-weight: bold;
+        color: #2563eb;
+        margin-bottom: 4px;
+    }
+    
+    .limit-label {
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    </style>
+    
+    <script>
+    function redirectToPayPal(plan, price) {
+        // In a real implementation, this would create a PayPal order and redirect
+        // For now, we'll show an alert and redirect to a payment page
+        if (confirm(`Upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan for $${price}/month?`)) {
+            // Redirect to PayPal or payment processing page
+            window.location.href = '/payment-success/?plan=' + plan + '&price=' + price;
+        }
+    }
+    </script>
+    
     <?php
     return ob_get_clean();
 }
