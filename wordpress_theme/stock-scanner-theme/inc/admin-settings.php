@@ -20,6 +20,9 @@ class StockScannerAdminSettings {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_ajax_test_api_connection', array($this, 'test_api_connection'));
         add_action('wp_ajax_test_paypal_connection', array($this, 'test_paypal_connection'));
+        add_action('wp_ajax_cancel_user_membership', array($this, 'cancel_user_membership'));
+        add_action('wp_ajax_update_user_membership', array($this, 'update_user_membership'));
+        add_action('wp_ajax_search_users', array($this, 'search_users'));
     }
     
     /**
@@ -72,6 +75,15 @@ class StockScannerAdminSettings {
             'manage_options',
             'stock-scanner-limits',
             array($this, 'limits_settings_page')
+        );
+        
+        add_submenu_page(
+            $this->page_slug,
+            'User Management',
+            'User Management',
+            'manage_options',
+            'stock-scanner-users',
+            array($this, 'user_management_page')
         );
         
         add_submenu_page(
@@ -962,6 +974,332 @@ class StockScannerAdminSettings {
     }
     
     /**
+     * User management page
+     */
+    public function user_management_page() {
+        ?>
+        <div class="wrap stock-scanner-admin">
+            <h1><?php esc_html_e('User Management', 'stock-scanner'); ?></h1>
+            
+            <div class="nav-tab-wrapper">
+                <a href="#active-users" class="nav-tab nav-tab-active"><?php esc_html_e('Active Users', 'stock-scanner'); ?></a>
+                <a href="#membership-control" class="nav-tab"><?php esc_html_e('Membership Control', 'stock-scanner'); ?></a>
+                <a href="#bulk-actions" class="nav-tab"><?php esc_html_e('Bulk Actions', 'stock-scanner'); ?></a>
+            </div>
+            
+            <!-- Active Users Tab -->
+            <div id="active-users" class="tab-content active">
+                <div class="user-search-section">
+                    <h2><?php esc_html_e('User Search & Management', 'stock-scanner'); ?></h2>
+                    
+                    <div class="search-controls">
+                        <input type="text" id="user-search" placeholder="Search users by email, username, or name..." class="regular-text" />
+                        <select id="membership-filter">
+                            <option value=""><?php esc_html_e('All Memberships', 'stock-scanner'); ?></option>
+                            <option value="free"><?php esc_html_e('Free Users', 'stock-scanner'); ?></option>
+                            <option value="bronze"><?php esc_html_e('Bronze Members', 'stock-scanner'); ?></option>
+                            <option value="silver"><?php esc_html_e('Silver Members', 'stock-scanner'); ?></option>
+                            <option value="gold"><?php esc_html_e('Gold Members', 'stock-scanner'); ?></option>
+                        </select>
+                        <button type="button" id="search-users" class="button"><?php esc_html_e('Search', 'stock-scanner'); ?></button>
+                    </div>
+                </div>
+                
+                <div id="users-table-container">
+                    <table class="wp-list-table widefat fixed striped users">
+                        <thead>
+                            <tr>
+                                <th scope="col"><?php esc_html_e('User', 'stock-scanner'); ?></th>
+                                <th scope="col"><?php esc_html_e('Email', 'stock-scanner'); ?></th>
+                                <th scope="col"><?php esc_html_e('Membership', 'stock-scanner'); ?></th>
+                                <th scope="col"><?php esc_html_e('Registration Date', 'stock-scanner'); ?></th>
+                                <th scope="col"><?php esc_html_e('Last Active', 'stock-scanner'); ?></th>
+                                <th scope="col"><?php esc_html_e('Actions', 'stock-scanner'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <?php $this->display_users_table(); ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Membership Control Tab -->
+            <div id="membership-control" class="tab-content">
+                <h2><?php esc_html_e('Membership Control', 'stock-scanner'); ?></h2>
+                
+                <div class="card">
+                    <h3><?php esc_html_e('Force Cancel Membership', 'stock-scanner'); ?></h3>
+                    <p class="description"><?php esc_html_e('Immediately cancel a user\'s membership. This will downgrade them to free tier and stop all billing.', 'stock-scanner'); ?></p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('User Email/Username', 'stock-scanner'); ?></th>
+                            <td>
+                                <input type="text" id="cancel-user-input" class="regular-text" placeholder="Enter email or username" />
+                                <button type="button" id="force-cancel-membership" class="button button-secondary">
+                                    <?php esc_html_e('Force Cancel Membership', 'stock-scanner'); ?>
+                                </button>
+                                <p class="description"><?php esc_html_e('WARNING: This action cannot be undone. The user will be immediately downgraded to free tier.', 'stock-scanner'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="card">
+                    <h3><?php esc_html_e('Upgrade/Downgrade User', 'stock-scanner'); ?></h3>
+                    <p class="description"><?php esc_html_e('Manually change a user\'s membership level.', 'stock-scanner'); ?></p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('User Email/Username', 'stock-scanner'); ?></th>
+                            <td>
+                                <input type="text" id="upgrade-user-input" class="regular-text" placeholder="Enter email or username" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('New Membership Level', 'stock-scanner'); ?></th>
+                            <td>
+                                <select id="new-membership-level">
+                                    <option value="free"><?php esc_html_e('Free User', 'stock-scanner'); ?></option>
+                                    <option value="bronze"><?php esc_html_e('Bronze Member', 'stock-scanner'); ?></option>
+                                    <option value="silver"><?php esc_html_e('Silver Member', 'stock-scanner'); ?></option>
+                                    <option value="gold"><?php esc_html_e('Gold Member', 'stock-scanner'); ?></option>
+                                </select>
+                                <button type="button" id="update-membership" class="button button-primary">
+                                    <?php esc_html_e('Update Membership', 'stock-scanner'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="card">
+                    <h3><?php esc_html_e('Membership Statistics', 'stock-scanner'); ?></h3>
+                    <div class="membership-stats">
+                        <?php $this->display_membership_stats(); ?>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bulk Actions Tab -->
+            <div id="bulk-actions" class="tab-content">
+                <h2><?php esc_html_e('Bulk Operations', 'stock-scanner'); ?></h2>
+                
+                <div class="card">
+                    <h3><?php esc_html_e('Bulk Membership Operations', 'stock-scanner'); ?></h3>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Action', 'stock-scanner'); ?></th>
+                            <td>
+                                <select id="bulk-action">
+                                    <option value=""><?php esc_html_e('Select Action', 'stock-scanner'); ?></option>
+                                    <option value="cancel_expired"><?php esc_html_e('Cancel Expired Memberships', 'stock-scanner'); ?></option>
+                                    <option value="send_renewal_reminders"><?php esc_html_e('Send Renewal Reminders', 'stock-scanner'); ?></option>
+                                    <option value="cleanup_inactive"><?php esc_html_e('Cleanup Inactive Users (90+ days)', 'stock-scanner'); ?></option>
+                                </select>
+                                <button type="button" id="execute-bulk-action" class="button button-secondary">
+                                    <?php esc_html_e('Execute', 'stock-scanner'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div id="bulk-action-results" style="display: none;">
+                        <h4><?php esc_html_e('Results', 'stock-scanner'); ?></h4>
+                        <div id="bulk-results-content"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><?php esc_html_e('Export User Data', 'stock-scanner'); ?></h3>
+                    <p class="description"><?php esc_html_e('Export user data for analysis or backup purposes.', 'stock-scanner'); ?></p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Export Format', 'stock-scanner'); ?></th>
+                            <td>
+                                <select id="export-format">
+                                    <option value="csv"><?php esc_html_e('CSV', 'stock-scanner'); ?></option>
+                                    <option value="json"><?php esc_html_e('JSON', 'stock-scanner'); ?></option>
+                                </select>
+                                <button type="button" id="export-users" class="button">
+                                    <?php esc_html_e('Export Users', 'stock-scanner'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+        .user-search-section {
+            background: #fff;
+            border: 1px solid #c3c4c7;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .search-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-controls input[type="text"] {
+            min-width: 300px;
+        }
+        
+        .membership-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2271b1;
+        }
+        
+        .stat-label {
+            color: #646970;
+            font-size: 0.9em;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .user-actions .button {
+            padding: 2px 8px;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+        
+        .membership-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .membership-badge.free {
+            background: #646970;
+            color: #fff;
+        }
+        
+        .membership-badge.bronze {
+            background: #cd7f32;
+            color: #fff;
+        }
+        
+        .membership-badge.silver {
+            background: #c0c0c0;
+            color: #000;
+        }
+        
+        .membership-badge.gold {
+            background: #ffd700;
+            color: #000;
+        }
+        
+        @media (max-width: 768px) {
+            .search-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-controls input[type="text"] {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+        </style>
+        <?php
+    }
+    
+    /**
+     * Display users table
+     */
+    private function display_users_table() {
+        $users = get_users(array(
+            'number' => 20,
+            'orderby' => 'registered',
+            'order' => 'DESC'
+        ));
+        
+        foreach ($users as $user) {
+            $membership_level = get_user_meta($user->ID, 'membership_level', true) ?: 'free';
+            $last_active = get_user_meta($user->ID, 'last_active', true);
+            $last_active_display = $last_active ? date('Y-m-d H:i', strtotime($last_active)) : __('Never', 'stock-scanner');
+            
+            echo '<tr>';
+            echo '<td><strong>' . esc_html($user->display_name) . '</strong><br><small>' . esc_html($user->user_login) . '</small></td>';
+            echo '<td>' . esc_html($user->user_email) . '</td>';
+            echo '<td><span class="membership-badge ' . esc_attr($membership_level) . '">' . esc_html(ucfirst($membership_level)) . '</span></td>';
+            echo '<td>' . esc_html($user->user_registered) . '</td>';
+            echo '<td>' . esc_html($last_active_display) . '</td>';
+            echo '<td class="user-actions">';
+            echo '<button class="button button-small edit-user" data-user-id="' . esc_attr($user->ID) . '">Edit</button>';
+            echo '<button class="button button-small cancel-membership" data-user-id="' . esc_attr($user->ID) . '">Cancel</button>';
+            echo '</td>';
+            echo '</tr>';
+        }
+    }
+    
+    /**
+     * Display membership statistics
+     */
+    private function display_membership_stats() {
+        $stats = array(
+            'total' => count_users()['total_users'],
+            'free' => $this->count_users_by_membership('free'),
+            'bronze' => $this->count_users_by_membership('bronze'),
+            'silver' => $this->count_users_by_membership('silver'),
+            'gold' => $this->count_users_by_membership('gold')
+        );
+        
+        foreach ($stats as $type => $count) {
+            $label = $type === 'total' ? 'Total Users' : ucfirst($type) . ' Members';
+            echo '<div class="stat-card">';
+            echo '<div class="stat-number">' . esc_html($count) . '</div>';
+            echo '<div class="stat-label">' . esc_html($label) . '</div>';
+            echo '</div>';
+        }
+    }
+    
+    /**
+     * Count users by membership level
+     */
+    private function count_users_by_membership($level) {
+        $users = get_users(array(
+            'meta_key' => 'membership_level',
+            'meta_value' => $level,
+            'count_total' => true,
+            'fields' => 'ID'
+        ));
+        
+        return is_array($users) ? count($users) : 0;
+    }
+
+    /**
      * Advanced settings page
      */
     public function advanced_settings_page() {
@@ -1438,6 +1776,224 @@ class StockScannerAdminSettings {
         }
         
         return $sanitized;
+    }
+    
+    /**
+     * Cancel user membership AJAX handler
+     */
+    public function cancel_user_membership() {
+        check_ajax_referer('stock_scanner_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'stock-scanner'));
+        }
+        
+        $user_identifier = sanitize_text_field($_POST['user_identifier'] ?? '');
+        
+        if (empty($user_identifier)) {
+            wp_send_json_error(__('User identifier is required', 'stock-scanner'));
+        }
+        
+        // Find user by email or username
+        $user = get_user_by('email', $user_identifier);
+        if (!$user) {
+            $user = get_user_by('login', $user_identifier);
+        }
+        
+        if (!$user) {
+            wp_send_json_error(__('User not found', 'stock-scanner'));
+        }
+        
+        // Cancel membership
+        $old_level = get_user_meta($user->ID, 'membership_level', true);
+        update_user_meta($user->ID, 'membership_level', 'free');
+        update_user_meta($user->ID, 'membership_cancelled_date', current_time('mysql'));
+        update_user_meta($user->ID, 'previous_membership_level', $old_level);
+        
+        // Log the action
+        $this->log_admin_action('membership_cancelled', array(
+            'user_id' => $user->ID,
+            'previous_level' => $old_level,
+            'admin_user' => get_current_user_id()
+        ));
+        
+        // Send cancellation email to user
+        $this->send_cancellation_email($user);
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Membership cancelled for %s. User downgraded to free tier.', 'stock-scanner'), $user->display_name)
+        ));
+    }
+    
+    /**
+     * Update user membership AJAX handler
+     */
+    public function update_user_membership() {
+        check_ajax_referer('stock_scanner_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'stock-scanner'));
+        }
+        
+        $user_identifier = sanitize_text_field($_POST['user_identifier'] ?? '');
+        $new_level = sanitize_text_field($_POST['new_level'] ?? '');
+        
+        if (empty($user_identifier) || empty($new_level)) {
+            wp_send_json_error(__('User identifier and membership level are required', 'stock-scanner'));
+        }
+        
+        // Validate membership level
+        $valid_levels = array('free', 'bronze', 'silver', 'gold');
+        if (!in_array($new_level, $valid_levels)) {
+            wp_send_json_error(__('Invalid membership level', 'stock-scanner'));
+        }
+        
+        // Find user
+        $user = get_user_by('email', $user_identifier);
+        if (!$user) {
+            $user = get_user_by('login', $user_identifier);
+        }
+        
+        if (!$user) {
+            wp_send_json_error(__('User not found', 'stock-scanner'));
+        }
+        
+        // Update membership
+        $old_level = get_user_meta($user->ID, 'membership_level', true);
+        update_user_meta($user->ID, 'membership_level', $new_level);
+        update_user_meta($user->ID, 'membership_updated_date', current_time('mysql'));
+        
+        // Log the action
+        $this->log_admin_action('membership_updated', array(
+            'user_id' => $user->ID,
+            'previous_level' => $old_level,
+            'new_level' => $new_level,
+            'admin_user' => get_current_user_id()
+        ));
+        
+        // Send update email to user
+        $this->send_membership_update_email($user, $old_level, $new_level);
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Membership updated for %s. Changed from %s to %s.', 'stock-scanner'), 
+                $user->display_name, $old_level, $new_level)
+        ));
+    }
+    
+    /**
+     * Search users AJAX handler
+     */
+    public function search_users() {
+        check_ajax_referer('stock_scanner_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Unauthorized', 'stock-scanner'));
+        }
+        
+        $search = sanitize_text_field($_POST['search'] ?? '');
+        $membership_filter = sanitize_text_field($_POST['membership_filter'] ?? '');
+        
+        $args = array(
+            'number' => 50,
+            'orderby' => 'registered',
+            'order' => 'DESC'
+        );
+        
+        if (!empty($search)) {
+            $args['search'] = '*' . $search . '*';
+            $args['search_columns'] = array('user_login', 'user_email', 'display_name');
+        }
+        
+        if (!empty($membership_filter)) {
+            $args['meta_query'] = array(
+                array(
+                    'key' => 'membership_level',
+                    'value' => $membership_filter,
+                    'compare' => '='
+                )
+            );
+        }
+        
+        $users = get_users($args);
+        $html = '';
+        
+        foreach ($users as $user) {
+            $membership_level = get_user_meta($user->ID, 'membership_level', true) ?: 'free';
+            $last_active = get_user_meta($user->ID, 'last_active', true);
+            $last_active_display = $last_active ? date('Y-m-d H:i', strtotime($last_active)) : __('Never', 'stock-scanner');
+            
+            $html .= '<tr>';
+            $html .= '<td><strong>' . esc_html($user->display_name) . '</strong><br><small>' . esc_html($user->user_login) . '</small></td>';
+            $html .= '<td>' . esc_html($user->user_email) . '</td>';
+            $html .= '<td><span class="membership-badge ' . esc_attr($membership_level) . '">' . esc_html(ucfirst($membership_level)) . '</span></td>';
+            $html .= '<td>' . esc_html($user->user_registered) . '</td>';
+            $html .= '<td>' . esc_html($last_active_display) . '</td>';
+            $html .= '<td class="user-actions">';
+            $html .= '<button class="button button-small edit-user" data-user-id="' . esc_attr($user->ID) . '">Edit</button>';
+            $html .= '<button class="button button-small cancel-membership" data-user-id="' . esc_attr($user->ID) . '">Cancel</button>';
+            $html .= '</td>';
+            $html .= '</tr>';
+        }
+        
+        wp_send_json_success(array('html' => $html));
+    }
+    
+    /**
+     * Send cancellation email to user
+     */
+    private function send_cancellation_email($user) {
+        $subject = __('Membership Cancellation Notice', 'stock-scanner');
+        $message = sprintf(__('Dear %s,
+
+Your premium membership has been cancelled by our administrative team. You have been downgraded to our free tier.
+
+If you believe this was done in error, please contact our support team.
+
+Best regards,
+Stock Scanner Team', 'stock-scanner'), $user->display_name);
+        
+        wp_mail($user->user_email, $subject, $message);
+    }
+    
+    /**
+     * Send membership update email to user
+     */
+    private function send_membership_update_email($user, $old_level, $new_level) {
+        $subject = __('Membership Update Notice', 'stock-scanner');
+        $message = sprintf(__('Dear %s,
+
+Your membership level has been updated by our administrative team.
+
+Previous Level: %s
+New Level: %s
+
+Thank you for being a valued member!
+
+Best regards,
+Stock Scanner Team', 'stock-scanner'), $user->display_name, ucfirst($old_level), ucfirst($new_level));
+        
+        wp_mail($user->user_email, $subject, $message);
+    }
+    
+    /**
+     * Log admin actions for audit trail
+     */
+    private function log_admin_action($action, $data) {
+        $log_entry = array(
+            'timestamp' => current_time('mysql'),
+            'action' => $action,
+            'data' => $data
+        );
+        
+        $logs = get_option('stock_scanner_admin_logs', array());
+        $logs[] = $log_entry;
+        
+        // Keep only last 1000 log entries
+        if (count($logs) > 1000) {
+            $logs = array_slice($logs, -1000);
+        }
+        
+        update_option('stock_scanner_admin_logs', $logs);
     }
 }
 

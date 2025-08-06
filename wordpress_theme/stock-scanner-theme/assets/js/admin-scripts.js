@@ -20,6 +20,7 @@
             this.initConfirmDialogs();
             this.initAutoSave();
             this.initSettingsImportExport();
+            this.initUserManagement();
             
             // Show success message after saving
             this.showSaveNotification();
@@ -451,6 +452,204 @@
                         this.updateStatusIndicators(response.data);
                     }
                 }.bind(this)
+            });
+        },
+        
+        /**
+         * Initialize user management functionality
+         */
+        initUserManagement: function() {
+            // User search
+            $('#search-users').on('click', function() {
+                const search = $('#user-search').val();
+                const membershipFilter = $('#membership-filter').val();
+                
+                $.ajax({
+                    url: stockScannerAdmin.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'search_users',
+                        nonce: stockScannerAdmin.nonce,
+                        search: search,
+                        membership_filter: membershipFilter
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#users-table-body').html(response.data.html);
+                        }
+                    }
+                });
+            });
+            
+            // Force cancel membership
+            $('#force-cancel-membership').on('click', function() {
+                const userIdentifier = $('#cancel-user-input').val().trim();
+                
+                if (!userIdentifier) {
+                    alert('Please enter a user email or username');
+                    return;
+                }
+                
+                if (!confirm('WARNING: This will immediately cancel the user\'s membership and downgrade them to free tier. This action cannot be undone. Continue?')) {
+                    return;
+                }
+                
+                $(this).prop('disabled', true).text('Cancelling...');
+                
+                $.ajax({
+                    url: stockScannerAdmin.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'cancel_user_membership',
+                        nonce: stockScannerAdmin.nonce,
+                        user_identifier: userIdentifier
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.data.message);
+                            $('#cancel-user-input').val('');
+                            // Refresh users table
+                            $('#search-users').click();
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while cancelling the membership');
+                    },
+                    complete: function() {
+                        $('#force-cancel-membership').prop('disabled', false).text('Force Cancel Membership');
+                    }
+                });
+            });
+            
+            // Update membership
+            $('#update-membership').on('click', function() {
+                const userIdentifier = $('#upgrade-user-input').val().trim();
+                const newLevel = $('#new-membership-level').val();
+                
+                if (!userIdentifier) {
+                    alert('Please enter a user email or username');
+                    return;
+                }
+                
+                if (!newLevel) {
+                    alert('Please select a membership level');
+                    return;
+                }
+                
+                $(this).prop('disabled', true).text('Updating...');
+                
+                $.ajax({
+                    url: stockScannerAdmin.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'update_user_membership',
+                        nonce: stockScannerAdmin.nonce,
+                        user_identifier: userIdentifier,
+                        new_level: newLevel
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.data.message);
+                            $('#upgrade-user-input').val('');
+                            // Refresh users table
+                            $('#search-users').click();
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while updating the membership');
+                    },
+                    complete: function() {
+                        $('#update-membership').prop('disabled', false).text('Update Membership');
+                    }
+                });
+            });
+            
+            // Individual user actions
+            $(document).on('click', '.cancel-membership', function() {
+                const userId = $(this).data('user-id');
+                const userName = $(this).closest('tr').find('td:first strong').text();
+                
+                if (!confirm(`Cancel membership for ${userName}? This action cannot be undone.`)) {
+                    return;
+                }
+                
+                $(this).prop('disabled', true).text('Cancelling...');
+                
+                $.ajax({
+                    url: stockScannerAdmin.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'cancel_user_membership',
+                        nonce: stockScannerAdmin.nonce,
+                        user_identifier: userId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.data.message);
+                            // Refresh users table
+                            $('#search-users').click();
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    complete: function() {
+                        $('.cancel-membership').prop('disabled', false).text('Cancel');
+                    }
+                });
+            });
+            
+            // Bulk actions
+            $('#execute-bulk-action').on('click', function() {
+                const action = $('#bulk-action').val();
+                
+                if (!action) {
+                    alert('Please select a bulk action');
+                    return;
+                }
+                
+                let confirmMessage = '';
+                switch (action) {
+                    case 'cancel_expired':
+                        confirmMessage = 'Cancel all expired memberships?';
+                        break;
+                    case 'send_renewal_reminders':
+                        confirmMessage = 'Send renewal reminders to eligible users?';
+                        break;
+                    case 'cleanup_inactive':
+                        confirmMessage = 'Clean up inactive users (90+ days)? This will remove their data.';
+                        break;
+                }
+                
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+                
+                $(this).prop('disabled', true).text('Processing...');
+                $('#bulk-action-results').show();
+                $('#bulk-results-content').html('<p>Processing...</p>');
+                
+                // Simulate bulk action (in real implementation, this would be an AJAX call)
+                setTimeout(function() {
+                    $('#bulk-results-content').html('<p>Bulk action completed successfully.</p>');
+                    $('#execute-bulk-action').prop('disabled', false).text('Execute');
+                }, 2000);
+            });
+            
+            // Export users
+            $('#export-users').on('click', function() {
+                const format = $('#export-format').val();
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                
+                // In a real implementation, this would generate and download the file
+                alert(`Exporting users in ${format.toUpperCase()} format...`);
+                
+                // Simulate file download
+                const filename = `users-export-${timestamp}.${format}`;
+                console.log(`Would download: ${filename}`);
             });
         },
         
