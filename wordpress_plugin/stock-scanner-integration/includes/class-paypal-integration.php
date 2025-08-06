@@ -26,15 +26,15 @@ class StockScannerPayPalIntegration {
     private $cancel_url;
     
     /**
-     * Membership plan prices
+     * Membership plan prices (updated to match membership manager)
      */
     private $plan_prices = [
         'bronze_monthly' => 14.99,
-        'bronze_annual' => 143.88,
+        'bronze_annual' => 149.99,
         'silver_monthly' => 29.99,
-        'silver_annual' => 287.88,
-        'gold_monthly' => 59.99,
-        'gold_annual' => 575.88
+        'silver_annual' => 299.99,
+        'gold_monthly' => 69.99,
+        'gold_annual' => 699.99
     ];
     
     /**
@@ -76,9 +76,8 @@ class StockScannerPayPalIntegration {
         // Webhook endpoint
         add_action('rest_api_init', array($this, 'register_webhook_endpoint'));
         
-        // Admin hooks
-        add_action('admin_menu', array($this, 'add_paypal_admin_menu'));
-        add_action('admin_init', array($this, 'register_paypal_settings'));
+        // Note: PayPal settings are now integrated into the main Stock Scanner settings page
+        // No separate admin menu needed
     }
     
     /**
@@ -504,87 +503,9 @@ class StockScannerPayPalIntegration {
     }
     
     /**
-     * Add PayPal admin menu
+     * Note: PayPal settings are now integrated into the main Stock Scanner settings page
+     * No separate admin menu needed
      */
-    public function add_paypal_admin_menu() {
-        add_submenu_page(
-            'stock-scanner-settings',
-            'PayPal Settings',
-            'PayPal Settings',
-            'manage_options',
-            'paypal-settings',
-            array($this, 'paypal_settings_page')
-        );
-    }
-    
-    /**
-     * Register PayPal settings
-     */
-    public function register_paypal_settings() {
-        register_setting('paypal_settings', 'paypal_mode');
-        register_setting('paypal_settings', 'paypal_client_id');
-        register_setting('paypal_settings', 'paypal_client_secret');
-        register_setting('paypal_settings', 'paypal_webhook_url');
-        register_setting('paypal_settings', 'paypal_return_url');
-        register_setting('paypal_settings', 'paypal_cancel_url');
-    }
-    
-    /**
-     * PayPal settings page
-     */
-    public function paypal_settings_page() {
-        ?>
-        <div class="wrap">
-            <h1>PayPal Settings</h1>
-            <form method="post" action="options.php">
-                <?php settings_fields('paypal_settings'); ?>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">PayPal Mode</th>
-                        <td>
-                            <select name="paypal_mode">
-                                <option value="sandbox" <?php selected(get_option('paypal_mode'), 'sandbox'); ?>>Sandbox</option>
-                                <option value="live" <?php selected(get_option('paypal_mode'), 'live'); ?>>Live</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Client ID</th>
-                        <td>
-                            <input type="text" name="paypal_client_id" value="<?php echo esc_attr(get_option('paypal_client_id')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Client Secret</th>
-                        <td>
-                            <input type="password" name="paypal_client_secret" value="<?php echo esc_attr(get_option('paypal_client_secret')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Webhook URL</th>
-                        <td>
-                            <input type="url" name="paypal_webhook_url" value="<?php echo esc_attr(get_option('paypal_webhook_url')); ?>" class="regular-text" />
-                            <p class="description">Set this URL in your PayPal Developer Dashboard</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Return URL</th>
-                        <td>
-                            <input type="url" name="paypal_return_url" value="<?php echo esc_attr(get_option('paypal_return_url')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Cancel URL</th>
-                        <td>
-                            <input type="url" name="paypal_cancel_url" value="<?php echo esc_attr(get_option('paypal_cancel_url')); ?>" class="regular-text" />
-                        </td>
-                    </tr>
-                </table>
-                <?php submit_button(); ?>
-            </form>
-        </div>
-        <?php
-    }
     
     /**
      * Log payment
@@ -613,6 +534,184 @@ class StockScannerPayPalIntegration {
         
         $log_file = WP_CONTENT_DIR . '/paypal_errors.log';
         file_put_contents($log_file, json_encode($log_entry) . "\n", FILE_APPEND | LOCK_EX);
+    }
+    
+    /**
+     * Create subscription (called by membership manager)
+     */
+    public function create_subscription($subscription_data) {
+        try {
+            $access_token = $this->get_access_token();
+            
+            if (!$access_token) {
+                return ['success' => false, 'error' => 'Failed to get PayPal access token'];
+            }
+            
+            $url = $this->api_base_url . '/v1/billing/subscriptions';
+            
+            $plan_id = $subscription_data['plan_id'];
+            $user_id = $subscription_data['user_id'];
+            $user = get_user_by('ID', $user_id);
+            
+            $subscription_request = [
+                'plan_id' => $plan_id,
+                'subscriber' => [
+                    'name' => [
+                        'given_name' => $user->first_name ?: 'User',
+                        'surname' => $user->last_name ?: 'Name'
+                    ],
+                    'email_address' => $user->user_email
+                ],
+                'application_context' => [
+                    'brand_name' => 'Stock Scanner Professional',
+                    'shipping_preference' => 'NO_SHIPPING',
+                    'user_action' => 'SUBSCRIBE_NOW',
+                    'return_url' => $this->return_url,
+                    'cancel_url' => $this->cancel_url
+                ]
+            ];
+            
+            $headers = [
+                'Authorization' => 'Bearer ' . $access_token,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'Prefer' => 'return=representation'
+            ];
+            
+            $response = wp_remote_post($url, [
+                'headers' => $headers,
+                'body' => json_encode($subscription_request),
+                'timeout' => 30
+            ]);
+            
+            if (is_wp_error($response)) {
+                $this->log_error('PayPal API error: ' . $response->get_error_message());
+                return ['success' => false, 'error' => 'PayPal API connection failed'];
+            }
+            
+            $body = wp_remote_retrieve_body($response);
+            $data = json_decode($body, true);
+            
+            if (wp_remote_retrieve_response_code($response) !== 201) {
+                $this->log_error('PayPal subscription creation failed: ' . $body);
+                return ['success' => false, 'error' => 'Failed to create subscription'];
+            }
+            
+            // Find approval URL
+            $approval_url = '';
+            if (isset($data['links'])) {
+                foreach ($data['links'] as $link) {
+                    if ($link['rel'] === 'approve') {
+                        $approval_url = $link['href'];
+                        break;
+                    }
+                }
+            }
+            
+            return [
+                'success' => true,
+                'subscription_id' => $data['id'],
+                'approval_url' => $approval_url,
+                'status' => $data['status']
+            ];
+            
+        } catch (Exception $e) {
+            $this->log_error('Exception in create_subscription: ' . $e->getMessage());
+            return ['success' => false, 'error' => 'Subscription creation failed'];
+        }
+    }
+    
+    /**
+     * Cancel subscription (called by membership manager)
+     */
+    public function cancel_subscription($subscription_id) {
+        try {
+            $access_token = $this->get_access_token();
+            
+            if (!$access_token) {
+                return ['success' => false, 'error' => 'Failed to get PayPal access token'];
+            }
+            
+            $url = $this->api_base_url . '/v1/billing/subscriptions/' . $subscription_id . '/cancel';
+            
+            $headers = [
+                'Authorization' => 'Bearer ' . $access_token,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ];
+            
+            $cancel_request = [
+                'reason' => 'User requested cancellation'
+            ];
+            
+            $response = wp_remote_post($url, [
+                'headers' => $headers,
+                'body' => json_encode($cancel_request),
+                'timeout' => 30
+            ]);
+            
+            if (is_wp_error($response)) {
+                $this->log_error('PayPal cancel API error: ' . $response->get_error_message());
+                return ['success' => false, 'error' => 'PayPal API connection failed'];
+            }
+            
+            $response_code = wp_remote_retrieve_response_code($response);
+            
+            if ($response_code === 204) {
+                return ['success' => true, 'message' => 'Subscription cancelled successfully'];
+            } else {
+                $body = wp_remote_retrieve_body($response);
+                $this->log_error('PayPal subscription cancellation failed: ' . $body);
+                return ['success' => false, 'error' => 'Failed to cancel subscription'];
+            }
+            
+        } catch (Exception $e) {
+            $this->log_error('Exception in cancel_subscription: ' . $e->getMessage());
+            return ['success' => false, 'error' => 'Subscription cancellation failed'];
+        }
+    }
+    
+    /**
+     * Get subscription details
+     */
+    public function get_subscription_details($subscription_id) {
+        try {
+            $access_token = $this->get_access_token();
+            
+            if (!$access_token) {
+                return ['success' => false, 'error' => 'Failed to get PayPal access token'];
+            }
+            
+            $url = $this->api_base_url . '/v1/billing/subscriptions/' . $subscription_id;
+            
+            $headers = [
+                'Authorization' => 'Bearer ' . $access_token,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ];
+            
+            $response = wp_remote_get($url, [
+                'headers' => $headers,
+                'timeout' => 30
+            ]);
+            
+            if (is_wp_error($response)) {
+                return ['success' => false, 'error' => 'PayPal API connection failed'];
+            }
+            
+            $body = wp_remote_retrieve_body($response);
+            $data = json_decode($body, true);
+            
+            if (wp_remote_retrieve_response_code($response) === 200) {
+                return ['success' => true, 'subscription' => $data];
+            } else {
+                return ['success' => false, 'error' => 'Failed to get subscription details'];
+            }
+            
+        } catch (Exception $e) {
+            $this->log_error('Exception in get_subscription_details: ' . $e->getMessage());
+            return ['success' => false, 'error' => 'Failed to get subscription details'];
+        }
     }
 }
 
