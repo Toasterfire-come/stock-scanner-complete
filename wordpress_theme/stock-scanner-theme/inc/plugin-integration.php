@@ -1127,5 +1127,131 @@ function handle_usage_stats_ajax() {
 }
 add_action('wp_ajax_get_usage_stats', 'handle_usage_stats_ajax');
 
-// Add all other existing AJAX handlers here...
+/**
+ * Stock Lookup Tool Shortcode
+ */
+function stock_lookup_tool_shortcode($atts) {
+    if (!is_stock_scanner_plugin_active()) {
+        return '<div class="plugin-notice">Stock Scanner plugin is not active.</div>';
+    }
+    
+    return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
+}
+add_shortcode('stock_lookup_tool', 'stock_lookup_tool_shortcode');
+
+/**
+ * Stock News Feed Shortcode
+ */
+function stock_news_feed_shortcode($atts) {
+    return '<div id="stock-news-feed" class="stock-news-container">
+        <div class="news-loading">Loading latest stock news...</div>
+    </div>';
+}
+add_shortcode('stock_news_feed', 'stock_news_feed_shortcode');
+
+/**
+ * Stock Screener Tool Shortcode
+ */
+function stock_screener_tool_shortcode($atts) {
+    return '<div id="stock-screener-tool" class="screener-container">
+        <div class="screener-loading">Loading stock screening tools...</div>
+    </div>';
+}
+add_shortcode('stock_screener_tool', 'stock_screener_tool_shortcode');
+
+/**
+ * Market Overview Dashboard Shortcode
+ */
+function market_overview_dashboard_shortcode($atts) {
+    return '<div id="market-overview-dashboard" class="market-dashboard">
+        <div class="market-loading">Loading market overview...</div>
+    </div>';
+}
+add_shortcode('market_overview_dashboard', 'market_overview_dashboard_shortcode');
+
+/**
+ * Technical Analysis Tools Shortcode
+ */
+function technical_analysis_tools_shortcode($atts) {
+    return '<div id="technical-analysis-tools" class="technical-tools">
+        <div class="technical-loading">Loading technical analysis tools...</div>
+    </div>';
+}
+add_shortcode('technical_analysis_tools', 'technical_analysis_tools_shortcode');
+
+/**
+ * Options Data Viewer Shortcode
+ */
+function options_data_viewer_shortcode($atts) {
+    return '<div id="options-data-viewer" class="options-container">
+        <div class="options-loading">Loading options data viewer...</div>
+    </div>';
+}
+add_shortcode('options_data_viewer', 'options_data_viewer_shortcode');
+
+/**
+ * Level 2 Data Viewer Shortcode
+ */
+function level2_data_viewer_shortcode($atts) {
+    return '<div id="level2-data-viewer" class="level2-container">
+        <div class="level2-loading">Loading Level 2 data viewer...</div>
+    </div>';
+}
+add_shortcode('level2_data_viewer', 'level2_data_viewer_shortcode');
+
+/**
+ * Stock Watchlist Manager Shortcode
+ */
+function stock_watchlist_manager_shortcode($atts) {
+    return '<div id="watchlist-manager" class="watchlist-container">
+        <div class="watchlist-loading">Loading watchlist manager...</div>
+    </div>';
+}
+add_shortcode('stock_watchlist_manager', 'stock_watchlist_manager_shortcode');
+
+/**
+ * User Account Manager Shortcode
+ */
+function user_account_manager_shortcode($atts) {
+    return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
+}
+add_shortcode('user_account_manager', 'user_account_manager_shortcode');
+
+/**
+ * Advanced Contact Form Shortcode
+ */
+function contact_form_advanced_shortcode($atts) {
+    return '<div id="advanced-contact-form" class="contact-form-container">
+        <form id="stock-scanner-contact-form" class="contact-form">
+            <div class="form-group">
+                <label for="contact-name">Name *</label>
+                <input type="text" id="contact-name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-email">Email *</label>
+                <input type="email" id="contact-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-subject">Subject *</label>
+                <select id="contact-subject" name="subject" required>
+                    <option value="">Select a topic</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="technical">Technical Support</option>
+                    <option value="billing">Billing Question</option>
+                    <option value="feature">Feature Request</option>
+                    <option value="bug">Bug Report</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="contact-message">Message *</label>
+                <textarea id="contact-message" name="message" rows="6" required></textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Send Message</button>
+            </div>
+        </form>
+    </div>';
+}
+add_shortcode('contact_form_advanced', 'contact_form_advanced_shortcode');
+
 ?>

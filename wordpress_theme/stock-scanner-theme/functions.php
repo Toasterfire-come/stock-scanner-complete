@@ -147,11 +147,46 @@ function stock_scanner_create_pages() {
             'template' => 'page-dashboard.php'
         ),
         array(
-            'title' => 'Stock Scanner',
-            'slug' => 'stock-scanner',
-            'content' => '<h2>Professional Stock Scanner</h2><p>Advanced stock analysis and screening tools for informed investment decisions.</p>[stock_scanner_dashboard]',
-            'meta_description' => 'Professional stock scanner with advanced filtering, real-time data, and comprehensive market analysis tools.',
-            'template' => 'page-scanner.php'
+            'title' => 'Stock Lookup',
+            'slug' => 'stock-lookup',
+            'content' => '<h2>Stock Quote Lookup</h2><p>Get real-time stock quotes, prices, and basic company information.</p>[stock_lookup_tool]',
+            'meta_description' => 'Real-time stock quote lookup with current prices, volume, and basic stock information.',
+            'template' => 'page-stock-lookup.php'
+        ),
+        array(
+            'title' => 'Stock News',
+            'slug' => 'stock-news',
+            'content' => '<h2>Latest Stock News</h2><p>Stay updated with the latest stock market news and financial analysis.</p>[stock_news_feed]',
+            'meta_description' => 'Latest stock market news, financial analysis, and market updates for informed trading decisions.',
+            'template' => 'page-stock-news.php'
+        ),
+        array(
+            'title' => 'Stock Screener',
+            'slug' => 'stock-screener',
+            'content' => '<h2>Stock Screener & Filters</h2><p>Advanced stock screening with customizable filters and criteria.</p>[stock_screener_tool]',
+            'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
+            'template' => 'page-stock-screener.php'
+        ),
+        array(
+            'title' => 'Technical Analysis',
+            'slug' => 'technical-analysis',
+            'content' => '<h2>Technical Analysis Tools</h2><p>Advanced charting and technical indicators for comprehensive stock analysis.</p>[technical_analysis_tools]',
+            'meta_description' => 'Professional technical analysis tools with advanced charting, indicators, and pattern recognition.',
+            'template' => 'page-technical-analysis.php'
+        ),
+        array(
+            'title' => 'Options Data',
+            'slug' => 'options-data',
+            'content' => '<h2>Options Chain & Analytics</h2><p>Complete options data including chains, Greeks, and volatility analysis.</p>[options_data_viewer]',
+            'meta_description' => 'Comprehensive options data with chains, Greeks, implied volatility, and options analytics.',
+            'template' => 'page-options-data.php'
+        ),
+        array(
+            'title' => 'Level 2 Data',
+            'slug' => 'level2-data',
+            'content' => '<h2>Level 2 Market Data</h2><p>Real-time order book and market depth information for advanced trading.</p>[level2_data_viewer]',
+            'meta_description' => 'Real-time Level 2 market data with order book, market depth, and bid/ask information.',
+            'template' => 'page-level2-data.php'
         ),
         array(
             'title' => 'My Watchlist',
@@ -287,9 +322,14 @@ function stock_scanner_create_menus() {
     if (!is_wp_error($primary_menu_id)) {
         $menu_items = array(
             array('title' => 'Dashboard', 'url' => '/dashboard/', 'icon' => '📊'),
-            array('title' => 'Stock Scanner', 'url' => '/stock-scanner/', 'icon' => '🔍'),
-            array('title' => 'Watchlist', 'url' => '/watchlist/', 'icon' => '📋'),
+            array('title' => 'Stock Lookup', 'url' => '/stock-lookup/', 'icon' => '🔍'),
+            array('title' => 'Stock News', 'url' => '/stock-news/', 'icon' => '📰'),
+            array('title' => 'Stock Screener', 'url' => '/stock-screener/', 'icon' => '🔎'),
             array('title' => 'Market Overview', 'url' => '/market-overview/', 'icon' => '📈'),
+            array('title' => 'Technical Analysis', 'url' => '/technical-analysis/', 'icon' => '📉'),
+            array('title' => 'Options Data', 'url' => '/options-data/', 'icon' => '💹'),
+            array('title' => 'Level 2 Data', 'url' => '/level2-data/', 'icon' => '📊'),
+            array('title' => 'Watchlist', 'url' => '/watchlist/', 'icon' => '📋'),
             array('title' => 'Premium Plans', 'url' => '/premium-plans/', 'icon' => '⭐'),
             array('title' => 'Contact', 'url' => '/contact/', 'icon' => '📞')
         );
