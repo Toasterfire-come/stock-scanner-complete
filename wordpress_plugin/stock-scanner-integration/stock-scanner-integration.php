@@ -384,7 +384,10 @@ class Stock_Scanner_Integration {
      */
     public function admin_enqueue_scripts($hook) {
         if (strpos($hook, 'stock-scanner') !== false) {
-            wp_enqueue_script('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), STOCK_SCANNER_VERSION, true);
+            // Enqueue Chart.js for security analytics charts
+            wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
+            
+            wp_enqueue_script('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'chart-js'), STOCK_SCANNER_VERSION, true);
             wp_enqueue_style('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/css/admin.css', array(), STOCK_SCANNER_VERSION);
             
             wp_localize_script('stock-scanner-admin', 'stockScannerAdmin', array(

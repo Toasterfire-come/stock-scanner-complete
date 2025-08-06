@@ -76,9 +76,9 @@ class StockScannerAPI {
      * Add WordPress hooks
      */
     private function add_hooks() {
-        // AJAX endpoints for API calls
-        add_action('wp_ajax_get_stock_quote', [$this, 'get_stock_quote_ajax']);
-        add_action('wp_ajax_nopriv_get_stock_quote', [$this, 'get_stock_quote_ajax']);
+        // AJAX endpoints for API calls (using unique action names)
+        add_action('wp_ajax_stock_api_get_quote', [$this, 'get_stock_quote_ajax']);
+        add_action('wp_ajax_nopriv_stock_api_get_quote', [$this, 'get_stock_quote_ajax']);
         
         add_action('wp_ajax_search_stocks', [$this, 'search_stocks_ajax']);
         add_action('wp_ajax_nopriv_search_stocks', [$this, 'search_stocks_ajax']);

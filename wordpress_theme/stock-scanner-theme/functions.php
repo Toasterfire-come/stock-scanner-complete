@@ -45,11 +45,15 @@ function stock_scanner_scripts() {
     // Enqueue Chart.js for stock charts
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
     
-    // Enqueue theme JavaScript
-    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '2.0.0', true);
+    // Enqueue theme JavaScript (check if file exists)
+    if (file_exists(get_template_directory() . '/assets/js/theme.js')) {
+        wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/assets/js/theme.js', array('jquery'), '2.0.0', true);
+    }
     
     // Enqueue plugin integration JavaScript
-    wp_enqueue_script('stock-scanner-plugin-js', get_template_directory_uri() . '/assets/js/plugin-integration.js', array('jquery', 'stock-scanner-js'), '2.0.0', true);
+    if (file_exists(get_template_directory() . '/assets/js/plugin-integration.js')) {
+        wp_enqueue_script('stock-scanner-plugin-js', get_template_directory_uri() . '/assets/js/plugin-integration.js', array('jquery'), '2.0.0', true);
+    }
     
     // Localize script for AJAX with WordPress admin colors
     wp_localize_script('stock-scanner-plugin-js', 'stock_scanner_theme', array(

@@ -1126,3 +1126,6 @@ function handle_usage_stats_ajax() {
     wp_send_json_success($usage);
 }
 add_action('wp_ajax_get_usage_stats', 'handle_usage_stats_ajax');
+
+// Add all other existing AJAX handlers here...
+?>

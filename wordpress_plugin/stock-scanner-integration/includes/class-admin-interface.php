@@ -887,5 +887,80 @@ class Stock_Scanner_Admin_Interface {
             )
         );
     }
+    
+    /**
+     * AJAX: Update Rate Limits
+     */
+    public function ajax_update_rate_limits() {
+        check_ajax_referer('stock_scanner_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $settings = array(
+            'requests_per_minute' => intval($_POST['requests_per_minute'] ?? 10),
+            'requests_per_hour' => intval($_POST['requests_per_hour'] ?? 300),
+            'requests_per_day' => intval($_POST['requests_per_day'] ?? 1000),
+            'bot_detection_enabled' => isset($_POST['bot_detection_enabled']),
+            'auto_ban_enabled' => false, // Always disabled
+            'auto_rate_limit_enabled' => isset($_POST['auto_rate_limit_enabled']),
+            'bot_score_threshold' => intval($_POST['bot_score_threshold'] ?? 75),
+            'suspicious_threshold' => intval($_POST['suspicious_threshold'] ?? 50),
+            'alert_threshold' => intval($_POST['alert_threshold'] ?? 60)
+        );
+        
+        update_option('stock_scanner_rate_limits', json_encode($settings));
+        
+        wp_send_json_success('Rate limits updated successfully');
+    }
+    
+    /**
+     * AJAX: Get Security Data
+     */
+    public function ajax_get_security_data() {
+        check_ajax_referer('stock_scanner_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        global $wpdb;
+        
+        // Get security statistics
+        $data = array(
+            'security_events' => $wpdb->get_var(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_security 
+                 WHERE created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+            ),
+            'banned_users' => $wpdb->get_var(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_subscriptions 
+                 WHERE is_banned = 1"
+            ),
+            'suspicious_requests' => $wpdb->get_var(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_usage 
+                 WHERE is_suspicious = 1 AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+            ),
+            'admin_alerts' => $wpdb->get_var(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_security 
+                 WHERE event_type = 'suspicious_user_alert' AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+            )
+        );
+        
+        // Calculate bot detection rate
+        $total_requests = $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_usage 
+             WHERE created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+        );
+        
+        $bot_requests = $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}stock_scanner_usage 
+             WHERE bot_score > 50 AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+        );
+        
+        $data['bot_detection_rate'] = $total_requests > 0 ? round(($bot_requests / $total_requests) * 100, 1) : 0;
+        
+        wp_send_json_success($data);
+    }
 }
 ?>
