@@ -42,6 +42,7 @@
                         'menu_class'     => 'primary-menu',
                         'container'      => false,
                         'fallback_cb'    => 'stock_scanner_fallback_menu',
+                        'walker'         => new Stock_Scanner_Nav_Walker()
                     ));
                     ?>
                 </div>
@@ -117,24 +118,24 @@
     <div id="content" class="site-content">
 
 <style>
-/* Professional Header Styling with WordPress Admin Colors */
+/* Professional Header Styling */
 .site-header {
-    background: var(--wp-admin-background, #f0f0f1);
-    border-bottom: 1px solid #c3c4c7;
+    background: #ffffff;
+    border-bottom: 1px solid #e1e5e9;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 .header-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 70px;
+    min-height: 80px;
 }
 
 /* Site Branding */
@@ -204,22 +205,38 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    gap: 30px;
+    gap: 8px;
     align-items: center;
+    flex-wrap: nowrap;
+}
+
+.primary-menu li {
+    flex-shrink: 0;
 }
 
 .primary-menu li a {
-    color: var(--wp-admin-gray, #646970);
+    color: #374151;
     text-decoration: none;
     font-weight: 500;
-    padding: 10px 0;
+    padding: 10px 16px;
     position: relative;
-    transition: color 0.3s ease;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    white-space: nowrap;
+    font-size: 14px;
+    display: block;
 }
 
-.primary-menu li a:hover,
-.primary-menu li.current-menu-item a {
-    color: var(--wp-admin-blue, #2271b1);
+.primary-menu li a:hover {
+    color: #2563eb;
+    background-color: #f1f5f9;
+}
+
+.primary-menu li.current-menu-item a,
+.primary-menu li.current_page_item a {
+    color: #2563eb;
+    background-color: #eff6ff;
+    font-weight: 600;
 }
 
 .primary-menu li a::after {

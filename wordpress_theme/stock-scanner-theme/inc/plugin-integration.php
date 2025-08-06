@@ -688,25 +688,7 @@ function stock_scanner_pricing_shortcode($atts) {
     
     ob_start();
     ?>
-    <div class="pricing-table">
-        <div class="pricing-plan free-plan">
-            <div class="plan-header">
-                <h3>🆓 Free Plan</h3>
-                <div class="price">$0<span>/month</span></div>
-            </div>
-            <div class="plan-features">
-                <ul>
-                    <li>✅ 15 API calls per month</li>
-                    <li>✅ Basic stock data</li>
-                    <li>✅ Email support</li>
-                    <li>✅ Community access</li>
-                </ul>
-            </div>
-            <div class="plan-footer">
-                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-outline">Get Started</a>
-            </div>
-        </div>
-        
+    <div class="pricing-table">        
         <div class="pricing-plan bronze-plan">
             <div class="plan-header">
                 <h3>🥉 Bronze Plan</h3>
@@ -716,12 +698,12 @@ function stock_scanner_pricing_shortcode($atts) {
                 <ul>
                     <li>✅ 1,500 API calls per month</li>
                     <li>✅ Advanced stock data</li>
-                    <li>✅ Priority support</li>
+                    <li>✅ Email support</li>
                     <li>✅ Historical data access</li>
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99">
+                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99" onclick="redirectToPayPal('bronze', '9.99')">
                     Upgrade to Bronze
                 </button>
             </div>
@@ -739,13 +721,13 @@ function stock_scanner_pricing_shortcode($atts) {
                 <ul>
                     <li>✅ 5,000 API calls per month</li>
                     <li>✅ Real-time stock data</li>
-                    <li>✅ Priority support</li>
+                    <li>✅ Email support</li>
                     <li>✅ Advanced analytics</li>
                     <li>✅ Custom alerts</li>
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99">
+                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99" onclick="redirectToPayPal('silver', '19.99')">
                     Upgrade to Silver
                 </button>
             </div>
@@ -767,12 +749,102 @@ function stock_scanner_pricing_shortcode($atts) {
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="49.99">
+                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="49.99" onclick="redirectToPayPal('gold', '49.99')">
                     Upgrade to Gold
                 </button>
             </div>
         </div>
     </div>
+    
+    <!-- Free Plan - Centered Below -->
+    <div class="free-plan-section">
+        <div class="pricing-plan free-plan-centered">
+            <div class="plan-header">
+                <h3>🆓 Free Plan</h3>
+                <div class="price">$0<span>/month</span></div>
+            </div>
+            <div class="plan-features">
+                <div class="limits-grid">
+                    <div class="limit-item">
+                        <span class="limit-number">15</span>
+                        <span class="limit-label">Monthly Calls</span>
+                    </div>
+                    <div class="limit-item">
+                        <span class="limit-number">5</span>
+                        <span class="limit-label">Daily Calls</span>
+                    </div>
+                    <div class="limit-item">
+                        <span class="limit-number">2</span>
+                        <span class="limit-label">Hourly Calls</span>
+                    </div>
+                </div>
+            </div>
+            <div class="plan-footer">
+                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-outline">Get Started Free</a>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    .pricing-table {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .free-plan-section {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+    }
+    
+    .free-plan-centered {
+        max-width: 350px;
+        width: 100%;
+    }
+    
+    .limits-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .limit-item {
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .limit-number {
+        display: block;
+        font-size: 24px;
+        font-weight: bold;
+        color: #2563eb;
+        margin-bottom: 4px;
+    }
+    
+    .limit-label {
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    </style>
+    
+    <script>
+    function redirectToPayPal(plan, price) {
+        // In a real implementation, this would create a PayPal order and redirect
+        // For now, we'll show an alert and redirect to a payment page
+        if (confirm(`Upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan for $${price}/month?`)) {
+            // Redirect to PayPal or payment processing page
+            window.location.href = '/payment-success/?plan=' + plan + '&price=' + price;
+        }
+    }
+    </script>
+    
     <?php
     return ob_get_clean();
 }
@@ -1127,5 +1199,131 @@ function handle_usage_stats_ajax() {
 }
 add_action('wp_ajax_get_usage_stats', 'handle_usage_stats_ajax');
 
-// Add all other existing AJAX handlers here...
+/**
+ * Stock Lookup Tool Shortcode
+ */
+function stock_lookup_tool_shortcode($atts) {
+    if (!is_stock_scanner_plugin_active()) {
+        return '<div class="plugin-notice">Stock Scanner plugin is not active.</div>';
+    }
+    
+    return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
+}
+add_shortcode('stock_lookup_tool', 'stock_lookup_tool_shortcode');
+
+/**
+ * Stock News Feed Shortcode
+ */
+function stock_news_feed_shortcode($atts) {
+    return '<div id="stock-news-feed" class="stock-news-container">
+        <div class="news-loading">Loading latest stock news...</div>
+    </div>';
+}
+add_shortcode('stock_news_feed', 'stock_news_feed_shortcode');
+
+/**
+ * Stock Screener Tool Shortcode
+ */
+function stock_screener_tool_shortcode($atts) {
+    return '<div id="stock-screener-tool" class="screener-container">
+        <div class="screener-loading">Loading stock screening tools...</div>
+    </div>';
+}
+add_shortcode('stock_screener_tool', 'stock_screener_tool_shortcode');
+
+/**
+ * Market Overview Dashboard Shortcode
+ */
+function market_overview_dashboard_shortcode($atts) {
+    return '<div id="market-overview-dashboard" class="market-dashboard">
+        <div class="market-loading">Loading market overview...</div>
+    </div>';
+}
+add_shortcode('market_overview_dashboard', 'market_overview_dashboard_shortcode');
+
+/**
+ * Technical Analysis Tools Shortcode
+ */
+function technical_analysis_tools_shortcode($atts) {
+    return '<div id="technical-analysis-tools" class="technical-tools">
+        <div class="technical-loading">Loading technical analysis tools...</div>
+    </div>';
+}
+add_shortcode('technical_analysis_tools', 'technical_analysis_tools_shortcode');
+
+/**
+ * Options Data Viewer Shortcode
+ */
+function options_data_viewer_shortcode($atts) {
+    return '<div id="options-data-viewer" class="options-container">
+        <div class="options-loading">Loading options data viewer...</div>
+    </div>';
+}
+add_shortcode('options_data_viewer', 'options_data_viewer_shortcode');
+
+/**
+ * Level 2 Data Viewer Shortcode
+ */
+function level2_data_viewer_shortcode($atts) {
+    return '<div id="level2-data-viewer" class="level2-container">
+        <div class="level2-loading">Loading Level 2 data viewer...</div>
+    </div>';
+}
+add_shortcode('level2_data_viewer', 'level2_data_viewer_shortcode');
+
+/**
+ * Stock Watchlist Manager Shortcode
+ */
+function stock_watchlist_manager_shortcode($atts) {
+    return '<div id="watchlist-manager" class="watchlist-container">
+        <div class="watchlist-loading">Loading watchlist manager...</div>
+    </div>';
+}
+add_shortcode('stock_watchlist_manager', 'stock_watchlist_manager_shortcode');
+
+/**
+ * User Account Manager Shortcode
+ */
+function user_account_manager_shortcode($atts) {
+    return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
+}
+add_shortcode('user_account_manager', 'user_account_manager_shortcode');
+
+/**
+ * Advanced Contact Form Shortcode
+ */
+function contact_form_advanced_shortcode($atts) {
+    return '<div id="advanced-contact-form" class="contact-form-container">
+        <form id="stock-scanner-contact-form" class="contact-form">
+            <div class="form-group">
+                <label for="contact-name">Name *</label>
+                <input type="text" id="contact-name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-email">Email *</label>
+                <input type="email" id="contact-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-subject">Subject *</label>
+                <select id="contact-subject" name="subject" required>
+                    <option value="">Select a topic</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="technical">Technical Support</option>
+                    <option value="billing">Billing Question</option>
+                    <option value="feature">Feature Request</option>
+                    <option value="bug">Bug Report</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="contact-message">Message *</label>
+                <textarea id="contact-message" name="message" rows="6" required></textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Send Message</button>
+            </div>
+        </form>
+    </div>';
+}
+add_shortcode('contact_form_advanced', 'contact_form_advanced_shortcode');
+
 ?>
