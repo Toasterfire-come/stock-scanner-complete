@@ -442,3 +442,101 @@ class PortfolioFollowing(models.Model):
     
     def __str__(self):
         return f'{self.follower.username} follows {self.followed_user.username}'
+
+class DiscountCode(models.Model):
+    """
+    Model to track discount codes and their usage
+    """
+    code = models.CharField(max_length=20, unique=True, db_index=True)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    is_active = models.BooleanField(default=True)
+    applies_to_first_payment_only = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.code} ({self.discount_percentage}% off)"
+
+class UserDiscountUsage(models.Model):
+    """
+    Track which users have used which discount codes
+    This creates a permanent link between user and discount for revenue tracking
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='discount_usage')
+    discount_code = models.ForeignKey(DiscountCode, on_delete=models.CASCADE, related_name='user_usage')
+    first_used_date = models.DateTimeField(auto_now_add=True)
+    total_savings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    class Meta:
+        unique_together = ('user', 'discount_code')
+        
+    def __str__(self):
+        return f"{self.user.username} used {self.discount_code.code}"
+
+class RevenueTracking(models.Model):
+    """
+    Track monthly revenue and commission calculations
+    """
+    REVENUE_TYPES = [
+        ('regular', 'Regular Revenue'),
+        ('discount_generated', 'Discount Code Generated Revenue'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='revenue_tracking')
+    discount_code = models.ForeignKey(DiscountCode, on_delete=models.SET_NULL, null=True, blank=True)
+    revenue_type = models.CharField(max_length=20, choices=REVENUE_TYPES, default='regular')
+    
+    # Financial tracking
+    original_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    final_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Temporal tracking
+    payment_date = models.DateTimeField()
+    month_year = models.CharField(max_length=7, db_index=True)  # Format: "2024-01"
+    
+    # Commission tracking
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=20.00)  # 20%
+    commission_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        # Auto-calculate commission if this is discount-generated revenue
+        if self.revenue_type == 'discount_generated' and self.discount_code:
+            self.commission_amount = (self.final_amount * self.commission_rate) / 100
+        
+        # Auto-set month_year from payment_date
+        if self.payment_date:
+            self.month_year = self.payment_date.strftime('%Y-%m')
+            
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.user.username} - ${self.final_amount} ({self.month_year})"
+
+class MonthlyRevenueSummary(models.Model):
+    """
+    Aggregated monthly revenue data for efficient reporting
+    """
+    month_year = models.CharField(max_length=7, unique=True, db_index=True)
+    
+    # Total revenue breakdown
+    total_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    regular_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    discount_generated_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    
+    # Discount-specific tracking
+    total_discount_savings = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total_commission_owed = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    
+    # User counts
+    total_paying_users = models.IntegerField(default=0)
+    new_discount_users = models.IntegerField(default=0)
+    existing_discount_users = models.IntegerField(default=0)
+    
+    # Metadata
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Revenue Summary {self.month_year}: ${self.total_revenue}"

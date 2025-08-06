@@ -4,38 +4,33 @@ from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlert
 from .simple_api import SimpleStockView, SimpleNewsView
 
 urlpatterns = [
-    # Main API endpoints
-    path('', views.index, name='api_index'),
+    # Stock data endpoints
+    path('api/stock/<str:symbol>/', views.get_stock_data, name='get_stock_data'),
+    path('api/stock/<str:symbol>/price/', views.get_stock_price, name='get_stock_price'),
+    path('api/search/', views.search_stocks, name='search_stocks'),
+    path('api/trending/', views.get_trending_stocks, name='get_trending_stocks'),
+    path('api/market-data/', views.get_market_data, name='get_market_data'),
     
-    # Comprehensive Stock API endpoints (order matters - specific before generic)
-    path('stocks/', api_views.stock_list_api, name='stock_list_api'),
-    path('stocks/nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks_api'),
-    path('stocks/search/', api_views.stock_search_api, name='stock_search_api'),
-    path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_api'),
+    # User management endpoints
+    path('api/user/profile/', views.get_user_profile, name='get_user_profile'),
+    path('api/user/profile/update/', views.update_user_profile, name='update_user_profile'),
+    path('api/user/membership/', views.get_user_membership, name='get_user_membership'),
     
-    # Market data endpoints
-    path('market/stats/', api_views.market_stats_api, name='market_stats_api'),
-    path('market/filter/', api_views.filter_stocks_api, name='filter_stocks_api'),
-    
-    # Real-time data endpoints
-    path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock_api'),
-    path('trending/', api_views.trending_stocks_api, name='trending_stocks_api'),
-    
-    # Alert management
-    path('alerts/create/', api_views.create_alert_api, name='create_alert_api'),
-    
-    # Modular API endpoints (organized by feature)
+    # Portfolio endpoints
     path('portfolio/', include('stocks.portfolio_urls')),
+    
+    # Watchlist endpoints  
     path('watchlist/', include('stocks.watchlist_urls')),
+    
+    # News endpoints
     path('news/', include('stocks.news_urls')),
     
-    # WordPress Integration APIs
-    path('wordpress/', WordPressStockView.as_view(), name='wordpress_stocks'),
-    path('wordpress/stocks/', WordPressStockView.as_view(), name='wordpress_stocks_detailed'),
-    path('wordpress/news/', WordPressNewsView.as_view(), name='wordpress_news'),
-    path('wordpress/alerts/', WordPressAlertsView.as_view(), name='wordpress_alerts'),
+    # Revenue and discount endpoints
+    path('revenue/', include('stocks.revenue_urls')),
     
-    # Simple APIs (no database required)
-    path('simple/stocks/', SimpleStockView.as_view(), name='simple_stocks'),
-    path('simple/news/', SimpleNewsView.as_view(), name='simple_news'),
+    # Alert endpoints
+    path('api/alerts/', views.get_user_alerts, name='get_user_alerts'),
+    path('api/alerts/create/', views.create_alert, name='create_alert'),
+    path('api/alerts/<int:alert_id>/update/', views.update_alert, name='update_alert'),
+    path('api/alerts/<int:alert_id>/delete/', views.delete_alert, name='delete_alert'),
 ]

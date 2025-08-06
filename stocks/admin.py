@@ -3,7 +3,8 @@ from .models import (
     Stock, StockPrice, StockAlert, Membership,
     UserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
-    PortfolioFollowing
+    PortfolioFollowing, UserFollow, DiscountCode, UserDiscountUsage,
+    RevenueTracking, MonthlyRevenueSummary
 )
 
 # Basic models
@@ -98,3 +99,50 @@ class PortfolioFollowingAdmin(admin.ModelAdmin):
     list_filter = ['followed_at']
     search_fields = ['follower__username', 'followed_user__username']
     readonly_fields = ['followed_at']
+
+@admin.register(UserFollow)
+class UserFollowAdmin(admin.ModelAdmin):
+    list_display = ('follower', 'followed_user', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('follower__username', 'followed_user__username')
+
+@admin.register(DiscountCode)
+class DiscountCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_percentage', 'is_active', 'applies_to_first_payment_only', 'created_at', 'usage_count')
+    list_filter = ('is_active', 'applies_to_first_payment_only', 'created_at')
+    search_fields = ('code',)
+    readonly_fields = ('created_at',)
+
+    def usage_count(self, obj):
+        return obj.user_usage.count()
+    usage_count.short_description = 'Times Used'
+
+@admin.register(UserDiscountUsage)
+class UserDiscountUsageAdmin(admin.ModelAdmin):
+    list_display = ('user', 'discount_code', 'first_used_date', 'total_savings')
+    list_filter = ('discount_code', 'first_used_date')
+    search_fields = ('user__username', 'user__email', 'discount_code__code')
+    readonly_fields = ('first_used_date',)
+
+@admin.register(RevenueTracking)
+class RevenueTrackingAdmin(admin.ModelAdmin):
+    list_display = ('user', 'revenue_type', 'final_amount', 'discount_code', 'commission_amount', 'month_year', 'payment_date')
+    list_filter = ('revenue_type', 'month_year', 'discount_code', 'payment_date')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('commission_amount', 'month_year', 'created_at')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'discount_code')
+
+@admin.register(MonthlyRevenueSummary)
+class MonthlyRevenueSummaryAdmin(admin.ModelAdmin):
+    list_display = (
+        'month_year', 'total_revenue', 'discount_generated_revenue',
+        'total_commission_owed', 'total_paying_users', 'new_discount_users'
+    )
+    list_filter = ('month_year',)
+    readonly_fields = ('last_updated',)
+
+    def has_add_permission(self, request):
+        # These are auto-generated, so disable manual addition
+        return False

@@ -15,84 +15,65 @@ class StockScannerAdminSettings {
     private $page_slug = 'stock-scanner-settings';
     
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_menu', array($this, 'add_admin_menus'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        
+        // AJAX handlers for existing functionality
         add_action('wp_ajax_test_api_connection', array($this, 'test_api_connection'));
         add_action('wp_ajax_test_paypal_connection', array($this, 'test_paypal_connection'));
         add_action('wp_ajax_cancel_user_membership', array($this, 'cancel_user_membership'));
         add_action('wp_ajax_update_user_membership', array($this, 'update_user_membership'));
         add_action('wp_ajax_search_users', array($this, 'search_users'));
+        
+        // AJAX handlers for revenue tracking
+        add_action('wp_ajax_get_revenue_analytics', array($this, 'get_revenue_analytics'));
+        add_action('wp_ajax_refresh_revenue_data', array($this, 'refresh_revenue_data'));
+        add_action('wp_ajax_initialize_discount_codes', array($this, 'initialize_discount_codes'));
     }
     
     /**
      * Add admin menu pages
      */
-    public function add_admin_menu() {
-        // Main settings page
+    public function add_admin_menus() {
+        // Main menu page
         add_menu_page(
             'Stock Scanner Settings',
             'Stock Scanner',
             'manage_options',
-            $this->page_slug,
-            array($this, 'settings_page'),
+            'stock-scanner-settings',
+            array($this, 'general_settings_page'),
             'dashicons-chart-line',
             30
         );
-        
-        // Sub-menu pages
+
+        // Submenu pages
         add_submenu_page(
-            $this->page_slug,
-            'API Configuration',
-            'API Settings',
+            'stock-scanner-settings',
+            'General Settings',
+            'General',
             'manage_options',
-            'stock-scanner-api',
-            array($this, 'api_settings_page')
+            'stock-scanner-settings',
+            array($this, 'general_settings_page')
         );
-        
+
         add_submenu_page(
-            $this->page_slug,
-            'Payment Settings',
-            'Payment Settings',
-            'manage_options',
-            'stock-scanner-payments',
-            array($this, 'payment_settings_page')
-        );
-        
-        add_submenu_page(
-            $this->page_slug,
-            'Feature Settings',
-            'Features',
-            'manage_options',
-            'stock-scanner-features',
-            array($this, 'feature_settings_page')
-        );
-        
-        add_submenu_page(
-            $this->page_slug,
-            'User Limits',
-            'User Limits',
-            'manage_options',
-            'stock-scanner-limits',
-            array($this, 'limits_settings_page')
-        );
-        
-        add_submenu_page(
-            $this->page_slug,
+            'stock-scanner-settings',
             'User Management',
-            'User Management',
+            'Users',
             'manage_options',
             'stock-scanner-users',
             array($this, 'user_management_page')
         );
         
+        // NEW: Revenue Analytics submenu
         add_submenu_page(
-            $this->page_slug,
-            'Advanced Settings',
-            'Advanced',
+            'stock-scanner-settings',
+            'Revenue Analytics',
+            'Revenue',
             'manage_options',
-            'stock-scanner-advanced',
-            array($this, 'advanced_settings_page')
+            'stock-scanner-revenue',
+            array($this, 'revenue_analytics_page')
         );
     }
     
@@ -1994,6 +1975,655 @@ Stock Scanner Team', 'stock-scanner'), $user->display_name, ucfirst($old_level),
         }
         
         update_option('stock_scanner_admin_logs', $logs);
+    }
+
+    /**
+     * Revenue Analytics admin page
+     */
+    public function revenue_analytics_page() {
+        $current_month = date('Y-m');
+        $backend_url = get_option('stock_scanner_backend_url', '');
+        
+        ?>
+        <div class="wrap">
+            <h1>Revenue Analytics & Marketer Commission</h1>
+            
+            <div class="stock-scanner-revenue-dashboard">
+                <!-- Month Selector -->
+                <div class="revenue-controls">
+                    <h2>Select Month for Analytics</h2>
+                    <form method="get" action="">
+                        <input type="hidden" name="page" value="stock-scanner-revenue">
+                        <select name="month" id="revenue-month-selector">
+                            <?php
+                            // Generate last 12 months
+                            for ($i = 0; $i < 12; $i++) {
+                                $month = date('Y-m', strtotime("-$i months"));
+                                $month_name = date('F Y', strtotime("-$i months"));
+                                $selected = (isset($_GET['month']) && $_GET['month'] === $month) || (!isset($_GET['month']) && $i === 0) ? 'selected' : '';
+                                echo "<option value='$month' $selected>$month_name</option>";
+                            }
+                            ?>
+                        </select>
+                        <button type="submit" class="button button-primary">Load Analytics</button>
+                        <button type="button" id="refresh-revenue-data" class="button">Refresh Data</button>
+                    </form>
+                </div>
+
+                <!-- Revenue Summary Cards -->
+                <div class="revenue-summary-cards">
+                    <div class="revenue-card total-revenue">
+                        <h3>Total Monthly Revenue</h3>
+                        <div class="revenue-amount" id="total-revenue">$0.00</div>
+                        <div class="revenue-subtitle">All payments this month</div>
+                    </div>
+                    
+                    <div class="revenue-card discount-revenue">
+                        <h3>Discount Code Revenue</h3>
+                        <div class="revenue-amount" id="discount-revenue">$0.00</div>
+                        <div class="revenue-subtitle">From REF50 users</div>
+                    </div>
+                    
+                    <div class="revenue-card commission-owed">
+                        <h3>Marketer Commission (20%)</h3>
+                        <div class="revenue-amount commission" id="commission-amount">$0.00</div>
+                        <div class="revenue-subtitle">Amount to pay marketer</div>
+                    </div>
+                    
+                    <div class="revenue-card discount-users">
+                        <h3>Discount Code Users</h3>
+                        <div class="revenue-amount" id="discount-users-count">0</div>
+                        <div class="revenue-subtitle">New + Existing users</div>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown -->
+                <div class="revenue-details">
+                    <div class="revenue-section">
+                        <h3>Revenue Breakdown</h3>
+                        <table class="wp-list-table widefat fixed striped">
+                            <thead>
+                                <tr>
+                                    <th>Revenue Type</th>
+                                    <th>Amount</th>
+                                    <th>Users</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="revenue-breakdown-table">
+                                <tr><td colspan="4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="revenue-section">
+                        <h3>Discount Code Performance</h3>
+                        <table class="wp-list-table widefat fixed striped">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Discount %</th>
+                                    <th>Users</th>
+                                    <th>Revenue Generated</th>
+                                    <th>Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discount-performance-table">
+                                <tr><td colspan="5">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="revenue-section">
+                        <h3>Marketer Commission Details</h3>
+                        <div class="commission-breakdown">
+                            <div class="commission-item">
+                                <label>Commission Rate:</label>
+                                <span>20% of discount-generated revenue</span>
+                            </div>
+                            <div class="commission-item">
+                                <label>Calculation Base:</label>
+                                <span id="commission-base">$0.00</span>
+                            </div>
+                            <div class="commission-item">
+                                <label>Commission Amount:</label>
+                                <span id="commission-total">$0.00</span>
+                            </div>
+                            <div class="commission-note">
+                                <strong>Note:</strong> Commission is calculated on all revenue from users who originally signed up with REF50, 
+                                including their subsequent full-price payments after the first month.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Actions -->
+                <div class="revenue-actions">
+                    <h3>Admin Actions</h3>
+                    <div class="action-buttons">
+                        <button type="button" id="initialize-ref50" class="button button-secondary">
+                            Initialize REF50 Code
+                        </button>
+                        <button type="button" id="export-revenue-data" class="button button-secondary">
+                            Export Revenue Data
+                        </button>
+                        <button type="button" id="generate-commission-report" class="button button-primary">
+                            Generate Commission Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div id="revenue-loading" class="revenue-loading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading revenue data...</div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+        .stock-scanner-revenue-dashboard {
+            max-width: 1200px;
+            margin: 20px 0;
+        }
+
+        .revenue-controls {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .revenue-controls form {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .revenue-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .revenue-card {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .revenue-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .revenue-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2271b1;
+            margin-bottom: 5px;
+        }
+
+        .revenue-amount.commission {
+            color: #d63638;
+        }
+
+        .revenue-subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .revenue-card.total-revenue { border-left: 4px solid #00a32a; }
+        .revenue-card.discount-revenue { border-left: 4px solid #2271b1; }
+        .revenue-card.commission-owed { border-left: 4px solid #d63638; }
+        .revenue-card.discount-users { border-left: 4px solid #8c8f94; }
+
+        .revenue-details {
+            display: grid;
+            gap: 20px;
+        }
+
+        .revenue-section {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .revenue-section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .commission-breakdown {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .commission-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .commission-item:last-child {
+            border-bottom: none;
+        }
+
+        .commission-item label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .commission-note {
+            margin-top: 15px;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #856404;
+        }
+
+        .revenue-actions {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .revenue-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100000;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2271b1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .revenue-summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .revenue-controls form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+        </style>
+
+        <script>
+        jQuery(document).ready(function($) {
+            // Load initial data
+            loadRevenueAnalytics();
+
+            // Event handlers
+            $('#revenue-month-selector').on('change', function() {
+                $(this).closest('form').submit();
+            });
+
+            $('#refresh-revenue-data').on('click', function() {
+                refreshRevenueData();
+            });
+
+            $('#initialize-ref50').on('click', function() {
+                initializeRef50Code();
+            });
+
+            $('#export-revenue-data').on('click', function() {
+                exportRevenueData();
+            });
+
+            $('#generate-commission-report').on('click', function() {
+                generateCommissionReport();
+            });
+
+            function loadRevenueAnalytics() {
+                const monthYear = getSelectedMonth();
+                showLoading();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'get_revenue_analytics',
+                        month_year: monthYear,
+                        nonce: '<?php echo wp_create_nonce('revenue_analytics_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            updateDashboard(response.data);
+                        } else {
+                            showError('Failed to load revenue analytics: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        showError('Connection error while loading analytics.');
+                    },
+                    complete: function() {
+                        hideLoading();
+                    }
+                });
+            }
+
+            function refreshRevenueData() {
+                showLoading();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'refresh_revenue_data',
+                        month_year: getSelectedMonth(),
+                        nonce: '<?php echo wp_create_nonce('revenue_analytics_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            loadRevenueAnalytics(); // Reload with fresh data
+                            showSuccess('Revenue data refreshed successfully!');
+                        } else {
+                            showError('Failed to refresh revenue data: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        showError('Connection error while refreshing data.');
+                    },
+                    complete: function() {
+                        hideLoading();
+                    }
+                });
+            }
+
+            function initializeRef50Code() {
+                if (!confirm('Initialize REF50 discount code? This will create the code if it doesn\'t exist.')) {
+                    return;
+                }
+
+                showLoading();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'initialize_discount_codes',
+                        nonce: '<?php echo wp_create_nonce('revenue_analytics_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showSuccess(response.data.message);
+                        } else {
+                            showError('Failed to initialize discount codes: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        showError('Connection error while initializing codes.');
+                    },
+                    complete: function() {
+                        hideLoading();
+                    }
+                });
+            }
+
+            function updateDashboard(data) {
+                const analytics = data.analytics;
+                const summary = analytics.summary;
+
+                // Update summary cards
+                $('#total-revenue').text('$' + formatNumber(summary.total_revenue));
+                $('#discount-revenue').text('$' + formatNumber(summary.discount_generated_revenue));
+                $('#commission-amount').text('$' + formatNumber(summary.total_commission_owed));
+                $('#discount-users-count').text(summary.new_discount_users + summary.existing_discount_users);
+
+                // Update revenue breakdown table
+                updateRevenueBreakdownTable(summary);
+
+                // Update discount performance table
+                updateDiscountPerformanceTable(analytics.discount_breakdown);
+
+                // Update commission details
+                $('#commission-base').text('$' + formatNumber(summary.discount_generated_revenue));
+                $('#commission-total').text('$' + formatNumber(summary.total_commission_owed));
+            }
+
+            function updateRevenueBreakdownTable(summary) {
+                const totalRevenue = summary.total_revenue;
+                const regularPercent = totalRevenue > 0 ? (summary.regular_revenue / totalRevenue * 100).toFixed(1) : 0;
+                const discountPercent = totalRevenue > 0 ? (summary.discount_generated_revenue / totalRevenue * 100).toFixed(1) : 0;
+
+                const html = `
+                    <tr>
+                        <td>Regular Revenue</td>
+                        <td>$${formatNumber(summary.regular_revenue)}</td>
+                        <td>${summary.total_paying_users - summary.new_discount_users - summary.existing_discount_users}</td>
+                        <td>${regularPercent}%</td>
+                    </tr>
+                    <tr>
+                        <td>Discount Generated Revenue</td>
+                        <td>$${formatNumber(summary.discount_generated_revenue)}</td>
+                        <td>${summary.new_discount_users + summary.existing_discount_users}</td>
+                        <td>${discountPercent}%</td>
+                    </tr>
+                `;
+                $('#revenue-breakdown-table').html(html);
+            }
+
+            function updateDiscountPerformanceTable(discountBreakdown) {
+                if (discountBreakdown.length === 0) {
+                    $('#discount-performance-table').html('<tr><td colspan="5">No discount code data available</td></tr>');
+                    return;
+                }
+
+                let html = '';
+                discountBreakdown.forEach(function(code) {
+                    html += `
+                        <tr>
+                            <td>${code.discount_code__code || 'N/A'}</td>
+                            <td>${code.discount_code__discount_percentage || 0}%</td>
+                            <td>${code.user_count || 0}</td>
+                            <td>$${formatNumber(code.total_revenue || 0)}</td>
+                            <td>$${formatNumber(code.total_commission || 0)}</td>
+                        </tr>
+                    `;
+                });
+                $('#discount-performance-table').html(html);
+            }
+
+            function exportRevenueData() {
+                const monthYear = getSelectedMonth();
+                window.open(`<?php echo admin_url('admin-ajax.php'); ?>?action=export_revenue_data&month_year=${monthYear}&nonce=<?php echo wp_create_nonce('revenue_analytics_nonce'); ?>`);
+            }
+
+            function generateCommissionReport() {
+                const monthYear = getSelectedMonth();
+                window.open(`<?php echo admin_url('admin-ajax.php'); ?>?action=generate_commission_report&month_year=${monthYear}&nonce=<?php echo wp_create_nonce('revenue_analytics_nonce'); ?>`);
+            }
+
+            function getSelectedMonth() {
+                return $('#revenue-month-selector').val() || '<?php echo $current_month; ?>';
+            }
+
+            function formatNumber(num) {
+                return parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+            function showLoading() {
+                $('#revenue-loading').show();
+            }
+
+            function hideLoading() {
+                $('#revenue-loading').hide();
+            }
+
+            function showSuccess(message) {
+                // You can implement your own notification system here
+                alert('Success: ' + message);
+            }
+
+            function showError(message) {
+                // You can implement your own notification system here
+                alert('Error: ' + message);
+            }
+        });
+        </script>
+        <?php
+    }
+
+    /**
+     * AJAX handler to get revenue analytics
+     */
+    public function get_revenue_analytics() {
+        check_ajax_referer('revenue_analytics_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized access');
+        }
+
+        $month_year = sanitize_text_field($_POST['month_year'] ?? date('Y-m'));
+        $backend_url = get_option('stock_scanner_backend_url', '');
+        
+        if (empty($backend_url)) {
+            wp_send_json_error('Backend URL not configured');
+            return;
+        }
+
+        $api_url = rtrim($backend_url, '/') . '/revenue/revenue-analytics/' . $month_year . '/';
+        
+        $response = $this->make_backend_request($api_url, 'GET');
+        
+        if ($response && isset($response['success']) && $response['success']) {
+            wp_send_json_success($response);
+        } else {
+            wp_send_json_error($response['error'] ?? 'Failed to fetch revenue analytics');
+        }
+    }
+
+    /**
+     * AJAX handler to refresh revenue data
+     */
+    public function refresh_revenue_data() {
+        check_ajax_referer('revenue_analytics_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized access');
+        }
+
+        $month_year = sanitize_text_field($_POST['month_year'] ?? date('Y-m'));
+        
+        // You could trigger a backend recalculation here if needed
+        // For now, we'll just return success to trigger a reload
+        wp_send_json_success(['message' => 'Revenue data refresh triggered']);
+    }
+
+    /**
+     * AJAX handler to initialize discount codes
+     */
+    public function initialize_discount_codes() {
+        check_ajax_referer('revenue_analytics_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized access');
+        }
+
+        $backend_url = get_option('stock_scanner_backend_url', '');
+        
+        if (empty($backend_url)) {
+            wp_send_json_error('Backend URL not configured');
+            return;
+        }
+
+        $api_url = rtrim($backend_url, '/') . '/revenue/initialize-codes/';
+        
+        $response = $this->make_backend_request($api_url, 'POST');
+        
+        if ($response && isset($response['success']) && $response['success']) {
+            wp_send_json_success($response);
+        } else {
+            wp_send_json_error($response['error'] ?? 'Failed to initialize discount codes');
+        }
+    }
+
+    /**
+     * Helper method to make backend API requests
+     */
+    private function make_backend_request($url, $method = 'GET', $data = null) {
+        $args = [
+            'method' => $method,
+            'timeout' => 30,
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ]
+        ];
+
+        if ($data && $method === 'POST') {
+            $args['body'] = json_encode($data);
+        }
+
+        $response = wp_remote_request($url, $args);
+
+        if (is_wp_error($response)) {
+            return ['error' => $response->get_error_message()];
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        $decoded = json_decode($body, true);
+
+        if ($status_code >= 200 && $status_code < 300) {
+            return $decoded;
+        } else {
+            return ['error' => $decoded['error'] ?? 'API request failed'];
+        }
     }
 }
 
