@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
+import json
 
 class Stock(models.Model):
     # Basic stock info
@@ -148,3 +149,296 @@ class Membership(models.Model):
     
     def __str__(self):
         return f'{self.user.username} - {self.plan}'
+
+# New Portfolio Tracking Models
+
+class UserProfile(models.Model):
+    """Extended user profile with social features"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    username = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Public username for social features")
+    bio = models.TextField(max_length=500, blank=True, help_text="User biography")
+    avatar_url = models.URLField(blank=True, help_text="Profile picture URL")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['username']),
+        ]
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.username or "No public username"}'
+
+class UserPortfolio(models.Model):
+    """User stock portfolios with performance tracking"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='portfolios')
+    name = models.CharField(max_length=100, help_text="Portfolio name")
+    description = models.TextField(blank=True, help_text="Portfolio description")
+    is_public = models.BooleanField(default=False, help_text="Whether portfolio is publicly viewable")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Performance metrics (calculated fields)
+    total_value = models.DecimalField(max_digits=20, decimal_places=2, default=0, help_text="Current total portfolio value")
+    total_cost = models.DecimalField(max_digits=20, decimal_places=2, default=0, help_text="Total cost basis")
+    total_return = models.DecimalField(max_digits=20, decimal_places=2, default=0, help_text="Total return amount")
+    total_return_percent = models.DecimalField(max_digits=8, decimal_places=4, default=0, help_text="Total return percentage")
+    
+    # Social features
+    followers_count = models.PositiveIntegerField(default=0, help_text="Number of followers")
+    likes_count = models.PositiveIntegerField(default=0, help_text="Number of likes")
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['is_public', 'total_return_percent']),
+            models.Index(fields=['followers_count']),
+        ]
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.name}'
+    
+    @property
+    def performance_since_inception(self):
+        """Calculate performance since portfolio creation"""
+        if self.total_cost > 0:
+            return (self.total_return / self.total_cost) * 100
+        return 0
+
+class PortfolioHolding(models.Model):
+    """Individual stock positions within portfolios"""
+    portfolio = models.ForeignKey(UserPortfolio, on_delete=models.CASCADE, related_name='holdings')
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    shares = models.DecimalField(max_digits=15, decimal_places=4, help_text="Number of shares held")
+    average_cost = models.DecimalField(max_digits=12, decimal_places=4, help_text="Average cost per share")
+    current_price = models.DecimalField(max_digits=12, decimal_places=4, help_text="Current price per share")
+    date_added = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    # Alert tracking
+    from_alert = models.ForeignKey(StockAlert, on_delete=models.SET_NULL, null=True, blank=True, help_text="Alert that triggered this position")
+    alert_action_date = models.DateTimeField(null=True, blank=True, help_text="When alert action was taken")
+    
+    # Calculated performance fields
+    market_value = models.DecimalField(max_digits=20, decimal_places=2, default=0, help_text="Current market value")
+    unrealized_gain_loss = models.DecimalField(max_digits=20, decimal_places=2, default=0, help_text="Unrealized gain/loss")
+    unrealized_gain_loss_percent = models.DecimalField(max_digits=8, decimal_places=4, default=0, help_text="Unrealized gain/loss percentage")
+    
+    class Meta:
+        unique_together = ('portfolio', 'stock')
+        ordering = ['-date_added']
+        indexes = [
+            models.Index(fields=['portfolio', 'stock']),
+            models.Index(fields=['from_alert']),
+            models.Index(fields=['unrealized_gain_loss_percent']),
+        ]
+    
+    def __str__(self):
+        return f'{self.portfolio.name} - {self.stock.ticker} ({self.shares} shares)'
+    
+    def update_performance(self):
+        """Update calculated performance metrics"""
+        self.market_value = self.shares * self.current_price
+        cost_basis = self.shares * self.average_cost
+        self.unrealized_gain_loss = self.market_value - cost_basis
+        if cost_basis > 0:
+            self.unrealized_gain_loss_percent = (self.unrealized_gain_loss / cost_basis) * 100
+        self.save()
+
+class TradeTransaction(models.Model):
+    """Record of buy/sell transactions with alert tracking"""
+    TRANSACTION_TYPES = [
+        ('buy', 'Buy'),
+        ('sell', 'Sell'),
+    ]
+    
+    ALERT_CATEGORIES = [
+        ('earnings', 'Earnings Alert'),
+        ('analyst', 'Analyst Rating'),
+        ('insider', 'Insider Trading'),
+        ('merger', 'Merger/Acquisition'),
+        ('volume', 'Volume Surge'),
+        ('price', 'Price Alert'),
+        ('manual', 'Manual Trade'),
+    ]
+    
+    portfolio = models.ForeignKey(UserPortfolio, on_delete=models.CASCADE, related_name='transactions')
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    shares = models.DecimalField(max_digits=15, decimal_places=4, help_text="Number of shares")
+    price = models.DecimalField(max_digits=12, decimal_places=4, help_text="Price per share")
+    total_amount = models.DecimalField(max_digits=20, decimal_places=2, help_text="Total transaction amount")
+    fees = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Transaction fees")
+    transaction_date = models.DateTimeField(help_text="When the transaction occurred")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Alert tracking
+    from_alert = models.ForeignKey(StockAlert, on_delete=models.SET_NULL, null=True, blank=True)
+    alert_category = models.CharField(max_length=20, choices=ALERT_CATEGORIES, default='manual')
+    
+    # Performance tracking
+    realized_gain_loss = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, help_text="Realized gain/loss for sell transactions")
+    holding_period_days = models.PositiveIntegerField(null=True, blank=True, help_text="Days held for sell transactions")
+    
+    class Meta:
+        ordering = ['-transaction_date']
+        indexes = [
+            models.Index(fields=['portfolio', 'transaction_date']),
+            models.Index(fields=['stock', 'transaction_date']),
+            models.Index(fields=['from_alert']),
+            models.Index(fields=['alert_category', 'transaction_date']),
+        ]
+    
+    def __str__(self):
+        return f'{self.portfolio.name} - {self.transaction_type.upper()} {self.shares} {self.stock.ticker} @ ${self.price}'
+
+# Watchlist Models
+
+class UserWatchlist(models.Model):
+    """User watchlists with performance metrics"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watchlists')
+    name = models.CharField(max_length=100, help_text="Watchlist name")
+    description = models.TextField(blank=True, help_text="Watchlist description")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Performance tracking
+    total_return_percent = models.DecimalField(max_digits=8, decimal_places=4, default=0, help_text="Average return since addition")
+    best_performer = models.CharField(max_length=10, blank=True, help_text="Best performing stock ticker")
+    worst_performer = models.CharField(max_length=10, blank=True, help_text="Worst performing stock ticker")
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['total_return_percent']),
+        ]
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.name}'
+
+class WatchlistItem(models.Model):
+    """Individual stocks in watchlists with tracking data"""
+    watchlist = models.ForeignKey(UserWatchlist, on_delete=models.CASCADE, related_name='items')
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+    added_price = models.DecimalField(max_digits=12, decimal_places=4, help_text="Price when added to watchlist")
+    current_price = models.DecimalField(max_digits=12, decimal_places=4, help_text="Current stock price")
+    price_change = models.DecimalField(max_digits=12, decimal_places=4, default=0, help_text="Price change since addition")
+    price_change_percent = models.DecimalField(max_digits=8, decimal_places=4, default=0, help_text="Price change percentage")
+    notes = models.TextField(blank=True, help_text="User notes about this stock")
+    
+    # Alert settings
+    target_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Target price")
+    stop_loss = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Stop loss price")
+    price_alert_enabled = models.BooleanField(default=False, help_text="Enable price alerts")
+    news_alert_enabled = models.BooleanField(default=False, help_text="Enable news alerts")
+    
+    class Meta:
+        unique_together = ('watchlist', 'stock')
+        ordering = ['-added_at']
+        indexes = [
+            models.Index(fields=['watchlist', 'stock']),
+            models.Index(fields=['price_change_percent']),
+            models.Index(fields=['target_price']),
+        ]
+    
+    def __str__(self):
+        return f'{self.watchlist.name} - {self.stock.ticker}'
+    
+    def update_performance(self):
+        """Update price change metrics"""
+        self.price_change = self.current_price - self.added_price
+        if self.added_price > 0:
+            self.price_change_percent = (self.price_change / self.added_price) * 100
+        self.save()
+
+# News Personalization Models
+
+class UserInterests(models.Model):
+    """User preferences for news personalization"""
+    NEWS_FREQUENCY_CHOICES = [
+        ('realtime', 'Real-time'),
+        ('hourly', 'Hourly'),
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='interests')
+    followed_stocks = models.JSONField(default=list, help_text="List of stock tickers user follows")
+    followed_sectors = models.JSONField(default=list, help_text="List of sectors user follows")
+    preferred_categories = models.JSONField(default=list, help_text="Preferred news categories")
+    news_frequency = models.CharField(max_length=20, choices=NEWS_FREQUENCY_CHOICES, default='daily')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['news_frequency']),
+        ]
+    
+    def __str__(self):
+        return f'{self.user.username} - Interests'
+
+class PersonalizedNews(models.Model):
+    """Personalized news articles for each user"""
+    NEWS_CATEGORIES = [
+        ('earnings', 'Earnings'),
+        ('analyst', 'Analyst Rating'),
+        ('insider', 'Insider Trading'),
+        ('merger', 'Merger/Acquisition'),
+        ('ipo', 'IPO'),
+        ('dividend', 'Dividend'),
+        ('guidance', 'Guidance'),
+        ('partnership', 'Partnership'),
+        ('regulation', 'Regulation'),
+        ('general', 'General News'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='personalized_news')
+    title = models.CharField(max_length=500, help_text="News article title")
+    content = models.TextField(help_text="News article content/summary")
+    url = models.URLField(help_text="Original article URL")
+    source = models.CharField(max_length=100, help_text="News source")
+    relevance_score = models.DecimalField(max_digits=5, decimal_places=2, help_text="Relevance score 0-100")
+    related_stocks = models.JSONField(default=list, help_text="List of related stock tickers")
+    category = models.CharField(max_length=20, choices=NEWS_CATEGORIES, default='general')
+    published_at = models.DateTimeField(help_text="When article was published")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # User engagement tracking
+    read_at = models.DateTimeField(null=True, blank=True, help_text="When user read the article")
+    clicked = models.BooleanField(default=False, help_text="Whether user clicked the article")
+    
+    class Meta:
+        ordering = ['-published_at']
+        indexes = [
+            models.Index(fields=['user', 'published_at']),
+            models.Index(fields=['relevance_score']),
+            models.Index(fields=['category', 'published_at']),
+            models.Index(fields=['clicked', 'read_at']),
+        ]
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.title[:50]}...'
+
+# Social Features
+
+class PortfolioFollowing(models.Model):
+    """Track users following other users' portfolios"""
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    followed_portfolio = models.ForeignKey(UserPortfolio, on_delete=models.CASCADE, null=True, blank=True)
+    followed_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('follower', 'followed_user')
+        indexes = [
+            models.Index(fields=['follower', 'followed_user']),
+            models.Index(fields=['followed_user', 'followed_at']),
+        ]
+    
+    def __str__(self):
+        return f'{self.follower.username} follows {self.followed_user.username}'
