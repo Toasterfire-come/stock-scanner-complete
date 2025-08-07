@@ -3,6 +3,48 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php 
+    // SEO: Canonical URL
+    if (function_exists('wp_get_canonical_url')) {
+        $canonical = wp_get_canonical_url();
+    } else {
+        $canonical = is_singular() ? get_permalink() : home_url(add_query_arg(array(),$wp->request));
+    }
+    if ($canonical): ?>
+        <link rel="canonical" href="<?php echo esc_url($canonical); ?>" />
+    <?php endif; ?>
+    <?php 
+        // SEO: Open Graph and Twitter
+        global $post;
+        $site_name = get_bloginfo('name');
+        $title = wp_get_document_title();
+        $description = get_bloginfo('description');
+        if (is_singular() && isset($post)) {
+            $excerpt = has_excerpt($post) ? get_the_excerpt($post) : wp_strip_all_tags(get_the_content(null, false, $post));
+            if (!empty($excerpt)) { $description = wp_trim_words($excerpt, 30); }
+        }
+        $url = $canonical ? $canonical : home_url();
+        $image = '';
+        if (is_singular() && has_post_thumbnail($post)) {
+            $img = wp_get_attachment_image_src(get_post_thumbnail_id($post->ID), 'full');
+            if (!empty($img[0])) { $image = $img[0]; }
+        }
+        if (empty($image)) {
+            // Fallback theme image if exists
+            $fallback = get_template_directory_uri() . '/assets/images/og-default.jpg';
+            $image = $fallback;
+        }
+    ?>
+    <meta property="og:site_name" content="<?php echo esc_attr($site_name); ?>" />
+    <meta property="og:title" content="<?php echo esc_attr($title); ?>" />
+    <meta property="og:description" content="<?php echo esc_attr($description); ?>" />
+    <meta property="og:url" content="<?php echo esc_url($url); ?>" />
+    <meta property="og:type" content="<?php echo is_singular() ? 'article' : 'website'; ?>" />
+    <meta property="og:image" content="<?php echo esc_url($image); ?>" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<?php echo esc_attr($title); ?>" />
+    <meta name="twitter:description" content="<?php echo esc_attr($description); ?>" />
+    <meta name="twitter:image" content="<?php echo esc_url($image); ?>" />
     <?php wp_head(); ?>
 </head>
 
@@ -118,11 +160,10 @@
                             </div>
                         </div>
                     </div>
-                    
                 <?php else: ?>
-                    <div class="auth-buttons">
-                        <a href="<?php echo wp_login_url(); ?>" class="btn btn-outline">Login</a>
-                        <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary">Sign Up Free</a>
+                    <div class="auth-links">
+                        <a class="login-link" href="<?php echo esc_url(wp_login_url()); ?>"><?php esc_html_e('Log in', 'stock-scanner'); ?></a>
+                        <a class="signup-link" href="<?php echo esc_url(wp_registration_url()); ?>"><?php esc_html_e('Sign up', 'stock-scanner'); ?></a>
                     </div>
                 <?php endif; ?>
             </div>
