@@ -40,8 +40,9 @@ Edit your `.env` file and update these **REQUIRED** settings:
 # Django Security (REQUIRED)
 DJANGO_SECRET_KEY=your-generated-secret-key-here
 
-# Database (REQUIRED)
-DB_PASSWORD=your-secure-database-password
+# Database (Currently using XAMPP root with no password)
+DB_USER=root
+DB_PASSWORD=
 
 # Email (REQUIRED for notifications)
 EMAIL_HOST_PASSWORD=your-gmail-app-password
@@ -119,17 +120,17 @@ Use `.env.production` for live deployment:
 - **Secure Cookies**: Production-safe cookie settings
 - **Rate Limiting**: Production-appropriate limits
 
-### Development Environment
+### Development Environment (Current XAMPP Setup)
 
-For local development, modify these settings:
+Current configuration is already set for XAMPP development:
 
 ```bash
-# Development overrides
-DJANGO_DEBUG=True
-PAYPAL_MODE=sandbox
+# Current XAMPP settings
 DB_USER=root
 DB_PASSWORD=
-SSL_ENABLED=False
+DJANGO_DEBUG=False  # Set to True for debugging
+PAYPAL_MODE=live    # Change to sandbox for testing
+SSL_ENABLED=True    # Can be False for local development
 ```
 
 ## Required External Services
@@ -156,8 +157,13 @@ CACHE_BACKEND=django.core.cache.backends.redis.RedisCache
 
 ### 2. MySQL Database
 
-Create production database:
+**Current Setup (XAMPP Development):**
+```sql
+CREATE DATABASE stockscanner CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Using root user with no password (XAMPP default)
+```
 
+**Future Production Setup:**
 ```sql
 CREATE DATABASE stockscanner CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'stockscanner_user'@'localhost' IDENTIFIED BY 'StockScanner2024!SecurePassword#Prod';
@@ -177,12 +183,12 @@ Generate Gmail app password for email notifications:
 ## Security Checklist
 
 - [ ] Generated new Django secret key
-- [ ] Updated database password
+- [ ] Database configured (currently XAMPP root/no password)
 - [ ] Configured Gmail app password
-- [ ] Updated PayPal to live credentials
+- [ ] PayPal credentials configured (currently live)
 - [ ] Set secure file permissions: `chmod 600 .env`
-- [ ] Verified SSL certificates are in place
-- [ ] Updated all default passwords
+- [ ] Consider SSL certificates for production
+- [ ] Plan production database security upgrade
 - [ ] Configured proper backup settings
 
 ## File Permissions
