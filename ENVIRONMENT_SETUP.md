@@ -74,23 +74,20 @@ WEEKEND_TRADING_ENABLED=False
 
 ### 💰 Updated Pricing (December 2024)
 
-Simplified 3-tier pricing structure:
+Simplified 3-tier pricing structure with 10% annual discount:
 
 ```bash
 # Bronze Plan - Entry Level
 BRONZE_MONTHLY_PRICE=24.99
-BRONZE_QUARTERLY_PRICE=67.47
-BRONZE_ANNUAL_PRICE=239.88
+BRONZE_ANNUAL_PRICE=269.89
 
 # Silver Plan - Professional
 SILVER_MONTHLY_PRICE=49.99
-SILVER_QUARTERLY_PRICE=134.97
-SILVER_ANNUAL_PRICE=479.88
+SILVER_ANNUAL_PRICE=539.89
 
 # Gold Plan - Premium
 GOLD_MONTHLY_PRICE=99.99
-GOLD_QUARTERLY_PRICE=269.97
-GOLD_ANNUAL_PRICE=959.88
+GOLD_ANNUAL_PRICE=1079.89
 ```
 
 ### 🔒 Enhanced Security Settings
