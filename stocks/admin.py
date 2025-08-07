@@ -3,7 +3,7 @@ from .models import (
     Stock, StockPrice, StockAlert, Membership,
     UserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
-    PortfolioFollowing, UserFollow, DiscountCode, UserDiscountUsage,
+    PortfolioFollowing, DiscountCode, UserDiscountUsage,
     RevenueTracking, MonthlyRevenueSummary
 )
 
@@ -99,12 +99,6 @@ class PortfolioFollowingAdmin(admin.ModelAdmin):
     list_filter = ['followed_at']
     search_fields = ['follower__username', 'followed_user__username']
     readonly_fields = ['followed_at']
-
-@admin.register(UserFollow)
-class UserFollowAdmin(admin.ModelAdmin):
-    list_display = ('follower', 'followed_user', 'created_at')
-    list_filter = ('created_at',)
-    search_fields = ('follower__username', 'followed_user__username')
 
 @admin.register(DiscountCode)
 class DiscountCodeAdmin(admin.ModelAdmin):
