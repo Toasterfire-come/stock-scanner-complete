@@ -410,14 +410,11 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
 
 def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_db=True):
     """Single attempt to process a symbol"""
-    # Build a session for this attempt
-    session = create_session_for_proxy(proxy, timeout=timeout)
-
     # Minimal delay to avoid rate limiting
     time.sleep(random.uniform(0.01, 0.02))
 
-    # Try multiple approaches to get data using this session
-    ticker_obj = yf.Ticker(symbol, session=session)
+    # Try multiple approaches to get data letting yfinance manage its own session
+    ticker_obj = yf.Ticker(symbol)
     info = None
     hist = None
     current_price = None
@@ -429,14 +426,13 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
             info = None
     except Exception as e:
         if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
-            session.close()
             raise
         pass
 
     # Approach 2: Try to get historical data with multiple periods
     for period in ["1d", "5d", "1mo"]:
         try:
-            # Newer yfinance supports timeout in history; if not, default timeout is enforced by session wrapper
+            # Newer yfinance supports timeout in history
             hist = ticker_obj.history(period=period, timeout=timeout)
             if hist is not None and not hist.empty and len(hist) > 0:
                 try:
@@ -447,7 +443,6 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                     continue
         except Exception as e:
             if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
-                session.close()
                 raise
             continue
 
@@ -466,17 +461,14 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Check for delisted or invalid stocks
     if info and info.get('quoteType') == 'NONE':
         logger.warning(f"{symbol}: possibly delisted; no price data found (period=1d)")
-        session.close()
         return None
 
     if not has_data and not has_info:
         logger.warning(f"{symbol}: No data available")
-        session.close()
         return None
 
     if not has_price and info and info.get('volume', 0) == 0:
         logger.warning(f"{symbol}: No current trading activity")
-        session.close()
         return None
 
     # Extract and save data (unchanged)
@@ -526,10 +518,8 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
             )
             if stock_data.get('current_price'):
                 StockPrice.objects.create(stock=stock, price=stock_data['current_price'])
-        session.close()
         return stock_data if not save_to_db or test_mode else stock_data
     except Exception as e:
-        session.close()
         logger.error(f"DB ERROR {symbol}: {e}")
         raise
 
