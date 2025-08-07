@@ -63,7 +63,7 @@ def stock_list_api(request):
     - max_market_cap: Maximum market cap filter
     - min_pe: Minimum P/E ratio
     - max_pe: Maximum P/E ratio
-    - exchange: Filter by exchange (default: NASDAQ)
+    - exchange: Filter by exchange (default: NYSE)
     - sort_by: Sort field (price, volume, market_cap, change_percent, pe_ratio)
     - sort_order: Sort order (asc, desc) default: desc
     """
@@ -89,7 +89,7 @@ def stock_list_api(request):
         max_pe = request.GET.get('max_pe')
         
         # Exchange filter
-        exchange = request.GET.get('exchange', 'NASDAQ')
+        exchange = request.GET.get('exchange', 'NYSE')
         
         # Sorting - default to volume for better results
         sort_by = request.GET.get('sort_by', 'volume')
@@ -907,35 +907,71 @@ def trending_stocks_api(request):
     Get trending stocks based on volume and price changes
     """
     try:
-        # Get top trending by volume
-        high_volume_stocks = Stock.objects.exclude(
+        # Get top trending by volume - prioritize NYSE
+        high_volume_stocks = Stock.objects.filter(
+            exchange__iexact='NYSE'
+        ).exclude(
             volume__isnull=True
         ).exclude(volume=0).order_by('-volume')[:10]
         
-        # Get top gainers (prefer positive changes, but fallback to all if none)
+        # If not enough NYSE stocks, include other exchanges
+        if len(high_volume_stocks) < 5:
+            additional_stocks = Stock.objects.exclude(
+                exchange__iexact='NYSE'
+            ).exclude(
+                volume__isnull=True
+            ).exclude(volume=0).order_by('-volume')[:10-len(high_volume_stocks)]
+            high_volume_stocks = list(high_volume_stocks) + list(additional_stocks)
+        
+        # Get top gainers (prefer positive changes, prioritize NYSE)
         top_gainers = Stock.objects.filter(
+            exchange__iexact='NYSE',
             change_percent__gt=0
         ).order_by('-change_percent')[:10]
         
-        # If no gainers, get stocks with the best changes (even if negative)
-        if not top_gainers.exists():
+        # If not enough NYSE gainers, include other exchanges
+        if len(top_gainers) < 5:
+            additional_gainers = Stock.objects.filter(
+                change_percent__gt=0
+            ).exclude(
+                exchange__iexact='NYSE'
+            ).order_by('-change_percent')[:10-len(top_gainers)]
+            top_gainers = list(top_gainers) + list(additional_gainers)
+        
+        # If still no gainers, get stocks with the best changes (even if negative)
+        if len(top_gainers) == 0:
             top_gainers = Stock.objects.exclude(
                 change_percent__isnull=True
             ).order_by('-change_percent')[:10]
         
-        # Get most active (high volume + price data available)
-        most_active = Stock.objects.exclude(
+        # Get most active (high volume + price data available, prioritize NYSE)
+        most_active = Stock.objects.filter(
+            exchange__iexact='NYSE'
+        ).exclude(
             volume__isnull=True,
             current_price__isnull=True
         ).filter(
             volume__gt=100000  # Lower volume threshold for more results
         ).order_by('-volume')[:10]
         
+        # If not enough NYSE active stocks, include other exchanges
+        if len(most_active) < 5:
+            additional_active = Stock.objects.exclude(
+                exchange__iexact='NYSE'
+            ).exclude(
+                volume__isnull=True,
+                current_price__isnull=True
+            ).filter(
+                volume__gt=100000
+            ).order_by('-volume')[:10-len(most_active)]
+            most_active = list(most_active) + list(additional_active)
+        
         # Fallback for most active if volume filter is too restrictive
-        if not most_active.exists():
-            most_active = Stock.objects.exclude(
+        if len(most_active) < 5:
+            fallback_active = Stock.objects.exclude(
                 volume__isnull=True
             ).exclude(volume=0).order_by('-volume')[:10]
+            most_active = list(most_active) + [s for s in fallback_active if s not in most_active][:10]
         
         def format_stock_data(stocks):
             return [{
