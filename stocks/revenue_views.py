@@ -3,6 +3,7 @@ API Views for discount codes and revenue tracking
 """
 
 import json
+import logging
 from decimal import Decimal
 from datetime import datetime
 from django.http import JsonResponse
@@ -16,6 +17,9 @@ from django.utils.decorators import method_decorator
 from .services.discount_service import DiscountService
 from .models import DiscountCode, RevenueTracking, MonthlyRevenueSummary
 from .security_utils import secure_api_endpoint, validate_user_input
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt

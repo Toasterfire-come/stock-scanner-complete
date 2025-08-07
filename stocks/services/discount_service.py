@@ -179,10 +179,15 @@ class DiscountService:
         
         # Calculate totals
         totals = revenue_records.aggregate(
-            total_revenue=Sum('final_amount') or Decimal('0.00'),
-            total_discount_savings=Sum('discount_amount') or Decimal('0.00'),
-            total_commission=Sum('commission_amount') or Decimal('0.00')
+            total_revenue=Sum('final_amount'),
+            total_discount_savings=Sum('discount_amount'),
+            total_commission=Sum('commission_amount')
         )
+        
+        # Ensure no None values (aggregate can return None if no records)
+        totals['total_revenue'] = totals['total_revenue'] or Decimal('0.00')
+        totals['total_discount_savings'] = totals['total_discount_savings'] or Decimal('0.00')
+        totals['total_commission'] = totals['total_commission'] or Decimal('0.00')
         
         # Calculate revenue breakdown
         regular_revenue = revenue_records.filter(
