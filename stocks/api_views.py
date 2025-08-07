@@ -876,28 +876,40 @@ def trending_stocks_api(request):
         # Get top trending by volume
         high_volume_stocks = Stock.objects.exclude(
             volume__isnull=True
-        ).order_by('-volume')[:10]
+        ).exclude(volume=0).order_by('-volume')[:10]
         
-        # Get top gainers
+        # Get top gainers (prefer positive changes, but fallback to all if none)
         top_gainers = Stock.objects.filter(
-            price_change_percent__gt=0
-        ).order_by('-price_change_percent')[:10]
+            change_percent__gt=0
+        ).order_by('-change_percent')[:10]
         
-        # Get most active (high volume + significant price movement)
+        # If no gainers, get stocks with the best changes (even if negative)
+        if not top_gainers.exists():
+            top_gainers = Stock.objects.exclude(
+                change_percent__isnull=True
+            ).order_by('-change_percent')[:10]
+        
+        # Get most active (high volume + price data available)
         most_active = Stock.objects.exclude(
             volume__isnull=True,
-            price_change_percent__isnull=True
+            current_price__isnull=True
         ).filter(
-            volume__gt=1000000  # High volume threshold
+            volume__gt=100000  # Lower volume threshold for more results
         ).order_by('-volume')[:10]
+        
+        # Fallback for most active if volume filter is too restrictive
+        if not most_active.exists():
+            most_active = Stock.objects.exclude(
+                volume__isnull=True
+            ).exclude(volume=0).order_by('-volume')[:10]
         
         def format_stock_data(stocks):
             return [{
                 'ticker': stock.ticker,
                 'name': stock.name,
                 'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(stock.price_change),
-                'price_change_percent': format_decimal_safe(stock.price_change_percent),
+                'price_change_today': format_decimal_safe(stock.price_change_today),
+                'change_percent': format_decimal_safe(stock.change_percent),
                 'volume': stock.volume,
                 'market_cap': format_decimal_safe(stock.market_cap)
             } for stock in stocks]
