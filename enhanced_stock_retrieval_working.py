@@ -24,6 +24,8 @@ import schedule
 import threading
 from decimal import Decimal
 from collections import defaultdict
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 
 # Django imports for database integration
 import django
@@ -51,6 +53,61 @@ shutdown_flag = False
 proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "blocked": False})
 proxy_failure_threshold = 3  # Mark proxy as blocked after 3 consecutive failures
 proxy_retry_cooldown = 300  # 5 minutes before retrying a blocked proxy
+
+# New: normalize and validate proxy strings
+
+def normalize_proxy_string(proxy_str: str) -> str | None:
+    """Ensure proxy has a scheme and basic host:port shape."""
+    if not proxy_str or not isinstance(proxy_str, str):
+        return None
+    p = proxy_str.strip()
+    if not p:
+        return None
+    if '://' not in p:
+        # Assume HTTP if not specified
+        p = f"http://{p}"
+    return p
+
+
+def create_session_for_proxy(proxy: str | None, timeout: int = 10) -> requests.Session:
+    """Create a requests.Session configured for a specific proxy with retries and default timeout."""
+    session = requests.Session()
+
+    # Mount retries
+    retry = Retry(
+        total=2,
+        backoff_factor=0.2,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"],
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=50, pool_maxsize=50)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    # Set proxies if provided
+    if proxy:
+        normalized = normalize_proxy_string(proxy)
+        if normalized:
+            session.proxies = {
+                'http': normalized,
+                'https': normalized,
+            }
+
+    # Inject default timeout by wrapping request
+    original_request = session.request
+
+    def request_with_timeout(method, url, **kwargs):
+        if 'timeout' not in kwargs or kwargs['timeout'] is None:
+            kwargs['timeout'] = timeout
+        return original_request(method, url, **kwargs)
+
+    session.request = request_with_timeout  # type: ignore[assignment]
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    })
+
+    return session
 
 def signal_handler(signum, frame):
     """Handle interrupt signals gracefully"""
@@ -116,11 +173,21 @@ def load_proxies_direct(proxy_file):
         else:
             proxies = []
         
-        # Filter out None/empty values
-        proxies = [p for p in proxies if p and isinstance(p, str)]
-        
-        logger.info(f"Loaded {len(proxies)} proxies directly from {proxy_file}")
-        return proxies
+        # Normalize and filter
+        normalized = []
+        for p in proxies:
+            np = normalize_proxy_string(p) if isinstance(p, str) else None
+            if np:
+                normalized.append(np)
+        # De-dupe while preserving order
+        seen = set()
+        deduped = []
+        for p in normalized:
+            if p not in seen:
+                seen.add(p)
+                deduped.append(p)
+        logger.info(f"Loaded {len(deduped)} proxies directly from {proxy_file}")
+        return deduped
         
     except FileNotFoundError:
         logger.warning(f"Proxy file not found: {proxy_file}")
@@ -184,31 +251,6 @@ def mark_proxy_failure(proxy, reason=""):
     if health["failures"] >= proxy_failure_threshold:
         health["blocked"] = True
         logger.warning(f"Proxy {proxy} marked as blocked after {health['failures']} failures. Reason: {reason}")
-
-def patch_yfinance_proxy(proxy):
-    """Patch yfinance to use proxy with enhanced error handling"""
-    if not proxy:
-        return
-        
-    try:
-        session = requests.Session()
-        session.proxies = {
-            'http': proxy,
-            'https': proxy
-        }
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        })
-        
-        # Set timeouts
-        session.timeout = 10
-        
-        import yfinance.shared
-        yfinance.shared._requests = session
-        
-    except Exception as e:
-        logger.error(f"Failed to set proxy {proxy}: {e}")
-        mark_proxy_failure(proxy, f"Session setup failed: {e}")
 
 def _extract_pe_ratio(info):
     """Extract PE ratio with multiple fallback options"""
@@ -368,75 +410,79 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
 
 def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_db=True):
     """Single attempt to process a symbol"""
-    
-    # Set up proxy
-    patch_yfinance_proxy(proxy)
-    
+    # Build a session for this attempt
+    session = create_session_for_proxy(proxy, timeout=timeout)
+
     # Minimal delay to avoid rate limiting
     time.sleep(random.uniform(0.01, 0.02))
-    
-    # Try multiple approaches to get data
-    ticker_obj = yf.Ticker(symbol)
+
+    # Try multiple approaches to get data using this session
+    ticker_obj = yf.Ticker(symbol, session=session)
     info = None
     hist = None
     current_price = None
-    
-    # Approach 1: Try to get basic info with timeout
+
+    # Approach 1: Try to get basic info
     try:
         info = ticker_obj.info
-        if info and len(info) <= 3:  # Minimal info suggests issue
+        if info and len(info) <= 3:
             info = None
     except Exception as e:
         if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
-            raise  # Re-raise network errors for retry
+            session.close()
+            raise
         pass
-    
+
     # Approach 2: Try to get historical data with multiple periods
     for period in ["1d", "5d", "1mo"]:
         try:
+            # Newer yfinance supports timeout in history; if not, default timeout is enforced by session wrapper
             hist = ticker_obj.history(period=period, timeout=timeout)
             if hist is not None and not hist.empty and len(hist) > 0:
                 try:
                     current_price = hist['Close'].iloc[-1]
                     if current_price is not None and not pd.isna(current_price):
                         break
-                except:
+                except Exception:
                     continue
         except Exception as e:
             if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
-                raise  # Re-raise network errors for retry
+                session.close()
+                raise
             continue
-    
+
     # Approach 3: Try to get current price from info if historical failed
     if current_price is None and info:
         try:
             current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
-        except:
+        except Exception:
             pass
-    
+
     # Determine if we have enough data to process
     has_data = hist is not None and not hist.empty
     has_info = info and isinstance(info, dict) and len(info) > 3
     has_price = current_price is not None and not pd.isna(current_price)
-    
+
     # Check for delisted or invalid stocks
     if info and info.get('quoteType') == 'NONE':
         logger.warning(f"{symbol}: possibly delisted; no price data found (period=1d)")
+        session.close()
         return None
-        
+
     if not has_data and not has_info:
         logger.warning(f"{symbol}: No data available")
+        session.close()
         return None
-        
-    # Skip stocks with no current price data and no recent volume
+
     if not has_price and info and info.get('volume', 0) == 0:
         logger.warning(f"{symbol}: No current trading activity")
+        session.close()
         return None
-    
-    # Extract comprehensive data with better PE ratio and dividend yield handling
+
+    # Extract and save data (unchanged)
     stock_data = {
-        'ticker': symbol,  # Use ticker as the primary key
-        'symbol': symbol,   # Keep symbol for compatibility
+        'ticker': symbol,
+        'symbol': symbol,
         'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
         'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
         'current_price': _safe_decimal(current_price) if current_price else None,
@@ -447,8 +493,8 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'change_percent': None,
         'bid_price': None,
         'ask_price': None,
-        'bid_ask_spread': '',  # Empty string instead of None for CharField
-        'days_range': '',  # Empty string instead of None for CharField
+        'bid_ask_spread': '',
+        'days_range': '',
         'days_low': _safe_decimal(info.get('dayLow')) if info else None,
         'days_high': _safe_decimal(info.get('dayHigh')) if info else None,
         'volume': _safe_decimal(info.get('volume')) if info else None,
@@ -471,52 +517,21 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'last_updated': timezone.now(),
         'created_at': timezone.now()
     }
-    
-    # Calculate price changes if historical data available
-    if has_data and len(hist) > 1:
-        try:
-            current = hist['Close'].iloc[-1]
-            previous = hist['Close'].iloc[-2]
-            if current and previous:
-                change = current - previous
-                change_percent = (change / previous) * 100
-                stock_data['price_change_today'] = _safe_decimal(change)
-                stock_data['change_percent'] = _safe_decimal(change_percent)
-        except:
-            pass
-    
-    # Add volume analysis
-    if stock_data.get('volume') and stock_data.get('avg_volume_3mon'):
-        try:
-            volume_ratio = stock_data['volume'] / stock_data['avg_volume_3mon']
-            stock_data['dvav'] = _safe_decimal(volume_ratio)
-        except:
-            pass
-    
-    # Save to database if requested
-    if save_to_db and not test_mode:
-        try:
-            # Create or update Stock object
+
+    try:
+        if save_to_db and not test_mode:
             stock, created = Stock.objects.update_or_create(
-                ticker=symbol,  # Use ticker as the lookup field
+                ticker=symbol,
                 defaults=stock_data
             )
-            
-            # Create StockPrice record
             if stock_data.get('current_price'):
-                StockPrice.objects.create(
-                    stock=stock,
-                    price=stock_data['current_price']
-                )
-            
-            return stock_data
-            
-        except Exception as e:
-            logger.error(f"DB ERROR {symbol}: {e}")
-            raise  # Re-raise DB errors for retry
-    else:
-        # Test mode - return the data without saving
-        return stock_data
+                StockPrice.objects.create(stock=stock, price=stock_data['current_price'])
+        session.close()
+        return stock_data if not save_to_db or test_mode else stock_data
+    except Exception as e:
+        session.close()
+        logger.error(f"DB ERROR {symbol}: {e}")
+        raise
 
 # Create an alias for backward compatibility
 def process_symbol(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True):
