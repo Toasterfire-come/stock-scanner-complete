@@ -53,10 +53,26 @@ class Stock_Scanner_Integration {
      * Initialize plugin
      */
     public function init() {
-        $this->create_tables();
-        $this->init_components();
-        $this->register_hooks();
-        $this->init_security_manager();
+        try {
+            $this->create_tables();
+            $this->init_components();
+            $this->register_hooks();
+            $this->init_security_manager();
+        } catch (Exception $e) {
+            // Log error but don't break WordPress
+            error_log('Stock Scanner Plugin Error: ' . $e->getMessage());
+            add_action('admin_notices', array($this, 'show_init_error'));
+        }
+    }
+    
+    /**
+     * Show initialization error notice
+     */
+    public function show_init_error() {
+        echo '<div class="notice notice-error"><p>';
+        echo '<strong>Stock Scanner Plugin Error:</strong> Plugin initialization failed. ';
+        echo 'Please check error logs or contact support.';
+        echo '</p></div>';
     }
     
     /**
@@ -313,8 +329,8 @@ class Stock_Scanner_Integration {
         add_action('wp_ajax_stock_scanner_upgrade', array($this, 'ajax_upgrade_membership'));
         add_action('wp_ajax_stock_scanner_usage', array($this, 'ajax_get_usage'));
         
-        // Admin hooks
-        add_action('admin_menu', array($this, 'add_admin_menu'));
+        // Admin hooks - run after theme to integrate properly
+        add_action('admin_menu', array($this, 'add_admin_menu'), 15);
         add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
         
         // User registration hook
@@ -329,60 +345,90 @@ class Stock_Scanner_Integration {
     }
     
     /**
-     * Add admin menu
+     * Add admin menu - integrate with theme menu
      */
     public function add_admin_menu() {
-        add_menu_page(
-            'Stock Scanner Security',
-            'Stock Scanner',
-            'manage_options',
-            'stock-scanner-security',
-            array($this, 'admin_security_page'),
-            'dashicons-shield-alt',
-            30
-        );
-        
-        add_submenu_page(
-            'stock-scanner-security',
-            'Security Analytics',
-            'Security Analytics',
-            'manage_options',
-            'stock-scanner-security',
-            array($this, 'admin_security_page')
-        );
-        
-        add_submenu_page(
-            'stock-scanner-security',
-            'Rate Limiting',
-            'Rate Limiting',
-            'manage_options',
-            'stock-scanner-rate-limits',
-            array($this, 'admin_rate_limits_page')
-        );
-        
-        add_submenu_page(
-            'stock-scanner-security',
-            'User Management',
-            'User Management',
-            'manage_options',
-            'stock-scanner-users',
-            array($this, 'admin_users_page')
-        );
-        
-        add_submenu_page(
-            'stock-scanner-security',
-            'Settings',
-            'Settings',
-            'manage_options',
-            'stock-scanner-settings',
-            array($this, 'admin_settings_page')
-        );
+        try {
+            // Check if theme menu already exists
+            global $admin_page_hooks;
+            
+            if (isset($admin_page_hooks['stock-scanner-settings'])) {
+            // Theme menu exists, add as submenus to it
+            add_submenu_page(
+                'stock-scanner-settings',
+                'Security Analytics',
+                'Security',
+                'manage_options',
+                'stock-scanner-security',
+                array($this, 'admin_security_page')
+            );
+            
+            add_submenu_page(
+                'stock-scanner-settings',
+                'Rate Limiting',
+                'Rate Limits',
+                'manage_options',
+                'stock-scanner-rate-limits',
+                array($this, 'admin_rate_limits_page')
+            );
+            
+            add_submenu_page(
+                'stock-scanner-settings',
+                'Plugin Settings',
+                'Plugin Config',
+                'manage_options',
+                'stock-scanner-plugin-settings',
+                array($this, 'admin_settings_page')
+            );
+        } else {
+            // Theme menu doesn't exist, create our own
+            add_menu_page(
+                'Stock Scanner',
+                'Stock Scanner',
+                'manage_options',
+                'stock-scanner-main',
+                array($this, 'admin_security_page'),
+                'dashicons-chart-line',
+                30
+            );
+            
+            add_submenu_page(
+                'stock-scanner-main',
+                'Security Analytics',
+                'Security',
+                'manage_options',
+                'stock-scanner-main',
+                array($this, 'admin_security_page')
+            );
+            
+            add_submenu_page(
+                'stock-scanner-main',
+                'Rate Limiting',
+                'Rate Limits',
+                'manage_options',
+                'stock-scanner-rate-limits',
+                array($this, 'admin_rate_limits_page')
+            );
+            
+            add_submenu_page(
+                'stock-scanner-main',
+                'Plugin Settings',
+                'Settings',
+                'manage_options',
+                'stock-scanner-plugin-settings',
+                                 array($this, 'admin_settings_page')
+             );
+         }
+        } catch (Exception $e) {
+            error_log('Stock Scanner Menu Error: ' . $e->getMessage());
+        }
     }
     
     /**
      * Enqueue admin scripts
      */
     public function admin_enqueue_scripts($hook) {
+        // Check for both possible hook patterns (theme or plugin menu)
         if (strpos($hook, 'stock-scanner') !== false) {
             // Enqueue Chart.js for security analytics charts
             wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);

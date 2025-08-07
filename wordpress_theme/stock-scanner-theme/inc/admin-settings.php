@@ -15,7 +15,8 @@ class StockScannerAdminSettings {
     private $page_slug = 'stock-scanner-settings';
     
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_admin_menus'));
+        // Add menu early so plugin can detect it and integrate
+        add_action('admin_menu', array($this, 'add_admin_menus'), 5);
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         
