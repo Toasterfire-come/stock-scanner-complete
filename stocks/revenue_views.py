@@ -224,7 +224,8 @@ def record_payment(request):
 @csrf_exempt
 def get_revenue_analytics(request, month_year=None):
     """
-    Get revenue analytics for admin dashboard
+    Get revenue analytics - supports both HTML and API responses
+    WordPress/AJAX calls get JSON, browser visits get HTML page
     """
     try:
         analytics = DiscountService.get_revenue_analytics(month_year)
@@ -240,15 +241,63 @@ def get_revenue_analytics(request, month_year=None):
             else:
                 return obj
         
-        return JsonResponse({
-            'success': True,
-            'analytics': convert_decimals(analytics)
-        })
+        analytics = convert_decimals(analytics)
+        
+        # Check if this should be an API response
+        is_api_request = (
+            # WordPress/AJAX requests
+            request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or
+            # Accept header indicates JSON
+            'application/json' in request.META.get('HTTP_ACCEPT', '') or
+            # Explicit format parameter
+            request.GET.get('format') == 'json' or
+            # Always API for WordPress compatibility
+            getattr(request, 'is_api_request', True)  # Default to API for revenue
+        )
+        
+        if is_api_request:
+            return JsonResponse({
+                'success': True,
+                'data': analytics,
+                'timestamp': timezone.now().isoformat(),
+                'endpoint': request.path,
+                'method': request.method
+            })
+        else:
+            # Return HTML page for browser visits
+            from django.shortcuts import render
+            context = {
+                'analytics': analytics,
+                'month_year': month_year,
+                'title': f'Revenue Analytics - {month_year or "Current"}'
+            }
+            return render(request, 'revenue/analytics.html', context)
         
     except Exception as e:
-        return JsonResponse({
-            'error': 'An error occurred while fetching revenue analytics'
-        }, status=500)
+        logger.error(f"Error in get_revenue_analytics: {e}")
+        
+        # Check if this should be an API response for errors too
+        is_api_request = (
+            request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or
+            'application/json' in request.META.get('HTTP_ACCEPT', '') or
+            request.GET.get('format') == 'json' or
+            getattr(request, 'is_api_request', True)
+        )
+        
+        if is_api_request:
+            return JsonResponse({
+                'success': False,
+                'error': 'An error occurred while fetching revenue analytics',
+                'timestamp': timezone.now().isoformat(),
+                'endpoint': request.path
+            }, status=500)
+        else:
+            from django.shortcuts import render
+            context = {
+                'error': 'An error occurred while fetching revenue analytics',
+                'month_year': month_year
+            }
+            return render(request, 'revenue/analytics.html', context)
 
 
 @require_http_methods(["GET"])
@@ -291,20 +340,30 @@ def get_monthly_summary(request, month_year):
 @require_http_methods(["POST"])
 def initialize_discount_codes(request):
     """
-    Initialize the REF50 discount code (admin only)
+    Initialize the REF50 discount code - WordPress compatible
+    Always returns JSON response
     """
     try:
         code, created = DiscountService.initialize_ref50_code()
         
         return JsonResponse({
             'success': True,
-            'code': code.code,
-            'discount_percentage': float(code.discount_percentage),
-            'created': created,
-            'message': 'REF50 code created' if created else 'REF50 code already exists'
+            'data': {
+                'code': code.code,
+                'discount_percentage': float(code.discount_percentage),
+                'created': created,
+                'message': 'REF50 code created' if created else 'REF50 code already exists'
+            },
+            'timestamp': timezone.now().isoformat(),
+            'endpoint': request.path,
+            'method': request.method
         })
         
     except Exception as e:
+        logger.error(f"Error in initialize_discount_codes: {e}")
         return JsonResponse({
-            'error': 'An error occurred while initializing discount codes'
+            'success': False,
+            'error': 'An error occurred while initializing discount codes',
+            'timestamp': timezone.now().isoformat(),
+            'endpoint': request.path
         }, status=500)

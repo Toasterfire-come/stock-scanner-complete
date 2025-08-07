@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Revenue Analytics | Stock Scanner API{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-dashboard {
+        display: grid;
+        gap: 2rem;
+    }
+    
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        border: 1px solid #e2e8f0;
+        text-align: center;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        color: #4a5568;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .metric-change {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+    
+    .positive { color: #38a169; }
+    .negative { color: #e53e3e; }
+    
+    .charts-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .api-response {
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .response-data {
+        background: #1a202c;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 3rem;
+        color: #4a5568;
+    }
+    
+    .error {
+        background: #fed7d7;
+        color: #742a2a;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #feb2b2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-dashboard">
+    <div class="card">
+        <h1 style="margin-bottom: 1rem; color: #2d3748;">Revenue Analytics Dashboard</h1>
+        <p style="color: #4a5568; margin-bottom: 2rem;">
+            Real-time revenue metrics and subscription analytics for Stock Scanner API
+        </p>
+        
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <button class="btn" onclick="loadAnalytics()">Refresh Data</button>
+            <button class="btn btn-secondary" onclick="loadAnalytics('2025-07')">July 2025</button>
+            <button class="btn btn-secondary" onclick="loadAnalytics('2025-06')">June 2025</button>
+            <a href="/revenue/revenue-analytics/?format=json" class="btn btn-secondary">View JSON</a>
+        </div>
+    </div>
+    
+    <div id="analytics-content">
+        <div class="loading">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+            <p>Loading revenue analytics...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentData = null;
+
+function loadAnalytics(monthYear = null) {
+    const contentDiv = document.getElementById('analytics-content');
+    contentDiv.innerHTML = `
+        <div class="loading">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+            <p>Loading analytics data...</p>
+        </div>
+    `;
+    
+    const url = monthYear ? 
+        `/revenue/revenue-analytics/${monthYear}/` : 
+        '/revenue/revenue-analytics/';
+    
+    fetch(url, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        currentData = data;
+        if (data.success) {
+            displayAnalytics(data.data);
+        } else {
+            displayError(data.error || 'Failed to load analytics');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading analytics:', error);
+        displayError('Network error loading analytics');
+    });
+}
+
+function displayAnalytics(analytics) {
+    const contentDiv = document.getElementById('analytics-content');
+    
+    const html = `
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value">$${formatNumber(analytics.total_revenue || 0)}</div>
+                <div class="metric-label">Total Revenue</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">${formatNumber(analytics.total_subscriptions || 0)}</div>
+                <div class="metric-label">Active Subscriptions</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">${formatNumber(analytics.new_users || 0)}</div>
+                <div class="metric-label">New Users</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">${formatNumber(analytics.api_calls || 0)}</div>
+                <div class="metric-label">API Calls</div>
+            </div>
+        </div>
+        
+        <div class="api-response">
+            <div class="response-header">
+                <h3>API Response Data</h3>
+                <span style="color: #38a169; font-weight: 600;">✓ Success</span>
+            </div>
+            <div class="response-data">${JSON.stringify(currentData, null, 2)}</div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function displayError(error) {
+    const contentDiv = document.getElementById('analytics-content');
+    contentDiv.innerHTML = `
+        <div class="error">
+            <h3>Error Loading Analytics</h3>
+            <p>${error}</p>
+            <button class="btn" onclick="loadAnalytics()" style="margin-top: 1rem;">Try Again</button>
+        </div>
+    `;
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString();
+}
+
+// Load analytics on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAnalytics();
+});
+</script>
+{% endblock %}

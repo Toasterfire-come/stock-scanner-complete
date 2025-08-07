@@ -41,6 +41,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress
+    'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
