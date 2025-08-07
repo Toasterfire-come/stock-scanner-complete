@@ -54,10 +54,20 @@ if not exist "manage.py" (
     exit /b 1
 )
 
-REM Check if enhanced_stock_retrieval_working.py exists
+REM Check if restart-enabled scripts exist
 if not exist "enhanced_stock_retrieval_working.py" (
     echo [WARNING] enhanced_stock_retrieval_working.py not found
     echo [WARNING] Stock retrieval component will not work
+)
+
+if not exist "news_scraper_with_restart.py" (
+    echo [WARNING] news_scraper_with_restart.py not found
+    echo [WARNING] News scraper component will not work
+)
+
+if not exist "email_sender_with_restart.py" (
+    echo [WARNING] email_sender_with_restart.py not found
+    echo [WARNING] Email sender component will not work
 )
 
 echo [SUCCESS] Environment checks passed

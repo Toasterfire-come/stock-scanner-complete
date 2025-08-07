@@ -88,10 +88,20 @@ if [ ! -f "manage.py" ]; then
     exit 1
 fi
 
-# Check if enhanced_stock_retrieval_working.py exists
+# Check if restart-enabled scripts exist
 if [ ! -f "enhanced_stock_retrieval_working.py" ]; then
     print_warning "enhanced_stock_retrieval_working.py not found"
     print_warning "Stock retrieval component will not work"
+fi
+
+if [ ! -f "news_scraper_with_restart.py" ]; then
+    print_warning "news_scraper_with_restart.py not found"
+    print_warning "News scraper component will not work"
+fi
+
+if [ ! -f "email_sender_with_restart.py" ]; then
+    print_warning "email_sender_with_restart.py not found"
+    print_warning "Email sender component will not work"
 fi
 
 print_success "Environment checks passed"

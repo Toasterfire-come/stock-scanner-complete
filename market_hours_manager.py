@@ -54,23 +54,21 @@ class MarketHoursManager:
         self.components = {
             'stock_retrieval': {
                 'script': 'enhanced_stock_retrieval_working.py',
-                'args': [],
+                'args': ['-schedule'],
                 'active_during': ['premarket', 'market', 'postmarket'],
                 'process': None
             },
             'news_scraper': {
-                'command': ['python', 'manage.py', 'scrape_news'],
-                'args': [],
+                'script': 'news_scraper_with_restart.py',
+                'args': ['-schedule', '-interval', '5'],
                 'active_during': ['premarket', 'market', 'postmarket'],
-                'process': None,
-                'interval': 300  # Run every 5 minutes
+                'process': None
             },
             'email_sender': {
-                'command': ['python', 'manage.py', 'send_stock_emails'],
-                'args': [],
+                'script': 'email_sender_with_restart.py',
+                'args': ['-schedule', '-interval', '10'],
                 'active_during': ['premarket', 'market', 'postmarket'],
-                'process': None,
-                'interval': 600  # Run every 10 minutes
+                'process': None
             },
             'django_server': {
                 'command': ['python', 'manage.py', 'runserver', '0.0.0.0:8000'],
@@ -216,42 +214,9 @@ class MarketHoursManager:
         return True
         
     def run_scheduled_component(self, component_name):
-        """Run a scheduled component (for news scraper and email sender)"""
-        component = self.components.get(component_name)
-        if not component:
-            return
-            
-        current_phase = self.get_current_market_phase()
-        if not self.is_component_active(component_name, current_phase):
-            return
-            
-        try:
-            # Build command
-            if 'script' in component:
-                cmd = [self.python_exe, component['script']] + component['args']
-            else:
-                cmd = component['command'] + component['args']
-                
-            logger.info(f"Running scheduled {component_name}: {' '.join(cmd)}")
-            
-            # Run and wait for completion
-            result = subprocess.run(
-                cmd,
-                cwd=self.project_root,
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minute timeout
-            )
-            
-            if result.returncode == 0:
-                logger.info(f"Scheduled {component_name} completed successfully")
-            else:
-                logger.error(f"Scheduled {component_name} failed: {result.stderr}")
-                
-        except subprocess.TimeoutExpired:
-            logger.error(f"Scheduled {component_name} timed out")
-        except Exception as e:
-            logger.error(f"Failed to run scheduled {component_name}: {e}")
+        """Legacy function - no longer used since all components are now continuous processes"""
+        logger.warning(f"run_scheduled_component called for {component_name} - this is no longer used")
+        pass
             
     def manage_components(self):
         """Main component management logic"""
@@ -263,10 +228,6 @@ class MarketHoursManager:
         for component_name, component in self.components.items():
             should_be_active = self.is_component_active(component_name, current_phase)
             is_currently_running = self.check_component_health(component_name)
-            
-            # Skip scheduled components (they run on their own schedule)
-            if 'interval' in component:
-                continue
                 
             if should_be_active and not is_currently_running:
                 logger.info(f"Starting {component_name} for {current_phase} phase")
@@ -276,13 +237,7 @@ class MarketHoursManager:
                 self.stop_component(component_name)
                 
     def setup_scheduled_tasks(self):
-        """Setup scheduled tasks for periodic components"""
-        # News scraper every 5 minutes
-        schedule.every(5).minutes.do(self.run_scheduled_component, 'news_scraper')
-        
-        # Email sender every 10 minutes
-        schedule.every(10).minutes.do(self.run_scheduled_component, 'email_sender')
-        
+        """Setup scheduled tasks for component management"""
         # Component management every 1 minute
         schedule.every(1).minutes.do(self.manage_components)
         

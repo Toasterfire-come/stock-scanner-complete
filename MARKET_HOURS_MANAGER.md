@@ -26,18 +26,21 @@ The Market Hours Manager is an automated system that starts and stops all stock 
 
 ### 1. Stock Retrieval (`enhanced_stock_retrieval_working.py`)
 - **Purpose**: Fetches real-time stock data from Yahoo Finance
-- **Schedule**: Runs continuously during premarket, market, and postmarket hours
+- **Schedule**: Runs continuously with built-in 3-minute intervals during active hours
 - **Database**: Stores data in Django database
+- **Restart**: Self-managing with `-schedule` argument
 
-### 2. News Scraper (`python manage.py scrape_news`)
+### 2. News Scraper (`news_scraper_with_restart.py`)
 - **Purpose**: Scrapes Yahoo Finance news feeds
-- **Schedule**: Runs every 5 minutes during active hours
+- **Schedule**: Runs continuously with built-in 5-minute intervals during active hours
 - **Database**: Stores articles with sentiment analysis
+- **Restart**: Self-managing with `-schedule -interval 5` arguments
 
-### 3. Email Sender (`python manage.py send_stock_emails`)
+### 3. Email Sender (`email_sender_with_restart.py`)
 - **Purpose**: Sends personalized stock alerts to subscribers
-- **Schedule**: Runs every 10 minutes during active hours
-- **Features**: Rate limiting and error handling
+- **Schedule**: Runs continuously with built-in 10-minute intervals during active hours
+- **Features**: Rate limiting, error handling, and improved categorization
+- **Restart**: Self-managing with `-schedule -interval 10` arguments
 
 ### 4. Django Server (`python manage.py runserver`)
 - **Purpose**: Web interface and API server
