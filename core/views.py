@@ -5,6 +5,28 @@ from django.views.decorators.http import require_http_methods
 from django.db import connection
 import json
 import datetime
+import pytz
+
+def _get_market_status_et(now_utc: datetime.datetime | None = None):
+    """Return market open/closed status based on US/Eastern pre/post market.
+    Open window: Weekdays 04:00–20:00 ET.
+    """
+    eastern = pytz.timezone('US/Eastern')
+    now = now_utc or datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    now_et = now.astimezone(eastern)
+    hhmm = now_et.strftime('%H:%M')
+    is_weekday = now_et.weekday() < 5
+    is_open_window = is_weekday and ('04:00' <= hhmm < '20:00')
+    return {
+        'is_open': is_open_window,
+        'now_et': now_et,
+        'phase': (
+            'premarket' if '04:00' <= hhmm < '09:30' else
+            'market' if '09:30' <= hhmm < '16:00' else
+            'postmarket' if '16:00' <= hhmm < '20:00' else
+            'closed'
+        )
+    }
 
 def homepage(request):
     """
@@ -23,6 +45,15 @@ def homepage(request):
         ]
     }
     
+    # Market status flags for UI banner
+    status = _get_market_status_et()
+    context.update({
+        'market_is_closed': not status['is_open'],
+        'market_phase': status['phase'],
+        'market_now_et': status['now_et'],
+        'market_status_message': 'Market is closed. Information will not be updated until the market reopens.' if not status['is_open'] else ''
+    })
+    
     # Check if this is an API request
     if getattr(request, 'is_api_request', False):
         return JsonResponse({
@@ -31,7 +62,12 @@ def homepage(request):
                 'title': context['title'],
                 'version': context['version'],
                 'endpoints': context['endpoints'],
-                'timestamp': datetime.datetime.now().isoformat()
+                'timestamp': datetime.datetime.now().isoformat(),
+                'market': {
+                    'is_open': status['is_open'],
+                    'phase': status['phase'],
+                    'now_et': status['now_et'].isoformat(),
+                }
             }
         })
     
