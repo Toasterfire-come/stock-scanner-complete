@@ -570,6 +570,14 @@ function stock_scanner_fallback_menu() {
     echo '<ul class="primary-menu">';
     echo '<li><a href="' . home_url('/dashboard/') . '">Dashboard</a></li>';
     echo '<li><a href="' . home_url('/stock-scanner/') . '">Scanner</a></li>';
+    
+    // New feature menu items (only show if user is logged in)
+    if (is_user_logged_in()) {
+        echo '<li><a href="' . home_url('/portfolio/') . '"><span class="menu-icon">📊</span> My Portfolios</a></li>';
+        echo '<li><a href="' . home_url('/enhanced-watchlist/') . '"><span class="menu-icon">👁️</span> Enhanced Watchlist</a></li>';
+        echo '<li><a href="' . home_url('/personalized-news/') . '"><span class="menu-icon">📰</span> My News Feed</a></li>';
+    }
+    
     echo '<li><a href="' . home_url('/premium-plans/') . '">Plans</a></li>';
     echo '<li><a href="' . home_url('/contact/') . '">Contact</a></li>';
     echo '</ul>';

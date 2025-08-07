@@ -1012,4 +1012,130 @@ function stock_scanner_custom_taxonomies() {
     ));
 }
 add_action('init', 'stock_scanner_custom_taxonomies');
+
+/**
+ * Include admin settings
+ */
+if (is_admin()) {
+    require_once get_template_directory() . '/inc/admin-settings.php';
+}
+
+/**
+ * Helper function to get stock scanner settings
+ */
+function get_stock_scanner_setting($setting_group, $key, $default = null) {
+    $settings = get_option($setting_group, array());
+    return isset($settings[$key]) ? $settings[$key] : $default;
+}
+
+/**
+ * Check if a feature is enabled
+ */
+function is_stock_scanner_feature_enabled($feature) {
+    $feature_settings = get_option('stock_scanner_feature_settings', array());
+    return isset($feature_settings[$feature]) && $feature_settings[$feature];
+}
+
+/**
+ * Get user limits based on membership level
+ */
+function get_user_limits($user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    // Get user membership level (this would be determined by your membership system)
+    $membership_level = get_user_meta($user_id, 'membership_level', true) ?: 'free';
+    
+    $limit_settings = get_option('stock_scanner_limit_settings', array());
+    
+    return array(
+        'api_calls' => $limit_settings[$membership_level . '_api_calls'] ?? 15,
+        'portfolios' => $limit_settings[$membership_level . '_portfolios'] ?? 1,
+        'watchlists' => $limit_settings[$membership_level . '_watchlists'] ?? 2,
+        'holdings' => $limit_settings[$membership_level . '_holdings'] ?? 10
+    );
+}
+
+/**
+ * Get backend API URL
+ */
+function get_backend_api_url($endpoint = '') {
+    $api_settings = get_option('stock_scanner_api_settings', array());
+    $backend_url = $api_settings['backend_url'] ?? '';
+    
+    if (empty($backend_url)) {
+        return false;
+    }
+    
+    return rtrim($backend_url, '/') . '/api/' . ltrim($endpoint, '/');
+}
+
+/**
+ * Make authenticated API request to Django backend
+ */
+function make_backend_api_request($endpoint, $data = array(), $method = 'GET') {
+    $api_settings = get_option('stock_scanner_api_settings', array());
+    $api_url = get_backend_api_url($endpoint);
+    $api_key = $api_settings['api_key'] ?? '';
+    $timeout = $api_settings['timeout'] ?? 30;
+    
+    if (!$api_url) {
+        return new WP_Error('no_backend_url', 'Backend URL not configured');
+    }
+    
+    $args = array(
+        'method' => $method,
+        'timeout' => $timeout,
+        'headers' => array(
+            'Content-Type' => 'application/json',
+        )
+    );
+    
+    if (!empty($api_key)) {
+        $args['headers']['Authorization'] = 'Bearer ' . $api_key;
+    }
+    
+    if ($method === 'POST' || $method === 'PUT') {
+        $args['body'] = json_encode($data);
+    } elseif ($method === 'GET' && !empty($data)) {
+        $api_url .= '?' . http_build_query($data);
+    }
+    
+    $response = wp_remote_request($api_url, $args);
+    
+    if (is_wp_error($response)) {
+        return $response;
+    }
+    
+    $status_code = wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+    
+    if ($status_code >= 400) {
+        return new WP_Error('api_error', "API request failed with status $status_code: $body");
+    }
+    
+    return json_decode($body, true);
+}
+
+/**
+ * Check if maintenance mode is enabled
+ */
+function is_maintenance_mode_enabled() {
+    $advanced_settings = get_option('stock_scanner_advanced_settings', array());
+    return isset($advanced_settings['maintenance_mode']) && $advanced_settings['maintenance_mode'];
+}
+
+/**
+ * Redirect to maintenance page if maintenance mode is enabled
+ */
+function check_maintenance_mode() {
+    if (is_maintenance_mode_enabled() && !current_user_can('administrator') && !is_admin()) {
+        $advanced_settings = get_option('stock_scanner_advanced_settings', array());
+        $message = $advanced_settings['maintenance_message'] ?? 'We are currently performing scheduled maintenance. Please check back soon.';
+        
+        wp_die($message, 'Maintenance Mode', array('response' => 503));
+    }
+}
+add_action('wp', 'check_maintenance_mode');
 ?>

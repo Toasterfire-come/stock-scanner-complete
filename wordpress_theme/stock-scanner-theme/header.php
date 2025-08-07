@@ -86,6 +86,20 @@
                                     <span class="item-icon">📊</span>
                                     Dashboard
                                 </a>
+                                <hr class="menu-divider">
+                                <a href="/portfolio/" class="user-menu-item">
+                                    <span class="item-icon">📈</span>
+                                    My Portfolios
+                                </a>
+                                <a href="/enhanced-watchlist/" class="user-menu-item">
+                                    <span class="item-icon">👁️</span>
+                                    Enhanced Watchlist
+                                </a>
+                                <a href="/personalized-news/" class="user-menu-item">
+                                    <span class="item-icon">📰</span>
+                                    My News Feed
+                                </a>
+                                <hr class="menu-divider">
                                 <a href="/account/" class="user-menu-item">
                                     <span class="item-icon">⚙️</span>
                                     Account Settings
@@ -425,6 +439,22 @@
 
 .item-icon {
     font-size: 0.9rem;
+}
+
+/* Menu icons */
+.menu-icon {
+    font-size: 0.9rem;
+    margin-right: 6px;
+}
+
+/* Enhanced navigation styling for new features */
+.primary-menu li a .menu-icon {
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.primary-menu li a:hover .menu-icon {
+    opacity: 1;
 }
 
 /* Auth Buttons */
