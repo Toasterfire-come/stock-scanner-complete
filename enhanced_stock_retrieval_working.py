@@ -26,6 +26,8 @@ from decimal import Decimal
 from collections import defaultdict
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+import subprocess
+import pytz
 
 # Django imports for database integration
 import django
@@ -48,6 +50,11 @@ logger = logging.getLogger(__name__)
 
 # Global flag for graceful shutdown
 shutdown_flag = False
+
+# Market window configuration (US/Eastern)
+EASTERN_TZ = pytz.timezone('US/Eastern')
+PREMARKET_START = "04:00"  # 4:00 AM ET
+POSTMARKET_END = "20:00"   # 8:00 PM ET
 
 # Global proxy health tracking
 proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "blocked": False})
@@ -661,6 +668,85 @@ def run_stock_update(args):
     print(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
+def _build_subprocess_args(args) -> list[str]:
+    """Build argument list to spawn a one-off cycle in a separate process."""
+    cmd = [sys.executable, os.path.abspath(__file__)]
+    if args.noproxy:
+        cmd.append('-noproxy')
+    if args.test:
+        cmd.append('-test')
+    cmd += ['-threads', str(args.threads)]
+    cmd += ['-timeout', str(args.timeout)]
+    if args.csv:
+        cmd += ['-csv', args.csv]
+    if args.output:
+        cmd += ['-output', args.output]
+    if args.max_symbols:
+        cmd += ['-max-symbols', str(args.max_symbols)]
+    if args.proxy_file:
+        cmd += ['-proxy-file', args.proxy_file]
+    if args.save_to_db:
+        cmd.append('-save-to-db')
+    # Do NOT include '-schedule' here; child should run a single cycle and exit
+    return cmd
+
+# New helpers to launch companion tasks
+
+def _build_news_subprocess_args() -> list[str]:
+    """Build argument list for a single-run news scraping cycle."""
+    news_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'news_scraper_with_restart.py'))
+    cmd = [sys.executable, news_script]
+    # Single run: do not pass -schedule
+    # Keep defaults for limit/interval; can be extended later via env or args
+    return cmd
+
+def _build_email_subprocess_args() -> list[str]:
+    """Build argument list for a single-run email sender cycle."""
+    email_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'email_sender_with_restart.py'))
+    cmd = [sys.executable, email_script]
+    # Single run: do not pass -schedule
+    # Keep defaults; can be extended later via env or args
+    return cmd
+
+def start_cycle_in_subprocess(args):
+    """Start a single stock update cycle in a separate process, returning immediately.
+    This allows a new cycle to begin every 3 minutes regardless of the prior run time.
+    """
+    try:
+        cmd = _build_subprocess_args(args)
+        print(f"Spawning new stock cycle subprocess: {' '.join(cmd)}")
+        subprocess.Popen(cmd)
+    except Exception as e:
+        logger.error(f"Failed to start subprocess cycle: {e}")
+
+# New: launch all three cycles (stocks, news, email)
+
+def start_all_cycles_in_subprocess(args):
+    """Spawn stock, news scraper, and email sender cycles as separate subprocesses."""
+    # Only run within market window (weekdays 04:00–20:00 ET)
+    now_et = datetime.now(EASTERN_TZ)
+    current_hhmm = now_et.strftime("%H:%M")
+    if now_et.weekday() >= 5 or not (PREMARKET_START <= current_hhmm < POSTMARKET_END):
+        print(f"Skipping cycle spawn (outside market window) at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        return
+    
+    # Stocks
+    start_cycle_in_subprocess(args)
+    # News scraper
+    try:
+        news_cmd = _build_news_subprocess_args()
+        print(f"Spawning news scraper subprocess: {' '.join(news_cmd)}")
+        subprocess.Popen(news_cmd)
+    except Exception as e:
+        logger.error(f"Failed to start news scraper subprocess: {e}")
+    # Email sender
+    try:
+        email_cmd = _build_email_subprocess_args()
+        print(f"Spawning email sender subprocess: {' '.join(email_cmd)}")
+        subprocess.Popen(email_cmd)
+    except Exception as e:
+        logger.error(f"Failed to start email sender subprocess: {e}")
+
 def main():
     """Main function"""
     global shutdown_flag
@@ -682,22 +768,32 @@ def main():
     print("=" * 60)
     
     if args.schedule:
-        print(f"\nSCHEDULER MODE: Running every 3 minutes")
+        print(f"\nSCHEDULER MODE: Spawning stock, news, and email cycles every 3 minutes (overlap allowed)")
         print(f"Press Ctrl+C to stop the scheduler")
         print("=" * 60)
         
-        # Schedule the job to run every 3 minutes
-        schedule.every(3).minutes.do(run_stock_update, args)
+        # Immediate run of all three
+        start_all_cycles_in_subprocess(args)
+        # Schedule subsequent runs every 3 minutes
+        schedule.every(3).minutes.do(start_all_cycles_in_subprocess, args)
         
         try:
             while True:
                 schedule.run_pending()
+                
+                # Stop scheduler after postmarket end on weekdays
+                now_et = datetime.now(EASTERN_TZ)
+                current_hhmm = now_et.strftime("%H:%M")
+                if now_et.weekday() < 5 and current_hhmm >= POSTMARKET_END:
+                    print(f"Postmarket ended at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}. Stopping scheduler.")
+                    break
+                
                 time.sleep(1)
         except KeyboardInterrupt:
             print("\nScheduler stopped by user")
             shutdown_flag = True
     else:
-        # Run single update
+        # Run single update in the current process
         run_stock_update(args)
     
     print("\nScript completed!")

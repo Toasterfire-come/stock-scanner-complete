@@ -7,6 +7,34 @@
     <meta name="description" content="{% block description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}">
     
     {% load static %}
+    {% if request %}
+    <link rel="canonical" href="{{ request.build_absolute_uri|escape }}" />
+    {% endif %}
+    
+    {% block seo_meta %}
+    <meta property="og:title" content="{% block og_title %}Stock Scanner API{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}" />
+    {% if request %}<meta property="og:url" content="{{ request.build_absolute_uri|escape }}" />{% endif %}
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="{% static 'images/og-default.jpg' %}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{% block twitter_title %}Stock Scanner API{% endblock %}" />
+    <meta name="twitter:description" content="{% block twitter_description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}" />
+    <meta name="twitter:image" content="{% static 'images/og-default.jpg' %}" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Stock Scanner API",
+      "url": "{{ request.build_absolute_uri|default:'' }}",
+      "logo": "{% static 'images/logo.png' %}",
+      "sameAs": [
+        "https://x.com/",
+        "https://www.linkedin.com/"
+      ]
+    }
+    </script>
+    {% endblock %}
     
     <style>
         * {
