@@ -23,6 +23,8 @@ if IS_XAMPP_AVAILABLE:
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
+# API key for WordPress/backend-to-backend auth
+WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -130,7 +132,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

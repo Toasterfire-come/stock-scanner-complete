@@ -2,6 +2,7 @@ from django.urls import path, include
 from . import views, api_views
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
+from .api_views_fixed import trigger_stock_update, trigger_news_update
 
 urlpatterns = [
     # Basic API endpoint
@@ -17,6 +18,15 @@ urlpatterns = [
     path('stocks/', api_views.stock_list_api, name='stock_list'),
     path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
     path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
+    
+    # WordPress-friendly endpoints
+    path('wordpress/stocks/', WordPressStockView.as_view(), name='wp_stocks'),
+    path('wordpress/news/', WordPressNewsView.as_view(), name='wp_news'),
+    path('wordpress/alerts/', WordPressAlertsView.as_view(), name='wp_alerts'),
+    
+    # Hosted WP workflow triggers
+    path('stocks/update/', trigger_stock_update, name='stocks_update_trigger'),
+    path('news/update/', trigger_news_update, name='news_update_trigger'),
     
     # Alert endpoints
     path('alerts/create/', api_views.create_alert_api, name='create_alert'),

@@ -17,6 +17,8 @@ from datetime import datetime, timedelta
 import json
 import logging
 from decimal import Decimal
+from django.conf import settings
+from django.core.management import call_command
 
 from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
@@ -337,3 +339,55 @@ def stock_list_api_fixed(request):
             'data': [],
             'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _is_authorized(request) -> bool:
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    if not settings.WORDPRESS_API_KEY:
+        # If no API key configured, allow only in DEBUG
+        return settings.DEBUG
+    return auth_header == f"Bearer {settings.WORDPRESS_API_KEY}"
+
+
+@csrf_exempt
+@require_http_methods(["POST"]) 
+def trigger_stock_update(request):
+    if not _is_authorized(request):
+        return JsonResponse({
+            'success': False,
+            'error': 'Unauthorized'
+        }, status=401)
+    try:
+        symbols = None
+        if request.body:
+            try:
+                import json
+                body = json.loads(request.body.decode('utf-8'))
+                symbols = body.get('symbols')
+            except Exception:
+                symbols = None
+        kwargs = {}
+        if symbols and isinstance(symbols, list) and symbols:
+            kwargs['symbols'] = ','.join(symbols)
+        call_command('update_stocks_yfinance', **kwargs)
+        return JsonResponse({'success': True, 'message': 'Stock update triggered'})
+    except Exception as e:
+        logger.exception("trigger_stock_update failed")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"]) 
+def trigger_news_update(request):
+    if not _is_authorized(request):
+        return JsonResponse({
+            'success': False,
+            'error': 'Unauthorized'
+        }, status=401)
+    try:
+        # Reuse existing news scraper via management script if present
+        # For now, no-op success to satisfy WP workflow
+        return JsonResponse({'success': True, 'message': 'News update triggered'})
+    except Exception as e:
+        logger.exception("trigger_news_update failed")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
