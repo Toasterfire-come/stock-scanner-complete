@@ -43,11 +43,27 @@ def wordpress_stocks_api(request):
         search = request.GET.get('search', '')
         category = request.GET.get('category', '')  # gainers, losers, active
 
-        # Base queryset - get stocks with recent data
-        stocks_queryset = Stock.objects.filter(
+        # Base queryset - FIXED to be more inclusive
+        # Start with all stocks, then progressively filter
+        stocks_queryset = Stock.objects.all()
+        
+        # Try to prioritize stocks with price data, but don't exclude all others
+        preferred_stocks = stocks_queryset.filter(
             current_price__isnull=False,
             current_price__gt=0
         )
+        
+        # If we have enough stocks with good data, use them
+        # Otherwise, include stocks with ANY useful data
+        if preferred_stocks.count() >= limit:
+            stocks_queryset = preferred_stocks
+        else:
+            # More inclusive - get stocks with ANY data
+            stocks_queryset = stocks_queryset.filter(
+                Q(current_price__isnull=False) |
+                Q(volume__isnull=False) |
+                Q(market_cap__isnull=False)
+            )
 
         # Apply search filter
         if search:
@@ -97,12 +113,12 @@ def wordpress_stocks_api(request):
                 'ticker': stock.ticker,
                 'symbol': stock.symbol or stock.ticker,
                 'company_name': stock.company_name or stock.name or stock.ticker,
-                'exchange': stock.exchange,
+                'exchange': stock.exchange or 'N/A',
                 
-                # Price data
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change_today': format_decimal_safe(stock.price_change_today),
-                'change_percent': format_decimal_safe(stock.change_percent),
+                # Price data (with better fallbacks)
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
                 
                 # Volume and market data
                 'volume': int(stock.volume) if stock.volume else 0,
@@ -111,12 +127,12 @@ def wordpress_stocks_api(request):
                 'market_cap_formatted': market_cap_formatted,
                 
                 # Financial ratios
-                'pe_ratio': format_decimal_safe(stock.pe_ratio),
-                'dividend_yield': format_decimal_safe(stock.dividend_yield),
+                'pe_ratio': format_decimal_safe(stock.pe_ratio) or 0.0,
+                'dividend_yield': format_decimal_safe(stock.dividend_yield) or 0.0,
                 
                 # 52-week range
-                'week_52_high': format_decimal_safe(stock.week_52_high),
-                'week_52_low': format_decimal_safe(stock.week_52_low),
+                'week_52_high': format_decimal_safe(stock.week_52_high) or 0.0,
+                'week_52_low': format_decimal_safe(stock.week_52_low) or 0.0,
                 
                 # Timestamps
                 'last_updated': stock.last_updated.isoformat() if stock.last_updated else None,
@@ -187,11 +203,26 @@ class WordPressStockView(View):
             ticker_filter = request.GET.get('ticker', '')
             featured_only = request.GET.get('featured', 'false').lower() == 'true'
             
-            # Build queryset
-            queryset = Stock.objects.filter(
+            # Build queryset - FIXED to be more inclusive
+            queryset = Stock.objects.all()
+            
+            # Try to prioritize stocks with price data, but don't exclude all others
+            preferred_stocks = queryset.filter(
                 current_price__isnull=False,
                 current_price__gt=0
             )
+            
+            # If we have enough stocks with good data, use them
+            # Otherwise, include stocks with ANY useful data
+            if preferred_stocks.count() >= limit:
+                queryset = preferred_stocks
+            else:
+                # More inclusive - get stocks with ANY data
+                queryset = queryset.filter(
+                    Q(current_price__isnull=False) |
+                    Q(volume__isnull=False) |
+                    Q(market_cap__isnull=False)
+                )
             
             # Filter by ticker if specified
             if ticker_filter:
