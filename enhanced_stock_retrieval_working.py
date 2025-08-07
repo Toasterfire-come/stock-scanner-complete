@@ -305,8 +305,18 @@ def process_symbol(symbol, ticker_number, proxies, timeout=10, test_mode=False, 
         has_info = info and isinstance(info, dict) and len(info) > 3
         has_price = current_price is not None and not pd.isna(current_price)
         
+        # Check for delisted or invalid stocks
+        if info and info.get('quoteType') == 'NONE':
+            logger.warning(f"{symbol}: possibly delisted; no price data found")
+            return None
+            
         if not has_data and not has_info:
             logger.warning(f"{symbol}: No data available")
+            return None
+            
+        # Skip stocks with no current price data and no recent volume
+        if not has_price and info and info.get('volume', 0) == 0:
+            logger.warning(f"{symbol}: No current trading activity")
             return None
         
                 # Extract comprehensive data with better PE ratio and dividend yield handling
@@ -343,7 +353,7 @@ def process_symbol(symbol, ticker_number, proxies, timeout=10, test_mode=False, 
             'earnings_per_share': _safe_decimal(info.get('trailingEps')) if info else None,
             'book_value': _safe_decimal(info.get('bookValue')) if info else None,
             'price_to_book': _safe_decimal(info.get('priceToBook')) if info else None,
-            'exchange': info.get('exchange') if info else None,
+            'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
             'last_updated': timezone.now(),
             'created_at': timezone.now()
         }
