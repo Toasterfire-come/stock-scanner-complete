@@ -8,10 +8,11 @@
 require_once('wp-config.php');
 
 // Set the backend URL - CHANGE THIS TO YOUR ACTUAL URL
-$backend_url = 'http://localhost:8000';  // Change this to your Django server URL
+$backend_url = 'https://api.retailtradescanner.com';  // Your Django server URL
 
-// If using Cloudflare tunnel, use something like:
-// $backend_url = 'https://your-tunnel-url.trycloudflare.com';
+// Alternative URLs for reference:
+// $backend_url = 'http://localhost:8000';  // Local development
+// $backend_url = 'https://your-tunnel-url.trycloudflare.com';  // Cloudflare tunnel
 
 // Connect to WordPress database
 global $wpdb;
