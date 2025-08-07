@@ -4,17 +4,25 @@ from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlert
 from .simple_api import SimpleStockView, SimpleNewsView
 
 urlpatterns = [
-    # Stock data endpoints
-    path('api/stock/<str:symbol>/', views.get_stock_data, name='get_stock_data'),
-    path('api/stock/<str:symbol>/price/', views.get_stock_price, name='get_stock_price'),
-    path('api/search/', views.search_stocks, name='search_stocks'),
-    path('api/trending/', views.get_trending_stocks, name='get_trending_stocks'),
-    path('api/market-data/', views.get_market_data, name='get_market_data'),
+    # Basic API endpoint
+    path('', views.index, name='index'),
     
-    # User management endpoints
-    path('api/user/profile/', views.get_user_profile, name='get_user_profile'),
-    path('api/user/profile/update/', views.update_user_profile, name='update_user_profile'),
-    path('api/user/membership/', views.get_user_membership, name='get_user_membership'),
+    # Stock data endpoints - using available api_views functions
+    path('api/stock/<str:ticker>/', api_views.stock_detail_api, name='stock_detail'),
+    path('api/realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
+    path('api/search/', api_views.stock_search_api, name='stock_search'),
+    path('api/trending/', api_views.trending_stocks_api, name='trending_stocks'),
+    path('api/market-stats/', api_views.market_stats_api, name='market_stats'),
+    path('api/nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks'),
+    path('api/stocks/', api_views.stock_list_api, name='stock_list'),
+    path('api/filter/', api_views.filter_stocks_api, name='filter_stocks'),
+    path('api/statistics/', api_views.stock_statistics_api, name='stock_statistics'),
+    
+    # Alert endpoints
+    path('api/alerts/create/', api_views.create_alert_api, name='create_alert'),
+    
+    # Subscription endpoint
+    path('api/subscription/', api_views.wordpress_subscription_api, name='wordpress_subscription'),
     
     # Portfolio endpoints
     path('portfolio/', include('stocks.portfolio_urls')),
@@ -27,10 +35,4 @@ urlpatterns = [
     
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
-    
-    # Alert endpoints
-    path('api/alerts/', views.get_user_alerts, name='get_user_alerts'),
-    path('api/alerts/create/', views.create_alert, name='create_alert'),
-    path('api/alerts/<int:alert_id>/update/', views.update_alert, name='update_alert'),
-    path('api/alerts/<int:alert_id>/delete/', views.delete_alert, name='delete_alert'),
 ]
