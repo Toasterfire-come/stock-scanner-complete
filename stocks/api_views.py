@@ -930,12 +930,35 @@ def trending_stocks_api(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def create_alert_api(request):
     """
     Create a new stock price alert
+    GET: Returns endpoint information
+    POST: Creates a new alert
     """
+    if request.method == 'GET':
+        return Response({
+            'endpoint': '/api/alerts/create/',
+            'method': 'POST',
+            'description': 'Create a new stock price alert',
+            'required_fields': {
+                'ticker': 'Stock symbol (e.g., AAPL)',
+                'target_price': 'Alert trigger price (number)',
+                'alert_type': 'Type of alert ("above" or "below")',
+                'email': 'Email address for notifications (optional)'
+            },
+            'example_request': {
+                'ticker': 'AAPL',
+                'target_price': 200.00,
+                'alert_type': 'above',
+                'email': 'user@example.com'
+            },
+            'usage': 'Send POST request with JSON data to create an alert'
+        }, status=status.HTTP_200_OK)
+    
+    # Handle POST request
     try:
         data = json.loads(request.body)
         
