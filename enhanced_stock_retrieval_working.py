@@ -27,6 +27,7 @@ from collections import defaultdict
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 import subprocess
+import pytz
 
 # Django imports for database integration
 import django
@@ -49,6 +50,11 @@ logger = logging.getLogger(__name__)
 
 # Global flag for graceful shutdown
 shutdown_flag = False
+
+# Market window configuration (US/Eastern)
+EASTERN_TZ = pytz.timezone('US/Eastern')
+PREMARKET_START = "04:00"  # 4:00 AM ET
+POSTMARKET_END = "20:00"   # 8:00 PM ET
 
 # Global proxy health tracking
 proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "blocked": False})
@@ -717,6 +723,13 @@ def start_cycle_in_subprocess(args):
 
 def start_all_cycles_in_subprocess(args):
     """Spawn stock, news scraper, and email sender cycles as separate subprocesses."""
+    # Only run within market window (weekdays 04:00–20:00 ET)
+    now_et = datetime.now(EASTERN_TZ)
+    current_hhmm = now_et.strftime("%H:%M")
+    if now_et.weekday() >= 5 or not (PREMARKET_START <= current_hhmm < POSTMARKET_END):
+        print(f"Skipping cycle spawn (outside market window) at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        return
+    
     # Stocks
     start_cycle_in_subprocess(args)
     # News scraper
@@ -767,6 +780,14 @@ def main():
         try:
             while True:
                 schedule.run_pending()
+                
+                # Stop scheduler after postmarket end on weekdays
+                now_et = datetime.now(EASTERN_TZ)
+                current_hhmm = now_et.strftime("%H:%M")
+                if now_et.weekday() < 5 and current_hhmm >= POSTMARKET_END:
+                    print(f"Postmarket ended at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}. Stopping scheduler.")
+                    break
+                
                 time.sleep(1)
         except KeyboardInterrupt:
             print("\nScheduler stopped by user")
