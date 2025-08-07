@@ -684,16 +684,55 @@ def _build_subprocess_args(args) -> list[str]:
     # Do NOT include '-schedule' here; child should run a single cycle and exit
     return cmd
 
+# New helpers to launch companion tasks
+
+def _build_news_subprocess_args() -> list[str]:
+    """Build argument list for a single-run news scraping cycle."""
+    news_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'news_scraper_with_restart.py'))
+    cmd = [sys.executable, news_script]
+    # Single run: do not pass -schedule
+    # Keep defaults for limit/interval; can be extended later via env or args
+    return cmd
+
+def _build_email_subprocess_args() -> list[str]:
+    """Build argument list for a single-run email sender cycle."""
+    email_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'email_sender_with_restart.py'))
+    cmd = [sys.executable, email_script]
+    # Single run: do not pass -schedule
+    # Keep defaults; can be extended later via env or args
+    return cmd
+
 def start_cycle_in_subprocess(args):
     """Start a single stock update cycle in a separate process, returning immediately.
     This allows a new cycle to begin every 3 minutes regardless of the prior run time.
     """
     try:
         cmd = _build_subprocess_args(args)
-        print(f"Spawning new cycle subprocess: {' '.join(cmd)}")
+        print(f"Spawning new stock cycle subprocess: {' '.join(cmd)}")
         subprocess.Popen(cmd)
     except Exception as e:
         logger.error(f"Failed to start subprocess cycle: {e}")
+
+# New: launch all three cycles (stocks, news, email)
+
+def start_all_cycles_in_subprocess(args):
+    """Spawn stock, news scraper, and email sender cycles as separate subprocesses."""
+    # Stocks
+    start_cycle_in_subprocess(args)
+    # News scraper
+    try:
+        news_cmd = _build_news_subprocess_args()
+        print(f"Spawning news scraper subprocess: {' '.join(news_cmd)}")
+        subprocess.Popen(news_cmd)
+    except Exception as e:
+        logger.error(f"Failed to start news scraper subprocess: {e}")
+    # Email sender
+    try:
+        email_cmd = _build_email_subprocess_args()
+        print(f"Spawning email sender subprocess: {' '.join(email_cmd)}")
+        subprocess.Popen(email_cmd)
+    except Exception as e:
+        logger.error(f"Failed to start email sender subprocess: {e}")
 
 def main():
     """Main function"""
@@ -716,13 +755,14 @@ def main():
     print("=" * 60)
     
     if args.schedule:
-        print(f"\nSCHEDULER MODE: Spawning a new cycle every 3 minutes (overlap allowed)")
+        print(f"\nSCHEDULER MODE: Spawning stock, news, and email cycles every 3 minutes (overlap allowed)")
         print(f"Press Ctrl+C to stop the scheduler")
         print("=" * 60)
         
-        # Kick off an immediate run in a subprocess, then schedule subsequent runs
-        start_cycle_in_subprocess(args)
-        schedule.every(3).minutes.do(start_cycle_in_subprocess, args)
+        # Immediate run of all three
+        start_all_cycles_in_subprocess(args)
+        # Schedule subsequent runs every 3 minutes
+        schedule.every(3).minutes.do(start_all_cycles_in_subprocess, args)
         
         try:
             while True:
