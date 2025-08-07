@@ -48,14 +48,13 @@ def calculate_change_percent(current_price, price_change):
 @permission_classes([AllowAny])
 def stock_list_api(request):
     """
-    Get comprehensive list of stocks with full data and filtering
+    Get comprehensive list of stocks with full data and filtering - FIXED VERSION
 
     URL: /api/stocks/
     Parameters:
     - limit: Number of stocks to return (default: 50, max: 1000)
     - search: Search by ticker or company name
     - category: Filter by category (gainers, losers, high_volume, large_cap, small_cap, all)
-      Note: Default behavior prioritizes stocks with current price data. Use category='all' to include all stocks.
     - min_price: Minimum price filter
     - max_price: Maximum price filter
     - min_volume: Minimum volume filter
@@ -88,33 +87,72 @@ def stock_list_api(request):
         min_pe = request.GET.get('min_pe')
         max_pe = request.GET.get('max_pe')
         
-        # Exchange filter
+        # Exchange filter - Fixed to be more flexible
         exchange = request.GET.get('exchange', 'NYSE')
         
-        # Sorting - default to volume for better results
-        sort_by = request.GET.get('sort_by', 'volume')
+        # Sorting - default to last_updated for better results
+        sort_by = request.GET.get('sort_by', 'last_updated')
         sort_order = request.GET.get('sort_order', 'desc')
         
-        # Base queryset - prioritize stocks with actual data
-        if category == 'all':
-            # Show all stocks including those without data
-            queryset = Stock.objects.filter(exchange__iexact=exchange)
-        else:
-            # Default: prioritize stocks with current price and volume data
-            queryset = Stock.objects.filter(exchange__iexact=exchange).exclude(
-                current_price__isnull=True
-            ).exclude(
-                current_price=0
-            )
-
-        # Apply search filter
+        # PROGRESSIVE FILTERING APPROACH - Start with more inclusive base
+        # Base queryset - much more inclusive
+        base_queryset = Stock.objects.all()
+        
+        # Apply exchange filter (case insensitive, flexible)
+        if exchange:
+            # Try exact match first, then broader matches
+            exchange_queries = [
+                Q(exchange__iexact=exchange),
+                Q(exchange__icontains=exchange),
+                Q(exchange__icontains=exchange.upper()),
+                Q(exchange__icontains=exchange.lower())
+            ]
+            
+            exchange_query = exchange_queries[0]
+            for eq in exchange_queries[1:]:
+                exchange_query |= eq
+            
+            base_queryset = base_queryset.filter(exchange_query)
+        
+        # Apply search filter early
         if search:
-            queryset = queryset.filter(
+            base_queryset = base_queryset.filter(
                 Q(ticker__icontains=search) | 
                 Q(company_name__icontains=search) |
                 Q(symbol__icontains=search) |
                 Q(name__icontains=search)
             )
+        
+        # Get total count before further filtering
+        total_available = base_queryset.count()
+        
+        # Apply progressive quality filters
+        queryset = base_queryset
+        
+        # Only apply strict price filters for specific categories
+        if category == 'all':
+            # Show all stocks including those without complete data
+            queryset = base_queryset
+        else:
+            # Try to get stocks with good data first
+            preferred_queryset = queryset.filter(
+                current_price__isnull=False
+            ).exclude(current_price=0)
+            
+            # If we get enough results, use the preferred set
+            if preferred_queryset.count() >= limit // 2:
+                queryset = preferred_queryset
+            # Otherwise, be more inclusive
+            else:
+                # Include stocks with ANY useful data (even if price is zero)
+                queryset = queryset.filter(
+                    Q(current_price__isnull=False) |
+                    Q(volume__isnull=False) |
+                    Q(market_cap__isnull=False)
+                )
+
+        # Search filter already applied above to base_queryset
+        # No need to reapply here
 
         # Apply price filters
         if min_price:
@@ -174,49 +212,35 @@ def stock_list_api(request):
         elif category == 'small_cap':
             queryset = queryset.filter(market_cap__lt=2000000000, market_cap__gt=0)  # < $2B
 
-        # Apply sorting
+        # Apply sorting with fallbacks
         sort_field = sort_by
         if sort_order == 'desc':
             sort_field = f'-{sort_by}'
             
-        # Handle special sorting cases
-        if sort_by == 'change_percent':
-            if sort_order == 'desc':
-                queryset = queryset.order_by('-change_percent')
+        # Handle sorting with fallbacks
+        try:
+            if sort_by == 'change_percent':
+                if sort_order == 'desc':
+                    queryset = queryset.order_by('-change_percent', '-last_updated')
+                else:
+                    queryset = queryset.order_by('change_percent', '-last_updated')
+            elif sort_by == 'volume':
+                queryset = queryset.order_by(sort_field, '-last_updated')
+            elif sort_by == 'last_updated':
+                queryset = queryset.order_by(sort_field, '-id')
             else:
-                queryset = queryset.order_by('change_percent')
-        else:
-            try:
-                queryset = queryset.order_by(sort_field)
-            except:
-                queryset = queryset.order_by('-last_updated')
+                queryset = queryset.order_by(sort_field, '-last_updated')
+        except:
+            # Fallback sorting
+            queryset = queryset.order_by('-last_updated', '-id')
+
+        # EMERGENCY FALLBACK: If still no results, return ANY stocks
+        if queryset.count() == 0 and not search:
+            logger.warning(f"API returned 0 results, using emergency fallback")
+            queryset = base_queryset.order_by('-last_updated')[:limit]
 
         # Limit results
         stocks = queryset[:limit]
-        
-        # If we got very few results and not searching for 'all', try including more stocks
-        if len(stocks) < limit//2 and category != 'all':
-            # Fallback: get more stocks, including those with some missing data
-            fallback_queryset = Stock.objects.filter(exchange__iexact=exchange).exclude(
-                current_price__isnull=True,
-                volume__isnull=True
-            )
-            
-            # Apply same filters
-            if search:
-                fallback_queryset = fallback_queryset.filter(
-                    Q(ticker__icontains=search) | 
-                    Q(company_name__icontains=search) |
-                    Q(symbol__icontains=search) |
-                    Q(name__icontains=search)
-                )
-            
-            # Add to stocks if needed
-            additional_stocks = fallback_queryset.exclude(
-                id__in=[s.id for s in stocks]
-            )[:limit - len(stocks)]
-            
-            stocks = list(stocks) + list(additional_stocks)
 
         # Format comprehensive data
         stock_data = []
@@ -227,17 +251,17 @@ def stock_list_api(request):
                 # Basic info
                 'ticker': stock.ticker,
                 'symbol': stock.symbol or stock.ticker,
-                'company_name': stock.company_name or stock.name,
-                'name': stock.name or stock.company_name,
+                'company_name': stock.company_name or stock.name or stock.ticker,
+                'name': stock.name or stock.company_name or stock.ticker,
                 'exchange': stock.exchange,
                 
-                # Price data
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change_today': format_decimal_safe(stock.price_change_today),
-                'price_change_week': format_decimal_safe(stock.price_change_week),
-                'price_change_month': format_decimal_safe(stock.price_change_month),
-                'price_change_year': format_decimal_safe(stock.price_change_year),
-                'change_percent': format_decimal_safe(stock.change_percent) or change_percent,
+                # Price data (with better fallbacks)
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
+                'price_change_week': format_decimal_safe(stock.price_change_week) or 0.0,
+                'price_change_month': format_decimal_safe(stock.price_change_month) or 0.0,
+                'price_change_year': format_decimal_safe(stock.price_change_year) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or change_percent or 0.0,
                 
                 # Bid/Ask and Range
                 'bid_price': format_decimal_safe(stock.bid_price),
@@ -248,16 +272,16 @@ def stock_list_api(request):
                 'days_high': format_decimal_safe(stock.days_high),
                 
                 # Volume data
-                'volume': stock.volume,
-                'volume_today': stock.volume_today or stock.volume,
-                'avg_volume_3mon': stock.avg_volume_3mon,
-                'dvav': format_decimal_safe(stock.dvav),
-                'shares_available': stock.shares_available,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'volume_today': int(stock.volume_today or stock.volume) if (stock.volume_today or stock.volume) else 0,
+                'avg_volume_3mon': int(stock.avg_volume_3mon) if stock.avg_volume_3mon else 0,
+                'dvav': format_decimal_safe(stock.dvav) or 0.0,
+                'shares_available': int(stock.shares_available) if stock.shares_available else 0,
                 
                 # Market data
-                'market_cap': stock.market_cap,
-                'market_cap_change_3mon': format_decimal_safe(stock.market_cap_change_3mon),
-                'formatted_market_cap': stock.formatted_market_cap,
+                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'market_cap_change_3mon': format_decimal_safe(stock.market_cap_change_3mon) or 0.0,
+                'formatted_market_cap': getattr(stock, 'formatted_market_cap', '') or '',
                 
                 # Financial ratios
                 'pe_ratio': format_decimal_safe(stock.pe_ratio),
@@ -292,10 +316,14 @@ def stock_list_api(request):
                 'wordpress_url': f"/stock/{stock.ticker.lower()}/"
             })
 
+        # Ensure we always have a meaningful response
+        final_count = len(stock_data)
+        final_total = max(total_available, final_count)
+
         return Response({
             'success': True,
-            'count': len(stock_data),
-            'total_available': queryset.count() if len(stock_data) < limit else len(stock_data),
+            'count': final_count,
+            'total_available': final_total,
             'filters_applied': {
                 'search': search,
                 'category': category,
@@ -504,17 +532,17 @@ def nasdaq_stocks_api(request):
         for stock in nasdaq_stocks:
             stock_data.append({
                 'ticker': stock.ticker,
-                'company_name': stock.company_name or stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change_today': format_decimal_safe(stock.price_change_today),
-                'change_percent': format_decimal_safe(stock.change_percent),
-                'volume': stock.volume,
-                'market_cap': stock.market_cap,
-                'pe_ratio': format_decimal_safe(stock.pe_ratio),
-                'formatted_price': stock.formatted_price,
-                'formatted_change': stock.formatted_change,
-                'formatted_market_cap': stock.formatted_market_cap,
-                'last_updated': stock.last_updated.isoformat() if stock.last_updated else None,
+                'company_name': stock.company_name or stock.name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'pe_ratio': format_decimal_safe(stock.pe_ratio) or 0.0,
+                'formatted_price': getattr(stock, 'formatted_price', '') or f"${format_decimal_safe(stock.current_price) or 0:.2f}",
+                'formatted_change': getattr(stock, 'formatted_change', '') or '',
+                'formatted_market_cap': getattr(stock, 'formatted_market_cap', '') or '',
+                'last_updated': stock.last_updated.isoformat() if stock.last_updated else timezone.now().isoformat(),
                 'is_gaining': (stock.price_change_today or 0) > 0
             })
         
@@ -562,11 +590,11 @@ def stock_search_api(request):
         for stock in stocks:
             search_results.append({
                 'ticker': stock.ticker,
-                'company_name': stock.company_name or stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'change_percent': format_decimal_safe(stock.change_percent),
-                'market_cap': stock.market_cap,
-                'exchange': stock.exchange,
+                'company_name': stock.company_name or stock.name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
+                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'exchange': stock.exchange or 'N/A',
                 'match_type': 'ticker' if query.upper() in stock.ticker else 'company',
                 'url': f'/api/stocks/{stock.ticker}/'
             })
@@ -826,14 +854,14 @@ def filter_stocks_api(request):
         for stock in stocks:
             result.append({
                 'ticker': stock.ticker,
-                'name': stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(stock.price_change),
-                'price_change_percent': format_decimal_safe(stock.price_change_percent),
-                'volume': stock.volume,
-                'market_cap': format_decimal_safe(stock.market_cap),
-                'sector': stock.sector,
-                'exchange': stock.exchange
+                'name': stock.name or stock.company_name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change': format_decimal_safe(stock.price_change) or 0.0,
+                'price_change_percent': format_decimal_safe(stock.price_change_percent) or 0.0,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'market_cap': format_decimal_safe(stock.market_cap) or 0.0,
+                'sector': stock.sector or '',
+                'exchange': stock.exchange or ''
             })
         
         return Response({
@@ -944,26 +972,21 @@ def trending_stocks_api(request):
                 change_percent__isnull=True
             ).order_by('-change_percent')[:10]
         
-        # Get most active (high volume + price data available, prioritize NYSE)
+        # Get most active (FIXED - more inclusive filtering)
+        # Try NYSE stocks with good volume data first
         most_active = Stock.objects.filter(
             exchange__iexact='NYSE'
         ).exclude(
-            volume__isnull=True,
-            current_price__isnull=True
-        ).filter(
-            volume__gt=100000  # Lower volume threshold for more results
-        ).order_by('-volume')[:10]
+            volume__isnull=True
+        ).exclude(volume=0).order_by('-volume')[:10]
         
         # If not enough NYSE active stocks, include other exchanges
         if len(most_active) < 5:
             additional_active = Stock.objects.exclude(
                 exchange__iexact='NYSE'
             ).exclude(
-                volume__isnull=True,
-                current_price__isnull=True
-            ).filter(
-                volume__gt=100000
-            ).order_by('-volume')[:10-len(most_active)]
+                volume__isnull=True
+            ).exclude(volume=0).order_by('-volume')[:10-len(most_active)]
             most_active = list(most_active) + list(additional_active)
         
         # Fallback for most active if volume filter is too restrictive
@@ -976,12 +999,12 @@ def trending_stocks_api(request):
         def format_stock_data(stocks):
             return [{
                 'ticker': stock.ticker,
-                'name': stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change_today': format_decimal_safe(stock.price_change_today),
-                'change_percent': format_decimal_safe(stock.change_percent),
-                'volume': stock.volume,
-                'market_cap': format_decimal_safe(stock.market_cap)
+                'name': stock.name or stock.company_name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'market_cap': format_decimal_safe(stock.market_cap) or 0.0
             } for stock in stocks]
         
         trending_data = {

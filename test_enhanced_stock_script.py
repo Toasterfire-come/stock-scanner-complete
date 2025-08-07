@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced Stock Retrieval Script - WORKING VERSION (Direct Proxy Loading)
-Uses entire NYSE CSV, filters delisted stocks, supports production settings
-Command line options: -noproxy, -test (100 first tickers), -threads, -timeout
-Runs every 3 minutes in background with database integration
+Test version of Enhanced Stock Retrieval Script - WITHOUT DJANGO
+Tests proxy rotation, retry logic, and error handling improvements
 """
 
 import os
@@ -20,25 +18,15 @@ import requests
 from datetime import datetime, timedelta
 import logging
 import signal
-import schedule
-import threading
 from decimal import Decimal
 from collections import defaultdict
-
-# Django imports for database integration
-import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-django.setup()
-
-from django.utils import timezone
-from stocks.models import Stock, StockPrice
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('enhanced_stock_retrieval_working.log'),
+        logging.FileHandler('test_enhanced_stock.log'),
         logging.StreamHandler()
     ]
 )
@@ -64,21 +52,17 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 def parse_arguments():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script - WORKING')
+    parser = argparse.ArgumentParser(description='Test Enhanced Stock Retrieval Script')
     parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=15, help='Number of threads (default: 15)')
+    parser.add_argument('-threads', type=int, default=5, help='Number of threads (default: 5)')
     parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
     parser.add_argument('-csv', type=str, default='flat-ui__data-Fri Aug 01 2025.csv', 
                        help='NYSE CSV file path (default: flat-ui__data-Fri Aug 01 2025.csv)')
-    parser.add_argument('-output', type=str, default=None, 
-                       help='Output JSON file (default: auto-generated timestamp)')
-    parser.add_argument('-max-symbols', type=int, default=None, 
-                       help='Maximum number of symbols to process (for testing)')
+    parser.add_argument('-max-symbols', type=int, default=20, 
+                       help='Maximum number of symbols to process (default: 20)')
     parser.add_argument('-proxy-file', type=str, default='working_proxies.json',
                        help='Proxy JSON file path (default: working_proxies.json)')
-    parser.add_argument('-schedule', action='store_true', help='Run in scheduler mode (every 3 minutes)')
-    parser.add_argument('-save-to-db', action='store_true', default=True, help='Save results to database (default: True)')
     return parser.parse_args()
 
 def _safe_decimal(value):
@@ -120,7 +104,7 @@ def load_proxies_direct(proxy_file):
         proxies = [p for p in proxies if p and isinstance(p, str)]
         
         logger.info(f"Loaded {len(proxies)} proxies directly from {proxy_file}")
-        return proxies
+        return proxies[:50]  # Limit to first 50 for testing
         
     except FileNotFoundError:
         logger.warning(f"Proxy file not found: {proxy_file}")
@@ -210,46 +194,6 @@ def patch_yfinance_proxy(proxy):
         logger.error(f"Failed to set proxy {proxy}: {e}")
         mark_proxy_failure(proxy, f"Session setup failed: {e}")
 
-def _extract_pe_ratio(info):
-    """Extract PE ratio with multiple fallback options"""
-    if not info:
-        return None
-    
-    # Try multiple PE ratio fields
-    pe_fields = ['trailingPE', 'forwardPE', 'priceToBook', 'priceToSalesTrailing12Months']
-    
-    for field in pe_fields:
-        value = info.get(field)
-        if value is not None and value != 0 and not pd.isna(value):
-            try:
-                return float(value)
-            except (ValueError, TypeError):
-                continue
-    
-    return None
-
-def _extract_dividend_yield(info):
-    """Extract dividend yield with proper formatting"""
-    if not info:
-        return None
-    
-    # Try multiple dividend yield fields
-    dividend_fields = ['dividendYield', 'fiveYearAvgDividendYield', 'trailingAnnualDividendYield']
-    
-    for field in dividend_fields:
-        value = info.get(field)
-        if value is not None and not pd.isna(value):
-            try:
-                # Convert to percentage if it's a decimal
-                if isinstance(value, float) and value < 1:
-                    return float(value * 100)
-                else:
-                    return float(value)
-            except (ValueError, TypeError):
-                continue
-    
-    return None
-
 def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     """Load NYSE symbols from CSV file, filtering delisted stocks"""
     symbols = []
@@ -305,7 +249,7 @@ def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     
     return symbols
 
-def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True, max_retries=3):
+def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, max_retries=3):
     """Process a single symbol with retry logic and proxy rotation"""
     global shutdown_flag
     
@@ -327,7 +271,7 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                 if ticker_number <= 5 or attempt > 0:  # Show proxy info for first 5 tickers or retries
                     logger.info(f"{symbol} (attempt {attempt + 1}): Using proxy {proxy}")
             
-            result = process_symbol_attempt(symbol, proxy, timeout, test_mode, save_to_db)
+            result = process_symbol_attempt(symbol, proxy, timeout)
             
             if result is not None:
                 # Success - mark proxy as working
@@ -366,7 +310,7 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
     logger.error(f"{symbol}: All {max_retries} attempts failed. Last error: {last_error}")
     return None
 
-def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_db=True):
+def process_symbol_attempt(symbol, proxy, timeout=10):
     """Single attempt to process a symbol"""
     
     # Set up proxy
@@ -433,110 +377,40 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         logger.warning(f"{symbol}: No current trading activity")
         return None
     
-    # Extract comprehensive data with better PE ratio and dividend yield handling
+    # Return basic stock data
     stock_data = {
-        'ticker': symbol,  # Use ticker as the primary key
-        'symbol': symbol,   # Keep symbol for compatibility
+        'symbol': symbol,
+        'current_price': float(current_price) if current_price else None,
         'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-        'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-        'current_price': _safe_decimal(current_price) if current_price else None,
-        'price_change_today': None,
-        'price_change_week': None,
-        'price_change_month': None,
-        'price_change_year': None,
-        'change_percent': None,
-        'bid_price': None,
-        'ask_price': None,
-        'bid_ask_spread': '',  # Empty string instead of None for CharField
-        'days_range': '',  # Empty string instead of None for CharField
-        'days_low': _safe_decimal(info.get('dayLow')) if info else None,
-        'days_high': _safe_decimal(info.get('dayHigh')) if info else None,
-        'volume': _safe_decimal(info.get('volume')) if info else None,
-        'volume_today': _safe_decimal(info.get('volume')) if info else None,
-        'avg_volume_3mon': _safe_decimal(info.get('averageVolume')) if info else None,
-        'dvav': None,
-        'shares_available': None,
-        'market_cap': _safe_decimal(info.get('marketCap')) if info else None,
-        'market_cap_change_3mon': None,
-        'pe_ratio': _safe_decimal(_extract_pe_ratio(info)) if info else None,
-        'pe_change_3mon': None,
-        'dividend_yield': _safe_decimal(_extract_dividend_yield(info)) if info else None,
-        'one_year_target': _safe_decimal(info.get('targetMeanPrice')) if info else None,
-        'week_52_low': _safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
-        'week_52_high': _safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
-        'earnings_per_share': _safe_decimal(info.get('trailingEps')) if info else None,
-        'book_value': _safe_decimal(info.get('bookValue')) if info else None,
-        'price_to_book': _safe_decimal(info.get('priceToBook')) if info else None,
-        'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
-        'last_updated': timezone.now(),
-        'created_at': timezone.now()
+        'volume': info.get('volume') if info else None,
+        'market_cap': info.get('marketCap') if info else None,
     }
     
-    # Calculate price changes if historical data available
-    if has_data and len(hist) > 1:
-        try:
-            current = hist['Close'].iloc[-1]
-            previous = hist['Close'].iloc[-2]
-            if current and previous:
-                change = current - previous
-                change_percent = (change / previous) * 100
-                stock_data['price_change_today'] = _safe_decimal(change)
-                stock_data['change_percent'] = _safe_decimal(change_percent)
-        except:
-            pass
-    
-    # Add volume analysis
-    if stock_data.get('volume') and stock_data.get('avg_volume_3mon'):
-        try:
-            volume_ratio = stock_data['volume'] / stock_data['avg_volume_3mon']
-            stock_data['dvav'] = _safe_decimal(volume_ratio)
-        except:
-            pass
-    
-    # Save to database if requested
-    if save_to_db and not test_mode:
-        try:
-            # Create or update Stock object
-            stock, created = Stock.objects.update_or_create(
-                ticker=symbol,  # Use ticker as the lookup field
-                defaults=stock_data
-            )
-            
-            # Create StockPrice record
-            if stock_data.get('current_price'):
-                StockPrice.objects.create(
-                    stock=stock,
-                    price=stock_data['current_price']
-                )
-            
-            return stock_data
-            
-        except Exception as e:
-            logger.error(f"DB ERROR {symbol}: {e}")
-            raise  # Re-raise DB errors for retry
-    else:
-        # Test mode - return the data without saving
-        return stock_data
+    return stock_data
 
-# Create an alias for backward compatibility
-def process_symbol(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True):
-    """Backward compatibility wrapper"""
-    return process_symbol_with_retry(symbol, ticker_number, proxies, timeout, test_mode, save_to_db)
-
-def run_stock_update(args):
-    """Run a single stock update cycle"""
+def run_test():
+    """Run test with enhanced proxy management"""
     global shutdown_flag
     
-    print(f"\n{'='*60}")
-    print(f"STOCK UPDATE CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"{'='*60}")
+    args = parse_arguments()
+    
+    print("TEST ENHANCED STOCK RETRIEVAL SCRIPT")
+    print("=" * 60)
+    print(f"Configuration:")
+    print(f"  CSV File: {args.csv}")
+    print(f"  Use Proxies: {not args.noproxy}")
+    print(f"  Proxy File: {args.proxy_file}")
+    print(f"  Threads: {args.threads}")
+    print(f"  Timeout: {args.timeout}s")
+    print(f"  Max Symbols: {args.max_symbols}")
+    print("=" * 60)
     
     # Load NYSE symbols
-    print(f"Loading NYSE symbols from {args.csv}...")
+    print(f"\nLoading NYSE symbols from {args.csv}...")
     symbols = load_nyse_symbols(args.csv, args.test, args.max_symbols)
     
     if not symbols:
-        print("ERROR: No symbols loaded. Skipping cycle.")
+        print("ERROR: No symbols loaded. Exiting.")
         return
     
     print(f"Processing {len(symbols)} symbols...")
@@ -547,7 +421,7 @@ def run_stock_update(args):
         print(f"Loading proxies from {args.proxy_file}...")
         proxies = load_proxies_direct(args.proxy_file)
         if proxies:
-            print(f"SUCCESS: Loaded {len(proxies)} proxies (no validation)")
+            print(f"SUCCESS: Loaded {len(proxies)} proxies")
         else:
             print("WARNING: No proxies loaded - continuing without proxies")
     else:
@@ -562,16 +436,13 @@ def run_stock_update(args):
     failed = 0
     results = []
     
-    # Use ThreadPoolExecutor for parallel processing with better timeout handling
-    print(f"Submitting {len(symbols)} tasks to thread pool...")
-    
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             future_to_symbol = {}
             for i, symbol in enumerate(symbols, 1):
                 if shutdown_flag:
                     break
-                future = executor.submit(process_symbol_with_retry, symbol, i, proxies, args.timeout, args.test, args.save_to_db)
+                future = executor.submit(process_symbol_with_retry, symbol, i, proxies, args.timeout)
                 future_to_symbol[future] = symbol
             
             print(f"Submitted {len(future_to_symbol)} tasks. Processing...")
@@ -586,13 +457,14 @@ def run_stock_update(args):
                 completed += 1
                 
                 try:
-                    # Use shorter timeout for individual tasks
                     result = future.result(timeout=args.timeout + 2)
                     if result:
                         successful += 1
                         results.append(result)
+                        print(f"✓ {symbol}: ${result.get('current_price', 'N/A')} - {result.get('company_name', 'N/A')}")
                     else:
                         failed += 1
+                        print(f"✗ {symbol}: No data")
                 except TimeoutError:
                     logger.error(f"TIMEOUT {symbol}: Task timed out")
                     failed += 1
@@ -600,12 +472,9 @@ def run_stock_update(args):
                     logger.error(f"ERROR {symbol}: {e}")
                     failed += 1
                 
-                # Show progress every 10 completed or at the end
-                if completed % 10 == 0 or completed == len(symbols):
+                # Show progress every 5 completed or at the end
+                if completed % 5 == 0 or completed == len(symbols):
                     print(f"[PROGRESS] {completed}/{len(symbols)} completed ({successful} successful, {failed} failed)")
-                    
-                # Add a small delay to prevent overwhelming
-                time.sleep(0.01)
     
     except KeyboardInterrupt:
         print("\nInterrupted by user. Shutting down gracefully...")
@@ -617,7 +486,7 @@ def run_stock_update(args):
     
     # Results
     print("\n" + "=" * 60)
-    print("CYCLE RESULTS")
+    print("TEST RESULTS")
     print("=" * 60)
     print(f"SUCCESSFUL: {successful}")
     print(f"FAILED: {failed}")
@@ -649,53 +518,17 @@ def run_stock_update(args):
         if total_successes + total_failures > 0:
             success_rate = (total_successes / (total_successes + total_failures)) * 100
             print(f"PROXY SUCCESS RATE: {success_rate:.1f}% ({total_successes} successes, {total_failures} failures)")
-    
-    if args.save_to_db and not args.test:
-        print(f"DATABASE: Saved {successful} stocks to database")
-    
-    print(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
-
-def main():
-    """Main function"""
-    global shutdown_flag
-    
-    args = parse_arguments()
-    
-    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
-    print("=" * 60)
-    print(f"Configuration:")
-    print(f"  CSV File: {args.csv}")
-    print(f"  Test Mode: {args.test}")
-    print(f"  Use Proxies: {not args.noproxy}")
-    print(f"  Proxy File: {args.proxy_file}")
-    print(f"  Threads: {args.threads}")
-    print(f"  Timeout: {args.timeout}s")
-    print(f"  Max Symbols: {args.max_symbols or 'All'}")
-    print(f"  Save to DB: {args.save_to_db}")
-    print(f"  Schedule Mode: {args.schedule}")
-    print("=" * 60)
-    
-    if args.schedule:
-        print(f"\nSCHEDULER MODE: Running every 3 minutes")
-        print(f"Press Ctrl+C to stop the scheduler")
-        print("=" * 60)
         
-        # Schedule the job to run every 3 minutes
-        schedule.every(3).minutes.do(run_stock_update, args)
-        
-        try:
-            while True:
-                schedule.run_pending()
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("\nScheduler stopped by user")
-            shutdown_flag = True
-    else:
-        # Run single update
-        run_stock_update(args)
+        # Show detailed health for first few proxies
+        print("\nTOP PROXY PERFORMANCE:")
+        proxy_list = sorted(proxies, key=lambda p: proxy_health[p]["successes"], reverse=True)[:5]
+        for proxy in proxy_list:
+            health = proxy_health[proxy]
+            status = "BLOCKED" if health["blocked"] else "HEALTHY"
+            print(f"  {proxy}: {health['successes']} successes, {health['failures']} failures [{status}]")
     
-    print("\nScript completed!")
+    print(f"\nTEST COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 60)
 
 if __name__ == "__main__":
-    main()
+    run_test()
