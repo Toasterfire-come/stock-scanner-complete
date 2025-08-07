@@ -532,17 +532,17 @@ def nasdaq_stocks_api(request):
         for stock in nasdaq_stocks:
             stock_data.append({
                 'ticker': stock.ticker,
-                'company_name': stock.company_name or stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change_today': format_decimal_safe(stock.price_change_today),
-                'change_percent': format_decimal_safe(stock.change_percent),
-                'volume': stock.volume,
-                'market_cap': stock.market_cap,
-                'pe_ratio': format_decimal_safe(stock.pe_ratio),
-                'formatted_price': stock.formatted_price,
-                'formatted_change': stock.formatted_change,
-                'formatted_market_cap': stock.formatted_market_cap,
-                'last_updated': stock.last_updated.isoformat() if stock.last_updated else None,
+                'company_name': stock.company_name or stock.name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'pe_ratio': format_decimal_safe(stock.pe_ratio) or 0.0,
+                'formatted_price': getattr(stock, 'formatted_price', '') or f"${format_decimal_safe(stock.current_price) or 0:.2f}",
+                'formatted_change': getattr(stock, 'formatted_change', '') or '',
+                'formatted_market_cap': getattr(stock, 'formatted_market_cap', '') or '',
+                'last_updated': stock.last_updated.isoformat() if stock.last_updated else timezone.now().isoformat(),
                 'is_gaining': (stock.price_change_today or 0) > 0
             })
         
@@ -590,11 +590,11 @@ def stock_search_api(request):
         for stock in stocks:
             search_results.append({
                 'ticker': stock.ticker,
-                'company_name': stock.company_name or stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'change_percent': format_decimal_safe(stock.change_percent),
-                'market_cap': stock.market_cap,
-                'exchange': stock.exchange,
+                'company_name': stock.company_name or stock.name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
+                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'exchange': stock.exchange or 'N/A',
                 'match_type': 'ticker' if query.upper() in stock.ticker else 'company',
                 'url': f'/api/stocks/{stock.ticker}/'
             })
@@ -854,14 +854,14 @@ def filter_stocks_api(request):
         for stock in stocks:
             result.append({
                 'ticker': stock.ticker,
-                'name': stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(stock.price_change),
-                'price_change_percent': format_decimal_safe(stock.price_change_percent),
-                'volume': stock.volume,
-                'market_cap': format_decimal_safe(stock.market_cap),
-                'sector': stock.sector,
-                'exchange': stock.exchange
+                'name': stock.name or stock.company_name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change': format_decimal_safe(stock.price_change) or 0.0,
+                'price_change_percent': format_decimal_safe(stock.price_change_percent) or 0.0,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'market_cap': format_decimal_safe(stock.market_cap) or 0.0,
+                'sector': stock.sector or '',
+                'exchange': stock.exchange or ''
             })
         
         return Response({
@@ -972,26 +972,21 @@ def trending_stocks_api(request):
                 change_percent__isnull=True
             ).order_by('-change_percent')[:10]
         
-        # Get most active (high volume + price data available, prioritize NYSE)
+        # Get most active (FIXED - more inclusive filtering)
+        # Try NYSE stocks with good volume data first
         most_active = Stock.objects.filter(
             exchange__iexact='NYSE'
         ).exclude(
-            volume__isnull=True,
-            current_price__isnull=True
-        ).filter(
-            volume__gt=100000  # Lower volume threshold for more results
-        ).order_by('-volume')[:10]
+            volume__isnull=True
+        ).exclude(volume=0).order_by('-volume')[:10]
         
         # If not enough NYSE active stocks, include other exchanges
         if len(most_active) < 5:
             additional_active = Stock.objects.exclude(
                 exchange__iexact='NYSE'
             ).exclude(
-                volume__isnull=True,
-                current_price__isnull=True
-            ).filter(
-                volume__gt=100000
-            ).order_by('-volume')[:10-len(most_active)]
+                volume__isnull=True
+            ).exclude(volume=0).order_by('-volume')[:10-len(most_active)]
             most_active = list(most_active) + list(additional_active)
         
         # Fallback for most active if volume filter is too restrictive
@@ -1004,12 +999,12 @@ def trending_stocks_api(request):
         def format_stock_data(stocks):
             return [{
                 'ticker': stock.ticker,
-                'name': stock.name,
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change_today': format_decimal_safe(stock.price_change_today),
-                'change_percent': format_decimal_safe(stock.change_percent),
-                'volume': stock.volume,
-                'market_cap': format_decimal_safe(stock.market_cap)
+                'name': stock.name or stock.company_name or stock.ticker,
+                'current_price': format_decimal_safe(stock.current_price) or 0.0,
+                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
+                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
+                'volume': int(stock.volume) if stock.volume else 0,
+                'market_cap': format_decimal_safe(stock.market_cap) or 0.0
             } for stock in stocks]
         
         trending_data = {
