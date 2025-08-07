@@ -5,6 +5,8 @@ import csv
 import os
 from datetime import datetime
 from typing import Set, Tuple
+from pathlib import Path
+from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -48,20 +50,37 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        csv_path: str = options["csv"]
+        csv_input: str = options["csv"]
         csv_column: str = options["column"]
         apply_changes: bool = options["apply"]
         report_path: str | None = options["report"]
         delete_limit: int | None = options["limit"]
 
-        if not os.path.isabs(csv_path):
-            # Resolve relative to project root (manage.py location)
-            csv_path = os.path.abspath(csv_path)
+        # Build candidate paths to locate the CSV:
+        # - exact path as provided
+        # - relative to the project root (manage.py location)
+        # - inside the project's data/ directory
+        candidates: list[Path] = []
+        provided_path = Path(csv_input)
+        if provided_path.is_absolute():
+            candidates.append(provided_path)
+        else:
+            candidates.extend([
+                Path.cwd() / provided_path,
+                Path(settings.BASE_DIR) / provided_path,
+                Path(settings.BASE_DIR) / "data" / provided_path,
+            ])
 
-        if not os.path.exists(csv_path):
-            raise CommandError(f"CSV file not found: {csv_path}")
+        resolved_csv_path: Path | None = next((p for p in candidates if p.exists()), None)
+        if not resolved_csv_path:
+            attempted = "\n".join(str(p) for p in candidates)
+            raise CommandError(
+                f"CSV file not found. Tried the following locations based on '--csv {csv_input}':\n{attempted}"
+            )
 
-        allowed_tickers: Set[str] = self._load_allowed_tickers(csv_path, csv_column)
+        csv_path_str = str(resolved_csv_path.resolve())
+
+        allowed_tickers: Set[str] = self._load_allowed_tickers(csv_path_str, csv_column)
         if not allowed_tickers:
             raise CommandError(
                 "No tickers were found in the CSV. Verify the file and --column option."
@@ -84,7 +103,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.WARNING(
-                f"Found {total_extras} tickers in DB not present in CSV ({os.path.basename(csv_path)})."
+                f"Found {total_extras} tickers in DB not present in CSV ({resolved_csv_path.name})."
             )
         )
 
