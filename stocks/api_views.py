@@ -54,7 +54,8 @@ def stock_list_api(request):
     Parameters:
     - limit: Number of stocks to return (default: 50, max: 1000)
     - search: Search by ticker or company name
-    - category: Filter by category (gainers, losers, high_volume, large_cap, small_cap)
+    - category: Filter by category (gainers, losers, high_volume, large_cap, small_cap, all)
+      Note: Default behavior prioritizes stocks with current price data. Use category='all' to include all stocks.
     - min_price: Minimum price filter
     - max_price: Maximum price filter
     - min_volume: Minimum volume filter
@@ -90,12 +91,21 @@ def stock_list_api(request):
         # Exchange filter
         exchange = request.GET.get('exchange', 'NASDAQ')
         
-        # Sorting
-        sort_by = request.GET.get('sort_by', 'last_updated')
+        # Sorting - default to volume for better results
+        sort_by = request.GET.get('sort_by', 'volume')
         sort_order = request.GET.get('sort_order', 'desc')
         
-        # Base queryset
-        queryset = Stock.objects.filter(exchange__iexact=exchange)
+        # Base queryset - prioritize stocks with actual data
+        if category == 'all':
+            # Show all stocks including those without data
+            queryset = Stock.objects.filter(exchange__iexact=exchange)
+        else:
+            # Default: prioritize stocks with current price and volume data
+            queryset = Stock.objects.filter(exchange__iexact=exchange).exclude(
+                current_price__isnull=True
+            ).exclude(
+                current_price=0
+            )
 
         # Apply search filter
         if search:
@@ -183,6 +193,30 @@ def stock_list_api(request):
 
         # Limit results
         stocks = queryset[:limit]
+        
+        # If we got very few results and not searching for 'all', try including more stocks
+        if len(stocks) < limit//2 and category != 'all':
+            # Fallback: get more stocks, including those with some missing data
+            fallback_queryset = Stock.objects.filter(exchange__iexact=exchange).exclude(
+                current_price__isnull=True,
+                volume__isnull=True
+            )
+            
+            # Apply same filters
+            if search:
+                fallback_queryset = fallback_queryset.filter(
+                    Q(ticker__icontains=search) | 
+                    Q(company_name__icontains=search) |
+                    Q(symbol__icontains=search) |
+                    Q(name__icontains=search)
+                )
+            
+            # Add to stocks if needed
+            additional_stocks = fallback_queryset.exclude(
+                id__in=[s.id for s in stocks]
+            )[:limit - len(stocks)]
+            
+            stocks = list(stocks) + list(additional_stocks)
 
         # Format comprehensive data
         stock_data = []
