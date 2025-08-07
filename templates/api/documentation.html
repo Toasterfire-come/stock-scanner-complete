@@ -61,6 +61,56 @@
         <a href="/api/health/" class="btn btn-secondary">Health Check</a>
     </div>
     
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Portfolio Management</h2>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>GET /api/portfolio/list/</h3>
+        <p>List all user portfolios with performance metrics.</p>
+        <a href="/api/portfolio/list/" class="btn btn-secondary">Try It</a>
+    </div>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>POST /api/portfolio/create/</h3>
+        <p>Create a new investment portfolio.</p>
+        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+            <strong>Required Fields:</strong><br>
+            • name (string): Portfolio name<br>
+            • description (string): Portfolio description
+        </div>
+    </div>
+    
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Watchlist Management</h2>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>GET /api/watchlist/list/</h3>
+        <p>List all user watchlists with current prices.</p>
+        <a href="/api/watchlist/list/" class="btn btn-secondary">Try It</a>
+    </div>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>POST /api/watchlist/create/</h3>
+        <p>Create a new stock watchlist.</p>
+        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+            <strong>Required Fields:</strong><br>
+            • name (string): Watchlist name<br>
+            • description (string): Watchlist description
+        </div>
+    </div>
+    
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">News & Personalization</h2>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>GET /api/news/feed/</h3>
+        <p>Get personalized news feed based on user preferences.</p>
+        <a href="/api/news/feed/" class="btn btn-secondary">Try It</a>
+    </div>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>GET /api/news/analytics/</h3>
+        <p>Get news consumption analytics.</p>
+        <a href="/api/news/analytics/" class="btn btn-secondary">Try It</a>
+    </div>
+    
     <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Alert Management</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
@@ -71,6 +121,19 @@
             • ticker (string): Stock symbol<br>
             • target_price (number): Alert trigger price<br>
             • alert_type (string): "above" or "below"
+        </div>
+    </div>
+    
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">WordPress Integration</h2>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>POST /api/subscription/</h3>
+        <p>WordPress subscription management endpoint.</p>
+        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+            <strong>WordPress Integration:</strong><br>
+            • Handles subscription webhooks<br>
+            • Manages user access levels<br>
+            • Integrates with PayPal payments
         </div>
     </div>
     

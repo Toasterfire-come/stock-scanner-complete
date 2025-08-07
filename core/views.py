@@ -50,6 +50,29 @@ def api_documentation(request):
             {'method': 'GET', 'path': '/api/search/', 'description': 'Search stocks'},
             {'method': 'GET', 'path': '/api/trending/', 'description': 'Get trending stocks'},
             {'method': 'GET', 'path': '/api/realtime/{ticker}/', 'description': 'Real-time stock data'},
+            {'method': 'GET', 'path': '/api/nasdaq/', 'description': 'NASDAQ stocks'},
+            {'method': 'GET', 'path': '/api/filter/', 'description': 'Filter stocks'},
+            {'method': 'GET', 'path': '/api/market-stats/', 'description': 'Market statistics'},
+        ],
+        'portfolio_endpoints': [
+            {'method': 'GET', 'path': '/api/portfolio/list/', 'description': 'List portfolios'},
+            {'method': 'POST', 'path': '/api/portfolio/create/', 'description': 'Create portfolio'},
+            {'method': 'POST', 'path': '/api/portfolio/add-holding/', 'description': 'Add holding'},
+            {'method': 'POST', 'path': '/api/portfolio/sell-holding/', 'description': 'Sell holding'},
+            {'method': 'GET', 'path': '/api/portfolio/{id}/performance/', 'description': 'Portfolio performance'},
+        ],
+        'watchlist_endpoints': [
+            {'method': 'GET', 'path': '/api/watchlist/list/', 'description': 'List watchlists'},
+            {'method': 'POST', 'path': '/api/watchlist/create/', 'description': 'Create watchlist'},
+            {'method': 'POST', 'path': '/api/watchlist/add-stock/', 'description': 'Add stock to watchlist'},
+            {'method': 'POST', 'path': '/api/watchlist/remove-stock/', 'description': 'Remove stock'},
+            {'method': 'GET', 'path': '/api/watchlist/{id}/performance/', 'description': 'Watchlist performance'},
+        ],
+        'news_endpoints': [
+            {'method': 'GET', 'path': '/api/news/feed/', 'description': 'Personalized news feed'},
+            {'method': 'POST', 'path': '/api/news/mark-read/', 'description': 'Mark news as read'},
+            {'method': 'POST', 'path': '/api/news/preferences/', 'description': 'Update news preferences'},
+            {'method': 'GET', 'path': '/api/news/analytics/', 'description': 'News analytics'},
         ],
         'analytics_endpoints': [
             {'method': 'GET', 'path': '/revenue/revenue-analytics/', 'description': 'Revenue analytics'},
@@ -59,6 +82,7 @@ def api_documentation(request):
         'management_endpoints': [
             {'method': 'POST', 'path': '/api/alerts/create/', 'description': 'Create price alert'},
             {'method': 'POST', 'path': '/revenue/initialize-codes/', 'description': 'Initialize discount codes'},
+            {'method': 'POST', 'path': '/api/subscription/', 'description': 'WordPress subscription'},
         ]
     }
     
@@ -113,3 +137,84 @@ def health_check(request):
     }
     
     return JsonResponse(health_data)
+
+@csrf_exempt
+@require_http_methods(["GET", "HEAD", "OPTIONS"])
+def endpoint_status(request):
+    """
+    Endpoint status check - tests all major endpoints
+    Compatible with both WordPress and direct access
+    """
+    import requests
+    from django.conf import settings
+    
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    
+    endpoints_to_test = [
+        {'name': 'Homepage', 'url': f'{base_url}/', 'method': 'GET'},
+        {'name': 'Health Check', 'url': f'{base_url}/api/health/', 'method': 'GET'},
+        {'name': 'Stock List', 'url': f'{base_url}/api/stocks/', 'method': 'GET'},
+        {'name': 'Trending Stocks', 'url': f'{base_url}/api/trending/', 'method': 'GET'},
+        {'name': 'Search Stocks', 'url': f'{base_url}/api/search/?q=AAPL', 'method': 'GET'},
+        {'name': 'Revenue Analytics', 'url': f'{base_url}/revenue/revenue-analytics/?format=json', 'method': 'GET'},
+        {'name': 'Portfolio List', 'url': f'{base_url}/api/portfolio/list/', 'method': 'GET'},
+        {'name': 'Watchlist List', 'url': f'{base_url}/api/watchlist/list/', 'method': 'GET'},
+        {'name': 'News Feed', 'url': f'{base_url}/api/news/feed/', 'method': 'GET'},
+        {'name': 'API Documentation', 'url': f'{base_url}/docs/', 'method': 'GET'},
+    ]
+    
+    status_results = []
+    
+    for endpoint in endpoints_to_test:
+        try:
+            # Test each endpoint
+            response = requests.get(endpoint['url'], timeout=5, headers={
+                'User-Agent': 'Django-Endpoint-Test/1.0'
+            })
+            
+            status_results.append({
+                'name': endpoint['name'],
+                'url': endpoint['url'],
+                'status': 'success' if response.status_code < 400 else 'error',
+                'status_code': response.status_code,
+                'response_time': response.elapsed.total_seconds()
+            })
+            
+        except Exception as e:
+            status_results.append({
+                'name': endpoint['name'],
+                'url': endpoint['url'],
+                'status': 'error',
+                'error': str(e),
+                'status_code': 0,
+                'response_time': 0
+            })
+    
+    # Check if this is an API request
+    is_api_request = (
+        request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' or
+        'application/json' in request.META.get('HTTP_ACCEPT', '') or
+        request.GET.get('format') == 'json' or
+        getattr(request, 'is_api_request', False)
+    )
+    
+    if is_api_request:
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'endpoints': status_results,
+                'total_tested': len(endpoints_to_test),
+                'successful': len([r for r in status_results if r['status'] == 'success']),
+                'failed': len([r for r in status_results if r['status'] == 'error']),
+                'timestamp': datetime.datetime.now().isoformat()
+            }
+        })
+    else:
+        context = {
+            'endpoints': status_results,
+            'total_tested': len(endpoints_to_test),
+            'successful': len([r for r in status_results if r['status'] == 'success']),
+            'failed': len([r for r in status_results if r['status'] == 'error']),
+            'title': 'Endpoint Status Check'
+        }
+        return render(request, 'core/endpoint_status.html', context)
