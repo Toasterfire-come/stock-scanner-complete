@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Logged Out | Stock Scanner API{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; max-width: 500px; margin: 4rem auto;">
+    <div style="font-size: 4rem; margin-bottom: 2rem;">👋</div>
+    <h1 style="margin-bottom: 2rem; color: #2d3748;">Successfully Logged Out</h1>
+    <p style="margin-bottom: 3rem; color: #4a5568;">
+        You have been successfully logged out of the Stock Scanner API admin panel.
+    </p>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/" class="btn">Go Home</a>
+        <a href="/accounts/login/" class="btn btn-secondary">Login Again</a>
+    </div>
+    
+    <div style="margin-top: 2rem; padding: 1rem; background: #e8f4f8; border-radius: 8px; color: #0c5460;">
+        <strong>Note:</strong> API endpoints remain accessible without authentication.
+    </div>
+</div>
+{% endblock %}

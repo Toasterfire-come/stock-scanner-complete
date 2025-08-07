@@ -11,10 +11,15 @@ def homepage(request):
         'endpoints': [
             {'url': '/admin/', 'description': 'Django Admin Panel'},
             {'url': '/api/stocks/', 'description': 'Stock Data API'},
-            {'url': '/api/wordpress/', 'description': 'WordPress Integration API'},
+            {'url': '/docs/', 'description': 'API Documentation'},
+            {'url': '/revenue/revenue-analytics/', 'description': 'Revenue Analytics'},
         ]
     }
     return render(request, 'core/homepage.html', context)
+
+def api_documentation(request):
+    """API documentation page"""
+    return render(request, 'api/documentation.html')
 
 @csrf_exempt
 def health_check(request):
@@ -22,5 +27,11 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'database': 'connected',
-        'version': '1.0.0'
+        'version': '1.0.0',
+        'endpoints': {
+            'stocks': '/api/stocks/',
+            'health': '/api/health/',
+            'revenue': '/revenue/revenue-analytics/',
+            'docs': '/docs/',
+        }
     })

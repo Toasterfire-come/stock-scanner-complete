@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}404 - Page Not Found | Stock Scanner API{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; max-width: 600px; margin: 4rem auto;">
+    <div style="font-size: 6rem; margin-bottom: 2rem;">🔍</div>
+    <h1 style="font-size: 3rem; color: #667eea; margin-bottom: 1rem;">404</h1>
+    <h2 style="margin-bottom: 2rem; color: #2d3748;">Page Not Found</h2>
+    <p style="margin-bottom: 3rem; color: #4a5568; font-size: 1.1rem;">
+        The page you're looking for doesn't exist or has been moved.
+    </p>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/" class="btn">Go Home</a>
+        <a href="/api/stocks/" class="btn btn-secondary">View API</a>
+        <a href="/health/" class="btn btn-secondary">Health Check</a>
+    </div>
+    
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+        <h3 style="margin-bottom: 1rem; color: #2d3748;">Available Endpoints</h3>
+        <div style="text-align: left; display: inline-block;">
+            <ul style="list-style: none; color: #4a5568;">
+                <li style="margin-bottom: 0.5rem;">📊 <a href="/api/stocks/" style="color: #667eea;">Stock Data API</a></li>
+                <li style="margin-bottom: 0.5rem;">📈 <a href="/api/trending/" style="color: #667eea;">Trending Stocks</a></li>
+                <li style="margin-bottom: 0.5rem;">💰 <a href="/revenue/revenue-analytics/" style="color: #667eea;">Revenue Analytics</a></li>
+                <li style="margin-bottom: 0.5rem;">🔔 <a href="/api/alerts/create/" style="color: #667eea;">Create Alerts</a></li>
+                <li style="margin-bottom: 0.5rem;">⚡ <a href="/health/" style="color: #667eea;">Health Check</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
