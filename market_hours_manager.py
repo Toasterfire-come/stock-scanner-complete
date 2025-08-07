@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+"""
+Market Hours Manager - Automated Start/Stop Script
+Manages all stock scanner components based on market hours:
+- Premarket: 4:00 AM - 9:30 AM ET (starts retrieval, news, emails)
+- Regular Market: 9:30 AM - 4:00 PM ET (full operation + server)
+- Postmarket: 4:00 PM - 8:00 PM ET (continues operation)
+- After Hours: 8:00 PM - 4:00 AM ET (stops all components)
+"""
+
+import os
+import sys
+import time
+import logging
+import subprocess
+import signal
+import psutil
+import schedule
+import threading
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+import pytz
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('market_hours_manager.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+class MarketHoursManager:
+    """Manages all stock scanner components based on market hours"""
+    
+    def __init__(self):
+        self.project_root = Path(__file__).parent.absolute()
+        self.python_exe = sys.executable
+        self.processes = {}
+        self.is_running = True
+        
+        # Market hours in Eastern Time
+        self.eastern_tz = pytz.timezone('US/Eastern')
+        
+        # Market hours configuration
+        self.premarket_start = "04:00"  # 4:00 AM ET
+        self.market_open = "09:30"      # 9:30 AM ET
+        self.market_close = "16:00"     # 4:00 PM ET
+        self.postmarket_end = "20:00"   # 8:00 PM ET
+        
+        # Component configurations
+        self.components = {
+            'stock_retrieval': {
+                'script': 'enhanced_stock_retrieval_working.py',
+                'args': [],
+                'active_during': ['premarket', 'market', 'postmarket'],
+                'process': None
+            },
+            'news_scraper': {
+                'command': ['python', 'manage.py', 'scrape_news'],
+                'args': [],
+                'active_during': ['premarket', 'market', 'postmarket'],
+                'process': None,
+                'interval': 300  # Run every 5 minutes
+            },
+            'email_sender': {
+                'command': ['python', 'manage.py', 'send_stock_emails'],
+                'args': [],
+                'active_during': ['premarket', 'market', 'postmarket'],
+                'process': None,
+                'interval': 600  # Run every 10 minutes
+            },
+            'django_server': {
+                'command': ['python', 'manage.py', 'runserver', '0.0.0.0:8000'],
+                'args': [],
+                'active_during': ['market'],  # Only during regular market hours
+                'process': None
+            }
+        }
+        
+        # Setup signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+        
+    def signal_handler(self, signum, frame):
+        """Handle shutdown signals gracefully"""
+        logger.info(f"Received signal {signum}, shutting down gracefully...")
+        self.is_running = False
+        self.stop_all_components()
+        sys.exit(0)
+        
+    def get_current_market_phase(self):
+        """Determine current market phase based on Eastern Time"""
+        now_et = datetime.now(self.eastern_tz)
+        current_time = now_et.strftime("%H:%M")
+        
+        # Check if it's a weekday (Monday=0, Sunday=6)
+        if now_et.weekday() >= 5:  # Saturday or Sunday
+            return 'closed'
+            
+        if self.premarket_start <= current_time < self.market_open:
+            return 'premarket'
+        elif self.market_open <= current_time < self.market_close:
+            return 'market'
+        elif self.market_close <= current_time < self.postmarket_end:
+            return 'postmarket'
+        else:
+            return 'closed'
+            
+    def is_component_active(self, component_name, market_phase):
+        """Check if component should be active during current market phase"""
+        component = self.components.get(component_name)
+        if not component:
+            return False
+            
+        return market_phase in component['active_during']
+        
+    def start_component(self, component_name):
+        """Start a specific component"""
+        component = self.components.get(component_name)
+        if not component:
+            logger.error(f"Unknown component: {component_name}")
+            return False
+            
+        if component['process'] and component['process'].poll() is None:
+            logger.info(f"Component {component_name} is already running")
+            return True
+            
+        try:
+            # Build command
+            if 'script' in component:
+                cmd = [self.python_exe, component['script']] + component['args']
+            else:
+                cmd = component['command'] + component['args']
+                
+            # Change to project directory
+            logger.info(f"Starting {component_name}: {' '.join(cmd)}")
+            
+            # Start process
+            process = subprocess.Popen(
+                cmd,
+                cwd=self.project_root,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            component['process'] = process
+            self.processes[component_name] = process
+            
+            logger.info(f"Started {component_name} with PID {process.pid}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to start {component_name}: {e}")
+            return False
+            
+    def stop_component(self, component_name):
+        """Stop a specific component"""
+        component = self.components.get(component_name)
+        if not component or not component['process']:
+            return True
+            
+        try:
+            process = component['process']
+            if process.poll() is None:  # Process is still running
+                logger.info(f"Stopping {component_name} (PID: {process.pid})")
+                
+                # Try graceful shutdown first
+                process.terminate()
+                
+                # Wait for graceful shutdown
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"Force killing {component_name}")
+                    process.kill()
+                    process.wait()
+                    
+                logger.info(f"Stopped {component_name}")
+                
+            component['process'] = None
+            if component_name in self.processes:
+                del self.processes[component_name]
+                
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to stop {component_name}: {e}")
+            return False
+            
+    def stop_all_components(self):
+        """Stop all running components"""
+        logger.info("Stopping all components...")
+        for component_name in list(self.components.keys()):
+            self.stop_component(component_name)
+            
+    def check_component_health(self, component_name):
+        """Check if component is healthy and restart if needed"""
+        component = self.components.get(component_name)
+        if not component:
+            return False
+            
+        process = component['process']
+        if not process:
+            return False
+            
+        # Check if process is still running
+        if process.poll() is not None:
+            logger.warning(f"Component {component_name} has stopped unexpectedly")
+            component['process'] = None
+            return False
+            
+        return True
+        
+    def run_scheduled_component(self, component_name):
+        """Run a scheduled component (for news scraper and email sender)"""
+        component = self.components.get(component_name)
+        if not component:
+            return
+            
+        current_phase = self.get_current_market_phase()
+        if not self.is_component_active(component_name, current_phase):
+            return
+            
+        try:
+            # Build command
+            if 'script' in component:
+                cmd = [self.python_exe, component['script']] + component['args']
+            else:
+                cmd = component['command'] + component['args']
+                
+            logger.info(f"Running scheduled {component_name}: {' '.join(cmd)}")
+            
+            # Run and wait for completion
+            result = subprocess.run(
+                cmd,
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout
+            )
+            
+            if result.returncode == 0:
+                logger.info(f"Scheduled {component_name} completed successfully")
+            else:
+                logger.error(f"Scheduled {component_name} failed: {result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            logger.error(f"Scheduled {component_name} timed out")
+        except Exception as e:
+            logger.error(f"Failed to run scheduled {component_name}: {e}")
+            
+    def manage_components(self):
+        """Main component management logic"""
+        current_phase = self.get_current_market_phase()
+        now_et = datetime.now(self.eastern_tz)
+        
+        logger.info(f"Current market phase: {current_phase} ({now_et.strftime('%Y-%m-%d %H:%M:%S %Z')})")
+        
+        for component_name, component in self.components.items():
+            should_be_active = self.is_component_active(component_name, current_phase)
+            is_currently_running = self.check_component_health(component_name)
+            
+            # Skip scheduled components (they run on their own schedule)
+            if 'interval' in component:
+                continue
+                
+            if should_be_active and not is_currently_running:
+                logger.info(f"Starting {component_name} for {current_phase} phase")
+                self.start_component(component_name)
+            elif not should_be_active and is_currently_running:
+                logger.info(f"Stopping {component_name} (not active during {current_phase})")
+                self.stop_component(component_name)
+                
+    def setup_scheduled_tasks(self):
+        """Setup scheduled tasks for periodic components"""
+        # News scraper every 5 minutes
+        schedule.every(5).minutes.do(self.run_scheduled_component, 'news_scraper')
+        
+        # Email sender every 10 minutes
+        schedule.every(10).minutes.do(self.run_scheduled_component, 'email_sender')
+        
+        # Component management every 1 minute
+        schedule.every(1).minutes.do(self.manage_components)
+        
+    def run_scheduler(self):
+        """Run the scheduled tasks in a separate thread"""
+        while self.is_running:
+            try:
+                schedule.run_pending()
+                time.sleep(1)
+            except Exception as e:
+                logger.error(f"Scheduler error: {e}")
+                time.sleep(5)
+                
+    def display_status(self):
+        """Display current status of all components"""
+        current_phase = self.get_current_market_phase()
+        now_et = datetime.now(self.eastern_tz)
+        
+        print("\n" + "="*60)
+        print("MARKET HOURS MANAGER - STATUS")
+        print("="*60)
+        print(f"Current Time (ET): {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        print(f"Market Phase: {current_phase.upper()}")
+        print("-"*60)
+        print("Component Status:")
+        
+        for component_name, component in self.components.items():
+            is_active = self.is_component_active(component_name, current_phase)
+            is_running = self.check_component_health(component_name)
+            
+            status = "RUNNING" if is_running else "STOPPED"
+            should_status = "SHOULD RUN" if is_active else "SHOULD STOP"
+            
+            print(f"  {component_name:20} | {status:8} | {should_status}")
+            
+        print("="*60)
+        
+    def run(self):
+        """Main execution loop"""
+        logger.info("Market Hours Manager starting...")
+        
+        # Display initial status
+        self.display_status()
+        
+        # Setup scheduled tasks
+        self.setup_scheduled_tasks()
+        
+        # Start scheduler thread
+        scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
+        scheduler_thread.start()
+        
+        # Initial component management
+        self.manage_components()
+        
+        # Main loop
+        try:
+            while self.is_running:
+                time.sleep(30)  # Check every 30 seconds
+                
+                # Display status every 5 minutes
+                if datetime.now().minute % 5 == 0 and datetime.now().second < 30:
+                    self.display_status()
+                    
+        except KeyboardInterrupt:
+            logger.info("Received keyboard interrupt")
+        finally:
+            self.stop_all_components()
+            logger.info("Market Hours Manager stopped")
+
+def main():
+    """Main entry point"""
+    try:
+        manager = MarketHoursManager()
+        manager.run()
+    except Exception as e:
+        logger.error(f"Fatal error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
