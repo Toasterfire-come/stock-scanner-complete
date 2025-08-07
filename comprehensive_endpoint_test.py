@@ -332,14 +332,14 @@ def create_test_data():
                     defaults=stock_data
                 )
             
-            print(f"✓ Created {len(test_stocks)} test stocks")
+            print(f"[OK] Created {len(test_stocks)} test stocks")
             return True
         else:
-            print(f"✓ Database has {Stock.objects.count()} stocks already")
+            print(f"[OK] Database has {Stock.objects.count()} stocks already")
             return True
             
     except Exception as e:
-        print(f"❌ Failed to create test data: {e}")
+        print(f"[FAIL] Failed to create test data: {e}")
         return False
 
 def analyze_results(all_results):
@@ -359,7 +359,7 @@ def analyze_results(all_results):
                 total_endpoints += 1
                 
                 if 'error' in result:
-                    print(f"  ❌ {endpoint}: ERROR - {result['error']}")
+                    print(f"  [FAIL] {endpoint}: ERROR - {result['error']}")
                     problematic_endpoints.append(f"{api_group}.{endpoint}")
                 else:
                     # Determine if endpoint is working
@@ -400,12 +400,12 @@ def analyze_results(all_results):
                     
                     if is_working:
                         working_endpoints += 1
-                        print(f"  ✅ {endpoint}: WORKING - {', '.join(status_info)}")
+                        print(f"  [OK] {endpoint}: WORKING - {', '.join(status_info)}")
                     else:
-                        print(f"  ⚠️ {endpoint}: NO DATA - {result}")
+                        print(f"  [WARN] {endpoint}: NO DATA - {result}")
                         problematic_endpoints.append(f"{api_group}.{endpoint}")
         else:
-            print(f"\n{api_group.upper()}: ❌ FAILED TO TEST")
+            print(f"\n{api_group.upper()}: [FAIL] FAILED TO TEST")
             if isinstance(results, dict) and 'error' in results:
                 print(f"  Error: {results['error']}")
     
@@ -418,7 +418,7 @@ def analyze_results(all_results):
     print(f"Problematic endpoints: {len(problematic_endpoints)}")
     
     if problematic_endpoints:
-        print(f"\n❌ PROBLEMATIC ENDPOINTS:")
+        print(f"\n[FAIL] PROBLEMATIC ENDPOINTS:")
         for endpoint in problematic_endpoints:
             print(f"  - {endpoint}")
     
@@ -426,13 +426,13 @@ def analyze_results(all_results):
     print(f"\nSUCCESS RATE: {success_rate:.1f}%")
     
     if success_rate >= 90:
-        print("\n🎉 EXCELLENT! Almost all endpoints are working!")
+        print("\n[SUCCESS] EXCELLENT! Almost all endpoints are working!")
     elif success_rate >= 75:
-        print("\n✅ GOOD! Most endpoints are working.")
+        print("\n[OK] GOOD! Most endpoints are working.")
     elif success_rate >= 50:
-        print("\n⚠️ FAIR! Some endpoints need attention.")
+        print("\n[WARN] FAIR! Some endpoints need attention.")
     else:
-        print("\n❌ POOR! Many endpoints need fixing.")
+        print("\n[FAIL] POOR! Many endpoints need fixing.")
     
     return success_rate >= 90
 
@@ -443,7 +443,7 @@ def main():
     
     # Create test data if needed
     if not create_test_data():
-        print("❌ Could not create test data. Tests may not work properly.")
+        print("[FAIL] Could not create test data. Tests may not work properly.")
     
     # Run all tests
     all_results = {}
@@ -461,10 +461,10 @@ def main():
     overall_success = analyze_results(all_results)
     
     if overall_success:
-        print("\n🎉 COMPREHENSIVE TEST PASSED!")
+        print("\n[SUCCESS] COMPREHENSIVE TEST PASSED!")
         print("All endpoints are working and returning data properly.")
     else:
-        print("\n⚠️ SOME ISSUES FOUND!")
+        print("\n[WARN] SOME ISSUES FOUND!")
         print("Check the detailed results above for specific problems.")
     
     return overall_success
