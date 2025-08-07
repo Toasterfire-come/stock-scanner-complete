@@ -15,7 +15,7 @@ from django.utils.decorators import method_decorator
 
 from .services.discount_service import DiscountService
 from .models import DiscountCode, RevenueTracking, MonthlyRevenueSummary
-from .decorators import secure_api_endpoint, validate_user_input
+from .security_utils import secure_api_endpoint, validate_user_input
 
 
 @csrf_exempt
