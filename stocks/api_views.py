@@ -762,21 +762,21 @@ def market_stats_api(request):
         nasdaq_stocks = Stock.objects.filter(exchange='NASDAQ').count()
         
         # Calculate market trends
-        gainers = Stock.objects.filter(price_change__gt=0).count()
-        losers = Stock.objects.filter(price_change__lt=0).count()
-        unchanged = Stock.objects.filter(price_change=0).count()
+        gainers = Stock.objects.filter(price_change_today__gt=0).count()
+        losers = Stock.objects.filter(price_change_today__lt=0).count()
+        unchanged = Stock.objects.filter(price_change_today=0).count()
         
         # Get top performers
         top_gainers = Stock.objects.filter(
-            price_change__gt=0
-        ).order_by('-price_change_percent')[:5].values(
-            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+            price_change_today__gt=0
+        ).order_by('-change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change_today', 'change_percent'
         )
         
         top_losers = Stock.objects.filter(
-            price_change__lt=0
-        ).order_by('price_change_percent')[:5].values(
-            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+            price_change_today__lt=0
+        ).order_by('change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change_today', 'change_percent'
         )
         
         # Most active by volume
@@ -856,11 +856,10 @@ def filter_stocks_api(request):
                 'ticker': stock.ticker,
                 'name': stock.name or stock.company_name or stock.ticker,
                 'current_price': format_decimal_safe(stock.current_price) or 0.0,
-                'price_change': format_decimal_safe(stock.price_change) or 0.0,
-                'price_change_percent': format_decimal_safe(stock.price_change_percent) or 0.0,
+                'price_change': format_decimal_safe(stock.price_change_today) or 0.0,
+                'price_change_percent': format_decimal_safe(stock.change_percent) or 0.0,
                 'volume': int(stock.volume) if stock.volume else 0,
                 'market_cap': format_decimal_safe(stock.market_cap) or 0.0,
-                'sector': stock.sector or '',
                 'exchange': stock.exchange or ''
             })
         

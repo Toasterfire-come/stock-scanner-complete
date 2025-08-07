@@ -8,24 +8,30 @@ import os
 import sys
 import django
 import json
-from unittest.mock import Mock
 
-# Set up Django
+# Set up Django with SQLite for testing
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-
-# Mock some Django components that might not be available
-class MockCache:
-    def get(self, key, default=None):
-        return default
-    def set(self, key, value, timeout=None):
-        pass
-
-# Mock the cache module
-sys.modules['django.core.cache'] = Mock()
-sys.modules['django.core.cache'].cache = MockCache()
+os.environ['TEST_MODE'] = 'true'  # Flag for test mode
 
 try:
     django.setup()
+    print("INFO: Django setup completed successfully")
+    
+    # Override database for testing after setup
+    from django.conf import settings
+    settings.DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+    
+    # Setup database tables
+    from django.core.management import call_command
+    try:
+        call_command('migrate', verbosity=0, interactive=False)
+        print("INFO: Database tables created successfully")
+    except Exception as e:
+        print(f"WARNING: Database migration failed: {e}")
+        
 except Exception as e:
     print(f"Warning: Django setup had issues: {e}")
     print("Continuing with limited testing...")
