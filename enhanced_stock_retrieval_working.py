@@ -26,6 +26,7 @@ from decimal import Decimal
 from collections import defaultdict
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+import subprocess
 
 # Django imports for database integration
 import django
@@ -661,6 +662,39 @@ def run_stock_update(args):
     print(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
+def _build_subprocess_args(args) -> list[str]:
+    """Build argument list to spawn a one-off cycle in a separate process."""
+    cmd = [sys.executable, os.path.abspath(__file__)]
+    if args.noproxy:
+        cmd.append('-noproxy')
+    if args.test:
+        cmd.append('-test')
+    cmd += ['-threads', str(args.threads)]
+    cmd += ['-timeout', str(args.timeout)]
+    if args.csv:
+        cmd += ['-csv', args.csv]
+    if args.output:
+        cmd += ['-output', args.output]
+    if args.max_symbols:
+        cmd += ['-max-symbols', str(args.max_symbols)]
+    if args.proxy_file:
+        cmd += ['-proxy-file', args.proxy_file]
+    if args.save_to_db:
+        cmd.append('-save-to-db')
+    # Do NOT include '-schedule' here; child should run a single cycle and exit
+    return cmd
+
+def start_cycle_in_subprocess(args):
+    """Start a single stock update cycle in a separate process, returning immediately.
+    This allows a new cycle to begin every 3 minutes regardless of the prior run time.
+    """
+    try:
+        cmd = _build_subprocess_args(args)
+        print(f"Spawning new cycle subprocess: {' '.join(cmd)}")
+        subprocess.Popen(cmd)
+    except Exception as e:
+        logger.error(f"Failed to start subprocess cycle: {e}")
+
 def main():
     """Main function"""
     global shutdown_flag
@@ -682,12 +716,13 @@ def main():
     print("=" * 60)
     
     if args.schedule:
-        print(f"\nSCHEDULER MODE: Running every 3 minutes")
+        print(f"\nSCHEDULER MODE: Spawning a new cycle every 3 minutes (overlap allowed)")
         print(f"Press Ctrl+C to stop the scheduler")
         print("=" * 60)
         
-        # Schedule the job to run every 3 minutes
-        schedule.every(3).minutes.do(run_stock_update, args)
+        # Kick off an immediate run in a subprocess, then schedule subsequent runs
+        start_cycle_in_subprocess(args)
+        schedule.every(3).minutes.do(start_cycle_in_subprocess, args)
         
         try:
             while True:
@@ -697,7 +732,7 @@ def main():
             print("\nScheduler stopped by user")
             shutdown_flag = True
     else:
-        # Run single update
+        # Run single update in the current process
         run_stock_update(args)
     
     print("\nScript completed!")
