@@ -288,18 +288,10 @@ class Command(BaseCommand):
             return
             
         try:
-            session = requests.Session()
-            session.proxies = {
-                'http': proxy,
-                'https': proxy
-            }
-            session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            })
-            import yfinance.shared
-            yfinance.shared._requests = session
+            # yfinance now manages its own curl_cffi session; do not override with requests.Session
+            self.stdout.write("Skipping manual session injection; letting yfinance manage transport")
         except Exception as e:
-            self.stdout.write(f"Failed to set proxy {proxy}: {e}")
+            self.stdout.write(f"Failed to patch yfinance proxy handling: {e}")
 
     def _extract_pe_ratio(self, info):
         """Extract PE ratio with multiple fallback options"""
