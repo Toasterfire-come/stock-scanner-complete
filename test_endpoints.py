@@ -4,6 +4,10 @@ Comprehensive endpoint testing script for Stock Scanner API
 Tests all major endpoints and reports status
 """
 
+import os
+# Ensure server started by scripts uses SQLite
+os.environ.setdefault('TEST_MODE', '1')
+
 import requests
 import json
 import time

@@ -75,48 +75,60 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
-# Database configuration - Auto-detect XAMPP or use environment settings
-if IS_XAMPP_AVAILABLE:
-    # XAMPP Configuration (no password by default)
+# Database configuration - Test mode override, otherwise Auto-detect XAMPP or use environment settings
+TEST_MODE = os.environ.get('TEST_MODE', '').lower() in ('1', 'true', 'yes')
+
+if TEST_MODE:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'stockscanner'),
-            'USER': os.environ.get('DB_USER', 'root'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # XAMPP default: no password
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'use_unicode': True,
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1",
-                'autocommit': True,
-                'connect_timeout': 60,
-                'read_timeout': 300,
-                'write_timeout': 300,
-            },
-            'CONN_MAX_AGE': 0,
-            'ATOMIC_REQUESTS': True,
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
         }
     }
-    print("INFO: Using XAMPP MySQL configuration")
+    print("INFO: TEST_MODE enabled - using SQLite database")
 else:
-    # Standard MySQL configuration
-    DATABASES = {
-        'default': {
-            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
-            'NAME': os.environ.get('DB_NAME', 'stock_scanner_nasdaq'),
-            'USER': os.environ.get('DB_USER', 'django_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
-            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+    # Database configuration - Auto-detect XAMPP or use environment settings
+    if IS_XAMPP_AVAILABLE:
+        # XAMPP Configuration (no password by default)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': os.environ.get('DB_NAME', 'stockscanner'),
+                'USER': os.environ.get('DB_USER', 'root'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # XAMPP default: no password
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '3306'),
+                'OPTIONS': {
+                    'charset': 'utf8mb4',
+                    'use_unicode': True,
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1",
+                    'autocommit': True,
+                    'connect_timeout': 60,
+                    'read_timeout': 300,
+                    'write_timeout': 300,
+                },
+                'CONN_MAX_AGE': 0,
+                'ATOMIC_REQUESTS': True,
             }
         }
-    }
-    print("INFO: Using standard MySQL configuration")
+        print("INFO: Using XAMPP MySQL configuration")
+    else:
+        # Standard MySQL configuration
+        DATABASES = {
+            'default': {
+                'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+                'NAME': os.environ.get('DB_NAME', 'stock_scanner_nasdaq'),
+                'USER': os.environ.get('DB_USER', 'django_user'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
+                'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+                'PORT': os.environ.get('DB_PORT', '3306'),
+                'OPTIONS': {
+                    'charset': 'utf8mb4',
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                }
+            }
+        }
+        print("INFO: Using standard MySQL configuration")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

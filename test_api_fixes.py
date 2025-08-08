@@ -10,6 +10,9 @@ import django
 import json
 from unittest.mock import Mock
 
+# Force test mode to avoid touching MySQL during this script
+os.environ.setdefault('TEST_MODE', '1')
+
 # Set up Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
 

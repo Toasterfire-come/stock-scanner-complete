@@ -12,6 +12,9 @@
 
 set -u
 
+# Ensure tests do not use MySQL
+export TEST_MODE=1
+
 BASE_URL="${1:-http://localhost:8000}"
 PYTHON_CMD="python3"
 SERVER_PID=""
