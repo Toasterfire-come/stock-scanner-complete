@@ -37,17 +37,17 @@ timeout /t 3 /nobreak >nul
 echo ✅ Cloudflare tunnel started
 echo.
 
-echo 🚀 Starting Market Hours Manager...
-start /b "" python market_hours_manager.py
+echo 🚀 Starting Django server...
+start /b "" python manage.py runserver 0.0.0.0:8000
 
-:: Wait for manager to start
-timeout /t 2 /nobreak >nul
+:: Wait for server to start
+timeout /t 3 /nobreak >nul
 
-echo ✅ Market Hours Manager started
+echo ✅ Django server started
 echo.
 echo 🌐 Services running:
 echo    📡 Cloudflare Tunnel: Active
-echo    ⏰ Market Hours Manager: Active
+echo    🐍 Django Server: Active
 echo    🔗 Your app is accessible via Cloudflare URL
 echo.
 echo Press any key to stop all services

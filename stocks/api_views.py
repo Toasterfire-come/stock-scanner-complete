@@ -97,6 +97,13 @@ def stock_list_api(request):
         sort_by = request.GET.get('sort_by', 'last_updated')
         sort_order = request.GET.get('sort_order', 'desc')
         
+        # Detect base request (no filters/search)
+        is_base_request = (
+            (not search) and (not category) and
+            not any([min_price, max_price, min_volume, min_market_cap, max_market_cap, min_pe, max_pe]) and
+            (exchange is None)
+        )
+        
         # PROGRESSIVE FILTERING APPROACH - Start with more inclusive base
         # Base queryset - much more inclusive
         base_queryset = Stock.objects.all()
@@ -117,7 +124,7 @@ def stock_list_api(request):
             
             base_queryset = base_queryset.filter(exchange_query)
         
-        # Apply search filter early
+        # Apply search filter early (only if search has content)
         if search:
             base_queryset = base_queryset.filter(
                 Q(ticker__icontains=search) | 
@@ -129,31 +136,37 @@ def stock_list_api(request):
         # Get total count before further filtering
         total_available = base_queryset.count()
         
-        # Apply progressive quality filters
-        queryset = base_queryset
-        
-        # Only apply strict price filters for specific categories
-        if category == 'all':
-            # Show all stocks including those without complete data
+        # If it's the base request with no filters/search, return all stocks without extra filtering
+        if is_base_request:
             queryset = base_queryset
+            # Base request should return all stocks
+            limit = total_available
         else:
-            # Try to get stocks with good data first
-            preferred_queryset = queryset.filter(
-                current_price__isnull=False
-            ).exclude(current_price=0)
+            # Apply progressive quality filters
+            queryset = base_queryset
             
-            # If we get enough results, use the preferred set
-            if preferred_queryset.count() >= limit // 2:
-                queryset = preferred_queryset
-            # Otherwise, be more inclusive
+            # Only apply strict price filters for specific categories
+            if category == 'all':
+                # Show all stocks including those without complete data
+                queryset = base_queryset
             else:
-                # Include stocks with ANY useful data (even if price is zero)
-                queryset = queryset.filter(
-                    Q(current_price__isnull=False) |
-                    Q(volume__isnull=False) |
-                    Q(market_cap__isnull=False)
-                )
-
+                # Try to get stocks with good data first
+                preferred_queryset = queryset.filter(
+                    current_price__isnull=False
+                ).exclude(current_price=0)
+                
+                # If we get enough results, use the preferred set
+                if preferred_queryset.count() >= limit // 2:
+                    queryset = preferred_queryset
+                # Otherwise, be more inclusive
+                else:
+                    # Include stocks with ANY useful data (even if price is zero)
+                    queryset = queryset.filter(
+                        Q(current_price__isnull=False) |
+                        Q(volume__isnull=False) |
+                        Q(market_cap__isnull=False)
+                    )
+        
         # Search filter already applied above to base_queryset
         # No need to reapply here
 
@@ -250,7 +263,7 @@ def stock_list_api(request):
         for stock in stocks:
             change_percent = calculate_change_percent(stock.current_price, stock.price_change_today)
             
-            stock_data.append({
+            record = {
                 # Basic info
                 'ticker': stock.ticker,
                 'symbol': stock.symbol or stock.ticker,
@@ -317,30 +330,38 @@ def stock_list_api(request):
                 
                 # WordPress integration
                 'wordpress_url': f"/stock/{stock.ticker.lower()}/"
-            })
+            }
+            
+            # Remove None-valued fields for a cleaner payload
+            cleaned_record = {k: v for k, v in record.items() if v is not None}
+            stock_data.append(cleaned_record)
 
         # Ensure we always have a meaningful response
         final_count = len(stock_data)
         final_total = max(total_available, final_count)
 
+        filters_raw = {
+            'search': search,
+            'category': category,
+            'min_price': min_price,
+            'max_price': max_price,
+            'min_volume': min_volume,
+            'min_market_cap': min_market_cap,
+            'max_market_cap': max_market_cap,
+            'min_pe': min_pe,
+            'max_pe': max_pe,
+            'exchange': exchange or 'all',
+            'sort_by': sort_by,
+            'sort_order': sort_order
+        }
+        # Remove empty strings and None from filters for a cleaner report
+        filters_applied = {k: v for k, v in filters_raw.items() if v not in (None, '')}
+
         return Response({
             'success': True,
             'count': final_count,
             'total_available': final_total,
-            'filters_applied': {
-                'search': search,
-                'category': category,
-                'min_price': min_price,
-                'max_price': max_price,
-                'min_volume': min_volume,
-                'min_market_cap': min_market_cap,
-                'max_market_cap': max_market_cap,
-                'min_pe': min_pe,
-                'max_pe': max_pe,
-                'exchange': exchange or 'all',
-                'sort_by': sort_by,
-                'sort_order': sort_order
-            },
+            'filters_applied': filters_applied,
             'data': stock_data,
             'timestamp': timezone.now().isoformat()
         })

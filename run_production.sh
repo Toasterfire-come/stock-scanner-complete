@@ -171,6 +171,45 @@ start_server() {
     python manage.py runserver 0.0.0.0:8000
 }
 
+# Start Cloudflare tunnel and Django server
+start_with_tunnel() {
+    print_step "Starting Cloudflare tunnel and Django server"
+
+    # Check cloudflared
+    if ! command -v cloudflared &> /dev/null; then
+        print_error "cloudflared not found. Please install Cloudflare tunnel."
+        exit 1
+    fi
+
+    # Default tunnel name
+    TUNNEL_NAME=${TUNNEL_NAME:-django-api}
+
+    # Verify tunnel exists
+    if ! cloudflared tunnel list 2>/dev/null | grep -q "$TUNNEL_NAME"; then
+        print_error "Tunnel '$TUNNEL_NAME' not found. Run setup_cloudflare_tunnel_auto.sh first."
+        exit 1
+    fi
+
+    # Start tunnel in background
+    print_step "Starting Cloudflare tunnel: $TUNNEL_NAME"
+    cloudflared tunnel run "$TUNNEL_NAME" &
+    TUNNEL_PID=$!
+    sleep 2
+
+    # Start Django server in background
+    print_step "Starting Django server"
+    python manage.py runserver 0.0.0.0:8000 &
+    SERVER_PID=$!
+
+    echo -e "\n${GREEN}Services running:${NC}"
+    echo -e "  📡 Cloudflare Tunnel (PID: $TUNNEL_PID)"
+    echo -e "  🐍 Django Server (PID: $SERVER_PID)"
+    echo -e "\n${YELLOW}Press Ctrl+C to stop both services${NC}"
+
+    # Wait on both processes
+    wait $TUNNEL_PID $SERVER_PID
+}
+
 # Main execution function
 main() {
     print_header "Stock Scanner - Production Setup"
@@ -194,6 +233,11 @@ main() {
             setup_virtual_environment
             start_server
             ;;
+        "start-tunnel")
+            check_environment
+            setup_virtual_environment
+            start_with_tunnel
+            ;;
         "migrate")
             check_environment
             setup_virtual_environment
@@ -215,12 +259,13 @@ main() {
             echo "Usage: ./run_production.sh [command]"
             echo ""
             echo "Commands:"
-            echo "  setup    - Full setup (default)"
-            echo "  start    - Start the Django server"
-            echo "  migrate  - Run database migrations"
-            echo "  static   - Collect static files"
-            echo "  check    - Run production readiness check"
-            echo "  help     - Show this help message"
+            echo "  setup         - Full setup (default)"
+            echo "  start         - Start the Django server"
+            echo "  start-tunnel  - Start Cloudflare tunnel and Django server"
+            echo "  migrate       - Run database migrations"
+            echo "  static        - Collect static files"
+            echo "  check         - Run production readiness check"
+            echo "  help          - Show this help message"
             ;;
         *)
             print_error "Unknown command: $1"

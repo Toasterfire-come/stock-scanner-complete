@@ -196,7 +196,7 @@ print_step "Creating startup scripts"
 # Linux/macOS startup script
 cat > start_tunnel.sh << 'EOF'
 #!/bin/bash
-# Start Cloudflare Tunnel and Market Hours Manager
+# Start Cloudflare Tunnel and Django Server
 
 echo "Starting Cloudflare Tunnel..."
 cloudflared tunnel run stock-scanner &
@@ -204,18 +204,18 @@ TUNNEL_PID=$!
 
 sleep 5
 
-echo "Starting Market Hours Manager..."
-./start_market_hours.sh &
-MANAGER_PID=$!
+echo "Starting Django Server..."
+python3 manage.py runserver 0.0.0.0:8000 &
+SERVER_PID=$!
 
 echo "Services started:"
 echo "Cloudflare Tunnel PID: $TUNNEL_PID"
-echo "Market Hours Manager PID: $MANAGER_PID"
+echo "Django Server PID: $SERVER_PID"
 echo ""
 echo "Press Ctrl+C to stop both services"
 
 # Wait for interrupt
-trap 'echo "Stopping services..."; kill $TUNNEL_PID $MANAGER_PID; exit' INT
+trap 'echo "Stopping services..."; kill $TUNNEL_PID $SERVER_PID; exit' INT
 wait
 EOF
 
@@ -229,8 +229,8 @@ start /B cloudflared tunnel run stock-scanner
 
 timeout /t 5
 
-echo Starting Market Hours Manager...
-start /B start_market_hours.bat
+echo Starting Django Server...
+start /B python manage.py runserver 0.0.0.0:8000
 
 echo Services started successfully!
 echo Check the Cloudflare dashboard for tunnel status.
