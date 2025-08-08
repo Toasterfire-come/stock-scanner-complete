@@ -21,9 +21,9 @@ from django.contrib.auth.models import User
 
 from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
-import yfinance as yf
-import requests
-from bs4 import BeautifulSoup
+# import yfinance as yf  # Disabled: DB-only mode
+# import requests  # Disabled: DB-only mode
+# from bs4 import BeautifulSoup  # Disabled: DB-only mode
 
 logger = logging.getLogger(__name__)
 
@@ -890,65 +890,34 @@ def filter_stocks_api(request):
 @permission_classes([AllowAny])
 def realtime_stock_api(request, ticker):
     """
-    Get real-time stock data using yfinance
+    Get current stock data from the database only
     """
     try:
-        # Attempt real-time data from yfinance
-        try:
-            yf_ticker = yf.Ticker(ticker.upper())
-            info = getattr(yf_ticker, 'info', {}) or {}
-            history = yf_ticker.history(period="1d", interval="1m")
-        except Exception:
-            info = {}
-            history = None
-        
-        # If yfinance failed or returned empty, fall back to DB
-        if not history is None and not history.empty:
-            latest = history.iloc[-1]
-            data = {
-                'ticker': ticker.upper(),
-                'company_name': info.get('longName') or info.get('shortName') or ticker.upper(),
-                'current_price': float(latest.get('Close', 0.0)),
-                'open_price': float(latest.get('Open', 0.0)),
-                'high_price': float(latest.get('High', 0.0)),
-                'low_price': float(latest.get('Low', 0.0)),
-                'volume': int(latest.get('Volume', 0) or 0),
-                'market_cap': info.get('marketCap'),
-                'pe_ratio': info.get('trailingPE'),
-                'dividend_yield': info.get('dividendYield'),
-                'last_updated': timezone.now().isoformat(),
-                'market_status': 'open' if info.get('regularMarketTime') else 'unknown'
-            }
-            return Response(data, status=status.HTTP_200_OK)
-        
-        # DB fallback
-        try:
-            db_stock = Stock.objects.get(Q(ticker__iexact=ticker) | Q(symbol__iexact=ticker))
-            data = {
-                'ticker': db_stock.ticker,
-                'company_name': db_stock.company_name or db_stock.name,
-                'current_price': float(db_stock.current_price or 0.0),
-                'open_price': None,
-                'high_price': None,
-                'low_price': None,
-                'volume': int(db_stock.volume or 0),
-                'market_cap': int(db_stock.market_cap or 0),
-                'pe_ratio': float(db_stock.pe_ratio or 0) if db_stock.pe_ratio is not None else None,
-                'dividend_yield': float(db_stock.dividend_yield or 0) if db_stock.dividend_yield is not None else None,
-                'last_updated': db_stock.last_updated.isoformat() if db_stock.last_updated else timezone.now().isoformat(),
-                'market_status': 'unknown'
-            }
-            return Response(data, status=status.HTTP_200_OK)
-        except Stock.DoesNotExist:
-            return Response(
-                {'error': f'No real-time or database data available for {ticker}'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
+        db_stock = Stock.objects.get(Q(ticker__iexact=ticker) | Q(symbol__iexact=ticker))
+        data = {
+            'ticker': db_stock.ticker,
+            'company_name': db_stock.company_name or db_stock.name,
+            'current_price': float(db_stock.current_price or 0.0),
+            'open_price': None,
+            'high_price': None,
+            'low_price': None,
+            'volume': int(db_stock.volume or 0),
+            'market_cap': int(db_stock.market_cap or 0),
+            'pe_ratio': float(db_stock.pe_ratio or 0) if db_stock.pe_ratio is not None else None,
+            'dividend_yield': float(db_stock.dividend_yield or 0) if db_stock.dividend_yield is not None else None,
+            'last_updated': db_stock.last_updated.isoformat() if db_stock.last_updated else timezone.now().isoformat(),
+            'market_status': 'unknown'
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    except Stock.DoesNotExist:
+        return Response(
+            {'error': f'Stock {ticker} not found in database'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         logger.error(f"Real-time stock API error for {ticker}: {e}")
         return Response(
-            {'error': f'Failed to retrieve real-time data for {ticker}'},
+            {'error': 'Failed to retrieve stock data'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
