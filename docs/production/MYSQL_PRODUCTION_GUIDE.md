@@ -68,7 +68,7 @@ pip install mysqlclient>=2.2.0
 Create `.env` file:
 ```env
 DEBUG=false
-DATABASE_URL=mysql://stock_scanner:StockScanner2024!@localhost:3307/stock_scanner_nasdaq
+DATABASE_URL=mysql://stock_scanner:StockScanner2024!@localhost:3306/stock_scanner_nasdaq
 ```
 
 ## Production Optimizations
@@ -89,7 +89,7 @@ character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
 
 # Network
-port = 3307
+port = 3306
 
 # Security
 bind-address = 127.0.0.1
