@@ -38,11 +38,11 @@ cleanup() {
         wait $TUNNEL_PID 2>/dev/null
     fi
     
-    # Kill market hours manager
-    if [ ! -z "$MANAGER_PID" ]; then
-        echo "   Stopping Market Hours Manager (PID: $MANAGER_PID)..."
-        kill -TERM $MANAGER_PID 2>/dev/null
-        wait $MANAGER_PID 2>/dev/null
+    # Kill Django server
+    if [ ! -z "$SERVER_PID" ]; then
+        echo "   Stopping Django server (PID: $SERVER_PID)..."
+        kill -TERM $SERVER_PID 2>/dev/null
+        wait $SERVER_PID 2>/dev/null
     fi
     
     echo "✅ All services stopped"
@@ -68,25 +68,25 @@ fi
 echo "✅ Cloudflare tunnel started (PID: $TUNNEL_PID)"
 echo ""
 
-echo "🚀 Starting Market Hours Manager..."
-python3 market_hours_manager.py &
-MANAGER_PID=$!
+echo "🚀 Starting Django server..."
+python3 manage.py runserver 0.0.0.0:8000 &
+SERVER_PID=$!
 
-# Wait a moment for manager to start
-sleep 2
+# Wait a moment for server to start
+sleep 3
 
-# Check if manager started successfully
-if ! ps -p $MANAGER_PID > /dev/null 2>&1; then
-    echo "❌ ERROR: Failed to start Market Hours Manager"
+# Check if server started successfully
+if ! ps -p $SERVER_PID > /dev/null 2>&1; then
+    echo "❌ ERROR: Failed to start Django server"
     cleanup
     exit 1
 fi
 
-echo "✅ Market Hours Manager started (PID: $MANAGER_PID)"
+echo "✅ Django server started (PID: $SERVER_PID)"
 echo ""
 echo "🌐 Services running:"
 echo "   📡 Cloudflare Tunnel: Active"
-echo "   ⏰ Market Hours Manager: Active"
+echo "   🐍 Django Server: Active"
 echo "   🔗 Your app is accessible via Cloudflare URL"
 echo ""
 echo "Press Ctrl+C to stop all services"
