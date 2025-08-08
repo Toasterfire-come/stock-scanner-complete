@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 from decimal import Decimal
+from django.contrib.auth.models import User
 
 from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
@@ -892,35 +893,57 @@ def realtime_stock_api(request, ticker):
     Get real-time stock data using yfinance
     """
     try:
-        # Get real-time data from yfinance
-        stock = yf.Ticker(ticker.upper())
-        info = stock.info
-        history = stock.history(period="1d", interval="1m")
+        # Attempt real-time data from yfinance
+        try:
+            yf_ticker = yf.Ticker(ticker.upper())
+            info = getattr(yf_ticker, 'info', {}) or {}
+            history = yf_ticker.history(period="1d", interval="1m")
+        except Exception:
+            info = {}
+            history = None
         
-        if history.empty:
+        # If yfinance failed or returned empty, fall back to DB
+        if not history is None and not history.empty:
+            latest = history.iloc[-1]
+            data = {
+                'ticker': ticker.upper(),
+                'company_name': info.get('longName') or info.get('shortName') or ticker.upper(),
+                'current_price': float(latest.get('Close', 0.0)),
+                'open_price': float(latest.get('Open', 0.0)),
+                'high_price': float(latest.get('High', 0.0)),
+                'low_price': float(latest.get('Low', 0.0)),
+                'volume': int(latest.get('Volume', 0) or 0),
+                'market_cap': info.get('marketCap'),
+                'pe_ratio': info.get('trailingPE'),
+                'dividend_yield': info.get('dividendYield'),
+                'last_updated': timezone.now().isoformat(),
+                'market_status': 'open' if info.get('regularMarketTime') else 'unknown'
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        
+        # DB fallback
+        try:
+            db_stock = Stock.objects.get(Q(ticker__iexact=ticker) | Q(symbol__iexact=ticker))
+            data = {
+                'ticker': db_stock.ticker,
+                'company_name': db_stock.company_name or db_stock.name,
+                'current_price': float(db_stock.current_price or 0.0),
+                'open_price': None,
+                'high_price': None,
+                'low_price': None,
+                'volume': int(db_stock.volume or 0),
+                'market_cap': int(db_stock.market_cap or 0),
+                'pe_ratio': float(db_stock.pe_ratio or 0) if db_stock.pe_ratio is not None else None,
+                'dividend_yield': float(db_stock.dividend_yield or 0) if db_stock.dividend_yield is not None else None,
+                'last_updated': db_stock.last_updated.isoformat() if db_stock.last_updated else timezone.now().isoformat(),
+                'market_status': 'unknown'
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        except Stock.DoesNotExist:
             return Response(
-                {'error': f'No real-time data available for {ticker}'},
+                {'error': f'No real-time or database data available for {ticker}'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-        latest = history.iloc[-1]
-        
-        data = {
-            'ticker': ticker.upper(),
-            'company_name': info.get('longName', 'Unknown'),
-            'current_price': float(latest['Close']),
-            'open_price': float(latest['Open']),
-            'high_price': float(latest['High']),
-            'low_price': float(latest['Low']),
-            'volume': int(latest['Volume']),
-            'market_cap': info.get('marketCap'),
-            'pe_ratio': info.get('trailingPE'),
-            'dividend_yield': info.get('dividendYield'),
-            'last_updated': timezone.now().isoformat(),
-            'market_status': 'open' if info.get('regularMarketTime') else 'closed'
-        }
-        
-        return Response(data, status=status.HTTP_200_OK)
         
     except Exception as e:
         logger.error(f"Real-time stock API error for {ticker}: {e}")
@@ -1056,6 +1079,7 @@ def create_alert_api(request):
     try:
         data = json.loads(request.body)
         
+        # Support both legacy fields and model fields
         required_fields = ['ticker', 'target_price', 'condition', 'email']
         for field in required_fields:
             if field not in data:
@@ -1080,12 +1104,26 @@ def create_alert_api(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
+        # Map to model: find or create a system user for alerts
+        system_user, _ = User.objects.get_or_create(username='system_alerts', defaults={'is_staff': False, 'is_superuser': False})
+        
+        # Translate condition to alert_type if needed
+        condition = data['condition']
+        if condition == 'above':
+            alert_type = 'price_above'
+        elif condition == 'below':
+            alert_type = 'price_below'
+        else:
+            alert_type = 'price_change'
+        
+        target_value = Decimal(str(data['target_price']))
+        
         # Create alert
         alert = StockAlert.objects.create(
+            user=system_user,
             stock=stock,
-            target_price=Decimal(str(data['target_price'])),
-            condition=data['condition'],
-            email=data['email'],
+            alert_type=alert_type,
+            target_value=target_value,
             is_active=True
         )
         
@@ -1094,9 +1132,8 @@ def create_alert_api(request):
             'message': f'Alert created for {stock.ticker}',
             'details': {
                 'ticker': stock.ticker,
-                'target_price': float(alert.target_price),
-                'condition': alert.condition,
-                'email': alert.email,
+                'target_value': float(alert.target_value),
+                'alert_type': alert.alert_type,
                 'created_at': alert.created_at.isoformat()
             }
         }, status=status.HTTP_201_CREATED)
