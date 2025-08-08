@@ -94,7 +94,6 @@ class EndpointTester:
         self.test_endpoint("/api/stock/AAPL/", expected_status=200)
         self.test_endpoint("/api/trending/", expected_status=200)
         self.test_endpoint("/api/search/?q=apple", expected_status=200)
-        self.test_endpoint("/api/nasdaq/", expected_status=200)
         self.test_endpoint("/api/market-stats/", expected_status=200)
         self.test_endpoint("/api/statistics/", expected_status=200)
         self.test_endpoint("/api/filter/", expected_status=200)

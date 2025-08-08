@@ -35,7 +35,7 @@ def homepage(request):
     API: Basic API information
     """
     context = {
-        'title': 'Stock Scanner - NASDAQ Data API',
+'title': 'Stock Scanner - NYSE Data API',
         'version': '1.0.0',
         'endpoints': [
             {'url': '/admin/', 'description': 'Django Admin Panel'},
@@ -86,7 +86,7 @@ def api_documentation(request):
             {'method': 'GET', 'path': '/api/search/', 'description': 'Search stocks'},
             {'method': 'GET', 'path': '/api/trending/', 'description': 'Get trending stocks'},
             {'method': 'GET', 'path': '/api/realtime/{ticker}/', 'description': 'Real-time stock data'},
-            {'method': 'GET', 'path': '/api/nasdaq/', 'description': 'NASDAQ stocks'},
+
             {'method': 'GET', 'path': '/api/filter/', 'description': 'Filter stocks'},
             {'method': 'GET', 'path': '/api/market-stats/', 'description': 'Market statistics'},
         ],

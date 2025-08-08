@@ -17,12 +17,13 @@ from datetime import datetime, timedelta
 import json
 import logging
 from decimal import Decimal
+from django.contrib.auth.models import User
 
 from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
-import yfinance as yf
-import requests
-from bs4 import BeautifulSoup
+# import yfinance as yf  # Disabled: DB-only mode
+# import requests  # Disabled: DB-only mode
+# from bs4 import BeautifulSoup  # Disabled: DB-only mode
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def stock_list_api(request):
     - max_market_cap: Maximum market cap filter
     - min_pe: Minimum P/E ratio
     - max_pe: Maximum P/E ratio
-    - exchange: Filter by exchange (default: NYSE)
+    - exchange: Filter by exchange (omit or 'all' to include all)
     - sort_by: Sort field (price, volume, market_cap, change_percent, pe_ratio)
     - sort_order: Sort order (asc, desc) default: desc
     """
@@ -87,8 +88,10 @@ def stock_list_api(request):
         min_pe = request.GET.get('min_pe')
         max_pe = request.GET.get('max_pe')
         
-        # Exchange filter - Fixed to be more flexible
-        exchange = request.GET.get('exchange', 'NYSE')
+        # Exchange filter - do not default to NYSE; allow 'all' to include everything
+        exchange = request.GET.get('exchange', '').strip()
+        if exchange.lower() in ('all', ''):
+            exchange = None
         
         # Sorting - default to last_updated for better results
         sort_by = request.GET.get('sort_by', 'last_updated')
@@ -334,7 +337,7 @@ def stock_list_api(request):
                 'max_market_cap': max_market_cap,
                 'min_pe': min_pe,
                 'max_pe': max_pe,
-                'exchange': exchange,
+                'exchange': exchange or 'all',
                 'sort_by': sort_by,
                 'sort_order': sort_order
             },
@@ -370,8 +373,7 @@ def stock_detail_api(request, ticker):
                 'error': f'Stock {ticker} not found',
                 'available_endpoints': [
                     '/api/stocks/',
-                    '/api/stocks/search/',
-                    '/api/stocks/nasdaq/'
+                    '/api/stocks/search/'
                 ]
             }, status=status.HTTP_404_NOT_FOUND)
 
@@ -497,69 +499,6 @@ def stock_detail_api(request, ticker):
             'success': False,
             'error': str(e),
             'ticker': ticker
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def nasdaq_stocks_api(request):
-    """
-    Get all NASDAQ-listed stocks with comprehensive data
-    
-    URL: /api/stocks/nasdaq/
-    """
-    try:
-        # Import NASDAQ tickers
-        import sys
-        from pathlib import Path
-        sys.path.append(str(Path(__file__).parent.parent.parent / 'data' / 'nasdaq_only'))
-        
-        try:
-            from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
-        except ImportError:
-            NASDAQ_ONLY_TICKERS = []
-        
-        # Filter stocks to NASDAQ only
-        nasdaq_stocks = Stock.objects.filter(
-            ticker__in=NASDAQ_ONLY_TICKERS,
-            exchange__iexact='NASDAQ'
-        ).order_by('ticker')
-        
-        # Parse limit
-        limit = min(int(request.GET.get('limit', 500)), 1000)
-        nasdaq_stocks = nasdaq_stocks[:limit]
-        
-        stock_data = []
-        for stock in nasdaq_stocks:
-            stock_data.append({
-                'ticker': stock.ticker,
-                'company_name': stock.company_name or stock.name or stock.ticker,
-                'current_price': format_decimal_safe(stock.current_price) or 0.0,
-                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
-                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
-                'volume': int(stock.volume) if stock.volume else 0,
-                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
-                'pe_ratio': format_decimal_safe(stock.pe_ratio) or 0.0,
-                'formatted_price': getattr(stock, 'formatted_price', '') or f"${format_decimal_safe(stock.current_price) or 0:.2f}",
-                'formatted_change': getattr(stock, 'formatted_change', '') or '',
-                'formatted_market_cap': getattr(stock, 'formatted_market_cap', '') or '',
-                'last_updated': stock.last_updated.isoformat() if stock.last_updated else timezone.now().isoformat(),
-                'is_gaining': (stock.price_change_today or 0) > 0
-            })
-        
-        return Response({
-            'success': True,
-            'exchange': 'NASDAQ',
-            'count': len(stock_data),
-            'total_nasdaq_tickers': len(NASDAQ_ONLY_TICKERS),
-            'data': stock_data,
-            'timestamp': timezone.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Error in nasdaq_stocks_api: {e}", exc_info=True)
-        return Response({
-            'success': False,
-            'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
@@ -759,7 +698,7 @@ def market_stats_api(request):
     try:
         # Get market statistics from database
         total_stocks = Stock.objects.count()
-        nasdaq_stocks = Stock.objects.filter(exchange='NASDAQ').count()
+        nyse_stocks = Stock.objects.filter(exchange__iexact='NYSE').count()
         
         # Calculate market trends
         gainers = Stock.objects.filter(price_change_today__gt=0).count()
@@ -789,7 +728,7 @@ def market_stats_api(request):
         stats = {
             'market_overview': {
                 'total_stocks': total_stocks,
-                'nasdaq_stocks': nasdaq_stocks,
+                'nyse_stocks': nyse_stocks,
                 'gainers': gainers,
                 'losers': losers,
                 'unchanged': unchanged
@@ -887,43 +826,34 @@ def filter_stocks_api(request):
 @permission_classes([AllowAny])
 def realtime_stock_api(request, ticker):
     """
-    Get real-time stock data using yfinance
+    Get current stock data from the database only
     """
     try:
-        # Get real-time data from yfinance
-        stock = yf.Ticker(ticker.upper())
-        info = stock.info
-        history = stock.history(period="1d", interval="1m")
-        
-        if history.empty:
-            return Response(
-                {'error': f'No real-time data available for {ticker}'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        latest = history.iloc[-1]
-        
+        db_stock = Stock.objects.get(Q(ticker__iexact=ticker) | Q(symbol__iexact=ticker))
         data = {
-            'ticker': ticker.upper(),
-            'company_name': info.get('longName', 'Unknown'),
-            'current_price': float(latest['Close']),
-            'open_price': float(latest['Open']),
-            'high_price': float(latest['High']),
-            'low_price': float(latest['Low']),
-            'volume': int(latest['Volume']),
-            'market_cap': info.get('marketCap'),
-            'pe_ratio': info.get('trailingPE'),
-            'dividend_yield': info.get('dividendYield'),
-            'last_updated': timezone.now().isoformat(),
-            'market_status': 'open' if info.get('regularMarketTime') else 'closed'
+            'ticker': db_stock.ticker,
+            'company_name': db_stock.company_name or db_stock.name,
+            'current_price': float(db_stock.current_price or 0.0),
+            'open_price': None,
+            'high_price': None,
+            'low_price': None,
+            'volume': int(db_stock.volume or 0),
+            'market_cap': int(db_stock.market_cap or 0),
+            'pe_ratio': float(db_stock.pe_ratio or 0) if db_stock.pe_ratio is not None else None,
+            'dividend_yield': float(db_stock.dividend_yield or 0) if db_stock.dividend_yield is not None else None,
+            'last_updated': db_stock.last_updated.isoformat() if db_stock.last_updated else timezone.now().isoformat(),
+            'market_status': 'unknown'
         }
-        
         return Response(data, status=status.HTTP_200_OK)
-        
+    except Stock.DoesNotExist:
+        return Response(
+            {'error': f'Stock {ticker} not found in database'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         logger.error(f"Real-time stock API error for {ticker}: {e}")
         return Response(
-            {'error': f'Failed to retrieve real-time data for {ticker}'},
+            {'error': 'Failed to retrieve stock data'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -1054,6 +984,7 @@ def create_alert_api(request):
     try:
         data = json.loads(request.body)
         
+        # Support both legacy fields and model fields
         required_fields = ['ticker', 'target_price', 'condition', 'email']
         for field in required_fields:
             if field not in data:
@@ -1078,12 +1009,26 @@ def create_alert_api(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
+        # Map to model: find or create a system user for alerts
+        system_user, _ = User.objects.get_or_create(username='system_alerts', defaults={'is_staff': False, 'is_superuser': False})
+        
+        # Translate condition to alert_type if needed
+        condition = data['condition']
+        if condition == 'above':
+            alert_type = 'price_above'
+        elif condition == 'below':
+            alert_type = 'price_below'
+        else:
+            alert_type = 'price_change'
+        
+        target_value = Decimal(str(data['target_price']))
+        
         # Create alert
         alert = StockAlert.objects.create(
+            user=system_user,
             stock=stock,
-            target_price=Decimal(str(data['target_price'])),
-            condition=data['condition'],
-            email=data['email'],
+            alert_type=alert_type,
+            target_value=target_value,
             is_active=True
         )
         
@@ -1092,9 +1037,8 @@ def create_alert_api(request):
             'message': f'Alert created for {stock.ticker}',
             'details': {
                 'ticker': stock.ticker,
-                'target_price': float(alert.target_price),
-                'condition': alert.condition,
-                'email': alert.email,
+                'target_value': float(alert.target_value),
+                'alert_type': alert.alert_type,
                 'created_at': alert.created_at.isoformat()
             }
         }, status=status.HTTP_201_CREATED)

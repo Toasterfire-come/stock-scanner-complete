@@ -22,7 +22,7 @@ All API endpoints are now active and properly configured:
 #### Main API Endpoints
 - ✅ `/api/` - Main API index
 - ✅ `/api/stocks/` - Comprehensive stock list with filtering
-- ✅ `/api/stocks/nasdaq/` - NASDAQ-specific stocks
+- (removed) NASDAQ-specific endpoint is not available; DB contains NYSE only
 - ✅ `/api/stocks/search/` - Stock search functionality
 - ✅ `/api/stocks/<ticker>/` - Individual stock details
 - ✅ `/api/market/stats/` - Market statistics

@@ -59,7 +59,7 @@ test_endpoint "/api/stocks/" "GET" "Stock List"
 test_endpoint "/api/stock/AAPL/" "GET" "Apple Stock Data"
 test_endpoint "/api/trending/" "GET" "Trending Stocks"
 test_endpoint "/api/search/?q=apple" "GET" "Stock Search"
-test_endpoint "/api/nasdaq/" "GET" "NASDAQ Stocks"
+# NASDAQ endpoint removed
 
 # Revenue endpoints
 echo -e "\n💰 Revenue Endpoints:"
