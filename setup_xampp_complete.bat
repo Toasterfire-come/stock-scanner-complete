@@ -157,7 +157,7 @@ echo SUCCESS: Python packages installed
 echo.
 
 echo [STEP 8] Updating Django settings for XAMPP...
-python -c "import os; import re; settings_file = 'stockscanner_django/settings.py'; content = open(settings_file).read() if os.path.exists(settings_file) else ''; db_config = '''DATABASES = {\n    'default': {\n        'ENGINE': 'django.db.backends.mysql',\n        'NAME': 'stockscanner',\n        'USER': 'root',\n        'PASSWORD': '',\n        'HOST': 'localhost',\n        'PORT': '3306',\n        'OPTIONS': {\n            'charset': 'utf8mb4',\n            'use_unicode': True,\n            'init_command': \"SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1\",\n            'autocommit': True,\n            'connect_timeout': 60,\n            'read_timeout': 300,\n            'write_timeout': 300,\n        },\n        'CONN_MAX_AGE': 0,\n        'ATOMIC_REQUESTS': True,\n    }\n}'''; content = re.sub(r'DATABASES\s*=\s*\{[^}]*\}[^}]*\}', db_config, content, flags=re.DOTALL); content = 'import pymysql\npymysql.install_as_MySQLdb()\n\n' + content if 'import pymysql' not in content else content; open(settings_file, 'w').write(content); print('SUCCESS: Django settings updated for XAMPP')"
+python -c "import os; import re; settings_file = 'stockscanner_django/settings.py'; content = open(settings_file).read() if os.path.exists(settings_file) else ''; db_config = '''DATABASES = {\n    'default': {\n        'ENGINE': 'django.db.backends.mysql',\n        'NAME': 'stockscanner',\n        'USER': 'root',\n        'PASSWORD': '',\n        'HOST': 'localhost',\n        'PORT': '3307',\n        'OPTIONS': {\n            'charset': 'utf8mb4',\n            'use_unicode': True,\n            'init_command': \"SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1\",\n            'autocommit': True,\n            'connect_timeout': 60,\n            'read_timeout': 300,\n            'write_timeout': 300,\n        },\n        'CONN_MAX_AGE': 0,\n        'ATOMIC_REQUESTS': True,\n    }\n}'''; content = re.sub(r'DATABASES\s*=\s*\{[^}]*\}[^}]*\}', db_config, content, flags=re.DOTALL); content = 'import pymysql\npymysql.install_as_MySQLdb()\n\n' + content if 'import pymysql' not in content else content; open(settings_file, 'w').write(content); print('SUCCESS: Django settings updated for XAMPP')"
 echo.
 
 echo [STEP 9] Creating XAMPP-specific batch files...
@@ -285,7 +285,7 @@ echo - MySQL Database: stockscanner
 echo - Username: root
 echo - Password: (none)
 echo - Host: localhost
-echo - Port: 3306
+echo - Port: 3307
 echo.
 echo New XAMPP Commands:
 echo - Start Scheduler: start_scheduler_xampp.bat
