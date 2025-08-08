@@ -373,8 +373,7 @@ def stock_detail_api(request, ticker):
                 'error': f'Stock {ticker} not found',
                 'available_endpoints': [
                     '/api/stocks/',
-                    '/api/stocks/search/',
-                    '/api/stocks/nasdaq/'
+                    '/api/stocks/search/'
                 ]
             }, status=status.HTTP_404_NOT_FOUND)
 
@@ -500,69 +499,6 @@ def stock_detail_api(request, ticker):
             'success': False,
             'error': str(e),
             'ticker': ticker
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def nasdaq_stocks_api(request):
-    """
-    Get all NASDAQ-listed stocks with comprehensive data
-    
-    URL: /api/stocks/nasdaq/
-    """
-    try:
-        # Import NASDAQ tickers
-        import sys
-        from pathlib import Path
-        sys.path.append(str(Path(__file__).parent.parent.parent / 'data' / 'nasdaq_only'))
-        
-        try:
-            from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
-        except ImportError:
-            NASDAQ_ONLY_TICKERS = []
-        
-        # Filter stocks to NASDAQ only
-        nasdaq_stocks = Stock.objects.filter(
-            ticker__in=NASDAQ_ONLY_TICKERS,
-            exchange__iexact='NASDAQ'
-        ).order_by('ticker')
-        
-        # Parse limit
-        limit = min(int(request.GET.get('limit', 500)), 1000)
-        nasdaq_stocks = nasdaq_stocks[:limit]
-        
-        stock_data = []
-        for stock in nasdaq_stocks:
-            stock_data.append({
-                'ticker': stock.ticker,
-                'company_name': stock.company_name or stock.name or stock.ticker,
-                'current_price': format_decimal_safe(stock.current_price) or 0.0,
-                'price_change_today': format_decimal_safe(stock.price_change_today) or 0.0,
-                'change_percent': format_decimal_safe(stock.change_percent) or 0.0,
-                'volume': int(stock.volume) if stock.volume else 0,
-                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
-                'pe_ratio': format_decimal_safe(stock.pe_ratio) or 0.0,
-                'formatted_price': getattr(stock, 'formatted_price', '') or f"${format_decimal_safe(stock.current_price) or 0:.2f}",
-                'formatted_change': getattr(stock, 'formatted_change', '') or '',
-                'formatted_market_cap': getattr(stock, 'formatted_market_cap', '') or '',
-                'last_updated': stock.last_updated.isoformat() if stock.last_updated else timezone.now().isoformat(),
-                'is_gaining': (stock.price_change_today or 0) > 0
-            })
-        
-        return Response({
-            'success': True,
-            'exchange': 'NASDAQ',
-            'count': len(stock_data),
-            'total_nasdaq_tickers': len(NASDAQ_ONLY_TICKERS),
-            'data': stock_data,
-            'timestamp': timezone.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Error in nasdaq_stocks_api: {e}", exc_info=True)
-        return Response({
-            'success': False,
-            'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
@@ -762,7 +698,7 @@ def market_stats_api(request):
     try:
         # Get market statistics from database
         total_stocks = Stock.objects.count()
-        nasdaq_stocks = Stock.objects.filter(exchange='NASDAQ').count()
+        nyse_stocks = Stock.objects.filter(exchange__iexact='NYSE').count()
         
         # Calculate market trends
         gainers = Stock.objects.filter(price_change_today__gt=0).count()
@@ -792,7 +728,7 @@ def market_stats_api(request):
         stats = {
             'market_overview': {
                 'total_stocks': total_stocks,
-                'nasdaq_stocks': nasdaq_stocks,
+                'nyse_stocks': nyse_stocks,
                 'gainers': gainers,
                 'losers': losers,
                 'unchanged': unchanged

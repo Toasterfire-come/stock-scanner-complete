@@ -42,7 +42,7 @@ def test_main_stock_apis():
     
     try:
         from stocks.api_views import (
-            stock_list_api, stock_detail_api, nasdaq_stocks_api, 
+            stock_list_api, stock_detail_api,
             stock_search_api, stock_statistics_api, market_stats_api,
             filter_stocks_api, realtime_stock_api, trending_stocks_api
         )
@@ -67,22 +67,7 @@ def test_main_stock_apis():
         except Exception as e:
             results['stock_list_api'] = {'error': str(e)}
         
-        # Test 2: NASDAQ stocks API
-        print("Testing nasdaq_stocks_api...")
-        try:
-            request = factory.get('/api/stocks/nasdaq/')
-            request.GET = QueryDict('limit=5')
-            response = nasdaq_stocks_api(request)
-            data = response.data
-            results['nasdaq_stocks_api'] = {
-                'success': data.get('success', False),
-                'count': data.get('count', 0),
-                'has_data': len(data.get('data', [])) > 0
-            }
-        except Exception as e:
-            results['nasdaq_stocks_api'] = {'error': str(e)}
-        
-        # Test 3: Stock search API
+        # Test 2: Stock search API
         print("Testing stock_search_api...")
         try:
             request = factory.get('/api/stocks/search/')
@@ -96,62 +81,65 @@ def test_main_stock_apis():
             }
         except Exception as e:
             results['stock_search_api'] = {'error': str(e)}
-        
+
         # Test 4: Stock statistics API
         print("Testing stock_statistics_api...")
         try:
-            request = factory.get('/api/stats/')
-            request.GET = QueryDict('')
+            request = factory.get('/api/statistics/')
             response = stock_statistics_api(request)
             data = response.data
             results['stock_statistics_api'] = {
-                'success': data.get('success', False),
-                'has_market_overview': 'market_overview' in data
+                'market_overview_keys': list(data.get('market_overview', {}).keys())
             }
         except Exception as e:
             results['stock_statistics_api'] = {'error': str(e)}
-        
+
         # Test 5: Market stats API
         print("Testing market_stats_api...")
         try:
             request = factory.get('/api/market-stats/')
-            request.GET = QueryDict('')
             response = market_stats_api(request)
             data = response.data
             results['market_stats_api'] = {
-                'success': data.get('success', False),
-                'has_market_overview': 'market_overview' in data
+                'market_overview_keys': list(data.get('market_overview', {}).keys())
             }
         except Exception as e:
             results['market_stats_api'] = {'error': str(e)}
-        
+
         # Test 6: Filter stocks API
         print("Testing filter_stocks_api...")
         try:
-            request = factory.get('/api/filter/')
-            request.GET = QueryDict('limit=5')
+            request = factory.get('/api/filter/?min_price=1&limit=5')
             response = filter_stocks_api(request)
             data = response.data
             results['filter_stocks_api'] = {
-                'success': True,  # No explicit success field
-                'has_stocks': len(data.get('stocks', [])) > 0,
-                'total_count': data.get('total_count', 0)
+                'count': len(data.get('stocks', [])),
+                'filters': data.get('filters_applied', {})
             }
         except Exception as e:
             results['filter_stocks_api'] = {'error': str(e)}
-        
-        # Test 7: Trending stocks API
+
+        # Test 7: Realtime stock API (DB-only)
+        print("Testing realtime_stock_api...")
+        try:
+            request = factory.get('/api/realtime/AAPL/')
+            response = realtime_stock_api(request, 'AAPL')
+            data = response.data
+            results['realtime_stock_api'] = {
+                'ticker': data.get('ticker'),
+                'current_price': data.get('current_price')
+            }
+        except Exception as e:
+            results['realtime_stock_api'] = {'error': str(e)}
+
+        # Test 8: Trending stocks API
         print("Testing trending_stocks_api...")
         try:
             request = factory.get('/api/trending/')
-            request.GET = QueryDict('')
             response = trending_stocks_api(request)
             data = response.data
             results['trending_stocks_api'] = {
-                'success': True,  # No explicit success field
-                'has_high_volume': len(data.get('high_volume', [])) > 0,
-                'has_top_gainers': len(data.get('top_gainers', [])) > 0,
-                'has_most_active': len(data.get('most_active', [])) > 0
+                'sections': list(data.keys())
             }
         except Exception as e:
             results['trending_stocks_api'] = {'error': str(e)}
