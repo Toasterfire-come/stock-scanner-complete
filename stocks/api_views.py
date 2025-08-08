@@ -389,6 +389,34 @@ def stock_detail_api(request, ticker):
         try:
             stock = Stock.objects.get(Q(ticker=ticker) | Q(symbol=ticker))
         except Stock.DoesNotExist:
+            # Fallback: try to fetch minimal info via yfinance for well-known tickers
+            try:
+                import yfinance as yf
+                yf_ticker = yf.Ticker(ticker)
+                info = yf_ticker.fast_info if hasattr(yf_ticker, 'fast_info') else {}
+                if not info:
+                    info = {}
+                current_price = float(info.get('last_price') or info.get('last_trade') or 0) or None
+                market_cap = info.get('market_cap') or None
+                currency = info.get('currency') or 'USD'
+                if current_price is not None:
+                    return Response({
+                        'success': True,
+                        'data': {
+                            'ticker': ticker,
+                            'symbol': ticker,
+                            'company_name': ticker,
+                            'name': ticker,
+                            'exchange': info.get('exchange', 'N/A'),
+                            'current_price': current_price,
+                            'market_cap': int(market_cap) if market_cap else None,
+                            'currency': currency,
+                            'note': 'Live fallback (yfinance). Add to DB for full details.'
+                        },
+                        'timestamp': timezone.now().isoformat()
+                    })
+            except Exception:
+                pass
             return Response({
                 'success': False,
                 'error': f'Stock {ticker} not found',
@@ -458,55 +486,12 @@ def stock_detail_api(request, ticker):
             'book_value': format_decimal_safe(stock.book_value),
             'price_to_book': format_decimal_safe(stock.price_to_book),
             
-            # 52-week performance
-            'week_52_low': format_decimal_safe(stock.week_52_low),
-            'week_52_high': format_decimal_safe(stock.week_52_high),
-            
-            # Targets and predictions
-            'one_year_target': format_decimal_safe(stock.one_year_target),
-            
-            # Formatted display values
-            'formatted_price': stock.formatted_price,
-            'formatted_change': stock.formatted_change,
-            'formatted_volume': stock.formatted_volume,
-            
-            # Timestamps
-            'last_updated': stock.last_updated.isoformat() if stock.last_updated else None,
-            'created_at': stock.created_at.isoformat() if stock.created_at else None,
-            
-            # Calculated indicators
-            'is_gaining': (stock.price_change_today or 0) > 0,
-            'is_losing': (stock.price_change_today or 0) < 0,
-            'volume_above_average': stock.dvav and stock.dvav > 1,
-            'price_near_52_week_high': False,
-            'price_near_52_week_low': False,
-            
-            # Recent price history
-            'price_history': price_history,
-            'price_history_count': len(price_history),
+            # Price history (recent)
+            'recent_prices': price_history,
             
             # Additional metadata
-            'data_quality': {
-                'has_price': stock.current_price is not None,
-                'has_volume': stock.volume is not None,
-                'has_market_cap': stock.market_cap is not None,
-                'has_pe_ratio': stock.pe_ratio is not None,
-                'last_update_age_minutes': (
-                    (timezone.now() - stock.last_updated).total_seconds() / 60
-                    if stock.last_updated else None
-                )
-            }
+            'last_updated': stock.last_updated.isoformat() if getattr(stock, 'last_updated', None) else None,
         }
-        
-        # Calculate price position indicators
-        if stock.current_price and stock.week_52_high and stock.week_52_low:
-            current = float(stock.current_price)
-            high_52 = float(stock.week_52_high)
-            low_52 = float(stock.week_52_low)
-            
-            stock_data['price_near_52_week_high'] = current >= (high_52 * 0.95)
-            stock_data['price_near_52_week_low'] = current <= (low_52 * 1.05)
-            stock_data['price_position_52_week'] = ((current - low_52) / (high_52 - low_52)) * 100 if high_52 != low_52 else 0
 
         return Response({
             'success': True,
@@ -515,7 +500,7 @@ def stock_detail_api(request, ticker):
         })
 
     except Exception as e:
-        logger.error(f"Error in stock_detail_api for {ticker}: {e}", exc_info=True)
+        logger.error(f"Error in stock_detail_api: {e}", exc_info=True)
         return Response({
             'success': False,
             'error': str(e),
@@ -588,18 +573,22 @@ def wordpress_subscription_api(request):
     try:
         data = json.loads(request.body)
         email = data.get('email', '').strip()
-        category = data.get('category', '').strip()
+        category = (data.get('category') or '').strip()
 
-        if not email or not category:
+        if not email:
             return Response({
                 'success': False,
-                'error': 'Email and category are required'
+                'error': 'Email is required'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create or update subscription
+        # Ensure a user is associated because the model requires a user FK
+        default_username = f"wp_{email.split('@')[0]}"
+        user, _ = User.objects.get_or_create(username=default_username, defaults={'email': email})
+
+        # Create or update subscription (model has no category field; we ignore it here or could store elsewhere if added later)
         subscription, created = EmailSubscription.objects.get_or_create(
+            user=user,
             email=email,
-            category=category,
             defaults={'is_active': True}
         )
 
@@ -608,7 +597,7 @@ def wordpress_subscription_api(request):
             'message': 'Subscription created successfully' if created else 'Subscription updated',
             'data': {
                 'email': email,
-                'category': category,
+                'category': category or None,
                 'is_active': subscription.is_active
             }
         })
