@@ -88,6 +88,9 @@ max_connections = 200
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
 
+# Network
+port = 3306
+
 # Security
 bind-address = 127.0.0.1
 ```
