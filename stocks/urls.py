@@ -10,6 +10,7 @@ urlpatterns = [
     
     # Stock data endpoints - using available api_views functions
     path('stock/<str:ticker>/', api_views.stock_detail_api, name='stock_detail'),
+    path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
     path('search/', api_views.stock_search_api, name='stock_search'),
     path('trending/', api_views.trending_stocks_api, name='trending_stocks'),
@@ -18,6 +19,9 @@ urlpatterns = [
     path('stocks/', api_views.stock_list_api, name='stock_list'),
     path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
     path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
+    
+    # Provide WordPress expected alias for stock search
+    path('stocks/search/', api_views.stock_search_api, name='stock_search_wp'),
     
     # WordPress-friendly endpoints
     path('wordpress/stocks/', WordPressStockView.as_view(), name='wp_stocks'),
@@ -31,8 +35,9 @@ urlpatterns = [
     # Alert endpoints
     path('alerts/create/', api_views.create_alert_api, name='create_alert'),
     
-    # Subscription endpoint
+    # Subscription endpoints
     path('subscription/', api_views.wordpress_subscription_api, name='wordpress_subscription'),
+    path('wordpress/subscribe/', api_views.wordpress_subscription_api, name='wp_subscribe'),
     
     # Portfolio endpoints
     path('portfolio/', include('stocks.portfolio_urls')),
