@@ -62,7 +62,7 @@ def stock_list_api(request):
     - max_market_cap: Maximum market cap filter
     - min_pe: Minimum P/E ratio
     - max_pe: Maximum P/E ratio
-    - exchange: Filter by exchange (default: NYSE)
+    - exchange: Filter by exchange (omit or 'all' to include all)
     - sort_by: Sort field (price, volume, market_cap, change_percent, pe_ratio)
     - sort_order: Sort order (asc, desc) default: desc
     """
@@ -87,8 +87,10 @@ def stock_list_api(request):
         min_pe = request.GET.get('min_pe')
         max_pe = request.GET.get('max_pe')
         
-        # Exchange filter - Fixed to be more flexible
-        exchange = request.GET.get('exchange', 'NYSE')
+        # Exchange filter - do not default to NYSE; allow 'all' to include everything
+        exchange = request.GET.get('exchange', '').strip()
+        if exchange.lower() in ('all', ''):
+            exchange = None
         
         # Sorting - default to last_updated for better results
         sort_by = request.GET.get('sort_by', 'last_updated')
@@ -334,7 +336,7 @@ def stock_list_api(request):
                 'max_market_cap': max_market_cap,
                 'min_pe': min_pe,
                 'max_pe': max_pe,
-                'exchange': exchange,
+                'exchange': exchange or 'all',
                 'sort_by': sort_by,
                 'sort_order': sort_order
             },
