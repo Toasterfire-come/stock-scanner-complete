@@ -479,8 +479,16 @@ class WatchlistManager {
                     <div class="empty-state">
                         <i class="fas fa-eye fa-3x mb-3"></i>
                         <h3>No Watchlists Yet</h3>
-                        <p>Create your first watchlist to start tracking stocks</p>
-                        <button class="btn btn-primary" id="create-first-watchlist">Create Watchlist</button>
+                        <p>Create your first watchlist or add from suggested stocks:</p>
+                        <div class="suggested-stocks d-flex flex-wrap justify-content-center gap-2 mt-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="watchlistManager.quickAddSuggested('AAPL')">AAPL</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="watchlistManager.quickAddSuggested('MSFT')">MSFT</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="watchlistManager.quickAddSuggested('NVDA')">NVDA</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="watchlistManager.quickAddSuggested('AMZN')">AMZN</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="watchlistManager.quickAddSuggested('TSLA')">TSLA</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="watchlistManager.quickAddSuggested('GOOGL')">GOOGL</button>
+                        </div>
+                        <button class="btn btn-primary mt-3" id="create-first-watchlist">Create Watchlist</button>
                     </div>
                 </div>
             `;
@@ -615,6 +623,52 @@ class WatchlistManager {
         }
     }
     
+    quickAddSuggested(ticker) {
+        // Create a default watchlist if none exists, then add ticker
+        if (!this.watchlists || this.watchlists.length === 0) {
+            this.createDefaultAndAdd(ticker);
+            return;
+        }
+        const firstId = this.watchlists[0].id;
+        this.addStockToWatchlist(firstId, ticker);
+    }
+
+    async createDefaultAndAdd(ticker) {
+        try {
+            const newWatch = await StockScanner.apiCall('watchlist/create/', {
+                method: 'POST',
+                body: JSON.stringify({ name: 'My Watchlist', description: 'Auto-created' })
+            });
+            await this.loadWatchlists();
+            const targetId = newWatch?.id || (this.watchlists[0] && this.watchlists[0].id);
+            if (targetId) {
+                await this.addStockToWatchlist(targetId, ticker);
+            }
+        } catch (e) {
+            console.error('Failed to create default watchlist:', e);
+            StockScanner.showNotification('Failed to create watchlist', 'error');
+        }
+    }
+
+    async addStockToWatchlist(watchlistId, ticker) {
+        try {
+            await StockScanner.apiCall('watchlist/add-stock/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    watchlist_id: parseInt(watchlistId),
+                    ticker: ticker,
+                    price_alert_enabled: false,
+                    news_alert_enabled: true
+                })
+            });
+            StockScanner.showNotification(`${ticker} added to watchlist`, 'success');
+            await this.loadWatchlists();
+        } catch (e) {
+            console.error('Failed to add suggested:', e);
+            StockScanner.showNotification('Failed to add suggested stock', 'error');
+        }
+    }
+
     async importWatchlist() {
         const activeTab = document.querySelector('#importWatchlistModal .nav-pills .active').id;
         const isCSV = activeTab === 'csv-import-tab';

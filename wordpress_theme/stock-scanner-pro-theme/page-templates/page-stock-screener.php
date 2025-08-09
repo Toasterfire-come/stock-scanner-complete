@@ -143,6 +143,7 @@ get_header(); ?>
             </div>
 
             <!-- Results Panel -->
+            <?php echo do_shortcode('[stock_screener_tool]'); ?>
             <div class="results-panel">
                 <div class="results-header">
                     <h2>📋 Screening Results</h2>

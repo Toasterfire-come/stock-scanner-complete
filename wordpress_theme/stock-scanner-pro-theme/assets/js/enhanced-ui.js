@@ -1719,3 +1719,116 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+(function(){
+  if (typeof window === 'undefined') return;
+
+  const settings = (window.stock_scanner_theme && window.stock_scanner_theme.settings) || {};
+  const enableSkeletons = !!settings.feature_skeletons;
+  const enableCmdPalette = !!settings.feature_command_palette;
+
+  // Offline indicator
+  function updateOnlineStatus(){
+    let bar = document.getElementById('offline-indicator');
+    if (!bar){
+      bar = document.createElement('div');
+      bar.id = 'offline-indicator';
+      bar.setAttribute('role','status');
+      bar.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);padding:8px 12px;border-radius:6px;background:#b91c1c;color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;display:none';
+      bar.textContent = 'You are offline';
+      document.body.appendChild(bar);
+    }
+    bar.style.display = navigator.onLine ? 'none' : 'block';
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  if (document.readyState === 'complete') { updateOnlineStatus(); } else { window.addEventListener('load', updateOnlineStatus); }
+
+  // Fetch with retry/backoff
+  window.fetchWithRetry = async function(url, opts = {}, retries = 2){
+    const baseDelay = 500;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const res = await fetch(url, opts);
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        return res;
+      } catch (e) {
+        if (attempt === retries) throw e;
+        const delay = baseDelay * Math.pow(2, attempt);
+        await new Promise(r=>setTimeout(r, delay));
+      }
+    }
+  };
+
+  // Skeleton helpers
+  if (enableSkeletons) {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .skeleton{position:relative;overflow:hidden;background:#e5e7eb;border-radius:8px}
+      .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.6),rgba(255,255,255,0));transform:translateX(-100%);animation:sk 1.2s infinite}
+      @keyframes sk{100%{transform:translateX(100%)}}
+    `;
+    document.head.appendChild(style);
+
+    window.showSkeletons = function(selector, count = 3, height = 80){
+      const el = document.querySelector(selector);
+      if (!el) return;
+      el.innerHTML = Array.from({length:count}).map(()=>`<div class="skeleton" style="height:${height}px;margin:10px 0"></div>`).join('');
+    };
+  }
+
+  // Command Palette
+  if (enableCmdPalette) {
+    const palette = document.createElement('div');
+    palette.id = 'command-palette';
+    palette.setAttribute('role', 'dialog');
+    palette.setAttribute('aria-modal', 'true');
+    palette.setAttribute('aria-label', 'Command Palette');
+    palette.style.cssText = 'position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(0,0,0,.4);z-index:10000;padding-top:10vh';
+    palette.innerHTML = `
+      <div style="width:min(700px,92vw);background:#fff;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.25);">
+        <div style="padding:12px 14px;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;align-items:center">
+          <span>⌘K</span>
+          <input id="cmdk-input" aria-label="Search commands" placeholder="Type a command or page..." style="flex:1;border:none;outline:none;font-size:16px" />
+          <button id="cmdk-close" aria-label="Close" style="background:none;border:none;font-size:20px">×</button>
+        </div>
+        <div id="cmdk-list" role="listbox" style="max-height:50vh;overflow:auto;padding:8px 0"></div>
+      </div>`;
+    document.body.appendChild(palette);
+
+    const input = palette.querySelector('#cmdk-input');
+    const list  = palette.querySelector('#cmdk-list');
+    const close = palette.querySelector('#cmdk-close');
+
+    const commands = [
+      {label:'Dashboard', href:'/dashboard/'},
+      {label:'Stock Lookup', href:'/stock-lookup/'},
+      {label:'Stock News', href:'/stock-news/'},
+      {label:'Stock Screener', href:'/stock-screener/'},
+      {label:'Watchlist', href:'/watchlist/'},
+      {label:'Market Overview', href:'/market-overview/'},
+      {label:'Premium Plans', href:'/premium-plans/'},
+    ];
+
+    function renderCommands(q=''){
+      const norm = q.trim().toLowerCase();
+      const items = commands.filter(c=>!norm || c.label.toLowerCase().includes(norm));
+      list.innerHTML = items.map((c,i)=>`<div role="option" tabindex="0" data-idx="${i}" style="padding:10px 14px;cursor:pointer" class="cmdk-item">${c.label}</div>`).join('');
+      list.querySelectorAll('.cmdk-item').forEach((el, i)=>{
+        el.addEventListener('click', ()=>{ window.location.href = items[i].href; hide(); });
+        el.addEventListener('keydown', (e)=>{ if (e.key==='Enter') { window.location.href = items[i].href; } });
+      });
+    }
+
+    function show(){ palette.style.display='flex'; renderCommands(); input.value=''; input.focus(); }
+    function hide(){ palette.style.display='none'; }
+
+    document.addEventListener('keydown', (e)=>{
+      const metaK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='k';
+      if (metaK){ e.preventDefault(); show(); }
+      if (e.key==='Escape' && palette.style.display==='flex'){ hide(); }
+    });
+    input.addEventListener('input', ()=>renderCommands(input.value));
+    close.addEventListener('click', hide);
+  }
+})();
