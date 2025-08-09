@@ -367,23 +367,8 @@ function stock_scanner_dashboard_shortcode($atts) {
         </div>
         <?php endif; ?>
         
-        <!-- Quick Stock Lookup -->
-        <div class="quick-lookup">
-            <h3>🔍 Quick Stock Lookup</h3>
-            <div class="lookup-form">
-                <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL)" maxlength="10" />
-                <button id="get-stock-quote" class="btn btn-primary">Get Quote</button>
-            </div>
-            <div id="stock-result" class="stock-result"></div>
-        </div>
-        
-        <!-- Recent API Calls -->
-        <div class="recent-calls">
-            <h3>📈 Recent Activity</h3>
-            <div id="recent-calls-list" class="calls-list">
-                <div class="loading">Loading recent activity...</div>
-            </div>
-        </div>
+        <!-- Quick Stock Lookup (removed per UX update) -->
+        <!-- Recent API Calls (removed per UX update) -->
     </div>
     
     <style>

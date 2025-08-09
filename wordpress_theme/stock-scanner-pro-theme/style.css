@@ -1781,3 +1781,117 @@ details p {
         -webkit-text-fill-color: #000 !important;
     }
 }
+
+/* ===== GLOBAL PAGE HEADER CONTRAST ENHANCEMENT ===== */
+.page-header h1,
+.page-header .page-title {
+  color: var(--text-primary, #1e293b);
+}
+.page-description {
+  color: var(--text-secondary, #64748b);
+}
+
+/* Match cards across pages */
+.card {
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+}
+
+/* Improve link focus/hover for contrast */
+a:focus {
+  outline: 2px solid var(--primary-color, #2563eb);
+  outline-offset: 2px;
+}
+a:hover {
+  color: var(--primary-color, #2563eb);
+}
+
+/* ===== UNIFIED PROFESSIONAL COLOR PALETTE (GLOBAL OVERRIDE) ===== */
+:root {
+  /* Core brand (WordPress-like professional palette) */
+  --primary-color: #2271b1;
+  --primary-hover: #1b5a97;
+  --secondary-color: #64748b;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  --info-color: #0284c7;
+
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-muted: #f1f5f9;
+
+  /* Text */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+
+  /* Borders */
+  --border-color: #e2e8f0;
+  --border-muted: #f1f5f9;
+
+  /* Radii & Shadows (fallbacks for shared styles users) */
+  --radius-sm: 4px; 
+  --radius-md: 8px; 
+  --radius-lg: 12px; 
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,0.10);
+}
+
+/* Map theme-specific gradients to the unified palette to avoid mismatched tones */
+:root {
+  --primary-gradient: linear-gradient(135deg, #eff6ff 0%, #e0ecf8 100%);
+  --secondary-gradient: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  --success-gradient: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  --warning-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  --gold-gradient: linear-gradient(135deg, #f7e5b4 0%, #e4c77e 100%);
+  --neutral-gradient: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+}
+
+/* Unify common UI primitives */
+.btn { border-radius: var(--radius-md); }
+.btn-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Page containers */
+.page-header { border-bottom: 1px solid var(--border-color); }
+.page-title { color: var(--text-primary); }
+.page-description { color: var(--text-secondary); }
+
+/* Tables and panels */
+.table, table { border-color: var(--border-color); }
+.panel, .filters-card, .results-panel { background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
+
+/* Links and focus */
+a { color: inherit; }
+a:hover { color: var(--primary-color); }
+a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+
+/* Dark mode alignment */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --bg-muted: #0b1220;
+    --text-primary: #e5e7eb;
+    --text-secondary: #cbd5e1;
+    --border-color: #374151;
+  }
+
+  .card, .panel, .filters-card, .results-panel { box-shadow: none; }
+  a:hover { color: #93c5fd; }
+}
+
+/* ===== END UNIFIED PALETTE ===== */
