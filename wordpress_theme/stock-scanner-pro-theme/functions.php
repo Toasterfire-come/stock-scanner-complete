@@ -175,7 +175,7 @@ add_action('after_switch_theme', 'stock_scanner_theme_activation');
  */
 function stock_scanner_clear_existing_pages() {
     $page_slugs = array(
-        'dashboard', 'stock-scanner', 'watchlist', 'market-overview', 'account', 
+        'dashboard', 'stock-scanner', 'stock-screener', 'watchlist', 'market-overview', 'account', 
         'premium-plans', 'payment-success', 'payment-cancelled', 'contact', 
         'about', 'privacy-policy', 'terms-of-service', 'faq', 'stock-search',
         'news-feed', 'portfolio', 'alerts', 'help', 'api-docs',
