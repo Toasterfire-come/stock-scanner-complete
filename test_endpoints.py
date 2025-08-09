@@ -77,11 +77,11 @@ class EndpointTester:
     
     def run_all_tests(self):
         """Run comprehensive endpoint tests"""
-        print(f"🧪 Testing Stock Scanner API at {self.base_url}")
+        print(f"Testing Stock Scanner API at {self.base_url}")
         print("=" * 60)
         
         # Core endpoints
-        print("\n📍 Core Endpoints:")
+        print("\nCore Endpoints:")
         self.test_endpoint("/", expected_status=200)
         self.test_endpoint("/health/", expected_status=200)
         self.test_endpoint("/api/health/", expected_status=200)
@@ -89,7 +89,7 @@ class EndpointTester:
         self.test_endpoint("/endpoint-status/?format=json", expected_status=200)
         
         # Stock data endpoints
-        print("\n📊 Stock Data Endpoints:")
+        print("\nStock Data Endpoints:")
         self.test_endpoint("/api/stocks/", expected_status=200)
         self.test_endpoint("/api/stock/AAPL/", expected_status=200)
         self.test_endpoint("/api/trending/", expected_status=200)
@@ -99,29 +99,29 @@ class EndpointTester:
         self.test_endpoint("/api/filter/", expected_status=200)
         
         # Revenue endpoints
-        print("\n💰 Revenue Endpoints:")
+        print("\nRevenue Endpoints:")
         self.test_endpoint("/revenue/revenue-analytics/?format=json", expected_status=200)
         
         # Portfolio endpoints (may require authentication)
-        print("\n💼 Portfolio Endpoints:")
+        print("\nPortfolio Endpoints:")
         self.test_endpoint("/api/portfolio/list/", expected_status=200)
         
         # Watchlist endpoints
-        print("\n👀 Watchlist Endpoints:")
+        print("\nWatchlist Endpoints:")
         self.test_endpoint("/api/watchlist/list/", expected_status=200)
         
         # News endpoints
-        print("\n📰 News Endpoints:")
+        print("\nNews Endpoints:")
         self.test_endpoint("/api/news/feed/", expected_status=200)
         self.test_endpoint("/api/news/analytics/", expected_status=200)
         
         # Test some POST endpoints (should return method details)
-        print("\n📝 POST Endpoints (Info Only):")
+        print("\nPOST Endpoints (Info Only):")
         self.test_endpoint("/api/alerts/create/", method='POST', expected_status=400)  # Should fail without data
         self.test_endpoint("/api/subscription/", method='POST', expected_status=400)  # Should fail without data
         
         # Test non-existent endpoint
-        print("\n❌ Error Handling:")
+        print("\nError Handling:")
         self.test_endpoint("/api/nonexistent/", expected_status=404)
         
         self.print_summary()
@@ -129,46 +129,46 @@ class EndpointTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "=" * 60)
-        print("📋 TEST RESULTS SUMMARY")
+        print("TEST RESULTS SUMMARY")
         print("=" * 60)
         
         total_tests = len(self.results)
         successful_tests = len([r for r in self.results if r['success']])
         failed_tests = total_tests - successful_tests
         
-        print(f"✅ Total Tests: {total_tests}")
-        print(f"✅ Successful: {successful_tests}")
-        print(f"❌ Failed: {failed_tests}")
-        print(f"📊 Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        print(f"Total Tests: {total_tests}")
+        print(f"Successful: {successful_tests}")
+        print(f"Failed: {failed_tests}")
+        print(f"Success Rate: {(successful_tests/total_tests)*100:.1f}%")
         
         # Show successful endpoints
-        print(f"\n🟢 WORKING ENDPOINTS ({successful_tests}):")
+        print(f"\nWORKING ENDPOINTS ({successful_tests}):")
         for result in self.results:
             if result['success']:
-                json_indicator = "📄" if result['has_json'] else "🌐"
+                json_indicator = "JSON" if result['has_json'] else "RAW"
                 print(f"  {json_indicator} {result['method']} {result['path']} ({result['response_time']}s)")
         
         # Show failed endpoints
         if failed_tests > 0:
-            print(f"\n🔴 FAILED ENDPOINTS ({failed_tests}):")
+            print(f"\nFAILED ENDPOINTS ({failed_tests}):")
             for result in self.results:
                 if not result['success']:
                     error_info = result.get('error', f"Status {result['status_code']}")
-                    print(f"  ❌ {result['method']} {result['path']} - {error_info}")
+                    print(f"  - {result['method']} {result['path']} - {error_info}")
         
         # Show performance stats
         response_times = [r['response_time'] for r in self.results if r['success']]
         if response_times:
             avg_time = sum(response_times) / len(response_times)
             max_time = max(response_times)
-            print(f"\n⚡ PERFORMANCE:")
+            print(f"\nPERFORMANCE:")
             print(f"  Average Response Time: {avg_time:.3f}s")
             print(f"  Slowest Response: {max_time:.3f}s")
         
         print("\n" + "=" * 60)
         
         # JSON output for detailed analysis
-        print("\n💾 Detailed JSON Results:")
+        print("\nDetailed JSON Results:")
         print(json.dumps(self.results, indent=2))
 
 if __name__ == "__main__":
