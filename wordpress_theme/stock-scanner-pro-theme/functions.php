@@ -125,6 +125,11 @@ add_action('wp_enqueue_scripts', function() {
 require_once get_template_directory() . '/inc/plugin-integration.php';
 require_once get_template_directory() . '/inc/admin-settings.php';
 
+// Prevent double-loading in case other files include admin-settings
+if (is_admin() && !class_exists('StockScannerAdminSettings')) {
+    require_once get_template_directory() . '/inc/admin-settings.php';
+}
+
 // Create screener saved screens table on theme activation if it doesn't exist
 function stock_scanner_create_tables(){
     global $wpdb; $charset = $wpdb->get_charset_collate();

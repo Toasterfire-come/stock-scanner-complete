@@ -43,7 +43,7 @@ class StockScannerAdminSettings {
             'Stock Scanner',
             'manage_options',
             'stock-scanner-settings',
-            array($this, 'general_settings_page'),
+            array($this, 'settings_page'),
             'dashicons-chart-line',
             30
         );
@@ -55,7 +55,7 @@ class StockScannerAdminSettings {
             'General',
             'manage_options',
             'stock-scanner-settings',
-            array($this, 'general_settings_page')
+            array($this, 'settings_page')
         );
 
         add_submenu_page(
