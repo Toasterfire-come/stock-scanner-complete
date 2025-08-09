@@ -303,7 +303,9 @@ class Stock_Scanner_Integration {
         $components = array(
             'Stock_Scanner_API' => 'includes/class-stock-api.php',
             'Stock_Scanner_PayPal' => 'includes/class-paypal-integration.php',
-            'StockScannerPageManager' => 'includes/class-page-manager.php'
+            'StockScannerPageManager' => 'includes/class-page-manager.php',
+            'StockScannerSitemap' => 'includes/class-seo-sitemap.php',
+            'StockScannerSEOOptimizer' => 'includes/class-seo-optimizer.php'
         );
         
         foreach ($components as $class => $file) {

@@ -11,6 +11,7 @@ class StockScannerSitemap {
         add_action('init', [$this, 'add_rewrite_rules']);
         add_action('template_redirect', [$this, 'handle_sitemap_request']);
         add_filter('robots_txt', [$this, 'add_sitemap_to_robots'], 10, 2);
+        add_action('save_post', [$this, 'maybe_ping_on_save'], 10, 1);
     }
     
     /**
@@ -26,6 +27,12 @@ class StockScannerSitemap {
         add_rewrite_rule(
             '^stock-scanner-sitemap-pages\.xml$',
             'index.php?stock_scanner_sitemap=pages',
+            'top'
+        );
+
+        add_rewrite_rule(
+            '^stock-scanner-sitemap-news\.xml$',
+            'index.php?stock_scanner_sitemap=news',
             'top'
         );
         
@@ -56,6 +63,9 @@ class StockScannerSitemap {
             case 'pages':
                 $this->generate_pages_sitemap();
                 break;
+            case 'news':
+                $this->generate_news_sitemap();
+                break;
             default:
                 status_header(404);
                 exit;
@@ -74,6 +84,12 @@ class StockScannerSitemap {
         // Pages sitemap
         echo "\t<sitemap>\n";
         echo "\t\t<loc>" . home_url('/stock-scanner-sitemap-pages.xml') . "</loc>\n";
+        echo "\t\t<lastmod>" . date('c') . "</lastmod>\n";
+        echo "\t</sitemap>\n";
+
+        // News sitemap
+        echo "\t<sitemap>\n";
+        echo "\t\t<loc>" . home_url('/stock-scanner-sitemap-news.xml') . "</loc>\n";
         echo "\t\t<lastmod>" . date('c') . "</lastmod>\n";
         echo "\t</sitemap>\n";
         
@@ -274,8 +290,8 @@ class StockScannerSitemap {
         $sitemap_url = urlencode(home_url('/stock-scanner-sitemap.xml'));
         
         $ping_urls = [
-            'google' => "http://www.google.com/webmasters/tools/ping?sitemap={$sitemap_url}",
-            'bing' => "http://www.bing.com/ping?sitemap={$sitemap_url}",
+            'google' => "https://www.google.com/ping?sitemap={$sitemap_url}",
+            'bing' => "https://www.bing.com/ping?sitemap={$sitemap_url}",
         ];
         
         foreach ($ping_urls as $engine => $url) {
@@ -283,6 +299,14 @@ class StockScannerSitemap {
                 'timeout' => 5,
                 'blocking' => false
             ]);
+        }
+    }
+
+    // Ping engines when plugin pages update
+    public function maybe_ping_on_save($post_id) {
+        if (get_post_type($post_id) !== 'page') { return; }
+        if (get_post_meta($post_id, 'stock_scanner_page', true)) {
+            $this->ping_search_engines();
         }
     }
     
@@ -310,6 +334,6 @@ class StockScannerSitemap {
         echo '</urlset>';
     }
 }
-
+ 
 // Initialize sitemap generator
 new StockScannerSitemap();
