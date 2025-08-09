@@ -1401,7 +1401,7 @@ function stock_scanner_register_user() {
 }
 add_action('wp_ajax_nopriv_stock_scanner_register_user', 'stock_scanner_register_user');
 
-add_action('init', function stock_scanner_ensure_pages(){
+add_action('init', function(){
     $ensure = function($title, $slug, $template, $content = ''){
         if (!get_page_by_path($slug)) {
             $page_id = wp_insert_post(array(
