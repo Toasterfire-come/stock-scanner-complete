@@ -40,15 +40,19 @@ add_action('after_setup_theme', 'stock_scanner_theme_setup');
  */
 function stock_scanner_scripts() {
     // Enqueue theme stylesheet with WordPress admin colors
-    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '2.0.0');
+    $style_file = get_stylesheet_directory() . '/style.css';
+    $style_ver = file_exists($style_file) ? filemtime($style_file) : '2.1.0';
+    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), $style_ver);
     
     // Add shared styles for unified color scheme across pages
     if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
+        $shared_file = get_template_directory() . '/assets/css/shared-styles.css';
+        $shared_ver = file_exists($shared_file) ? filemtime($shared_file) : '2.1.0';
         wp_enqueue_style(
             'stock-scanner-shared-styles',
             get_template_directory_uri() . '/assets/css/shared-styles.css',
             array('stock-scanner-style'),
-            '2.0.0'
+            $shared_ver
         );
     }
     
