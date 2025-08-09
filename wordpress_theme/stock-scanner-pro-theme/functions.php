@@ -232,10 +232,17 @@ function stock_scanner_clear_existing_pages() {
 function stock_scanner_create_pages() {
     $pages = array(
         array(
+            'title' => 'Home',
+            'slug' => 'home',
+            'content' => '',
+            'meta_description' => 'Professional stock scanner platform with real-time data, powerful screening, and personalized insights.',
+            'template' => 'page-templates/page-home.php'
+        ),
+        array(
             'title' => 'Dashboard',
             'slug' => 'dashboard',
             'content' => '[stock_scanner_dashboard]',
-            'meta_description' => 'Access your Stock Scanner dashboard with real-time market data, portfolio tracking, and professional stock analysis tools.',
+            'meta_description' => 'Your personalized Stock Scanner dashboard with market overview, usage stats, and quick actions.',
             'template' => 'page-dashboard.php'
         ),
         array(
@@ -1459,5 +1466,16 @@ add_action('init', function stock_scanner_ensure_pages(){
     // Enforce correct templates for existing pages that users report redirecting to dashboard
     $ensure_template('stock-news', 'page-templates/page-stock-news.php');
     $ensure_template('stock-screener', 'page-templates/page-stock-screener.php');
+});
+
+// Redirect signed-in users visiting the Home page to the Dashboard
+add_action('template_redirect', function() {
+    if (is_user_logged_in() && (is_front_page() || is_page('home'))) {
+        $dashboard = get_page_by_path('dashboard');
+        if ($dashboard) {
+            wp_redirect(get_permalink($dashboard->ID));
+            exit;
+        }
+    }
 });
 ?>
