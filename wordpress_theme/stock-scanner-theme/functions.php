@@ -151,21 +151,21 @@ function stock_scanner_create_pages() {
             'slug' => 'stock-lookup',
             'content' => '<div class="page-content-wrapper">[stock_lookup_tool]</div>',
             'meta_description' => 'Real-time stock quote lookup with current prices, volume, and basic stock information.',
-            'template' => 'page-stock-lookup.php'
+            'template' => 'page-templates/page-stock-lookup.php'
         ),
         array(
             'title' => 'Stock News',
             'slug' => 'stock-news',
             'content' => '<div class="page-content-wrapper">[stock_news_feed]</div>',
             'meta_description' => 'Latest stock market news, financial analysis, and market updates for informed trading decisions.',
-            'template' => 'page-stock-news.php'
+            'template' => 'page-templates/page-stock-news.php'
         ),
         array(
             'title' => 'Stock Screener',
             'slug' => 'stock-screener',
             'content' => '<div class="page-content-wrapper">[stock_screener_tool]</div>',
             'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
-            'template' => 'page-stock-screener.php'
+            'template' => 'page-templates/page-stock-screener.php'
         ),
 
         array(
@@ -180,7 +180,7 @@ function stock_scanner_create_pages() {
             'slug' => 'market-overview',
             'content' => '<div class="page-content-wrapper">[market_overview_dashboard]</div>',
             'meta_description' => 'Comprehensive market overview with real-time data on major indices, market trends, and stock performance.',
-            'template' => 'page-market-overview.php'
+            'template' => 'page-templates/page-market-overview.php'
         ),
         array(
             'title' => 'My Account',
