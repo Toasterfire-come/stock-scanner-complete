@@ -72,7 +72,9 @@ function stock_scanner_scripts() {
             'bronze' => 1500,
             'silver' => 5000,
             'gold' => -1
-        )
+        ),
+        'settings' => (class_exists('StockScannerThemeSettings') ? StockScannerThemeSettings::get_settings() : array()),
+        'rest_nonce' => wp_create_nonce('wp_rest')
     ));
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
@@ -87,12 +89,17 @@ add_action('wp_enqueue_scripts', function() {
     if (file_exists(get_template_directory() . '/assets/js/shared-functions.js')) {
         wp_enqueue_script('stock-scanner-shared', get_template_directory_uri() . '/assets/js/shared-functions.js', ['jquery'], '2.0.0', true);
     }
+    // Enhanced UI helpers (skeletons, offline, cmd palette)
+    if (file_exists(get_template_directory() . '/assets/js/enhanced-ui.js')) {
+        wp_enqueue_script('stock-scanner-enhanced-ui', get_template_directory_uri() . '/assets/js/enhanced-ui.js', ['jquery'], '2.0.0', true);
+    }
 }, 11);
 
 /**
  * Include plugin integration
  */
 require_once get_template_directory() . '/inc/plugin-integration.php';
+require_once get_template_directory() . '/inc/admin-settings.php';
 
 /**
  * Theme activation - Clear existing pages and create new ones
