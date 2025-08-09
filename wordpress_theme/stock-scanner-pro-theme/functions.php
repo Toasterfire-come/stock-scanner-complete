@@ -56,6 +56,7 @@ function stock_scanner_scripts() {
     }
     
     // Localize script for AJAX with WordPress admin colors
+    // Localize both plugin integration and enhanced UI consumers
     wp_localize_script('stock-scanner-plugin-js', 'stock_scanner_theme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_theme_nonce'),
@@ -81,17 +82,30 @@ add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
 
 // Ensure Bootstrap and shared scripts required by News/Watchlist are present
 add_action('wp_enqueue_scripts', function() {
-    // Bootstrap CSS/JS for theme UI components used by templates
-    wp_enqueue_style('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', [], '5.3.2');
-    wp_enqueue_script('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', [], '5.3.2', true);
+    // Determine current context
+    $is_home = is_front_page() || is_home();
+    $is_screener = is_page('stock-screener');
+    $is_watchlist = is_page('watchlist');
+    $is_news = is_page('stock-news') || is_page('news-feed');
+    $is_portfolio = is_page('portfolio');
+
+    // Bootstrap CSS/JS for theme UI components used by templates (load on needed pages only)
+    if ($is_home || $is_screener || $is_watchlist || $is_news || $is_portfolio) {
+        wp_enqueue_style('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', [], '5.3.2');
+        wp_enqueue_script('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', [], '5.3.2', true);
+    }
 
     // Shared functions (managers for News/Watchlist/Portfolio)
-    if (file_exists(get_template_directory() . '/assets/js/shared-functions.js')) {
+    if (($is_watchlist || $is_news || $is_portfolio) && file_exists(get_template_directory() . '/assets/js/shared-functions.js')) {
         wp_enqueue_script('stock-scanner-shared', get_template_directory_uri() . '/assets/js/shared-functions.js', ['jquery'], '2.0.0', true);
     }
     // Enhanced UI helpers (skeletons, offline, cmd palette)
-    if (file_exists(get_template_directory() . '/assets/js/enhanced-ui.js')) {
+    if (($is_home || $is_screener || $is_watchlist || $is_news || $is_portfolio) && file_exists(get_template_directory() . '/assets/js/enhanced-ui.js')) {
         wp_enqueue_script('stock-scanner-enhanced-ui', get_template_directory_uri() . '/assets/js/enhanced-ui.js', ['jquery'], '2.0.0', true);
+    }
+    // Screener advanced features (URL sync, saved screens)
+    if ($is_screener && file_exists(get_template_directory() . '/assets/js/advanced-screener.js')) {
+        wp_enqueue_script('stock-scanner-advanced-screener', get_template_directory_uri() . '/assets/js/advanced-screener.js', ['jquery'], '2.0.0', true);
     }
 }, 11);
 
@@ -100,6 +114,25 @@ add_action('wp_enqueue_scripts', function() {
  */
 require_once get_template_directory() . '/inc/plugin-integration.php';
 require_once get_template_directory() . '/inc/admin-settings.php';
+
+// Create screener saved screens table on theme activation if it doesn't exist
+function stock_scanner_create_tables(){
+    global $wpdb; $charset = $wpdb->get_charset_collate();
+    $table = $wpdb->prefix . 'stock_scanner_screens';
+    $sql = "CREATE TABLE IF NOT EXISTS $table (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id BIGINT UNSIGNED NOT NULL,
+        name VARCHAR(190) NOT NULL,
+        payload TEXT NOT NULL,
+        created_at DATETIME NOT NULL,
+        updated_at DATETIME NOT NULL,
+        PRIMARY KEY (id),
+        KEY user_id (user_id)
+    ) $charset;";
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta($sql);
+}
+add_action('after_switch_theme', 'stock_scanner_create_tables');
 
 /**
  * Theme activation - Clear existing pages and create new ones

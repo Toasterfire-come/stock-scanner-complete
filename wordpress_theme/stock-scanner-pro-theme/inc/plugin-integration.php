@@ -1327,4 +1327,80 @@ function contact_form_advanced_shortcode($atts) {
 }
 add_shortcode('contact_form_advanced', 'contact_form_advanced_shortcode');
 
+/**
+ * Screener Saved Screens (membership-gated)
+ */
+function stock_scanner_require_membership_level($min_level = 'silver') {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Login required');
+    }
+    if (!function_exists('get_user_membership_level')) {
+        wp_send_json_error('Membership unavailable');
+    }
+    $level = get_user_membership_level(get_current_user_id());
+    $order = ['free'=>0,'bronze'=>1,'silver'=>2,'gold'=>3];
+    if (($order[$level] ?? -1) < ($order[$min_level] ?? 99)) {
+        wp_send_json_error('Upgrade required');
+    }
+}
+
+function screener_sanitize_name($name){
+    $name = sanitize_text_field($name);
+    return wp_trim_words($name, 8, '');
+}
+
+function ajax_screener_list_screens(){
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    stock_scanner_require_membership_level('silver');
+    global $wpdb; $uid = get_current_user_id();
+    $table = $wpdb->prefix . 'stock_scanner_screens';
+    $rows = $wpdb->get_results($wpdb->prepare("SELECT id,name,created_at,updated_at FROM $table WHERE user_id=%d ORDER BY updated_at DESC LIMIT 50", $uid), ARRAY_A);
+    wp_send_json_success($rows ?: []);
+}
+add_action('wp_ajax_screener_list_screens', 'ajax_screener_list_screens');
+
+function ajax_screener_save_screen(){
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    stock_scanner_require_membership_level('silver');
+    global $wpdb; $uid = get_current_user_id();
+    $name = screener_sanitize_name($_POST['name'] ?? '');
+    $payload = sanitize_text_field($_POST['payload'] ?? '');
+    if (!$name || !$payload) wp_send_json_error('Invalid');
+    $table = $wpdb->prefix . 'stock_scanner_screens';
+    $wpdb->insert($table, [
+        'user_id'=>$uid,
+        'name'=>$name,
+        'payload'=>$payload,
+        'created_at'=>current_time('mysql'),
+        'updated_at'=>current_time('mysql')
+    ], ['%d','%s','%s','%s','%s']);
+    wp_send_json_success(['id'=>$wpdb->insert_id]);
+}
+add_action('wp_ajax_screener_save_screen', 'ajax_screener_save_screen');
+
+function ajax_screener_get_screen(){
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    stock_scanner_require_membership_level('silver');
+    global $wpdb; $uid = get_current_user_id();
+    $id = absint($_POST['id'] ?? 0);
+    if (!$id) wp_send_json_error('Invalid');
+    $table = $wpdb->prefix . 'stock_scanner_screens';
+    $row = $wpdb->get_row($wpdb->prepare("SELECT id,name,payload FROM $table WHERE id=%d AND user_id=%d", $id, $uid), ARRAY_A);
+    if (!$row) wp_send_json_error('Not found');
+    wp_send_json_success($row);
+}
+add_action('wp_ajax_screener_get_screen', 'ajax_screener_get_screen');
+
+function ajax_screener_delete_screen(){
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    stock_scanner_require_membership_level('silver');
+    global $wpdb; $uid = get_current_user_id();
+    $id = absint($_POST['id'] ?? 0);
+    if (!$id) wp_send_json_error('Invalid');
+    $table = $wpdb->prefix . 'stock_scanner_screens';
+    $wpdb->delete($table, ['id'=>$id,'user_id'=>$uid], ['%d','%d']);
+    wp_send_json_success(true);
+}
+add_action('wp_ajax_screener_delete_screen', 'ajax_screener_delete_screen');
+
 ?>
