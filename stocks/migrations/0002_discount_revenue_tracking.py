@@ -5,6 +5,24 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def create_ref50_discount(apps, schema_editor):
+    DiscountCode = apps.get_model('stocks', 'DiscountCode')
+    # Create or update REF50 discount code
+    obj, _created = DiscountCode.objects.update_or_create(
+        code='REF50',
+        defaults={
+            'discount_percentage': 50.00,
+            'is_active': True,
+            'applies_to_first_payment_only': True,
+        }
+    )
+
+
+def delete_ref50_discount(apps, schema_editor):
+    DiscountCode = apps.get_model('stocks', 'DiscountCode')
+    DiscountCode.objects.filter(code='REF50').delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -70,9 +88,6 @@ class Migration(migrations.Migration):
                 ('last_updated', models.DateTimeField(auto_now=True)),
             ],
         ),
-        # Insert initial REF50 discount code
-        migrations.RunSQL(
-            "INSERT INTO stocks_discountcode (code, discount_percentage, is_active, applies_to_first_payment_only, created_at) VALUES ('REF50', 50.00, 1, 1, NOW()) ON DUPLICATE KEY UPDATE discount_percentage=50.00, is_active=1;",
-            reverse_sql="DELETE FROM stocks_discountcode WHERE code='REF50';"
-        ),
+        # Insert initial REF50 discount code using ORM for cross-database compatibility
+        migrations.RunPython(create_ref50_discount, reverse_code=delete_ref50_discount),
     ]
