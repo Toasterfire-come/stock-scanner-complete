@@ -339,16 +339,6 @@ class Stock_Scanner_Integration {
         add_action('admin_menu', array($this, 'add_admin_menu'), 15);
         add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
         
-        // Guard: ensure security manager class exists to prevent fatal errors
-        if (!class_exists('Stock_Scanner_Security_Manager')) {
-            // Define a minimal no-op class to avoid fatals; full class will be loaded if available
-            class Stock_Scanner_Security_Manager {
-                public function __construct() {}
-                public function detect_automated_behavior($user_id, $ip) { return false; }
-                public function apply_rate_limit($user_id, $ip, $action) { return true; }
-            }
-        }
-        
         // User registration hook
         add_action('user_register', array($this, 'setup_new_user_membership'));
         
@@ -1111,20 +1101,13 @@ class Stock_Scanner_Integration {
 /**
  * Security Manager Class
  */
-class Stock_Scanner_Security_Manager {
-    
-    public function __construct() {
-        // Initialize security features
-    }
-    
-    public function detect_automated_behavior($user_id, $ip) {
-        // Detect patterns indicating automated behavior
-        return false;
-    }
-    
-    public function apply_rate_limit($user_id, $ip, $action) {
-        // Apply rate limiting based on rules
-        return true;
+// Note: Security manager full class should live in includes/class-security-manager.php.
+// Avoid redefining it here to prevent fatal redeclare errors.
+if (!class_exists('Stock_Scanner_Security_Manager')) {
+    class Stock_Scanner_Security_Manager {
+        public function __construct() {}
+        public function detect_automated_behavior($user_id, $ip) { return false; }
+        public function apply_rate_limit($user_id, $ip, $action) { return true; }
     }
 }
 
