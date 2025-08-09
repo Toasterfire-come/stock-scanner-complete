@@ -76,6 +76,7 @@ get_header(); ?>
                 
                 <div id="news-feed" class="news-feed">
                     <!-- News articles will be loaded here -->
+                    <?php echo do_shortcode('[stock_news_feed]'); ?>
                 </div>
                 
                 <div class="load-more-section">

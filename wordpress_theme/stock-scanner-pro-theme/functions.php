@@ -77,6 +77,18 @@ function stock_scanner_scripts() {
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
 
+// Ensure Bootstrap and shared scripts required by News/Watchlist are present
+add_action('wp_enqueue_scripts', function() {
+    // Bootstrap CSS/JS for theme UI components used by templates
+    wp_enqueue_style('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', [], '5.3.2');
+    wp_enqueue_script('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', [], '5.3.2', true);
+
+    // Shared functions (managers for News/Watchlist/Portfolio)
+    if (file_exists(get_template_directory() . '/assets/js/shared-functions.js')) {
+        wp_enqueue_script('stock-scanner-shared', get_template_directory_uri() . '/assets/js/shared-functions.js', ['jquery'], '2.0.0', true);
+    }
+}, 11);
+
 /**
  * Include plugin integration
  */
@@ -111,7 +123,9 @@ function stock_scanner_clear_existing_pages() {
         'dashboard', 'stock-scanner', 'watchlist', 'market-overview', 'account', 
         'premium-plans', 'payment-success', 'payment-cancelled', 'contact', 
         'about', 'privacy-policy', 'terms-of-service', 'faq', 'stock-search',
-        'news-feed', 'portfolio', 'alerts', 'help', 'api-docs'
+        'news-feed', 'portfolio', 'alerts', 'help', 'api-docs',
+        // Also remove plugin-created slugs to avoid duplicates
+        'stock-scanner-dashboard', 'watchlists', 'analytics'
     );
     
     foreach ($page_slugs as $slug) {
@@ -126,6 +140,17 @@ function stock_scanner_clear_existing_pages() {
         'post_type' => 'page',
         'post_status' => 'any',
         's' => 'Stock Scanner',
+        'meta_query' => array(
+            'relation' => 'OR',
+            array(
+                'key' => 'stock_scanner_page',
+                'compare' => 'EXISTS',
+            ),
+            array(
+                'key' => '_stock_scanner_page',
+                'compare' => 'EXISTS',
+            ),
+        ),
         'posts_per_page' => -1
     ));
     
@@ -382,7 +407,14 @@ function stock_scanner_create_pages() {
     }
     
     // Set homepage to dashboard for logged-in users
-    $homepage = get_page_by_path('dashboard');
+            $homepage = get_page_by_path('dashboard');
+        // Also set a static posts page if none set to avoid redirect loops
+        if (!get_option('page_for_posts')) {
+            $posts_page = get_page_by_path('news-feed');
+            if ($posts_page) {
+                update_option('page_for_posts', $posts_page->ID);
+            }
+        }
     if ($homepage) {
         update_option('page_on_front', $homepage->ID);
         update_option('show_on_front', 'page');

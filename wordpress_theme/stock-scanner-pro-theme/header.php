@@ -3,6 +3,7 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="wp-nonce" content="<?php echo esc_attr( wp_create_nonce('wp_rest') ); ?>">
     <?php 
     // SEO: Canonical URL
     if (function_exists('wp_get_canonical_url')) {

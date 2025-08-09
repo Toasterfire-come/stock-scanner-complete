@@ -4,11 +4,8 @@
  * Description: Intelligent news curation based on user holdings and interests
  */
 
-// Security check - require user authentication
-if (!is_user_logged_in()) {
-    wp_redirect(wp_registration_url());
-    exit;
-}
+// Optional: allow guests to view general news; personalize for logged-in users only
+// (No redirect for guests)
 
 get_header(); ?>
 

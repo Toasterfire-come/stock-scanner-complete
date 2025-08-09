@@ -1207,7 +1207,8 @@ function stock_lookup_tool_shortcode($atts) {
         return '<div class="plugin-notice">Stock Scanner plugin is not active.</div>';
     }
     
-    return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
+    // Render the dashboard shortcode rather than outputting the literal tag
+    return do_shortcode('[stock_scanner_dashboard]');
 }
 if (!shortcode_exists('stock_lookup_tool')) { add_shortcode('stock_lookup_tool', 'stock_lookup_tool_shortcode'); }
 

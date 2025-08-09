@@ -84,7 +84,10 @@ class StockScannerPageManager {
      * Add WordPress hooks
      */
     private function add_hooks() {
-        add_action('init', [$this, 'create_pages']);
+        // Avoid creating duplicate pages if the Stock Scanner Pro Theme is active
+        if (!wp_get_theme() || stripos(wp_get_theme()->get('Name'), 'Stock Scanner Pro Theme') === false) {
+            add_action('init', [$this, 'create_pages']);
+        }
         add_action('template_redirect', [$this, 'handle_page_access']);
         add_filter('the_content', [$this, 'filter_page_content']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_page_assets']);

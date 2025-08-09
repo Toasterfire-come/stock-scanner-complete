@@ -4,11 +4,8 @@
  * Description: Advanced watchlist management with import/export and performance tracking
  */
 
-// Security check - require user authentication
-if (!is_user_logged_in()) {
-    wp_redirect(wp_registration_url());
-    exit;
-}
+// Allow guests to see suggested stocks; watchlist actions will prompt login
+// (No redirect for guests)
 
 get_header(); ?>
 
