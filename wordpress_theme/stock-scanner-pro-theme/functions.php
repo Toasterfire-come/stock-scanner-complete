@@ -1414,9 +1414,23 @@ add_action('init', function stock_scanner_ensure_pages(){
         }
     };
 
+    $ensure_template = function($slug, $template){
+        $page = get_page_by_path($slug);
+        if ($page && !is_wp_error($page)) {
+            $current = get_page_template_slug($page->ID);
+            if ($current !== $template) {
+                update_post_meta($page->ID, '_wp_page_template', $template);
+            }
+        }
+    };
+
     // Ensure critical feature pages exist without requiring theme re-activation
     $ensure('My Watchlist', 'watchlist', 'page-watchlist.php', '<div class="page-content-wrapper">[stock_watchlist_manager]</div>');
     $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
     $ensure('My Portfolio', 'portfolio', 'page-templates/page-portfolio.php');
+
+    // Enforce correct templates for existing pages that users report redirecting to dashboard
+    $ensure_template('stock-news', 'page-templates/page-stock-news.php');
+    $ensure_template('stock-screener', 'page-templates/page-stock-screener.php');
 });
 ?>
