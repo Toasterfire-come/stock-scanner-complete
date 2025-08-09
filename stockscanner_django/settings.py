@@ -105,10 +105,10 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
-            'NAME': os.environ.get('DB_NAME', 'stock_scanner_nasdaq'),
-            'USER': os.environ.get('DB_USER', 'django_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
-            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'NAME': os.environ.get('DB_NAME', 'stockscanner'),
+            'USER': os.environ.get('DB_USER', 'stockscanner_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': {
                 'charset': 'utf8mb4',

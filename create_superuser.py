@@ -7,77 +7,76 @@ import os
 import sys
 import django
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
-
-# Configure PyMySQL for MySQL compatibility
-try:
-    import pymysql
-    pymysql.install_as_MySQLdb()
-    print("PyMySQL configured for MySQL compatibility")
-except ImportError:
-    print("PyMySQL not available")
 
 # Configure Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
 django.setup()
 
+
+def get_env(name: str, default: str) -> str:
+    return os.environ.get(name, default)
+
+
 def create_superuser():
-    """Create a superuser account"""
+    """Create a superuser account if it does not exist."""
     User = get_user_model()
-    
-    # Default credentials
-    username = 'admin'
-    email = 'admin@retailstockscanner.com'
-    password = 'StockScanner2010'
-    
+
+    username = get_env('DJANGO_ADMIN_USERNAME', 'admin')
+    email = get_env('DJANGO_ADMIN_EMAIL', 'admin@example.com')
+    password = get_env('DJANGO_ADMIN_PASSWORD', '')
+
     try:
         # Check if superuser already exists
         if User.objects.filter(username=username).exists():
             print(f"SUCCESS: Superuser '{username}' already exists!")
-            user = User.objects.get(username=username)
-            print(f"   Username: {user.username}")
-            print(f"   Email: {user.email}")
-            print(f"   Is Active: {user.is_active}")
-            print(f"   Is Superuser: {user.is_superuser}")
             return
-        
-        # Create new superuser
+
+        if not password:
+            # Generate a strong one-time password if not provided
+            import secrets, string
+            alphabet = string.ascii_letters + string.digits + string.punctuation
+            password = ''.join(secrets.choice(alphabet) for _ in range(20))
+            print("INFO: No DJANGO_ADMIN_PASSWORD provided. Generated a strong temporary password.")
+
         user = User.objects.create_superuser(
             username=username,
             email=email,
-            password=password
+            password=password,
         )
-        
+
         print("SUCCESS: Superuser created successfully!")
         print(f"   Username: {username}")
         print(f"   Email: {email}")
-        print(f"   Password: {password}")
-        print(f"   Admin URL: http://127.0.0.1:8000/admin/")
-        
+        print("   Password: [hidden]")
+        print("   Admin URL: http://127.0.0.1:8000/admin/")
+
+        # Optional: write the generated password to a local file (ignored by git)
+        if os.environ.get('WRITE_ADMIN_PASSWORD_TO_FILE', 'false').lower() == 'true':
+            with open('.admin_credentials', 'w') as f:
+                f.write(f"username={username}\nemail={email}\npassword={password}\n")
+            print("INFO: Credentials written to .admin_credentials")
+
         return user
-        
+
     except Exception as e:
         print(f"ERROR: Error creating superuser: {e}")
         return None
 
+
 def show_login_info():
-    """Display login information"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DJANGO ADMIN LOGIN INFORMATION")
-    print("="*60)
+    print("=" * 60)
     print("Admin URL: http://127.0.0.1:8000/admin/")
-    print("Username: admin")
-    print("Password: StockScanner2010")
-    print("Email: admin@retailstockscanner.com")
-    print("="*60)
-    print("Save these credentials for future use!")
-    print("Start server: python manage.py runserver")
+    print("Username: set via DJANGO_ADMIN_USERNAME (default 'admin')")
+    print("Password: set via DJANGO_ADMIN_PASSWORD or generated")
+    print("Email: set via DJANGO_ADMIN_EMAIL")
+    print("=" * 60)
+    print("Use environment variables to control credentials.")
+
 
 if __name__ == '__main__':
     print("Creating Django Superuser...")
-    print("Database: MySQL (stock_scanner_nasdaq)")
-    print("Environment: Git Bash Compatible")
     print()
-    
     create_superuser()
     show_login_info()

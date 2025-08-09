@@ -80,7 +80,7 @@ DB_ENGINE=django.db.backends.mysql
 DB_NAME=${DB_NAME}
 DB_USER=${DB_USER}
 DB_PASSWORD=${DB_PASSWORD}
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=3306
 ENV
 

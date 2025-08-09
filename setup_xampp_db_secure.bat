@@ -88,7 +88,7 @@ REM Append our desired values
   echo DB_NAME=%DB_NAME%
   echo DB_USER=%DB_USER%
   echo DB_PASSWORD=%DB_PASSWORD%
-  echo DB_HOST=localhost
+  echo DB_HOST=127.0.0.1
   echo DB_PORT=3306
 ) >> "%ENV_FILE%"
 

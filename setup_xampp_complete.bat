@@ -182,7 +182,7 @@ echo set DJANGO_SETTINGS_MODULE=stockscanner_django.settings
 echo set PATH=%%PATH%%;%XAMPP_MYSQL_PATH%
 echo echo Starting Django development server...
 echo echo Visit: http://127.0.0.1:8000/api/wordpress/
-echo echo Admin: http://127.0.0.1:8000/admin/ ^(admin/admin123^)
+echo echo Admin: http://127.0.0.1:8000/admin/
 echo python manage.py runserver
 echo pause
 ) > start_server_xampp.bat
@@ -267,7 +267,7 @@ echo SUCCESS: Database schema created
 echo.
 
 echo [STEP 11] Creating sample data and admin user...
-python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'); import django; django.setup(); from stocks.models import Stock; from django.contrib.auth.models import User; from decimal import Decimal; from django.utils import timezone; print('Setting up admin user and sample data...'); User.objects.create_superuser('admin', 'admin@example.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('INFO: Admin user already exists'); stocks_created = 0 if Stock.objects.count() == 0 else Stock.objects.count(); sample_stocks = [{'ticker': 'AAPL', 'name': 'Apple Inc.', 'current_price': Decimal('150.25'), 'price_change': Decimal('2.50'), 'price_change_percent': Decimal('1.69'), 'volume': 50000000, 'market_cap': Decimal('2500000000000'), 'sector': 'Technology', 'industry': 'Consumer Electronics', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'GOOGL', 'name': 'Alphabet Inc.', 'current_price': Decimal('2750.80'), 'price_change': Decimal('-15.20'), 'price_change_percent': Decimal('-0.55'), 'volume': 25000000, 'market_cap': Decimal('1800000000000'), 'sector': 'Technology', 'industry': 'Internet Software & Services', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'TSLA', 'name': 'Tesla, Inc.', 'current_price': Decimal('245.75'), 'price_change': Decimal('8.25'), 'price_change_percent': Decimal('3.47'), 'volume': 75000000, 'market_cap': Decimal('780000000000'), 'sector': 'Consumer Discretionary', 'industry': 'Auto Manufacturers', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'MSFT', 'name': 'Microsoft Corporation', 'current_price': Decimal('378.50'), 'price_change': Decimal('4.75'), 'price_change_percent': Decimal('1.27'), 'volume': 30000000, 'market_cap': Decimal('2800000000000'), 'sector': 'Technology', 'industry': 'Software', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'AMZN', 'name': 'Amazon.com, Inc.', 'current_price': Decimal('145.80'), 'price_change': Decimal('-2.30'), 'price_change_percent': Decimal('-1.55'), 'volume': 40000000, 'market_cap': Decimal('1500000000000'), 'sector': 'Consumer Discretionary', 'industry': 'Internet Retail', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}] if stocks_created == 0 else []; [Stock.objects.create(**stock_data) for stock_data in sample_stocks] if sample_stocks else None; print(f'SUCCESS: Created {len(sample_stocks)} sample stocks' if sample_stocks else f'INFO: Database already has {Stock.objects.count()} stocks'); print(f'Final database status: {Stock.objects.count()} stocks total')"
+python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'); import django; django.setup(); from stocks.models import Stock; from django.contrib.auth.models import User; from decimal import Decimal; from django.utils import timezone; print('Setting up admin user and sample data...'); print('INFO: Skipping auto-creation of admin user. Use create_superuser.py or Django createsuperuser.'); stocks_created = 0 if Stock.objects.count() == 0 else Stock.objects.count(); sample_stocks = [{'ticker': 'AAPL', 'name': 'Apple Inc.', 'current_price': Decimal('150.25'), 'price_change': Decimal('2.50'), 'price_change_percent': Decimal('1.69'), 'volume': 50000000, 'market_cap': Decimal('2500000000000'), 'sector': 'Technology', 'industry': 'Consumer Electronics', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'GOOGL', 'name': 'Alphabet Inc.', 'current_price': Decimal('2750.80'), 'price_change': Decimal('-15.20'), 'price_change_percent': Decimal('-0.55'), 'volume': 25000000, 'market_cap': Decimal('1800000000000'), 'sector': 'Technology', 'industry': 'Internet Software & Services', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'TSLA', 'name': 'Tesla, Inc.', 'current_price': Decimal('245.75'), 'price_change': Decimal('8.25'), 'price_change_percent': Decimal('3.47'), 'volume': 75000000, 'market_cap': Decimal('780000000000'), 'sector': 'Consumer Discretionary', 'industry': 'Auto Manufacturers', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'MSFT', 'name': 'Microsoft Corporation', 'current_price': Decimal('378.50'), 'price_change': Decimal('4.75'), 'price_change_percent': Decimal('1.27'), 'volume': 30000000, 'market_cap': Decimal('2800000000000'), 'sector': 'Technology', 'industry': 'Software', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}, {'ticker': 'AMZN', 'name': 'Amazon.com, Inc.', 'current_price': Decimal('145.80'), 'price_change': Decimal('-2.30'), 'price_change_percent': Decimal('-1.55'), 'volume': 40000000, 'market_cap': Decimal('1500000000000'), 'sector': 'Consumer Discretionary', 'industry': 'Internet Retail', 'exchange': 'NASDAQ', 'last_updated': timezone.now()}] if stocks_created == 0 else []; [Stock.objects.create(**stock_data) for stock_data in sample_stocks] if sample_stocks else None; print(f'SUCCESS: Created {len(sample_stocks)} sample stocks' if sample_stocks else f'INFO: Database already has {Stock.objects.count()} stocks'); print(f'Final database status: {Stock.objects.count()} stocks total')"
 echo.
 
 echo [STEP 12] Final testing and verification...
@@ -297,13 +297,13 @@ echo Web Interfaces:
 echo - XAMPP Control: %XAMPP_PATH%\xampp_control.exe (or xampp-control.exe)
 echo - phpMyAdmin: http://localhost/phpmyadmin
 echo - Django Server: http://127.0.0.1:8000/api/wordpress/
-echo - Django Admin: http://127.0.0.1:8000/admin/ (admin/admin123)
+echo - Django Admin: http://127.0.0.1:8000/admin/
 echo.
 echo Database Status:
 echo - All tables created with proper structure
 echo - All required fields present (ticker, name, current_price, etc.)
 echo - Sample stock data loaded (AAPL, GOOGL, TSLA, MSFT, AMZN)
-echo - Admin user created (admin/admin123)
+echo - Admin user can be created via create_superuser.py or Django 'createsuperuser'
 echo.
 echo Quick Start:
 echo 1. Ensure XAMPP Control Panel shows MySQL as running (green)

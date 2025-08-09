@@ -16,7 +16,6 @@ cd stock-scanner-complete
 **Access your application:**
 - **Main Dashboard**: http://127.0.0.1:8000/
 - **Admin Panel**: http://127.0.0.1:8000/admin/
-- **Login**: admin / admin123
 
 ## Project Structure
 
