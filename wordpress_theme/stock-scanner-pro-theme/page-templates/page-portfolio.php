@@ -10,69 +10,51 @@ if (!is_user_logged_in()) {
     exit;
 }
 
-get_header(); ?>
+g et_header(); ?>
 
 <div class="portfolio-management-container">
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Page Header -->
-            <div class="col-12">
-                <div class="page-header">
-                    <h1 class="page-title">
-                        <i class="fas fa-chart-pie"></i> Portfolio Management
-                    </h1>
-                    <p class="page-description">
-                        Manage your investment portfolios with real-time performance analytics and ROI tracking
-                    </p>
-                </div>
-            </div>
+    <div class="container">
+        <div class="page-header">
+            <h1>📈 My Portfolios</h1>
+            <p class="page-description">Create portfolios, add holdings, and track performance in real time</p>
         </div>
 
         <!-- Portfolio Actions Bar -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="portfolio-actions-bar">
-                    <button class="btn btn-primary" id="create-portfolio-btn">
-                        <i class="fas fa-plus"></i> Create Portfolio
-                    </button>
-                    <button class="btn btn-success" id="import-csv-btn">
-                        <i class="fas fa-upload"></i> Import from CSV
-                    </button>
-                    <button class="btn btn-info" id="view-roi-analytics-btn">
-                        <i class="fas fa-chart-line"></i> Alert ROI Analytics
-                    </button>
-                    <div class="portfolio-filters">
-                        <select id="portfolio-sort" class="form-select">
-                            <option value="created">Sort by Created Date</option>
-                            <option value="performance">Sort by Performance</option>
-                            <option value="value">Sort by Total Value</option>
-                            <option value="name">Sort by Name</option>
-                        </select>
-                    </div>
-                </div>
+        <div class="portfolio-actions-bar panel">
+            <button class="btn btn-primary" id="create-portfolio-btn">
+                <i class="fas fa-plus"></i> Create Portfolio
+            </button>
+            <button class="btn btn-secondary" id="import-csv-btn">
+                <i class="fas fa-upload"></i> Import from CSV
+            </button>
+            <button class="btn btn-outline" id="view-roi-analytics-btn">
+                <i class="fas fa-chart-line"></i> ROI Analytics
+            </button>
+            <div class="portfolio-filters">
+                <select id="portfolio-sort" class="form-select">
+                    <option value="created">Sort by Created Date</option>
+                    <option value="performance">Sort by Performance</option>
+                    <option value="value">Sort by Total Value</option>
+                    <option value="name">Sort by Name</option>
+                </select>
             </div>
         </div>
 
         <!-- Portfolio Grid -->
         <div class="row" id="portfolios-grid">
-            <!-- Portfolios will be loaded here via JavaScript -->
             <div class="col-12">
-                <div class="loading-spinner text-center">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <div class="loading-indicator">
+                    <div class="spinner"></div>
                     <p>Loading your portfolios...</p>
                 </div>
             </div>
         </div>
 
         <!-- Portfolio Performance Summary -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <div class="performance-summary-card">
-                    <h3><i class="fas fa-analytics"></i> Overall Portfolio Performance</h3>
-                    <div class="row" id="overall-performance">
-                        <!-- Performance metrics will be loaded here -->
-                    </div>
-                </div>
+        <div class="mt-6">
+            <div class="performance-summary-card card">
+                <h3>Overall Portfolio Performance</h3>
+                <div class="row" id="overall-performance"></div>
             </div>
         </div>
     </div>
@@ -96,18 +78,16 @@ get_header(); ?>
                         <label for="portfolio-description" class="form-label">Description</label>
                         <textarea class="form-control" id="portfolio-description" rows="3"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="portfolio-public">
-                            <label class="form-check-label" for="portfolio-public">
-                                Make portfolio public (visible to other users)
-                            </label>
-                        </div>
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" id="portfolio-public">
+                        <label class="form-check-label" for="portfolio-public">
+                            Make portfolio public (visible to other users)
+                        </label>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="save-portfolio-btn">Create Portfolio</button>
             </div>
         </div>
@@ -164,7 +144,6 @@ get_header(); ?>
                         <label for="alert-source" class="form-label">Alert Source (if applicable)</label>
                         <select class="form-select" id="alert-source">
                             <option value="">Manual Entry</option>
-                            <!-- Alert options will be populated here -->
                         </select>
                     </div>
                     <div class="holding-preview" id="holding-preview" style="display: none;">
@@ -174,7 +153,7 @@ get_header(); ?>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="save-holding-btn">Add Holding</button>
             </div>
         </div>
@@ -213,8 +192,8 @@ get_header(); ?>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="import-csv-btn-submit">Import Portfolio</button>
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="import-csv-btn-submit">Import Portfolio</button>
             </div>
         </div>
     </div>
@@ -229,9 +208,7 @@ get_header(); ?>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div id="roi-analytics-content">
-                    <!-- ROI analytics will be loaded here -->
-                </div>
+                <div id="roi-analytics-content"></div>
             </div>
         </div>
     </div>
@@ -246,12 +223,10 @@ get_header(); ?>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div id="portfolio-detail-content">
-                    <!-- Portfolio details will be loaded here -->
-                </div>
+                <div id="portfolio-detail-content"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="add-holding-to-portfolio">Add Holding</button>
             </div>
         </div>
@@ -261,62 +236,36 @@ get_header(); ?>
 <script>
 // Initialize Portfolio Management functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Portfolio Manager
     const portfolioManager = new PortfolioManager();
     portfolioManager.init();
-    
-    // Load user portfolios
-    portfolioManager.loadPortfolios();
-    
-    // Set up event listeners
+
     document.getElementById('create-portfolio-btn').addEventListener('click', function() {
         const modal = new bootstrap.Modal(document.getElementById('createPortfolioModal'));
         modal.show();
     });
-    
+
     document.getElementById('import-csv-btn').addEventListener('click', function() {
         const modal = new bootstrap.Modal(document.getElementById('importCsvModal'));
         modal.show();
     });
-    
+
     document.getElementById('view-roi-analytics-btn').addEventListener('click', function() {
         portfolioManager.loadROIAnalytics();
         const modal = new bootstrap.Modal(document.getElementById('roiAnalyticsModal'));
         modal.show();
     });
-    
-    // Portfolio sorting
+
     document.getElementById('portfolio-sort').addEventListener('change', function() {
         portfolioManager.sortPortfolios(this.value);
     });
-    
-    // Form submissions
+
     document.getElementById('save-portfolio-btn').addEventListener('click', function() {
         portfolioManager.createPortfolio();
     });
-    
+
     document.getElementById('save-holding-btn').addEventListener('click', function() {
         portfolioManager.addHolding();
     });
-    
-    document.getElementById('import-csv-btn-submit').addEventListener('click', function() {
-        portfolioManager.importFromCSV();
-    });
-    
-    // File upload preview
-    document.getElementById('csv-file').addEventListener('change', function() {
-        portfolioManager.previewCSV(this.files[0]);
-    });
-    
-    // Stock ticker search
-    document.getElementById('stock-ticker').addEventListener('input', function() {
-        portfolioManager.searchStocks(this.value);
-    });
-    
-    // Real-time price updates
-    setInterval(function() {
-        portfolioManager.updatePrices();
-    }, 30000); // Update every 30 seconds
 });
 </script>
 

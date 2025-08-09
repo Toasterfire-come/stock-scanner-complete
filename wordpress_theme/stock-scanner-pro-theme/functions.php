@@ -456,6 +456,13 @@ function stock_scanner_create_pages() {
             'content' => '',
             'meta_description' => 'Explore all major pages at a glance.',
             'template' => 'page-sitemap.php'
+        ),
+        array(
+            'title' => 'Personalized News',
+            'slug' => 'personalized-news',
+            'content' => '',
+            'meta_description' => 'Tailored stock market news feed based on your holdings, watchlists, and interests.',
+            'template' => 'page-templates/page-personalized-news.php'
         )
     );
     
@@ -1447,6 +1454,7 @@ add_action('init', function stock_scanner_ensure_pages(){
     // Enhanced Watchlist deprecated; use unified Watchlist page
     // $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
     $ensure('My Portfolio', 'portfolio', 'page-templates/page-portfolio.php');
+    $ensure('Personalized News', 'personalized-news', 'page-templates/page-personalized-news.php');
 
     // Enforce correct templates for existing pages that users report redirecting to dashboard
     $ensure_template('stock-news', 'page-templates/page-stock-news.php');

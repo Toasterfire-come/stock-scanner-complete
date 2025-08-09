@@ -235,7 +235,9 @@ label { font-weight: 600; color: var(--color-text); }
 /* Page wrappers */
 .stock-screener-page,
 .stock-news-page,
-.market-overview-page {
+.market-overview-page,
+.account-page,
+.portfolio-management-container {
   padding: var(--space-10) 0;
   background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
   min-height: 100vh;
@@ -283,3 +285,27 @@ label { font-weight: 600; color: var(--color-text); }
 .indices-grid, .movers-grid, .sectors-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-5); }
 .tab-btn { border: 2px solid var(--color-border); background: #fff; color: var(--color-text); padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; }
 .tab-btn.active, .tab-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* Account layout */
+.account-grid {
+  max-width: 1100px;
+  margin: var(--space-10) auto;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-6);
+}
+@media (max-width: 960px) { .account-grid { grid-template-columns: 1fr; } }
+
+.account-sidebar.card { padding: var(--space-5); }
+.account-sidebar-title { margin: 0 0 var(--space-3) 0; color: var(--color-text); }
+.account-nav { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+.account-nav a {
+  display: block;
+  color: var(--color-text);
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  transition: background .15s, color .15s, transform .15s;
+}
+.account-nav a:hover { background: #f1f5f9; color: var(--color-primary); transform: translateX(2px); }
+.account-card { margin-bottom: var(--space-4); padding: var(--space-5); }
