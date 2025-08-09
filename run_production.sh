@@ -34,6 +34,12 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Control whether to use virtual environment (default: yes)
+USE_VENV=1
+if [ "${SKIP_VENV:-0}" = "1" ] || [ "${NO_VENV:-0}" = "1" ]; then
+    USE_VENV=0
+fi
+
 # Check if running in Git Bash
 check_environment() {
     print_step "Checking environment compatibility"
@@ -62,6 +68,12 @@ check_environment() {
 # Create virtual environment if it doesn't exist
 setup_virtual_environment() {
     print_step "Setting up virtual environment"
+    
+    # Allow skipping venv via flag/env var
+    if [ "$USE_VENV" != "1" ]; then
+        print_warning "Skipping virtual environment (requested)"
+        return 0
+    fi
     
     if [ ! -d "venv" ]; then
         print_step "Creating virtual environment"
@@ -214,8 +226,31 @@ start_with_tunnel() {
 main() {
     print_header "Stock Scanner - Production Setup"
     
-    # Check command line arguments
-    case "${1:-setup}" in
+    # Parse global options and determine command (options can appear anywhere)
+    COMMAND=""
+    for arg in "$@"; do
+        case "$arg" in
+            --no-venv)
+                USE_VENV=0
+                ;;
+            -h|--help|help|setup|start|start-tunnel|migrate|static|check)
+                # First non-option token is the command
+                if [ -z "$COMMAND" ] && [[ "$arg" != --* ]]; then
+                    COMMAND="$arg"
+                fi
+                ;;
+            *)
+                # If it's not an option (doesn't start with -), and command not set yet
+                if [ -z "$COMMAND" ] && [[ "$arg" != -* ]]; then
+                    COMMAND="$arg"
+                fi
+                ;;
+        esac
+    done
+    [ -z "$COMMAND" ] && COMMAND="setup"
+    
+    # Execute command
+    case "$COMMAND" in
         "setup")
             check_environment
             setup_virtual_environment
@@ -256,7 +291,7 @@ main() {
         "help"|"-h"|"--help")
             echo "Stock Scanner - Production Script"
             echo ""
-            echo "Usage: ./run_production.sh [command]"
+            echo "Usage: ./run_production.sh [command] [options]"
             echo ""
             echo "Commands:"
             echo "  setup         - Full setup (default)"
@@ -266,6 +301,10 @@ main() {
             echo "  static        - Collect static files"
             echo "  check         - Run production readiness check"
             echo "  help          - Show this help message"
+            echo ""
+            echo "Options:"
+            echo "  --no-venv           Skip creating/activating virtual environment"
+            echo "                      (or set SKIP_VENV=1 / NO_VENV=1)"
             ;;
         *)
             print_error "Unknown command: $1"
