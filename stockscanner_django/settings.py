@@ -76,7 +76,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
 # Database configuration - Auto-detect XAMPP or use environment settings
-if IS_XAMPP_AVAILABLE:
+# Supports SQLite when DB_ENGINE indicates sqlite
+_db_engine_env = os.environ.get('DB_ENGINE', '').lower()
+if IS_XAMPP_AVAILABLE and ('mysql' in _db_engine_env or _db_engine_env == ''):
     # XAMPP Configuration (no password by default)
     DATABASES = {
         'default': {
@@ -100,23 +102,33 @@ if IS_XAMPP_AVAILABLE:
         }
     }
     print("INFO: Using XAMPP MySQL configuration")
-else:
-    # Standard MySQL configuration
+elif 'sqlite' in _db_engine_env:
+    # SQLite configuration for development/testing
     DATABASES = {
         'default': {
-            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
+        }
+    }
+    print("INFO: Using SQLite configuration")
+else:
+    # Standard MySQL configuration (default)
+    _engine = os.environ.get('DB_ENGINE', 'django.db.backends.mysql')
+    DATABASES = {
+        'default': {
+            'ENGINE': _engine,
             'NAME': os.environ.get('DB_NAME', 'stockscanner'),
             'USER': os.environ.get('DB_USER', 'stockscanner_user'),
             'PASSWORD': os.environ.get('DB_PASSWORD', ''),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
+            **({'OPTIONS': {
                 'charset': 'utf8mb4',
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            }
+            }} if 'mysql' in _engine else {}),
         }
     }
-    print("INFO: Using standard MySQL configuration")
+    print("INFO: Using standard MySQL configuration" if 'mysql' in _engine else "INFO: Using non-MySQL DB engine from env")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
