@@ -296,7 +296,10 @@ class Stock_Scanner_Integration {
         
         // Initialize security manager
         if (!class_exists('Stock_Scanner_Security_Manager')) {
-            require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-security-manager.php';
+            $security_manager_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-security-manager.php';
+            if (file_exists($security_manager_file)) {
+                require_once $security_manager_file;
+            }
         }
         
         // Initialize other components only if classes don't exist
@@ -335,6 +338,16 @@ class Stock_Scanner_Integration {
         // Admin hooks - run after theme to integrate properly
         add_action('admin_menu', array($this, 'add_admin_menu'), 15);
         add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+        
+        // Guard: ensure security manager class exists to prevent fatal errors
+        if (!class_exists('Stock_Scanner_Security_Manager')) {
+            // Define a minimal no-op class to avoid fatals; full class will be loaded if available
+            class Stock_Scanner_Security_Manager {
+                public function __construct() {}
+                public function detect_automated_behavior($user_id, $ip) { return false; }
+                public function apply_rate_limit($user_id, $ip, $action) { return true; }
+            }
+        }
         
         // User registration hook
         add_action('user_register', array($this, 'setup_new_user_membership'));
