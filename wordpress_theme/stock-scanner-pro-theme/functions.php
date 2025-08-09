@@ -188,6 +188,14 @@ function stock_scanner_clear_existing_pages() {
     );
     
     foreach ($page_slugs as $slug) {
+        // Redirect deprecated enhanced-watchlist to watchlist
+        if ($slug === 'enhanced-watchlist') {
+            $deprecated = get_page_by_path('enhanced-watchlist');
+            if ($deprecated) {
+                // Update slug to redirect content
+                wp_update_post(array('ID' => $deprecated->ID, 'post_name' => 'watchlist')); // ensure URL matches
+            }
+        }
         $page = get_page_by_path($slug);
         if ($page) {
             wp_delete_post($page->ID, true);
@@ -259,13 +267,14 @@ function stock_scanner_create_pages() {
             'meta_description' => 'Manage your stock watchlist with real-time price tracking, alerts, and portfolio monitoring tools.',
             'template' => 'page-watchlist.php'
         ),
-        array(
-            'title' => 'Enhanced Watchlist',
-            'slug' => 'enhanced-watchlist',
-            'content' => '',
-            'meta_description' => 'Advanced watchlist management with import/export, performance tracking, and alerts.',
-            'template' => 'page-templates/page-enhanced-watchlist.php'
-        ),
+        // Enhanced Watchlist deprecated in favor of unified Watchlist page
+        // array(
+        //     'title' => 'Enhanced Watchlist',
+        //     'slug' => 'enhanced-watchlist',
+        //     'content' => '',
+        //     'meta_description' => 'Advanced watchlist management with import/export, performance tracking, and alerts.',
+        //     'template' => 'page-templates/page-enhanced-watchlist.php'
+        // ),
         array(
             'title' => 'My Portfolio',
             'slug' => 'portfolio',
@@ -1435,7 +1444,8 @@ add_action('init', function stock_scanner_ensure_pages(){
 
     // Ensure critical feature pages exist without requiring theme re-activation
     $ensure('My Watchlist', 'watchlist', 'page-watchlist.php', '<div class="page-content-wrapper">[stock_watchlist_manager]</div>');
-    $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
+    // Enhanced Watchlist deprecated; use unified Watchlist page
+    // $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
     $ensure('My Portfolio', 'portfolio', 'page-templates/page-portfolio.php');
 
     // Enforce correct templates for existing pages that users report redirecting to dashboard

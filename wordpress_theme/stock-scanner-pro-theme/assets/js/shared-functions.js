@@ -1401,7 +1401,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.portfolioManager = portfolioManager; // Make globally available
     }
     
-    if (path.includes('/enhanced-watchlist/') || document.getElementById('watchlists-container')) {
+    if (path.includes('/watchlist/') || document.getElementById('watchlists-container')) {
         watchlistManager = new WatchlistManager();
         window.watchlistManager = watchlistManager; // Make globally available
     }

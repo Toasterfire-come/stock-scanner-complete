@@ -134,9 +134,9 @@
                                     <span class="item-icon">📈</span>
                                     My Portfolios
                                 </a>
-                                <a href="/enhanced-watchlist/" class="user-menu-item">
+                                <a href="/watchlist/" class="user-menu-item">
                                     <span class="item-icon">👁️</span>
-                                    Enhanced Watchlist
+                                    Watchlist
                                 </a>
                                 <a href="/personalized-news/" class="user-menu-item">
                                     <span class="item-icon">📰</span>
