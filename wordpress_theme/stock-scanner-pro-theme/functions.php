@@ -115,7 +115,7 @@ add_action('wp_enqueue_scripts', function() {
     }
     // Screener advanced features (URL sync, saved screens)
     if ($is_screener && file_exists(get_template_directory() . '/assets/js/advanced-screener.js')) {
-        wp_enqueue_script('stock-scanner-advanced-screener', get_template_directory_uri() . '/assets/js/advanced-screener.js', ['jquery'], '2.0.0', true);
+        wp_enqueue_script('stock-scanner-advanced-screener', get_template_directory_uri() . '/assets/js/advanced-screener.js', ['jquery','stock-scanner-plugin-js'], '2.0.1', true);
     }
 }, 11);
 
@@ -243,7 +243,7 @@ function stock_scanner_create_pages() {
         array(
             'title' => 'Stock Screener',
             'slug' => 'stock-screener',
-            'content' => '<div class="page-content-wrapper">[stock_screener_tool]</div>',
+            'content' => '<div class="page-content-wrapper">[stock_scanner_tool]</div>',
             'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
             'template' => 'page-templates/page-stock-screener.php'
         ),

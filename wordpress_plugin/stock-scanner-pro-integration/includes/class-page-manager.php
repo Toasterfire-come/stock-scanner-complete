@@ -96,6 +96,7 @@ class StockScannerPageManager {
         add_shortcode('stock_scanner_dashboard', [$this, 'dashboard_shortcode']);
         add_shortcode('stock_scanner_premium_plans', [$this, 'premium_plans_shortcode']);
         add_shortcode('stock_scanner_tool', [$this, 'stock_scanner_shortcode']);
+        add_shortcode('stock_screener_tool', [$this, 'stock_scanner_shortcode']);
         add_shortcode('stock_scanner_watchlists', [$this, 'watchlists_shortcode']);
         add_shortcode('stock_scanner_market_overview', [$this, 'market_overview_shortcode']);
         add_shortcode('stock_scanner_analytics', [$this, 'analytics_shortcode']);
