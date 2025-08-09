@@ -251,6 +251,104 @@ function stock_scanner_create_pages() {
             'content' => '',
             'meta_description' => 'Login to access your Stock Scanner dashboard and tools.',
             'template' => 'page-login.php'
+        ),
+        array(
+            'title' => 'Getting Started',
+            'slug' => 'getting-started',
+            'content' => '',
+            'meta_description' => 'Step-by-step guide to get started with Stock Scanner.',
+            'template' => 'page-getting-started.php'
+        ),
+        array(
+            'title' => 'How It Works',
+            'slug' => 'how-it-works',
+            'content' => '',
+            'meta_description' => 'Overview of how Stock Scanner works and key features.',
+            'template' => 'page-how-it-works.php'
+        ),
+        array(
+            'title' => 'Help Center',
+            'slug' => 'help-center',
+            'content' => '',
+            'meta_description' => 'Help Center with guides, FAQs, and tips.',
+            'template' => 'page-help-center.php'
+        ),
+        array(
+            'title' => 'Glossary',
+            'slug' => 'glossary',
+            'content' => '',
+            'meta_description' => 'Glossary of common stock market terms and definitions.',
+            'template' => 'page-glossary.php'
+        ),
+        array(
+            'title' => 'Market Hours & Holidays',
+            'slug' => 'market-hours',
+            'content' => '',
+            'meta_description' => 'Market hours and holiday schedule for major exchanges.',
+            'template' => 'page-market-hours.php'
+        ),
+        array(
+            'title' => 'Keyboard Shortcuts',
+            'slug' => 'shortcuts',
+            'content' => '',
+            'meta_description' => 'Keyboard shortcuts to navigate the app faster.',
+            'template' => 'page-keyboard-shortcuts.php'
+        ),
+        array(
+            'title' => 'Accessibility',
+            'slug' => 'accessibility',
+            'content' => '',
+            'meta_description' => 'Our commitment to accessibility and inclusive design.',
+            'template' => 'page-accessibility.php'
+        ),
+        array(
+            'title' => 'Security',
+            'slug' => 'security',
+            'content' => '',
+            'meta_description' => 'Security practices and how we protect your data.',
+            'template' => 'page-security.php'
+        ),
+        array(
+            'title' => 'Cookie Policy',
+            'slug' => 'cookie-policy',
+            'content' => '',
+            'meta_description' => 'Information about cookies used by the site.',
+            'template' => 'page-cookie-policy.php'
+        ),
+        array(
+            'title' => 'System Status',
+            'slug' => 'status',
+            'content' => '',
+            'meta_description' => 'Current system status and recent incidents.',
+            'template' => 'page-status.php'
+        ),
+        array(
+            'title' => 'Compare Plans',
+            'slug' => 'compare-plans',
+            'content' => '',
+            'meta_description' => 'Compare all plans and features side-by-side.',
+            'template' => 'page-compare-plans.php'
+        ),
+        array(
+            'title' => 'Release Notes',
+            'slug' => 'release-notes',
+            'content' => '',
+            'meta_description' => 'Latest improvements and changes to Stock Scanner.',
+            'template' => 'page-release-notes.php'
+        ),
+        array(
+            'title' => 'Roadmap',
+            'slug' => 'roadmap',
+            'content' => '',
+            'meta_description' => 'Upcoming features and priorities.',
+            'template' => 'page-roadmap.php'
+        ),
+        array(
+            'title' => 'Sitemap',
+            'slug' => 'sitemap',
+            'content' => '',
+            'meta_description' => 'Explore all major pages at a glance.',
+            'template' => 'page-sitemap.php'
         )
     );
     
