@@ -244,6 +244,13 @@ function stock_scanner_create_pages() {
             'content' => '<h2>FAQ</h2><p>Common questions about Stock Scanner features, pricing, and account management.</p>',
             'meta_description' => 'Frequently asked questions about Stock Scanner platform, features, pricing plans, and account management.',
             'template' => 'page-faq.php'
+        ),
+        array(
+            'title' => 'Login',
+            'slug' => 'login',
+            'content' => '',
+            'meta_description' => 'Login to access your Stock Scanner dashboard and tools.',
+            'template' => 'page-login.php'
         )
     );
     
@@ -1138,4 +1145,60 @@ function check_maintenance_mode() {
     }
 }
 add_action('wp', 'check_maintenance_mode');
+
+/**
+ * AJAX: Register user from signup page
+ */
+function stock_scanner_register_user() {
+    if (!isset($_POST['signup_nonce']) || !wp_verify_nonce($_POST['signup_nonce'], 'user_signup_nonce')) {
+        wp_send_json_error('Invalid request.');
+    }
+
+    $email = sanitize_email($_POST['user_email'] ?? '');
+    $username = sanitize_user($_POST['user_login'] ?? '');
+    $password = $_POST['user_pass'] ?? '';
+    $password_confirm = $_POST['user_pass_confirm'] ?? '';
+    $first_name = sanitize_text_field($_POST['first_name'] ?? '');
+    $last_name = sanitize_text_field($_POST['last_name'] ?? '');
+
+    if (empty($email) || empty($username) || empty($password) || empty($password_confirm)) {
+        wp_send_json_error('Please complete all required fields.');
+    }
+    if (!is_email($email)) {
+        wp_send_json_error('Please enter a valid email.');
+    }
+    if (username_exists($username) || email_exists($email)) {
+        wp_send_json_error('Username or email already exists.');
+    }
+    if ($password !== $password_confirm) {
+        wp_send_json_error('Passwords do not match.');
+    }
+
+    $user_id = wp_create_user($username, $password, $email);
+    if (is_wp_error($user_id)) {
+        wp_send_json_error('Failed to create account: ' . $user_id->get_error_message());
+    }
+
+    // Set profile fields
+    wp_update_user(array(
+        'ID' => $user_id,
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'display_name' => trim($first_name . ' ' . $last_name) ?: $username,
+    ));
+
+    // Log in the user
+    $creds = array(
+        'user_login' => $username,
+        'user_password' => $password,
+        'remember' => true,
+    );
+    $user = wp_signon($creds, false);
+    if (is_wp_error($user)) {
+        wp_send_json_error('Account created, but login failed: ' . $user->get_error_message());
+    }
+
+    wp_send_json_success(array('redirect' => home_url('/dashboard/')));
+}
+add_action('wp_ajax_nopriv_stock_scanner_register_user', 'stock_scanner_register_user');
 ?>

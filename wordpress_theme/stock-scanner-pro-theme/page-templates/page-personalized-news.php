@@ -6,7 +6,7 @@
 
 // Security check - require user authentication
 if (!is_user_logged_in()) {
-    wp_redirect(home_url('/signup/?redirect_to=' . urlencode($_SERVER['REQUEST_URI'])));
+    wp_redirect(wp_registration_url());
     exit;
 }
 

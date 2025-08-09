@@ -302,7 +302,8 @@ class Stock_Scanner_Integration {
         // Initialize other components only if classes don't exist
         $components = array(
             'Stock_Scanner_API' => 'includes/class-stock-api.php',
-            'Stock_Scanner_PayPal' => 'includes/class-paypal-integration.php'
+            'Stock_Scanner_PayPal' => 'includes/class-paypal-integration.php',
+            'StockScannerPageManager' => 'includes/class-page-manager.php'
         );
         
         foreach ($components as $class => $file) {

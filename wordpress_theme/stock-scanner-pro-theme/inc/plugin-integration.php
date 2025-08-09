@@ -675,7 +675,7 @@ function stock_scanner_dashboard_shortcode($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('stock_scanner_dashboard', 'stock_scanner_dashboard_shortcode');
+if (!shortcode_exists('stock_scanner_dashboard')) { add_shortcode('stock_scanner_dashboard', 'stock_scanner_dashboard_shortcode'); }
 
 /**
  * Enhanced pricing shortcode (keep existing)
@@ -848,7 +848,7 @@ function stock_scanner_pricing_shortcode($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('stock_scanner_pricing', 'stock_scanner_pricing_shortcode');
+if (!shortcode_exists('stock_scanner_pricing')) { add_shortcode('stock_scanner_pricing', 'stock_scanner_pricing_shortcode'); }
 
 /**
  * AJAX: Dismiss notification
@@ -1209,7 +1209,7 @@ function stock_lookup_tool_shortcode($atts) {
     
     return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
 }
-add_shortcode('stock_lookup_tool', 'stock_lookup_tool_shortcode');
+if (!shortcode_exists('stock_lookup_tool')) { add_shortcode('stock_lookup_tool', 'stock_lookup_tool_shortcode'); }
 
 /**
  * Stock News Feed Shortcode
@@ -1219,7 +1219,7 @@ function stock_news_feed_shortcode($atts) {
         <div class="news-loading">Loading latest stock news...</div>
     </div>';
 }
-add_shortcode('stock_news_feed', 'stock_news_feed_shortcode');
+if (!shortcode_exists('stock_news_feed')) { add_shortcode('stock_news_feed', 'stock_news_feed_shortcode'); }
 
 /**
  * Stock Screener Tool Shortcode
@@ -1229,7 +1229,7 @@ function stock_screener_tool_shortcode($atts) {
         <div class="screener-loading">Loading stock screening tools...</div>
     </div>';
 }
-add_shortcode('stock_screener_tool', 'stock_screener_tool_shortcode');
+if (!shortcode_exists('stock_screener_tool')) { add_shortcode('stock_screener_tool', 'stock_screener_tool_shortcode'); }
 
 /**
  * Market Overview Dashboard Shortcode
@@ -1239,7 +1239,7 @@ function market_overview_dashboard_shortcode($atts) {
         <div class="market-loading">Loading market overview...</div>
     </div>';
 }
-add_shortcode('market_overview_dashboard', 'market_overview_dashboard_shortcode');
+if (!shortcode_exists('market_overview_dashboard')) { add_shortcode('market_overview_dashboard', 'market_overview_dashboard_shortcode'); }
 
 /**
  * Technical Analysis Tools Shortcode
@@ -1249,7 +1249,7 @@ function technical_analysis_tools_shortcode($atts) {
         <div class="technical-loading">Loading technical analysis tools...</div>
     </div>';
 }
-add_shortcode('technical_analysis_tools', 'technical_analysis_tools_shortcode');
+if (!shortcode_exists('technical_analysis_tools')) { add_shortcode('technical_analysis_tools', 'technical_analysis_tools_shortcode'); }
 
 /**
  * Options Data Viewer Shortcode
@@ -1259,7 +1259,7 @@ function options_data_viewer_shortcode($atts) {
         <div class="options-loading">Loading options data viewer...</div>
     </div>';
 }
-add_shortcode('options_data_viewer', 'options_data_viewer_shortcode');
+if (!shortcode_exists('options_data_viewer')) { add_shortcode('options_data_viewer', 'options_data_viewer_shortcode'); }
 
 /**
  * Level 2 Data Viewer Shortcode
@@ -1269,7 +1269,7 @@ function level2_data_viewer_shortcode($atts) {
         <div class="level2-loading">Loading Level 2 data viewer...</div>
     </div>';
 }
-add_shortcode('level2_data_viewer', 'level2_data_viewer_shortcode');
+if (!shortcode_exists('level2_data_viewer')) { add_shortcode('level2_data_viewer', 'level2_data_viewer_shortcode'); }
 
 /**
  * Stock Watchlist Manager Shortcode
@@ -1279,7 +1279,7 @@ function stock_watchlist_manager_shortcode($atts) {
         <div class="watchlist-loading">Loading watchlist manager...</div>
     </div>';
 }
-add_shortcode('stock_watchlist_manager', 'stock_watchlist_manager_shortcode');
+if (!shortcode_exists('stock_watchlist_manager')) { add_shortcode('stock_watchlist_manager', 'stock_watchlist_manager_shortcode'); }
 
 /**
  * User Account Manager Shortcode
@@ -1287,7 +1287,7 @@ add_shortcode('stock_watchlist_manager', 'stock_watchlist_manager_shortcode');
 function user_account_manager_shortcode($atts) {
     return '[stock_scanner_dashboard]'; // Reuse existing dashboard functionality
 }
-add_shortcode('user_account_manager', 'user_account_manager_shortcode');
+if (!shortcode_exists('user_account_manager')) { add_shortcode('user_account_manager', 'user_account_manager_shortcode'); }
 
 /**
  * Advanced Contact Form Shortcode

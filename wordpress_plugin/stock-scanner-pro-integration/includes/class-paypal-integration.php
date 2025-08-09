@@ -56,6 +56,13 @@ class StockScannerPayPalIntegration {
         $this->return_url = get_option('paypal_return_url', '');
         $this->cancel_url = get_option('paypal_cancel_url', '');
         
+        if (empty($this->return_url)) {
+            $this->return_url = home_url('/payment-success/');
+        }
+        if (empty($this->cancel_url)) {
+            $this->cancel_url = home_url('/payment-cancelled/');
+        }
+        
         // Set API base URL based on mode
         $this->api_base_url = ($this->paypal_mode === 'live') 
             ? 'https://api-m.paypal.com' 
