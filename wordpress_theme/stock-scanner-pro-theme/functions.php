@@ -151,21 +151,21 @@ function stock_scanner_create_pages() {
             'slug' => 'stock-lookup',
             'content' => '<div class="page-content-wrapper">[stock_lookup_tool]</div>',
             'meta_description' => 'Real-time stock quote lookup with current prices, volume, and basic stock information.',
-            'template' => 'page-stock-lookup.php'
+            'template' => 'page-templates/page-stock-lookup.php'
         ),
         array(
             'title' => 'Stock News',
             'slug' => 'stock-news',
             'content' => '<div class="page-content-wrapper">[stock_news_feed]</div>',
             'meta_description' => 'Latest stock market news, financial analysis, and market updates for informed trading decisions.',
-            'template' => 'page-stock-news.php'
+            'template' => 'page-templates/page-stock-news.php'
         ),
         array(
             'title' => 'Stock Screener',
             'slug' => 'stock-screener',
             'content' => '<div class="page-content-wrapper">[stock_screener_tool]</div>',
             'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
-            'template' => 'page-stock-screener.php'
+            'template' => 'page-templates/page-stock-screener.php'
         ),
 
         array(
@@ -180,7 +180,7 @@ function stock_scanner_create_pages() {
             'slug' => 'market-overview',
             'content' => '<div class="page-content-wrapper">[market_overview_dashboard]</div>',
             'meta_description' => 'Comprehensive market overview with real-time data on major indices, market trends, and stock performance.',
-            'template' => 'page-market-overview.php'
+            'template' => 'page-templates/page-market-overview.php'
         ),
         array(
             'title' => 'My Account',
@@ -244,6 +244,111 @@ function stock_scanner_create_pages() {
             'content' => '<h2>FAQ</h2><p>Common questions about Stock Scanner features, pricing, and account management.</p>',
             'meta_description' => 'Frequently asked questions about Stock Scanner platform, features, pricing plans, and account management.',
             'template' => 'page-faq.php'
+        ),
+        array(
+            'title' => 'Login',
+            'slug' => 'login',
+            'content' => '',
+            'meta_description' => 'Login to access your Stock Scanner dashboard and tools.',
+            'template' => 'page-login.php'
+        ),
+        array(
+            'title' => 'Getting Started',
+            'slug' => 'getting-started',
+            'content' => '',
+            'meta_description' => 'Step-by-step guide to get started with Stock Scanner.',
+            'template' => 'page-getting-started.php'
+        ),
+        array(
+            'title' => 'How It Works',
+            'slug' => 'how-it-works',
+            'content' => '',
+            'meta_description' => 'Overview of how Stock Scanner works and key features.',
+            'template' => 'page-how-it-works.php'
+        ),
+        array(
+            'title' => 'Help Center',
+            'slug' => 'help-center',
+            'content' => '',
+            'meta_description' => 'Help Center with guides, FAQs, and tips.',
+            'template' => 'page-help-center.php'
+        ),
+        array(
+            'title' => 'Glossary',
+            'slug' => 'glossary',
+            'content' => '',
+            'meta_description' => 'Glossary of common stock market terms and definitions.',
+            'template' => 'page-glossary.php'
+        ),
+        array(
+            'title' => 'Market Hours & Holidays',
+            'slug' => 'market-hours',
+            'content' => '',
+            'meta_description' => 'Market hours and holiday schedule for major exchanges.',
+            'template' => 'page-market-hours.php'
+        ),
+        array(
+            'title' => 'Keyboard Shortcuts',
+            'slug' => 'shortcuts',
+            'content' => '',
+            'meta_description' => 'Keyboard shortcuts to navigate the app faster.',
+            'template' => 'page-keyboard-shortcuts.php'
+        ),
+        array(
+            'title' => 'Accessibility',
+            'slug' => 'accessibility',
+            'content' => '',
+            'meta_description' => 'Our commitment to accessibility and inclusive design.',
+            'template' => 'page-accessibility.php'
+        ),
+        array(
+            'title' => 'Security',
+            'slug' => 'security',
+            'content' => '',
+            'meta_description' => 'Security practices and how we protect your data.',
+            'template' => 'page-security.php'
+        ),
+        array(
+            'title' => 'Cookie Policy',
+            'slug' => 'cookie-policy',
+            'content' => '',
+            'meta_description' => 'Information about cookies used by the site.',
+            'template' => 'page-cookie-policy.php'
+        ),
+        array(
+            'title' => 'System Status',
+            'slug' => 'status',
+            'content' => '',
+            'meta_description' => 'Current system status and recent incidents.',
+            'template' => 'page-status.php'
+        ),
+        array(
+            'title' => 'Compare Plans',
+            'slug' => 'compare-plans',
+            'content' => '',
+            'meta_description' => 'Compare all plans and features side-by-side.',
+            'template' => 'page-compare-plans.php'
+        ),
+        array(
+            'title' => 'Release Notes',
+            'slug' => 'release-notes',
+            'content' => '',
+            'meta_description' => 'Latest improvements and changes to Stock Scanner.',
+            'template' => 'page-release-notes.php'
+        ),
+        array(
+            'title' => 'Roadmap',
+            'slug' => 'roadmap',
+            'content' => '',
+            'meta_description' => 'Upcoming features and priorities.',
+            'template' => 'page-roadmap.php'
+        ),
+        array(
+            'title' => 'Sitemap',
+            'slug' => 'sitemap',
+            'content' => '',
+            'meta_description' => 'Explore all major pages at a glance.',
+            'template' => 'page-sitemap.php'
         )
     );
     
@@ -1138,4 +1243,60 @@ function check_maintenance_mode() {
     }
 }
 add_action('wp', 'check_maintenance_mode');
+
+/**
+ * AJAX: Register user from signup page
+ */
+function stock_scanner_register_user() {
+    if (!isset($_POST['signup_nonce']) || !wp_verify_nonce($_POST['signup_nonce'], 'user_signup_nonce')) {
+        wp_send_json_error('Invalid request.');
+    }
+
+    $email = sanitize_email($_POST['user_email'] ?? '');
+    $username = sanitize_user($_POST['user_login'] ?? '');
+    $password = $_POST['user_pass'] ?? '';
+    $password_confirm = $_POST['user_pass_confirm'] ?? '';
+    $first_name = sanitize_text_field($_POST['first_name'] ?? '');
+    $last_name = sanitize_text_field($_POST['last_name'] ?? '');
+
+    if (empty($email) || empty($username) || empty($password) || empty($password_confirm)) {
+        wp_send_json_error('Please complete all required fields.');
+    }
+    if (!is_email($email)) {
+        wp_send_json_error('Please enter a valid email.');
+    }
+    if (username_exists($username) || email_exists($email)) {
+        wp_send_json_error('Username or email already exists.');
+    }
+    if ($password !== $password_confirm) {
+        wp_send_json_error('Passwords do not match.');
+    }
+
+    $user_id = wp_create_user($username, $password, $email);
+    if (is_wp_error($user_id)) {
+        wp_send_json_error('Failed to create account: ' . $user_id->get_error_message());
+    }
+
+    // Set profile fields
+    wp_update_user(array(
+        'ID' => $user_id,
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'display_name' => trim($first_name . ' ' . $last_name) ?: $username,
+    ));
+
+    // Log in the user
+    $creds = array(
+        'user_login' => $username,
+        'user_password' => $password,
+        'remember' => true,
+    );
+    $user = wp_signon($creds, false);
+    if (is_wp_error($user)) {
+        wp_send_json_error('Account created, but login failed: ' . $user->get_error_message());
+    }
+
+    wp_send_json_success(array('redirect' => home_url('/dashboard/')));
+}
+add_action('wp_ajax_nopriv_stock_scanner_register_user', 'stock_scanner_register_user');
 ?>

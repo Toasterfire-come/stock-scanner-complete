@@ -1050,18 +1050,23 @@ document.getElementById('user-signup-form').addEventListener('submit', function(
     submitBtn.querySelector('.btn-text').style.display = 'none';
     submitBtn.querySelector('.btn-loader').style.display = 'inline';
     
-    // Simulate form submission (replace with actual AJAX call)
-    setTimeout(function() {
-        alert('Account created successfully! Please check your email for verification.');
-        
-        // In real implementation, redirect to dashboard or email verification page
-        // window.location.href = '/email-verification/';
-        
-        // Reset form for demo
+    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(new FormData(document.getElementById('user-signup-form'))).toString() + '&action=stock_scanner_register_user'
+    }).then(r => r.json()).then(res => {
+        if (res.success && res.data && res.data.redirect) {
+            window.location.href = res.data.redirect;
+        } else {
+            alert(res.data || 'Failed to create account.');
+        }
+    }).catch(() => {
+        alert('Network error. Please try again.');
+    }).finally(() => {
         submitBtn.disabled = false;
         submitBtn.querySelector('.btn-text').style.display = 'inline';
         submitBtn.querySelector('.btn-loader').style.display = 'none';
-    }, 2000);
+    });
 });
 
 // Enhanced form interactions

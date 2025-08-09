@@ -187,7 +187,7 @@ class StockScannerPageManager {
         $config = get_post_meta($post->ID, 'stock_scanner_config', true);
         
         if ($config && isset($config['template'])) {
-            $template_path = STOCK_SCANNER_PRO_PLUGIN_DIR . 'templates/' . $config['template'];
+            $template_path = STOCK_SCANNER_PLUGIN_DIR . 'templates/' . $config['template'];
             
             if (file_exists($template_path)) {
                 ob_start();
@@ -212,24 +212,24 @@ class StockScannerPageManager {
         // Main plugin assets
         wp_enqueue_style(
             'stock-scanner-professional',
-            STOCK_SCANNER_PRO_PLUGIN_URL . 'assets/css/stock-scanner-professional.css',
+            STOCK_SCANNER_PLUGIN_URL . 'assets/css/stock-scanner-professional.css',
             [],
-            STOCK_SCANNER_PRO_VERSION
+            STOCK_SCANNER_VERSION
         );
         
         wp_enqueue_script(
             'stock-scanner-professional',
-            STOCK_SCANNER_PRO_PLUGIN_URL . 'assets/js/stock-scanner-professional.js',
+            STOCK_SCANNER_PLUGIN_URL . 'assets/js/stock-scanner-professional.js',
             ['jquery'],
-            STOCK_SCANNER_PRO_VERSION,
+            STOCK_SCANNER_VERSION,
             true
         );
         
         wp_enqueue_script(
             'seamless-navigation',
-            STOCK_SCANNER_PRO_PLUGIN_URL . 'assets/js/seamless-navigation.js',
+            STOCK_SCANNER_PLUGIN_URL . 'assets/js/seamless-navigation.js',
             ['jquery'],
-            STOCK_SCANNER_PRO_VERSION,
+            STOCK_SCANNER_VERSION,
             true
         );
         
@@ -250,7 +250,7 @@ class StockScannerPageManager {
             'userLevel' => $this->membership_manager->get_user_membership_level(),
             'isLoggedIn' => is_user_logged_in(),
             'homeUrl' => home_url(),
-            'pluginUrl' => STOCK_SCANNER_PRO_PLUGIN_URL,
+            'pluginUrl' => STOCK_SCANNER_PLUGIN_URL,
             'strings' => [
                 'loading' => 'Loading...',
                 'error' => 'An error occurred. Please try again.',
@@ -290,7 +290,7 @@ class StockScannerPageManager {
         ];
         
         // Include dashboard template with user data
-        include STOCK_SCANNER_PRO_PLUGIN_DIR . 'templates/dashboard-template.php';
+        include STOCK_SCANNER_PLUGIN_DIR . 'templates/dashboard-template.php';
         
         return ob_get_clean();
     }
@@ -309,7 +309,7 @@ class StockScannerPageManager {
         $current_user_level = $this->membership_manager->get_user_membership_level();
         
         // Include premium plans template
-        include STOCK_SCANNER_PRO_PLUGIN_DIR . 'templates/premium-plans-template.php';
+        include STOCK_SCANNER_PLUGIN_DIR . 'templates/premium-plans-template.php';
         
         return ob_get_clean();
     }
