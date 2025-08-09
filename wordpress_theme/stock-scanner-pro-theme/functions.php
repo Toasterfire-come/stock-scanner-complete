@@ -42,6 +42,16 @@ function stock_scanner_scripts() {
     // Enqueue theme stylesheet with WordPress admin colors
     wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '2.0.0');
     
+    // Add shared styles for unified color scheme across pages
+    if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
+        wp_enqueue_style(
+            'stock-scanner-shared-styles',
+            get_template_directory_uri() . '/assets/css/shared-styles.css',
+            array('stock-scanner-style'),
+            '2.0.0'
+        );
+    }
+    
     // Enqueue Chart.js for stock charts
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
     
@@ -232,13 +242,27 @@ function stock_scanner_create_pages() {
             'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
             'template' => 'page-templates/page-stock-screener.php'
         ),
-
+        
         array(
             'title' => 'My Watchlist',
             'slug' => 'watchlist',
             'content' => '<div class="page-content-wrapper">[stock_watchlist_manager]</div>',
             'meta_description' => 'Manage your stock watchlist with real-time price tracking, alerts, and portfolio monitoring tools.',
             'template' => 'page-watchlist.php'
+        ),
+        array(
+            'title' => 'Enhanced Watchlist',
+            'slug' => 'enhanced-watchlist',
+            'content' => '',
+            'meta_description' => 'Advanced watchlist management with import/export, performance tracking, and alerts.',
+            'template' => 'page-templates/page-enhanced-watchlist.php'
+        ),
+        array(
+            'title' => 'My Portfolio',
+            'slug' => 'portfolio',
+            'content' => '',
+            'meta_description' => 'Create and manage your investment portfolios with real-time performance analytics and ROI tracking.',
+            'template' => 'page-templates/page-portfolio.php'
         ),
         array(
             'title' => 'Market Overview',
@@ -1371,4 +1395,28 @@ function stock_scanner_register_user() {
     wp_send_json_success(array('redirect' => home_url('/dashboard/')));
 }
 add_action('wp_ajax_nopriv_stock_scanner_register_user', 'stock_scanner_register_user');
+
+add_action('init', function stock_scanner_ensure_pages(){
+    $ensure = function($title, $slug, $template, $content = ''){
+        if (!get_page_by_path($slug)) {
+            $page_id = wp_insert_post(array(
+                'post_title' => $title,
+                'post_name' => $slug,
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'post_author' => 1,
+                'post_content' => $content,
+            ));
+            if ($page_id && !is_wp_error($page_id)) {
+                update_post_meta($page_id, '_wp_page_template', $template);
+                update_post_meta($page_id, '_stock_scanner_page', 'yes');
+            }
+        }
+    };
+
+    // Ensure critical feature pages exist without requiring theme re-activation
+    $ensure('My Watchlist', 'watchlist', 'page-watchlist.php', '<div class="page-content-wrapper">[stock_watchlist_manager]</div>');
+    $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
+    $ensure('My Portfolio', 'portfolio', 'page-templates/page-portfolio.php');
+});
 ?>
