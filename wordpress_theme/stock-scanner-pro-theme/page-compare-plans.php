@@ -535,7 +535,6 @@ const planComparison = new PlanComparison();
 
 // Plan selection function
 function selectPlan(plan) {
-    // In real implementation, this would redirect to payment or account management
     console.log('Selected plan:', plan);
     
     if (plan === 'free') {
@@ -543,22 +542,20 @@ function selectPlan(plan) {
         return;
     }
     
-    const prices = {
-        bronze: planComparison.isAnnual ? '$19.99' : '$24.99',
-        silver: planComparison.isAnnual ? '$31.99' : '$39.99',
-        gold: planComparison.isAnnual ? '$71.99' : '$89.99'
-    };
+    // Check if user is logged in
+    <?php if (!is_user_logged_in()): ?>
+        // Redirect to login/signup if not logged in
+        const loginUrl = '<?php echo wp_login_url(); ?>';
+        window.location.href = loginUrl + '&redirect_to=' + encodeURIComponent(window.location.href);
+        return;
+    <?php endif; ?>
     
     const billingType = planComparison.isAnnual ? 'annual' : 'monthly';
     const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
     
-    const confirmMessage = `Upgrade to ${planName} Plan for ${prices[plan]}/${planComparison.isAnnual ? 'year' : 'month'}?`;
-    
-    if (confirm(confirmMessage)) {
-        // Redirect to payment page with plan parameters
-        const redirectUrl = `/signup/?plan=${plan}&billing=${billingType}&price=${prices[plan]}`;
-        window.location.href = redirectUrl;
-    }
+    // Redirect to PayPal checkout page with plan parameters
+    const checkoutUrl = `/paypal-checkout/?plan=${plan}&billing=${billingType}`;
+    window.location.href = checkoutUrl;
 }
 </script>
 
