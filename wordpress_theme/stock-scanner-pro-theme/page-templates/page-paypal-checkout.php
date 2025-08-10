@@ -282,6 +282,7 @@ get_header();
 .plan-features h3 {
     margin: 0 0 15px 0;
     color: #2c3e50;
+    font-weight: 600;
 }
 
 .plan-features ul {
@@ -291,10 +292,14 @@ get_header();
 }
 
 .plan-features li {
-    padding: 8px 0;
-    border-bottom: 1px solid #ecf0f1;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
+    color: #1e293b !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .check-icon {

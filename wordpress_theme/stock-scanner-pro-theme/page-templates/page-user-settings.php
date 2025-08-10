@@ -1149,6 +1149,23 @@ input:checked + .slider:before {
     margin-bottom: 25px;
 }
 
+.plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.plan-features li {
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    color: #1e293b !important;
+    font-weight: 500;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+}
+
 .feature-list {
     list-style: none;
     padding: 0;
@@ -1156,9 +1173,12 @@ input:checked + .slider:before {
 }
 
 .feature-list li {
-    padding: 8px 0;
-    border-bottom: 1px solid #e9ecef;
-    font-size: 1rem;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    color: #1e293b !important;
+    font-weight: 500;
+    line-height: 1.5;
 }
 
 .upgrade-section,
