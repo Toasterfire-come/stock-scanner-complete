@@ -60,7 +60,6 @@
         <div class="header-container">
             <div class="site-branding">
                 <a href="<?php echo esc_url(home_url('/')); ?>" class="site-logo">
-                    <span class="logo-icon">📈</span>
                     <span class="logo-text"><?php bloginfo('name'); ?></span>
                 </a>
                 <?php
@@ -120,44 +119,37 @@
                         
                         <div class="user-dropdown">
                             <button class="user-toggle" aria-expanded="false">
-                                <span class="user-avatar">👤</span>
+                                <span class="user-avatar">●</span>
                                 <span class="user-name"><?php echo esc_html($user->display_name); ?></span>
                                 <span class="dropdown-arrow">▼</span>
                             </button>
-                            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">🌓</button>
+                            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">◐</button>
                             
                             <div class="user-menu">
                                 <a href="/dashboard/" class="user-menu-item">
-                                    <span class="item-icon">📊</span>
                                     Dashboard
                                 </a>
                                 <hr class="menu-divider">
                                 <a href="/portfolio/" class="user-menu-item">
-                                    <span class="item-icon">📈</span>
                                     My Portfolios
                                 </a>
                                 <a href="/watchlist/" class="user-menu-item">
-                                    <span class="item-icon">👁️</span>
                                     Watchlist
                                 </a>
                                 <a href="/personalized-news/" class="user-menu-item">
-                                    <span class="item-icon">📰</span>
                                     My News Feed
                                 </a>
                                 <hr class="menu-divider">
                                 <a href="/account/" class="user-menu-item">
-                                    <span class="item-icon">⚙️</span>
                                     Account Settings
                                 </a>
                                 <?php if ($membership_level === 'free'): ?>
                                 <a href="/premium-plans/" class="user-menu-item upgrade-link">
-                                    <span class="item-icon">⭐</span>
                                     Upgrade Plan
                                 </a>
                                 <?php endif; ?>
                                 <hr class="menu-divider">
                                 <a href="<?php echo wp_logout_url(home_url()); ?>" class="user-menu-item logout-link">
-                                    <span class="item-icon">🚪</span>
                                     Logout
                                 </a>
                             </div>

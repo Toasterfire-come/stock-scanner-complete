@@ -1274,11 +1274,12 @@ class StockScannerAssetOptimizer {
         wp_deregister_script('stock-scanner-admin');
         
         // Enqueue optimized versions
+        $css_file_path = get_stylesheet_directory() . '/assets/css/shared-styles' . $suffix . '.css';
         wp_enqueue_style(
             'stock-scanner-shared-styles-optimized',
             get_stylesheet_directory_uri() . '/assets/css/shared-styles' . $suffix . '.css',
             array(),
-            filemtime(get_stylesheet_directory() . '/assets/css/shared-styles' . $suffix . '.css')
+            file_exists($css_file_path) ? filemtime($css_file_path) : time()
         );
         
         // Add preload hints for critical resources
