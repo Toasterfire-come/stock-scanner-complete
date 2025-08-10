@@ -9,7 +9,7 @@ get_header(); ?>
 <div class="market-overview-page">
     <div class="container">
         <div class="page-header">
-            <h1>📊 Market Overview</h1>
+            <h1>Market Overview</h1>
             <p class="page-description">Real-time market data, indices performance, and comprehensive market analysis</p>
         </div>
 
@@ -35,7 +35,7 @@ get_header(); ?>
             <!-- Major Indices -->
             <div class="indices-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📈 Major Indices</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Major Indices</h2>
                     <div class="indices-grid" id="indices-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4);">
                         <!-- Indices will be loaded here -->
                     </div>
@@ -46,9 +46,9 @@ get_header(); ?>
             <div class="movers-section mb-6">
                 <div class="card p-6">
                     <div class="movers-tabs" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-5); border-bottom: 2px solid var(--color-border);">
-                        <button class="tab-btn active" data-tab="gainers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); cursor: pointer; font-weight: 600;">🚀 Top Gainers</button>
-                        <button class="tab-btn" data-tab="losers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">📉 Top Losers</button>
-                        <button class="tab-btn" data-tab="active" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">⚡ Most Active</button>
+                        <button class="tab-btn active" data-tab="gainers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); cursor: pointer; font-weight: 600;">Top Gainers</button>
+                        <button class="tab-btn" data-tab="losers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">Top Losers</button>
+                        <button class="tab-btn" data-tab="active" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">Most Active</button>
                     </div>
                     <div class="movers-content">
                         <div id="gainers-content" class="tab-content active" style="display: block;">
@@ -73,7 +73,7 @@ get_header(); ?>
             <!-- Sector Performance -->
             <div class="sectors-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">🏢 Sector Performance</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Sector Performance</h2>
                     <div class="sectors-grid" id="sectors-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4);">
                         <!-- Sector performance will be loaded here -->
                     </div>
@@ -83,7 +83,7 @@ get_header(); ?>
             <!-- Market Breadth -->
             <div class="breadth-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📊 Market Breadth</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Market Breadth</h2>
                     <div class="breadth-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-5);">
                         <div class="breadth-card card p-4">
                             <h3 style="margin-bottom: var(--space-4); color: var(--color-text);">Advance/Decline</h3>
@@ -149,7 +149,7 @@ get_header(); ?>
             <!-- Market News Summary -->
             <div class="news-summary-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📰 Market News Summary</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Market News Summary</h2>
                     <div class="news-summary-cards" id="news-summary" style="display: grid; gap: var(--space-4); margin-bottom: var(--space-5);">
                         <!-- News summary will be loaded here -->
                     </div>
@@ -270,6 +270,7 @@ get_header(); ?>
 .index-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    cursor: pointer;
 }
 
 .index-header {
@@ -288,6 +289,11 @@ get_header(); ?>
 .index-symbol {
     color: #646970;
     font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.index-card:hover .index-symbol {
+    color: #4a5a3a;
 }
 
 .index-price {
@@ -381,6 +387,7 @@ get_header(); ?>
 .mover-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
 }
 
 .mover-header {
@@ -394,6 +401,11 @@ get_header(); ?>
     font-weight: 600;
     color: #2271b1;
     font-size: 1rem;
+}
+
+.mover-card:hover .mover-symbol {
+    color: #4a5a3a;
+    text-decoration: underline;
 }
 
 .mover-price {
@@ -446,6 +458,11 @@ get_header(); ?>
 .sector-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
+
+.sector-card:hover .sector-name {
+    color: #4a5a3a;
 }
 
 .sector-name {
@@ -829,7 +846,7 @@ function createIndexCard(index) {
     const changeIcon = index.change >= 0 ? '↗' : '↘';
     
     return `
-        <div class="index-card" onclick="viewIndex('${index.symbol}')">
+        <div class="index-card" onclick="viewIndex('${index.symbol}')" title="Click to view ${index.symbol} details">
             <div class="index-header">
                 <div>
                     <div class="index-name">${index.name}</div>
@@ -877,7 +894,7 @@ function createMoverCard(stock) {
     const changeIcon = stock.change >= 0 ? '↗' : '↘';
     
     return `
-        <div class="mover-card" onclick="viewStock('${stock.symbol}')">
+        <div class="mover-card" onclick="viewStock('${stock.symbol}')" title="Click to view ${stock.symbol} quote">
             <div class="mover-header">
                 <div class="mover-symbol">${stock.symbol}</div>
                 <div class="mover-price">$${stock.price.toFixed(2)}</div>
@@ -914,7 +931,7 @@ function createSectorCard(sector) {
     const performanceIcon = sector.performance >= 0 ? '+' : '';
     
     return `
-        <div class="sector-card" onclick="viewSector('${sector.name}')">
+        <div class="sector-card" onclick="viewSector('${sector.name}')" title="Click to view ${sector.name} sector stocks">
             <div class="sector-name">${sector.name}</div>
             <div class="sector-performance ${performanceClass}">
                 ${performanceIcon}${sector.performance.toFixed(2)}%
@@ -1090,7 +1107,7 @@ function setupCalendarNavigation() {
 
 // Global functions for onclick handlers
 window.viewIndex = function(symbol) {
-    window.location.href = `/technical-analysis/?symbol=${symbol}`;
+    window.location.href = `/stock-lookup/?symbol=${symbol}`;
 };
 
 window.viewStock = function(symbol) {

@@ -9,7 +9,7 @@ get_header(); ?>
 <div class="stock-lookup-page">
     <div class="container">
         <div class="page-header">
-            <h1>📈 Stock Quote Lookup</h1>
+            <h1>Stock Quote Lookup</h1>
             <p class="page-description">Get real-time stock quotes, prices, and basic company information</p>
         </div>
 
@@ -76,6 +76,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockResult = document.getElementById('stock-result');
     const loadingIndicator = document.getElementById('loading-indicator');
     const stockChips = document.querySelectorAll('.stock-chip');
+
+    // Check for symbol parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const symbolParam = urlParams.get('symbol');
+    if (symbolParam) {
+        const symbol = symbolParam.trim().toUpperCase();
+        stockSymbolInput.value = symbol;
+        getStockQuote(symbol);
+    }
 
     // Handle stock chip clicks
     stockChips.forEach(chip => {
