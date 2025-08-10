@@ -1274,11 +1274,12 @@ class StockScannerAssetOptimizer {
         wp_deregister_script('stock-scanner-admin');
         
         // Enqueue optimized versions
+        $css_file_path = get_stylesheet_directory() . '/assets/css/shared-styles' . $suffix . '.css';
         wp_enqueue_style(
             'stock-scanner-shared-styles-optimized',
             get_stylesheet_directory_uri() . '/assets/css/shared-styles' . $suffix . '.css',
             array(),
-            filemtime(get_stylesheet_directory() . '/assets/css/shared-styles' . $suffix . '.css')
+            file_exists($css_file_path) ? filemtime($css_file_path) : time()
         );
         
         // Add preload hints for critical resources
@@ -1568,10 +1569,10 @@ function get_user_limits($user_id = null) {
  */
 function get_backend_api_url($endpoint = '') {
     $api_settings = get_option('stock_scanner_api_settings', array());
-    $backend_url = $api_settings['backend_url'] ?? '';
+    $backend_url = $api_settings['backend_url'] ?? 'http://localhost:8000';
     
     if (empty($backend_url)) {
-        return false;
+        $backend_url = 'http://localhost:8000';
     }
     
     return rtrim($backend_url, '/') . '/api/' . ltrim($endpoint, '/');

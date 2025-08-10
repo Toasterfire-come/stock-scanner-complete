@@ -353,15 +353,92 @@ document.addEventListener('DOMContentLoaded', function() {
         // Collect filter criteria
         const filters = collectFilters();
         
-        // Simulate API call
-        setTimeout(() => {
-            const mockResults = generateMockResults(filters);
-            displayResults(mockResults);
+        // Build API URL with filters
+        const backendUrl = '<?php echo get_backend_api_url('stocks/'); ?>';
+        const params = new URLSearchParams();
+        
+        // Add filters to API request
+        if (filters.minPrice) params.append('min_price', filters.minPrice);
+        if (filters.maxPrice) params.append('max_price', filters.maxPrice);
+        if (filters.minVolume) params.append('min_volume', filters.minVolume);
+        if (filters.sectors && filters.sectors.length > 0) {
+            // Note: Django API may not have sector filtering, we'll add it to results filter
+        }
+        
+        params.append('limit', '100');
+        params.append('sort_by', 'market_cap');
+        params.append('sort_order', 'desc');
+        
+        // Make API call to Django backend
+        fetch(`${backendUrl}?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
             screeningLoading.style.display = 'none';
             isScreening = false;
             applyScreenBtn.disabled = false;
             applyScreenBtn.textContent = '🔍 Screen Stocks';
-        }, 2000);
+            
+            if (data.results && data.results.length > 0) {
+                // Apply client-side sector filtering if needed
+                let results = data.results;
+                if (filters.sectors && filters.sectors.length > 0) {
+                    results = results.filter(stock => 
+                        filters.sectors.some(sector => 
+                            (stock.sector || '').toLowerCase().includes(sector.toLowerCase())
+                        )
+                    );
+                }
+                
+                // Apply performance filters
+                if (filters.dayChange) {
+                    const threshold = parseFloat(filters.dayChange);
+                    results = results.filter(stock => {
+                        const change = parseFloat(stock.change_percent || 0);
+                        return Math.abs(change) >= threshold;
+                    });
+                }
+                
+                displayResults(results);
+            } else {
+                resultsTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #666;">No stocks found matching your criteria</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching stock data:', error);
+            screeningLoading.style.display = 'none';
+            isScreening = false;
+            applyScreenBtn.disabled = false;
+            applyScreenBtn.textContent = '🔍 Screen Stocks';
+            
+            // Show fallback sample data when backend is unavailable
+            const fallbackResults = [
+                { ticker: 'AAPL', name: 'Apple Inc.', current_price: 175.43, price_change_today: 2.15, change_percent: 1.24, volume: 52300000, market_cap: 2800000000000, sector: 'Technology' },
+                { ticker: 'GOOGL', name: 'Alphabet Inc.', current_price: 138.21, price_change_today: -1.45, change_percent: -1.04, volume: 25700000, market_cap: 1700000000000, sector: 'Technology' },
+                { ticker: 'TSLA', name: 'Tesla Inc.', current_price: 248.50, price_change_today: 8.32, change_percent: 3.46, volume: 95200000, market_cap: 789000000000, sector: 'Consumer' },
+                { ticker: 'MSFT', name: 'Microsoft Corp.', current_price: 378.85, price_change_today: 4.67, change_percent: 1.25, volume: 28400000, market_cap: 2800000000000, sector: 'Technology' },
+                { ticker: 'NVDA', name: 'NVIDIA Corp.', current_price: 875.28, price_change_today: 15.42, change_percent: 1.79, volume: 38900000, market_cap: 2200000000000, sector: 'Technology' }
+            ];
+            
+            // Apply basic client-side filtering to fallback data
+            let filteredResults = fallbackResults;
+            if (filters.minPrice) {
+                filteredResults = filteredResults.filter(stock => stock.current_price >= parseFloat(filters.minPrice));
+            }
+            if (filters.maxPrice) {
+                filteredResults = filteredResults.filter(stock => stock.current_price <= parseFloat(filters.maxPrice));
+            }
+            
+            if (filteredResults.length > 0) {
+                displayResults(filteredResults);
+                // Add notice about sample data
+                const notice = document.createElement('div');
+                notice.style.cssText = 'background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 10px; margin: 10px 0; border-radius: 4px; text-align: center;';
+                notice.textContent = 'Backend unavailable - showing sample data. Please try again later for real-time data.';
+                resultsTbody.parentNode.insertBefore(notice, resultsTbody.parentNode.firstChild);
+            } else {
+                resultsTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #666;">No sample data available matching your criteria</td></tr>';
+            }
+        });
     }
 
     function collectFilters() {
@@ -430,27 +507,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function createResultRow(stock) {
         const row = document.createElement('tr');
-        const changeClass = stock.change >= 0 ? 'change-positive' : 'change-negative';
-        const changeIcon = stock.change >= 0 ? '↗' : '↘';
+        
+        // Handle Django API data format
+        const symbol = stock.ticker || stock.symbol;
+        const company = stock.name || stock.company_name || stock.company || symbol;
+        const price = parseFloat(stock.current_price || stock.price || 0);
+        const change = parseFloat(stock.price_change_today || stock.change || 0);
+        const changePercent = parseFloat(stock.change_percent || stock.changePercent || 0);
+        const volume = formatVolume(stock.volume || 0);
+        const marketCap = formatMarketCap(stock.market_cap || 0);
+        const sector = stock.sector || 'N/A';
+        
+        const changeClass = change >= 0 ? 'change-positive' : 'change-negative';
+        const changeIcon = change >= 0 ? '↗' : '↘';
         
         row.innerHTML = `
-            <td><span class="symbol-cell" onclick="viewStock('${stock.symbol}')">${stock.symbol}</span></td>
-            <td>${stock.company}</td>
-            <td>$${stock.price.toFixed(2)}</td>
-            <td class="${changeClass}">${changeIcon} $${Math.abs(stock.change).toFixed(2)}</td>
-            <td class="${changeClass}">${stock.changePercent.toFixed(2)}%</td>
-            <td>${stock.volume}</td>
-            <td>${stock.marketCap}</td>
-            <td>${stock.sector}</td>
+            <td><span class="symbol-cell" onclick="viewStock('${symbol}')" title="Click to view ${symbol} details">${symbol}</span></td>
+            <td>${company}</td>
+            <td>$${price.toFixed(2)}</td>
+            <td class="${changeClass}">${changeIcon} $${Math.abs(change).toFixed(2)}</td>
+            <td class="${changeClass}">${changePercent.toFixed(2)}%</td>
+            <td>${volume}</td>
+            <td>${marketCap}</td>
+            <td>${sector}</td>
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-primary btn-small" onclick="addToWatchlist('${stock.symbol}')">⭐</button>
-                    <button class="btn btn-outline btn-small" onclick="viewChart('${stock.symbol}')">📊</button>
+                    <button class="btn btn-primary btn-small" onclick="addToWatchlist('${symbol}')" title="Add to watchlist">Add</button>
+                    <button class="btn btn-outline btn-small" onclick="viewStock('${symbol}')" title="View details">View</button>
                 </div>
             </td>
         `;
         
         return row;
+    }
+    
+    function formatVolume(volume) {
+        if (!volume) return 'N/A';
+        const vol = parseInt(volume);
+        if (vol >= 1000000) {
+            return (vol / 1000000).toFixed(1) + 'M';
+        } else if (vol >= 1000) {
+            return (vol / 1000).toFixed(1) + 'K';
+        }
+        return vol.toString();
+    }
+    
+    function formatMarketCap(marketCap) {
+        if (!marketCap) return 'N/A';
+        const cap = parseFloat(marketCap);
+        if (cap >= 1000000000000) {
+            return (cap / 1000000000000).toFixed(1) + 'T';
+        } else if (cap >= 1000000000) {
+            return (cap / 1000000000).toFixed(1) + 'B';
+        } else if (cap >= 1000000) {
+            return (cap / 1000000).toFixed(1) + 'M';
+        }
+        return cap.toString();
     }
 
     function resetAllFilters() {

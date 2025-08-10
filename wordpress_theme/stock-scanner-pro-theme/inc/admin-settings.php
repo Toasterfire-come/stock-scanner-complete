@@ -336,7 +336,7 @@ class StockScannerAdminSettings {
                             <th scope="row"><?php esc_html_e('Backend URL', 'stock-scanner'); ?></th>
                             <td>
                                 <input type="url" name="stock_scanner_api_settings[backend_url]" 
-                                       value="<?php echo esc_attr($api_settings['backend_url'] ?? 'https://your-django-backend.com'); ?>" 
+                                       value="<?php echo esc_attr($api_settings['backend_url'] ?? 'http://localhost:8000'); ?>" 
                                        class="regular-text" required />
                                 <p class="description"><?php esc_html_e('Full URL to your Django backend (e.g., https://api.yoursite.com)', 'stock-scanner'); ?></p>
                                 <button type="button" class="button test-connection" data-type="django">

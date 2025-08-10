@@ -9,7 +9,7 @@ get_header(); ?>
 <div class="market-overview-page">
     <div class="container">
         <div class="page-header">
-            <h1>📊 Market Overview</h1>
+            <h1>Market Overview</h1>
             <p class="page-description">Real-time market data, indices performance, and comprehensive market analysis</p>
         </div>
 
@@ -35,7 +35,7 @@ get_header(); ?>
             <!-- Major Indices -->
             <div class="indices-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📈 Major Indices</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Major Indices</h2>
                     <div class="indices-grid" id="indices-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4);">
                         <!-- Indices will be loaded here -->
                     </div>
@@ -46,9 +46,9 @@ get_header(); ?>
             <div class="movers-section mb-6">
                 <div class="card p-6">
                     <div class="movers-tabs" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-5); border-bottom: 2px solid var(--color-border);">
-                        <button class="tab-btn active" data-tab="gainers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); cursor: pointer; font-weight: 600;">🚀 Top Gainers</button>
-                        <button class="tab-btn" data-tab="losers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">📉 Top Losers</button>
-                        <button class="tab-btn" data-tab="active" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">⚡ Most Active</button>
+                        <button class="tab-btn active" data-tab="gainers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); cursor: pointer; font-weight: 600;">Top Gainers</button>
+                        <button class="tab-btn" data-tab="losers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">Top Losers</button>
+                        <button class="tab-btn" data-tab="active" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">Most Active</button>
                     </div>
                     <div class="movers-content">
                         <div id="gainers-content" class="tab-content active" style="display: block;">
@@ -73,7 +73,7 @@ get_header(); ?>
             <!-- Sector Performance -->
             <div class="sectors-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">🏢 Sector Performance</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Sector Performance</h2>
                     <div class="sectors-grid" id="sectors-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4);">
                         <!-- Sector performance will be loaded here -->
                     </div>
@@ -83,7 +83,7 @@ get_header(); ?>
             <!-- Market Breadth -->
             <div class="breadth-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📊 Market Breadth</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Market Breadth</h2>
                     <div class="breadth-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-5);">
                         <div class="breadth-card card p-4">
                             <h3 style="margin-bottom: var(--space-4); color: var(--color-text);">Advance/Decline</h3>
@@ -149,7 +149,7 @@ get_header(); ?>
             <!-- Market News Summary -->
             <div class="news-summary-section mb-6">
                 <div class="card p-6">
-                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📰 Market News Summary</h2>
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">Market News Summary</h2>
                     <div class="news-summary-cards" id="news-summary" style="display: grid; gap: var(--space-4); margin-bottom: var(--space-5);">
                         <!-- News summary will be loaded here -->
                     </div>
@@ -270,6 +270,7 @@ get_header(); ?>
 .index-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    cursor: pointer;
 }
 
 .index-header {
@@ -288,6 +289,11 @@ get_header(); ?>
 .index-symbol {
     color: #646970;
     font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.index-card:hover .index-symbol {
+    color: #4a5a3a;
 }
 
 .index-price {
@@ -381,6 +387,7 @@ get_header(); ?>
 .mover-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
 }
 
 .mover-header {
@@ -394,6 +401,11 @@ get_header(); ?>
     font-weight: 600;
     color: #2271b1;
     font-size: 1rem;
+}
+
+.mover-card:hover .mover-symbol {
+    color: #4a5a3a;
+    text-decoration: underline;
 }
 
 .mover-price {
@@ -446,6 +458,11 @@ get_header(); ?>
 .sector-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
+
+.sector-card:hover .sector-name {
+    color: #4a5a3a;
 }
 
 .sector-name {
@@ -715,6 +732,23 @@ get_header(); ?>
     color: white;
 }
 
+.loading-spinner {
+    text-align: center;
+    padding: 40px 20px;
+    color: #646970;
+    font-style: italic;
+}
+
+.error-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #d63638;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin: 10px;
+}
+
 @media (max-width: 768px) {
     .market-status-banner {
         grid-template-columns: 1fr;
@@ -811,17 +845,38 @@ function updateCurrentTime() {
 }
 
 function loadIndices() {
-    const mockIndices = [
-        { name: 'S&P 500', symbol: 'SPX', price: 4756.50, change: 24.85, changePercent: 0.53 },
-        { name: 'Dow Jones', symbol: 'DJI', price: 37863.80, change: -45.20, changePercent: -0.12 },
-        { name: 'NASDAQ', symbol: 'IXIC', price: 14906.85, change: 67.30, changePercent: 0.45 },
-        { name: 'Russell 2000', symbol: 'RUT', price: 2086.45, change: 12.75, changePercent: 0.61 },
-        { name: 'VIX', symbol: 'VIX', price: 14.23, change: -0.85, changePercent: -5.64 },
-        { name: 'USD Index', symbol: 'DXY', price: 103.45, change: 0.12, changePercent: 0.12 }
-    ];
-    
     const indicesGrid = document.getElementById('indices-grid');
-    indicesGrid.innerHTML = mockIndices.map(index => createIndexCard(index)).join('');
+    indicesGrid.innerHTML = '<div class="loading-spinner">Loading indices...</div>';
+    
+    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: 'get_major_indices',
+            nonce: '<?php echo wp_create_nonce('stock_scanner_theme_nonce'); ?>'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const indices = data.data.map(stock => ({
+                name: stock.name || stock.company_name || stock.ticker,
+                symbol: stock.ticker,
+                price: parseFloat(stock.current_price || 0),
+                change: parseFloat(stock.price_change_today || 0),
+                changePercent: parseFloat(stock.change_percent || 0)
+            }));
+            indicesGrid.innerHTML = indices.map(index => createIndexCard(index)).join('');
+        } else {
+            indicesGrid.innerHTML = '<div class="error-message">Failed to load indices data</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading indices:', error);
+        indicesGrid.innerHTML = '<div class="error-message">Error loading indices data</div>';
+    });
 }
 
 function createIndexCard(index) {
@@ -829,7 +884,7 @@ function createIndexCard(index) {
     const changeIcon = index.change >= 0 ? '↗' : '↘';
     
     return `
-        <div class="index-card" onclick="viewIndex('${index.symbol}')">
+        <div class="index-card" onclick="viewIndex('${index.symbol}')" title="Click to view ${index.symbol} details">
             <div class="index-header">
                 <div>
                     <div class="index-name">${index.name}</div>
@@ -849,27 +904,111 @@ function createIndexCard(index) {
 }
 
 function loadMarketMovers() {
-    const gainers = [
-        { symbol: 'NVDA', company: 'NVIDIA Corp', price: 875.28, change: 45.32, changePercent: 5.46, volume: '38.9M' },
-        { symbol: 'TSLA', company: 'Tesla Inc', price: 248.50, change: 18.75, changePercent: 8.16, volume: '95.2M' },
-        { symbol: 'AMD', company: 'Advanced Micro Devices', price: 154.20, change: 12.80, changePercent: 9.05, volume: '42.1M' }
-    ];
+    // Show loading state
+    document.getElementById('gainers-grid').innerHTML = '<div class="loading-spinner">Loading top gainers...</div>';
+    document.getElementById('losers-grid').innerHTML = '<div class="loading-spinner">Loading top losers...</div>';
+    document.getElementById('active-grid').innerHTML = '<div class="loading-spinner">Loading most active...</div>';
     
-    const losers = [
-        { symbol: 'META', company: 'Meta Platforms', price: 484.20, change: -15.75, changePercent: -3.15, volume: '18.3M' },
-        { symbol: 'NFLX', company: 'Netflix Inc', price: 456.80, change: -12.40, changePercent: -2.64, volume: '8.7M' },
-        { symbol: 'PYPL', company: 'PayPal Holdings', price: 58.25, change: -2.85, changePercent: -4.66, volume: '15.2M' }
-    ];
-    
-    const mostActive = [
-        { symbol: 'AAPL', company: 'Apple Inc', price: 175.43, change: 2.15, changePercent: 1.24, volume: '152.3M' },
-        { symbol: 'TSLA', company: 'Tesla Inc', price: 248.50, change: 18.75, changePercent: 8.16, volume: '95.2M' },
-        { symbol: 'SQQQ', company: 'ProShares UltraPro Short QQQ', price: 8.45, change: -0.25, changePercent: -2.87, volume: '89.4M' }
-    ];
-    
-    document.getElementById('gainers-grid').innerHTML = gainers.map(createMoverCard).join('');
-    document.getElementById('losers-grid').innerHTML = losers.map(createMoverCard).join('');
-    document.getElementById('active-grid').innerHTML = mostActive.map(createMoverCard).join('');
+    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: 'get_market_movers',
+            nonce: '<?php echo wp_create_nonce('stock_scanner_theme_nonce'); ?>'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const trendingData = data.data;
+            
+            // Process top gainers
+            const gainers = (trendingData.top_gainers || []).map(stock => ({
+                symbol: stock.ticker,
+                company: stock.name || stock.company_name || stock.ticker,
+                price: parseFloat(stock.current_price || 0),
+                change: parseFloat(stock.price_change_today || 0),
+                changePercent: parseFloat(stock.change_percent || 0),
+                volume: formatVolume(stock.volume || 0)
+            }));
+            
+            // Process most active
+            const mostActive = (trendingData.most_active || []).map(stock => ({
+                symbol: stock.ticker,
+                company: stock.name || stock.company_name || stock.ticker,
+                price: parseFloat(stock.current_price || 0),
+                change: parseFloat(stock.price_change_today || 0),
+                changePercent: parseFloat(stock.change_percent || 0),
+                volume: formatVolume(stock.volume || 0)
+            }));
+            
+            // For losers, we can get them from the stocks API with category filter
+            loadTopLosers();
+            
+            document.getElementById('gainers-grid').innerHTML = gainers.map(createMoverCard).join('');
+            document.getElementById('active-grid').innerHTML = mostActive.map(createMoverCard).join('');
+            
+        } else {
+            document.getElementById('gainers-grid').innerHTML = '<div class="error-message">Failed to load gainers</div>';
+            document.getElementById('active-grid').innerHTML = '<div class="error-message">Failed to load most active</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading market movers:', error);
+        document.getElementById('gainers-grid').innerHTML = '<div class="error-message">Error loading gainers</div>';
+        document.getElementById('active-grid').innerHTML = '<div class="error-message">Error loading most active</div>';
+    });
+}
+
+function loadTopLosers() {
+    // Get losers from stock API with category filter
+    const backendUrl = '<?php echo get_backend_api_url('stocks/'); ?>';
+    fetch(`${backendUrl}?category=losers&limit=10&sort_by=change_percent&sort_order=asc`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.results && data.results.length > 0) {
+            const losers = data.results.map(stock => ({
+                symbol: stock.ticker,
+                company: stock.name || stock.company_name || stock.ticker,
+                price: parseFloat(stock.current_price || 0),
+                change: parseFloat(stock.price_change_today || 0),
+                changePercent: parseFloat(stock.change_percent || 0),
+                volume: formatVolume(stock.volume || 0)
+            }));
+            document.getElementById('losers-grid').innerHTML = losers.map(createMoverCard).join('');
+        } else {
+            // Fallback sample data
+            const fallbackLosers = [
+                { symbol: 'META', company: 'Meta Platforms', price: 484.20, change: -15.75, changePercent: -3.15, volume: '18.3M' },
+                { symbol: 'NFLX', company: 'Netflix Inc', price: 456.80, change: -12.40, changePercent: -2.64, volume: '8.7M' },
+                { symbol: 'PYPL', company: 'PayPal Holdings', price: 58.25, change: -2.85, changePercent: -4.66, volume: '15.2M' }
+            ];
+            document.getElementById('losers-grid').innerHTML = fallbackLosers.map(createMoverCard).join('');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading losers:', error);
+        // Fallback sample data for errors
+        const fallbackLosers = [
+            { symbol: 'META', company: 'Meta Platforms', price: 484.20, change: -15.75, changePercent: -3.15, volume: '18.3M' },
+            { symbol: 'NFLX', company: 'Netflix Inc', price: 456.80, change: -12.40, changePercent: -2.64, volume: '8.7M' },
+            { symbol: 'PYPL', company: 'PayPal Holdings', price: 58.25, change: -2.85, changePercent: -4.66, volume: '15.2M' }
+        ];
+        document.getElementById('losers-grid').innerHTML = fallbackLosers.map(createMoverCard).join('');
+    });
+}
+
+function formatVolume(volume) {
+    if (!volume) return '0';
+    const vol = parseInt(volume);
+    if (vol >= 1000000) {
+        return (vol / 1000000).toFixed(1) + 'M';
+    } else if (vol >= 1000) {
+        return (vol / 1000).toFixed(1) + 'K';
+    }
+    return vol.toString();
 }
 
 function createMoverCard(stock) {
@@ -877,7 +1016,7 @@ function createMoverCard(stock) {
     const changeIcon = stock.change >= 0 ? '↗' : '↘';
     
     return `
-        <div class="mover-card" onclick="viewStock('${stock.symbol}')">
+        <div class="mover-card" onclick="viewStock('${stock.symbol}')" title="Click to view ${stock.symbol} quote">
             <div class="mover-header">
                 <div class="mover-symbol">${stock.symbol}</div>
                 <div class="mover-price">$${stock.price.toFixed(2)}</div>
@@ -914,7 +1053,7 @@ function createSectorCard(sector) {
     const performanceIcon = sector.performance >= 0 ? '+' : '';
     
     return `
-        <div class="sector-card" onclick="viewSector('${sector.name}')">
+        <div class="sector-card" onclick="viewSector('${sector.name}')" title="Click to view ${sector.name} sector stocks">
             <div class="sector-name">${sector.name}</div>
             <div class="sector-performance ${performanceClass}">
                 ${performanceIcon}${sector.performance.toFixed(2)}%
@@ -1090,7 +1229,7 @@ function setupCalendarNavigation() {
 
 // Global functions for onclick handlers
 window.viewIndex = function(symbol) {
-    window.location.href = `/technical-analysis/?symbol=${symbol}`;
+    window.location.href = `/stock-lookup/?symbol=${symbol}`;
 };
 
 window.viewStock = function(symbol) {

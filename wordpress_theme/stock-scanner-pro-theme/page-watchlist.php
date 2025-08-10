@@ -10,7 +10,7 @@ get_header(); ?>
 <div class="watchlist-page">
     <div class="container">
         <div class="page-header">
-            <h1>📋 My Watchlist</h1>
+            <h1>My Watchlist</h1>
             <p class="page-description">Track your favorite stocks and get quick suggestions to start building your list</p>
         </div>
 
