@@ -10,7 +10,7 @@ if (!is_user_logged_in()) {
     exit;
 }
 
-g et_header(); ?>
+get_header(); ?>
 
 <div class="portfolio-management-container">
     <div class="container">
@@ -20,30 +20,34 @@ g et_header(); ?>
         </div>
 
         <!-- Portfolio Actions Bar -->
-        <div class="portfolio-actions-bar panel">
-            <button class="btn btn-primary" id="create-portfolio-btn">
-                <i class="fas fa-plus"></i> Create Portfolio
-            </button>
-            <button class="btn btn-secondary" id="import-csv-btn">
-                <i class="fas fa-upload"></i> Import from CSV
-            </button>
-            <button class="btn btn-outline" id="view-roi-analytics-btn">
-                <i class="fas fa-chart-line"></i> ROI Analytics
-            </button>
-            <div class="portfolio-filters">
-                <select id="portfolio-sort" class="form-select">
-                    <option value="created">Sort by Created Date</option>
-                    <option value="performance">Sort by Performance</option>
-                    <option value="value">Sort by Total Value</option>
-                    <option value="name">Sort by Name</option>
-                </select>
+        <div class="card p-6 mb-6">
+            <div class="portfolio-actions-bar" style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
+                <div class="action-buttons" style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="create-portfolio-btn">
+                        ➕ Create Portfolio
+                    </button>
+                    <button class="btn btn-secondary" id="import-csv-btn">
+                        📤 Import from CSV
+                    </button>
+                    <button class="btn btn-outline" id="view-roi-analytics-btn">
+                        📊 ROI Analytics
+                    </button>
+                </div>
+                <div class="portfolio-filters">
+                    <select id="portfolio-sort" class="form-select" style="min-width: 200px;">
+                        <option value="created">Sort by Created Date</option>
+                        <option value="performance">Sort by Performance</option>
+                        <option value="value">Sort by Total Value</option>
+                        <option value="name">Sort by Name</option>
+                    </select>
+                </div>
             </div>
         </div>
 
         <!-- Portfolio Grid -->
-        <div class="row" id="portfolios-grid">
-            <div class="col-12">
-                <div class="loading-indicator">
+        <div class="portfolios-section mb-6">
+            <div id="portfolios-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: var(--space-5);">
+                <div class="loading-indicator" style="grid-column: 1 / -1;">
                     <div class="spinner"></div>
                     <p>Loading your portfolios...</p>
                 </div>
@@ -51,43 +55,43 @@ g et_header(); ?>
         </div>
 
         <!-- Portfolio Performance Summary -->
-        <div class="mt-6">
-            <div class="performance-summary-card card">
-                <h3>Overall Portfolio Performance</h3>
-                <div class="row" id="overall-performance"></div>
+        <div class="card p-6">
+            <h3 style="margin-bottom: var(--space-5); color: var(--color-text);">📊 Overall Portfolio Performance</h3>
+            <div id="overall-performance" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4);">
+                <!-- Performance metrics will be loaded here -->
             </div>
         </div>
     </div>
 </div>
 
 <!-- Create Portfolio Modal -->
-<div class="modal fade" id="createPortfolioModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create New Portfolio</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-overlay" id="createPortfolioModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="modal-dialog card" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-content p-6">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-border);">
+                <h5 class="modal-title" style="margin: 0; color: var(--color-text);">Create New Portfolio</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">×</button>
             </div>
             <div class="modal-body">
-                <form id="create-portfolio-form">
-                    <div class="mb-3">
+                <form id="create-portfolio-form" style="display: grid; gap: var(--space-4);">
+                    <div class="form-group">
                         <label for="portfolio-name" class="form-label">Portfolio Name *</label>
                         <input type="text" class="form-control" id="portfolio-name" required>
                     </div>
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="portfolio-description" class="form-label">Description</label>
                         <textarea class="form-control" id="portfolio-description" rows="3"></textarea>
                     </div>
-                    <div class="mb-3 form-check">
-                        <input class="form-check-input" type="checkbox" id="portfolio-public">
-                        <label class="form-check-label" for="portfolio-public">
+                    <div class="form-check" style="display: flex; align-items: center; gap: var(--space-2);">
+                        <input class="form-check-input" type="checkbox" id="portfolio-public" style="width: auto;">
+                        <label class="form-check-label" for="portfolio-public" style="margin: 0;">
                             Make portfolio public (visible to other users)
                         </label>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="save-portfolio-btn">Create Portfolio</button>
             </div>
         </div>
@@ -95,177 +99,230 @@ g et_header(); ?>
 </div>
 
 <!-- Add Holding Modal -->
-<div class="modal fade" id="addHoldingModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Stock Holding</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-overlay" id="addHoldingModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="modal-dialog card" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-content p-6">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-border);">
+                <h5 class="modal-title" style="margin: 0; color: var(--color-text);">Add New Holding</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">×</button>
             </div>
             <div class="modal-body">
-                <form id="add-holding-form">
-                    <input type="hidden" id="holding-portfolio-id">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="stock-ticker" class="form-label">Stock Ticker *</label>
-                                <input type="text" class="form-control" id="stock-ticker" placeholder="e.g., AAPL" required>
-                                <div class="stock-search-results" id="stock-search-results"></div>
-                            </div>
+                <form id="add-holding-form" style="display: grid; gap: var(--space-4);">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                        <div class="form-group">
+                            <label for="holding-symbol" class="form-label">Stock Symbol *</label>
+                            <input type="text" class="form-control" id="holding-symbol" placeholder="e.g., AAPL" required>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="shares-amount" class="form-label">Number of Shares *</label>
-                                <input type="number" class="form-control" id="shares-amount" step="0.0001" min="0.0001" required>
-                            </div>
+                        <div class="form-group">
+                            <label for="holding-quantity" class="form-label">Quantity *</label>
+                            <input type="number" class="form-control" id="holding-quantity" min="0" step="0.01" required>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="average-cost" class="form-label">Average Cost per Share *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="average-cost" step="0.01" min="0.01" required>
-                                </div>
-                            </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                        <div class="form-group">
+                            <label for="holding-price" class="form-label">Purchase Price *</label>
+                            <input type="number" class="form-control" id="holding-price" min="0" step="0.01" required>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="current-price" class="form-label">Current Price (optional)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="current-price" step="0.01" min="0.01">
-                                </div>
-                            </div>
+                        <div class="form-group">
+                            <label for="holding-date" class="form-label">Purchase Date *</label>
+                            <input type="date" class="form-control" id="holding-date" required>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="alert-source" class="form-label">Alert Source (if applicable)</label>
-                        <select class="form-select" id="alert-source">
-                            <option value="">Manual Entry</option>
-                        </select>
-                    </div>
-                    <div class="holding-preview" id="holding-preview" style="display: none;">
-                        <h6>Holding Preview</h6>
-                        <div class="preview-details"></div>
+                    <div class="form-group">
+                        <label for="holding-notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="holding-notes" rows="2" placeholder="Investment thesis, reminders, etc."></textarea>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="save-holding-btn">Add Holding</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Import CSV Modal -->
-<div class="modal fade" id="importCsvModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Import Portfolio from CSV</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="import-instructions mb-4">
-                    <h6>CSV Format Requirements:</h6>
-                    <p>Your CSV file should include the following columns:</p>
-                    <code>ticker,shares,average_cost,current_price</code>
-                    <p class="mt-2">Example:</p>
-                    <code>AAPL,100,150.00,165.00<br>MSFT,50,200.00,210.00</code>
-                </div>
-                <form id="import-csv-form">
-                    <div class="mb-3">
-                        <label for="import-portfolio-name" class="form-label">Portfolio Name *</label>
-                        <input type="text" class="form-control" id="import-portfolio-name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="csv-file" class="form-label">CSV File *</label>
-                        <input type="file" class="form-control" id="csv-file" accept=".csv" required>
-                    </div>
-                    <div class="import-preview" id="import-preview" style="display: none;">
-                        <h6>Import Preview</h6>
-                        <div class="preview-table"></div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-secondary" id="import-csv-btn-submit">Import Portfolio</button>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+/* Portfolio page specific styles */
+.portfolio-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-<!-- ROI Analytics Modal -->
-<div class="modal fade" id="roiAnalyticsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Alert-Based ROI Analytics</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="roi-analytics-content"></div>
-            </div>
-        </div>
-    </div>
-</div>
+.portfolio-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
 
-<!-- Portfolio Detail Modal -->
-<div class="modal fade" id="portfolioDetailModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="portfolio-detail-title">Portfolio Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="portfolio-detail-content"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="add-holding-to-portfolio">Add Holding</button>
-            </div>
-        </div>
-    </div>
-</div>
+.portfolio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+}
+
+.portfolio-title {
+    color: var(--color-text);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.portfolio-performance {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+}
+
+.perf-metric {
+    text-align: center;
+}
+
+.perf-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: var(--space-1);
+}
+
+.perf-label {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.modal-overlay.show {
+    display: flex !important;
+}
+
+@media (max-width: 768px) {
+    .portfolio-actions-bar {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 
 <script>
-// Initialize Portfolio Management functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const portfolioManager = new PortfolioManager();
-    portfolioManager.init();
+    // Modal functionality
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+        }
+    }
 
-    document.getElementById('create-portfolio-btn').addEventListener('click', function() {
-        const modal = new bootstrap.Modal(document.getElementById('createPortfolioModal'));
-        modal.show();
+    function hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    // Event listeners for modal triggers
+    document.getElementById('create-portfolio-btn')?.addEventListener('click', () => {
+        showModal('createPortfolioModal');
     });
 
-    document.getElementById('import-csv-btn').addEventListener('click', function() {
-        const modal = new bootstrap.Modal(document.getElementById('importCsvModal'));
-        modal.show();
+    // Close modal events
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal-overlay');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        });
     });
 
-    document.getElementById('view-roi-analytics-btn').addEventListener('click', function() {
-        portfolioManager.loadROIAnalytics();
-        const modal = new bootstrap.Modal(document.getElementById('roiAnalyticsModal'));
-        modal.show();
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
     });
 
-    document.getElementById('portfolio-sort').addEventListener('change', function() {
-        portfolioManager.sortPortfolios(this.value);
-    });
+    // Load portfolios
+    loadPortfolios();
+    loadOverallPerformance();
 
-    document.getElementById('save-portfolio-btn').addEventListener('click', function() {
-        portfolioManager.createPortfolio();
-    });
+    function loadPortfolios() {
+        // Simulate loading portfolios
+        setTimeout(() => {
+            const grid = document.getElementById('portfolios-grid');
+            grid.innerHTML = generateMockPortfolios();
+        }, 1000);
+    }
 
-    document.getElementById('save-holding-btn').addEventListener('click', function() {
-        portfolioManager.addHolding();
-    });
+    function loadOverallPerformance() {
+        const container = document.getElementById('overall-performance');
+        container.innerHTML = `
+            <div class="performance-metric" style="text-align: center; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin-bottom: var(--space-2);">+$12,547</div>
+                <div style="color: var(--color-text-muted); font-size: 0.875rem;">Total Gain/Loss</div>
+            </div>
+            <div class="performance-metric" style="text-align: center; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin-bottom: var(--space-2);">+15.2%</div>
+                <div style="color: var(--color-text-muted); font-size: 0.875rem;">Total Return</div>
+            </div>
+            <div class="performance-metric" style="text-align: center; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-2);">$94,732</div>
+                <div style="color: var(--color-text-muted); font-size: 0.875rem;">Total Value</div>
+            </div>
+            <div class="performance-metric" style="text-align: center; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--space-2);">3</div>
+                <div style="color: var(--color-text-muted); font-size: 0.875rem;">Active Portfolios</div>
+            </div>
+        `;
+    }
+
+    function generateMockPortfolios() {
+        const portfolios = [
+            { name: 'Growth Portfolio', value: '$45,230', return: '+12.3%', holdings: 8 },
+            { name: 'Dividend Focus', value: '$32,100', return: '+8.7%', holdings: 12 },
+            { name: 'Tech Stocks', value: '$17,402', return: '+21.5%', holdings: 5 }
+        ];
+
+        return portfolios.map(portfolio => `
+            <div class="portfolio-card">
+                <div class="portfolio-header">
+                    <h4 class="portfolio-title">${portfolio.name}</h4>
+                    <button class="btn btn-outline btn-small">⚙️</button>
+                </div>
+                <div class="portfolio-performance">
+                    <div class="perf-metric">
+                        <div class="perf-value" style="color: var(--color-primary);">${portfolio.value}</div>
+                        <div class="perf-label">Current Value</div>
+                    </div>
+                    <div class="perf-metric">
+                        <div class="perf-value" style="color: var(--color-success);">${portfolio.return}</div>
+                        <div class="perf-label">Total Return</div>
+                    </div>
+                    <div class="perf-metric">
+                        <div class="perf-value" style="color: var(--color-text);">${portfolio.holdings}</div>
+                        <div class="perf-label">Holdings</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: var(--space-2); margin-top: var(--space-4);">
+                    <button class="btn btn-primary" style="flex: 1;">View Details</button>
+                    <button class="btn btn-outline">+ Add Holding</button>
+                </div>
+            </div>
+        `).join('');
+    }
 });
 </script>
 
