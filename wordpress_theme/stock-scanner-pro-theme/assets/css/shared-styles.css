@@ -58,6 +58,47 @@ html[data-theme="dark"] .results-panel {
   box-shadow: var(--shadow-sm);
 }
 
+/* Enhanced Header Visibility and Consistency */
+.site-header {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-contrast) !important;
+  box-shadow: var(--shadow-lg) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-header .site-logo,
+.site-header .site-logo .logo-text {
+  color: var(--color-primary-contrast) !important;
+  font-weight: 700 !important;
+}
+
+.site-header .primary-menu a,
+.site-header .main-navigation a {
+  color: var(--color-primary-contrast) !important;
+  font-weight: 500 !important;
+}
+
+.site-header .primary-menu a:hover,
+.site-header .main-navigation a:hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-decoration: underline;
+}
+
+.site-header .user-toggle,
+.site-header .user-dropdown,
+.site-header .header-actions {
+  color: var(--color-primary-contrast) !important;
+}
+
+.site-header .membership-badge {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: var(--color-primary-contrast) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
 /* Base */
 html { box-sizing: border-box; }
 *, *::before, *::after { box-sizing: inherit; }

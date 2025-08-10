@@ -15,130 +15,147 @@ get_header(); ?>
 
         <div class="market-container">
             <!-- Market Status Banner -->
-            <div class="market-status-section">
-                <div class="market-status-banner" id="market-status">
-                    <div class="status-indicator">
-                        <span class="status-light open" id="status-light"></span>
-                        <span class="status-text" id="status-text">Market Open</span>
-                    </div>
-                    <div class="market-time" id="market-time">
-                        Eastern Time: <span id="current-time">Loading...</span>
-                    </div>
-                    <div class="next-session" id="next-session">
-                        Next: Pre-market opens at 4:00 AM ET
+            <div class="market-status-section mb-6">
+                <div class="card p-6">
+                    <div class="market-status-banner" id="market-status" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4);">
+                        <div class="status-indicator" style="display: flex; align-items: center; gap: var(--space-3);">
+                            <span class="status-light open" id="status-light" style="width: 12px; height: 12px; border-radius: 50%; background: var(--color-success); display: inline-block;"></span>
+                            <span class="status-text" id="status-text" style="font-weight: 600; color: var(--color-text);">Market Open</span>
+                        </div>
+                        <div class="market-time" id="market-time" style="color: var(--color-text-muted);">
+                            Eastern Time: <span id="current-time">Loading...</span>
+                        </div>
+                        <div class="next-session" id="next-session" style="color: var(--color-text-muted); font-size: 0.875rem;">
+                            Next: Pre-market opens at 4:00 AM ET
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Major Indices -->
-            <div class="indices-section">
-                <h2>📈 Major Indices</h2>
-                <div class="indices-grid" id="indices-grid">
-                    <!-- Indices will be loaded here -->
+            <div class="indices-section mb-6">
+                <div class="card p-6">
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📈 Major Indices</h2>
+                    <div class="indices-grid" id="indices-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4);">
+                        <!-- Indices will be loaded here -->
+                    </div>
                 </div>
             </div>
 
             <!-- Market Movers -->
-            <div class="movers-section">
-                <div class="movers-tabs">
-                    <button class="tab-btn active" data-tab="gainers">🚀 Top Gainers</button>
-                    <button class="tab-btn" data-tab="losers">📉 Top Losers</button>
-                    <button class="tab-btn" data-tab="active">⚡ Most Active</button>
-                </div>
-                <div class="movers-content">
-                    <div id="gainers-content" class="tab-content active">
-                        <div class="movers-grid" id="gainers-grid">
-                            <!-- Top gainers will be loaded here -->
-                        </div>
+            <div class="movers-section mb-6">
+                <div class="card p-6">
+                    <div class="movers-tabs" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-5); border-bottom: 2px solid var(--color-border);">
+                        <button class="tab-btn active" data-tab="gainers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); cursor: pointer; font-weight: 600;">🚀 Top Gainers</button>
+                        <button class="tab-btn" data-tab="losers" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">📉 Top Losers</button>
+                        <button class="tab-btn" data-tab="active" style="padding: var(--space-3) var(--space-4); border: none; background: none; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer;">⚡ Most Active</button>
                     </div>
-                    <div id="losers-content" class="tab-content">
-                        <div class="movers-grid" id="losers-grid">
-                            <!-- Top losers will be loaded here -->
+                    <div class="movers-content">
+                        <div id="gainers-content" class="tab-content active" style="display: block;">
+                            <div class="movers-grid" id="gainers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);">
+                                <!-- Top gainers will be loaded here -->
+                            </div>
                         </div>
-                    </div>
-                    <div id="active-content" class="tab-content">
-                        <div class="movers-grid" id="active-grid">
-                            <!-- Most active will be loaded here -->
+                        <div id="losers-content" class="tab-content" style="display: none;">
+                            <div class="movers-grid" id="losers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);">
+                                <!-- Top losers will be loaded here -->
+                            </div>
+                        </div>
+                        <div id="active-content" class="tab-content" style="display: none;">
+                            <div class="movers-grid" id="active-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);">
+                                <!-- Most active will be loaded here -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Sector Performance -->
-            <div class="sectors-section">
-                <h2>🏢 Sector Performance</h2>
-                <div class="sectors-grid" id="sectors-grid">
-                    <!-- Sector performance will be loaded here -->
+            <div class="sectors-section mb-6">
+                <div class="card p-6">
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">🏢 Sector Performance</h2>
+                    <div class="sectors-grid" id="sectors-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4);">
+                        <!-- Sector performance will be loaded here -->
+                    </div>
                 </div>
             </div>
 
             <!-- Market Breadth -->
-            <div class="breadth-section">
-                <h2>📊 Market Breadth</h2>
-                <div class="breadth-cards">
-                    <div class="breadth-card">
-                        <h3>Advance/Decline</h3>
-                        <div class="breadth-chart">
-                            <canvas id="advance-decline-chart"></canvas>
+            <div class="breadth-section mb-6">
+                <div class="card p-6">
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📊 Market Breadth</h2>
+                    <div class="breadth-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-5);">
+                        <div class="breadth-card card p-4">
+                            <h3 style="margin-bottom: var(--space-4); color: var(--color-text);">Advance/Decline</h3>
+                            <div class="breadth-chart" style="margin-bottom: var(--space-4);">
+                                <canvas id="advance-decline-chart" style="max-height: 200px;"></canvas>
+                            </div>
+                            <div class="breadth-stats" id="advance-decline-stats">
+                                <!-- Stats will be loaded here -->
+                            </div>
                         </div>
-                        <div class="breadth-stats" id="advance-decline-stats">
-                            <!-- Stats will be loaded here -->
+                        
+                        <div class="breadth-card card p-4">
+                            <h3 style="margin-bottom: var(--space-4); color: var(--color-text);">New Highs/Lows</h3>
+                            <div class="breadth-chart" style="margin-bottom: var(--space-4);">
+                                <canvas id="highs-lows-chart" style="max-height: 200px;"></canvas>
+                            </div>
+                            <div class="breadth-stats" id="highs-lows-stats">
+                                <!-- Stats will be loaded here -->
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="breadth-card">
-                        <h3>New Highs/Lows</h3>
-                        <div class="breadth-chart">
-                            <canvas id="highs-lows-chart"></canvas>
-                        </div>
-                        <div class="breadth-stats" id="highs-lows-stats">
-                            <!-- Stats will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <div class="breadth-card">
-                        <h3>Volume Analysis</h3>
-                        <div class="volume-metrics" id="volume-metrics">
-                            <!-- Volume metrics will be loaded here -->
+                        
+                        <div class="breadth-card card p-4">
+                            <h3 style="margin-bottom: var(--space-4); color: var(--color-text);">Volume Analysis</h3>
+                            <div class="breadth-chart" style="margin-bottom: var(--space-4);">
+                                <canvas id="volume-analysis-chart" style="max-height: 200px;"></canvas>
+                            </div>
+                            <div class="breadth-stats" id="volume-analysis-stats">
+                                <!-- Stats will be loaded here -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Economic Calendar -->
-            <div class="calendar-section">
-                <h2>📅 Economic Calendar</h2>
-                <div class="calendar-header">
-                    <div class="date-selector">
-                        <button id="prev-day" class="btn btn-outline">← Previous</button>
-                        <span id="selected-date">Today</span>
-                        <button id="next-day" class="btn btn-outline">Next →</button>
+            <div class="calendar-section mb-6">
+                <div class="card p-6">
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📅 Economic Calendar</h2>
+                    <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); background: var(--color-bg-light); padding: var(--space-4); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm);">
+                        <div class="date-selector" style="display: flex; align-items: center; gap: var(--space-3);">
+                            <button id="prev-day" class="btn btn-outline" style="padding: var(--space-2) var(--space-3); border: 2px solid var(--color-primary); border-radius: var(--border-radius-md); color: var(--color-primary); background: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">← Previous</button>
+                            <span id="selected-date" style="font-weight: 600; color: var(--color-text); min-width: 100px; text-align: center;">Today</span>
+                            <button id="next-day" class="btn btn-outline" style="padding: var(--space-2) var(--space-3); border: 2px solid var(--color-primary); border-radius: var(--border-radius-md); color: var(--color-primary); background: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Next →</button>
+                        </div>
+                        <div class="importance-filter" style="display: flex; gap: var(--space-3);">
+                            <label style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.9rem; color: var(--color-text-muted); cursor: pointer;">
+                                <input type="checkbox" checked> High Impact
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.9rem; color: var(--color-text-muted); cursor: pointer;">
+                                <input type="checkbox" checked> Medium Impact
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.9rem; color: var(--color-text-muted); cursor: pointer;">
+                                <input type="checkbox"> Low Impact
+                            </label>
+                        </div>
                     </div>
-                    <div class="importance-filter">
-                        <label>
-                            <input type="checkbox" checked> High Impact
-                        </label>
-                        <label>
-                            <input type="checkbox" checked> Medium Impact
-                        </label>
-                        <label>
-                            <input type="checkbox"> Low Impact
-                        </label>
+                    <div class="calendar-events" id="calendar-events" style="background: var(--color-bg-light); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;">
+                        <!-- Economic events will be loaded here -->
                     </div>
-                </div>
-                <div class="calendar-events" id="calendar-events">
-                    <!-- Economic events will be loaded here -->
                 </div>
             </div>
 
             <!-- Market News Summary -->
-            <div class="news-summary-section">
-                <h2>📰 Market News Summary</h2>
-                <div class="news-summary-cards" id="news-summary">
-                    <!-- News summary will be loaded here -->
-                </div>
-                <div class="news-actions">
-                    <a href="/stock-news/" class="btn btn-primary">View All News</a>
+            <div class="news-summary-section mb-6">
+                <div class="card p-6">
+                    <h2 style="margin-bottom: var(--space-5); color: var(--color-text);">📰 Market News Summary</h2>
+                    <div class="news-summary-cards" id="news-summary" style="display: grid; gap: var(--space-4); margin-bottom: var(--space-5);">
+                        <!-- News summary will be loaded here -->
+                    </div>
+                    <div class="news-actions" style="text-align: center;">
+                        <a href="/stock-news/" class="btn btn-primary" style="padding: var(--space-3) var(--space-4); border: none; border-radius: var(--border-radius-md); font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);">View All News</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -937,23 +954,23 @@ function initializeMarketBreadth() {
         </div>
     `;
     
-    const volumeMetrics = document.getElementById('volume-metrics');
+    const volumeMetrics = document.getElementById('volume-analysis-stats');
     volumeMetrics.innerHTML = `
-        <div class="metric-row">
-            <span class="metric-label">Total Volume</span>
-            <span class="metric-value">4.2B shares</span>
+        <div class="stat-item">
+            <div class="stat-value">4.2B shares</div>
+            <div class="stat-label">Total Volume</div>
         </div>
-        <div class="metric-row">
-            <span class="metric-label">Up Volume</span>
-            <span class="metric-value">2.8B shares</span>
+        <div class="stat-item">
+            <div class="stat-value">2.8B shares</div>
+            <div class="stat-label">Up Volume</div>
         </div>
-        <div class="metric-row">
-            <span class="metric-label">Down Volume</span>
-            <span class="metric-value">1.4B shares</span>
+        <div class="stat-item">
+            <div class="stat-value">1.4B shares</div>
+            <div class="stat-label">Down Volume</div>
         </div>
-        <div class="metric-row">
-            <span class="metric-label">Up/Down Ratio</span>
-            <span class="metric-value">2.0</span>
+        <div class="stat-item">
+            <div class="stat-value">2.0</div>
+            <div class="stat-label">Up/Down Ratio</div>
         </div>
     `;
 }

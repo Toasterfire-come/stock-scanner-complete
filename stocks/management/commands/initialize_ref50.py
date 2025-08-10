@@ -102,7 +102,7 @@ class Command(BaseCommand):
         
         # Create demo revenue records
         current_month = timezone.now()
-        original_prices = [9.99, 19.99, 29.99, 49.99]
+        original_prices = [24.99, 39.99, 59.99, 89.99]
         
         for i, user in enumerate(demo_users):
             price = random.choice(original_prices)

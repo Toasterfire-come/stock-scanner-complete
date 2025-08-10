@@ -41,7 +41,7 @@ get_header(); ?>
                 <!-- Price Filters -->
                 <div class="filter-section">
                     <h3>💵 Price Range</h3>
-                    <div class="range-inputs">
+                    <div class="range-inputs" style="display: grid; gap: var(--space-3);">
                         <div class="input-group">
                             <label>Min Price:</label>
                             <input type="number" id="min-price" placeholder="0" min="0" step="0.01">
@@ -56,7 +56,7 @@ get_header(); ?>
                 <!-- Volume Filters -->
                 <div class="filter-section">
                     <h3>📈 Volume</h3>
-                    <div class="range-inputs">
+                    <div class="range-inputs" style="display: grid; gap: var(--space-3);">
                         <div class="input-group">
                             <label>Min Volume:</label>
                             <input type="number" id="min-volume" placeholder="100000" min="0">
@@ -77,7 +77,7 @@ get_header(); ?>
                 <!-- Performance Filters -->
                 <div class="filter-section">
                     <h3>📊 Performance</h3>
-                    <div class="performance-filters">
+                    <div class="performance-filters" style="display: grid; gap: var(--space-3);">
                         <div class="input-group">
                             <label>1-Day Change (%):</label>
                             <select id="day-change">
@@ -105,7 +105,7 @@ get_header(); ?>
                 <div class="filter-section">
                     <h3>🏢 Sectors & Industries</h3>
                     <div class="sector-filters">
-                        <select id="sector-filter" multiple>
+                        <select id="sector-filter" multiple style="height: 120px;">
                             <option value="technology">Technology</option>
                             <option value="healthcare">Healthcare</option>
                             <option value="financial">Financial</option>
@@ -136,21 +136,20 @@ get_header(); ?>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="filter-actions">
-                    <button id="apply-screen" class="btn btn-primary btn-large">🔍 Screen Stocks</button>
+                <div class="filter-actions" style="display: grid; gap: var(--space-3); margin-top: var(--space-5);">
+                    <button id="apply-screen" class="btn btn-primary">🔍 Screen Stocks</button>
                     <button id="export-results" class="btn btn-outline">📤 Export Results</button>
                 </div>
             </div>
 
             <!-- Results Panel -->
-
             <div class="results-panel">
                 <div class="results-header">
                     <h2>📋 Screening Results</h2>
-                    <div class="results-info">
+                    <div class="results-info" style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);">
                         <span id="results-count">0 stocks found</span>
-                        <div class="sort-controls">
-                            <label>Sort by:</label>
+                        <div class="sort-controls" style="display: flex; align-items: center; gap: var(--space-2);">
+                            <label style="margin: 0;">Sort by:</label>
                             <select id="sort-by">
                                 <option value="symbol">Symbol</option>
                                 <option value="price">Price</option>
@@ -169,8 +168,8 @@ get_header(); ?>
                 </div>
 
                 <!-- Results Table -->
-                <div class="results-table-container">
-                    <table id="results-table" class="screening-results">
+                <div class="results-table-container" style="overflow-x: auto;">
+                    <table id="results-table" class="screening-results table">
                         <thead>
                             <tr>
                                 <th>Symbol</th>
@@ -191,23 +190,125 @@ get_header(); ?>
                 </div>
 
                 <!-- Pagination -->
-                <div class="pagination-controls">
+                <div class="pagination-controls" style="display: flex; justify-content: center; align-items: center; margin-top: var(--space-5);">
                     <button id="prev-page" class="btn btn-secondary">← Previous</button>
-                    <span id="page-info">Page 1 of 1</span>
+                    <span id="page-info" style="margin: 0 var(--space-4);">Page 1 of 1</span>
                     <button id="next-page" class="btn btn-secondary">Next →</button>
                 </div>
             </div>
         </div>
 
         <!-- Saved Screens Section -->
-        <div class="saved-screens-section">
+        <div class="card p-6 mt-6">
             <h3>💾 Saved Screens</h3>
-            <div id="saved-screens" class="saved-screens-grid">
+            <div id="saved-screens" class="saved-screens-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); margin-top: var(--space-4);">
                 <!-- Saved screens will be loaded here -->
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Additional styles for screener page specific to unified theme */
+.checkbox-group {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 400;
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-group label:hover {
+    background: #f8fafc;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.symbol-cell {
+    color: var(--color-primary);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.symbol-cell:hover {
+    text-decoration: underline;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.btn-small {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.875rem;
+    min-width: auto;
+}
+
+.saved-screen-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.saved-screen-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.saved-screen-card h4 {
+    color: var(--color-text);
+    margin: 0 0 var(--space-2) 0;
+    font-size: 1.125rem;
+}
+
+.saved-screen-card p {
+    color: var(--color-text-muted);
+    margin: 0 0 var(--space-1) 0;
+    font-size: 0.875rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+@media (max-width: 768px) {
+    .results-info {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: var(--space-3) !important;
+    }
+    
+    .sort-controls {
+        justify-content: space-between !important;
+    }
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -294,7 +395,12 @@ document.addEventListener('DOMContentLoaded', function() {
             { symbol: 'META', company: 'Meta Platforms', price: 484.20, change: -6.75, changePercent: -1.37, volume: '18.3M', marketCap: '1.2T', sector: 'Technology' },
             { symbol: 'JPM', company: 'JPMorgan Chase', price: 165.42, change: 1.28, changePercent: 0.78, volume: '12.8M', marketCap: '485B', sector: 'Financial' },
             { symbol: 'JNJ', company: 'Johnson & Johnson', price: 158.90, change: 0.85, changePercent: 0.54, volume: '8.2M', marketCap: '418B', sector: 'Healthcare' },
-            { symbol: 'V', company: 'Visa Inc.', price: 267.35, change: 3.20, changePercent: 1.21, volume: '6.4M', marketCap: '565B', sector: 'Financial' }
+            { symbol: 'V', company: 'Visa Inc.', price: 267.35, change: 3.20, changePercent: 1.21, volume: '6.4M', marketCap: '565B', sector: 'Financial' },
+            { symbol: 'PG', company: 'Procter & Gamble', price: 152.80, change: 0.45, changePercent: 0.30, volume: '5.8M', marketCap: '365B', sector: 'Consumer' },
+            { symbol: 'HD', company: 'Home Depot', price: 325.67, change: -2.15, changePercent: -0.66, volume: '4.2M', marketCap: '340B', sector: 'Consumer' },
+            { symbol: 'BAC', company: 'Bank of America', price: 34.52, change: 0.78, changePercent: 2.31, volume: '45.1M', marketCap: '285B', sector: 'Financial' },
+            { symbol: 'XOM', company: 'Exxon Mobil', price: 98.45, change: 2.85, changePercent: 2.98, volume: '18.7M', marketCap: '415B', sector: 'Energy' },
+            { symbol: 'CVX', company: 'Chevron Corp.', price: 142.78, change: 1.92, changePercent: 1.36, volume: '12.4M', marketCap: '275B', sector: 'Energy' }
         ];
 
         // Apply basic filtering (simplified)
@@ -415,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('saved-screens');
         
         if (savedScreens.length === 0) {
-            container.innerHTML = '<p>No saved screens yet. Create and save your first screen!</p>';
+            container.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; grid-column: 1 / -1;">No saved screens yet. Create and save your first screen!</p>';
             return;
         }
         

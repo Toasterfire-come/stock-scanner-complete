@@ -391,7 +391,7 @@ function stock_scanner_pricing_shortcode($atts) {
         <div class="pricing-plan bronze-plan">
             <div class="plan-header">
                 <h3>🥉 Bronze Plan</h3>
-                <div class="price">$9.99<span>/month</span></div>
+                <div class="price">$24.99<span>/month</span></div>
             </div>
             <div class="plan-features">
                 <ul>
@@ -402,7 +402,7 @@ function stock_scanner_pricing_shortcode($atts) {
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="9.99" onclick="redirectToPayPal('bronze', '9.99')">
+                <button class="btn btn-primary upgrade-btn" data-plan="bronze" data-price="24.99" onclick="redirectToPayPal('bronze', '24.99')">
                     Upgrade to Bronze
                 </button>
             </div>
@@ -414,7 +414,7 @@ function stock_scanner_pricing_shortcode($atts) {
             <?php endif; ?>
             <div class="plan-header">
                 <h3>🥈 Silver Plan</h3>
-                <div class="price">$19.99<span>/month</span></div>
+                <div class="price">$39.99<span>/month</span></div>
             </div>
             <div class="plan-features">
                 <ul>
@@ -426,7 +426,7 @@ function stock_scanner_pricing_shortcode($atts) {
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="19.99" onclick="redirectToPayPal('silver', '19.99')">
+                <button class="btn btn-primary upgrade-btn" data-plan="silver" data-price="39.99" onclick="redirectToPayPal('silver', '39.99')">
                     Upgrade to Silver
                 </button>
             </div>
@@ -435,7 +435,7 @@ function stock_scanner_pricing_shortcode($atts) {
         <div class="pricing-plan gold-plan">
             <div class="plan-header">
                 <h3>🥇 Gold Plan</h3>
-                <div class="price">$49.99<span>/month</span></div>
+                <div class="price">$89.99<span>/month</span></div>
             </div>
             <div class="plan-features">
                 <ul>
@@ -448,7 +448,7 @@ function stock_scanner_pricing_shortcode($atts) {
                 </ul>
             </div>
             <div class="plan-footer">
-                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="49.99" onclick="redirectToPayPal('gold', '49.99')">
+                <button class="btn btn-primary upgrade-btn" data-plan="gold" data-price="89.99" onclick="redirectToPayPal('gold', '89.99')">
                     Upgrade to Gold
                 </button>
             </div>

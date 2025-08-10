@@ -288,13 +288,13 @@ get_header();
                         <strong>Free</strong> - Basic screening & 1 portfolio
                     </div>
                     <div class="tier-item">
-                        <strong>Bronze ($9.99/mo)</strong> - 5 portfolios & advanced filters
+                        <strong>Bronze ($24.99/mo)</strong> - 5 portfolios & advanced filters
                     </div>
                     <div class="tier-item">
-                        <strong>Silver ($19.99/mo)</strong> - Unlimited portfolios & alerts
+                        <strong>Silver ($39.99/mo)</strong> - Unlimited portfolios & alerts
                     </div>
                     <div class="tier-item">
-                        <strong>Gold ($39.99/mo)</strong> - All features & priority support
+                        <strong>Gold ($89.99/mo)</strong> - All features & priority support
                     </div>
                 </div>
                 <p class="upgrade-note">Start with a free account and upgrade anytime!</p>

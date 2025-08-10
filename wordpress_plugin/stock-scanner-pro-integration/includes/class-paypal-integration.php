@@ -29,12 +29,12 @@ class StockScannerPayPalIntegration {
      * Membership plan prices (updated to match membership manager)
      */
     private $plan_prices = [
-        'bronze_monthly' => 14.99,
-        'bronze_annual' => 149.99,
-        'silver_monthly' => 29.99,
-        'silver_annual' => 299.99,
-        'gold_monthly' => 69.99,
-        'gold_annual' => 699.99
+        'bronze_monthly' => 24.99,
+        'bronze_annual' => 249.99,
+        'silver_monthly' => 39.99,
+        'silver_annual' => 399.99,
+        'gold_monthly' => 89.99,
+        'gold_annual' => 899.99
     ];
     
     /**
