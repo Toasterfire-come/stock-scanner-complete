@@ -75,7 +75,6 @@ function stock_scanner_scripts() {
         'lazyLoadOffset' => '50px',
         'debounceDelay' => 300
     ));
-}
     
     // Enqueue Chart.js for stock charts
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
