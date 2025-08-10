@@ -5,52 +5,67 @@ Version: 2.0.0
 Author: Stock Scanner Team
 */
 
-/* ===== PROFESSIONAL CREAM & MARBLE CSS VARIABLES ===== */
+/* ===== UNIFIED CSS VARIABLES - CONSISTENT WITH MAIN APP ===== */
 :root {
-    /* Primary Brand Colors - Cream & Marble Palette */
-    --cream-white: #f8f6f0;
-    --warm-beige: #e8dcc6;
-    --marble-grey: #d4c5b3;
-    --sage-green: #a8b5a0;
-    --deep-sage: #7a8471;
-    --charcoal: #3c3633;
-    --soft-brown: #8b7355;
-    --accent-gold: #c9a961;
+    /* Primary Brand Colors - Blue & Purple Gradient Palette (matches main app) */
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-blue: #667eea;
+    --primary-purple: #764ba2;
+    --secondary-blue: #5a6fd8;
+    --accent-green: #38a169;
+    --accent-green-dark: #2f855a;
+    --accent-red: #e53e3e;
+    --text-primary: #2d3748;
+    --text-secondary: #4a5568;
+    --text-light: #718096;
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --bg-dark: #1a202c;
+    --text-dark: #e2e8f0;
+    --border-light: #e2e8f0;
+    --border-secondary: #cbd5e0;
+    
+    /* Status Colors */
+    --success-bg: #c6f6d5;
+    --success-text: #22543d;
+    --success-border: #9ae6b4;
+    --error-bg: #fed7d7;
+    --error-text: #742a2a;
+    --error-border: #feb2b2;
+    --error-accent: #f56565;
+    --warning-bg: #fff5f5;
+    --warning-text: #9b2c2c;
+    --info-bg: #bee3f8;
+    --info-text: #2a4365;
+    --info-border: #90cdf4;
+    --link-color: #90cdf4;
     
     /* Professional Gradients */
-    --primary-gradient: linear-gradient(135deg, var(--cream-white) 0%, var(--warm-beige) 50%, var(--marble-grey) 100%);
-    --secondary-gradient: linear-gradient(135deg, var(--sage-green) 0%, var(--deep-sage) 100%);
-    --success-gradient: linear-gradient(135deg, var(--sage-green) 0%, var(--accent-gold) 100%);
-    --warning-gradient: linear-gradient(135deg, var(--accent-gold) 0%, var(--soft-brown) 100%);
-    --gold-gradient: linear-gradient(135deg, var(--accent-gold) 0%, var(--soft-brown) 100%);
-    --neutral-gradient: linear-gradient(135deg, var(--marble-grey) 0%, var(--warm-beige) 100%);
+    --secondary-gradient: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-purple) 100%);
+    --success-gradient: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-dark) 100%);
+    --warning-gradient: linear-gradient(135deg, var(--accent-red) 0%, #c53030 100%);
     
-    /* Neutral Colors */
-    --white: var(--cream-white);
-    --light-gray: var(--warm-beige);
-    --medium-gray: var(--marble-grey);
-    --dark-gray: var(--charcoal);
-    --text-primary: var(--charcoal);
-    --text-secondary: var(--deep-sage);
-    --text-muted: var(--soft-brown);
-    
-    /* Accent Colors */
-    --success: var(--sage-green);
-    --danger: #c67b5c;
-    --warning: var(--accent-gold);
-    --info: var(--deep-sage);
+    /* Legacy aliases for backwards compatibility */
+    --white: var(--bg-white);
+    --light-gray: var(--bg-light);
+    --medium-gray: var(--border-light);
+    --dark-gray: var(--text-primary);
+    --success: var(--accent-green);
+    --danger: var(--accent-red);
+    --warning: #dba617;
+    --info: var(--info-text);
     
     /* Shadows & Effects */
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     
     /* Typography */
-    --font-primary: 'Georgia', 'Times New Roman', serif;
-    --font-heading: 'Playfair Display', 'Georgia', serif;
-    --font-mono: 'Monaco', 'Consolas', monospace;
+    --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     
     /* Spacing */
     --spacing-xs: 0.25rem;
@@ -62,7 +77,9 @@ Author: Stock Scanner Team
     --spacing-3xl: 4rem;
     
     /* Border Radius */
-    --radius-sm: 0.375rem;
+    --border-radius: 12px;
+    --border-radius-sm: 6px;
+    --radius-sm: var(--border-radius-sm);
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
@@ -72,6 +89,52 @@ Author: Stock Scanner Team
     --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== UNIFIED UTILITY CLASSES ===== */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-light { color: var(--text-light); }
+.bg-gradient { background: var(--primary-gradient); }
+.bg-light { background: var(--bg-light); }
+.border-radius { border-radius: var(--border-radius); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* Professional Animation Classes */
+.fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+.slide-up {
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Status Indicator Animation */
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(56, 161, 105, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0); }
 }
 
 /* ===== MODERN RESET & BASE STYLES ===== */
@@ -90,12 +153,15 @@ html {
 
 body {
     font-family: var(--font-primary);
-    line-height: 1.7;
+    line-height: 1.6;
     color: var(--text-primary);
-    background: var(--light-gray);
+    background: var(--bg-light);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ===== TYPOGRAPHY ===== */
@@ -159,17 +225,16 @@ p {
     opacity: 0.1;
 }
 
-/* ===== MODERN HEADER ===== */
+/* ===== UNIFIED HEADER DESIGN ===== */
 .site-header {
-    background: var(--white);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--medium-gray);
-    padding: var(--spacing-lg) 0;
+    background: var(--primary-gradient);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: var(--shadow-md);
     position: sticky;
     top: 0;
-    z-index: 1000;
-    box-shadow: var(--shadow-sm);
+    z-index: 100;
+    backdrop-filter: blur(10px);
     transition: all var(--transition-normal);
 }
 
@@ -178,11 +243,13 @@ p {
     background: rgba(255, 255, 255, 0.95);
 }
 
-.header-content {
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
 }
 
 .site-title {
@@ -217,10 +284,7 @@ p {
 /* ===== PREMIUM NAVIGATION ===== */
 .main-navigation,
 .main-nav {
-    background: var(--white);
-    border: 1px solid var(--medium-gray);
-    border-radius: var(--radius-2xl);
-    padding: var(--spacing-sm);
+    /* Navigation styling handled in unified header section */
     margin-left: var(--spacing-xl);
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(10px);
@@ -1653,9 +1717,47 @@ details p {
         display: block;
     }
     
-    /* Header Mobile */
+    /* Header Mobile - Unified Design */
     .site-header {
-        padding: var(--spacing-md) 0;
+        padding: 0.75rem 0;
+    }
+    
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+        position: relative;
+    }
+    
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    .main-navigation {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--primary-gradient);
+        flex-direction: column;
+        padding: 1rem 2rem;
+        box-shadow: var(--shadow-md);
+        gap: 0.5rem;
+    }
+    
+    .main-navigation.active {
+        display: flex;
+    }
+    
+    .primary-menu {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .primary-menu li a {
+        width: 100%;
+        text-align: left;
+        padding: 0.75rem 1rem;
     }
     
     .site-title {
@@ -1748,13 +1850,12 @@ details p {
     }
     
     .site-header {
-        background: rgba(26, 32, 44, 0.95);
-        border-bottom-color: #4a5568;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
     }
     
     .main-navigation {
-        background: #2d3748;
-        border-color: #4a5568;
+        background: var(--bg-dark);
+        border-color: var(--border-secondary);
     }
 }
 
@@ -1896,46 +1997,125 @@ a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
 
 /* ===== END UNIFIED PALETTE ===== */
 
-/* === Moved from header.php (inline <style>) === */
-/* Professional Header Styling */
-.site-header {
-    background: #ffffff;
-    border-bottom: 1px solid #e1e5e9;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
-
-.header-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
+/* === Legacy header styles - now handled in unified design section === */
     justify-content: space-between;
     min-height: 80px;
 }
 
-/* Site Branding */
-.site-branding { flex-shrink: 0; }
-.site-logo { display: flex; align-items: center; text-decoration: none; color: var(--wp-admin-blue, #2271b1); font-weight: 700; font-size: 1.4rem; transition: opacity 0.3s ease; }
-.site-logo:hover { opacity: 0.8; }
-.logo-icon { font-size: 1.8rem; margin-right: 8px; }
-.site-description { margin: 0; font-size: 0.85rem; color: var(--wp-admin-gray, #646970); max-width: 200px; line-height: 1.3; }
+/* Site Branding - Unified Design */
+.site-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
 
-/* Navigation */
-.main-navigation { flex: 1; margin: 0 40px; }
-.menu-toggle { display: none; background: none; border: none; cursor: pointer; padding: 10px; flex-direction: column; align-items: center; gap: 4px; }
-.hamburger-line { width: 25px; height: 3px; background: var(--wp-admin-blue, #2271b1); transition: all 0.3s ease; }
-.menu-text { font-size: 0.75rem; color: var(--wp-admin-gray, #646970); margin-top: 2px; }
-.primary-menu { display: flex; list-style: none; margin: 0; padding: 0; gap: 8px; align-items: center; flex-wrap: nowrap; }
-.primary-menu li { flex-shrink: 0; }
-.primary-menu li a { color: #374151; text-decoration: none; font-weight: 500; padding: 10px 16px; position: relative; transition: all 0.2s ease; border-radius: 8px; white-space: nowrap; font-size: 14px; display: block; }
-.primary-menu li a:hover { color: #2563eb; background-color: #f1f5f9; }
-.primary-menu li.current-menu-item a, .primary-menu li.current_page_item a { color: #2563eb; background-color: #eff6ff; font-weight: 600; }
-.primary-menu li a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--wp-admin-blue, #2271b1); transition: width 0.3s ease; }
-.primary-menu li a:hover::after, .primary-menu li.current-menu-item a::after { width: 100%; }
+.site-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+    transition: opacity 0.2s;
+}
+
+.site-logo:hover {
+    opacity: 0.9;
+}
+
+.logo-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    backdrop-filter: blur(10px);
+}
+
+.site-description {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 200px;
+    line-height: 1.3;
+}
+
+/* Navigation - Unified Design */
+.main-navigation {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.hamburger-line {
+    width: 25px;
+    height: 3px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.menu-text {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 2px;
+}
+
+.primary-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
+    align-items: center;
+}
+
+.primary-menu li a {
+    color: white;
+    text-decoration: none;
+    opacity: 0.9;
+    transition: all 0.2s;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    position: relative;
+}
+
+.primary-menu li a:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.primary-menu li.current-menu-item a,
+.primary-menu li.current_page_item a {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    opacity: 1;
+}
+/* Mobile menu toggle */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
 
 /* User Info Section */
 .user-info { display: flex; align-items: center; gap: 15px; }
@@ -2450,8 +2630,8 @@ a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
 /* === Bern v2 Palette Overrides === */
 :root {
   /* Brand Palette */
-  --brand-navy: #0B1B33;
-  --brand-blue: #1F4E79;
+  --brand-navy: var(--primary-purple);
+  --brand-blue: var(--primary-blue);
   --brand-emerald: #21A179;
   --brand-red: #D64545;
   --brand-gold: #E3B341;
@@ -2502,9 +2682,7 @@ h1, h2, h3, h4, h5, h6 { -webkit-text-fill-color: initial; color: var(--brand-ch
 .text-error, .error { color: var(--brand-red) !important; }
 .text-warning, .warning { color: var(--brand-gold) !important; }
 
-/* Header/Footer */
-.site-header { background: #fff; border-bottom: 1px solid #e5e7eb; }
-.site-footer { background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); }
+/* Header/Footer - Updated in unified design section */
 
 /* Hero and key sections */
 .hero-section { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-navy) 100%) !important; }
