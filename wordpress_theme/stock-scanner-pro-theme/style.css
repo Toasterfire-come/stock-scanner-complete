@@ -2446,3 +2446,110 @@ a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
 .faq-section { padding: 40px 0; }
 .plans-page h1, .plans-page h2, .plans-page h3, .plans-page h4, .plans-page h5, .plans-page h6 { -webkit-text-fill-color: initial !important; background: none !important; color: #1d2327 !important; }
 .plans-page .hero h1, .plans-page .hero p { color: #fff !important; -webkit-text-fill-color: initial !important; }
+
+/* === Bern v2 Palette Overrides === */
+:root {
+  /* Brand Palette */
+  --brand-navy: #0B1B33;
+  --brand-blue: #1F4E79;
+  --brand-emerald: #21A179;
+  --brand-red: #D64545;
+  --brand-gold: #E3B341;
+  --brand-offwhite: #F4F6F8;
+  --brand-coolgray: #A3A9B1;
+  --brand-charcoal: #2C2C2C;
+
+  /* Map legacy variables used across the theme */
+  --wp-admin-blue: var(--brand-blue);
+  --wp-admin-blue-hover: #153854; /* darker rich blue */
+  --wp-admin-gray: var(--brand-coolgray);
+  --wp-admin-gray-hover: #8B9199;
+  --wp-admin-green: var(--brand-emerald);
+  --wp-admin-red: var(--brand-red);
+  --wp-admin-yellow: var(--brand-gold);
+  --wp-admin-background: var(--brand-offwhite);
+
+  /* Semantic text/background */
+  --text-primary: var(--brand-charcoal);
+  --text-secondary: #4b5563; /* keep good contrast */
+  --bg-primary: #ffffff;
+  --bg-secondary: #F9FAFB;
+}
+
+/* Global base */
+html, body { background: var(--brand-offwhite); color: var(--brand-charcoal); }
+
+/* Links */
+a { color: var(--brand-blue); }
+a:hover { color: var(--wp-admin-blue-hover); }
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 { -webkit-text-fill-color: initial; color: var(--brand-charcoal); background: none; }
+
+/* Buttons */
+.btn-primary, .button-primary {
+  background-color: var(--brand-blue) !important;
+  border-color: var(--brand-blue) !important;
+  color: #fff !important;
+}
+.btn-primary:hover, .button-primary:hover { background-color: var(--wp-admin-blue-hover) !important; border-color: var(--wp-admin-blue-hover) !important; }
+.btn-secondary, .button-secondary { background-color: var(--brand-coolgray) !important; border-color: var(--brand-coolgray) !important; color: #fff !important; }
+.btn-outline, .button-outline { color: var(--brand-blue); border: 2px solid var(--brand-blue); background: transparent; }
+.btn-outline:hover, .button-outline:hover { background: var(--brand-blue); color: #fff; }
+
+/* Status colors */
+.text-success, .success { color: var(--brand-emerald) !important; }
+.text-error, .error { color: var(--brand-red) !important; }
+.text-warning, .warning { color: var(--brand-gold) !important; }
+
+/* Header/Footer */
+.site-header { background: #fff; border-bottom: 1px solid #e5e7eb; }
+.site-footer { background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 100%); }
+
+/* Hero and key sections */
+.hero-section { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-navy) 100%) !important; }
+.section-title { color: var(--brand-blue) !important; }
+
+/* Cards / Surfaces */
+.widget, .portfolio-card, .news-article, .stock-result-card, .results-panel, .filters-card, .usage-stats-card { background: #fff; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+
+/* Chips / tags */
+.symbol-tag, .article-category { background: #eef2f7; color: var(--brand-blue); }
+
+/* Tables */
+.screening-results th { background: #f3f4f6; color: var(--brand-charcoal); }
+
+/* Positive/Negative indicators */
+.change-positive, .usage-normal, .stat-value.positive { color: var(--brand-emerald) !important; }
+.change-negative, .usage-critical, .stat-value.negative { color: var(--brand-red) !important; }
+
+/* Accents */
+.upgrade-link { color: var(--brand-gold) !important; }
+
+/* Form focus ring */
+input:focus, select:focus, textarea:focus { border-color: var(--brand-blue) !important; box-shadow: 0 0 0 3px rgba(31,78,121,0.15) !important; }
+
+/* Navigation hover/active */
+.primary-menu li a:hover { color: var(--brand-blue); background-color: #eef2f7; }
+.primary-menu li.current-menu-item a, .primary-menu li.current_page_item a { color: var(--brand-blue); background-color: #e8eff6; }
+.primary-menu li a::after { background: var(--brand-blue); }
+
+/* Pricing badges / highlights */
+.plan-badge, .security-badge { background: rgba(227,179,65,0.15); color: var(--brand-gold); }
+
+/* Breaking banner and alerts */
+.security-alert { background: linear-gradient(135deg, var(--brand-red) 0%, #b33232 100%) !important; }
+.breaking-news-banner { background: linear-gradient(90deg, var(--brand-red) 0%, #b33232 100%) !important; }
+
+/* Watchlist/Target states */
+.target-price.reached { color: var(--brand-emerald); }
+.stop-loss.triggered { color: var(--brand-red); }
+
+/* Footer links */
+.footer-legal a:hover { color: var(--brand-gold); }
+
+/* Fine-tune gray text */
+.page-description, .article-time, .quote-timestamp, .copyright p { color: var(--brand-coolgray); }
+
+/* Ensure transitions remain smooth */
+* { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
