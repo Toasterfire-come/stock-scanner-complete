@@ -227,7 +227,7 @@ p {
 
 /* ===== UNIFIED HEADER DESIGN ===== */
 .site-header {
-    background: var(--primary-gradient);
+    background: #4a5a3a;
     color: white;
     padding: 1rem 0;
     box-shadow: var(--shadow-md);
@@ -479,7 +479,7 @@ p {
 }
 
 .page-header {
-    background: linear-gradient(135deg, #4a5a3a 0%, #5d6b4d 100%);
+    background: #4a5a3a;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-2xl);
     padding: var(--spacing-3xl) var(--spacing-xl);
@@ -2859,6 +2859,27 @@ a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
     color: #4a5a3a;
     font-weight: bold;
     font-size: 1.1rem;
+}
+
+/* Strong overrides to ensure plan-features are always visible */
+.plan-features,
+.plan-features ul,
+.plan-features li {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: 1 !important;
+}
+
+/* Additional specific overrides for different contexts */
+div.plan-features,
+.pricing-card .plan-features,
+.checkout-page .plan-features {
+    display: block !important;
+    visibility: visible !important;
 }
 
 /* === Moved from premium plans (inline styles) === */

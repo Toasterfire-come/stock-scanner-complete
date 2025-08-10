@@ -29,9 +29,9 @@ get_header();
                 We do not provide investment advice, recommendations, or guidance. All investment decisions are entirely your own responsibility.
             </p>
             <div class="risk-warning">
-                <span class="risk-icon">🚨</span>
+                <span class="risk-icon"></span>
                 <strong class="risk-text">INVEST AT YOUR OWN RISK</strong>
-                <span class="risk-icon">🚨</span>
+                <span class="risk-icon"></span>
             </div>
         </div>
     </div>
@@ -141,9 +141,9 @@ get_header();
                         
                         <div class="risk-warning-box">
                             <div class="risk-header">
-                                <span class="risk-emoji">🚨</span>
+                                <span class="risk-emoji"></span>
                                 <strong>INVEST AT YOUR OWN RISK</strong>
-                                <span class="risk-emoji">🚨</span>
+                                <span class="risk-emoji"></span>
                             </div>
                             
                             <div class="risk-content">
@@ -161,7 +161,7 @@ get_header();
                                 
                                 <div class="additional-warnings">
                                     <div class="warning-item">
-                                        <span class="warning-icon">💰</span>
+                                        <span class="warning-icon"></span>
                                         <strong>Only invest money you can afford to lose</strong>
                                     </div>
                                     <div class="warning-item">
@@ -169,7 +169,7 @@ get_header();
                                         <strong>Educate yourself before investing</strong>
                                     </div>
                                     <div class="warning-item">
-                                        <span class="warning-icon">🎯</span>
+                                        <span class="warning-icon"></span>
                                         <strong>Diversify your investments</strong>
                                     </div>
                                 </div>
@@ -241,7 +241,7 @@ get_header();
             <h3>What You'll Get</h3>
             
             <div class="feature-item">
-                <div class="feature-icon">📊</div>
+                <div class="feature-icon"></div>
                 <div class="feature-content">
                     <h4>Advanced Stock Screener</h4>
                     <p>Filter stocks by 50+ criteria including financials, technicals, and fundamentals</p>
@@ -249,7 +249,7 @@ get_header();
             </div>
             
             <div class="feature-item">
-                <div class="feature-icon">📈</div>
+                <div class="feature-icon"></div>
                 <div class="feature-content">
                     <h4>Portfolio Tracking</h4>
                     <p>Monitor your investments with real-time performance analytics and ROI tracking</p>

@@ -272,11 +272,11 @@ class AdvancedUI {
 
     getSuggestionIcon(type) {
         const icons = {
-            stock: '📈',
+            stock: '',
             news: '📰',
             sector: '🏢'
         };
-        return icons[type] || '🔍';
+        return icons[type] || '';
     }
 
     // Scroll Animations

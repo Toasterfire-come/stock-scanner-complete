@@ -36,7 +36,7 @@ $membership_level = get_user_meta($current_user->ID, 'membership_level', true) ?
                     Profile
                 </a>
                 <a href="#portfolio-settings" class="settings-tab" data-tab="portfolio-settings">
-                    <span class="tab-icon">📊</span>
+                    <span class="tab-icon"></span>
                     Portfolio Settings
                 </a>
                 <a href="#news-preferences" class="settings-tab" data-tab="news-preferences">
@@ -577,7 +577,7 @@ $membership_level = get_user_meta($current_user->ID, 'membership_level', true) ?
 
                     <div class="export-option">
                         <div class="export-info">
-                            <h3>📊 Portfolio Data</h3>
+                            <h3> Portfolio Data</h3>
                             <p>Export all your portfolios, holdings, and transaction history</p>
                             <small>Format: CSV or JSON</small>
                         </div>
@@ -645,10 +645,10 @@ $membership_level = get_user_meta($current_user->ID, 'membership_level', true) ?
                         $limits = get_user_limits($current_user->ID);
                         ?>
                         <ul class="feature-list">
-                            <li>📊 <?php echo $limits['portfolios'] == -1 ? 'Unlimited' : $limits['portfolios']; ?> Portfolios</li>
+                            <li> <?php echo $limits['portfolios'] == -1 ? 'Unlimited' : $limits['portfolios']; ?> Portfolios</li>
                             <li>👁️ <?php echo $limits['watchlists'] == -1 ? 'Unlimited' : $limits['watchlists']; ?> Watchlists</li>
                             <li>🔔 <?php echo $limits['api_calls'] == -1 ? 'Unlimited' : $limits['api_calls']; ?> API Calls/Month</li>
-                            <li>📈 <?php echo $limits['holdings'] == -1 ? 'Unlimited' : $limits['holdings']; ?> Holdings per Portfolio</li>
+                            <li> <?php echo $limits['holdings'] == -1 ? 'Unlimited' : $limits['holdings']; ?> Holdings per Portfolio</li>
                         </ul>
                     </div>
 
@@ -1145,26 +1145,7 @@ input:checked + .slider:before {
     color: #000;
 }
 
-.plan-features {
-    margin-bottom: 25px;
-}
-
-.plan-features ul {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-}
-
-.plan-features li {
-    padding: 12px 0;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.95rem;
-    color: #1e293b !important;
-    font-weight: 500;
-    line-height: 1.5;
-    display: flex;
-    align-items: center;
-}
+/* plan-features styles moved to main style.css to avoid conflicts */
 
 .feature-list {
     list-style: none;

@@ -47,7 +47,7 @@ get_header(); ?>
             <div class="contact-info" style="display: grid; gap: var(--space-4);">
                 <div class="card p-6">
                     <h3 style="color: var(--color-text); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
-                        ⚡ Quick Support
+                         Quick Support
                     </h3>
                     <div style="display: grid; gap: var(--space-3);">
                         <div class="contact-item" style="display: flex; align-items: center; gap: var(--space-3);">
@@ -81,7 +81,7 @@ get_header(); ?>
                             <span style="color: var(--color-primary);">FAQ</span>
                         </a>
                         <a href="/getting-started/" class="resource-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none;">
-                            <span>🚀</span>
+                            <span></span>
                             <span style="color: var(--color-primary);">Getting Started</span>
                         </a>
                     </div>

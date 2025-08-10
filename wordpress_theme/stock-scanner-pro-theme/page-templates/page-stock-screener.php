@@ -9,7 +9,7 @@ get_header(); ?>
 <div class="stock-screener-page">
     <div class="container">
         <div class="page-header">
-            <h1>🔍 Stock Screener</h1>
+            <h1> Stock Screener</h1>
             <p class="page-description">Find stocks that match your investment criteria with our advanced screening tools</p>
         </div>
 
@@ -17,7 +17,7 @@ get_header(); ?>
             <!-- Screening Filters Panel -->
             <div class="filters-panel">
                 <div class="panel-header">
-                    <h2>📊 Screening Filters</h2>
+                    <h2> Screening Filters</h2>
                     <div class="panel-actions">
                         <button id="save-screen" class="btn btn-outline">💾 Save Screen</button>
                         <button id="reset-filters" class="btn btn-secondary">🔄 Reset</button>
@@ -26,7 +26,7 @@ get_header(); ?>
 
                 <!-- Market Cap Filters -->
                 <div class="filter-section" id="market-cap-filters">
-                    <h3>💰 Market Capitalization</h3>
+                    <h3> Market Capitalization</h3>
                     <div class="filter-group">
                         <div class="checkbox-group">
                             <label><input type="checkbox" value="mega" checked> Mega Cap ($200B+)</label>
@@ -55,7 +55,7 @@ get_header(); ?>
 
                 <!-- Volume Filters -->
                 <div class="filter-section">
-                    <h3>📈 Volume</h3>
+                    <h3> Volume</h3>
                     <div class="range-inputs" style="display: grid; gap: var(--space-3);">
                         <div class="input-group">
                             <label>Min Volume:</label>
@@ -76,7 +76,7 @@ get_header(); ?>
 
                 <!-- Performance Filters -->
                 <div class="filter-section">
-                    <h3>📊 Performance</h3>
+                    <h3> Performance</h3>
                     <div class="performance-filters" style="display: grid; gap: var(--space-3);">
                         <div class="input-group">
                             <label>1-Day Change (%):</label>
@@ -137,7 +137,7 @@ get_header(); ?>
 
                 <!-- Action Buttons -->
                 <div class="filter-actions" style="display: grid; gap: var(--space-3); margin-top: var(--space-5);">
-                    <button id="apply-screen" class="btn btn-primary">🔍 Screen Stocks</button>
+                    <button id="apply-screen" class="btn btn-primary"> Screen Stocks</button>
                     <button id="export-results" class="btn btn-outline">📤 Export Results</button>
                 </div>
             </div>
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         screeningLoading.style.display = 'block';
         resultsTbody.innerHTML = '';
         applyScreenBtn.disabled = true;
-        applyScreenBtn.textContent = '🔍 Screening...';
+        applyScreenBtn.textContent = ' Screening...';
 
         // Collect filter criteria
         const filters = collectFilters();
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
             screeningLoading.style.display = 'none';
             isScreening = false;
             applyScreenBtn.disabled = false;
-            applyScreenBtn.textContent = '🔍 Screen Stocks';
+            applyScreenBtn.textContent = ' Screen Stocks';
             
             if (data.results && data.results.length > 0) {
                 // Apply client-side sector filtering if needed
@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
             screeningLoading.style.display = 'none';
             isScreening = false;
             applyScreenBtn.disabled = false;
-            applyScreenBtn.textContent = '🔍 Screen Stocks';
+            applyScreenBtn.textContent = ' Screen Stocks';
             
             // Show fallback sample data when backend is unavailable
             const fallbackResults = [

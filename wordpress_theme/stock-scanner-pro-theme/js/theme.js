@@ -196,7 +196,7 @@ jQuery(document).ready(function($) {
                 
                 const loadTime = performance.getEntriesByName('page-load-time')[0];
                 if (loadTime && window.console) {
-                    console.log(`📈 Stock Scanner page loaded in ${Math.round(loadTime.duration)}ms`);
+                    console.log(` Stock Scanner page loaded in ${Math.round(loadTime.duration)}ms`);
                 }
             });
         }

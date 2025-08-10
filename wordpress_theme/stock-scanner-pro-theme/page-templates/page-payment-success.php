@@ -111,12 +111,12 @@ get_header();
             <div class="features-grid">
                 <?php if ($membership_plan === 'bronze'): ?>
                     <div class="feature-card">
-                        <div class="feature-icon">📊</div>
+                        <div class="feature-icon"></div>
                         <h3>Advanced Screening</h3>
                         <p>Access 25+ technical indicators and advanced filters</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">📈</div>
+                        <div class="feature-icon"></div>
                         <h3>5 Portfolios</h3>
                         <p>Track multiple investment strategies simultaneously</p>
                     </div>
@@ -127,12 +127,12 @@ get_header();
                     </div>
                 <?php elseif ($membership_plan === 'silver'): ?>
                     <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
+                        <div class="feature-icon"></div>
                         <h3>Real-time Data</h3>
                         <p>Live market data with no delays</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">🚀</div>
+                        <div class="feature-icon"></div>
                         <h3>Unlimited Portfolios</h3>
                         <p>Create as many portfolios as you need</p>
                     </div>
@@ -153,7 +153,7 @@ get_header();
                         <p>Access international stock markets worldwide</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">🎯</div>
+                        <div class="feature-icon"></div>
                         <h3>Priority Support</h3>
                         <p>Dedicated support team for immediate assistance</p>
                     </div>
@@ -163,7 +163,7 @@ get_header();
                         <p>Custom branding options for professional use</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
+                        <div class="feature-icon"></div>
                         <h3>WebSocket API</h3>
                         <p>Real-time streaming data integration</p>
                     </div>
@@ -184,7 +184,7 @@ get_header();
                     <span>Contact Support</span>
                 </a>
                 <a href="<?php echo home_url('/getting-started/'); ?>" class="support-link">
-                    <span class="support-icon">🚀</span>
+                    <span class="support-icon"></span>
                     <span>Getting Started Guide</span>
                 </a>
             </div>

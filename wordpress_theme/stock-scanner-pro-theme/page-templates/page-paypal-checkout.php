@@ -279,28 +279,7 @@ get_header();
     font-weight: bold;
 }
 
-.plan-features h3 {
-    margin: 0 0 15px 0;
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-.plan-features ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.plan-features li {
-    padding: 12px 0;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    color: #1e293b !important;
-    font-weight: 500;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
+/* plan-features styles moved to main style.css to avoid conflicts */
 
 .check-icon {
     color: #27ae60;

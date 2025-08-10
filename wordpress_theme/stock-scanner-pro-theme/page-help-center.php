@@ -17,7 +17,7 @@ get_header(); ?>
                 <h2 style="color: var(--color-text); margin-bottom: var(--space-4);">How can we help you?</h2>
                 <div class="search-container" style="position: relative;">
                     <input type="text" id="help-search" placeholder="Search documentation, guides, and tutorials..." style="width: 100%; padding-left: 3rem;">
-                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 1.2rem;">🔍</span>
+                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 1.2rem;"></span>
                 </div>
             </div>
         </div>
@@ -28,7 +28,7 @@ get_header(); ?>
             <!-- Getting Started -->
             <div class="help-category card p-6">
                 <div class="category-header" style="text-align: center; margin-bottom: var(--space-5);">
-                    <div style="font-size: 3rem; margin-bottom: var(--space-3);">🚀</div>
+                    <div style="font-size: 3rem; margin-bottom: var(--space-3);"></div>
                     <h3 style="color: var(--color-text); margin-bottom: var(--space-2);">Getting Started</h3>
                     <p style="color: var(--color-text-muted);">Set up your account and learn the basics</p>
                 </div>
@@ -38,7 +38,7 @@ get_header(); ?>
                         <span>Account Setup Guide</span>
                     </a>
                     <a href="/first-screening/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">
-                        <span>🔍</span>
+                        <span></span>
                         <span>Your First Stock Screen</span>
                     </a>
                     <a href="/dashboard-tour/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">
@@ -57,7 +57,7 @@ get_header(); ?>
                 </div>
                 <div class="help-links" style="display: grid; gap: var(--space-2);">
                     <a href="/screener-guide/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">
-                        <span>📊</span>
+                        <span></span>
                         <span>Advanced Screener</span>
                     </a>
                     <a href="/watchlist-guide/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">
@@ -65,7 +65,7 @@ get_header(); ?>
                         <span>Watchlist Management</span>
                     </a>
                     <a href="/portfolio-guide/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">
-                        <span>📈</span>
+                        <span></span>
                         <span>Portfolio Tracking</span>
                     </a>
                 </div>
@@ -84,7 +84,7 @@ get_header(); ?>
                         <span>Account Settings</span>
                     </a>
                     <a href="/billing-help/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">
-                        <span>💰</span>
+                        <span></span>
                         <span>Billing & Payments</span>
                     </a>
                     <a href="/upgrade-guide/" class="help-link" style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); transition: background-color 0.2s; text-decoration: none; color: var(--color-primary);">

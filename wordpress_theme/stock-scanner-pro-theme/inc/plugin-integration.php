@@ -222,7 +222,7 @@ function stock_scanner_dashboard_shortcode($atts) {
     
     if (!is_user_logged_in()) {
         return '<div class="stock-scanner-login-prompt">
-            <h3>📊 Access Your Dashboard</h3>
+            <h3> Access Your Dashboard</h3>
             <p>Please log in to access your Stock Scanner dashboard.</p>
             <a href="' . wp_login_url() . '" class="btn btn-primary">Login</a>
             <a href="' . wp_registration_url() . '" class="btn btn-outline">Sign Up Free</a>
@@ -291,7 +291,7 @@ function stock_scanner_dashboard_shortcode($atts) {
         
         <!-- Welcome Section -->
         <div class="dashboard-header">
-            <h2>Welcome back, <?php echo esc_html($user->display_name); ?>! 📈</h2>
+            <h2>Welcome back, <?php echo esc_html($user->display_name); ?>! </h2>
             <div class="membership-status">
                 <span class="membership-badge membership-<?php echo esc_attr($membership_level); ?>">
                     <?php echo esc_html(ucfirst($membership_level)); ?> Plan
@@ -312,7 +312,7 @@ function stock_scanner_dashboard_shortcode($atts) {
         
         <!-- Usage Statistics with Security Indicators -->
         <div class="usage-stats">
-            <h3>📊 Your Usage Statistics</h3>
+            <h3> Your Usage Statistics</h3>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number"><?php echo number_format($usage['monthly_calls']); ?></div>
@@ -361,7 +361,7 @@ function stock_scanner_dashboard_shortcode($atts) {
         <?php if ($membership_level === 'free'): ?>
         <!-- Upgrade Notice for Free Users -->
         <div class="upgrade-notice">
-            <h3>🚀 Upgrade Your Plan</h3>
+            <h3> Upgrade Your Plan</h3>
             <p>You're on the free plan with 15 API calls per month. Upgrade for more features!</p>
             <a href="/premium-plans/" class="btn btn-primary">View Premium Plans</a>
         </div>

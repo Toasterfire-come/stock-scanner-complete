@@ -9,7 +9,7 @@ get_header(); ?>
 <div class="home-page">
     <div class="container">
         <div class="page-header">
-            <h1>📈 Retail Trade Scanner</h1>
+            <h1>Retail Trade Scanner</h1>
             <p class="page-description">Find, track, and analyze stocks with professional-grade tools built for traders and investors</p>
         </div>
 
@@ -21,9 +21,9 @@ get_header(); ?>
                     <p class="muted" style="margin: 0; font-size: 1.125rem;">High-contrast, fast, and accurate. Start free and upgrade anytime.</p>
                 </div>
                 <div class="hero-buttons" style="display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap;">
-                    <a class="btn btn-primary" href="/stock-screener/">🔍 Start Screening</a>
-                    <a class="btn btn-secondary" href="/signup/">🚀 Create Free Account</a>
-                    <a class="btn btn-outline" href="/premium-plans/">💎 View Plans</a>
+                    <a class="btn btn-primary" href="/stock-screener/"> Start Screening</a>
+                    <a class="btn btn-secondary" href="/signup/">Create Free Account</a>
+                    <a class="btn btn-outline" href="/premium-plans/">View Plans</a>
                 </div>
             </div>
         </div>
@@ -33,7 +33,7 @@ get_header(); ?>
             <h2 style="text-align: center; margin-bottom: var(--space-6); color: var(--color-text);">Essential Trading Tools</h2>
             <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-5);">
                 <div class="card p-5">
-                    <div class="feature-icon" style="font-size: 2.5rem; margin-bottom: var(--space-3);">🔍</div>
+                    <div class="feature-icon" style="font-size: 2.5rem; margin-bottom: var(--space-3);"></div>
                     <h3 style="color: var(--color-text); margin-bottom: var(--space-3);">Advanced Screener</h3>
                     <p class="muted" style="margin-bottom: var(--space-4);">Filter by market cap, price, volume, performance, and technicals to quickly find opportunities.</p>
                     <a class="btn btn-outline" href="/stock-screener/">Explore Screener</a>
@@ -47,7 +47,7 @@ get_header(); ?>
                 </div>
                 
                 <div class="card p-5">
-                    <div class="feature-icon" style="font-size: 2.5rem; margin-bottom: var(--space-3);">📊</div>
+                    <div class="feature-icon" style="font-size: 2.5rem; margin-bottom: var(--space-3);"></div>
                     <h3 style="color: var(--color-text); margin-bottom: var(--space-3);">Portfolio Tracking</h3>
                     <p class="muted" style="margin-bottom: var(--space-4);">Track holdings and ROI with real-time performance summaries and CSV import.</p>
                     <a class="btn btn-outline" href="/portfolio/">Go to Portfolios</a>
@@ -71,11 +71,11 @@ get_header(); ?>
                     <span style="color: var(--color-text-muted);">High-contrast, accessible UI for long trading sessions</span>
                 </div>
                 <div class="benefit-item" style="display: flex; align-items: center; gap: var(--space-3);">
-                    <span style="font-size: 1.5rem;">⚡</span>
+                    <span style="font-size: 1.5rem;"></span>
                     <span style="color: var(--color-text-muted);">Fast screening with professional filters</span>
                 </div>
                 <div class="benefit-item" style="display: flex; align-items: center; gap: var(--space-3);">
-                    <span style="font-size: 1.5rem;">📈</span>
+                    <span style="font-size: 1.5rem;"></span>
                     <span style="color: var(--color-text-muted);">Unified dashboard with usage stats and limits</span>
                 </div>
                 <div class="benefit-item" style="display: flex; align-items: center; gap: var(--space-3);">
