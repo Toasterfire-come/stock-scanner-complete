@@ -7,7 +7,7 @@
 {% block extra_css %}
 <style>
     .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--primary-gradient);
         color: white;
         padding: 4rem 0;
         text-align: center;
@@ -40,7 +40,7 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #38a169;
+        background: var(--accent-green);
         margin-right: 0.5rem;
         animation: pulse 2s infinite;
     }
@@ -59,7 +59,7 @@
         font-size: 2.5rem;
         text-align: center;
         margin-bottom: 3rem;
-        color: #2d3748;
+        color: var(--text-primary);
     }
 
     .grid {
@@ -76,25 +76,25 @@
     }
 
     .feature-card {
-        background: white;
-        border-radius: 12px;
+        background: var(--bg-white);
+        border-radius: var(--border-radius);
         padding: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
-        border: 1px solid #e2e8f0;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-light);
         transition: transform 0.2s, box-shadow 0.2s;
         text-align: center;
     }
 
     .feature-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        box-shadow: var(--shadow-lg);
     }
 
     .card-icon {
         width: 60px;
         height: 60px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -104,8 +104,8 @@
     }
 
     .endpoint-list {
-        background: #f7fafc;
-        border-radius: 8px;
+        background: var(--bg-light);
+        border-radius: var(--border-radius-sm);
         padding: 1.5rem;
         margin-top: 1rem;
     }
@@ -116,9 +116,9 @@
         align-items: center;
         padding: 0.75rem;
         margin-bottom: 0.5rem;
-        background: white;
-        border-radius: 6px;
-        border-left: 4px solid #667eea;
+        background: var(--bg-white);
+        border-radius: var(--border-radius-sm);
+        border-left: 4px solid var(--primary-blue);
     }
 
     .endpoint:last-child {
@@ -128,7 +128,7 @@
     .endpoint-path {
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         font-size: 0.9rem;
-        color: #2d3748;
+        color: var(--text-primary);
         font-weight: 600;
     }
 
@@ -141,13 +141,13 @@
     }
 
     .method-get {
-        background: #c6f6d5;
-        color: #22543d;
+        background: var(--success-bg);
+        color: var(--success-text);
     }
 
     .method-post {
-        background: #fed7d7;
-        color: #742a2a;
+        background: var(--error-bg);
+        color: var(--error-text);
     }
 
     .stats-grid {
@@ -160,20 +160,20 @@
     .stat-card {
         text-align: center;
         padding: 1.5rem;
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        background: var(--bg-white);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-light);
     }
 
     .stat-number {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #667eea;
+        color: var(--primary-blue);
         display: block;
     }
 
     .stat-label {
-        color: #4a5568;
+        color: var(--text-secondary);
         font-size: 0.9rem;
         margin-top: 0.5rem;
     }
@@ -191,10 +191,10 @@
     }
 
     .code-block {
-        background: #1a202c;
-        color: #e2e8f0;
+        background: var(--bg-dark);
+        color: var(--text-dark);
         padding: 1.5rem;
-        border-radius: 8px;
+        border-radius: var(--border-radius-sm);
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         font-size: 0.9rem;
         overflow-x: auto;
@@ -202,16 +202,16 @@
     }
 
     .banner {
-        background: #fff5f5;
-        border: 1px solid #feb2b2;
-        color: #742a2a;
+        background: var(--warning-bg);
+        border: 1px solid var(--error-border);
+        color: var(--error-text);
         padding: 1rem 1.25rem;
-        border-radius: 8px;
+        border-radius: var(--border-radius-sm);
         margin: -2rem -2rem 2rem -2rem;
     }
 
     .banner strong { 
-        color: #9b2c2c; 
+        color: var(--warning-text); 
     }
 
     @media (max-width: 768px) {
@@ -270,13 +270,13 @@
                 <h3>Revenue Analytics</h3>
                 <p>Comprehensive revenue tracking and discount management system. Monitor subscription metrics, payment analytics, and promotional code performance.</p>
                 <a href="/revenue/revenue-analytics/" class="btn">View Revenue</a>
-                <a href="/revenue/revenue-analytics/?format=json" class="btn btn-secondary" style="background: #e2e8f0; color: #2d3748; margin-top: 0.5rem;">API Endpoint</a>
+                <a href="/revenue/revenue-analytics/?format=json" class="btn btn-secondary" style="background: var(--border-light); color: var(--text-primary); margin-top: 0.5rem;">API Endpoint</a>
             </div>
         </div>
     </div>
 </section>
 
-<section class="section" style="background: white;">
+<section class="section" style="background: var(--bg-white);">
     <div class="container">
         <h2 class="section-title">API Endpoints</h2>
         <div class="grid grid-2">
@@ -358,7 +358,7 @@
     </div>
 </section>
 
-<section class="section" style="background: white;">
+<section class="section" style="background: var(--bg-white);">
     <div class="container">
         <h2 class="section-title">Key Features</h2>
         <div class="feature-grid">

@@ -17,23 +17,23 @@
     }
     
     .metric-card {
-        background: white;
+        background: var(--bg-white);
         padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
-        border: 1px solid #e2e8f0;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-light);
         text-align: center;
     }
     
     .metric-value {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #667eea;
+        color: var(--primary-blue);
         margin-bottom: 0.5rem;
     }
     
     .metric-label {
-        color: #4a5568;
+        color: var(--text-secondary);
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -44,8 +44,8 @@
         margin-top: 0.5rem;
     }
     
-    .positive { color: #38a169; }
-    .negative { color: #e53e3e; }
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
     
     .charts-section {
         display: grid;
@@ -55,17 +55,17 @@
     }
     
     .chart-container {
-        background: white;
+        background: var(--bg-white);
         padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
-        border: 1px solid #e2e8f0;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-light);
     }
     
     .api-response {
-        background: #f7fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
+        border-radius: var(--border-radius-sm);
         padding: 1rem;
         margin-top: 2rem;
     }
@@ -76,14 +76,14 @@
         align-items: center;
         margin-bottom: 1rem;
         padding-bottom: 0.5rem;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--border-light);
     }
     
     .response-data {
-        background: #1a202c;
-        color: #e2e8f0;
+        background: var(--bg-dark);
+        color: var(--text-dark);
         padding: 1rem;
-        border-radius: 6px;
+        border-radius: var(--border-radius-sm);
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         font-size: 0.9rem;
         overflow-x: auto;
@@ -94,15 +94,15 @@
     .loading {
         text-align: center;
         padding: 3rem;
-        color: #4a5568;
+        color: var(--text-secondary);
     }
     
     .error {
-        background: #fed7d7;
-        color: #742a2a;
+        background: var(--error-bg);
+        color: var(--error-text);
         padding: 1rem;
-        border-radius: 6px;
-        border: 1px solid #feb2b2;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--error-border);
     }
 </style>
 {% endblock %}
@@ -110,8 +110,8 @@
 {% block content %}
 <div class="analytics-dashboard">
     <div class="card">
-        <h1 style="margin-bottom: 1rem; color: #2d3748;">Revenue Analytics Dashboard</h1>
-        <p style="color: #4a5568; margin-bottom: 2rem;">
+        <h1 style="margin-bottom: 1rem; color: var(--text-primary);">Revenue Analytics Dashboard</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
             Real-time revenue metrics and subscription analytics for Stock Scanner API
         </p>
         
@@ -194,7 +194,7 @@ function displayAnalytics(analytics) {
         <div class="api-response">
             <div class="response-header">
                 <h3>API Response Data</h3>
-                <span style="color: #38a169; font-weight: 600;">✓ Success</span>
+                <span style="color: var(--accent-green); font-weight: 600;">✓ Success</span>
             </div>
             <div class="response-data">${JSON.stringify(currentData, null, 2)}</div>
         </div>

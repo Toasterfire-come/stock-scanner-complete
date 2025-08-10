@@ -4,18 +4,18 @@
 
 {% block content %}
 <div class="card">
-    <h1 style="margin-bottom: 2rem; color: #2d3748;">API Documentation</h1>
+    <h1 style="margin-bottom: 2rem; color: var(--text-primary);">API Documentation</h1>
     
     <div class="alert alert-info">
         <strong>Base URL:</strong> {{ request.build_absolute_uri|slice:":"-1" }}
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Stock Data Endpoints</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Stock Data Endpoints</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /api/stocks/ (NYSE)</h3>
         <p>Retrieve a list of all available stocks with current market data.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>Response:</strong> JSON array of stock objects
         </div>
         <a href="/api/stocks/" class="btn btn-secondary">Try It</a>
@@ -24,7 +24,7 @@
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /api/stock/{ticker}/</h3>
         <p>Get detailed information for a specific stock by its ticker symbol.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>Parameters:</strong><br>
             • ticker (string): Stock symbol (e.g., AAPL, GOOGL, TSLA)
         </div>
@@ -34,7 +34,7 @@
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /api/search/</h3>
         <p>Search for stocks by symbol or company name.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>Query Parameters:</strong><br>
             • q (string): Search query
         </div>
@@ -47,7 +47,7 @@
         <a href="/api/trending/" class="btn btn-secondary">View Trending</a>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Analytics Endpoints</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Analytics Endpoints</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /revenue/revenue-analytics/</h3>
@@ -61,7 +61,7 @@
         <a href="/api/health/" class="btn btn-secondary">Health Check</a>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Portfolio Management</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Portfolio Management</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /api/portfolio/list/</h3>
@@ -72,14 +72,14 @@
     <div class="card" style="margin-bottom: 2rem;">
         <h3>POST /api/portfolio/create/</h3>
         <p>Create a new investment portfolio.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>Required Fields:</strong><br>
             • name (string): Portfolio name<br>
             • description (string): Portfolio description
         </div>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Watchlist Management</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Watchlist Management</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /api/watchlist/list/</h3>
@@ -90,14 +90,14 @@
     <div class="card" style="margin-bottom: 2rem;">
         <h3>POST /api/watchlist/create/</h3>
         <p>Create a new stock watchlist.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>Required Fields:</strong><br>
             • name (string): Watchlist name<br>
             • description (string): Watchlist description
         </div>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">News & Personalization</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">News & Personalization</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>GET /api/news/feed/</h3>
@@ -111,12 +111,12 @@
         <a href="/api/news/analytics/" class="btn btn-secondary">Try It</a>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Alert Management</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Alert Management</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>POST /api/alerts/create/</h3>
         <p>Create a new price alert for a stock.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>Required Fields:</strong><br>
             • ticker (string): Stock symbol<br>
             • target_price (number): Alert trigger price<br>
@@ -124,12 +124,12 @@
         </div>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">WordPress Integration</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">WordPress Integration</h2>
     
     <div class="card" style="margin-bottom: 2rem;">
         <h3>POST /api/subscription/</h3>
         <p>WordPress subscription management endpoint.</p>
-        <div style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+        <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--border-radius-sm); margin: 1rem 0;">
             <strong>WordPress Integration:</strong><br>
             • Handles subscription webhooks<br>
             • Manages user access levels<br>
@@ -137,9 +137,9 @@
         </div>
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Response Format</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Response Format</h2>
     
-    <div style="background: #1a202c; color: #e2e8f0; padding: 1.5rem; border-radius: 8px; font-family: monospace; margin: 1rem 0;">
+    <div style="background: var(--bg-dark); color: var(--text-dark); padding: 1.5rem; border-radius: var(--border-radius-sm); font-family: monospace; margin: 1rem 0;">
 {
   "success": true,
   "data": {
@@ -153,7 +153,7 @@
 }
     </div>
     
-    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: #2d3748;">Rate Limits</h2>
+    <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Rate Limits</h2>
     
     <div class="alert alert-info">
         • <strong>Free Tier:</strong> 1,000 requests per hour<br>

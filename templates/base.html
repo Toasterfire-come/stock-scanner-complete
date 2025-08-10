@@ -43,12 +43,30 @@
             --primary-purple: #764ba2;
             --secondary-blue: #5a6fd8;
             --accent-green: #38a169;
+            --accent-green-dark: #2f855a;
+            --accent-red: #e53e3e;
             --text-primary: #2d3748;
             --text-secondary: #4a5568;
             --text-light: #718096;
             --bg-light: #f8fafc;
             --bg-white: #ffffff;
+            --bg-dark: #1a202c;
+            --text-dark: #e2e8f0;
             --border-light: #e2e8f0;
+            --border-secondary: #cbd5e0;
+            --success-bg: #c6f6d5;
+            --success-text: #22543d;
+            --success-border: #9ae6b4;
+            --error-bg: #fed7d7;
+            --error-text: #742a2a;
+            --error-border: #feb2b2;
+            --error-accent: #f56565;
+            --warning-bg: #fff5f5;
+            --warning-text: #9b2c2c;
+            --info-bg: #bee3f8;
+            --info-text: #2a4365;
+            --info-border: #90cdf4;
+            --link-color: #90cdf4;
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
             --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
@@ -198,7 +216,7 @@
         }
 
         .footer-links a {
-            color: #90cdf4;
+            color: var(--link-color);
             text-decoration: none;
             transition: color 0.2s;
         }
@@ -238,7 +256,7 @@
         }
 
         .btn-secondary:hover {
-            background: #cbd5e0;
+            background: var(--border-secondary);
         }
 
         .btn-success {
@@ -246,7 +264,7 @@
         }
 
         .btn-success:hover {
-            background: #2f855a;
+            background: var(--accent-green-dark);
         }
 
         .card {
@@ -290,21 +308,21 @@
         }
 
         .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border-color: #9ae6b4;
+            background: var(--success-bg);
+            color: var(--success-text);
+            border-color: var(--success-border);
         }
 
         .alert-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border-color: #feb2b2;
+            background: var(--error-bg);
+            color: var(--error-text);
+            border-color: var(--error-border);
         }
 
         .alert-info {
-            background: #bee3f8;
-            color: #2a4365;
-            border-color: #90cdf4;
+            background: var(--info-bg);
+            color: var(--info-text);
+            border-color: var(--info-border);
         }
 
         /* Responsive Design */
