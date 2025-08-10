@@ -104,9 +104,27 @@ def stock_list_api(request):
             (exchange is None)
         )
         
-        # PROGRESSIVE FILTERING APPROACH - Start with more inclusive base
-        # Base queryset - much more inclusive
-        base_queryset = Stock.objects.all()
+        # Add intelligent caching to reduce database load
+        cache_key = f"stocks_api_{category}_{sort_by}_{sort_order}_{limit}_{min_price}_{max_price}_{min_market_cap}_{max_market_cap}_{min_pe}_{max_pe}_{search}"
+        cached_result = cache.get(cache_key)
+        
+        if cached_result:
+            logger.info(f"Returning cached result for key: {cache_key}")
+            return Response(cached_result, status=status.HTTP_200_OK)
+
+        # Base queryset with better filtering
+        base_queryset = Stock.objects.exclude(
+            ticker__isnull=True
+        ).exclude(
+            ticker__exact=''
+        ).exclude(
+            current_price__isnull=True
+        ).exclude(
+            current_price__lte=0
+        ).filter(
+            # Only include stocks updated within the last 30 days
+            last_updated__gte=timezone.now() - timedelta(days=30)
+        )
         
         # Apply exchange filter (case insensitive, flexible)
         if exchange:
@@ -216,17 +234,40 @@ def stock_list_api(request):
             except (ValueError, TypeError):
                 pass
 
-        # Apply category filters
+        # Apply category filters with smarter fallback
         if category == 'gainers':
             queryset = queryset.filter(price_change_today__gt=0)
+            # If no gainers found, try to find stocks with any positive change data
+            if queryset.count() == 0:
+                queryset = base_queryset.filter(
+                    Q(price_change_today__gt=0) |
+                    Q(change_percent__gt=0) |
+                    Q(price_change_week__gt=0)
+                ).exclude(current_price__isnull=True).order_by('-last_updated')
         elif category == 'losers':
             queryset = queryset.filter(price_change_today__lt=0)
+            # If no losers found, try to find stocks with any negative change data
+            if queryset.count() == 0:
+                queryset = base_queryset.filter(
+                    Q(price_change_today__lt=0) |
+                    Q(change_percent__lt=0) |
+                    Q(price_change_week__lt=0)
+                ).exclude(current_price__isnull=True).order_by('-last_updated')
         elif category == 'high_volume':
             queryset = queryset.filter(volume__isnull=False).exclude(volume=0)
+            # If no high volume stocks found, get any stocks with volume data
+            if queryset.count() == 0:
+                queryset = base_queryset.filter(volume__isnull=False).order_by('-volume', '-last_updated')
         elif category == 'large_cap':
             queryset = queryset.filter(market_cap__gte=10000000000)  # $10B+
+            # If no large cap found, try lower threshold
+            if queryset.count() == 0:
+                queryset = base_queryset.filter(market_cap__gte=5000000000).order_by('-market_cap', '-last_updated')
         elif category == 'small_cap':
             queryset = queryset.filter(market_cap__lt=2000000000, market_cap__gt=0)  # < $2B
+            # If no small cap found, try different range
+            if queryset.count() == 0:
+                queryset = base_queryset.filter(market_cap__lt=5000000000, market_cap__gt=0).order_by('market_cap', '-last_updated')
 
         # Apply sorting with fallbacks
         sort_field = sort_by
@@ -250,10 +291,16 @@ def stock_list_api(request):
             # Fallback sorting
             queryset = queryset.order_by('-last_updated', '-id')
 
-        # EMERGENCY FALLBACK: If still no results, return ANY stocks
+        # EMERGENCY FALLBACK: If still no results, return most recent stocks
         if queryset.count() == 0 and not search:
-            logger.warning(f"API returned 0 results, using emergency fallback")
-            queryset = base_queryset.order_by('-last_updated')[:limit]
+            logger.warning(f"API returned 0 results for category '{category}', using emergency fallback with recent stocks")
+            # Try to get stocks updated in the last 7 days first
+            recent_cutoff = timezone.now() - timedelta(days=7)
+            queryset = base_queryset.filter(last_updated__gte=recent_cutoff).order_by('-last_updated')
+            if queryset.count() == 0:
+                # If no recent stocks, get any stocks with valid price data
+                queryset = base_queryset.exclude(current_price__isnull=True).order_by('-last_updated')
+            queryset = queryset[:limit]
 
         # Limit results
         stocks = queryset[:limit]
@@ -356,6 +403,16 @@ def stock_list_api(request):
         }
         # Remove empty strings and None from filters for a cleaner report
         filters_applied = {k: v for k, v in filters_raw.items() if v not in (None, '')}
+
+        # Cache the final response
+        cache.set(cache_key, {
+            'success': True,
+            'count': final_count,
+            'total_available': final_total,
+            'filters_applied': filters_applied,
+            'data': stock_data,
+            'timestamp': timezone.now().isoformat()
+        }, 300) # Cache for 5 minutes
 
         return Response({
             'success': True,

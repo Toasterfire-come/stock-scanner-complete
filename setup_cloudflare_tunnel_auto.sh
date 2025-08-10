@@ -89,33 +89,49 @@ else
     print_success "Tunnel already exists with ID: $TUNNEL_ID"
 fi
 
-# Create configuration file
-print_step "Creating tunnel configuration"
-cat > "$CONFIG_DIR/config.yml" << EOF
-tunnel: $TUNNEL_NAME
-credentials-file: $CONFIG_DIR/$TUNNEL_ID.json
+# Enhanced configuration with connection stability and DNS optimization
+cat > ~/.cloudflared/config.yml << EOF
+tunnel: $TUNNEL_ID
+credentials-file: ~/.cloudflared/$TUNNEL_ID.json
 
+# Enhanced connection settings for stability
+warp-routing:
+  enabled: false
+
+# DNS settings for better resolution
+dns:
+  fallback: 1.1.1.1,8.8.8.8
+
+# Connection optimization settings
+connection:
+  protocol: quic
+  max-connection-retries: 10
+  initial-connection-retries: 5
+  connection-timeout: 30s
+  keep-alive-timeout: 30s
+  no-autoupdate: false
+
+# Logging configuration
+log-level: info
+log-directory: ~/.cloudflared/logs/
+
+# Network optimizations
+edge-bind-address: 0.0.0.0
+metrics: 127.0.0.1:9090
+
+# Service configuration
 ingress:
-  # Main Django API
   - hostname: $API_SUBDOMAIN.$DOMAIN
     service: http://localhost:8000
-    
-  # WordPress integration endpoint
-  - hostname: $API_SUBDOMAIN.$DOMAIN
-    service: http://localhost:8000
-    path: /wp-json/*
-    
-  # API endpoints
-  - hostname: $API_SUBDOMAIN.$DOMAIN
-    service: http://localhost:8000
-    path: /api/*
-    
-  # Health check endpoint
-  - hostname: $API_SUBDOMAIN.$DOMAIN
-    service: http://localhost:8000
-    path: /health/*
-    
-  # Catch-all rule (required)
+    originRequest:
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      tcpKeepAlive: 30s
+      keepAliveTimeout: 90s
+      keepAliveConnections: 100
+      httpHostHeader: $API_SUBDOMAIN.$DOMAIN
+      originServerName: $API_SUBDOMAIN.$DOMAIN
+  # Catch-all rule (required, must be last)
   - service: http_status:404
 EOF
 
