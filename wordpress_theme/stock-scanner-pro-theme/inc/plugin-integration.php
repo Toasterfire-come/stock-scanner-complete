@@ -572,32 +572,32 @@ function handle_stock_quote_ajax() {
     $response = make_backend_api_request("stock/{$symbol}/");
     
     if (is_wp_error($response) || empty($response)) {
+        error_log("Stock API fallback for symbol: {$symbol}. Error: " . (is_wp_error($response) ? $response->get_error_message() : 'Empty response'));
+        
         // Generate sample data for popular stocks as fallback
         $sample_stocks = array(
             'AAPL' => array('name' => 'Apple Inc.', 'current_price' => 175.43, 'price_change_today' => 2.15, 'change_percent' => 1.24, 'volume' => 52300000, 'market_cap' => 2800000000000, 'pe_ratio' => 28.5),
             'GOOGL' => array('name' => 'Alphabet Inc.', 'current_price' => 138.21, 'price_change_today' => -1.45, 'change_percent' => -1.04, 'volume' => 25700000, 'market_cap' => 1700000000000, 'pe_ratio' => 25.2),
             'TSLA' => array('name' => 'Tesla Inc.', 'current_price' => 248.50, 'price_change_today' => 8.32, 'change_percent' => 3.46, 'volume' => 95200000, 'market_cap' => 789000000000, 'pe_ratio' => 65.4),
             'MSFT' => array('name' => 'Microsoft Corp.', 'current_price' => 378.85, 'price_change_today' => 4.67, 'change_percent' => 1.25, 'volume' => 28400000, 'market_cap' => 2800000000000, 'pe_ratio' => 31.8),
-            'NVDA' => array('name' => 'NVIDIA Corp.', 'current_price' => 875.28, 'price_change_today' => 15.42, 'change_percent' => 1.79, 'volume' => 38900000, 'market_cap' => 2200000000000, 'pe_ratio' => 72.1)
+            'NVDA' => array('name' => 'NVIDIA Corp.', 'current_price' => 875.28, 'price_change_today' => 15.42, 'change_percent' => 1.79, 'volume' => 38900000, 'market_cap' => 2200000000000, 'pe_ratio' => 72.1),
+            'AMZN' => array('name' => 'Amazon.com Inc.', 'current_price' => 145.86, 'price_change_today' => 3.21, 'change_percent' => 2.25, 'volume' => 35800000, 'market_cap' => 1520000000000, 'pe_ratio' => 43.2),
+            'META' => array('name' => 'Meta Platforms Inc.', 'current_price' => 298.47, 'price_change_today' => -2.15, 'change_percent' => -0.71, 'volume' => 18900000, 'market_cap' => 758000000000, 'pe_ratio' => 23.1),
+            'IWM' => array('name' => 'iShares Russell 2000 ETF', 'current_price' => 208.45, 'price_change_today' => 1.75, 'change_percent' => 0.85, 'volume' => 42100000, 'market_cap' => 32000000000, 'pe_ratio' => null)
         );
         
         if (isset($sample_stocks[strtoupper($symbol)])) {
             $response = $sample_stocks[strtoupper($symbol)];
             $response['ticker'] = strtoupper($symbol);
             $response['exchange'] = 'NASDAQ';
+            $response['is_fallback'] = true;
         } else {
-            // Generate random data for unknown symbols
-            $response = array(
-                'ticker' => strtoupper($symbol),
-                'name' => strtoupper($symbol) . ' Corporation',
-                'current_price' => rand(50, 500) + (rand(0, 99) / 100),
-                'price_change_today' => (rand(-1000, 1000) / 100),
-                'change_percent' => (rand(-500, 500) / 100),
-                'volume' => rand(1000000, 50000000),
-                'market_cap' => rand(1000000000, 100000000000),
-                'pe_ratio' => rand(10, 50) + (rand(0, 99) / 100),
-                'exchange' => 'NASDAQ'
-            );
+            // Return error for unknown symbols when backend is unavailable
+            wp_send_json_error(array(
+                'message' => "Stock symbol '{$symbol}' not found. Real-time data service is temporarily unavailable.",
+                'suggestion' => 'Please try one of these popular symbols: AAPL, GOOGL, TSLA, MSFT, NVDA, AMZN, META, IWM'
+            ));
+            return;
         }
     }
     
