@@ -36,6 +36,28 @@
   --space-10: 40px;
 }
 
+/* Dark mode (opt-in via html[data-theme="dark"]) */
+html[data-theme="dark"] {
+  --color-bg: #0b1220;
+  --color-surface: #0f172a;
+  --color-text: #e5e7eb;
+  --color-text-muted: #9ca3af;
+  --color-border: #1f2937;
+  --color-primary: #60a5fa;
+  --color-primary-contrast: #0b1220;
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-info: #38bdf8;
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .filters-panel,
+html[data-theme="dark"] .results-panel {
+  box-shadow: var(--shadow-sm);
+}
+
 /* Base */
 html { box-sizing: border-box; }
 *, *::before, *::after { box-sizing: inherit; }

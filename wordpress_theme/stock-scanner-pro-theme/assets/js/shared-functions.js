@@ -1388,6 +1388,74 @@ class NewsManager {
     }
 }
 
+// Theme toggle and keyboard shortcuts
+(function(){
+  if (typeof window === 'undefined') return;
+
+  const STORAGE_KEY = 'rts_theme';
+  function applyTheme(theme){
+    const html = document.documentElement;
+    if (theme === 'dark') html.setAttribute('data-theme','dark');
+    else html.removeAttribute('data-theme');
+  }
+  function initTheme(){
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'dark' || saved === 'light') applyTheme(saved);
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
+  }
+  function toggleTheme(){
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
+  }
+  window.toggleTheme = toggleTheme;
+  initTheme();
+
+  // Common keyboard shortcuts
+  let pendingG = false;
+  function navigate(path){ try { window.location.href = path; } catch(e){} }
+  function focusSearch(){
+    const search = document.querySelector('input[type="search"], .search-input, #stock-symbol, #news-symbol');
+    if (search) { search.focus(); search.select?.(); }
+  }
+  document.addEventListener('keydown', (e)=>{
+    // Ignore when typing in inputs/textarea or when modifiers change intent
+    const tag = (e.target && e.target.tagName || '').toLowerCase();
+    const typing = tag === 'input' || tag === 'textarea' || e.isComposing;
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (!typing && e.key.toLowerCase() === 'g') {
+        pendingG = true;
+        setTimeout(()=>{ pendingG = false; }, 800);
+        return;
+      }
+      if (pendingG) {
+        if (e.key.toLowerCase() === 'd') { e.preventDefault(); navigate('/dashboard/'); pendingG = false; return; }
+        if (e.key.toLowerCase() === 's') { e.preventDefault(); navigate('/stock-screener/'); pendingG = false; return; }
+        if (e.key.toLowerCase() === 'w') { e.preventDefault(); navigate('/watchlist/'); pendingG = false; return; }
+        if (e.key.toLowerCase() === 'n') { e.preventDefault(); navigate('/stock-news/'); pendingG = false; return; }
+      }
+      if (!typing && e.key === '/') { e.preventDefault(); focusSearch(); return; }
+      if (e.shiftKey && e.key === '?') { e.preventDefault(); navigate('/shortcuts/'); return; }
+      if (!typing && (e.key.toLowerCase() === 'k' || e.key.toLowerCase() === 'j')) {
+        // Basic list navigation (optional enhancement)
+        const list = document.querySelector('.news-feed, #results-tbody');
+        if (list) {
+          const items = list.querySelectorAll('.news-article, tr');
+          const active = list.querySelector('.active-item');
+          let idx = Array.from(items).indexOf(active);
+          idx = idx < 0 ? 0 : idx + (e.key.toLowerCase() === 'j' ? 1 : -1);
+          idx = Math.max(0, Math.min(items.length-1, idx));
+          items.forEach(el=>el.classList.remove('active-item'));
+          const target = items[idx];
+          target?.classList.add('active-item');
+          target?.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }
+  });
+})();
+
 // Global instances
 let portfolioManager, watchlistManager, newsManager;
 

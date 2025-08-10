@@ -123,6 +123,7 @@
                                 <span class="user-name"><?php echo esc_html($user->display_name); ?></span>
                                 <span class="dropdown-arrow">▼</span>
                             </button>
+                            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">🌓</button>
                             
                             <div class="user-menu">
                                 <a href="/dashboard/" class="user-menu-item">
