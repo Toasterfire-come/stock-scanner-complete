@@ -1,4 +1,5 @@
 /* Critical CSS - Above the fold styles for fastest loading */
+/* WordPress Stock Scanner Pro Theme - Performance Optimized */
 
 /* Essential Variables */
 :root {
@@ -28,8 +29,8 @@ body{
     flex-direction:column;
 }
 
-/* Header - Critical for first paint */
-.header{
+/* WordPress Theme Header - Critical for first paint */
+.site-header{
     background:var(--primary-gradient);
     color:white;
     padding:1rem 0;
@@ -37,9 +38,10 @@ body{
     position:sticky;
     top:0;
     z-index:100;
+    backdrop-filter:blur(10px);
 }
 
-.header .container{
+.header-container{
     max-width:1200px;
     margin:0 auto;
     padding:0 2rem;
@@ -48,13 +50,13 @@ body{
     align-items:center;
 }
 
-.header .logo{
+.site-branding{
     display:flex;
     align-items:center;
     gap:0.75rem;
 }
 
-.header .logo-icon{
+.logo-icon{
     width:36px;
     height:36px;
     background:rgba(255,255,255,0.15);
@@ -63,27 +65,36 @@ body{
     align-items:center;
     justify-content:center;
     font-size:1.2rem;
+    backdrop-filter:blur(10px);
 }
 
-.header h1{
+.site-title{
     font-size:1.5rem;
     font-weight:700;
     margin:0;
 }
 
-.header h1 a{
+.site-title a{
     color:white;
     text-decoration:none;
 }
 
-/* Navigation - Critical */
-.nav{
+/* WordPress Navigation - Critical */
+.main-navigation{
     display:flex;
     gap:2rem;
     align-items:center;
 }
 
-.nav a{
+.primary-menu{
+    display:flex;
+    gap:1.5rem;
+    list-style:none;
+    margin:0;
+    padding:0;
+}
+
+.primary-menu li a{
     color:white;
     text-decoration:none;
     opacity:0.9;
@@ -91,11 +102,14 @@ body{
     padding:0.5rem 1rem;
     border-radius:var(--border-radius-sm);
     font-weight:500;
+    position:relative;
 }
 
-.nav a:hover,.nav a.active{
+.primary-menu li a:hover,
+.primary-menu li a.current{
     opacity:1;
     background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(10px);
 }
 
 /* Main Content Container */
@@ -122,16 +136,59 @@ body{
     border:none;
     cursor:pointer;
     font-size:0.9rem;
+    transition:all 0.2s ease;
 }
 
-/* Mobile Toggle - Hidden by default */
-.mobile-menu-toggle{display:none}
+.btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(102,126,234,0.4);
+}
+
+/* Mobile Menu Toggle - Hidden by default */
+.menu-toggle{display:none}
 
 /* Critical Mobile Styles */
 @media(max-width:768px){
-    .header .container{position:relative}
-    .mobile-menu-toggle{display:block;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;padding:0.5rem}
-    .nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--primary-gradient);flex-direction:column;padding:1rem 2rem;box-shadow:var(--shadow-md)}
-    .nav.active{display:flex}
+    .header-container{position:relative}
+    .menu-toggle{
+        display:flex;
+        background:none;
+        border:none;
+        color:white;
+        font-size:1.5rem;
+        cursor:pointer;
+        padding:0.5rem;
+        gap:0.5rem;
+        align-items:center;
+        flex-direction:column;
+        width:40px;
+        height:40px;
+        justify-content:center;
+    }
+    .hamburger-line{
+        width:20px;
+        height:2px;
+        background:white;
+        transition:all 0.3s ease;
+    }
+    .main-navigation{
+        display:none;
+        position:absolute;
+        top:100%;
+        left:0;
+        right:0;
+        background:var(--primary-gradient);
+        flex-direction:column;
+        padding:1rem 2rem;
+        box-shadow:var(--shadow-md);
+        backdrop-filter:blur(10px);
+    }
+    .main-navigation.active{display:flex}
+    .primary-menu{flex-direction:column;gap:0.5rem;width:100%}
+    .primary-menu li a{
+        display:block;
+        padding:0.75rem 1rem;
+        border-radius:var(--border-radius-sm);
+    }
     .container{padding:0 1rem}
 }

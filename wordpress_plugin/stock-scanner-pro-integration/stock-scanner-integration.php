@@ -47,6 +47,9 @@ class Stock_Scanner_Integration {
         add_action('init', array($this, 'init'));
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+        
+        // Initialize performance optimizer
+        add_action('plugins_loaded', array($this, 'init_performance_optimizer'));
     }
     
     /**
@@ -73,6 +76,19 @@ class Stock_Scanner_Integration {
         echo '<strong>Stock Scanner Plugin Error:</strong> Plugin initialization failed. ';
         echo 'Please check error logs or contact support.';
         echo '</p></div>';
+    }
+    
+    /**
+     * Initialize performance optimizer
+     */
+    public function init_performance_optimizer() {
+        // Include the performance optimizer class
+        require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-performance-optimizer.php';
+        
+        // Initialize performance optimizer
+        if (class_exists('Stock_Scanner_Performance_Optimizer')) {
+            new Stock_Scanner_Performance_Optimizer();
+        }
     }
     
     /**
