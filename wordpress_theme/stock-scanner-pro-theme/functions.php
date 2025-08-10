@@ -1468,14 +1468,24 @@ add_action('init', function(){
     $ensure_template('stock-screener', 'page-templates/page-stock-screener.php');
 });
 
-// Redirect signed-in users visiting the Home page to the Dashboard
+// Redirect signed-in users visiting the Home page to the Dashboard (avoid self-redirect loops)
 add_action('template_redirect', function() {
-    if (is_user_logged_in() && (is_front_page() || is_page('home'))) {
-        $dashboard = get_page_by_path('dashboard');
-        if ($dashboard) {
-            wp_redirect(get_permalink($dashboard->ID));
-            exit;
-        }
+    if (!is_user_logged_in()) {
+        return;
     }
+    if (!(is_front_page() || is_page('home'))) {
+        return;
+    }
+    $dashboard = get_page_by_path('dashboard');
+    if (!$dashboard) {
+        return;
+    }
+    $dashboard_url = get_permalink($dashboard->ID);
+    // If the Dashboard is set as the static front page or we're already on it, do not redirect
+    if (is_page($dashboard->ID) || ((int) get_option('page_on_front') === (int) $dashboard->ID)) {
+        return;
+    }
+    wp_safe_redirect($dashboard_url, 302);
+    exit;
 });
 ?>
