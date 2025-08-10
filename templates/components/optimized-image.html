@@ -1,0 +1,55 @@
+<!-- Optimized Image Component with Progressive Loading -->
+<!-- Usage: {% include 'components/optimized-image.html' with src='image.jpg' alt='Description' class='custom-class' %} -->
+
+<picture class="optimized-image {{ class|default:'' }}">
+    <!-- WebP format for modern browsers -->
+    {% if webp_src %}
+        <source 
+            data-srcset="{{ webp_src }}" 
+            type="image/webp"
+            {% if sizes %}sizes="{{ sizes }}"{% endif %}>
+    {% endif %}
+    
+    <!-- Fallback to original format -->
+    <img 
+        class="lazy-image"
+        data-src="{{ src }}"
+        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {{ width|default:400 }} {{ height|default:300 }}'%3E%3Crect width='100%25' height='100%25' fill='%23f8fafc'/%3E%3C/svg%3E"
+        alt="{{ alt }}"
+        loading="lazy"
+        decoding="async"
+        {% if width %}width="{{ width }}"{% endif %}
+        {% if height %}height="{{ height }}"{% endif %}
+        {% if sizes %}sizes="{{ sizes }}"{% endif %}
+        onload="this.classList.add('loaded')"
+        onerror="this.classList.add('error')">
+</picture>
+
+<style>
+.optimized-image {
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+
+.lazy-image {
+    width: 100%;
+    height: auto;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.lazy-image.loaded {
+    opacity: 1;
+}
+
+.lazy-image.error {
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+/* Progressive enhancement for blur effect */
+.lazy-image:not(.loaded) {
+    filter: blur(2px);
+}
+</style>

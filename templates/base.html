@@ -36,6 +36,22 @@
     </script>
     {% endblock %}
     
+    <!-- Critical CSS - Inline for fastest first paint -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='critical.css') }}" media="all">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{{ url_for('static', filename='optimized-scripts.js') }}" as="script">
+    <link rel="preload" href="{{ url_for('static', filename='index_sub.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='index_sub.css') }}"></noscript>
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    
+    <!-- Optimized font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -434,28 +450,15 @@
         </div>
     </footer>
 
+    <!-- Optimized JavaScript - Load asynchronously -->
+    <script src="{{ url_for('static', filename='optimized-scripts.js') }}" async></script>
+    
+    <!-- Fallback for critical mobile menu functionality -->
     <script>
         function toggleMobileMenu() {
             const nav = document.getElementById('nav-menu');
-            nav.classList.toggle('active');
+            if (nav) nav.classList.toggle('active');
         }
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const nav = document.getElementById('nav-menu');
-            const toggle = document.querySelector('.mobile-menu-toggle');
-            
-            if (!nav.contains(event.target) && !toggle.contains(event.target)) {
-                nav.classList.remove('active');
-            }
-        });
-
-        // Close mobile menu when clicking on a link
-        document.querySelectorAll('.nav a').forEach(link => {
-            link.addEventListener('click', () => {
-                document.getElementById('nav-menu').classList.remove('active');
-            });
-        });
     </script>
 
     {% block extra_js %}{% endblock %}
