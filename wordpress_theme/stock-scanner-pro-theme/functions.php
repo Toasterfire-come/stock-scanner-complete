@@ -1186,7 +1186,278 @@ function stock_scanner_remove_admin_bar() {
 }
 add_action('after_setup_theme', 'stock_scanner_remove_admin_bar');
 
-// Performance optimizations moved to line 1577 to avoid duplication
+/**
+ * Performance Optimization - CSS/JS Minification and Caching
+ */
+class StockScannerAssetOptimizer {
+    
+    public function __construct() {
+        add_action('wp_enqueue_scripts', array($this, 'optimize_assets'), 999);
+        add_action('wp_head', array($this, 'add_performance_headers'), 1);
+        add_filter('style_loader_src', array($this, 'add_cache_busting'), 10, 2);
+        add_filter('script_loader_src', array($this, 'add_cache_busting'), 10, 2);
+    }
+    
+    /**
+     * Minify CSS content
+     */
+    public function minify_css($css) {
+        // Remove comments
+        $css = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $css);
+        // Remove whitespace
+        $css = str_replace(array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $css);
+        // Remove trailing semicolon before closing brace
+        $css = str_replace(';}', '}', $css);
+        return trim($css);
+    }
+    
+    /**
+     * Minify JavaScript content
+     */
+    public function minify_js($js) {
+        // Simple minification - remove comments and excess whitespace
+        $js = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:\/\/.*))/', '', $js);
+        $js = str_replace(array("\r\n", "\r", "\n", "\t"), ' ', $js);
+        $js = preg_replace('/\s+/', ' ', $js);
+        return trim($js);
+    }
+    
+    /**
+     * Create minified versions of CSS/JS files
+     */
+    public function create_minified_assets() {
+        $theme_dir = get_stylesheet_directory();
+        $css_files = array(
+            '/assets/css/shared-styles.css',
+            '/style.css'
+        );
+        
+        $js_files = array(
+            '/assets/js/admin-scripts.js',
+            '/js/stock-screener.js',
+            '/js/portfolio-manager.js'
+        );
+        
+        // Minify CSS files
+        foreach ($css_files as $file) {
+            $file_path = $theme_dir . $file;
+            if (file_exists($file_path)) {
+                $content = file_get_contents($file_path);
+                $minified = $this->minify_css($content);
+                $min_file = str_replace('.css', '.min.css', $file_path);
+                file_put_contents($min_file, $minified);
+            }
+        }
+        
+        // Minify JS files
+        foreach ($js_files as $file) {
+            $file_path = $theme_dir . $file;
+            if (file_exists($file_path)) {
+                $content = file_get_contents($file_path);
+                $minified = $this->minify_js($content);
+                $min_file = str_replace('.js', '.min.js', $file_path);
+                file_put_contents($min_file, $minified);
+            }
+        }
+    }
+    
+    /**
+     * Optimize asset loading
+     */
+    public function optimize_assets() {
+        // Only load minified versions in production
+        $is_production = !defined('WP_DEBUG') || !WP_DEBUG;
+        $suffix = $is_production ? '.min' : '';
+        
+        // Deregister default styles and scripts to replace with optimized versions
+        wp_deregister_style('stock-scanner-shared-styles');
+        wp_deregister_script('stock-scanner-admin');
+        
+        // Enqueue optimized versions
+        wp_enqueue_style(
+            'stock-scanner-shared-styles-optimized',
+            get_stylesheet_directory_uri() . '/assets/css/shared-styles' . $suffix . '.css',
+            array(),
+            filemtime(get_stylesheet_directory() . '/assets/css/shared-styles' . $suffix . '.css')
+        );
+        
+        // Add preload hints for critical resources
+        add_action('wp_head', function() use ($suffix) {
+            echo '<link rel="preload" href="' . get_stylesheet_directory_uri() . '/assets/css/shared-styles' . $suffix . '.css" as="style">';
+            echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">';
+            echo '<link rel="dns-prefetch" href="//api.stockscanner.com">';
+        }, 5);
+    }
+    
+    /**
+     * Add performance headers
+     */
+    public function add_performance_headers() {
+        ?>
+        <meta http-equiv="Cache-Control" content="public, max-age=31536000">
+        <meta http-equiv="Expires" content="<?php echo gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT'; ?>">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <?php
+    }
+    
+    /**
+     * Add cache busting for assets
+     */
+    public function add_cache_busting($src, $handle) {
+        if (strpos($src, get_stylesheet_directory_uri()) !== false) {
+            $file_path = str_replace(get_stylesheet_directory_uri(), get_stylesheet_directory(), $src);
+            if (file_exists($file_path)) {
+                $version = filemtime($file_path);
+                $src = add_query_arg('v', $version, $src);
+            }
+        }
+        return $src;
+    }
+}
+
+// Initialize asset optimizer
+new StockScannerAssetOptimizer();
+
+/**
+ * Image Optimization - WebP Support and Lazy Loading
+ */
+class StockScannerImageOptimizer {
+    
+    public function __construct() {
+        add_filter('wp_generate_attachment_metadata', array($this, 'generate_webp_images'), 10, 2);
+        add_filter('wp_get_attachment_image_attributes', array($this, 'add_lazy_loading'), 10, 3);
+        add_action('wp_head', array($this, 'add_lazy_loading_script'));
+        add_filter('the_content', array($this, 'add_lazy_loading_to_content'));
+    }
+    
+    /**
+     * Generate WebP versions of uploaded images
+     */
+    public function generate_webp_images($metadata, $attachment_id) {
+        if (!function_exists('imagewebp')) {
+            return $metadata;
+        }
+        
+        $upload_dir = wp_upload_dir();
+        $file_path = get_attached_file($attachment_id);
+        
+        if (!$file_path || !file_exists($file_path)) {
+            return $metadata;
+        }
+        
+        $image_info = getimagesize($file_path);
+        if (!$image_info || !in_array($image_info['mime'], array('image/jpeg', 'image/png'))) {
+            return $metadata;
+        }
+        
+        // Create WebP version of original
+        $this->create_webp_image($file_path);
+        
+        // Create WebP versions of all sizes
+        if (isset($metadata['sizes']) && is_array($metadata['sizes'])) {
+            foreach ($metadata['sizes'] as $size => $size_data) {
+                $size_path = path_join(dirname($file_path), $size_data['file']);
+                if (file_exists($size_path)) {
+                    $this->create_webp_image($size_path);
+                }
+            }
+        }
+        
+        return $metadata;
+    }
+    
+    /**
+     * Create WebP version of an image
+     */
+    private function create_webp_image($file_path) {
+        $image_info = getimagesize($file_path);
+        $webp_path = preg_replace('/\.(jpe?g|png)$/i', '.webp', $file_path);
+        
+        switch ($image_info['mime']) {
+            case 'image/jpeg':
+                $image = imagecreatefromjpeg($file_path);
+                break;
+            case 'image/png':
+                $image = imagecreatefrompng($file_path);
+                break;
+            default:
+                return false;
+        }
+        
+        if ($image) {
+            imagewebp($image, $webp_path, 85);
+            imagedestroy($image);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Add lazy loading attributes to images
+     */
+    public function add_lazy_loading($attr, $attachment, $size) {
+        if (!isset($attr['loading'])) {
+            $attr['loading'] = 'lazy';
+        }
+        if (!isset($attr['decoding'])) {
+            $attr['decoding'] = 'async';
+        }
+        return $attr;
+    }
+    
+    /**
+     * Add lazy loading to content images
+     */
+    public function add_lazy_loading_to_content($content) {
+        $content = preg_replace('/<img((?:[^>](?!loading=))*?)>/i', '<img$1 loading="lazy" decoding="async">', $content);
+        return $content;
+    }
+    
+    /**
+     * Add lazy loading JavaScript for older browsers
+     */
+    public function add_lazy_loading_script() {
+        ?>
+        <script>
+        // Lazy loading polyfill for older browsers
+        if (!('loading' in HTMLImageElement.prototype)) {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/loading-attribute-polyfill@2/dist/loading-attribute-polyfill.min.js';
+            document.head.appendChild(script);
+        }
+        
+        // WebP detection and image optimization
+        function supportsWebP() {
+            return new Promise(resolve => {
+                const webP = new Image();
+                webP.onload = webP.onerror = () => resolve(webP.height === 2);
+                webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+            });
+        }
+        
+        // Replace images with WebP versions if supported
+        supportsWebP().then(supported => {
+            if (supported) {
+                document.querySelectorAll('img[src]').forEach(img => {
+                    const webpSrc = img.src.replace(/\.(jpe?g|png)(\?.*)?$/i, '.webp$2');
+                    // Test if WebP version exists
+                    const testImg = new Image();
+                    testImg.onload = () => {
+                        img.src = webpSrc;
+                    };
+                    testImg.src = webpSrc;
+                });
+            }
+        });
+        </script>
+        <?php
+    }
+}
+
+// Initialize image optimizer
+new StockScannerImageOptimizer();
 
 /**
  * Custom post types for enhanced SEO
