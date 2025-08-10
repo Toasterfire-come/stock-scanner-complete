@@ -46,7 +46,7 @@
     <meta name="twitter:title" content="<?php echo esc_attr($title); ?>" />
     <meta name="twitter:description" content="<?php echo esc_attr($description); ?>" />
     <meta name="twitter:image" content="<?php echo esc_url($image); ?>" />
-        <link rel="manifest" href="<?php echo esc_url( get_stylesheet_directory_uri() . '/manifest.webmanifest' ); ?>">
+
     <?php wp_head(); ?>
   </head>
 
