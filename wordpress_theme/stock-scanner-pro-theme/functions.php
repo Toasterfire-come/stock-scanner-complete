@@ -50,9 +50,16 @@ function stock_scanner_scripts() {
     // Performance: Load CSS non-blocking
     add_filter('style_loader_tag', 'stock_scanner_async_css', 10, 2);
     
-    // Add shared styles for unified color scheme across pages
+    // Add shared styles for unified color scheme across pages with proper MIME type
     if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
-        wp_enqueue_style('stock-scanner-shared', get_template_directory_uri() . '/assets/css/shared-styles.css', array(), $style_ver);
+        wp_enqueue_style('stock-scanner-shared', get_template_directory_uri() . '/assets/css/shared-styles.css', array(), $style_ver, 'all');
+        // Ensure proper content type for CSS files
+        add_filter('style_loader_tag', function($html, $handle) {
+            if ($handle === 'stock-scanner-shared') {
+                $html = str_replace("rel='stylesheet'", "rel='stylesheet' type='text/css'", $html);
+            }
+            return $html;
+        }, 10, 2);
     }
     
     // Performance: Enqueue optimized JavaScript
@@ -556,11 +563,11 @@ function stock_scanner_create_menus() {
     $primary_menu_id = wp_create_nav_menu('Stock Scanner Primary');
     if (!is_wp_error($primary_menu_id)) {
         $menu_items = array(
-            array('title' => 'Dashboard', 'url' => '/dashboard/', 'icon' => '📊'),
-            array('title' => 'Stock Lookup', 'url' => '/stock-lookup/', 'icon' => '🔍'),
+            array('title' => 'Dashboard', 'url' => '/dashboard/', 'icon' => ''),
+            array('title' => 'Stock Lookup', 'url' => '/stock-lookup/', 'icon' => ''),
             array('title' => 'Stock News', 'url' => '/stock-news/', 'icon' => '📰'),
             array('title' => 'Stock Screener', 'url' => '/stock-screener/', 'icon' => '🔎'),
-            array('title' => 'Market Overview', 'url' => '/market-overview/', 'icon' => '📈'),
+            array('title' => 'Market Overview', 'url' => '/market-overview/', 'icon' => ''),
             array('title' => 'Watchlist', 'url' => '/watchlist/', 'icon' => '📋'),
             array('title' => 'Premium Plans', 'url' => '/premium-plans/', 'icon' => '⭐'),
             array('title' => 'Contact', 'url' => '/contact/', 'icon' => '📞')

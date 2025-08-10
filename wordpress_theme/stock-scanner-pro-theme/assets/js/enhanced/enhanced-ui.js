@@ -367,7 +367,7 @@ class EnhancedUI {
             case 'stocks':
                 return `
                     <div class="suggestion-item" data-index="${index}">
-                        <div class="suggestion-icon">📈</div>
+                        <div class="suggestion-icon"></div>
                         <div class="suggestion-content">
                             <div class="suggestion-title">${item.symbol} - ${item.name}</div>
                             <div class="suggestion-meta">${item.price} <span class="${item.change.startsWith('+') ? 'positive' : 'negative'}">${item.change}</span></div>

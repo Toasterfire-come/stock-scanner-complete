@@ -33,7 +33,7 @@ get_header(); ?>
 
                 <div class="values-section">
                     <h2 style="color: var(--color-text); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
-                        💎 What We Value
+                         What We Value
                     </h2>
                     <div class="values-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-5); margin-top: var(--space-4);">
                         <div class="value-item" style="text-align: center; padding: var(--space-4);">

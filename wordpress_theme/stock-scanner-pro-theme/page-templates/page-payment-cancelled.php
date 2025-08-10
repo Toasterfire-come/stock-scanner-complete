@@ -52,7 +52,7 @@ get_header();
             
             <div class="action-buttons">
                 <a href="<?php echo home_url('/compare-plans/'); ?>" class="btn btn-primary">
-                    <span class="btn-icon">📊</span>
+                    <span class="btn-icon"></span>
                     View Plans Again
                 </a>
                 <a href="<?php echo home_url('/dashboard/'); ?>" class="btn btn-outline">

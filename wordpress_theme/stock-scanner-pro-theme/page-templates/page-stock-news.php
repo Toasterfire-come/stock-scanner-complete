@@ -25,7 +25,7 @@ get_header(); ?>
             <!-- News Filters Panel -->
             <div class="filters-card mb-6 p-6">
                 <div class="panel-header">
-                    <h3>🔍 Filter News</h3>
+                    <h3> Filter News</h3>
                     <div class="panel-actions">
                         <button id="clear-filters" class="btn btn-secondary">Clear Filters</button>
                     </div>
@@ -84,7 +84,7 @@ get_header(); ?>
 
                 <!-- Controls Header -->
                 <div class="news-header p-6 pb-0">
-                    <h2>📈 Latest News</h2>
+                    <h2> Latest News</h2>
                     <button id="refresh-news" class="btn btn-outline">🔄 Refresh</button>
                 </div>
 
@@ -121,7 +121,7 @@ get_header(); ?>
 
             <!-- Trending Topics -->
             <div class="card p-6">
-                <h3>🔥 Trending Topics</h3>
+                <h3> Trending Topics</h3>
                 <div id="trending-topics" class="trending-topics" style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4);"></div>
             </div>
         </div>

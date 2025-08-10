@@ -15,7 +15,7 @@ get_header(); ?>
 <div class="portfolio-management-container">
     <div class="container">
         <div class="page-header">
-            <h1>📈 My Portfolios</h1>
+            <h1> My Portfolios</h1>
             <p class="page-description">Create portfolios, add holdings, and track performance in real time</p>
         </div>
 
@@ -30,7 +30,7 @@ get_header(); ?>
                         📤 Import from CSV
                     </button>
                     <button class="btn btn-outline" id="view-roi-analytics-btn">
-                        📊 ROI Analytics
+                         ROI Analytics
                     </button>
                 </div>
                 <div class="portfolio-filters">
@@ -56,7 +56,7 @@ get_header(); ?>
 
         <!-- Portfolio Performance Summary -->
         <div class="card p-6">
-            <h3 style="margin-bottom: var(--space-5); color: var(--color-text);">📊 Overall Portfolio Performance</h3>
+            <h3 style="margin-bottom: var(--space-5); color: var(--color-text);"> Overall Portfolio Performance</h3>
             <div id="overall-performance" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4);">
                 <!-- Performance metrics will be loaded here -->
             </div>

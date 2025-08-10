@@ -6,7 +6,7 @@
                 <div class="footer-widgets">
                     <div class="footer-widget-area">
                         <div class="widget footer-about">
-                            <h3 class="widget-title">📈 Stock Scanner</h3>
+                            <h3 class="widget-title">Stock Scanner</h3>
                             <p>Professional stock analysis platform providing real-time market data, advanced screening tools, and portfolio tracking for investors and traders worldwide.</p>
                             <div class="social-links">
                                 <?php
@@ -86,7 +86,7 @@
                 
                 <div class="footer-pricing-cta">
                     <div class="cta-content">
-                        <h3>🚀 Ready to Start Analyzing Stocks?</h3>
+                        <h3>Ready to Start Analyzing Stocks?</h3>
                         <p>Join thousands of investors using our professional platform</p>
                         <div class="cta-buttons">
                             <?php if (!is_user_logged_in()): ?>
@@ -120,7 +120,7 @@
                             <span class="badge-text">PayPal Protected</span>
                         </div>
                         <div class="security-badge">
-                            <span class="badge-icon">⚡</span>
+                            <span class="badge-icon"></span>
                             <span class="badge-text">99.9% Uptime</span>
                         </div>
                     </div>
@@ -195,7 +195,7 @@ function stock_scanner_fallback_menu() {
     
     // New feature menu items (only show if user is logged in)
     if (is_user_logged_in()) {
-        echo '<li><a href="' . home_url('/portfolio/') . '"><span class="menu-icon">📊</span> My Portfolios</a></li>';
+        echo '<li><a href="' . home_url('/portfolio/') . '"><span class="menu-icon"></span> My Portfolios</a></li>';
         echo '<li><a href="' . home_url('/watchlist/') . '"><span class="menu-icon">👁️</span> Watchlist</a></li>';
         echo '<li><a href="' . home_url('/personalized-news/') . '"><span class="menu-icon">📰</span> My News Feed</a></li>';
     }

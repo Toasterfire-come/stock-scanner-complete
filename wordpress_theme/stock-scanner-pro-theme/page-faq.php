@@ -26,7 +26,7 @@ get_header(); ?>
                 <!-- Getting Started -->
                 <div class="faq-category card p-6">
                     <h2 style="color: var(--color-text); margin-bottom: var(--space-5); display: flex; align-items: center; gap: var(--space-2);">
-                        🚀 Getting Started
+                         Getting Started
                     </h2>
                     <div class="faq-items" style="display: grid; gap: var(--space-4);">
                         <div class="faq-item">
