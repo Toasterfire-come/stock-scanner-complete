@@ -629,9 +629,9 @@ function stock_scanner_setup_seo_defaults() {
             'name' => 'Stock Analysis Plans',
             'itemListElement' => array(
                 array('@type' => 'Offer', 'name' => 'Free Plan', 'price' => '0'),
-                array('@type' => 'Offer', 'name' => 'Bronze Plan', 'price' => '9.99'),
-                array('@type' => 'Offer', 'name' => 'Silver Plan', 'price' => '19.99'),
-                array('@type' => 'Offer', 'name' => 'Gold Plan', 'price' => '49.99')
+                array('@type' => 'Offer', 'name' => 'Bronze Plan', 'price' => '24.99'),
+                array('@type' => 'Offer', 'name' => 'Silver Plan', 'price' => '39.99'),
+                array('@type' => 'Offer', 'name' => 'Gold Plan', 'price' => '89.99')
             )
         )
     )));
@@ -960,21 +960,21 @@ function stock_scanner_structured_data() {
                     '@type' => 'Offer',
                     'name' => 'Bronze Plan',
                     'description' => '1,500 API calls per month',
-                    'price' => '9.99',
+                    'price' => '24.99',
                     'priceCurrency' => 'USD'
                 ),
                 array(
                     '@type' => 'Offer',
                     'name' => 'Silver Plan',
                     'description' => '5,000 API calls per month',
-                    'price' => '19.99',
+                    'price' => '39.99',
                     'priceCurrency' => 'USD'
                 ),
                 array(
                     '@type' => 'Offer',
                     'name' => 'Gold Plan',
                     'description' => 'Unlimited API calls',
-                    'price' => '49.99',
+                    'price' => '89.99',
                     'priceCurrency' => 'USD'
                 )
             )

@@ -409,9 +409,9 @@
          * Calculate pricing based on user limits
          */
         calculatePricing: function() {
-            const bronzePrice = parseFloat($('#bronze-price').val()) || 9.99;
-            const silverPrice = parseFloat($('#silver-price').val()) || 19.99;
-            const goldPrice = parseFloat($('#gold-price').val()) || 39.99;
+            const bronzePrice = parseFloat($('#bronze-price').val()) || 24.99;
+            const silverPrice = parseFloat($('#silver-price').val()) || 39.99;
+            const goldPrice = parseFloat($('#gold-price').val()) || 89.99;
             
             // Update price displays
             $('.bronze-price-display').text(`$${bronzePrice.toFixed(2)}`);

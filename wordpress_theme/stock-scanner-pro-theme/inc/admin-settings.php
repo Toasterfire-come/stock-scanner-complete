@@ -536,7 +536,7 @@ class StockScannerAdminSettings {
                             <th scope="row"><?php esc_html_e('Bronze Plan Price', 'stock-scanner'); ?></th>
                             <td>
                                 <input type="number" name="stock_scanner_payment_settings[bronze_price]" 
-                                       value="<?php echo esc_attr($payment_settings['bronze_price'] ?? '9.99'); ?>" 
+                                       value="<?php echo esc_attr($payment_settings['bronze_price'] ?? '24.99'); ?>" 
                                        step="0.01" min="0" />
                                 <span><?php echo esc_html($general_settings['default_currency'] ?? 'USD'); ?></span>
                                 <p class="description"><?php esc_html_e('Monthly price for Bronze membership', 'stock-scanner'); ?></p>
@@ -547,7 +547,7 @@ class StockScannerAdminSettings {
                             <th scope="row"><?php esc_html_e('Silver Plan Price', 'stock-scanner'); ?></th>
                             <td>
                                 <input type="number" name="stock_scanner_payment_settings[silver_price]" 
-                                       value="<?php echo esc_attr($payment_settings['silver_price'] ?? '19.99'); ?>" 
+                                       value="<?php echo esc_attr($payment_settings['silver_price'] ?? '39.99'); ?>" 
                                        step="0.01" min="0" />
                                 <span><?php echo esc_html($general_settings['default_currency'] ?? 'USD'); ?></span>
                                 <p class="description"><?php esc_html_e('Monthly price for Silver membership', 'stock-scanner'); ?></p>
@@ -558,7 +558,7 @@ class StockScannerAdminSettings {
                             <th scope="row"><?php esc_html_e('Gold Plan Price', 'stock-scanner'); ?></th>
                             <td>
                                 <input type="number" name="stock_scanner_payment_settings[gold_price]" 
-                                       value="<?php echo esc_attr($payment_settings['gold_price'] ?? '39.99'); ?>" 
+                                       value="<?php echo esc_attr($payment_settings['gold_price'] ?? '89.99'); ?>" 
                                        step="0.01" min="0" />
                                 <span><?php echo esc_html($general_settings['default_currency'] ?? 'USD'); ?></span>
                                 <p class="description"><?php esc_html_e('Monthly price for Gold membership', 'stock-scanner'); ?></p>

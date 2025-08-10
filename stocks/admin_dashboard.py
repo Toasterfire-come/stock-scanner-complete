@@ -43,9 +43,9 @@ def dashboard_data(request):
 # Calculate real revenue
             tier_pricing = {
             'free': 0.00,
-            'basic': 9.99,
-            'professional': 29.99,
-            'expert': 49.99
+            'basic': 24.99,
+            'professional': 39.99,
+            'expert': 89.99
             }
 
             revenue_calculation = {}
