@@ -154,10 +154,7 @@ add_action('wp_enqueue_scripts', function() {
 require_once get_template_directory() . '/inc/plugin-integration.php';
 require_once get_template_directory() . '/inc/admin-settings.php';
 
-// Prevent double-loading in case other files include admin-settings
-if (is_admin() && !class_exists('StockScannerAdminSettings')) {
-    require_once get_template_directory() . '/inc/admin-settings.php';
-}
+// Admin settings is already included above - this duplicate removed to fix include conflicts
 
 // Create screener saved screens table on theme activation if it doesn't exist
 function stock_scanner_create_tables(){
@@ -1189,27 +1186,7 @@ function stock_scanner_remove_admin_bar() {
 }
 add_action('after_setup_theme', 'stock_scanner_remove_admin_bar');
 
-/**
- * Performance optimizations for AI crawling
- */
-function stock_scanner_performance_optimizations() {
-    // Remove unnecessary WordPress features
-    remove_action('wp_head', 'print_emoji_detection_script', 7);
-    remove_action('wp_print_styles', 'print_emoji_styles');
-    remove_action('admin_print_scripts', 'print_emoji_detection_script');
-    remove_action('admin_print_styles', 'print_emoji_styles');
-    
-    // Remove unnecessary generator tags
-    remove_action('wp_head', 'wp_generator');
-    remove_action('wp_head', 'wlwmanifest_link');
-    remove_action('wp_head', 'rsd_link');
-    
-    // Add proper cache headers for static assets
-    if (!is_admin()) {
-        header('Cache-Control: max-age=31536000');
-    }
-}
-add_action('init', 'stock_scanner_performance_optimizations');
+// Performance optimizations moved to line 1577 to avoid duplication
 
 /**
  * Custom post types for enhanced SEO
@@ -1274,11 +1251,9 @@ function stock_scanner_custom_taxonomies() {
 add_action('init', 'stock_scanner_custom_taxonomies');
 
 /**
- * Include admin settings
+ * Include admin settings (already included at top of file to avoid duplication)
  */
-if (is_admin()) {
-    require_once get_template_directory() . '/inc/admin-settings.php';
-}
+// Admin settings included at line 155 - duplicate removed
 
 /**
  * Helper function to get stock scanner settings
