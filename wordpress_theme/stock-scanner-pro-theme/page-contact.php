@@ -7,7 +7,7 @@ get_header(); ?>
 <div class="contact-page">
     <div class="container">
         <div class="page-header">
-            <h1>📞 Contact Us</h1>
+            <h1>Contact Us</h1>
             <p class="page-description">Get in touch with our support team or send us your feedback</p>
         </div>
 
