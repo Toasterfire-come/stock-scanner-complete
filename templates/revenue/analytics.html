@@ -125,7 +125,7 @@
     
     <div id="analytics-content">
         <div class="loading">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; background: #4a5a3a; color: white; padding: 1rem; border-radius: 8px; display: inline-block;">ANALYTICS</div>
             <p>Loading revenue analytics...</p>
         </div>
     </div>
@@ -138,7 +138,7 @@ function loadAnalytics(monthYear = null) {
     const contentDiv = document.getElementById('analytics-content');
     contentDiv.innerHTML = `
         <div class="loading">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; background: #4a5a3a; color: white; padding: 1rem; border-radius: 8px; display: inline-block;">LOADING</div>
             <p>Loading analytics data...</p>
         </div>
     `;
@@ -194,7 +194,7 @@ function displayAnalytics(analytics) {
         <div class="api-response">
             <div class="response-header">
                 <h3>API Response Data</h3>
-                <span style="color: var(--accent-green); font-weight: 600;">✓ Success</span>
+                <span style="color: var(--accent-green); font-weight: 600; background: #4a5a3a; color: white; padding: 0.5rem 1rem; border-radius: 4px;">SUCCESS</span>
             </div>
             <div class="response-data">${JSON.stringify(currentData, null, 2)}</div>
         </div>

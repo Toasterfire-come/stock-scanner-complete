@@ -2797,30 +2797,50 @@ a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
 /* === Plan Features Styling === */
 .plan-features {
     margin-bottom: 25px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    border: 1px solid #e2e8f0;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .plan-features h3 {
     margin: 0 0 15px 0;
-    color: #2c3e50;
+    color: white;
     font-weight: 600;
+    background: #4a5a3a;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
 }
 
 .plan-features ul {
     list-style: none;
     padding: 0;
     margin: 10px 0;
+    display: block !important;
+    visibility: visible !important;
 }
 
 .plan-features li {
-    padding: 12px 8px;
+    padding: 15px 12px;
     border-bottom: 1px solid #e2e8f0;
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: #1e293b !important;
     font-weight: 500;
     line-height: 1.5;
-    display: flex;
+    display: flex !important;
     align-items: center;
     background: white;
+    visibility: visible !important;
+    opacity: 1 !important;
+    border-left: 4px solid #4a5a3a;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
 .plan-features li:last-child {
@@ -2829,12 +2849,16 @@ a:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
 
 .plan-features li:hover {
     background: #f8fafc;
+    transform: translateX(5px);
 }
 
 /* Ensure checkmark icons are visible */
 .plan-features li::before {
-    content: '';
-    margin-right: 8px;
+    content: '✓';
+    margin-right: 12px;
+    color: #4a5a3a;
+    font-weight: bold;
+    font-size: 1.1rem;
 }
 
 /* === Moved from premium plans (inline styles) === */

@@ -17,7 +17,7 @@ get_header(); ?>
             <!-- Quick Lookup Section -->
             <div class="lookup-section">
                 <div class="lookup-form-card">
-                    <h2>🔍 Quick Stock Quote</h2>
+                    <h2>Quick Stock Quote</h2>
                     <div class="lookup-form">
                         <div class="input-group">
                             <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)" maxlength="10" />
@@ -50,7 +50,7 @@ get_header(); ?>
 
             <!-- Recent Lookups -->
             <div class="recent-lookups-section">
-                <h3>📊 Recent Lookups</h3>
+                <h3>Recent Lookups</h3>
                 <div id="recent-lookups" class="recent-lookups-grid">
                     <!-- Recent lookups will be populated here -->
                 </div>
@@ -59,7 +59,7 @@ get_header(); ?>
             <!-- Usage Stats -->
             <?php if (is_user_logged_in()): ?>
             <div class="usage-stats-section">
-                <h3>📈 Your API Usage</h3>
+                <h3>Your API Usage</h3>
                 <div id="usage-stats" class="usage-stats-card">
                     <!-- Usage stats will be loaded here -->
                 </div>
@@ -145,7 +145,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 addToRecentLookups(symbol, data.data);
                 updateUsageStats();
             } else {
-                displayError(data.data || 'Failed to fetch stock data');
+                // Handle different error response formats
+                let errorMessage = 'Failed to fetch stock data';
+                let suggestion = '';
+                
+                if (data.data) {
+                    if (typeof data.data === 'string') {
+                        errorMessage = data.data;
+                    } else if (data.data.message) {
+                        errorMessage = data.data.message;
+                        suggestion = data.data.suggestion || '';
+                    } else {
+                        errorMessage = 'An unexpected error occurred';
+                        console.error('Unexpected error format:', data.data);
+                    }
+                }
+                
+                displayError(errorMessage, data.data, suggestion);
             }
         })
         .catch(error => {
@@ -160,10 +176,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const changeClass = parseFloat(data.change) >= 0 ? 'positive' : 'negative';
         const changeIcon = parseFloat(data.change) >= 0 ? '↗' : '↘';
         
+        // Show fallback notice if using sample data
+        const fallbackNotice = data.is_fallback ? 
+            '<div class="fallback-notice">⚠️ Showing sample data - Real-time service temporarily unavailable</div>' : '';
+        
         stockResult.innerHTML = `
+            ${fallbackNotice}
             <div class="stock-quote-header">
                 <h3>${data.symbol}</h3>
-                <div class="quote-timestamp">Updated: ${new Date(data.timestamp).toLocaleString()}</div>
+                <div class="quote-timestamp">Updated: ${new Date(data.timestamp || new Date()).toLocaleString()}</div>
             </div>
             <div class="stock-quote-data">
                 <div class="main-price">
@@ -176,16 +197,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="stock-details">
                     <div class="detail-item">
                         <span class="label">Volume:</span>
-                        <span class="value">${data.volume}</span>
+                        <span class="value">${data.volume ? data.volume.toLocaleString() : 'N/A'}</span>
                     </div>
                 </div>
             </div>
             <div class="quote-actions">
                 <button class="btn btn-secondary add-to-watchlist" data-symbol="${data.symbol}">
-                    ⭐ Add to Watchlist
+                    Add to Watchlist
                 </button>
                 <button class="btn btn-outline view-chart" data-symbol="${data.symbol}">
-                    📊 View Chart
+                    View Chart
                 </button>
             </div>
         `;
@@ -209,12 +230,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function displayError(message) {
+    function displayError(message, errorData = null, suggestion = '') {
+        let actionButtons = '<button class="btn btn-secondary" onclick="location.reload()">Try Again</button>';
+        
+        // Add specific action buttons based on error type
+        if (errorData && typeof errorData === 'object') {
+            if (errorData.upgrade_url) {
+                actionButtons = `
+                    <a href="${errorData.upgrade_url}" class="btn btn-primary">Upgrade Plan</a>
+                    <button class="btn btn-secondary" onclick="location.reload()">Try Again</button>
+                `;
+            } else if (errorData.contact_url) {
+                actionButtons = `
+                    <a href="${errorData.contact_url}" class="btn btn-primary">Contact Support</a>
+                    <button class="btn btn-secondary" onclick="location.reload()">Try Again</button>
+                `;
+            }
+        }
+
+        const suggestionHtml = suggestion ? `<p class="error-suggestion">${suggestion}</p>` : '';
+
         stockResult.innerHTML = `
             <div class="error-message">
-                <h3>⚠️ Error</h3>
+                <h3>Error</h3>
                 <p>${message}</p>
-                <button class="btn btn-secondary" onclick="location.reload()">Try Again</button>
+                ${suggestionHtml}
+                <div class="error-actions">
+                    ${actionButtons}
+                </div>
             </div>
         `;
         stockResult.style.display = 'block';
@@ -449,6 +492,33 @@ document.addEventListener('DOMContentLoaded', function() {
 .error-message h3 {
     color: #d63638;
     margin-bottom: 15px;
+}
+
+.error-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.fallback-notice {
+    background: #fff3cd;
+    color: #856404;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ffeaa7;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.error-suggestion {
+    color: #646970;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 10px;
 }
 
 .usage-grid {

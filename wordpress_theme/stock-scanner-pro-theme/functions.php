@@ -1787,14 +1787,24 @@ function stock_scanner_inline_critical_css() {
  * Make CSS non-blocking for better performance
  */
 function stock_scanner_async_css($tag, $handle) {
-    // Skip critical CSS and admin styles
-    if (strpos($handle, 'critical') !== false || is_admin()) {
+    // Skip critical CSS, admin styles, and shared styles to prevent MIME issues
+    if (strpos($handle, 'critical') !== false || 
+        strpos($handle, 'shared') !== false || 
+        is_admin()) {
         return $tag;
     }
     
-    // Make CSS non-blocking
-    $tag = str_replace("rel='stylesheet'", "rel='preload' as='style' onload=\"this.onload=null;this.rel='stylesheet'\"", $tag);
-    $tag .= '<noscript>' . str_replace("rel='preload' as='style' onload=\"this.onload=null;this.rel='stylesheet'\"", "rel='stylesheet'", $tag) . '</noscript>';
+    // Ensure we have a valid CSS link before modifying
+    if (strpos($tag, '.css') === false) {
+        return $tag;
+    }
+    
+    // Make CSS non-blocking with proper type attribute
+    $tag = str_replace("rel='stylesheet'", "rel='preload' as='style' type='text/css' onload=\"this.onload=null;this.rel='stylesheet'\"", $tag);
+    
+    // Add fallback noscript tag
+    $fallback_tag = str_replace("rel='preload' as='style' type='text/css' onload=\"this.onload=null;this.rel='stylesheet'\"", "rel='stylesheet' type='text/css'", $tag);
+    $tag .= '<noscript>' . $fallback_tag . '</noscript>';
     
     return $tag;
 }
@@ -1900,5 +1910,31 @@ function stock_scanner_performance_monitor() {
     }
 }
 add_action('wp_loaded', 'stock_scanner_performance_monitor');
+
+/**
+ * Fix MIME types for assets
+ */
+function stock_scanner_fix_mime_types() {
+    // Ensure proper MIME types for assets
+    add_action('send_headers', function() {
+        if (strpos($_SERVER['REQUEST_URI'], '/assets/css/') !== false && strpos($_SERVER['REQUEST_URI'], '.css') !== false) {
+            header('Content-Type: text/css', true);
+        }
+        if (strpos($_SERVER['REQUEST_URI'], '/assets/js/') !== false && strpos($_SERVER['REQUEST_URI'], '.js') !== false) {
+            header('Content-Type: application/javascript', true);
+        }
+    });
+}
+add_action('init', 'stock_scanner_fix_mime_types');
+
+/**
+ * Add MIME type support for CSS and JS files
+ */
+function stock_scanner_add_mime_types($mimes) {
+    $mimes['css'] = 'text/css';
+    $mimes['js'] = 'application/javascript';
+    return $mimes;
+}
+add_filter('upload_mimes', 'stock_scanner_add_mime_types');
 
 ?>

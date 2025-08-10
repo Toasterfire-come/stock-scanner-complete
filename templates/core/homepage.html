@@ -7,11 +7,23 @@
 {% block extra_css %}
 <style>
     .hero-section {
-        background: var(--primary-gradient);
+        background: #4a5a3a;
         color: white;
         padding: 4rem 0;
         text-align: center;
         margin: -2rem -2rem 2rem -2rem;
+        animation: professional-glow 8s ease-in-out infinite;
+    }
+
+    @keyframes professional-glow {
+        0%, 100% { 
+            transform: translateY(0) scale(1);
+            opacity: 0.8;
+        }
+        50% { 
+            transform: translateY(-10px) scale(1.05);
+            opacity: 0.6;
+        }
     }
 
     .hero-section h1 {
@@ -60,6 +72,11 @@
         text-align: center;
         margin-bottom: 3rem;
         color: var(--text-primary);
+        background: #4a5a3a;
+        color: white;
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        animation: professional-glow 8s ease-in-out infinite;
     }
 
     .grid {
@@ -93,7 +110,7 @@
     .card-icon {
         width: 60px;
         height: 60px;
-        background: var(--primary-gradient);
+        background: #4a5a3a;
         border-radius: var(--border-radius);
         display: flex;
         align-items: center;
@@ -101,6 +118,7 @@
         margin: 0 auto 1.5rem;
         font-size: 1.5rem;
         color: white;
+        font-weight: bold;
     }
 
     .endpoint-list {
@@ -186,8 +204,16 @@
     }
 
     .feature-icon {
-        font-size: 3rem;
+        font-size: 1rem;
+        font-weight: bold;
         margin-bottom: 1rem;
+        background: #4a5a3a;
+        color: white;
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        display: inline-block;
+        text-align: center;
+        min-width: 80px;
     }
 
     .code-block {
@@ -248,25 +274,25 @@
         <h2 class="section-title">API Overview</h2>
         <div class="grid grid-2">
             <div class="feature-card">
-                <div class="card-icon">📊</div>
+                <div class="card-icon">DATA</div>
                 <h3>Real-time Stock Data</h3>
                 <p>Access comprehensive real-time stock market data including prices, volumes, market caps, and financial ratios. Our API currently provides access to NYSE-listed stocks.</p>
                 <a href="/api/stocks/" class="btn">View Stock Data</a>
             </div>
             <div class="feature-card">
-                <div class="card-icon">📈</div>
+                <div class="card-icon">TRENDS</div>
                 <h3>Market Analytics</h3>
                 <p>Advanced analytics and insights including trending stocks, market statistics, and performance metrics. Get the data you need for informed trading decisions.</p>
                 <a href="/api/trending/" class="btn">View Analytics</a>
             </div>
             <div class="feature-card">
-                <div class="card-icon">🔔</div>
+                <div class="card-icon">ALERTS</div>
                 <h3>Smart Alerts</h3>
                 <p>Create custom price alerts and notifications. Monitor your portfolio and get notified when your stocks hit target prices or significant market events occur.</p>
                 <a href="/api/alerts/create/" class="btn">Create Alerts</a>
             </div>
             <div class="feature-card">
-                <div class="card-icon">💰</div>
+                <div class="card-icon">REVENUE</div>
                 <h3>Revenue Analytics</h3>
                 <p>Comprehensive revenue tracking and discount management system. Monitor subscription metrics, payment analytics, and promotional code performance.</p>
                 <a href="/revenue/revenue-analytics/" class="btn">View Revenue</a>
@@ -363,17 +389,17 @@
         <h2 class="section-title">Key Features</h2>
         <div class="feature-grid">
             <div class="feature-card">
-                <div class="feature-icon">🚀</div>
+                <div class="feature-icon">SPEED</div>
                 <h3>High Performance</h3>
                 <p>Optimized for speed with sub-100ms response times and 99.9% uptime guarantee.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔒</div>
+                <div class="feature-icon">SECURE</div>
                 <h3>Secure & Reliable</h3>
                 <p>Enterprise-grade security with API authentication and rate limiting protection.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">📱</div>
+                <div class="feature-icon">API</div>
                 <h3>RESTful API</h3>
                 <p>Clean, intuitive REST API design with JSON responses and comprehensive documentation.</p>
             </div>
