@@ -1,140 +1,210 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Scanner - Login</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 400px;
-        }
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .login-header h1 {
-            color: #333;
-            margin: 0;
-            font-size: 1.8rem;
-        }
-        .login-header p {
-            color: #666;
-            margin: 0.5rem 0 0 0;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #555;
-            font-weight: 500;
-        }
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e1e1e1;
-            border-radius: 5px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
-        }
-        input[type="text"]:focus, input[type="password"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .btn-login {
-            width: 100%;
-            padding: 0.75rem;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .btn-login:hover {
-            background: #5a6fd8;
-        }
-        .error-messages {
-            background: #fee;
-            border: 1px solid #fcc;
-            color: #c66;
-            padding: 0.75rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-        }
-        .info-box {
-            background: #e8f4f8;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1>Stock Scanner</h1>
-            <p>Admin Login</p>
-        </div>
+{% extends 'base.html' %}
 
-        {% if form.errors %}
-            <div class="error-messages">
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
+{% block title %}Admin Login | Stock Scanner API{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        background: var(--primary-gradient);
+        padding: 4rem 0;
+        min-height: calc(100vh - 140px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-container {
+        background: var(--bg-white);
+        padding: 3rem;
+        border-radius: var(--border-radius);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .login-header .logo-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin: 0 auto 1rem;
+    }
+
+    .login-header h1 {
+        color: var(--text-primary);
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .login-header p {
+        color: var(--text-secondary);
+        margin: 0.5rem 0 0 0;
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .form-group input[type="text"], 
+    .form-group input[type="password"] {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid var(--border-light);
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        transition: all 0.3s;
+        box-sizing: border-box;
+        background: var(--bg-white);
+    }
+
+    .form-group input[type="text"]:focus, 
+    .form-group input[type="password"]:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 0.875rem;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 0.5rem;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .error-messages {
+        background: #fed7d7;
+        border: 1px solid #feb2b2;
+        color: #742a2a;
+        padding: 1rem;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1.5rem;
+    }
+
+    .error-messages p {
+        margin: 0.25rem 0;
+        font-size: 0.9rem;
+    }
+
+    .info-box {
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 1rem;
+        border-radius: var(--border-radius-sm);
+        margin-top: 1.5rem;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .back-link {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .back-link a {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+        .login-container {
+            padding: 2rem 1.5rem;
+            margin: 1rem;
+        }
+        
+        .main-content {
+            padding: 2rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-header">
+        <div class="logo-icon">📊</div>
+        <h1>Stock Scanner API</h1>
+        <p>Admin Login</p>
+    </div>
+
+    {% if form.errors %}
+        <div class="error-messages">
+            {% for field in form %}
+                {% for error in field.errors %}
                     <p>{{ error }}</p>
                 {% endfor %}
-            </div>
-        {% endif %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="{{ form.username.id_for_label }}">Username:</label>
-                {{ form.username }}
-            </div>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+        </div>
 
-            <div class="form-group">
-                <label for="{{ form.password.id_for_label }}">Password:</label>
-                {{ form.password }}
-            </div>
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+        </div>
 
-            <button type="submit" class="btn-login">Login</button>
-        </form>
+        <button type="submit" class="btn-login">Sign In</button>
 
         {% if next %}
             <input type="hidden" name="next" value="{{ next }}" />
         {% endif %}
+    </form>
 
-        <div class="info-box">
-            <strong>Note:</strong> This is the admin login for Stock Scanner API management.
-            <br>For API access, use the endpoints directly.
-        </div>
+    <div class="info-box">
+        <strong>Admin Access:</strong> This login is for Stock Scanner API management and administration.
+        <br>For API access, use the endpoints directly with proper authentication.
     </div>
-</body>
-</html>
+
+    <div class="back-link">
+        <a href="/">← Back to Homepage</a>
+    </div>
+</div>
+{% endblock %}
