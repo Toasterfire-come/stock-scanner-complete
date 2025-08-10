@@ -11,33 +11,33 @@
     }
     
     .endpoint-card {
-        background: white;
+        background: var(--bg-white);
         padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border-left: 4px solid #e2e8f0;
+        border-radius: var(--border-radius-sm);
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid var(--border-light);
     }
     
     .endpoint-card.success {
-        border-left-color: #48bb78;
+        border-left-color: var(--accent-green);
     }
     
     .endpoint-card.error {
-        border-left-color: #f56565;
+        border-left-color: var(--error-accent);
     }
     
     .endpoint-name {
         font-size: 1.2rem;
         font-weight: 600;
-        color: #2d3748;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
     
     .endpoint-url {
         font-family: 'Monaco', 'Menlo', monospace;
         font-size: 0.9rem;
-        color: #4a5568;
-        background: #f7fafc;
+        color: var(--text-secondary);
+        background: var(--bg-light);
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
         margin-bottom: 0.5rem;
@@ -53,13 +53,13 @@
     }
     
     .status-success {
-        background: #c6f6d5;
-        color: #22543d;
+        background: var(--success-bg);
+        color: var(--success-text);
     }
     
     .status-error {
-        background: #fed7d7;
-        color: #742a2a;
+        background: var(--error-bg);
+        color: var(--error-text);
     }
     
     .stats-grid {
@@ -70,21 +70,21 @@
     }
     
     .stat-card {
-        background: white;
+        background: var(--bg-white);
         padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: var(--border-radius-sm);
+        box-shadow: var(--shadow-sm);
         text-align: center;
     }
     
     .stat-number {
         font-size: 2rem;
         font-weight: 700;
-        color: #667eea;
+        color: var(--primary-blue);
     }
     
     .stat-label {
-        color: #4a5568;
+        color: var(--text-secondary);
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -94,8 +94,8 @@
 
 {% block content %}
 <div class="card">
-    <h1 style="margin-bottom: 1rem; color: #2d3748;">Endpoint Status Check</h1>
-    <p style="color: #4a5568; margin-bottom: 2rem;">
+    <h1 style="margin-bottom: 1rem; color: var(--text-primary);">Endpoint Status Check</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
         Real-time status of all API endpoints and services
     </p>
     
@@ -105,11 +105,11 @@
             <div class="stat-label">Total Endpoints</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number" style="color: #48bb78;">{{ successful }}</div>
+            <div class="stat-number" style="color: var(--accent-green);">{{ successful }}</div>
             <div class="stat-label">Working</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number" style="color: #f56565;">{{ failed }}</div>
+            <div class="stat-number" style="color: var(--error-accent);">{{ failed }}</div>
             <div class="stat-label">Failed</div>
         </div>
         <div class="stat-card">
@@ -135,13 +135,13 @@
                     {% if endpoint.status == 'success' %}✓ {{ endpoint.status_code }}{% else %}✗ Error{% endif %}
                 </span>
                 {% if endpoint.status == 'success' %}
-                <span style="color: #4a5568; font-size: 0.875rem;">
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">
                     {{ endpoint.response_time|floatformat:3 }}s
                 </span>
                 {% endif %}
             </div>
             {% if endpoint.error %}
-            <div style="margin-top: 0.5rem; color: #742a2a; font-size: 0.875rem;">
+            <div style="margin-top: 0.5rem; color: var(--error-text); font-size: 0.875rem;">
                 Error: {{ endpoint.error }}
             </div>
             {% endif %}
@@ -149,7 +149,7 @@
         {% endfor %}
     </div>
     
-    <div style="margin-top: 2rem; padding: 1rem; background: #f7fafc; border-radius: 6px;">
+    <div style="margin-top: 2rem; padding: 1rem; background: var(--bg-light); border-radius: var(--border-radius-sm);">
         <strong>Legend:</strong><br>
         <span class="status-badge status-success" style="margin-right: 1rem;">✓ Working</span>
         <span class="status-badge status-error">✗ Failed</span>
