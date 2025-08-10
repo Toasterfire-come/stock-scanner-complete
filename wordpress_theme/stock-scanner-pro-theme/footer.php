@@ -138,6 +138,13 @@
 </div><!-- #page -->
 
 <?php wp_footer(); ?>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('<?php echo esc_js( get_stylesheet_directory_uri() . '/service-worker.js' ); ?>');
+  });
+}
+</script>
 
 
 <script>

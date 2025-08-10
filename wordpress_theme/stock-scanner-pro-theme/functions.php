@@ -56,6 +56,10 @@ function stock_scanner_scripts() {
     if (file_exists(get_template_directory() . '/assets/js/theme.js')) {
         wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/assets/js/theme.js', array('jquery'), '2.0.0', true);
     }
+    // Chart.js theme defaults
+    if (file_exists(get_template_directory() . '/assets/js/chart-theme.js')) {
+        wp_enqueue_script('stock-scanner-chart-theme', get_template_directory_uri() . '/assets/js/chart-theme.js', array('chart-js'), '1.0.0', true);
+    }
     
     // Enqueue plugin integration JavaScript
     if (file_exists(get_template_directory() . '/assets/js/plugin-integration.js')) {
@@ -845,8 +849,10 @@ function stock_scanner_head_seo() {
     
     // Preconnect to external domains for performance
     echo '<link rel="preconnect" href="https://fonts.googleapis.com">';
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
     echo '<link rel="preconnect" href="https://cdn.jsdelivr.net">';
     echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">';
+    echo '<link rel="dns-prefetch" href="//fonts.gstatic.com">';
     echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
 }
 add_action('wp_head', 'stock_scanner_head_seo', 1);
