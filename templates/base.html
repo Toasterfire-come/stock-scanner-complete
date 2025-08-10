@@ -107,7 +107,7 @@
         }
 
         .header {
-            background: var(--primary-gradient);
+            background: #4a5a3a;
             color: white;
             padding: 1rem 0;
             box-shadow: var(--shadow-md);
@@ -140,7 +140,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
             backdrop-filter: blur(10px);
         }
 
@@ -190,12 +192,15 @@
 
         .mobile-menu-toggle {
             display: none;
-            background: none;
-            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            font-size: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
-            padding: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            backdrop-filter: blur(10px);
         }
 
         .main-content {
@@ -405,7 +410,7 @@
     <header class="header">
         <div class="container">
             <div class="logo">
-                <div class="logo-icon">📊</div>
+                <div class="logo-icon">SS</div>
                 <h1><a href="/">Stock Scanner API</a></h1>
             </div>
             <nav class="nav" id="nav-menu">
@@ -416,7 +421,7 @@
                 <a href="/health/" {% if 'health' in request.path %}class="active"{% endif %}>Health</a>
                 <a href="/admin/" {% if 'admin' in request.path %}class="active"{% endif %}>Admin</a>
             </nav>
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">MENU</button>
         </div>
     </header>
 

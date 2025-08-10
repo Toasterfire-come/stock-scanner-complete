@@ -390,15 +390,15 @@ function stock_scanner_pricing_shortcode($atts) {
     <div class="pricing-table">        
         <div class="pricing-plan bronze-plan">
             <div class="plan-header">
-                <h3>🥉 Bronze Plan</h3>
+                <h3>Bronze Plan</h3>
                 <div class="price">$24.99<span>/month</span></div>
             </div>
             <div class="plan-features">
                 <ul>
-                    <li>✅ 1,500 API calls per month</li>
-                    <li>✅ Advanced stock data</li>
-                    <li>✅ Email support</li>
-                    <li>✅ Historical data access</li>
+                    <li>1,500 API calls per month</li>
+                    <li>Advanced stock data</li>
+                    <li>Email support</li>
+                    <li>Historical data access</li>
                 </ul>
             </div>
             <div class="plan-footer">
@@ -413,16 +413,16 @@ function stock_scanner_pricing_shortcode($atts) {
             <div class="plan-badge">Most Popular</div>
             <?php endif; ?>
             <div class="plan-header">
-                <h3>🥈 Silver Plan</h3>
+                <h3>Silver Plan</h3>
                 <div class="price">$39.99<span>/month</span></div>
             </div>
             <div class="plan-features">
                 <ul>
-                    <li>✅ 5,000 API calls per month</li>
-                    <li>✅ Real-time stock data</li>
-                    <li>✅ Email support</li>
-                    <li>✅ Advanced analytics</li>
-                    <li>✅ Custom alerts</li>
+                    <li>5,000 API calls per month</li>
+                    <li>Real-time stock data</li>
+                    <li>Email support</li>
+                    <li>Advanced analytics</li>
+                    <li>Custom alerts</li>
                 </ul>
             </div>
             <div class="plan-footer">
@@ -434,17 +434,17 @@ function stock_scanner_pricing_shortcode($atts) {
         
         <div class="pricing-plan gold-plan">
             <div class="plan-header">
-                <h3>🥇 Gold Plan</h3>
+                <h3>Gold Plan</h3>
                 <div class="price">$89.99<span>/month</span></div>
             </div>
             <div class="plan-features">
                 <ul>
-                    <li>✅ Unlimited API calls</li>
-                    <li>✅ Premium stock data</li>
-                    <li>✅ Phone support</li>
-                    <li>✅ Advanced analytics</li>
-                    <li>✅ API access</li>
-                    <li>✅ White-label options</li>
+                    <li>Unlimited API calls</li>
+                    <li>Premium stock data</li>
+                    <li>Phone support</li>
+                    <li>Advanced analytics</li>
+                    <li>API access</li>
+                    <li>White-label options</li>
                 </ul>
             </div>
             <div class="plan-footer">
@@ -459,7 +459,7 @@ function stock_scanner_pricing_shortcode($atts) {
     <div class="free-plan-section">
         <div class="pricing-plan free-plan-centered">
             <div class="plan-header">
-                <h3>🆓 Free Plan</h3>
+                <h3>Free Plan</h3>
                 <div class="price">$0<span>/month</span></div>
             </div>
             <div class="plan-features">
