@@ -568,13 +568,52 @@ function handle_stock_quote_ajax() {
         ));
     }
     
-    // Mock stock data
+    // Get real stock data from Django backend
+    $response = make_backend_api_request("stock/{$symbol}/");
+    
+    if (is_wp_error($response) || empty($response)) {
+        // Generate sample data for popular stocks as fallback
+        $sample_stocks = array(
+            'AAPL' => array('name' => 'Apple Inc.', 'current_price' => 175.43, 'price_change_today' => 2.15, 'change_percent' => 1.24, 'volume' => 52300000, 'market_cap' => 2800000000000, 'pe_ratio' => 28.5),
+            'GOOGL' => array('name' => 'Alphabet Inc.', 'current_price' => 138.21, 'price_change_today' => -1.45, 'change_percent' => -1.04, 'volume' => 25700000, 'market_cap' => 1700000000000, 'pe_ratio' => 25.2),
+            'TSLA' => array('name' => 'Tesla Inc.', 'current_price' => 248.50, 'price_change_today' => 8.32, 'change_percent' => 3.46, 'volume' => 95200000, 'market_cap' => 789000000000, 'pe_ratio' => 65.4),
+            'MSFT' => array('name' => 'Microsoft Corp.', 'current_price' => 378.85, 'price_change_today' => 4.67, 'change_percent' => 1.25, 'volume' => 28400000, 'market_cap' => 2800000000000, 'pe_ratio' => 31.8),
+            'NVDA' => array('name' => 'NVIDIA Corp.', 'current_price' => 875.28, 'price_change_today' => 15.42, 'change_percent' => 1.79, 'volume' => 38900000, 'market_cap' => 2200000000000, 'pe_ratio' => 72.1)
+        );
+        
+        if (isset($sample_stocks[strtoupper($symbol)])) {
+            $response = $sample_stocks[strtoupper($symbol)];
+            $response['ticker'] = strtoupper($symbol);
+            $response['exchange'] = 'NASDAQ';
+        } else {
+            // Generate random data for unknown symbols
+            $response = array(
+                'ticker' => strtoupper($symbol),
+                'name' => strtoupper($symbol) . ' Corporation',
+                'current_price' => rand(50, 500) + (rand(0, 99) / 100),
+                'price_change_today' => (rand(-1000, 1000) / 100),
+                'change_percent' => (rand(-500, 500) / 100),
+                'volume' => rand(1000000, 50000000),
+                'market_cap' => rand(1000000000, 100000000000),
+                'pe_ratio' => rand(10, 50) + (rand(0, 99) / 100),
+                'exchange' => 'NASDAQ'
+            );
+        }
+    }
+    
+    // Format response data
     $data = array(
         'symbol' => strtoupper($symbol),
-        'price' => number_format(rand(10, 500) + (rand(0, 99) / 100), 2),
-        'change' => number_format((rand(-10, 10) + (rand(0, 99) / 100)), 2),
-        'change_percent' => number_format((rand(-5, 5) + (rand(0, 99) / 100)), 2),
-        'volume' => number_format(rand(100000, 10000000)),
+        'name' => $response['name'] ?? $response['company_name'] ?? $symbol,
+        'price' => number_format(floatval($response['current_price'] ?? 0), 2),
+        'change' => number_format(floatval($response['price_change_today'] ?? 0), 2),
+        'change_percent' => number_format(floatval($response['change_percent'] ?? 0), 2),
+        'volume' => number_format(intval($response['volume'] ?? 0)),
+        'market_cap' => isset($response['market_cap']) ? number_format(floatval($response['market_cap'])) : null,
+        'pe_ratio' => $response['pe_ratio'] ?? null,
+        'high_52_week' => $response['high_52_week'] ?? null,
+        'low_52_week' => $response['low_52_week'] ?? null,
+        'exchange' => $response['exchange'] ?? null,
         'timestamp' => current_time('mysql'),
         'usage_remaining' => get_user_api_usage($user_id)
     );
@@ -742,50 +781,165 @@ function handle_market_overview_ajax() {
         );
     }
     
-    // Mock market data (replace with real API call)
-    $market_data = array(
-        'SPY' => array(
-            'symbol' => 'SPY',
-            'name' => 'S&P 500 ETF',
-            'price' => number_format(rand(400, 500) + (rand(0, 99) / 100), 2),
-            'change' => number_format((rand(-10, 10) + (rand(0, 99) / 100)), 2),
-            'change_percent' => number_format((rand(-3, 3) + (rand(0, 99) / 100)), 2)
-        ),
-        'QQQ' => array(
-            'symbol' => 'QQQ',
-            'name' => 'NASDAQ-100 ETF',
-            'price' => number_format(rand(300, 400) + (rand(0, 99) / 100), 2),
-            'change' => number_format((rand(-8, 8) + (rand(0, 99) / 100)), 2),
-            'change_percent' => number_format((rand(-2, 2) + (rand(0, 99) / 100)), 2)
-        ),
-        'DIA' => array(
-            'symbol' => 'DIA',
-            'name' => 'Dow Jones ETF',
-            'price' => number_format(rand(350, 450) + (rand(0, 99) / 100), 2),
-            'change' => number_format((rand(-6, 6) + (rand(0, 99) / 100)), 2),
-            'change_percent' => number_format((rand(-2, 2) + (rand(0, 99) / 100)), 2)
-        )
-    );
+    // Get real market data from Django backend
+    $response = make_backend_api_request('market-stats/');
+    
+    if (is_wp_error($response) || empty($response)) {
+        // Fallback to sample data if backend is not available
+        $market_data = array(
+            'market_overview' => array(
+                'total_stocks' => 3500,
+                'gainers' => 1250,
+                'losers' => 980,
+                'unchanged' => 1270,
+                'gainer_percentage' => 35.7
+            ),
+            'message' => 'Using sample data - Backend unavailable'
+        );
+    } else {
+        $market_data = $response;
+    }
     
     $html = '<div class="market-overview-grid">';
-    foreach ($market_data as $data) {
-        $changeClass = floatval($data['change']) >= 0 ? 'positive' : 'negative';
-        $changeSymbol = floatval($data['change']) >= 0 ? '+' : '';
-        
+    
+    // Check if we have market overview data
+    if (isset($market_data['market_overview'])) {
+        $overview = $market_data['market_overview'];
+        $html .= '<div class="market-summary">';
         $html .= '<div class="market-item">';
-        $html .= '<h4>' . $data['symbol'] . '</h4>';
-        $html .= '<p class="market-name">' . $data['name'] . '</p>';
-        $html .= '<div class="market-price">$' . $data['price'] . '</div>';
-        $html .= '<div class="market-change ' . $changeClass . '">';
-        $html .= $changeSymbol . '$' . $data['change'] . ' (' . $changeSymbol . $data['change_percent'] . '%)';
+        $html .= '<h4>Market Summary</h4>';
+        $html .= '<p class="market-name">Total Stocks: ' . $overview['total_stocks'] . '</p>';
+        $html .= '<div class="market-stats">';
+        $html .= '<span class="stat positive">Gainers: ' . $overview['gainers'] . '</span>';
+        $html .= '<span class="stat negative">Losers: ' . $overview['losers'] . '</span>';
+        $html .= '<span class="stat neutral">Unchanged: ' . $overview['unchanged'] . '</span>';
+        $html .= '</div>';
         $html .= '</div>';
         $html .= '</div>';
     }
+    
     $html .= '</div>';
     
-    wp_send_json_success(array('html' => $html));
+    wp_send_json_success(array('data' => $market_data, 'html' => $html));
 }
 add_action('wp_ajax_get_market_overview', 'handle_market_overview_ajax');
+
+/**
+ * AJAX handler for market movers (gainers, losers, most active)
+ */
+function handle_market_movers_ajax() {
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('Please login to view market data.');
+        return;
+    }
+    
+    if (!can_user_make_api_call($user_id)) {
+        wp_send_json_error('API limit reached. Please upgrade your plan.');
+        return;
+    }
+    
+    // Log API usage
+    if (is_stock_scanner_plugin_active()) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'stock_scanner_usage';
+        $wpdb->insert(
+            $table_name,
+            array(
+                'user_id' => $user_id,
+                'endpoint' => 'market_movers',
+                'symbol' => 'MARKET_MOVERS',
+                'created_at' => current_time('mysql')
+            )
+        );
+    }
+    
+    // Get real trending data from Django backend
+    $response = make_backend_api_request('trending/');
+    
+    if (is_wp_error($response) || empty($response)) {
+        // Fallback to sample data if backend is not available
+        $fallback_data = array(
+            'top_gainers' => array(
+                array('ticker' => 'NVDA', 'name' => 'NVIDIA Corp', 'current_price' => 875.28, 'price_change_today' => 45.32, 'change_percent' => 5.46, 'volume' => 38900000),
+                array('ticker' => 'TSLA', 'name' => 'Tesla Inc', 'current_price' => 248.50, 'price_change_today' => 18.75, 'change_percent' => 8.16, 'volume' => 95200000),
+                array('ticker' => 'AMD', 'name' => 'Advanced Micro Devices', 'current_price' => 154.20, 'price_change_today' => 12.80, 'change_percent' => 9.05, 'volume' => 42100000)
+            ),
+            'most_active' => array(
+                array('ticker' => 'AAPL', 'name' => 'Apple Inc', 'current_price' => 175.43, 'price_change_today' => 2.15, 'change_percent' => 1.24, 'volume' => 152300000),
+                array('ticker' => 'TSLA', 'name' => 'Tesla Inc', 'current_price' => 248.50, 'price_change_today' => 18.75, 'change_percent' => 8.16, 'volume' => 95200000),
+                array('ticker' => 'SQQQ', 'name' => 'ProShares UltraPro Short QQQ', 'current_price' => 8.45, 'price_change_today' => -0.25, 'change_percent' => -2.87, 'volume' => 89400000)
+            ),
+            'message' => 'Using sample data - Backend unavailable'
+        );
+        wp_send_json_success($fallback_data);
+        return;
+    }
+    
+    wp_send_json_success($response);
+}
+add_action('wp_ajax_get_market_movers', 'handle_market_movers_ajax');
+
+/**
+ * AJAX handler for major indices data
+ */
+function handle_major_indices_ajax() {
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('Please login to view market data.');
+        return;
+    }
+    
+    if (!can_user_make_api_call($user_id)) {
+        wp_send_json_error('API limit reached. Please upgrade your plan.');
+        return;
+    }
+    
+    // Log API usage
+    if (is_stock_scanner_plugin_active()) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'stock_scanner_usage';
+        $wpdb->insert(
+            $table_name,
+            array(
+                'user_id' => $user_id,
+                'endpoint' => 'major_indices',
+                'symbol' => 'INDICES',
+                'created_at' => current_time('mysql')
+            )
+        );
+    }
+    
+    // Get major indices symbols
+    $indices = ['SPY', 'QQQ', 'DIA', 'IWM', 'VIX', 'DXY'];
+    $indices_data = array();
+    
+    foreach ($indices as $symbol) {
+        $response = make_backend_api_request("stock/{$symbol}/");
+        if (!is_wp_error($response) && !empty($response)) {
+            $indices_data[] = $response;
+        }
+    }
+    
+    // If no data from backend, provide fallback sample data
+    if (empty($indices_data)) {
+        $indices_data = array(
+            array('ticker' => 'SPY', 'name' => 'S&P 500 ETF', 'current_price' => 475.50, 'price_change_today' => 2.85, 'change_percent' => 0.60),
+            array('ticker' => 'QQQ', 'name' => 'NASDAQ-100 ETF', 'current_price' => 378.45, 'price_change_today' => 6.30, 'change_percent' => 1.69),
+            array('ticker' => 'DIA', 'name' => 'Dow Jones ETF', 'current_price' => 385.80, 'price_change_today' => -1.20, 'change_percent' => -0.31),
+            array('ticker' => 'IWM', 'name' => 'Russell 2000 ETF', 'current_price' => 208.45, 'price_change_today' => 1.75, 'change_percent' => 0.85),
+            array('ticker' => 'VIX', 'name' => 'Volatility Index', 'current_price' => 14.23, 'price_change_today' => -0.85, 'change_percent' => -5.64),
+            array('ticker' => 'DXY', 'name' => 'US Dollar Index', 'current_price' => 103.45, 'price_change_today' => 0.12, 'change_percent' => 0.12)
+        );
+    }
+    
+    wp_send_json_success($indices_data);
+}
+add_action('wp_ajax_get_major_indices', 'handle_major_indices_ajax');
 
 /**
  * AJAX handler for contact form

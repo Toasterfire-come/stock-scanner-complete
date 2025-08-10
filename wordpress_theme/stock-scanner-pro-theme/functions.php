@@ -1569,10 +1569,10 @@ function get_user_limits($user_id = null) {
  */
 function get_backend_api_url($endpoint = '') {
     $api_settings = get_option('stock_scanner_api_settings', array());
-    $backend_url = $api_settings['backend_url'] ?? '';
+    $backend_url = $api_settings['backend_url'] ?? 'http://localhost:8000';
     
     if (empty($backend_url)) {
-        return false;
+        $backend_url = 'http://localhost:8000';
     }
     
     return rtrim($backend_url, '/') . '/api/' . ltrim($endpoint, '/');
