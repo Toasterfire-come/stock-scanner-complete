@@ -108,12 +108,12 @@ add_action('wp_enqueue_scripts', function() {
     }
 
     // Shared functions (managers for News/Watchlist/Portfolio)
-    if (($is_watchlist || $is_news || $is_portfolio) && file_exists(get_template_directory() . '/assets/js/shared-functions.js')) {
-        wp_enqueue_script('stock-scanner-shared', get_template_directory_uri() . '/assets/js/shared-functions.js', ['jquery'], '2.0.0', true);
+    if (($is_watchlist || $is_news || $is_portfolio) && file_exists(get_template_directory() . '/assets/js/shared/shared-functions.js')) {
+        wp_enqueue_script('stock-scanner-shared', get_template_directory_uri() . '/assets/js/shared/shared-functions.js', ['jquery'], '2.0.0', true);
     }
     // Enhanced UI helpers (skeletons, offline, cmd palette)
-    if (($is_home || $is_screener || $is_watchlist || $is_news || $is_portfolio) && file_exists(get_template_directory() . '/assets/js/enhanced-ui.js')) {
-        wp_enqueue_script('stock-scanner-enhanced-ui', get_template_directory_uri() . '/assets/js/enhanced-ui.js', ['jquery'], '2.0.0', true);
+    if (($is_home || $is_screener || $is_watchlist || $is_news || $is_portfolio) && file_exists(get_template_directory() . '/assets/js/enhanced/enhanced-ui.js')) {
+        wp_enqueue_script('stock-scanner-enhanced-ui', get_template_directory_uri() . '/assets/js/enhanced/enhanced-ui.js', ['jquery'], '2.0.0', true);
     }
     // Screener advanced features (URL sync, saved screens)
     if ($is_screener && file_exists(get_template_directory() . '/assets/js/advanced-screener.js')) {
