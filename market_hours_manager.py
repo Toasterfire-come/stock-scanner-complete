@@ -225,6 +225,15 @@ class MarketHoursManager:
         
         logger.info(f"Current market phase: {current_phase} ({now_et.strftime('%Y-%m-%d %H:%M:%S %Z')})")
         
+        # Handle market closed period specially
+        if current_phase == 'closed':
+            # Check if we've already handled this closed period
+            if not hasattr(self, '_last_closed_handling') or \
+               (datetime.now() - self._last_closed_handling).total_seconds() > 3600:  # Once per hour
+                self.handle_market_closed()
+                self._last_closed_handling = datetime.now()
+            return
+        
         for component_name, component in self.components.items():
             should_be_active = self.is_component_active(component_name, current_phase)
             is_currently_running = self.check_component_health(component_name)
@@ -306,6 +315,31 @@ class MarketHoursManager:
         finally:
             self.stop_all_components()
             logger.info("Market Hours Manager stopped")
+
+    def handle_market_closed(self):
+        """Handle market closed period - ensure fallback data is available"""
+        logger.info("Market is closed - ensuring fallback data availability")
+        
+        # Stop all active components
+        for component_name in list(self.components.keys()):
+            self.stop_component(component_name)
+        
+        # Populate fallback data to ensure API functionality
+        try:
+            import subprocess
+            result = subprocess.run([
+                self.python_exe, 
+                os.path.join(self.project_root, 'populate_fallback_data.py')
+            ], capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0:
+                logger.info("Fallback data populated successfully")
+            else:
+                logger.error(f"Failed to populate fallback data: {result.stderr}")
+        except Exception as e:
+            logger.error(f"Error running fallback data script: {e}")
+        
+        logger.info("Market closed period handling complete")
 
 def main():
     """Main entry point"""

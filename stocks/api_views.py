@@ -234,35 +234,51 @@ def stock_list_api(request):
             except (ValueError, TypeError):
                 pass
 
-        # Apply category filters with smarter fallback
+        # Apply category filters with market hours awareness
         if category == 'gainers':
+            # Try current day first, then fall back to most recent available data
             queryset = queryset.filter(price_change_today__gt=0)
-            # If no gainers found, try to find stocks with any positive change data
             if queryset.count() == 0:
+                logger.info("No gainers found for today, checking recent price changes...")
                 queryset = base_queryset.filter(
                     Q(price_change_today__gt=0) |
                     Q(change_percent__gt=0) |
                     Q(price_change_week__gt=0)
                 ).exclude(current_price__isnull=True).order_by('-last_updated')
+                
         elif category == 'losers':
+            # Try current day first, then fall back to most recent available data
             queryset = queryset.filter(price_change_today__lt=0)
-            # If no losers found, try to find stocks with any negative change data
             if queryset.count() == 0:
+                logger.info("No losers found for today (market may be closed), checking recent price changes...")
+                # Use weekly or monthly data when daily data is not available
                 queryset = base_queryset.filter(
                     Q(price_change_today__lt=0) |
                     Q(change_percent__lt=0) |
-                    Q(price_change_week__lt=0)
-                ).exclude(current_price__isnull=True).order_by('-last_updated')
+                    Q(price_change_week__lt=0) |
+                    Q(price_change_month__lt=0)
+                ).exclude(current_price__isnull=True)
+                
+                # If still no results, get stocks with the most negative changes available
+                if queryset.count() == 0:
+                    logger.info("No negative price changes found, getting stocks with lowest prices...")
+                    queryset = base_queryset.filter(
+                        current_price__isnull=False,
+                        current_price__gt=0
+                    ).order_by('current_price')  # Lowest priced stocks
+                    
         elif category == 'high_volume':
             queryset = queryset.filter(volume__isnull=False).exclude(volume=0)
             # If no high volume stocks found, get any stocks with volume data
             if queryset.count() == 0:
                 queryset = base_queryset.filter(volume__isnull=False).order_by('-volume', '-last_updated')
+                
         elif category == 'large_cap':
             queryset = queryset.filter(market_cap__gte=10000000000)  # $10B+
             # If no large cap found, try lower threshold
             if queryset.count() == 0:
                 queryset = base_queryset.filter(market_cap__gte=5000000000).order_by('-market_cap', '-last_updated')
+                
         elif category == 'small_cap':
             queryset = queryset.filter(market_cap__lt=2000000000, market_cap__gt=0)  # < $2B
             # If no small cap found, try different range
