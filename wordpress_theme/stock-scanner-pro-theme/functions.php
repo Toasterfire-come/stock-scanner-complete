@@ -182,7 +182,7 @@ function stock_scanner_clear_existing_pages() {
         'dashboard', 'stock-scanner', 'stock-screener', 'stock-news', 'watchlist', 'market-overview', 'account', 
         'premium-plans', 'payment-success', 'payment-cancelled', 'contact', 
         'about', 'privacy-policy', 'terms-of-service', 'faq', 'stock-search',
-        'news-feed', 'portfolio', 'alerts', 'help', 'api-docs',
+        'news-feed', 'personalized-news', 'portfolio', 'alerts', 'help', 'api-docs',
         // Also remove plugin-created slugs to avoid duplicates
         'stock-scanner-dashboard', 'watchlists', 'analytics'
     );

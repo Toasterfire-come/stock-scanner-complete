@@ -14,6 +14,25 @@ get_header(); ?>
         </div>
 
         <div class="news-container">
+            <!-- Tabs for categories and personalized feed -->
+            <ul class="nav nav-tabs" id="news-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="personalized-tab" data-bs-toggle="tab" data-bs-target="#personalized" type="button" role="tab">For You</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="business-tab" data-bs-toggle="tab" data-bs-target="#business" type="button" role="tab">Business</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="technology-tab" data-bs-toggle="tab" data-bs-target="#technology" type="button" role="tab">Technology</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="markets-tab" data-bs-toggle="tab" data-bs-target="#markets" type="button" role="tab">Markets</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#earnings" type="button" role="tab">Earnings</button>
+                </li>
+            </ul>
+
             <!-- News Filters -->
             <div class="news-filters-section">
                 <div class="filters-card">
@@ -31,12 +50,10 @@ get_header(); ?>
                                 <option value="commodities">Commodities</option>
                             </select>
                         </div>
-                        
                         <div class="filter-group">
                             <label for="news-symbol">Stock Symbol:</label>
                             <input type="text" id="news-symbol" placeholder="e.g., AAPL, GOOGL" maxlength="10" />
                         </div>
-                        
                         <div class="filter-group">
                             <label for="news-timeframe">Timeframe:</label>
                             <select id="news-timeframe">
@@ -45,7 +62,6 @@ get_header(); ?>
                                 <option value="month">This Month</option>
                             </select>
                         </div>
-                        
                         <button id="apply-filters" class="btn btn-primary">Apply Filters</button>
                         <button id="clear-filters" class="btn btn-secondary">Clear</button>
                     </div>
@@ -56,28 +72,39 @@ get_header(); ?>
             <div class="breaking-news-section">
                 <div class="breaking-news-banner">
                     <span class="breaking-label">🔴 BREAKING</span>
-                    <div class="breaking-news-text" id="breaking-news-text">
-                        Loading latest breaking news...
-                    </div>
+                    <div class="breaking-news-text" id="breaking-news-text">Loading latest breaking news...</div>
                 </div>
             </div>
 
-            <!-- News Feed -->
+            <!-- Tabbed News Feeds -->
+            <div class="tab-content" id="news-tab-content">
+                <div class="tab-pane fade show active" id="personalized" role="tabpanel">
+                    <div class="news-feed" id="personalized-feed"></div>
+                </div>
+                <div class="tab-pane fade" id="business" role="tabpanel">
+                    <div class="news-feed" id="business-feed"></div>
+                </div>
+                <div class="tab-pane fade" id="technology" role="tabpanel">
+                    <div class="news-feed" id="technology-feed"></div>
+                </div>
+                <div class="tab-pane fade" id="markets" role="tabpanel">
+                    <div class="news-feed" id="markets-feed"></div>
+                </div>
+                <div class="tab-pane fade" id="earnings" role="tabpanel">
+                    <div class="news-feed" id="earnings-feed"></div>
+                </div>
+            </div>
+
+            <!-- Controls -->
             <div class="news-feed-section">
                 <div class="news-header">
                     <h2>📈 Latest News</h2>
                     <button id="refresh-news" class="btn btn-outline">🔄 Refresh</button>
                 </div>
-                
                 <div class="loading-indicator" id="news-loading" style="display: none;">
                     <div class="spinner"></div>
                     <p>Loading latest news...</p>
                 </div>
-                
-                <div id="news-feed" class="news-feed">
-                    <!-- News articles will be loaded here -->
-                </div>
-                
                 <div class="load-more-section">
                     <button id="load-more-news" class="btn btn-secondary">Load More News</button>
                 </div>
@@ -86,9 +113,7 @@ get_header(); ?>
             <!-- Trending Topics -->
             <div class="trending-section">
                 <h3>🔥 Trending Topics</h3>
-                <div id="trending-topics" class="trending-topics">
-                    <!-- Trending topics will be loaded here -->
-                </div>
+                <div id="trending-topics" class="trending-topics"></div>
             </div>
         </div>
     </div>
@@ -434,193 +459,78 @@ get_header(); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const newsCategory = document.getElementById('news-category');
-    const newsSymbol = document.getElementById('news-symbol');
-    const newsTimeframe = document.getElementById('news-timeframe');
-    const applyFiltersBtn = document.getElementById('apply-filters');
-    const clearFiltersBtn = document.getElementById('clear-filters');
-    const refreshNewsBtn = document.getElementById('refresh-news');
-    const loadMoreBtn = document.getElementById('load-more-news');
-    const newsFeed = document.getElementById('news-feed');
-    const newsLoading = document.getElementById('news-loading');
-    const breakingNewsText = document.getElementById('breaking-news-text');
-    const trendingTopics = document.getElementById('trending-topics');
+  const feeds = {
+    'personalized': document.getElementById('personalized-feed'),
+    'business': document.getElementById('business-feed'),
+    'technology': document.getElementById('technology-feed'),
+    'markets': document.getElementById('markets-feed'),
+    'earnings': document.getElementById('earnings-feed')
+  };
 
-    let currentPage = 1;
-    let isLoading = false;
+  const newsLoading = document.getElementById('news-loading');
 
-    // Event listeners
-    applyFiltersBtn.addEventListener('click', function() {
-        currentPage = 1;
-        loadNews(true);
+  function renderArticles(container, items) {
+    container.innerHTML = '';
+    items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'news-article';
+      el.innerHTML = `
+        <div class="article-header"><span class="article-category">${item.category}</span><span class="article-time">${item.time}</span></div>
+        <h3 class="article-title">${item.title}</h3>
+        <p class="article-summary">${item.summary}</p>
+        <div class="article-footer"><span class="article-source">📰 ${item.source}</span><div class="article-symbols">${(item.symbols||[]).map(s=>`<span class='symbol-tag'>${s}</span>`).join('')}</div></div>
+      `;
+      container.appendChild(el);
     });
+  }
 
-    clearFiltersBtn.addEventListener('click', function() {
-        newsCategory.value = 'all';
-        newsSymbol.value = '';
-        newsTimeframe.value = 'today';
-        currentPage = 1;
-        loadNews(true);
+  function mock(category) {
+    const base = ['business','technology','markets','earnings'];
+    const cat = category === 'personalized' ? base[Math.floor(Math.random()*base.length)] : category;
+    const templates = [
+      { title: 'Market Opens Higher on Optimism', summary: 'Stocks rally amid positive macro data and earnings beats.' },
+      { title: 'Analysts Upgrade Major Tech Names', summary: 'Upgrades drive momentum in large-cap tech leaders.' },
+      { title: 'Energy Stocks Gain on Supply Shift', summary: 'Commodity trends boost energy sector performance.' },
+    ];
+    const sources = ['Reuters','Bloomberg','MarketWatch','CNBC'];
+    const symbols = ['AAPL','MSFT','NVDA','AMZN','TSLA','GOOGL'];
+    return Array.from({length: 6}, (_, i) => {
+      const t = templates[i % templates.length];
+      return {
+        category: cat,
+        time: new Date(Date.now() - Math.random()*86400000).toLocaleString(),
+        title: t.title,
+        summary: t.summary,
+        source: sources[Math.floor(Math.random()*sources.length)],
+        symbols: symbols.slice(0, Math.floor(Math.random()*3)+1)
+      };
     });
+  }
 
-    refreshNewsBtn.addEventListener('click', function() {
-        currentPage = 1;
-        loadNews(true);
-        loadBreakingNews();
-        loadTrendingTopics();
+  function loadFeed(key, clear=true) {
+    if (!feeds[key]) return;
+    newsLoading.style.display = 'block';
+    setTimeout(()=>{
+      renderArticles(feeds[key], mock(key));
+      newsLoading.style.display = 'none';
+    }, 700);
+  }
+
+  // Initial loads
+  Object.keys(feeds).forEach(k=>loadFeed(k));
+
+  document.getElementById('refresh-news').addEventListener('click', ()=>{
+    const active = document.querySelector('#news-tabs .nav-link.active');
+    const target = active?.getAttribute('data-bs-target')?.substring(1) || 'personalized';
+    loadFeed(target, true);
+  });
+
+  document.querySelectorAll('#news-tabs .nav-link').forEach(btn=>{
+    btn.addEventListener('shown.bs.tab', (e)=>{
+      const target = e.target.getAttribute('data-bs-target').substring(1);
+      loadFeed(target, false);
     });
-
-    loadMoreBtn.addEventListener('click', function() {
-        currentPage++;
-        loadNews(false);
-    });
-
-    // Load initial data
-    loadNews(true);
-    loadBreakingNews();
-    loadTrendingTopics();
-
-    function loadNews(clearExisting = false) {
-        if (isLoading) return;
-        
-        isLoading = true;
-        newsLoading.style.display = 'block';
-        
-        if (clearExisting) {
-            newsFeed.innerHTML = '';
-        }
-
-        // Simulate API call with mock data
-        setTimeout(() => {
-            const mockNews = generateMockNews();
-            displayNews(mockNews, clearExisting);
-            newsLoading.style.display = 'none';
-            isLoading = false;
-        }, 1000);
-    }
-
-    function generateMockNews() {
-        const categories = ['general', 'earnings', 'mergers', 'ipo', 'crypto', 'commodities'];
-        const symbols = ['AAPL', 'GOOGL', 'TSLA', 'MSFT', 'AMZN', 'NVDA', 'META', 'NFLX'];
-        const sources = ['Reuters', 'Bloomberg', 'MarketWatch', 'CNBC', 'Financial Times', 'Wall Street Journal'];
-        
-        const newsTemplates = [
-            {
-                title: "Tech Giants Show Strong Q4 Performance Despite Market Volatility",
-                summary: "Major technology companies reported better-than-expected earnings, driving market optimism despite ongoing economic uncertainties."
-            },
-            {
-                title: "Federal Reserve Signals Potential Rate Changes in Upcoming Meeting",
-                summary: "Market analysts anticipate significant monetary policy decisions that could impact investment strategies across all sectors."
-            },
-            {
-                title: "Breakthrough AI Technology Drives Semiconductor Stock Rally",
-                summary: "Advanced artificial intelligence applications are creating new opportunities in the semiconductor industry, boosting related stock prices."
-            },
-            {
-                title: "Energy Sector Sees Major Investment Shift Toward Renewables",
-                summary: "Traditional energy companies are pivoting toward sustainable solutions, attracting significant institutional investment."
-            },
-            {
-                title: "Healthcare Innovation Sparks Biotech Stock Surge",
-                summary: "Revolutionary medical treatments and drug developments are driving unprecedented growth in biotechnology investments."
-            }
-        ];
-
-        return Array.from({length: 8}, (_, i) => {
-            const template = newsTemplates[i % newsTemplates.length];
-            const category = categories[Math.floor(Math.random() * categories.length)];
-            const relatedSymbols = symbols.slice(0, Math.floor(Math.random() * 3) + 1);
-            const source = sources[Math.floor(Math.random() * sources.length)];
-            
-            return {
-                id: Date.now() + i,
-                title: template.title,
-                summary: template.summary,
-                category: category,
-                symbols: relatedSymbols,
-                source: source,
-                time: new Date(Date.now() - Math.random() * 86400000).toLocaleString(),
-                url: '#'
-            };
-        });
-    }
-
-    function displayNews(newsItems, clearExisting) {
-        if (clearExisting) {
-            newsFeed.innerHTML = '';
-        }
-
-        newsItems.forEach(item => {
-            const articleElement = createNewsArticle(item);
-            newsFeed.appendChild(articleElement);
-        });
-    }
-
-    function createNewsArticle(item) {
-        const article = document.createElement('div');
-        article.className = 'news-article';
-        article.onclick = () => openNewsArticle(item);
-        
-        article.innerHTML = `
-            <div class="article-header">
-                <span class="article-category">${item.category}</span>
-                <span class="article-time">${item.time}</span>
-            </div>
-            <h3 class="article-title">${item.title}</h3>
-            <p class="article-summary">${item.summary}</p>
-            <div class="article-footer">
-                <span class="article-source">📰 ${item.source}</span>
-                <div class="article-symbols">
-                    ${item.symbols.map(symbol => `<span class="symbol-tag">${symbol}</span>`).join('')}
-                </div>
-            </div>
-        `;
-        
-        return article;
-    }
-
-    function openNewsArticle(item) {
-        // In a real implementation, this would open the full article
-        alert(`Opening article: ${item.title}\n\nThis would typically open the full article or redirect to the source.`);
-    }
-
-    function loadBreakingNews() {
-        // Simulate breaking news
-        const breakingNews = [
-            "Market opens higher following positive economic data release",
-            "Major tech acquisition announced, shares surge in pre-market trading",
-            "Federal Reserve minutes reveal key insights into future policy direction",
-            "Breakthrough drug approval sends biotech stocks soaring",
-            "Energy sector rally continues amid supply chain improvements"
-        ];
-        
-        const randomNews = breakingNews[Math.floor(Math.random() * breakingNews.length)];
-        breakingNewsText.textContent = randomNews;
-    }
-
-    function loadTrendingTopics() {
-        const topics = [
-            'Artificial Intelligence', 'Electric Vehicles', 'Renewable Energy', 'Biotechnology',
-            'Cryptocurrency', 'Supply Chain', 'Inflation', 'Interest Rates', 'Tech Earnings',
-            'Market Volatility', 'ESG Investing', 'Digital Transformation'
-        ];
-        
-        trendingTopics.innerHTML = topics.map(topic => 
-            `<span class="trending-topic" onclick="searchNewsByTopic('${topic}')">${topic}</span>`
-        ).join('');
-    }
-
-    window.searchNewsByTopic = function(topic) {
-        newsSymbol.value = '';
-        newsCategory.value = 'all';
-        // In a real implementation, this would filter news by topic
-        alert(`Searching news for: ${topic}`);
-        loadNews(true);
-    };
-
-    // Auto-refresh breaking news every 30 seconds
-    setInterval(loadBreakingNews, 30000);
+  });
 });
 </script>
 
