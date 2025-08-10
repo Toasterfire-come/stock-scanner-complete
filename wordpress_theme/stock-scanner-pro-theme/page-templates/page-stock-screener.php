@@ -25,7 +25,7 @@ get_header(); ?>
                 </div>
 
                 <!-- Market Cap Filters -->
-                <div class="filter-section">
+                <div class="filter-section" id="market-cap-filters">
                     <h3>💰 Market Capitalization</h3>
                     <div class="filter-group">
                         <div class="checkbox-group">
@@ -143,7 +143,7 @@ get_header(); ?>
             </div>
 
             <!-- Results Panel -->
-            <?php echo do_shortcode('[stock_screener_tool]'); ?>
+
             <div class="results-panel">
                 <div class="results-header">
                     <h2>📋 Screening Results</h2>
@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function collectFilters() {
         // Collect all filter values
-        const marketCaps = Array.from(document.querySelectorAll('input[value]:checked'))
+        const marketCaps = Array.from(document.querySelectorAll('#market-cap-filters input[type="checkbox"]:checked'))
             .map(cb => cb.value);
         
         return {
@@ -757,11 +757,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function resetAllFilters() {
         // Reset all form inputs
-        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        document.querySelectorAll('.filters-panel input[type="checkbox"]').forEach(cb => {
             cb.checked = cb.value === 'mega' || cb.value === 'large' || cb.value === 'mid' || cb.value === 'small';
         });
-        document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
-        document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+        document.querySelectorAll('.filters-panel input[type="number"]').forEach(input => input.value = '');
+        document.querySelectorAll('.filters-panel select').forEach(select => select.selectedIndex = 0);
         
         // Clear results
         resultsTbody.innerHTML = '';

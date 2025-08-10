@@ -40,15 +40,19 @@ add_action('after_setup_theme', 'stock_scanner_theme_setup');
  */
 function stock_scanner_scripts() {
     // Enqueue theme stylesheet with WordPress admin colors
-    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '2.0.0');
+    $style_file = get_stylesheet_directory() . '/style.css';
+    $style_ver = file_exists($style_file) ? filemtime($style_file) : '2.1.0';
+    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), $style_ver);
     
     // Add shared styles for unified color scheme across pages
     if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
+        $shared_file = get_template_directory() . '/assets/css/shared-styles.css';
+        $shared_ver = file_exists($shared_file) ? filemtime($shared_file) : '2.1.0';
         wp_enqueue_style(
             'stock-scanner-shared-styles',
             get_template_directory_uri() . '/assets/css/shared-styles.css',
             array('stock-scanner-style'),
-            '2.0.0'
+            $shared_ver
         );
     }
     
@@ -115,7 +119,7 @@ add_action('wp_enqueue_scripts', function() {
     }
     // Screener advanced features (URL sync, saved screens)
     if ($is_screener && file_exists(get_template_directory() . '/assets/js/advanced-screener.js')) {
-        wp_enqueue_script('stock-scanner-advanced-screener', get_template_directory_uri() . '/assets/js/advanced-screener.js', ['jquery'], '2.0.0', true);
+        wp_enqueue_script('stock-scanner-advanced-screener', get_template_directory_uri() . '/assets/js/advanced-screener.js', ['jquery','stock-scanner-plugin-js'], '2.0.1', true);
     }
 }, 11);
 
@@ -175,15 +179,23 @@ add_action('after_switch_theme', 'stock_scanner_theme_activation');
  */
 function stock_scanner_clear_existing_pages() {
     $page_slugs = array(
-        'dashboard', 'stock-scanner', 'watchlist', 'market-overview', 'account', 
+        'dashboard', 'stock-scanner', 'stock-screener', 'stock-news', 'watchlist', 'market-overview', 'account', 
         'premium-plans', 'payment-success', 'payment-cancelled', 'contact', 
         'about', 'privacy-policy', 'terms-of-service', 'faq', 'stock-search',
-        'news-feed', 'portfolio', 'alerts', 'help', 'api-docs',
+        'news-feed', 'personalized-news', 'portfolio', 'alerts', 'help', 'api-docs',
         // Also remove plugin-created slugs to avoid duplicates
         'stock-scanner-dashboard', 'watchlists', 'analytics'
     );
     
     foreach ($page_slugs as $slug) {
+        // Redirect deprecated enhanced-watchlist to watchlist
+        if ($slug === 'enhanced-watchlist') {
+            $deprecated = get_page_by_path('enhanced-watchlist');
+            if ($deprecated) {
+                // Update slug to redirect content
+                wp_update_post(array('ID' => $deprecated->ID, 'post_name' => 'watchlist')); // ensure URL matches
+            }
+        }
         $page = get_page_by_path($slug);
         if ($page) {
             wp_delete_post($page->ID, true);
@@ -220,10 +232,17 @@ function stock_scanner_clear_existing_pages() {
 function stock_scanner_create_pages() {
     $pages = array(
         array(
+            'title' => 'Home',
+            'slug' => 'home',
+            'content' => '',
+            'meta_description' => 'Professional stock scanner platform with real-time data, powerful screening, and personalized insights.',
+            'template' => 'page-templates/page-home.php'
+        ),
+        array(
             'title' => 'Dashboard',
             'slug' => 'dashboard',
             'content' => '[stock_scanner_dashboard]',
-            'meta_description' => 'Access your Stock Scanner dashboard with real-time market data, portfolio tracking, and professional stock analysis tools.',
+            'meta_description' => 'Your personalized Stock Scanner dashboard with market overview, usage stats, and quick actions.',
             'template' => 'page-dashboard.php'
         ),
         array(
@@ -243,7 +262,7 @@ function stock_scanner_create_pages() {
         array(
             'title' => 'Stock Screener',
             'slug' => 'stock-screener',
-            'content' => '<div class="page-content-wrapper">[stock_screener_tool]</div>',
+            'content' => '<div class="page-content-wrapper">[stock_scanner_tool]</div>',
             'meta_description' => 'Professional stock screener with advanced filtering options to find stocks matching your investment criteria.',
             'template' => 'page-templates/page-stock-screener.php'
         ),
@@ -255,13 +274,14 @@ function stock_scanner_create_pages() {
             'meta_description' => 'Manage your stock watchlist with real-time price tracking, alerts, and portfolio monitoring tools.',
             'template' => 'page-watchlist.php'
         ),
-        array(
-            'title' => 'Enhanced Watchlist',
-            'slug' => 'enhanced-watchlist',
-            'content' => '',
-            'meta_description' => 'Advanced watchlist management with import/export, performance tracking, and alerts.',
-            'template' => 'page-templates/page-enhanced-watchlist.php'
-        ),
+        // Enhanced Watchlist deprecated in favor of unified Watchlist page
+        // array(
+        //     'title' => 'Enhanced Watchlist',
+        //     'slug' => 'enhanced-watchlist',
+        //     'content' => '',
+        //     'meta_description' => 'Advanced watchlist management with import/export, performance tracking, and alerts.',
+        //     'template' => 'page-templates/page-enhanced-watchlist.php'
+        // ),
         array(
             'title' => 'My Portfolio',
             'slug' => 'portfolio',
@@ -443,6 +463,13 @@ function stock_scanner_create_pages() {
             'content' => '',
             'meta_description' => 'Explore all major pages at a glance.',
             'template' => 'page-sitemap.php'
+        ),
+        array(
+            'title' => 'Personalized News',
+            'slug' => 'personalized-news',
+            'content' => '',
+            'meta_description' => 'Tailored stock market news feed based on your holdings, watchlists, and interests.',
+            'template' => 'page-templates/page-personalized-news.php'
         )
     );
     
@@ -1431,11 +1458,24 @@ add_action('init', function stock_scanner_ensure_pages(){
 
     // Ensure critical feature pages exist without requiring theme re-activation
     $ensure('My Watchlist', 'watchlist', 'page-watchlist.php', '<div class="page-content-wrapper">[stock_watchlist_manager]</div>');
-    $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
+    // Enhanced Watchlist deprecated; use unified Watchlist page
+    // $ensure('Enhanced Watchlist', 'enhanced-watchlist', 'page-templates/page-enhanced-watchlist.php');
     $ensure('My Portfolio', 'portfolio', 'page-templates/page-portfolio.php');
+    $ensure('Personalized News', 'personalized-news', 'page-templates/page-personalized-news.php');
 
     // Enforce correct templates for existing pages that users report redirecting to dashboard
     $ensure_template('stock-news', 'page-templates/page-stock-news.php');
     $ensure_template('stock-screener', 'page-templates/page-stock-screener.php');
+});
+
+// Redirect signed-in users visiting the Home page to the Dashboard
+add_action('template_redirect', function() {
+    if (is_user_logged_in() && (is_front_page() || is_page('home'))) {
+        $dashboard = get_page_by_path('dashboard');
+        if ($dashboard) {
+            wp_redirect(get_permalink($dashboard->ID));
+            exit;
+        }
+    }
 });
 ?>

@@ -686,7 +686,7 @@ class StockScannerAdminSettings {
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php esc_html_e('Enable Enhanced Watchlists', 'stock-scanner'); ?></th>
+                            <th scope="row"><?php esc_html_e('Enable Watchlists', 'stock-scanner'); ?></th>
                             <td>
                                 <label>
                                     <input type="checkbox" name="stock_scanner_feature_settings[enable_watchlists]" 

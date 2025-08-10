@@ -574,7 +574,7 @@ function stock_scanner_fallback_menu() {
     // New feature menu items (only show if user is logged in)
     if (is_user_logged_in()) {
         echo '<li><a href="' . home_url('/portfolio/') . '"><span class="menu-icon">📊</span> My Portfolios</a></li>';
-        echo '<li><a href="' . home_url('/enhanced-watchlist/') . '"><span class="menu-icon">👁️</span> Enhanced Watchlist</a></li>';
+        echo '<li><a href="' . home_url('/watchlist/') . '"><span class="menu-icon">👁️</span> Watchlist</a></li>';
         echo '<li><a href="' . home_url('/personalized-news/') . '"><span class="menu-icon">📰</span> My News Feed</a></li>';
     }
     
