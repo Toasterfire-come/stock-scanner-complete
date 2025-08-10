@@ -36,18 +36,46 @@ function stock_scanner_theme_setup() {
 add_action('after_setup_theme', 'stock_scanner_theme_setup');
 
 /**
- * Enqueue scripts and styles
+ * Enqueue scripts and styles with performance optimizations
  */
 function stock_scanner_scripts() {
-    // Enqueue theme stylesheet with WordPress admin colors
+    // Performance: Inline critical CSS for fastest first paint
+    add_action('wp_head', 'stock_scanner_inline_critical_css', 1);
+    
+    // Enqueue theme stylesheet with WordPress admin colors (non-blocking)
     $style_file = get_stylesheet_directory() . '/style.css';
     $style_ver = file_exists($style_file) ? filemtime($style_file) : '2.1.0';
     wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), $style_ver);
     
+    // Performance: Load CSS non-blocking
+    add_filter('style_loader_tag', 'stock_scanner_async_css', 10, 2);
+    
     // Add shared styles for unified color scheme across pages
     if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
-
+        wp_enqueue_style('stock-scanner-shared', get_template_directory_uri() . '/assets/css/shared-styles.css', array(), $style_ver);
     }
+    
+    // Performance: Enqueue optimized JavaScript
+    wp_enqueue_script(
+        'stock-scanner-performance',
+        get_template_directory_uri() . '/assets/js/performance-optimized.js',
+        array('jquery'),
+        $style_ver,
+        true // Load in footer
+    );
+    
+    // Performance: Add preload hints for critical resources
+    add_action('wp_head', 'stock_scanner_resource_hints', 2);
+    
+    // Performance: Localize script with theme settings
+    wp_localize_script('stock-scanner-performance', 'stockScannerTheme', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('stock_scanner_nonce'),
+        'enablePerformanceMonitoring' => defined('WP_DEBUG') && WP_DEBUG,
+        'lazyLoadOffset' => '50px',
+        'debounceDelay' => 300
+    ));
+}
     
     // Enqueue Chart.js for stock charts
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
@@ -1488,4 +1516,143 @@ add_action('template_redirect', function() {
     wp_safe_redirect($dashboard_url, 302);
     exit;
 });
+
+/**
+ * =======================================================================
+ * PERFORMANCE OPTIMIZATION FUNCTIONS
+ * =======================================================================
+ */
+
+/**
+ * Inline critical CSS for fastest first paint
+ */
+function stock_scanner_inline_critical_css() {
+    $critical_css_file = get_template_directory() . '/assets/css/critical.css';
+    
+    if (file_exists($critical_css_file)) {
+        $critical_css = file_get_contents($critical_css_file);
+        if ($critical_css) {
+            echo '<style id="critical-css">' . $critical_css . '</style>';
+        }
+    }
+}
+
+/**
+ * Make CSS non-blocking for better performance
+ */
+function stock_scanner_async_css($tag, $handle) {
+    // Skip critical CSS and admin styles
+    if (strpos($handle, 'critical') !== false || is_admin()) {
+        return $tag;
+    }
+    
+    // Make CSS non-blocking
+    $tag = str_replace("rel='stylesheet'", "rel='preload' as='style' onload=\"this.onload=null;this.rel='stylesheet'\"", $tag);
+    $tag .= '<noscript>' . str_replace("rel='preload' as='style' onload=\"this.onload=null;this.rel='stylesheet'\"", "rel='stylesheet'", $tag) . '</noscript>';
+    
+    return $tag;
+}
+
+/**
+ * Add resource hints for better performance
+ */
+function stock_scanner_resource_hints() {
+    // DNS prefetch for external resources
+    echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">';
+    echo '<link rel="dns-prefetch" href="//fonts.gstatic.com">';
+    echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
+    
+    // Preconnect to critical external domains
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com">';
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
+    
+    // Preload critical theme assets
+    $theme_dir = get_template_directory_uri();
+    echo '<link rel="preload" href="' . $theme_dir . '/assets/js/performance-optimized.js" as="script">';
+    echo '<link rel="preload" href="' . $theme_dir . '/assets/css/shared-styles.css" as="style">';
+}
+
+/**
+ * Optimize WordPress for performance
+ */
+function stock_scanner_performance_optimizations() {
+    // Remove unnecessary WordPress features that slow down the site
+    remove_action('wp_head', 'wp_generator');
+    remove_action('wp_head', 'wlwmanifest_link');
+    remove_action('wp_head', 'rsd_link');
+    remove_action('wp_head', 'wp_shortlink_wp_head');
+    remove_action('wp_head', 'adjacent_posts_rel_link_wp_head');
+    
+    // Remove emoji scripts (performance drain)
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('wp_print_styles', 'print_emoji_styles');
+    remove_action('admin_print_scripts', 'print_emoji_detection_script');
+    remove_action('admin_print_styles', 'print_emoji_styles');
+    
+    // Disable embeds for better performance
+    remove_action('wp_head', 'wp_oembed_add_discovery_links');
+    remove_action('wp_head', 'wp_oembed_add_host_js');
+    
+    // Remove query strings from static resources for better caching
+    add_filter('script_loader_src', 'stock_scanner_remove_query_strings', 15);
+    add_filter('style_loader_src', 'stock_scanner_remove_query_strings', 15);
+}
+add_action('init', 'stock_scanner_performance_optimizations');
+
+/**
+ * Remove query strings from static resources
+ */
+function stock_scanner_remove_query_strings($src) {
+    if (strpos($src, '?ver=')) {
+        $src = remove_query_arg('ver', $src);
+    }
+    return $src;
+}
+
+/**
+ * Add performance-focused image optimization
+ */
+function stock_scanner_optimize_images($attr, $attachment) {
+    // Add lazy loading to images
+    if (!is_admin() && !empty($attr['src'])) {
+        $attr['loading'] = 'lazy';
+        $attr['decoding'] = 'async';
+        
+        // Add responsive image classes
+        $attr['class'] = (isset($attr['class']) ? $attr['class'] . ' ' : '') . 'optimized-image';
+    }
+    
+    return $attr;
+}
+add_filter('wp_get_attachment_image_attributes', 'stock_scanner_optimize_images', 10, 2);
+
+/**
+ * Enable WordPress caching headers
+ */
+function stock_scanner_add_cache_headers() {
+    if (!is_admin() && !is_user_logged_in()) {
+        // Set cache headers for static content
+        $expires = 604800; // 1 week
+        header('Cache-Control: public, max-age=' . $expires);
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $expires) . ' GMT');
+    }
+}
+add_action('send_headers', 'stock_scanner_add_cache_headers');
+
+/**
+ * Add performance monitoring for logged-in admins
+ */
+function stock_scanner_performance_monitor() {
+    if (current_user_can('administrator') && defined('WP_DEBUG') && WP_DEBUG) {
+        add_action('wp_footer', function() {
+            echo '<script>
+                if (window.wpStockScannerPerf) {
+                    console.log("WordPress Theme Performance Monitoring Enabled");
+                }
+            </script>';
+        });
+    }
+}
+add_action('wp_loaded', 'stock_scanner_performance_monitor');
+
 ?>

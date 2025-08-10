@@ -1,16 +1,34 @@
 /* Stock Scanner Admin Security Dashboard Styles */
 
-/* WordPress Admin Color Palette Integration */
+/* Unified CSS Variables with WordPress Admin Integration */
 :root {
-    --wp-admin-blue: #2271b1;
-    --wp-admin-blue-dark: #135e96;
+    /* Main App Colors (for consistency) */
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-blue: #667eea;
+    --primary-purple: #764ba2;
+    --secondary-blue: #5a6fd8;
+    --accent-green: #38a169;
+    --accent-red: #e53e3e;
+    --text-primary: #2d3748;
+    --text-secondary: #4a5568;
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --border-light: #e2e8f0;
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
+    --border-radius: 12px;
+    --border-radius-sm: 6px;
+    
+    /* WordPress Admin Colors (preserved for compatibility) */
+    --wp-admin-blue: var(--primary-blue);
+    --wp-admin-blue-dark: var(--secondary-blue);
     --wp-admin-gray: #646970;
-    --wp-admin-green: #00a32a;
-    --wp-admin-red: #d63638;
+    --wp-admin-green: var(--accent-green);
+    --wp-admin-red: var(--accent-red);
     --wp-admin-yellow: #dba617;
-    --wp-admin-light-gray: #f6f7f7;
-    --wp-admin-white: #ffffff;
-    --wp-admin-border: #c3c4c7;
+    --wp-admin-light-gray: var(--bg-light);
+    --wp-admin-white: var(--bg-white);
+    --wp-admin-border: var(--border-light);
 }
 
 /* Main Container */
