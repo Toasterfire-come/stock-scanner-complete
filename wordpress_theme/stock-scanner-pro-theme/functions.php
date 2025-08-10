@@ -46,14 +46,7 @@ function stock_scanner_scripts() {
     
     // Add shared styles for unified color scheme across pages
     if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
-        $shared_file = get_template_directory() . '/assets/css/shared-styles.css';
-        $shared_ver = file_exists($shared_file) ? filemtime($shared_file) : '2.1.0';
-        wp_enqueue_style(
-            'stock-scanner-shared-styles',
-            get_template_directory_uri() . '/assets/css/shared-styles.css',
-            array('stock-scanner-style'),
-            $shared_ver
-        );
+
     }
     
     // Enqueue Chart.js for stock charts
@@ -62,6 +55,10 @@ function stock_scanner_scripts() {
     // Enqueue theme JavaScript (check if file exists)
     if (file_exists(get_template_directory() . '/assets/js/theme.js')) {
         wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/assets/js/theme.js', array('jquery'), '2.0.0', true);
+    }
+    // Chart.js theme defaults
+    if (file_exists(get_template_directory() . '/assets/js/chart-theme.js')) {
+        wp_enqueue_script('stock-scanner-chart-theme', get_template_directory_uri() . '/assets/js/chart-theme.js', array('chart-js'), '1.0.0', true);
     }
     
     // Enqueue plugin integration JavaScript
@@ -105,7 +102,8 @@ add_action('wp_enqueue_scripts', function() {
 
     // Bootstrap CSS/JS for theme UI components used by templates (load on needed pages only)
     if ($is_home || $is_screener || $is_watchlist || $is_news || $is_portfolio) {
-        wp_enqueue_style('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', [], '5.3.2');
+        // Bootstrap CSS removed to keep a single site-wide stylesheet
+        // wp_enqueue_style('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', [], '5.3.2');
         wp_enqueue_script('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', [], '5.3.2', true);
     }
 
@@ -851,8 +849,10 @@ function stock_scanner_head_seo() {
     
     // Preconnect to external domains for performance
     echo '<link rel="preconnect" href="https://fonts.googleapis.com">';
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
     echo '<link rel="preconnect" href="https://cdn.jsdelivr.net">';
     echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">';
+    echo '<link rel="dns-prefetch" href="//fonts.gstatic.com">';
     echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">';
 }
 add_action('wp_head', 'stock_scanner_head_seo', 1);
@@ -1150,7 +1150,7 @@ function stock_scanner_custom_css() {
     </style>
     <?php
 }
-add_action('wp_head', 'stock_scanner_custom_css', 20);
+// add_action('wp_head', 'stock_scanner_custom_css', 20);
 
 /**
  * Remove admin bar for non-admins on frontend

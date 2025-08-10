@@ -181,8 +181,6 @@ if ($article['relevance_score'] >= 8) {
     <?php endif; ?>
 </article>
 
-<!-- Component Styles -->
-<style>
 .news-item {
     background: var(--bg-primary, #ffffff);
     border: 1px solid var(--border-color, #e2e8f0);
@@ -507,7 +505,6 @@ if ($article['relevance_score'] >= 8) {
 .news-item.new-article {
     animation: slideInFromTop 0.5s ease-out;
 }
-</style>
 
 <script>
 // Track reading progress for detailed articles

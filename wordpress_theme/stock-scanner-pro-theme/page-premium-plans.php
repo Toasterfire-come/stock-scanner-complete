@@ -6,29 +6,19 @@
 get_header(); ?>
 
 <div class="plans-page">
-<style>
-/* Ensure headings have visible color on gradient backgrounds */
-.plans-page h1, .plans-page h2, .plans-page h3, .plans-page h4, .plans-page h5, .plans-page h6 {
-  -webkit-text-fill-color: initial !important;
-  background: none !important;
-  color: #1d2327 !important;
-}
-/* Improve contrast inside hero */
-.plans-page .hero h1, .plans-page .hero p { color: #fff !important; -webkit-text-fill-color: initial !important; }
-</style>
-    <section class="hero" style="background:linear-gradient(135deg,#2271b1,#135e96);color:#fff;padding:60px 0;">
-        <div class="container" style="max-width:1100px;margin:0 auto;padding:0 20px;">
-            <h1 style="margin:0 0 12px;">Choose Your Plan</h1>
-            <p style="margin:0;opacity:0.9;">Start free. Upgrade anytime. Cancel anytime.</p>
+    <section class="hero">
+        <div class="container-narrow">
+            <h1>Choose Your Plan</h1>
+            <p>Start free. Upgrade anytime. Cancel anytime.</p>
         </div>
     </section>
-    <section class="plans" style="padding:40px 0;background:#f7f8fa;">
-        <div class="container" style="max-width:1100px;margin:0 auto;padding:0 20px;">
+    <section class="plans-section">
+        <div class="container-narrow">
             <?php echo do_shortcode('[stock_scanner_pricing]'); ?>
         </div>
     </section>
-    <section class="faq" style="padding:40px 0;">
-        <div class="container" style="max-width:1100px;margin:0 auto;padding:0 20px;">
+    <section class="faq-section">
+        <div class="container-narrow">
             <div class="card">
                 <h2>Frequently Asked Questions</h2>
                 <details>
