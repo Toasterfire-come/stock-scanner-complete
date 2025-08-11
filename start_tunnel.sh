@@ -70,7 +70,7 @@ start_tunnel() {
         echo "🚀 Starting Cloudflare tunnel (attempt $((retry_count + 1))/$MAX_RETRIES)..."
         
         # Start tunnel with enhanced logging and configuration
-        cloudflared tunnel --loglevel info --protocol quic --retries 5 --max-connection-retries 10 run $TUNNEL_NAME &
+        cloudflared tunnel --loglevel info run $TUNNEL_NAME &
         TUNNEL_PID=$!
         
         # Wait for tunnel to initialize
