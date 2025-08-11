@@ -13,19 +13,23 @@
   // Set global defaults
   try {
     if (Chart.defaults) {
+      // Initialize font object if it doesn't exist
       Chart.defaults.font = Chart.defaults.font || {};
       if (Chart.defaults.font) {
         Chart.defaults.font.family = getComputedStyle(document.body).fontFamily || 'system-ui, sans-serif';
       }
       
+      // Set global text color
       if (Chart.defaults.color !== undefined) {
         Chart.defaults.color = palette.text;
       }
       
-      // Plugin defaults
+      // Plugin defaults with proper null checks
       if (Chart.defaults.plugins) {
-        if (Chart.defaults.plugins.legend && Chart.defaults.plugins.legend.labels) {
+        if (Chart.defaults.plugins.legend) {
+          Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
           Chart.defaults.plugins.legend.labels.boxWidth = 12;
+          Chart.defaults.plugins.legend.labels.color = palette.text;
         }
         
         if (Chart.defaults.plugins.tooltip) {
