@@ -49,6 +49,12 @@ function stock_scanner_zatra_scripts() {
     // Main theme JavaScript
     wp_enqueue_script('stock-scanner-zatra-js', get_template_directory_uri() . '/assets/js/theme.js', array('jquery'), '1.0.0', true);
     
+    // Advanced AI Assistant
+    wp_enqueue_script('stock-scanner-ai-assistant', get_template_directory_uri() . '/assets/js/ai-assistant.js', array('jquery'), '1.0.0', true);
+    
+    // Advanced Charts System
+    wp_enqueue_script('stock-scanner-advanced-charts', get_template_directory_uri() . '/assets/js/advanced-charts.js', array('chart-js'), '1.0.0', true);
+    
     // Localize script with AJAX URL and nonce
     wp_localize_script('stock-scanner-zatra-js', 'stockScannerAjax', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
