@@ -1154,6 +1154,580 @@ function stock_scanner_sanitize_api_settings($input) {
 }
 
 // =============================================================================
+// DATA FORMATTING AND PROCESSING UTILITIES
+// =============================================================================
+
+/**
+ * Format stock price for display
+ */
+function format_stock_price($price, $decimals = 2) {
+    if (!is_numeric($price)) {
+        return '--';
+    }
+    return '$' . number_format((float)$price, $decimals);
+}
+
+/**
+ * Format percentage change with color coding
+ */
+function format_percentage_change($change, $decimals = 2, $include_color = false) {
+    if (!is_numeric($change)) {
+        return '--';
+    }
+    
+    $formatted = number_format((float)$change, $decimals) . '%';
+    $sign = $change >= 0 ? '+' : '';
+    
+    if ($include_color) {
+        $color_class = $change >= 0 ? 'positive' : 'negative';
+        return "<span class=\"change-{$color_class}\">{$sign}{$formatted}</span>";
+    }
+    
+    return $sign . $formatted;
+}
+
+/**
+ * Format volume numbers
+ */
+function format_volume($volume) {
+    if (!is_numeric($volume)) {
+        return '--';
+    }
+    
+    $volume = (float)$volume;
+    
+    if ($volume >= 1000000000) {
+        return number_format($volume / 1000000000, 1) . 'B';
+    } elseif ($volume >= 1000000) {
+        return number_format($volume / 1000000, 1) . 'M';
+    } elseif ($volume >= 1000) {
+        return number_format($volume / 1000, 1) . 'K';
+    }
+    
+    return number_format($volume);
+}
+
+/**
+ * Format market cap
+ */
+function format_market_cap($market_cap) {
+    if (!is_numeric($market_cap)) {
+        return '--';
+    }
+    
+    $market_cap = (float)$market_cap;
+    
+    if ($market_cap >= 1000000000000) {
+        return '$' . number_format($market_cap / 1000000000000, 2) . 'T';
+    } elseif ($market_cap >= 1000000000) {
+        return '$' . number_format($market_cap / 1000000000, 2) . 'B';
+    } elseif ($market_cap >= 1000000) {
+        return '$' . number_format($market_cap / 1000000, 2) . 'M';
+    }
+    
+    return '$' . number_format($market_cap);
+}
+
+/**
+ * Format currency amount
+ */
+function format_currency($amount, $decimals = 2) {
+    if (!is_numeric($amount)) {
+        return '--';
+    }
+    return '$' . number_format((float)$amount, $decimals);
+}
+
+/**
+ * Format date for display
+ */
+function format_display_date($date, $format = 'M j, Y') {
+    if (empty($date)) {
+        return '--';
+    }
+    
+    $timestamp = is_numeric($date) ? $date : strtotime($date);
+    if (!$timestamp) {
+        return '--';
+    }
+    
+    return date($format, $timestamp);
+}
+
+/**
+ * Format time for display
+ */
+function format_display_time($time, $format = 'g:i A') {
+    if (empty($time)) {
+        return '--';
+    }
+    
+    $timestamp = is_numeric($time) ? $time : strtotime($time);
+    if (!$timestamp) {
+        return '--';
+    }
+    
+    return date($format, $timestamp);
+}
+
+/**
+ * Format stock data for table display
+ */
+function format_stock_for_table($stock_data) {
+    if (!is_array($stock_data)) {
+        return array();
+    }
+    
+    return array(
+        'symbol' => strtoupper($stock_data['symbol'] ?? ''),
+        'name' => $stock_data['name'] ?? '--',
+        'price' => format_stock_price($stock_data['price'] ?? 0),
+        'change' => format_stock_price($stock_data['change'] ?? 0),
+        'change_percent' => format_percentage_change($stock_data['change_percent'] ?? 0, 2, true),
+        'volume' => format_volume($stock_data['volume'] ?? 0),
+        'market_cap' => format_market_cap($stock_data['market_cap'] ?? 0),
+        'pe_ratio' => is_numeric($stock_data['pe_ratio'] ?? null) ? number_format($stock_data['pe_ratio'], 2) : '--',
+        'high_52w' => format_stock_price($stock_data['high_52w'] ?? 0),
+        'low_52w' => format_stock_price($stock_data['low_52w'] ?? 0),
+        'raw_price' => (float)($stock_data['price'] ?? 0),
+        'raw_change' => (float)($stock_data['change'] ?? 0),
+        'raw_change_percent' => (float)($stock_data['change_percent'] ?? 0),
+        'raw_volume' => (int)($stock_data['volume'] ?? 0),
+        'timestamp' => $stock_data['timestamp'] ?? time()
+    );
+}
+
+/**
+ * Format historical data for charts
+ */
+function format_historical_for_chart($historical_data) {
+    if (!is_array($historical_data) || empty($historical_data['labels']) || empty($historical_data['prices'])) {
+        return array(
+            'labels' => array(),
+            'prices' => array(),
+            'volumes' => array(),
+            'trend' => 0
+        );
+    }
+    
+    $formatted_labels = array();
+    foreach ($historical_data['labels'] as $label) {
+        $formatted_labels[] = format_display_date($label, 'M j');
+    }
+    
+    return array(
+        'labels' => $formatted_labels,
+        'prices' => array_map('floatval', $historical_data['prices']),
+        'volumes' => array_map('intval', $historical_data['volumes'] ?? array()),
+        'trend' => (int)($historical_data['trend'] ?? 0),
+        'symbol' => strtoupper($historical_data['symbol'] ?? ''),
+        'range' => $historical_data['range'] ?? '1W'
+    );
+}
+
+/**
+ * Format portfolio data for display
+ */
+function format_portfolio_for_display($portfolio_data) {
+    if (!is_array($portfolio_data)) {
+        return array(
+            'total_value' => '$0.00',
+            'total_cost' => '$0.00',
+            'total_gain_loss' => '$0.00',
+            'total_gain_loss_percent' => '0.00%',
+            'holdings' => array(),
+            'raw_total_value' => 0,
+            'raw_total_gain_loss' => 0
+        );
+    }
+    
+    $formatted_holdings = array();
+    foreach ($portfolio_data['holdings'] ?? array() as $holding) {
+        $formatted_holdings[] = array(
+            'symbol' => strtoupper($holding['symbol'] ?? ''),
+            'name' => $holding['name'] ?? '--',
+            'shares' => number_format($holding['shares'] ?? 0),
+            'avg_cost' => format_stock_price($holding['avg_cost'] ?? 0),
+            'current_price' => format_stock_price($holding['current_price'] ?? 0),
+            'market_value' => format_currency($holding['market_value'] ?? 0),
+            'gain_loss' => format_currency($holding['gain_loss'] ?? 0),
+            'gain_loss_percent' => format_percentage_change($holding['gain_loss_percent'] ?? 0, 2, true),
+            'raw_shares' => (float)($holding['shares'] ?? 0),
+            'raw_avg_cost' => (float)($holding['avg_cost'] ?? 0),
+            'raw_current_price' => (float)($holding['current_price'] ?? 0),
+            'raw_market_value' => (float)($holding['market_value'] ?? 0),
+            'raw_gain_loss' => (float)($holding['gain_loss'] ?? 0),
+            'raw_gain_loss_percent' => (float)($holding['gain_loss_percent'] ?? 0)
+        );
+    }
+    
+    return array(
+        'total_value' => format_currency($portfolio_data['total_value'] ?? 0),
+        'total_cost' => format_currency($portfolio_data['total_cost'] ?? 0),
+        'total_gain_loss' => format_currency($portfolio_data['total_gain_loss'] ?? 0),
+        'total_gain_loss_percent' => format_percentage_change($portfolio_data['total_gain_loss_percent'] ?? 0, 2, true),
+        'holdings' => $formatted_holdings,
+        'raw_total_value' => (float)($portfolio_data['total_value'] ?? 0),
+        'raw_total_cost' => (float)($portfolio_data['total_cost'] ?? 0),
+        'raw_total_gain_loss' => (float)($portfolio_data['total_gain_loss'] ?? 0),
+        'raw_total_gain_loss_percent' => (float)($portfolio_data['total_gain_loss_percent'] ?? 0),
+        'last_updated' => format_display_time($portfolio_data['last_updated'] ?? time())
+    );
+}
+
+/**
+ * Format market data for display
+ */
+function format_market_data_for_display($market_data) {
+    if (!is_array($market_data)) {
+        return array(
+            'indices' => array(),
+            'market_status' => 'closed',
+            'last_updated' => '--',
+            'advancing' => 0,
+            'declining' => 0,
+            'unchanged' => 0
+        );
+    }
+    
+    $formatted_indices = array();
+    foreach ($market_data['indices'] ?? array() as $index) {
+        $formatted_indices[] = array(
+            'symbol' => strtoupper($index['symbol'] ?? ''),
+            'name' => $index['name'] ?? '--',
+            'price' => format_stock_price($index['price'] ?? 0),
+            'change' => format_stock_price($index['change'] ?? 0),
+            'change_percent' => format_percentage_change($index['change_percent'] ?? 0, 2, true),
+            'raw_price' => (float)($index['price'] ?? 0),
+            'raw_change' => (float)($index['change'] ?? 0),
+            'raw_change_percent' => (float)($index['change_percent'] ?? 0)
+        );
+    }
+    
+    return array(
+        'indices' => $formatted_indices,
+        'market_status' => $market_data['market_status'] ?? 'closed',
+        'last_updated' => format_display_time($market_data['last_updated'] ?? time()),
+        'advancing' => number_format($market_data['advancing'] ?? 0),
+        'declining' => number_format($market_data['declining'] ?? 0),
+        'unchanged' => number_format($market_data['unchanged'] ?? 0),
+        'raw_advancing' => (int)($market_data['advancing'] ?? 0),
+        'raw_declining' => (int)($market_data['declining'] ?? 0),
+        'raw_unchanged' => (int)($market_data['unchanged'] ?? 0)
+    );
+}
+
+/**
+ * Format news data for display
+ */
+function format_news_for_display($news_data) {
+    if (!is_array($news_data) || empty($news_data['articles'])) {
+        return array(
+            'articles' => array(),
+            'total' => 0,
+            'category' => 'general'
+        );
+    }
+    
+    $formatted_articles = array();
+    foreach ($news_data['articles'] as $article) {
+        $formatted_articles[] = array(
+            'title' => $article['title'] ?? 'No title',
+            'summary' => $article['summary'] ?? 'No summary available',
+            'source' => $article['source'] ?? 'Unknown',
+            'published_at' => format_display_time($article['published_at'] ?? time(), 'M j, Y g:i A'),
+            'url' => $article['url'] ?? '#',
+            'category' => $article['category'] ?? 'general',
+            'raw_published_at' => $article['published_at'] ?? time()
+        );
+    }
+    
+    return array(
+        'articles' => $formatted_articles,
+        'total' => count($formatted_articles),
+        'category' => $news_data['category'] ?? 'general',
+        'last_updated' => format_display_time($news_data['last_updated'] ?? time())
+    );
+}
+
+/**
+ * Format watchlist data for display
+ */
+function format_watchlist_for_display($watchlist_data) {
+    if (!is_array($watchlist_data)) {
+        return array();
+    }
+    
+    $formatted_watchlist = array();
+    foreach ($watchlist_data as $item) {
+        if (is_string($item)) {
+            // Simple symbol list
+            $formatted_watchlist[] = array(
+                'symbol' => strtoupper($item),
+                'name' => '--',
+                'price' => '--',
+                'change' => '--',
+                'change_percent' => '--',
+                'volume' => '--'
+            );
+        } elseif (is_array($item)) {
+            // Full stock data
+            $formatted_watchlist[] = format_stock_for_table($item);
+        }
+    }
+    
+    return $formatted_watchlist;
+}
+
+/**
+ * Sanitize and validate stock symbol
+ */
+function sanitize_stock_symbol($symbol) {
+    if (!is_string($symbol)) {
+        return '';
+    }
+    
+    // Remove any non-alphanumeric characters and convert to uppercase
+    $symbol = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $symbol));
+    
+    // Limit length to 10 characters (most stock symbols are 1-5 characters)
+    return substr($symbol, 0, 10);
+}
+
+/**
+ * Validate and sanitize time range parameter
+ */
+function sanitize_time_range($range) {
+    $valid_ranges = array('1D', '1W', '1M', '3M', '1Y', '5Y');
+    
+    if (!in_array($range, $valid_ranges)) {
+        return '1W'; // Default fallback
+    }
+    
+    return $range;
+}
+
+/**
+ * Get formatted data for AJAX endpoints
+ */
+function get_formatted_stock_data($symbol) {
+    $symbol = sanitize_stock_symbol($symbol);
+    if (empty($symbol)) {
+        return new WP_Error('invalid_symbol', 'Invalid stock symbol provided');
+    }
+    
+    $raw_data = get_stock_data($symbol);
+    
+    if (is_wp_error($raw_data)) {
+        return $raw_data;
+    }
+    
+    return format_stock_for_table($raw_data);
+}
+
+/**
+ * Get formatted historical data for charts
+ */
+function get_formatted_historical_data($symbol, $range = '1W') {
+    $symbol = sanitize_stock_symbol($symbol);
+    $range = sanitize_time_range($range);
+    
+    if (empty($symbol)) {
+        return new WP_Error('invalid_symbol', 'Invalid stock symbol provided');
+    }
+    
+    $raw_data = make_backend_api_request("historical/{$symbol}", array('range' => $range));
+    
+    if (is_wp_error($raw_data)) {
+        return $raw_data;
+    }
+    
+    return format_historical_for_chart($raw_data);
+}
+
+/**
+ * Get formatted portfolio data
+ */
+function get_formatted_portfolio_data($user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    if (!$user_id) {
+        return new WP_Error('no_user', 'User not authenticated');
+    }
+    
+    $raw_data = make_backend_api_request("portfolio/{$user_id}");
+    
+    if (is_wp_error($raw_data)) {
+        return $raw_data;
+    }
+    
+    return format_portfolio_for_display($raw_data);
+}
+
+/**
+ * Get formatted market data
+ */
+function get_formatted_market_data() {
+    $raw_data = get_market_overview();
+    
+    if (is_wp_error($raw_data)) {
+        return $raw_data;
+    }
+    
+    return format_market_data_for_display($raw_data);
+}
+
+/**
+ * Get formatted watchlist data
+ */
+function get_formatted_watchlist_data($user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    if (!$user_id) {
+        return new WP_Error('no_user', 'User not authenticated');
+    }
+    
+    $raw_data = get_user_watchlist($user_id);
+    
+    if (is_wp_error($raw_data)) {
+        return $raw_data;
+    }
+    
+    return format_watchlist_for_display($raw_data);
+}
+
+/**
+ * Get formatted news data
+ */
+function get_formatted_news_data($category = 'general', $limit = 20) {
+    $raw_data = make_backend_api_request('news', array(
+        'category' => $category,
+        'limit' => $limit
+    ));
+    
+    if (is_wp_error($raw_data)) {
+        return $raw_data;
+    }
+    
+    return format_news_for_display($raw_data);
+}
+
+// =============================================================================
+// AJAX HANDLERS FOR FORMATTED DATA
+// =============================================================================
+
+/**
+ * AJAX handler for formatted stock data
+ */
+function ajax_get_formatted_stock_data() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    $symbol = sanitize_text_field($_POST['symbol'] ?? '');
+    $formatted_data = get_formatted_stock_data($symbol);
+    
+    if (is_wp_error($formatted_data)) {
+        wp_send_json_error($formatted_data->get_error_message());
+    }
+    
+    wp_send_json_success($formatted_data);
+}
+add_action('wp_ajax_get_formatted_stock_data', 'ajax_get_formatted_stock_data');
+add_action('wp_ajax_nopriv_get_formatted_stock_data', 'ajax_get_formatted_stock_data');
+
+/**
+ * AJAX handler for formatted historical data
+ */
+function ajax_get_formatted_historical_data() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    $symbol = sanitize_text_field($_POST['symbol'] ?? '');
+    $range = sanitize_text_field($_POST['range'] ?? '1W');
+    
+    $formatted_data = get_formatted_historical_data($symbol, $range);
+    
+    if (is_wp_error($formatted_data)) {
+        wp_send_json_error($formatted_data->get_error_message());
+    }
+    
+    wp_send_json_success($formatted_data);
+}
+add_action('wp_ajax_get_formatted_historical_data', 'ajax_get_formatted_historical_data');
+add_action('wp_ajax_nopriv_get_formatted_historical_data', 'ajax_get_formatted_historical_data');
+
+/**
+ * AJAX handler for formatted portfolio data
+ */
+function ajax_get_formatted_portfolio_data() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    $formatted_data = get_formatted_portfolio_data();
+    
+    if (is_wp_error($formatted_data)) {
+        wp_send_json_error($formatted_data->get_error_message());
+    }
+    
+    wp_send_json_success($formatted_data);
+}
+add_action('wp_ajax_get_formatted_portfolio_data', 'ajax_get_formatted_portfolio_data');
+
+/**
+ * AJAX handler for formatted market data
+ */
+function ajax_get_formatted_market_data() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    $formatted_data = get_formatted_market_data();
+    
+    if (is_wp_error($formatted_data)) {
+        wp_send_json_error($formatted_data->get_error_message());
+    }
+    
+    wp_send_json_success($formatted_data);
+}
+add_action('wp_ajax_get_formatted_market_data', 'ajax_get_formatted_market_data');
+add_action('wp_ajax_nopriv_get_formatted_market_data', 'ajax_get_formatted_market_data');
+
+/**
+ * AJAX handler for formatted watchlist data
+ */
+function ajax_get_formatted_watchlist_data() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    $formatted_data = get_formatted_watchlist_data();
+    
+    if (is_wp_error($formatted_data)) {
+        wp_send_json_error($formatted_data->get_error_message());
+    }
+    
+    wp_send_json_success($formatted_data);
+}
+add_action('wp_ajax_get_formatted_watchlist_data', 'ajax_get_formatted_watchlist_data');
+
+/**
+ * AJAX handler for formatted news data
+ */
+function ajax_get_formatted_news_data() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    $category = sanitize_text_field($_POST['category'] ?? 'general');
+    $limit = intval($_POST['limit'] ?? 20);
+    
+    $formatted_data = get_formatted_news_data($category, $limit);
+    
+    if (is_wp_error($formatted_data)) {
+        wp_send_json_error($formatted_data->get_error_message());
+    }
+    
+    wp_send_json_success($formatted_data);
+}
+add_action('wp_ajax_get_formatted_news_data', 'ajax_get_formatted_news_data');
+add_action('wp_ajax_nopriv_get_formatted_news_data', 'ajax_get_formatted_news_data');
+
+// =============================================================================
 // THEME ACTIVATION: DELETE ALL PAGES AND CREATE FRESH ONES
 // =============================================================================
 
