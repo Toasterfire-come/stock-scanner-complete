@@ -831,18 +831,15 @@ function handle_market_movers_ajax() {
     check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
     
     $user_id = get_current_user_id();
-    if (!$user_id) {
-        wp_send_json_error('Please login to view market data.');
-        return;
-    }
     
-    if (!can_user_make_api_call($user_id)) {
+    // For logged-in users, check API limits
+    if ($user_id && !can_user_make_api_call($user_id)) {
         wp_send_json_error('API limit reached. Please upgrade your plan.');
         return;
     }
     
-    // Log API usage
-    if (is_stock_scanner_plugin_active()) {
+    // Log API usage for logged-in users only
+    if ($user_id && is_stock_scanner_plugin_active()) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'stock_scanner_usage';
         $wpdb->insert(
@@ -881,6 +878,7 @@ function handle_market_movers_ajax() {
     wp_send_json_success($response);
 }
 add_action('wp_ajax_get_market_movers', 'handle_market_movers_ajax');
+add_action('wp_ajax_nopriv_get_market_movers', 'handle_market_movers_ajax');
 
 /**
  * AJAX handler for major indices data
@@ -889,18 +887,15 @@ function handle_major_indices_ajax() {
     check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
     
     $user_id = get_current_user_id();
-    if (!$user_id) {
-        wp_send_json_error('Please login to view market data.');
-        return;
-    }
     
-    if (!can_user_make_api_call($user_id)) {
+    // For logged-in users, check API limits
+    if ($user_id && !can_user_make_api_call($user_id)) {
         wp_send_json_error('API limit reached. Please upgrade your plan.');
         return;
     }
     
-    // Log API usage
-    if (is_stock_scanner_plugin_active()) {
+    // Log API usage for logged-in users only
+    if ($user_id && is_stock_scanner_plugin_active()) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'stock_scanner_usage';
         $wpdb->insert(
@@ -940,6 +935,7 @@ function handle_major_indices_ajax() {
     wp_send_json_success($indices_data);
 }
 add_action('wp_ajax_get_major_indices', 'handle_major_indices_ajax');
+add_action('wp_ajax_nopriv_get_major_indices', 'handle_major_indices_ajax');
 
 /**
  * AJAX handler for contact form

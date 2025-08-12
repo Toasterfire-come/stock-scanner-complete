@@ -1,5 +1,10 @@
 (function(){
-  if (!window.Chart || !Chart.defaults) return;
+  // Wait for Chart.js to be fully loaded
+  function initChartTheme() {
+    if (!window.Chart || !Chart.defaults) {
+      setTimeout(initChartTheme, 100);
+      return;
+    }
   
   const palette = {
     text: getComputedStyle(document.documentElement).getPropertyValue('--brand-charcoal')?.trim() || '#2C2C2C',
@@ -42,4 +47,8 @@
   } catch (error) {
     console.warn('Chart.js theme configuration failed:', error);
   }
+  }
+  
+  // Start the initialization
+  initChartTheme();
 })();
