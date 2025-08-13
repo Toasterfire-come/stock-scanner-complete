@@ -47,7 +47,7 @@ class CustomUserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline, UserSettingsInline)
     list_display = (
         'username', 'email', 'first_name', 'last_name', 'get_tier',
-        'get_subscription_status', 'get_api_usage_today', 'date_joined', 'is_active'
+        'get_subscription_status', 'get_api_usage_this_month', 'date_joined', 'is_active'
     )
     list_filter = (
         'is_active', 'is_staff', 'date_joined', 'profile__tier', 'profile__subscription_active'
@@ -80,20 +80,20 @@ class CustomUserAdmin(BaseUserAdmin):
         return 'Unknown'
     get_subscription_status.short_description = 'Subscription'
     
-    def get_api_usage_today(self, obj):
+    def get_api_usage_this_month(self, obj):
         if hasattr(obj, 'profile'):
-            usage = obj.profile.api_calls_today
+            usage = obj.profile.api_calls_this_month
             limits = obj.profile.get_rate_limits()
-            daily_limit = limits.get('api_calls_per_day', 15)
-            percentage = (usage / daily_limit) * 100 if daily_limit > 0 else 0
+            monthly_limit = limits.get('api_calls_per_month', 15)
+            percentage = (usage / monthly_limit) * 100 if monthly_limit > 0 else 0
             
             color = 'red' if percentage > 80 else 'orange' if percentage > 60 else 'green'
             return format_html(
                 '<span style="color: {};">{}/{} ({}%)</span>',
-                color, usage, daily_limit, int(percentage)
+                color, usage, monthly_limit, int(percentage)
             )
         return '0'
-    get_api_usage_today.short_description = 'API Usage Today'
+    get_api_usage_this_month.short_description = 'API Usage This Month'
 
 # Re-register UserAdmin
 admin.site.unregister(User)
@@ -105,7 +105,7 @@ admin.site.register(User, CustomUserAdmin)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = (
         'user', 'tier', 'subscription_active', 'subscription_start', 
-        'subscription_end', 'api_calls_today', 'api_calls_this_month'
+        'subscription_end', 'api_calls_this_month'
     )
     list_filter = ('tier', 'subscription_active', 'enable_frontend_optimization')
     search_fields = ('user__username', 'user__email', 'paypal_subscription_id')
@@ -128,16 +128,11 @@ class UserProfileAdmin(admin.ModelAdmin):
             )
         }),
         ('API Usage', {
-            'fields': ('api_calls_today', 'api_calls_this_month', 'last_api_call')
+            'fields': ('api_calls_this_month', 'last_api_call')
         })
     )
     
-    actions = ['reset_daily_usage', 'reset_monthly_usage', 'upgrade_to_basic', 'upgrade_to_pro']
-    
-    def reset_daily_usage(self, request, queryset):
-        updated = queryset.update(api_calls_today=0)
-        self.message_user(request, f'Reset daily usage for {updated} users.')
-    reset_daily_usage.short_description = 'Reset daily API usage'
+    actions = ['reset_monthly_usage', 'upgrade_to_basic', 'upgrade_to_pro']
     
     def reset_monthly_usage(self, request, queryset):
         updated = queryset.update(api_calls_this_month=0)
@@ -413,8 +408,8 @@ def export_users_csv(modeladmin, request, queryset):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="users.csv"'
     
-    writer = csv.writer(response)
-    writer.writerow(['Username', 'Email', 'Tier', 'Subscription Active', 'API Calls Today'])
+        writer = csv.writer(response)
+    writer.writerow(['Username', 'Email', 'Tier', 'Subscription Active', 'API Calls This Month'])
     
     for user in queryset:
         profile = getattr(user, 'profile', None)
@@ -423,7 +418,7 @@ def export_users_csv(modeladmin, request, queryset):
             user.email,
             profile.tier if profile else 'free',
             profile.subscription_active if profile else False,
-            profile.api_calls_today if profile else 0
+            profile.api_calls_this_month if profile else 0
         ])
     
     return response

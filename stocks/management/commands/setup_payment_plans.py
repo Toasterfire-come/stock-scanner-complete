@@ -27,8 +27,7 @@ class Command(BaseCommand):
                 'price_monthly': Decimal('24.99'),
                 'price_yearly': Decimal('274.89'),  # 10% annual discount
                 'features': {
-                    'api_calls_per_day': 1500,
-                    'api_calls_per_hour': 100,
+                    'api_calls_per_month': 1500,
                     'max_watchlist_items': 25,
                     'real_time_data': True,
                     'advanced_charts': True,
@@ -51,8 +50,7 @@ class Command(BaseCommand):
                 'price_monthly': Decimal('49.99'),
                 'price_yearly': Decimal('549.89'),  # 10% annual discount
                 'features': {
-                    'api_calls_per_day': 5000,
-                    'api_calls_per_hour': 300,
+                    'api_calls_per_month': 5000,
                     'max_watchlist_items': 100,
                     'real_time_data': True,
                     'advanced_charts': True,
@@ -79,8 +77,7 @@ class Command(BaseCommand):
                 'price_monthly': Decimal('79.99'),
                 'price_yearly': Decimal('879.89'),  # 10% annual discount
                 'features': {
-                    'api_calls_per_day': 'unlimited',
-                    'api_calls_per_hour': 'unlimited',
+                    'api_calls_per_month': 'unlimited',
                     'max_watchlist_items': 'unlimited',
                     'real_time_data': True,
                     'advanced_charts': True,
@@ -115,7 +112,7 @@ class Command(BaseCommand):
                 f"\n{plan.name} ({plan.tier.upper()})\n"
                 f"  Monthly: ${plan.price_monthly}\n"
                 f"  Yearly: ${plan.price_yearly} (Save ${annual_savings:.2f})\n"
-                f"  API Calls: {plan.features.get('api_calls_per_day', 'N/A')}/day\n"
+                f"  API Calls: {plan.features.get('api_calls_per_month', 'N/A')}/month\n"
                 f"  Watchlist Items: {plan.features.get('max_watchlist_items', 'N/A')}\n"
                 f"  Real-time Data: {plan.features.get('real_time_data', False)}"
             )
@@ -124,7 +121,7 @@ class Command(BaseCommand):
         self.stdout.write(
             f"\nFREE TIER\n"
             f"  Monthly: $0.00\n"
-            f"  API Calls: 15/day\n"
+            f"  API Calls: 15/month\n"
             f"  Watchlist Items: 3\n"
             f"  Real-time Data: False"
         )

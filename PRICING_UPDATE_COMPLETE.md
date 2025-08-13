@@ -10,12 +10,12 @@ I have successfully updated the entire Django system to reflect your new pricing
 
 ### **📊 Updated Tier Structure**:
 
-| **Tier** | **Price** | **API Calls/Hour** | **API Calls/Day** | **Watchlist Items** | **Features** |
-|----------|-----------|-------------------|-------------------|---------------------|--------------|
-| **FREE** | **$0.00** | **15** | **15** | **3** | Basic charts, limited data |
-| **BASIC** | **$24.99/month** | **100** | **1,500** | **25** | Real-time data, advanced charts, data export |
-| **PRO** | **$49.99/month** | **300** | **5,000** | **100** | All Basic + API access, custom alerts, analytics |
-| **ENTERPRISE** | **$79.99/month** | **Unlimited** | **Unlimited** | **Unlimited** | All features + white-label, SLA, dedicated support |
+| **Tier** | **Price** | **API Calls/Month** | **Watchlist Items** | **Features** |
+|----------|-----------|---------------------|---------------------|--------------|
+| **FREE** | **$0.00** | **15** | **3** | Basic charts, limited data |
+| **BASIC** | **$24.99/month** | **1,500** | **25** | Real-time data, advanced charts, data export |
+| **PRO** | **$49.99/month** | **5,000** | **100** | All Basic + API access, custom alerts, analytics |
+| **ENTERPRISE** | **$79.99/month** | **Unlimited** | **Unlimited** | All features + white-label, SLA, dedicated support |
 
 ### **💳 Annual Pricing (10% Discount)**:
 - **Basic**: $274.89/year (Save $25.00)

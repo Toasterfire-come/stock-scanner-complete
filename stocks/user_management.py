@@ -130,8 +130,7 @@ def user_profile(request):
                     'enable_client_side_charts': profile.enable_client_side_charts,
                     'enable_progressive_loading': profile.enable_progressive_loading,
                     'max_cache_size_mb': profile.max_cache_size_mb,
-                    'api_calls_today': profile.api_calls_today,
-                    'api_calls_this_month': profile.api_calls_this_month,
+                                         'api_calls_this_month': profile.api_calls_this_month,
                     'rate_limits': profile.get_rate_limits()
                 }
             })
@@ -256,11 +255,10 @@ def api_usage_stats(request):
                 'optimization_rate': frontend_optimized_calls / total_calls * 100 if total_calls > 0 else 0,
                 'avg_response_time_ms': avg_response_time,
                 'endpoints': endpoint_stats,
-                'rate_limits': rate_limits,
-                'current_usage': {
-                    'today': profile.api_calls_today if profile else 0,
-                    'this_month': profile.api_calls_this_month if profile else 0
-                }
+                                 'rate_limits': rate_limits,
+                 'current_usage': {
+                     'this_month': profile.api_calls_this_month if profile else 0
+                 }
             }
         })
     

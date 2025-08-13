@@ -89,29 +89,25 @@ class UserPaymentFlowTester:
         """Test that tier rate limits are correctly configured"""
         self.print_header("TIER RATE LIMITS TEST")
         
-        # Expected rate limits based on your pricing structure
+                # Expected rate limits based on your pricing structure
         expected_limits = {
             'free': {
-                'api_calls_per_hour': 15,
-                'api_calls_per_day': 15,
+                'api_calls_per_month': 15,
                 'max_watchlist_items': 3,
                 'price_monthly': 0.00
             },
             'basic': {
-                'api_calls_per_hour': 100,
-                'api_calls_per_day': 1500,
+                'api_calls_per_month': 1500,
                 'max_watchlist_items': 25,
                 'price_monthly': 24.99
             },
             'pro': {
-                'api_calls_per_hour': 300,
-                'api_calls_per_day': 5000,
+                'api_calls_per_month': 5000,
                 'max_watchlist_items': 100,
                 'price_monthly': 49.99
             },
             'enterprise': {
-                'api_calls_per_hour': 9999,
-                'api_calls_per_day': 999999,
+                'api_calls_per_month': 999999,
                 'max_watchlist_items': 9999,
                 'price_monthly': 79.99
             }
@@ -344,12 +340,12 @@ class UserPaymentFlowTester:
                 self.log_test(f"Tier Definition: {tier.upper()}", False, "Tier choice missing")
                 all_tiers_correct = False
             
-            # Check API call limits
-            api_limit_pattern = f"'api_calls_per_day': {expected_calls}"
+                                     # Check API call limits
+            api_limit_pattern = f"'api_calls_per_month': {expected_calls}"
             if api_limit_pattern in content:
-                self.log_test(f"{tier.upper()} API Limits", True, f"{expected_calls} calls/day")
+                self.log_test(f"{tier.upper()} API Limits", True, f"{expected_calls} calls/month")
             else:
-                self.log_test(f"{tier.upper()} API Limits", False, f"Expected {expected_calls} calls/day")
+                self.log_test(f"{tier.upper()} API Limits", False, f"Expected {expected_calls} calls/month")
                 all_tiers_correct = False
         
         return all_tiers_correct
@@ -372,7 +368,7 @@ class UserPaymentFlowTester:
             ('PaymentTransactionAdmin', 'Transaction tracking'),
             ('get_tier', 'Tier display method'),
             ('get_subscription_status', 'Subscription status display'),
-            ('get_api_usage_today', 'API usage monitoring'),
+            ('get_api_usage_this_month', 'API usage monitoring'),
             ('export_users_csv', 'User data export')
         ]
         
@@ -421,17 +417,17 @@ class UserPaymentFlowTester:
         summary = """
 🎯 COMPLETE USER PAYMENT FLOW SUMMARY
 
-1. 👤 USER REGISTRATION
-   • User creates account with email/password
-   • UserProfile automatically created with FREE tier
-   • UserSettings configured with default preferences
-   • User gets 15 API calls per day initially
+ 1. 👤 USER REGISTRATION
+    • User creates account with email/password
+    • UserProfile automatically created with FREE tier
+    • UserSettings configured with default preferences
+    • User gets 15 API calls per month initially
 
-2. 🆓 FREE TIER EXPERIENCE  
-   • User can make 15 API calls per day
-   • Basic charts and delayed data only
-   • 3 watchlist items maximum
-   • Clear upgrade prompts when limits hit
+ 2. 🆓 FREE TIER EXPERIENCE  
+    • User can make 15 API calls per month
+    • Basic charts and delayed data only
+    • 3 watchlist items maximum
+    • Clear upgrade prompts when limits hit
 
 3. 💳 SUBSCRIPTION PROCESS
    • User views pricing plans ($24.99, $49.99, $79.99)
@@ -445,10 +441,10 @@ class UserPaymentFlowTester:
    • User tier upgraded automatically
    • Features unlocked immediately
 
-5. 📈 TIER BENEFITS UNLOCKED
-   BASIC ($24.99/month): 1,500 calls/day, real-time data, advanced charts
-   PRO ($49.99/month): 5,000 calls/day, API access, custom alerts
-   ENTERPRISE ($79.99/month): Unlimited calls, white-label, dedicated support
+ 5. 📈 TIER BENEFITS UNLOCKED
+    BASIC ($24.99/month): 1,500 calls/month, real-time data, advanced charts
+    PRO ($49.99/month): 5,000 calls/month, API access, custom alerts
+    ENTERPRISE ($79.99/month): Unlimited calls, white-label, dedicated support
 
 6. 🎛️ SUBSCRIPTION MANAGEMENT
    • User can view subscription status

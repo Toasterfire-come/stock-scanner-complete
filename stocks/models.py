@@ -599,8 +599,7 @@ class UserProfile(models.Model):
         """Get rate limits based on user tier"""
         limits = {
             UserTier.FREE: {
-                'api_calls_per_hour': 15,
-                'api_calls_per_day': 15,
+                'api_calls_per_month': 15,
                 'max_watchlist_items': 3,
                 'real_time_data': False,
                 'advanced_charts': False,
@@ -609,8 +608,7 @@ class UserProfile(models.Model):
                 'price_yearly': 0.00
             },
             UserTier.BASIC: {
-                'api_calls_per_hour': 100,
-                'api_calls_per_day': 1500,
+                'api_calls_per_month': 1500,
                 'max_watchlist_items': 25,
                 'real_time_data': True,
                 'advanced_charts': True,
@@ -619,8 +617,7 @@ class UserProfile(models.Model):
                 'price_yearly': 274.89  # 10% annual discount
             },
             UserTier.PRO: {
-                'api_calls_per_hour': 300,
-                'api_calls_per_day': 5000,
+                'api_calls_per_month': 5000,
                 'max_watchlist_items': 100,
                 'real_time_data': True,
                 'advanced_charts': True,
@@ -629,8 +626,7 @@ class UserProfile(models.Model):
                 'price_yearly': 549.89  # 10% annual discount
             },
             UserTier.ENTERPRISE: {
-                'api_calls_per_hour': 9999,  # Effectively unlimited
-                'api_calls_per_day': 999999,  # Effectively unlimited
+                'api_calls_per_month': 999999,  # Effectively unlimited
                 'max_watchlist_items': 9999,  # Effectively unlimited
                 'real_time_data': True,
                 'advanced_charts': True,
@@ -645,28 +641,17 @@ class UserProfile(models.Model):
         """Check if user can make another API call based on their tier limits"""
         limits = self.get_rate_limits()
         
-        # Check daily limit
-        if self.api_calls_today >= limits['api_calls_per_day']:
-            return False, "Daily API limit exceeded"
-        
-        # Check hourly limit (simplified - would need more sophisticated tracking)
-        
-        if self.last_api_call:
-            one_hour_ago = timezone.now() - timedelta(hours=1)
-            if self.last_api_call > one_hour_ago:
-                # In a real implementation, you'd track hourly calls more precisely
-                estimated_hourly_calls = min(self.api_calls_today, limits['api_calls_per_hour'])
-                if estimated_hourly_calls >= limits['api_calls_per_hour']:
-                    return False, "Hourly API limit exceeded"
+        # Check monthly limit
+        if self.api_calls_this_month >= limits['api_calls_per_month']:
+            return False, "Monthly API limit exceeded"
         
         return True, "OK"
     
     def increment_api_usage(self):
         """Increment API usage counters"""
-        self.api_calls_today += 1
         self.api_calls_this_month += 1
         self.last_api_call = timezone.now()
-        self.save(update_fields=['api_calls_today', 'api_calls_this_month', 'last_api_call'])
+        self.save(update_fields=['api_calls_this_month', 'last_api_call'])
 
 class PaymentPlan(models.Model):
     """Available payment plans"""

@@ -53,7 +53,9 @@ class UserTierRateLimitMiddleware(MiddlewareMixin):
                 'message': message,
                 'tier': profile.tier,
                 'limits': profile.get_rate_limits(),
-                'upgrade_url': '/premium-plans/'
+                'upgrade_url': '/premium-plans/',
+                'calls_used': profile.api_calls_this_month,
+                'calls_limit': profile.get_rate_limits().get('api_calls_per_month', 15)
             }, status=429)
         
         # Store user info for later processing
@@ -92,7 +94,7 @@ class UserTierRateLimitMiddleware(MiddlewareMixin):
         cache_key = f"anon_rate_limit_{ip_address}"
         
         current_count = cache.get(cache_key, 0)
-        max_anonymous_requests = 5  # per hour for anonymous users
+        max_anonymous_requests = 5  # per month for anonymous users
         
         if current_count >= max_anonymous_requests:
             return JsonResponse({
@@ -102,8 +104,8 @@ class UserTierRateLimitMiddleware(MiddlewareMixin):
                 'signup_url': '/signup/'
             }, status=429)
         
-        # Increment counter (1 hour TTL)
-        cache.set(cache_key, current_count + 1, 3600)
+        # Increment counter (30 day TTL for monthly limit)
+        cache.set(cache_key, current_count + 1, 2592000)  # 30 days
         return None
     
     def _get_client_ip(self, request):

@@ -71,20 +71,20 @@ Your system is ready to accept payments immediately after PayPal configuration.
 
 ### **🎯 User Journey to Payment**:
 ```
-Registration → Free Tier (15 calls) → Limits Hit → Upgrade Prompt → 
+Registration → Free Tier (15 calls/month) → Limits Hit → Upgrade Prompt → 
 PayPal Payment → Webhook → Tier Upgrade → Revenue! 💰
 ```
 
 ### **📊 Pricing Structure**:
-| **Tier** | **Price** | **Daily Limits** | **Features** | **Revenue Potential** |
-|-----------|-----------|------------------|--------------|----------------------|
+| **Tier** | **Price** | **Monthly Limits** | **Features** | **Revenue Potential** |
+|-----------|-----------|-------------------|--------------|----------------------|
 | FREE | $0 | 15 calls | Basic | User acquisition |
 | BASIC | $24.99/mo | 1,500 calls | Real-time data | $299.88/year |
 | PRO | $49.99/mo | 5,000 calls | API access | $599.88/year |
 | ENTERPRISE | $79.99/mo | Unlimited | Everything | $959.88/year |
 
 ### **🎯 Revenue Optimization Features**:
-- **Aggressive free tier limits** (15 calls/day) → Fast conversion
+- **Aggressive free tier limits** (15 calls/month) → Fast conversion
 - **Clear value progression** → Natural upgrade path
 - **Annual discounts** → Improved cash flow
 - **Instant activation** → Immediate satisfaction
