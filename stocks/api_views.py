@@ -21,11 +21,38 @@ from django.contrib.auth.models import User
 
 from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
-# import yfinance as yf  # Disabled: DB-only mode
-# import requests  # Disabled: DB-only mode
-# from bs4 import BeautifulSoup  # Disabled: DB-only mode
+
+# Optional imports with fallback handling
+try:
+    import yfinance as yf
+    YFINANCE_AVAILABLE = True
+except ImportError:
+    YFINANCE_AVAILABLE = False
+    yf = None
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    requests = None
+
+try:
+    from bs4 import BeautifulSoup
+    BEAUTIFULSOUP_AVAILABLE = True
+except ImportError:
+    BEAUTIFULSOUP_AVAILABLE = False
+    BeautifulSoup = None
 
 logger = logging.getLogger(__name__)
+
+# Log import status
+if not YFINANCE_AVAILABLE:
+    logger.warning("yfinance not available - using database-only mode")
+if not REQUESTS_AVAILABLE:
+    logger.warning("requests not available - external API calls disabled")
+if not BEAUTIFULSOUP_AVAILABLE:
+    logger.warning("BeautifulSoup not available - web scraping disabled")
 
 def format_decimal_safe(value):
     """Safely format decimal values"""

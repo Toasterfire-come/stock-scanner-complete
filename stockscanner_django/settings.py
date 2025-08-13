@@ -1,4 +1,5 @@
 import os
+import platform
 from pathlib import Path
 
 try:
@@ -9,8 +10,14 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# XAMPP Auto-Detection and Configuration
-XAMPP_PATH = r"C:\xampp"
+# Cross-platform XAMPP Auto-Detection and Configuration
+if platform.system() == 'Windows':
+    XAMPP_PATH = r"C:\xampp"
+elif platform.system() == 'Darwin':  # macOS
+    XAMPP_PATH = "/Applications/XAMPP"
+else:  # Linux
+    XAMPP_PATH = "/opt/lampp"
+
 XAMPP_MYSQL_PATH = os.path.join(XAMPP_PATH, "mysql", "bin")
 IS_XAMPP_AVAILABLE = os.path.exists(XAMPP_PATH) and os.path.exists(XAMPP_MYSQL_PATH)
 

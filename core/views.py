@@ -35,7 +35,7 @@ def homepage(request):
     API: Basic API information
     """
     context = {
-'title': 'Stock Scanner - NYSE Data API',
+        'title': 'Stock Scanner - NYSE Data API',
         'version': '1.0.0',
         'endpoints': [
             {'url': '/admin/', 'description': 'Django Admin Panel'},

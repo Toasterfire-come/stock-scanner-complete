@@ -11,7 +11,6 @@ django-cors-headers>=4.3.1
 
 # ===== DATABASE & CACHING =====
 mysqlclient>=2.2.0
-dj-database-url>=2.1.0
 
 # ===== STOCK DATA & API =====
 yfinance>=0.2.25
