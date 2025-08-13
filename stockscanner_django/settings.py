@@ -49,17 +49,21 @@ INSTALLED_APPS = [
     'news',
 ]
 
+# ===== MIDDLEWARE CONFIGURATION =====
 MIDDLEWARE = [
-    'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress
-    'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection
-    'corsheaders.middleware.CorsMiddleware',
+    'stocks.graceful_shutdown.GracefulShutdownMiddleware',  # Graceful shutdown support
+    'stocks.compression_optimization.SmartCompressionMiddleware',  # Intelligent compression
+    'stocks.enhanced_error_handling.ErrorReportingMiddleware',  # Enhanced error reporting
+    'stocks.memory_optimization.RequestMemoryMiddleware',  # Memory monitoring per request
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.gzip.GZipMiddleware',  # Enable gzip compression
 ]
 
 ROOT_URLCONF = 'stockscanner_django.urls'
@@ -155,23 +159,60 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
 ]
 
-# REST Framework
+# ===== REST FRAMEWORK CONFIGURATION =====
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+    'DEFAULT_PAGINATION_CLASS': 'stocks.pagination.OptimizedStockPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'stocks.throttling.StockAPIThrottle',
+        'stocks.throttling.AnonymousAPIThrottle',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        'stock_api': '200/hour',
+        'anon_api': '30/hour',
+        'search': '100/hour',
+        'bulk_operation': '10/hour',
+        'realtime': '300/hour',
+        'admin_api': '1000/hour',
+    },
     'DEFAULT_RENDERER_CLASSES': [
+        'stocks.compression_optimization.CompressedJSONRenderer',
         'rest_framework.renderers.JSONRenderer',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'EXCEPTION_HANDLER': 'stocks.enhanced_error_handling.custom_exception_handler',
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
 }
 
-# Cache
+# ===== ENHANCED CACHING CONFIGURATION =====
 CACHES = {
     'default': {
+        'BACKEND': 'django_redis.cache.RedisCache' if 'REDIS_URL' in os.environ else 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 20,
+                'retry_on_timeout': True,
+            },
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+        } if 'REDIS_URL' in os.environ else {
+            'MAX_ENTRIES': 1000,
+        },
+        'KEY_PREFIX': 'stock_scanner',
+        'TIMEOUT': 300,  # 5 minutes default
+    },
+    'query_cache': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'stock-scanner-cache',
+        'LOCATION': 'query-cache',
+        'TIMEOUT': 180,  # 3 minutes for query results
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
     }
 }
 
@@ -189,16 +230,136 @@ FINNHUB_KEYS = [
     if key.strip()
 ]
 
-# Logging
+# ===== ENHANCED LOGGING CONFIGURATION =====
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'json': {
+            'format': '{"level": "%(levelname)s", "time": "%(asctime)s", "module": "%(module)s", "message": "%(message)s"}',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
     'handlers': {
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/stock_scanner.log',
+            'maxBytes': 1024*1024*50,  # 50MB
+            'backupCount': 5,
+            'formatter': 'json',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/errors.log',
+            'maxBytes': 1024*1024*10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['error_file', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'stocks': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'stocks.performance': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
     'root': {
         'handlers': ['console'],
+        'level': 'INFO',
     },
+}
+
+# Create logs directory if it doesn't exist
+import os
+os.makedirs('logs', exist_ok=True)
+
+# ===== PERFORMANCE MONITORING CONFIGURATION =====
+PERFORMANCE_MONITORING = {
+    'ENABLE_QUERY_MONITORING': True,
+    'SLOW_QUERY_THRESHOLD': 0.1,  # 100ms
+    'ENABLE_CACHE_MONITORING': True,
+    'ENABLE_REQUEST_MONITORING': True,
+    'LOG_SLOW_REQUESTS': True,
+    'SLOW_REQUEST_THRESHOLD': 2.0,  # 2 seconds
+}
+
+# ===== OPTIMIZATION SYSTEM CONFIGURATION =====
+OPTIMIZATION_SETTINGS = {
+    'DATABASE_RESILIENCE': {
+        'ENABLED': True,
+        'MAX_RETRIES': 3,
+        'CIRCUIT_BREAKER_THRESHOLD': 5,
+        'CIRCUIT_BREAKER_TIMEOUT': 300,  # 5 minutes
+    },
+    'MEMORY_OPTIMIZATION': {
+        'ENABLED': True,
+        'MEMORY_THRESHOLD': 500 * 1024 * 1024,  # 500MB
+        'CLEANUP_INTERVAL': 600,  # 10 minutes
+        'ENABLE_PROFILING': DEBUG,
+    },
+    'ERROR_HANDLING': {
+        'ENABLED': True,
+        'ENABLE_CIRCUIT_BREAKER': True,
+        'ENABLE_AUTO_RECOVERY': True,
+        'ERROR_TRACKING': True,
+    },
+    'COMPRESSION': {
+        'ENABLED': True,
+        'MIN_COMPRESSION_SIZE': 500,  # bytes
+        'COMPRESSION_RATIO_THRESHOLD': 0.1,  # 10%
+        'ENABLE_CONDITIONAL_REQUESTS': True,
+    },
+    'GRACEFUL_SHUTDOWN': {
+        'ENABLED': True,
+        'SHUTDOWN_TIMEOUT': 30,  # seconds
+        'THREAD_WAIT_TIMEOUT': 15,  # seconds
+    },
+}
+
+# ===== HEALTH CHECK ENDPOINTS =====
+HEALTH_CHECK_ENDPOINTS = {
+    'simple': '/health/',
+    'detailed': '/health/detailed/',
+    'metrics': '/health/metrics/',
+    'performance': '/health/performance/',
 }

@@ -3,24 +3,36 @@
 # MySQL + yfinance + NASDAQ-only tickers
 # =========================================================================
 
-# ===== CORE DJANGO FRAMEWORK =====
-Django>=4.2.11,<5.0
-django-extensions>=3.2.0
-djangorestframework>=3.14.0
-django-cors-headers>=4.3.1
+# ===== CORE DEPENDENCIES =====
+Django>=5.1.4
+djangorestframework>=3.15.2
 
-# ===== DATABASE & CACHING =====
-mysqlclient>=2.2.0
+# ===== PERFORMANCE & OPTIMIZATION =====
+django-redis>=5.4.0
+redis>=5.2.0
+psutil>=6.1.0  # System monitoring
+django-extensions>=3.2.3  # Development utilities
 
-# ===== STOCK DATA & API =====
-yfinance>=0.2.25
-requests>=2.31.0
-urllib3>=2.0.0
+# ===== CORS & SECURITY =====
+django-cors-headers>=4.6.0
 
-# ===== TASK QUEUE & SCHEDULING =====
-celery>=5.3.0
-redis>=5.0.0
-schedule>=1.2.0
+# ===== DATA PROCESSING =====
+pandas>=2.2.2
+numpy>=2.0.0
+
+# ===== API & DATA SOURCES =====
+yfinance>=0.2.40
+requests>=2.32.3
+beautifulsoup4>=4.12.3
+lxml>=5.3.0
+
+# ===== FILE HANDLING =====
+openpyxl>=3.1.5
+xlsxwriter>=3.2.0
+
+# ===== ASYNC & TASK PROCESSING =====
+celery>=5.4.0
+kombu>=5.4.2
 
 # ===== DATABASE SUPPORT =====
 dj-database-url>=3.0.0
@@ -34,19 +46,31 @@ python-dotenv>=1.0.0
 # ===== TEXT PROCESSING & NLP =====
 textblob>=0.17.1
 
-# ===== NEWS SCRAPING =====
-feedparser>=6.0.0
-beautifulsoup4>=4.12.0
-lxml>=4.9.0
+# ===== FINANCIAL DATA =====
+alpha-vantage>=2.3.1
 
-# ===== DATA PROCESSING (OPTIONAL) =====
-# These are optional and will be installed if available
-numpy>=1.24.0
-pandas>=2.0.0
+# ===== DATETIME HANDLING =====
+python-dateutil>=2.9.0
 
-# ===== SECURITY & CRYPTO =====
-cryptography>=41.0.0
+# ===== HTTP & NETWORKING =====
+urllib3>=2.0.7
 
-# ===== MARKET HOURS MANAGER =====
-pytz>=2023.3
-psutil>=5.9.0
+# ===== CACHING & COMPRESSION =====
+django-compressor>=4.5.1
+django-cachalot>=2.6.3  # ORM caching
+
+# ===== MONITORING & LOGGING =====
+django-debug-toolbar>=4.4.6  # Development only
+sentry-sdk>=2.18.0  # Error tracking
+django-silk>=5.3.0  # Performance profiling
+
+# ===== FILTERING & PAGINATION =====
+django-filter>=24.3
+
+# ===== DEVELOPMENT & TESTING =====
+django-nose>=1.4.7
+coverage>=7.6.9
+
+# ===== ADDITIONAL UTILITIES =====
+Pillow>=11.0.0  # Image processing
+gunicorn>=23.0.0  # WSGI server for production

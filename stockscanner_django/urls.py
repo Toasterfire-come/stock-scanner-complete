@@ -1,15 +1,59 @@
+"""
+URL Configuration for Stock Scanner Django Project
+"""
 from django.contrib import admin
 from django.urls import path, include
-from core.views import homepage, health_check, api_documentation, endpoint_status
+from django.http import JsonResponse
+from django.utils import timezone
+
+# Import health check views
+from stocks.monitoring import health_check_detailed, health_check_simple, system_metrics, performance_metrics
+
+def api_root(request):
+    """API root endpoint with available endpoints"""
+    return JsonResponse({
+        'message': 'Stock Scanner API',
+        'version': '1.0.0',
+        'timestamp': timezone.now().isoformat(),
+        'endpoints': {
+            'stocks': '/api/stocks/',
+            'search': '/api/search/',
+            'health': '/health/',
+            'admin': '/admin/',
+        },
+        'status': 'operational'
+    })
 
 urlpatterns = [
-    path('', homepage, name='homepage'),
-    path('health/', health_check, name='health_check'),
-    path('api/health/', health_check, name='api_health_check'),  # WordPress expects this
-    path('docs/', api_documentation, name='api_documentation'),  # API Documentation
-    path('endpoint-status/', endpoint_status, name='endpoint_status'),  # Endpoint status check
+    # Admin interface
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
+    
+    # API root
+    path('api/', api_root, name='api_root'),
+    
+    # Stock API endpoints
     path('api/', include('stocks.urls')),
-    path('revenue/', include('stocks.revenue_urls')),
+    
+    # Health check and monitoring endpoints
+    path('health/', health_check_simple, name='health_check_simple'),
+    path('health/detailed/', health_check_detailed, name='health_check_detailed'),
+    path('health/metrics/', system_metrics, name='system_metrics'),
+    path('health/performance/', performance_metrics, name='performance_metrics'),
+    
+    # WordPress-compatible API endpoints (alternative paths)
+    path('wp-json/stock-scanner/v1/', include('stocks.urls')),
+    
+    # Legacy compatibility
+    path('', api_root, name='home'),
 ]
+
+# Add debug toolbar in development
+import os
+if os.environ.get('DEBUG', 'False').lower() == 'true':
+    try:
+        import debug_toolbar
+        urlpatterns = [
+            path('__debug__/', include(debug_toolbar.urls)),
+        ] + urlpatterns
+    except ImportError:
+        pass
