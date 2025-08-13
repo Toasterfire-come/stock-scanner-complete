@@ -51,10 +51,6 @@ INSTALLED_APPS = [
 
 # ===== MIDDLEWARE CONFIGURATION =====
 MIDDLEWARE = [
-    'stocks.graceful_shutdown.GracefulShutdownMiddleware',  # Graceful shutdown support
-    'stocks.compression_optimization.SmartCompressionMiddleware',  # Intelligent compression
-    'stocks.enhanced_error_handling.ErrorReportingMiddleware',  # Enhanced error reporting
-    'stocks.memory_optimization.RequestMemoryMiddleware',  # Memory monitoring per request
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -63,7 +59,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.gzip.GZipMiddleware',  # Enable gzip compression
+    
+    # Custom Stock Scanner middleware
+    'stocks.middleware.UserTierRateLimitMiddleware',
+    'stocks.middleware.FrontendOptimizationMiddleware',
+    'stocks.middleware.UserSettingsAutoSetupMiddleware',
+    'stocks.middleware.APIResponseOptimizationMiddleware',
+    'stocks.middleware.SecurityHeadersMiddleware',
+    'stocks.middleware.PerformanceMonitoringMiddleware',
 ]
 
 ROOT_URLCONF = 'stockscanner_django.urls'
@@ -393,3 +396,26 @@ CSRF_TRUSTED_ORIGINS = [
 # ===== ADDITIONAL SECURITY SETTINGS =====
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
+
+# ===== PAYPAL CONFIGURATION =====
+PAYPAL_BASE_URL = os.environ.get('PAYPAL_BASE_URL', 'https://api.sandbox.paypal.com')  # Use sandbox for development
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+PAYPAL_WEBHOOK_ID = os.environ.get('PAYPAL_WEBHOOK_ID', '')
+
+# ===== AUTO-SETUP CONFIGURATION =====
+# Automatically create user profiles and settings
+AUTO_CREATE_USER_PROFILES = True
+AUTO_OPTIMIZE_FRONTEND = True
+AUTO_APPLY_RATE_LIMITS = True
+
+# ===== FRONTEND OPTIMIZATION DEFAULTS =====
+FRONTEND_OPTIMIZATION_DEFAULTS = {
+    'enabled': True,
+    'virtual_scrolling': True,
+    'fuzzy_search': True,
+    'progressive_loading': True,
+    'client_side_charts': True,
+    'cache_size_mb': 50,
+    'items_per_page': 50
+}

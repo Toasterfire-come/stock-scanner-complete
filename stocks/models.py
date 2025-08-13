@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
 import json
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from datetime import timedelta
 
 # Import the optimized manager
 from .query_optimization import OptimizedStockManager
@@ -545,3 +548,240 @@ class MonthlyRevenueSummary(models.Model):
     
     def __str__(self):
         return f"Revenue Summary {self.month_year}: ${self.total_revenue}"
+
+# ===== USER SUBSCRIPTION AND PAYMENT MODELS =====
+
+class UserTier(models.TextChoices):
+    """User subscription tiers with different features and rate limits"""
+    FREE = 'free', 'Free'
+    BASIC = 'basic', 'Basic'
+    PRO = 'pro', 'Pro'
+    ENTERPRISE = 'enterprise', 'Enterprise'
+
+class UserProfile(models.Model):
+    """Extended user profile with subscription and settings"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    tier = models.CharField(max_length=20, choices=UserTier.choices, default=UserTier.FREE)
+    subscription_active = models.BooleanField(default=False)
+    subscription_start = models.DateTimeField(null=True, blank=True)
+    subscription_end = models.DateTimeField(null=True, blank=True)
+    paypal_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Frontend optimization preferences
+    enable_frontend_optimization = models.BooleanField(default=True)
+    enable_client_side_charts = models.BooleanField(default=True)
+    enable_progressive_loading = models.BooleanField(default=True)
+    max_cache_size_mb = models.IntegerField(default=50)  # Browser cache limit
+    
+    # API usage tracking
+    api_calls_today = models.IntegerField(default=0)
+    api_calls_this_month = models.IntegerField(default=0)
+    last_api_call = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'user_profiles'
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.tier}"
+    
+    @property
+    def is_subscription_active(self):
+        """Check if subscription is currently active"""
+        if not self.subscription_active:
+            return False
+        if self.subscription_end and timezone.now() > self.subscription_end:
+            return False
+        return True
+    
+    def get_rate_limits(self):
+        """Get rate limits based on user tier"""
+        limits = {
+            UserTier.FREE: {
+                'api_calls_per_hour': 100,
+                'api_calls_per_day': 1000,
+                'max_watchlist_items': 10,
+                'real_time_data': False,
+                'advanced_charts': False,
+                'data_export': False
+            },
+            UserTier.BASIC: {
+                'api_calls_per_hour': 500,
+                'api_calls_per_day': 5000,
+                'max_watchlist_items': 50,
+                'real_time_data': True,
+                'advanced_charts': True,
+                'data_export': True
+            },
+            UserTier.PRO: {
+                'api_calls_per_hour': 2000,
+                'api_calls_per_day': 20000,
+                'max_watchlist_items': 200,
+                'real_time_data': True,
+                'advanced_charts': True,
+                'data_export': True
+            },
+            UserTier.ENTERPRISE: {
+                'api_calls_per_hour': 10000,
+                'api_calls_per_day': 100000,
+                'max_watchlist_items': 1000,
+                'real_time_data': True,
+                'advanced_charts': True,
+                'data_export': True
+            }
+        }
+        return limits.get(self.tier, limits[UserTier.FREE])
+    
+    def can_make_api_call(self):
+        """Check if user can make another API call based on their tier limits"""
+        limits = self.get_rate_limits()
+        
+        # Check daily limit
+        if self.api_calls_today >= limits['api_calls_per_day']:
+            return False, "Daily API limit exceeded"
+        
+        # Check hourly limit (simplified - would need more sophisticated tracking)
+        
+        if self.last_api_call:
+            one_hour_ago = timezone.now() - timedelta(hours=1)
+            if self.last_api_call > one_hour_ago:
+                # In a real implementation, you'd track hourly calls more precisely
+                estimated_hourly_calls = min(self.api_calls_today, limits['api_calls_per_hour'])
+                if estimated_hourly_calls >= limits['api_calls_per_hour']:
+                    return False, "Hourly API limit exceeded"
+        
+        return True, "OK"
+    
+    def increment_api_usage(self):
+        """Increment API usage counters"""
+        self.api_calls_today += 1
+        self.api_calls_this_month += 1
+        self.last_api_call = timezone.now()
+        self.save(update_fields=['api_calls_today', 'api_calls_this_month', 'last_api_call'])
+
+class PaymentPlan(models.Model):
+    """Available payment plans"""
+    name = models.CharField(max_length=50)
+    tier = models.CharField(max_length=20, choices=UserTier.choices)
+    price_monthly = models.DecimalField(max_digits=10, decimal_places=2)
+    price_yearly = models.DecimalField(max_digits=10, decimal_places=2)
+    paypal_plan_id_monthly = models.CharField(max_length=100, blank=True)
+    paypal_plan_id_yearly = models.CharField(max_length=100, blank=True)
+    features = models.JSONField(default=dict)  # Store plan features as JSON
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'payment_plans'
+        
+    def __str__(self):
+        return f"{self.name} - ${self.price_monthly}/month"
+
+class PaymentTransaction(models.Model):
+    """Track all payment transactions"""
+    TRANSACTION_STATUS = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE)
+    paypal_transaction_id = models.CharField(max_length=100, unique=True)
+    paypal_subscription_id = models.CharField(max_length=100, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    status = models.CharField(max_length=20, choices=TRANSACTION_STATUS, default='pending')
+    billing_cycle = models.CharField(max_length=10, choices=[('monthly', 'Monthly'), ('yearly', 'Yearly')])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # PayPal webhook data
+    webhook_data = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        db_table = 'payment_transactions'
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.plan.name} - {self.status}"
+
+class UserAPIUsage(models.Model):
+    """Detailed API usage tracking for analytics and billing"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_usage')
+    endpoint = models.CharField(max_length=200)
+    method = models.CharField(max_length=10)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    response_time_ms = models.IntegerField()
+    status_code = models.IntegerField()
+    user_tier = models.CharField(max_length=20, choices=UserTier.choices)
+    
+    # Frontend optimization specific tracking
+    frontend_optimized = models.BooleanField(default=False)
+    data_size_bytes = models.IntegerField(default=0)
+    cache_hit = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'user_api_usage'
+        indexes = [
+            models.Index(fields=['user', 'timestamp']),
+            models.Index(fields=['endpoint', 'timestamp']),
+            models.Index(fields=['user_tier', 'timestamp']),
+        ]
+
+class UserSettings(models.Model):
+    """User-specific settings for frontend optimization and features"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
+    
+    # Frontend optimization settings
+    enable_virtual_scrolling = models.BooleanField(default=True)
+    enable_fuzzy_search = models.BooleanField(default=True)
+    enable_real_time_charts = models.BooleanField(default=True)
+    chart_theme = models.CharField(max_length=20, choices=[('light', 'Light'), ('dark', 'Dark')], default='light')
+    items_per_page = models.IntegerField(default=50, validators=[MinValueValidator(10), MaxValueValidator(200)])
+    
+    # Data preferences
+    default_watchlist_view = models.CharField(max_length=20, choices=[('grid', 'Grid'), ('list', 'List'), ('chart', 'Chart')], default='grid')
+    auto_refresh_interval = models.IntegerField(default=30, help_text="Seconds between auto-refresh")
+    enable_notifications = models.BooleanField(default=True)
+    
+    # Privacy settings
+    share_usage_analytics = models.BooleanField(default=True)
+    enable_performance_tracking = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'user_settings'
+        
+    def __str__(self):
+        return f"Settings for {self.user.username}"
+
+# ===== SIGNALS FOR AUTO-CREATION =====
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_user_profile_and_settings(sender, instance, created, **kwargs):
+    """Automatically create UserProfile and UserSettings when a new user is created"""
+    if created:
+        UserProfile.objects.create(user=instance)
+        UserSettings.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile_and_settings(sender, instance, **kwargs):
+    """Save UserProfile and UserSettings when user is saved"""
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        UserProfile.objects.create(user=instance)
+        
+    if hasattr(instance, 'settings'):
+        instance.settings.save()
+    else:
+        UserSettings.objects.create(user=instance)

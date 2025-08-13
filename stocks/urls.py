@@ -3,7 +3,7 @@ from . import views, api_views
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
-from . import frontend_optimization, browser_charts, client_side_utilities
+from . import frontend_optimization, browser_charts, client_side_utilities, paypal_integration, user_management
 
 urlpatterns = [
     # Basic API endpoint
@@ -71,4 +71,20 @@ urlpatterns = [
     # Client-side utilities
     path('client/utilities/', client_side_utilities.get_client_utilities, name='client_utilities'),
     path('client/performance-config/', client_side_utilities.get_performance_config, name='performance_config'),
+    
+    # PayPal integration endpoints
+    path('payment/create-subscription/', paypal_integration.create_subscription, name='create_subscription'),
+    path('payment/cancel-subscription/', paypal_integration.cancel_subscription, name='cancel_subscription'),
+    path('payment/subscription-status/', paypal_integration.subscription_status, name='subscription_status'),
+    path('payment/plans/', paypal_integration.available_plans, name='available_plans'),
+    path('payment/webhook/', paypal_integration.paypal_webhook, name='paypal_webhook'),
+    
+    # User management endpoints
+    path('user/settings/', user_management.user_settings, name='user_settings'),
+    path('user/profile/', user_management.user_profile, name='user_profile'),
+    path('user/api-usage/', user_management.api_usage_stats, name='api_usage_stats'),
+    path('user/subscription/', user_management.subscription_management, name='subscription_management'),
+    path('user/optimization-config/', user_management.frontend_optimization_config, name='optimization_config'),
+    path('user/export-data/', user_management.export_user_data, name='export_user_data'),
+    path('user/reset-usage/', user_management.reset_api_usage, name='reset_api_usage'),
 ]
