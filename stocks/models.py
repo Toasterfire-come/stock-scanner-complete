@@ -3,7 +3,12 @@ from django.contrib.auth.models import User
 from decimal import Decimal
 import json
 
+# Import the optimized manager
+from .query_optimization import OptimizedStockManager
+
 class Stock(models.Model):
+    # Use optimized manager for performance
+    objects = OptimizedStockManager()
     # Basic stock info
     ticker = models.CharField(max_length=10, unique=True)
     symbol = models.CharField(max_length=10, unique=True)  # Keep for compatibility

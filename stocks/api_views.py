@@ -1165,4 +1165,188 @@ def create_alert_api(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+# ===== OPTIMIZATION AND HEALTH CHECK ENDPOINTS =====
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def database_optimization_status(request):
+    """
+    Get current database optimization status
+    """
+    try:
+        from .database_indexes import get_database_optimization_status
+        
+        optimization_data = get_database_optimization_status()
+        
+        return Response({
+            'status': 'success',
+            'optimization_status': optimization_data,
+            'timestamp': timezone.now()
+        })
+        
+    except ImportError:
+        return Response({
+            'status': 'error',
+            'message': 'Database optimization module not available',
+            'timestamp': timezone.now()
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
+    except Exception as e:
+        logger.error(f"Database optimization status error: {e}")
+        return Response({
+            'status': 'error',
+            'message': 'Failed to get optimization status',
+            'timestamp': timezone.now()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Consider adding proper permissions for production
+def create_indexes_endpoint(request):
+    """
+    Manually trigger database index creation
+    """
+    try:
+        from .database_indexes import check_and_create_indexes
+        
+        force = request.data.get('force', False)
+        
+        results = check_and_create_indexes()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Index creation completed',
+            'results': {
+                'created': len(results.get('created', [])),
+                'skipped': len(results.get('skipped', [])),
+                'errors': len(results.get('errors', [])),
+                'details': results
+            },
+            'timestamp': timezone.now()
+        })
+        
+    except ImportError:
+        return Response({
+            'status': 'error',
+            'message': 'Database index module not available',
+            'timestamp': timezone.now()
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
+    except Exception as e:
+        logger.error(f"Index creation error: {e}")
+        return Response({
+            'status': 'error',
+            'message': 'Failed to create indexes',
+            'error_details': str(e),
+            'timestamp': timezone.now()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def memory_status_endpoint(request):
+    """
+    Get current memory optimization status and metrics
+    """
+    try:
+        from .memory_optimization import memory_manager
+        
+        memory_stats = memory_manager.get_memory_stats()
+        memory_usage = memory_manager.get_memory_usage()
+        
+        return Response({
+            'status': 'success',
+            'memory_status': {
+                'current_usage': memory_usage,
+                'statistics': memory_stats,
+                'optimization_active': True
+            },
+            'timestamp': timezone.now()
+        })
+        
+    except ImportError:
+        return Response({
+            'status': 'error',
+            'message': 'Memory optimization module not available',
+            'timestamp': timezone.now()
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
+    except Exception as e:
+        logger.error(f"Memory status error: {e}")
+        return Response({
+            'status': 'error',
+            'message': 'Failed to get memory status',
+            'timestamp': timezone.now()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def system_optimization_overview(request):
+    """
+    Get comprehensive overview of all optimization systems
+    """
+    try:
+        overview = {
+            'optimization_systems': {},
+            'health_status': {},
+            'performance_metrics': {}
+        }
+        
+        # Database optimization
+        try:
+            from .database_indexes import get_database_optimization_status
+            overview['optimization_systems']['database'] = get_database_optimization_status()
+        except ImportError:
+            overview['optimization_systems']['database'] = {'status': 'not_available'}
+        
+        # Memory optimization
+        try:
+            from .memory_optimization import memory_manager
+            overview['optimization_systems']['memory'] = {
+                'status': 'active',
+                'current_usage': memory_manager.get_memory_usage(),
+                'stats': memory_manager.get_memory_stats()
+            }
+        except ImportError:
+            overview['optimization_systems']['memory'] = {'status': 'not_available'}
+        
+        # Health monitoring
+        try:
+            from .monitoring import SystemHealthChecker
+            checker = SystemHealthChecker()
+            health_data = checker.run_all_checks()
+            overview['health_status'] = {
+                'overall_status': health_data.get('status', 'unknown'),
+                'check_count': len(health_data.get('checks', {}))
+            }
+        except ImportError:
+            overview['health_status'] = {'status': 'not_available'}
+        
+        # Error handling status
+        try:
+            from .enhanced_error_handling import error_recovery
+            overview['optimization_systems']['error_handling'] = {
+                'status': 'active',
+                'circuit_breakers': len(error_recovery.circuit_breakers),
+                'error_tracking': True
+            }
+        except ImportError:
+            overview['optimization_systems']['error_handling'] = {'status': 'not_available'}
+        
+        return Response({
+            'status': 'success',
+            'overview': overview,
+            'timestamp': timezone.now()
+        })
+        
+    except Exception as e:
+        logger.error(f"System optimization overview error: {e}")
+        return Response({
+            'status': 'error',
+            'message': 'Failed to generate optimization overview',
+            'timestamp': timezone.now()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # Helper functions - moved to utils for better organization

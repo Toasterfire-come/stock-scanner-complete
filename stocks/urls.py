@@ -49,4 +49,10 @@ urlpatterns = [
     
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
+    
+    # Optimization and monitoring endpoints
+    path('optimization/database/', api_views.database_optimization_status, name='db_optimization_status'),
+    path('optimization/indexes/create/', api_views.create_indexes_endpoint, name='create_indexes'),
+    path('optimization/memory/', api_views.memory_status_endpoint, name='memory_status'),
+    path('optimization/overview/', api_views.system_optimization_overview, name='optimization_overview'),
 ]
