@@ -3,6 +3,7 @@ from . import views, api_views
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
+from . import frontend_optimization, browser_charts, client_side_utilities
 
 urlpatterns = [
     # Basic API endpoint
@@ -55,4 +56,19 @@ urlpatterns = [
     path('optimization/indexes/create/', api_views.create_indexes_endpoint, name='create_indexes'),
     path('optimization/memory/', api_views.memory_status_endpoint, name='memory_status'),
     path('optimization/overview/', api_views.system_optimization_overview, name='optimization_overview'),
+    
+    # Frontend optimization endpoints
+    path('frontend/minimal-stocks/', frontend_optimization.get_minimal_stocks_api, name='minimal_stocks'),
+    path('frontend/configuration/', frontend_optimization.get_frontend_configuration, name='frontend_config'),
+    path('frontend/chart-data/', frontend_optimization.get_raw_chart_data, name='raw_chart_data'),
+    path('frontend/bulk-data/', frontend_optimization.bulk_minimal_data, name='bulk_minimal_data'),
+    path('frontend/scripts/', frontend_optimization.get_client_side_scripts, name='client_scripts'),
+    
+    # Browser chart system
+    path('charts/library/', browser_charts.get_chart_library, name='chart_library'),
+    path('charts/data-stream/', browser_charts.get_chart_data_stream, name='chart_stream'),
+    
+    # Client-side utilities
+    path('client/utilities/', client_side_utilities.get_client_utilities, name='client_utilities'),
+    path('client/performance-config/', client_side_utilities.get_performance_config, name='performance_config'),
 ]
