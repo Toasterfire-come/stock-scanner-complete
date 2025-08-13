@@ -84,7 +84,7 @@ class CustomUserAdmin(BaseUserAdmin):
         if hasattr(obj, 'profile'):
             usage = obj.profile.api_calls_today
             limits = obj.profile.get_rate_limits()
-            daily_limit = limits.get('api_calls_per_day', 1000)
+            daily_limit = limits.get('api_calls_per_day', 15)
             percentage = (usage / daily_limit) * 100 if daily_limit > 0 else 0
             
             color = 'red' if percentage > 80 else 'orange' if percentage > 60 else 'green'

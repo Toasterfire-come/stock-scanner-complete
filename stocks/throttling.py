@@ -58,17 +58,17 @@ class StockAPIThrottle(IntelligentRateThrottle, UserRateThrottle):
                 membership = Membership.objects.get(user=self.request.user)
                 
                 # Different rates based on membership level
-                rate_map = {
-                    'free': '100/hour',
-                    'basic': '500/hour', 
-                    'pro': '2000/hour',
-                    'enterprise': '10000/hour'
-                }
+                            rate_map = {
+                'free': '15/hour',
+                'basic': '100/hour',
+                'pro': '300/hour',
+                'enterprise': '9999/hour'
+            }
                 
-                return rate_map.get(membership.plan, '100/hour')
+                return rate_map.get(membership.plan, '15/hour')
                 
             except (Membership.DoesNotExist, Exception):
-                return '100/hour'  # Default for authenticated users
+                return '15/hour'  # Default for authenticated users
         
         return '50/hour'  # Default rate
 
@@ -84,7 +84,7 @@ class SearchThrottle(IntelligentRateThrottle, UserRateThrottle):
     Specialized throttling for search endpoints
     """
     scope = 'search'
-    rate = '100/hour'
+    rate = '15/hour'
     
     def allow_request(self, request, view):
         """Enhanced allow logic with search complexity detection"""
@@ -320,7 +320,7 @@ class SmartThrottleMiddleware:
 THROTTLE_RATES = {
     'stock_api': '200/hour',
     'anon_api': '30/hour', 
-    'search': '100/hour',
+    'search': '15/hour',
     'bulk_operation': '10/hour',
     'realtime': '300/hour',
     'admin_api': '1000/hour',

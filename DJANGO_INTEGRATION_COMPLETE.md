@@ -33,10 +33,10 @@ def create_user_profile_and_settings(sender, instance, created, **kwargs):
 **Implementation**: `UserProfile` model with `UserTier` choices, `UserTierRateLimitMiddleware`
 
 #### **Tier Structure**:
-- **FREE**: 100 API calls/hour, 1,000/day, 10 watchlist items
-- **BASIC**: 500 API calls/hour, 5,000/day, 50 watchlist items, real-time data
-- **PRO**: 2,000 API calls/hour, 20,000/day, 200 watchlist items, advanced charts
-- **ENTERPRISE**: 10,000 API calls/hour, 100,000/day, 1,000 watchlist items, unlimited features
+- **FREE**: $0.00 - 15 API calls/hour & day, 3 watchlist items
+- **BASIC**: $24.99/month - 100 API calls/hour, 1,500/day, 25 watchlist items, real-time data
+- **PRO**: $49.99/month - 300 API calls/hour, 5,000/day, 100 watchlist items, advanced charts
+- **ENTERPRISE**: $79.99/month - Unlimited API calls, unlimited watchlist items, all features
 
 #### **Rate Limiting Features**:
 - **Automatic Enforcement** - Middleware enforces limits on every API call
@@ -218,12 +218,12 @@ def create_user_profile_and_settings(sender, instance, created, **kwargs):
 ## 🛡️ **Security & Rate Limiting**
 
 ### **Rate Limiting by Tier**:
-| **Tier** | **Hourly Limit** | **Daily Limit** | **Watchlist Items** | **Real-Time Data** |
-|----------|------------------|-----------------|---------------------|-------------------|
-| Free | 100 | 1,000 | 10 | ❌ |
-| Basic | 500 | 5,000 | 50 | ✅ |
-| Pro | 2,000 | 20,000 | 200 | ✅ |
-| Enterprise | 10,000 | 100,000 | 1,000 | ✅ |
+| **Tier** | **Price** | **Hourly Limit** | **Daily Limit** | **Watchlist Items** | **Real-Time Data** |
+|----------|-----------|------------------|-----------------|---------------------|-------------------|
+| Free | $0.00 | 15 | 15 | 3 | ❌ |
+| Basic | $24.99/month | 100 | 1,500 | 25 | ✅ |
+| Pro | $49.99/month | 300 | 5,000 | 100 | ✅ |
+| Enterprise | $79.99/month | Unlimited | Unlimited | Unlimited | ✅ |
 
 ### **Security Features**:
 - **JWT-like Session Management** - Secure user sessions

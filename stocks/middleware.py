@@ -92,7 +92,7 @@ class UserTierRateLimitMiddleware(MiddlewareMixin):
         cache_key = f"anon_rate_limit_{ip_address}"
         
         current_count = cache.get(cache_key, 0)
-        max_anonymous_requests = 50  # per hour for anonymous users
+        max_anonymous_requests = 5  # per hour for anonymous users
         
         if current_count >= max_anonymous_requests:
             return JsonResponse({

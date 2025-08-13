@@ -599,36 +599,44 @@ class UserProfile(models.Model):
         """Get rate limits based on user tier"""
         limits = {
             UserTier.FREE: {
-                'api_calls_per_hour': 100,
-                'api_calls_per_day': 1000,
-                'max_watchlist_items': 10,
+                'api_calls_per_hour': 15,
+                'api_calls_per_day': 15,
+                'max_watchlist_items': 3,
                 'real_time_data': False,
                 'advanced_charts': False,
-                'data_export': False
+                'data_export': False,
+                'price_monthly': 0.00,
+                'price_yearly': 0.00
             },
             UserTier.BASIC: {
-                'api_calls_per_hour': 500,
-                'api_calls_per_day': 5000,
-                'max_watchlist_items': 50,
+                'api_calls_per_hour': 100,
+                'api_calls_per_day': 1500,
+                'max_watchlist_items': 25,
                 'real_time_data': True,
                 'advanced_charts': True,
-                'data_export': True
+                'data_export': True,
+                'price_monthly': 24.99,
+                'price_yearly': 274.89  # 10% annual discount
             },
             UserTier.PRO: {
-                'api_calls_per_hour': 2000,
-                'api_calls_per_day': 20000,
-                'max_watchlist_items': 200,
+                'api_calls_per_hour': 300,
+                'api_calls_per_day': 5000,
+                'max_watchlist_items': 100,
                 'real_time_data': True,
                 'advanced_charts': True,
-                'data_export': True
+                'data_export': True,
+                'price_monthly': 49.99,
+                'price_yearly': 549.89  # 10% annual discount
             },
             UserTier.ENTERPRISE: {
-                'api_calls_per_hour': 10000,
-                'api_calls_per_day': 100000,
-                'max_watchlist_items': 1000,
+                'api_calls_per_hour': 9999,  # Effectively unlimited
+                'api_calls_per_day': 999999,  # Effectively unlimited
+                'max_watchlist_items': 9999,  # Effectively unlimited
                 'real_time_data': True,
                 'advanced_charts': True,
-                'data_export': True
+                'data_export': True,
+                'price_monthly': 79.99,
+                'price_yearly': 879.89  # 10% annual discount
             }
         }
         return limits.get(self.tier, limits[UserTier.FREE])
