@@ -1,0 +1,49 @@
+<!-- wp:template-part {"slug":"header","theme":"zatra","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","metadata":{"name":"Main Group"},"style":{"spacing":{"blockGap":"0px","margin":{"top":"0","bottom":"0"}}},"layout":{"type":"default"}} -->
+<main class="wp-block-group" style="margin-top:0;margin-bottom:0">
+    <!-- wp:template-part {"slug":"banner-section","theme":"zatra"} /-->
+
+    <!-- wp:template-part {"slug":"about-section","theme":"zatra"} /-->
+
+    <!-- wp:group {"metadata":{"name":"Blog List"},"style":{"spacing":{"padding":{"top":"var:preset|spacing|70","bottom":"var:preset|spacing|70"}}},"layout":{"type":"constrained"}} -->
+    <div class="wp-block-group"
+        style="padding-top:var(--wp--preset--spacing--70);padding-bottom:var(--wp--preset--spacing--70)">
+        <!-- wp:query {"queryId":0,"query":{"perPage":6,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"","inherit":true,"taxQuery":null,"parents":[]},"tagName":"main","layout":{"contentSize":null,"type":"constrained"}} -->
+        <main class="wp-block-query">
+            <!-- wp:post-template {"style":{"spacing":{"blockGap":"var:preset|spacing|70"}},"layout":{"type":"grid","columnCount":"2","minimumColumnWidth":null}} -->
+            <!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|30","bottom":"var:preset|spacing|40","left":"var:preset|spacing|30","right":"var:preset|spacing|30"}},"border":{"width":"0px","style":"none"}}} -->
+            <div class="wp-block-group"
+                style="border-style:none;border-width:0px;padding-top:var(--wp--preset--spacing--30);padding-right:var(--wp--preset--spacing--30);padding-bottom:var(--wp--preset--spacing--40);padding-left:var(--wp--preset--spacing--30)">
+                <!-- wp:post-featured-image {"isLink":true,"aspectRatio":"4/3","style":{"border":{"radius":"10px","bottom":{"color":"var:preset|color|custom-color-1","width":"3px"},"top":{"color":"var:preset|color|custom-color-1","width":"3px"},"right":[],"left":[]}}} /-->
+
+                <!-- wp:post-title {"isLink":true,"style":{"typography":{"fontStyle":"normal","fontWeight":"600"}},"fontSize":"large"} /-->
+
+                <!-- wp:post-excerpt {"excerptLength":30,"fontSize":"medium"} /-->
+            </div>
+            <!-- /wp:group -->
+            <!-- /wp:post-template -->
+
+            <!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|60"}}},"layout":{"inherit":true,"type":"constrained"}} -->
+            <div class="wp-block-group" style="padding-top:var(--wp--preset--spacing--60)">
+                <!-- wp:query-pagination {"paginationArrow":"chevron","style":{"typography":{"fontSize":"18px"}},"layout":{"type":"flex","justifyContent":"center"}} -->
+                <!-- wp:query-pagination-previous /-->
+
+                <!-- wp:query-pagination-numbers /-->
+
+                <!-- wp:query-pagination-next /-->
+                <!-- /wp:query-pagination -->
+            </div>
+            <!-- /wp:group -->
+        </main>
+        <!-- /wp:query -->
+    </div>
+    <!-- /wp:group -->
+
+    <!-- wp:template-part {"slug":"choose-section","theme":"zatra"} /-->
+
+    <!-- wp:template-part {"slug":"newsletter-cta","theme":"zatra","tagName":"newsletter-cta"} /-->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","theme":"zatra","tagName":"footer"} /-->

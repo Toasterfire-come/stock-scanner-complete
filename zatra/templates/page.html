@@ -1,0 +1,37 @@
+<!-- wp:template-part {"slug":"header","theme":"zatra","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","metadata":{"name":"Main Group"},"style":{"spacing":{"blockGap":"0px","margin":{"top":"0","bottom":"0"}},"dimensions":{"minHeight":"50vh"}},"layout":{"type":"default"}} -->
+<main class="wp-block-group" style="min-height:50vh;margin-top:0;margin-bottom:0">
+    <!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|80","bottom":"var:preset|spacing|80"}},"elements":{"link":{"color":{"text":"var:preset|color|custom-color-3"},":hover":{"color":{"text":"var:preset|color|custom-color-1"}}}}},"textColor":"custom-color-3","gradient":"custom-color-2","layout":{"type":"constrained"}} -->
+    <div class="wp-block-group has-custom-color-3-color has-custom-color-2-gradient-background has-text-color has-background has-link-color"
+        style="padding-top:var(--wp--preset--spacing--80);padding-bottom:var(--wp--preset--spacing--80)">
+        <!-- wp:group {"style":{"border":{"left":{"color":"var:preset|color|custom-color-1","width":"5px"},"top":[],"right":[],"bottom":[]},"spacing":{"padding":{"right":"15%"}}},"layout":{"type":"default"}} -->
+        <div class="wp-block-group"
+            style="border-left-color:var(--wp--preset--color--custom-color-1);border-left-width:5px;padding-right:15%">
+            <!-- wp:post-title {"level":1,"style":{"spacing":{"padding":{"right":"var:preset|spacing|40","left":"var:preset|spacing|40"}},"typography":{"fontSize":"70px"}}} /-->
+        </div>
+        <!-- /wp:group -->
+
+        <!-- wp:group {"style":{"border":{"right":{"color":"var:preset|color|custom-color-1","width":"5px"},"top":[],"bottom":[],"left":[]},"spacing":{"padding":{"right":"var:preset|spacing|30","left":"var:preset|spacing|30"}}},"layout":{"type":"constrained"}} -->
+        <div class="wp-block-group"
+            style="border-right-color:var(--wp--preset--color--custom-color-1);border-right-width:5px;padding-right:var(--wp--preset--spacing--30);padding-left:var(--wp--preset--spacing--30)">
+            <!-- wp:paragraph {"align":"right","fontSize":"medium"} -->
+            <p class="has-text-align-right has-medium-font-size">Teamwork at the<br>heart of our process</p>
+            <!-- /wp:paragraph -->
+        </div>
+        <!-- /wp:group -->
+    </div>
+    <!-- /wp:group -->
+
+    <!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|70","bottom":"var:preset|spacing|70"}}},"backgroundColor":"custom-color-4","layout":{"type":"constrained","contentSize":"920px"}} -->
+    <div class="wp-block-group has-custom-color-4-background-color has-background"
+        style="padding-top:var(--wp--preset--spacing--70);padding-bottom:var(--wp--preset--spacing--70)">
+        <!-- wp:post-content /-->
+    </div>
+    <!-- /wp:group -->
+
+    <!-- wp:template-part {"slug":"newsletter-cta","theme":"zatra","tagName":"newsletter-cta"} /-->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","theme":"zatra","tagName":"footer"} /-->
