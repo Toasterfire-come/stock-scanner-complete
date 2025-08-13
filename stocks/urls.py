@@ -3,7 +3,8 @@ from . import views, api_views
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
-from . import frontend_optimization, browser_charts, client_side_utilities, paypal_integration, user_management
+from . import frontend_optimization, browser_charts, client_side_utilities
+from . import paypal_integration, user_management
 
 urlpatterns = [
     # Basic API endpoint
