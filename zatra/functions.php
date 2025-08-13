@@ -44,9 +44,14 @@ add_action('after_setup_theme', 'stock_scanner_pro_setup');
  * Enqueue Scripts and Styles
  */
 function stock_scanner_pro_scripts() {
-    // Theme styles
+    // Theme styles (maintain original Zatra styling)
+    wp_enqueue_style('zatra-style', get_stylesheet_uri(), array(), wp_get_theme()->get('Version'));
+    
+    // Font Awesome
     wp_enqueue_style('font-awesome', get_template_directory_uri() . '/assets/framework/font-awesome-6/css/all.css', array(), '6.0.0');
-    wp_enqueue_style('stock-scanner-pro-style', get_stylesheet_uri(), array(), wp_get_theme()->get('Version'));
+    
+    // Stock Scanner Pro enhanced styles
+    wp_enqueue_style('stock-scanner-pro-css', get_template_directory_uri() . '/assets/css/stock-scanner-pro.css', array('zatra-style'), wp_get_theme()->get('Version'));
     
     // Chart.js for advanced charts
     wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', array(), '3.9.1', true);
