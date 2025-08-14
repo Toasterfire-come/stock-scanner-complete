@@ -2203,3 +2203,408 @@ function get_stock_scanner_page_type() {
     global $post;
     return get_post_meta($post->ID, '_stock_scanner_page_type', true);
 }
+
+// =============================================================================
+// ENHANCED SEO FUNCTIONS
+// =============================================================================
+
+/**
+ * Add custom SEO meta boxes to pages
+ */
+function zatra_add_seo_meta_boxes() {
+    add_meta_box(
+        'zatra_seo_meta',
+        'SEO Settings',
+        'zatra_seo_meta_callback',
+        'page',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'zatra_add_seo_meta_boxes');
+
+/**
+ * SEO meta box callback
+ */
+function zatra_seo_meta_callback($post) {
+    wp_nonce_field('zatra_seo_meta_nonce', 'zatra_seo_meta_nonce_field');
+    
+    $seo_description = get_post_meta($post->ID, '_seo_description', true);
+    $seo_keywords = get_post_meta($post->ID, '_seo_keywords', true);
+    $seo_title = get_post_meta($post->ID, '_seo_title', true);
+    $noindex = get_post_meta($post->ID, '_seo_noindex', true);
+    
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="seo_title">SEO Title:</label></th>';
+    echo '<td><input type="text" id="seo_title" name="seo_title" value="' . esc_attr($seo_title) . '" style="width:100%" /></td></tr>';
+    echo '<tr><th><label for="seo_description">Meta Description:</label></th>';
+    echo '<td><textarea id="seo_description" name="seo_description" rows="3" style="width:100%">' . esc_textarea($seo_description) . '</textarea></td></tr>';
+    echo '<tr><th><label for="seo_keywords">Keywords:</label></th>';
+    echo '<td><input type="text" id="seo_keywords" name="seo_keywords" value="' . esc_attr($seo_keywords) . '" style="width:100%" placeholder="Separate keywords with commas" /></td></tr>';
+    echo '<tr><th><label for="seo_noindex">Search Engine Visibility:</label></th>';
+    echo '<td><label><input type="checkbox" id="seo_noindex" name="seo_noindex" value="1" ' . checked($noindex, 1, false) . ' /> Discourage search engines from indexing this page</label></td></tr>';
+    echo '</table>';
+}
+
+/**
+ * Save SEO meta data
+ */
+function zatra_save_seo_meta($post_id) {
+    if (!isset($_POST['zatra_seo_meta_nonce_field']) || !wp_verify_nonce($_POST['zatra_seo_meta_nonce_field'], 'zatra_seo_meta_nonce')) {
+        return;
+    }
+    
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    if (isset($_POST['seo_title'])) {
+        update_post_meta($post_id, '_seo_title', sanitize_text_field($_POST['seo_title']));
+    }
+    
+    if (isset($_POST['seo_description'])) {
+        update_post_meta($post_id, '_seo_description', sanitize_textarea_field($_POST['seo_description']));
+    }
+    
+    if (isset($_POST['seo_keywords'])) {
+        update_post_meta($post_id, '_seo_keywords', sanitize_text_field($_POST['seo_keywords']));
+    }
+    
+    if (isset($_POST['seo_noindex'])) {
+        update_post_meta($post_id, '_seo_noindex', 1);
+    } else {
+        delete_post_meta($post_id, '_seo_noindex');
+    }
+}
+add_action('save_post', 'zatra_save_seo_meta');
+
+/**
+ * Custom document title for better SEO
+ */
+function zatra_custom_document_title($title) {
+    global $post;
+    
+    if (is_singular() && isset($post)) {
+        $custom_title = get_post_meta($post->ID, '_seo_title', true);
+        if (!empty($custom_title)) {
+            return $custom_title;
+        }
+    }
+    
+    return $title;
+}
+add_filter('pre_get_document_title', 'zatra_custom_document_title');
+
+/**
+ * Add robots meta tag based on settings
+ */
+function zatra_robots_meta() {
+    global $post;
+    
+    if (is_singular() && isset($post)) {
+        $noindex = get_post_meta($post->ID, '_seo_noindex', true);
+        if ($noindex) {
+            echo '<meta name="robots" content="noindex, nofollow">' . "\n";
+            return;
+        }
+    }
+    
+    // Default robots tag is already handled in header.php
+}
+add_action('wp_head', 'zatra_robots_meta', 1);
+
+/**
+ * Generate breadcrumbs for better navigation and SEO
+ */
+function zatra_breadcrumbs() {
+    $home_title = get_bloginfo('name');
+    $delimiter = ' &raquo; ';
+    $before = '<span class="current">';
+    $after = '</span>';
+    
+    if (!is_home() && !is_front_page()) {
+        echo '<div class="breadcrumbs" itemscope itemtype="https://schema.org/BreadcrumbList">';
+        echo '<span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+        echo '<a itemprop="item" href="' . esc_url(home_url()) . '"><span itemprop="name">' . $home_title . '</span></a>';
+        echo '<meta itemprop="position" content="1" /></span>';
+        
+        if (is_page()) {
+            $position = 2;
+            global $post;
+            if ($post->post_parent) {
+                $parent_id = $post->post_parent;
+                $breadcrumbs = array();
+                while ($parent_id) {
+                    $page = get_page($parent_id);
+                    $breadcrumbs[] = '<span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="' . get_permalink($page->ID) . '"><span itemprop="name">' . get_the_title($page->ID) . '</span></a><meta itemprop="position" content="' . $position . '" /></span>';
+                    $parent_id = $page->post_parent;
+                    $position++;
+                }
+                $breadcrumbs = array_reverse($breadcrumbs);
+                foreach ($breadcrumbs as $breadcrumb) {
+                    echo $delimiter . $breadcrumb;
+                }
+            }
+            echo $delimiter . $before . get_the_title() . $after;
+        }
+        
+        echo '</div>';
+    }
+}
+
+/**
+ * Add structured data for financial pages
+ */
+function zatra_add_financial_structured_data() {
+    if (is_page_template('page-stock-screener.php') || is_page_template('page-market-overview.php')) {
+        ?>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FinancialService",
+            "name": "<?php echo esc_js(get_bloginfo('name')); ?>",
+            "description": "Professional stock market analysis and investment tools",
+            "url": "<?php echo esc_url(home_url()); ?>",
+            "serviceType": "Investment Analysis",
+            "provider": {
+                "@type": "Organization",
+                "name": "<?php echo esc_js(get_bloginfo('name')); ?>"
+            }
+        }
+        </script>
+        <?php
+    }
+    
+    if (is_page_template('page-premium-plans.php')) {
+        ?>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Zatra Premium Subscription",
+            "description": "Advanced stock market analysis tools and unlimited API access",
+            "category": "Financial Software",
+            "offers": {
+                "@type": "Offer",
+                "availability": "https://schema.org/InStock",
+                "priceValidUntil": "<?php echo date('Y-12-31'); ?>"
+            }
+        }
+        </script>
+        <?php
+    }
+}
+add_action('wp_head', 'zatra_add_financial_structured_data');
+
+/**
+ * Optimize images for SEO
+ */
+function zatra_add_image_alt_text($attr, $attachment, $size) {
+    if (empty($attr['alt'])) {
+        $alt_text = get_post_meta($attachment->ID, '_wp_attachment_image_alt', true);
+        if (empty($alt_text)) {
+            $alt_text = $attachment->post_title;
+        }
+        $attr['alt'] = $alt_text;
+    }
+    return $attr;
+}
+add_filter('wp_get_attachment_image_attributes', 'zatra_add_image_alt_text', 10, 3);
+
+/**
+ * Add rel="noopener" to external links for security and SEO
+ */
+function zatra_add_noopener_to_external_links($content) {
+    $content = preg_replace_callback(
+        '/<a([^>]*)href="(https?:\/\/(?!' . preg_quote(home_url(), '/') . ')[^"]*)"([^>]*)>/i',
+        function($matches) {
+            $attrs = $matches[1] . $matches[3];
+            if (strpos($attrs, 'rel=') === false) {
+                $attrs .= ' rel="noopener"';
+            } else {
+                $attrs = preg_replace('/rel="([^"]*)"/', 'rel="$1 noopener"', $attrs);
+            }
+            return '<a' . $matches[1] . 'href="' . $matches[2] . '"' . $matches[3] . $attrs . '>';
+        },
+        $content
+    );
+    return $content;
+}
+add_filter('the_content', 'zatra_add_noopener_to_external_links');
+
+/**
+ * Generate XML sitemap (basic implementation)
+ */
+function zatra_generate_sitemap() {
+    if (isset($_GET['sitemap']) && $_GET['sitemap'] === 'xml') {
+        header('Content-Type: application/xml; charset=utf-8');
+        
+        echo '<?xml version="1.0" encoding="UTF-8"?>';
+        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        
+        // Home page
+        echo '<url>';
+        echo '<loc>' . esc_url(home_url()) . '</loc>';
+        echo '<lastmod>' . date('Y-m-d') . '</lastmod>';
+        echo '<changefreq>daily</changefreq>';
+        echo '<priority>1.0</priority>';
+        echo '</url>';
+        
+        // Pages
+        $pages = get_pages(array('post_status' => 'publish'));
+        foreach ($pages as $page) {
+            $noindex = get_post_meta($page->ID, '_seo_noindex', true);
+            if (!$noindex) {
+                echo '<url>';
+                echo '<loc>' . esc_url(get_permalink($page->ID)) . '</loc>';
+                echo '<lastmod>' . date('Y-m-d', strtotime($page->post_modified)) . '</lastmod>';
+                echo '<changefreq>weekly</changefreq>';
+                echo '<priority>0.8</priority>';
+                echo '</url>';
+            }
+        }
+        
+        echo '</urlset>';
+        exit;
+    }
+}
+add_action('init', 'zatra_generate_sitemap');
+
+/**
+ * Add performance optimizations for SEO
+ */
+function zatra_performance_optimizations() {
+    // Remove unnecessary WordPress features
+    remove_action('wp_head', 'wp_generator');
+    remove_action('wp_head', 'wlwmanifest_link');
+    remove_action('wp_head', 'rsd_link');
+    remove_action('wp_head', 'wp_shortlink_wp_head');
+    
+    // Remove emoji scripts for better performance
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('wp_print_styles', 'print_emoji_styles');
+    remove_action('admin_print_scripts', 'print_emoji_detection_script');
+    remove_action('admin_print_styles', 'print_emoji_styles');
+    
+    // Remove WordPress version from RSS feeds
+    add_filter('the_generator', '__return_empty_string');
+}
+add_action('init', 'zatra_performance_optimizations');
+
+/**
+ * Add schema markup for organization
+ */
+function zatra_organization_schema() {
+    if (is_front_page()) {
+        ?>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "<?php echo esc_js(get_bloginfo('name')); ?>",
+            "description": "<?php echo esc_js(get_bloginfo('description')); ?>",
+            "url": "<?php echo esc_url(home_url()); ?>",
+            "logo": "<?php echo esc_url(get_template_directory_uri() . '/assets/images/logo.png'); ?>",
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+1-555-0123",
+                "contactType": "Customer Service"
+            }
+        }
+        </script>
+        <?php
+    }
+}
+add_action('wp_head', 'zatra_organization_schema');
+
+/**
+ * Enhance page loading speed with resource optimization
+ */
+function zatra_optimize_resources() {
+    // Defer non-critical JavaScript
+    add_filter('script_loader_tag', function($tag, $handle) {
+        if (in_array($handle, array('chart-js', 'stock-scanner-advanced-charts'))) {
+            return str_replace(' src', ' defer src', $tag);
+        }
+        return $tag;
+    }, 10, 2);
+    
+    // Add preload for critical resources
+    add_action('wp_head', function() {
+        echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">';
+    }, 1);
+}
+add_action('init', 'zatra_optimize_resources');
+
+/**
+ * Add custom robots.txt content
+ */
+function zatra_custom_robots_txt($output, $public) {
+    if ($public) {
+        $robots_content = file_get_contents(get_template_directory() . '/robots.txt');
+        if ($robots_content) {
+            $robots_content = str_replace('{SITE_URL}', home_url(), $robots_content);
+            return $robots_content;
+        }
+    }
+    return $output;
+}
+add_filter('robots_txt', 'zatra_custom_robots_txt', 10, 2);
+
+/**
+ * Add breadcrumbs to page templates
+ */
+function zatra_add_breadcrumbs_to_pages() {
+    if (is_page() && !is_front_page()) {
+        add_action('wp_head', function() {
+            echo '<script type="application/ld+json">';
+            echo '{';
+            echo '"@context": "https://schema.org",';
+            echo '"@type": "BreadcrumbList",';
+            echo '"itemListElement": [';
+            echo '{';
+            echo '"@type": "ListItem",';
+            echo '"position": 1,';
+            echo '"name": "' . esc_js(get_bloginfo('name')) . '",';
+            echo '"item": "' . esc_url(home_url()) . '"';
+            echo '}';
+            if (is_page()) {
+                echo ',{';
+                echo '"@type": "ListItem",';
+                echo '"position": 2,';
+                echo '"name": "' . esc_js(get_the_title()) . '",';
+                echo '"item": "' . esc_url(get_permalink()) . '"';
+                echo '}';
+            }
+            echo ']';
+            echo '}';
+            echo '</script>';
+        });
+    }
+}
+add_action('wp', 'zatra_add_breadcrumbs_to_pages');
+
+/**
+ * Add financial sector specific meta tags
+ */
+function zatra_financial_meta_tags() {
+    echo '<meta name="rating" content="general">';
+    echo '<meta name="distribution" content="global">';
+    echo '<meta name="revisit-after" content="1 days">';
+    echo '<meta name="language" content="en">';
+    echo '<meta name="classification" content="finance, business, investment, stock market">';
+    echo '<meta name="subject" content="Stock Market Analysis and Investment Tools">';
+    echo '<meta name="copyright" content="' . esc_attr(get_bloginfo('name')) . '">';
+    
+    // Financial specific meta tags
+    if (is_page_template(array('page-market-overview.php', 'page-stock-screener.php', 'page-portfolio.php'))) {
+        echo '<meta name="financial-service" content="investment-analysis">';
+        echo '<meta name="market-data" content="real-time">';
+        echo '<meta name="investment-disclaimer" content="true">';
+    }
+}
+add_action('wp_head', 'zatra_financial_meta_tags', 15);

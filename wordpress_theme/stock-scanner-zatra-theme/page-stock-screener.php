@@ -5,10 +5,70 @@
  * The template for displaying stock screening and filtering functionality
  */
 
+// Add page-specific structured data
+add_action('wp_head', function() {
+    ?>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Stock Screener - Advanced Stock Filtering Tool",
+        "description": "Advanced stock screener with customizable filters for market cap, P/E ratio, dividend yield, sector analysis, and technical indicators. Find investment opportunities that match your criteria.",
+        "url": "<?php echo esc_url(get_permalink()); ?>",
+        "mainEntity": {
+            "@type": "SoftwareApplication",
+            "name": "Stock Screener Tool",
+            "applicationCategory": "FinanceApplication",
+            "description": "Professional stock screening tool with advanced filters for fundamental and technical analysis",
+            "operatingSystem": "Web Browser",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "featureList": [
+                "Market cap filtering",
+                "P/E ratio analysis", 
+                "Dividend yield screening",
+                "Sector performance filtering",
+                "Technical indicator analysis",
+                "Volume analysis",
+                "Price change filtering"
+            ]
+        },
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "<?php echo esc_url(home_url()); ?>"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Stock Screener",
+                    "item": "<?php echo esc_url(get_permalink()); ?>"
+                }
+            ]
+        }
+    }
+    </script>
+    <?php
+});
+
 get_header(); 
 ?>
 
-<div class="stock-screener-container">
+<!-- SEO-enhanced page content with semantic HTML5 -->
+<article class="stock-screener-container" itemscope itemtype="https://schema.org/WebPage">
+    <!-- Hidden SEO content for search engines -->
+    <div style="display:none;" itemprop="description">
+        Professional stock screener tool for filtering stocks by market capitalization, price-to-earnings ratio, 
+        dividend yield, sector performance, trading volume, price changes, and technical indicators. 
+        Advanced screening capabilities for fundamental and technical analysis to find investment opportunities.
+    </div>
     <div class="page-header">
         <div class="container">
             <h1 class="page-title">
@@ -1002,5 +1062,7 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 </script>
+
+</article><!-- .stock-screener-container -->
 
 <?php get_footer(); ?>

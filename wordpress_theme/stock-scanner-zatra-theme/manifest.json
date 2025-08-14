@@ -1,0 +1,118 @@
+{
+    "name": "Zatra Stock Scanner",
+    "short_name": "Zatra",
+    "description": "Professional stock market analysis and portfolio management platform",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1a73e8",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "categories": ["finance", "business", "productivity"],
+    "lang": "en-US",
+    "dir": "ltr",
+    "icons": [
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/screenshot-desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Stock market dashboard view"
+        },
+        {
+            "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/screenshot-mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Mobile portfolio view"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "View your investment dashboard",
+            "url": "/dashboard/",
+            "icons": [
+                {
+                    "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/shortcut-dashboard.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Stock Screener",
+            "short_name": "Screener",
+            "description": "Find investment opportunities",
+            "url": "/stock-screener/",
+            "icons": [
+                {
+                    "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/shortcut-screener.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Market Overview",
+            "short_name": "Market",
+            "description": "Real-time market data",
+            "url": "/market-overview/",
+            "icons": [
+                {
+                    "src": "/wp-content/themes/stock-scanner-zatra-theme/assets/images/shortcut-market.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}
