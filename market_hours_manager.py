@@ -14,23 +14,38 @@ import time
 import logging
 import subprocess
 import signal
-import psutil
 import schedule
 import threading
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import pytz
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('market_hours_manager.log'),
-        logging.StreamHandler()
-    ]
-)
+# Setup logging with rotation
+from logging.handlers import RotatingFileHandler
+
+# Configure logger with rotation to avoid unbounded log growth  
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create handlers
+file_handler = RotatingFileHandler(
+    'market_hours_manager.log',
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5
+)
+console_handler = logging.StreamHandler()
+
+# Create formatter
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add handlers to logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# Prevent propagation to avoid duplicate messages
+logger.propagate = False
 
 class MarketHoursManager:
     """Manages all stock scanner components based on market hours"""
@@ -44,11 +59,11 @@ class MarketHoursManager:
         # Market hours in Eastern Time
         self.eastern_tz = pytz.timezone('US/Eastern')
         
-        # Market hours configuration
-        self.premarket_start = "04:00"  # 4:00 AM ET
-        self.market_open = "09:30"      # 9:30 AM ET
-        self.market_close = "16:00"     # 4:00 PM ET
-        self.postmarket_end = "20:00"   # 8:00 PM ET
+        # Market hours configuration - configurable via environment variables
+        self.premarket_start = os.getenv('PREMARKET_START', "04:00")  # 4:00 AM ET
+        self.market_open = os.getenv('MARKET_OPEN', "09:30")      # 9:30 AM ET
+        self.market_close = os.getenv('MARKET_CLOSE', "16:00")     # 4:00 PM ET
+        self.postmarket_end = os.getenv('POSTMARKET_END', "20:00")   # 8:00 PM ET
         
         # Component configurations
         self.components = {
@@ -136,12 +151,12 @@ class MarketHoursManager:
             # Change to project directory
             logger.info(f"Starting {component_name}: {' '.join(cmd)}")
             
-            # Start process
+            # Start process - redirect to DEVNULL to avoid PIPE deadlocks
             process = subprocess.Popen(
                 cmd,
                 cwd=self.project_root,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
                 text=True
             )
             
@@ -265,13 +280,13 @@ class MarketHoursManager:
         current_phase = self.get_current_market_phase()
         now_et = datetime.now(self.eastern_tz)
         
-        print("\n" + "="*60)
-        print("MARKET HOURS MANAGER - STATUS")
-        print("="*60)
-        print(f"Current Time (ET): {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-        print(f"Market Phase: {current_phase.upper()}")
-        print("-"*60)
-        print("Component Status:")
+        logger.info("="*60)
+        logger.info("MARKET HOURS MANAGER - STATUS")
+        logger.info("="*60)
+        logger.info(f"Current Time (ET): {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        logger.info(f"Market Phase: {current_phase.upper()}")
+        logger.info("-"*60)
+        logger.info("Component Status:")
         
         for component_name, component in self.components.items():
             is_active = self.is_component_active(component_name, current_phase)
@@ -280,9 +295,9 @@ class MarketHoursManager:
             status = "RUNNING" if is_running else "STOPPED"
             should_status = "SHOULD RUN" if is_active else "SHOULD STOP"
             
-            print(f"  {component_name:20} | {status:8} | {should_status}")
+            logger.info(f"  {component_name:20} | {status:8} | {should_status}")
             
-        print("="*60)
+        logger.info("="*60)
         
     def run(self):
         """Main execution loop"""

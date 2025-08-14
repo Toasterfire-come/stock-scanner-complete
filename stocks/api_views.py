@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
-from django.db.models import Q, F
+from django.db.models import Q, F, FieldError
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
@@ -105,7 +105,7 @@ def stock_list_api(request):
         )
         
         # Add intelligent caching to reduce database load
-        cache_key = f"stocks_api_{category}_{sort_by}_{sort_order}_{limit}_{min_price}_{max_price}_{min_market_cap}_{max_market_cap}_{min_pe}_{max_pe}_{search}"
+        cache_key = f"stocks_api_{category}_{sort_by}_{sort_order}_{limit}_{min_price}_{max_price}_{min_market_cap}_{max_market_cap}_{min_pe}_{max_pe}_{search}_{exchange or 'all'}"
         cached_result = cache.get(cache_key)
         
         if cached_result:
@@ -154,11 +154,11 @@ def stock_list_api(request):
         # Get total count before further filtering
         total_available = base_queryset.count()
         
-        # If it's the base request with no filters/search, return all stocks without extra filtering
+        # If it's the base request with no filters/search, return stocks with pagination
         if is_base_request:
             queryset = base_queryset
-            # Base request should return all stocks
-            limit = total_available
+            # Base request should use reasonable pagination limit, not return all stocks
+            limit = min(limit, 100)  # Cap at 100 for base requests
         else:
             # Apply progressive quality filters
             queryset = base_queryset
@@ -238,7 +238,7 @@ def stock_list_api(request):
         if category == 'gainers':
             # Try current day first, then fall back to most recent available data
             queryset = queryset.filter(price_change_today__gt=0)
-            if queryset.count() == 0:
+            if not queryset.exists():
                 logger.info("No gainers found for today, checking recent price changes...")
                 queryset = base_queryset.filter(
                     Q(price_change_today__gt=0) |
@@ -249,7 +249,7 @@ def stock_list_api(request):
         elif category == 'losers':
             # Try current day first, then fall back to most recent available data
             queryset = queryset.filter(price_change_today__lt=0)
-            if queryset.count() == 0:
+            if not queryset.exists():
                 logger.info("No losers found for today (market may be closed), checking recent price changes...")
                 # Use weekly or monthly data when daily data is not available
                 queryset = base_queryset.filter(
@@ -260,7 +260,7 @@ def stock_list_api(request):
                 ).exclude(current_price__isnull=True)
                 
                 # If still no results, get stocks with the most negative changes available
-                if queryset.count() == 0:
+                if not queryset.exists():
                     logger.info("No negative price changes found, getting stocks with lowest prices...")
                     queryset = base_queryset.filter(
                         current_price__isnull=False,
@@ -270,19 +270,19 @@ def stock_list_api(request):
         elif category == 'high_volume':
             queryset = queryset.filter(volume__isnull=False).exclude(volume=0)
             # If no high volume stocks found, get any stocks with volume data
-            if queryset.count() == 0:
+            if not queryset.exists():
                 queryset = base_queryset.filter(volume__isnull=False).order_by('-volume', '-last_updated')
                 
         elif category == 'large_cap':
             queryset = queryset.filter(market_cap__gte=10000000000)  # $10B+
             # If no large cap found, try lower threshold
-            if queryset.count() == 0:
+            if not queryset.exists():
                 queryset = base_queryset.filter(market_cap__gte=5000000000).order_by('-market_cap', '-last_updated')
                 
         elif category == 'small_cap':
             queryset = queryset.filter(market_cap__lt=2000000000, market_cap__gt=0)  # < $2B
             # If no small cap found, try different range
-            if queryset.count() == 0:
+            if not queryset.exists():
                 queryset = base_queryset.filter(market_cap__lt=5000000000, market_cap__gt=0).order_by('market_cap', '-last_updated')
 
         # Apply sorting with fallbacks
@@ -303,17 +303,18 @@ def stock_list_api(request):
                 queryset = queryset.order_by(sort_field, '-id')
             else:
                 queryset = queryset.order_by(sort_field, '-last_updated')
-        except:
-            # Fallback sorting
+        except (AttributeError, FieldError, ValueError) as e:
+            # Fallback sorting for invalid sort fields
+            logger.warning(f"Invalid sort field '{sort_by}', using fallback: {e}")
             queryset = queryset.order_by('-last_updated', '-id')
 
         # EMERGENCY FALLBACK: If still no results, return most recent stocks
-        if queryset.count() == 0 and not search:
+        if not queryset.exists() and not search:
             logger.warning(f"API returned 0 results for category '{category}', using emergency fallback with recent stocks")
             # Try to get stocks updated in the last 7 days first
             recent_cutoff = timezone.now() - timedelta(days=7)
             queryset = base_queryset.filter(last_updated__gte=recent_cutoff).order_by('-last_updated')
-            if queryset.count() == 0:
+            if not queryset.exists():
                 # If no recent stocks, get any stocks with valid price data
                 queryset = base_queryset.exclude(current_price__isnull=True).order_by('-last_updated')
             queryset = queryset[:limit]
@@ -944,9 +945,16 @@ def realtime_stock_api(request, ticker):
 @permission_classes([AllowAny])
 def trending_stocks_api(request):
     """
-    Get trending stocks based on volume and price changes
+    Get trending stocks based on volume and price changes - cached for 90 seconds
     """
     try:
+        # Check cache first
+        cache_key = "trending_stocks_api"
+        cached_result = cache.get(cache_key)
+        
+        if cached_result:
+            logger.info(f"Returning cached trending stocks result")
+            return Response(cached_result, status=status.HTTP_200_OK)
         # Get top trending by volume - prioritize NYSE
         high_volume_stocks = Stock.objects.filter(
             exchange__iexact='NYSE'
@@ -1025,6 +1033,9 @@ def trending_stocks_api(request):
             'most_active': format_stock_data(most_active),
             'last_updated': timezone.now().isoformat()
         }
+        
+        # Cache the result for 90 seconds to reduce DB load during peak traffic
+        cache.set(cache_key, trending_data, 90)
         
         return Response(trending_data, status=status.HTTP_200_OK)
         

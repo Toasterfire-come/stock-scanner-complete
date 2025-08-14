@@ -37,27 +37,55 @@ django.setup()
 from django.utils import timezone
 from stocks.models import Stock, StockPrice
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('enhanced_stock_retrieval_working.log'),
-        logging.StreamHandler()
-    ]
+# Import shared utilities
+from utils.stock_data import (
+    safe_decimal_conversion, 
+    load_nyse_symbols_from_csv, 
+    extract_pe_ratio, 
+    extract_dividend_yield,
+    calculate_change_percent_from_history,
+    extract_stock_data_from_info,
+    calculate_volume_ratio
 )
+
+# Setup logging with rotation
+from logging.handlers import RotatingFileHandler
+
+# Configure logger with rotation to avoid unbounded log growth
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create handlers
+file_handler = RotatingFileHandler(
+    'enhanced_stock_retrieval_working.log',
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5
+)
+console_handler = logging.StreamHandler()
+
+# Create formatter
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add handlers to logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# Prevent propagation to avoid duplicate messages
+logger.propagate = False
 
 # Global flag for graceful shutdown
 shutdown_flag = False
 
-# Market window configuration (US/Eastern)
+# Market window configuration (US/Eastern) - configurable via environment variables
 EASTERN_TZ = pytz.timezone('US/Eastern')
-PREMARKET_START = "04:00"  # 4:00 AM ET
-POSTMARKET_END = "20:00"   # 8:00 PM ET
+PREMARKET_START = os.getenv('PREMARKET_START', "04:00")  # 4:00 AM ET
+POSTMARKET_END = os.getenv('POSTMARKET_END', "20:00")   # 8:00 PM ET
 
-# Global proxy health tracking
+# Global proxy health tracking with thread safety
 proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "blocked": False})
+proxy_health_lock = threading.Lock()  # Protect proxy_health dict updates
 proxy_failure_threshold = 3  # Mark proxy as blocked after 3 consecutive failures
 proxy_retry_cooldown = 300  # 5 minutes before retrying a blocked proxy
 
@@ -76,50 +104,12 @@ def normalize_proxy_string(proxy_str: str) -> str | None:
     return p
 
 
-def create_session_for_proxy(proxy: str | None, timeout: int = 10) -> requests.Session:
-    """Create a requests.Session configured for a specific proxy with retries and default timeout."""
-    session = requests.Session()
-
-    # Mount retries
-    retry = Retry(
-        total=2,
-        backoff_factor=0.2,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "GET", "OPTIONS"],
-        raise_on_status=False,
-    )
-    adapter = HTTPAdapter(max_retries=retry, pool_connections=50, pool_maxsize=50)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-
-    # Set proxies if provided
-    if proxy:
-        normalized = normalize_proxy_string(proxy)
-        if normalized:
-            session.proxies = {
-                'http': normalized,
-                'https': normalized,
-            }
-
-    # Inject default timeout by wrapping request
-    original_request = session.request
-
-    def request_with_timeout(method, url, **kwargs):
-        if 'timeout' not in kwargs or kwargs['timeout'] is None:
-            kwargs['timeout'] = timeout
-        return original_request(method, url, **kwargs)
-
-    session.request = request_with_timeout  # type: ignore[assignment]
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    })
-
-    return session
+# Removed unused create_session_for_proxy function
 
 def signal_handler(signum, frame):
     """Handle interrupt signals gracefully"""
     global shutdown_flag
-    print("\nReceived interrupt signal. Shutting down gracefully...")
+    logger.info("Received interrupt signal. Shutting down gracefully...")
     shutdown_flag = True
 
 # Register signal handlers
@@ -133,31 +123,19 @@ def parse_arguments():
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
     parser.add_argument('-threads', type=int, default=15, help='Number of threads (default: 15)')
     parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
-    parser.add_argument('-csv', type=str, default='flat-ui__data-Fri Aug 01 2025.csv', 
-                       help='NYSE CSV file path (default: flat-ui__data-Fri Aug 01 2025.csv)')
+    parser.add_argument('-csv', type=str, default=os.getenv('NYSE_CSV_PATH', 'flat-ui__data-Fri Aug 01 2025.csv'), 
+                       help='NYSE CSV file path (default from NYSE_CSV_PATH env var or flat-ui__data-Fri Aug 01 2025.csv)')
     parser.add_argument('-output', type=str, default=None, 
                        help='Output JSON file (default: auto-generated timestamp)')
     parser.add_argument('-max-symbols', type=int, default=None, 
                        help='Maximum number of symbols to process (for testing)')
-    parser.add_argument('-proxy-file', type=str, default='working_proxies.json',
-                       help='Proxy JSON file path (default: working_proxies.json)')
+    parser.add_argument('-proxy-file', type=str, default=os.getenv('PROXY_FILE_PATH', 'working_proxies.json'),
+                       help='Proxy JSON file path (default from PROXY_FILE_PATH env var or working_proxies.json)')
     parser.add_argument('-schedule', action='store_true', help='Run in scheduler mode (every 3 minutes)')
     parser.add_argument('-save-to-db', action='store_true', default=True, help='Save results to database (default: True)')
     return parser.parse_args()
 
-def _safe_decimal(value):
-    """Safely convert value to Decimal, skip Infinity/NaN"""
-    if value is None or pd.isna(value):
-        return None
-    try:
-        if isinstance(value, (int, float)):
-            if pd.isna(value) or value == float('inf') or value == float('-inf'):
-                return None
-            return Decimal(str(value))
-        else:
-            return Decimal(str(value))
-    except (ValueError, TypeError, OverflowError):
-        return None
+# Removed _safe_decimal - using shared safe_decimal_conversion from utils.stock_data
 
 def load_proxies_direct(proxy_file):
     """Load proxies directly from JSON file without validation"""
@@ -218,16 +196,17 @@ def get_healthy_proxy(proxies, used_proxies=None):
         if proxy in used_proxies:
             continue
             
-        health = proxy_health[proxy]
-        
-        # Check if proxy is blocked and cooldown period has passed
-        if health["blocked"]:
-            if health["last_failure"] and (current_time - health["last_failure"]).seconds > proxy_retry_cooldown:
-                health["blocked"] = False
-                health["failures"] = 0
-                logger.info(f"Proxy {proxy} cooldown expired, marking as available")
-            else:
-                continue
+        with proxy_health_lock:
+            health = proxy_health[proxy]
+            
+            # Check if proxy is blocked and cooldown period has passed
+            if health["blocked"]:
+                if health["last_failure"] and (current_time - health["last_failure"]).total_seconds() > proxy_retry_cooldown:
+                    health["blocked"] = False
+                    health["failures"] = 0
+                    logger.info(f"Proxy {proxy} cooldown expired, marking as available")
+                else:
+                    continue
         
         healthy_proxies.append(proxy)
     
@@ -236,123 +215,38 @@ def get_healthy_proxy(proxies, used_proxies=None):
         return random.choice(proxies) if proxies else None
     
     # Prefer proxies with fewer failures
-    healthy_proxies.sort(key=lambda p: proxy_health[p]["failures"])
+    with proxy_health_lock:
+        healthy_proxies.sort(key=lambda p: proxy_health[p]["failures"])
     return healthy_proxies[0]
 
 def mark_proxy_success(proxy):
     """Mark a proxy as successful"""
     if proxy:
-        proxy_health[proxy]["successes"] += 1
-        proxy_health[proxy]["failures"] = 0  # Reset failure count on success
-        proxy_health[proxy]["blocked"] = False
+        with proxy_health_lock:
+            proxy_health[proxy]["successes"] += 1
+            proxy_health[proxy]["failures"] = 0  # Reset failure count on success
+            proxy_health[proxy]["blocked"] = False
 
 def mark_proxy_failure(proxy, reason=""):
     """Mark a proxy as failed"""
     if not proxy:
         return
+    
+    with proxy_health_lock:
+        health = proxy_health[proxy]
+        health["failures"] += 1
+        health["last_failure"] = datetime.now()
         
-    health = proxy_health[proxy]
-    health["failures"] += 1
-    health["last_failure"] = datetime.now()
-    
-    if health["failures"] >= proxy_failure_threshold:
-        health["blocked"] = True
-        logger.warning(f"Proxy {proxy} marked as blocked after {health['failures']} failures. Reason: {reason}")
+        if health["failures"] >= proxy_failure_threshold:
+            health["blocked"] = True
+            logger.warning(f"Proxy {proxy} marked as blocked after {health['failures']} failures. Reason: {reason}")
 
-def _extract_pe_ratio(info):
-    """Extract PE ratio with multiple fallback options"""
-    if not info:
-        return None
-    
-    # Try multiple PE ratio fields
-    pe_fields = ['trailingPE', 'forwardPE', 'priceToBook', 'priceToSalesTrailing12Months']
-    
-    for field in pe_fields:
-        value = info.get(field)
-        if value is not None and value != 0 and not pd.isna(value):
-            try:
-                return float(value)
-            except (ValueError, TypeError):
-                continue
-    
-    return None
+# Removed _extract_pe_ratio and _extract_dividend_yield - using shared utilities from utils.stock_data
 
-def _extract_dividend_yield(info):
-    """Extract dividend yield with proper formatting"""
-    if not info:
-        return None
-    
-    # Try multiple dividend yield fields
-    dividend_fields = ['dividendYield', 'fiveYearAvgDividendYield', 'trailingAnnualDividendYield']
-    
-    for field in dividend_fields:
-        value = info.get(field)
-        if value is not None and not pd.isna(value):
-            try:
-                # Convert to percentage if it's a decimal
-                if isinstance(value, float) and value < 1:
-                    return float(value * 100)
-                else:
-                    return float(value)
-            except (ValueError, TypeError):
-                continue
-    
-    return None
-
+# Using shared load_nyse_symbols_from_csv from utils.stock_data
 def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
-    """Load NYSE symbols from CSV file, filtering delisted stocks"""
-    symbols = []
-    delisted_count = 0
-    etf_count = 0
-    active_count = 0
-    
-    try:
-        with open(csv_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                symbol = row.get('Symbol', '').strip()
-                financial_status = row.get('Financial Status', '').strip()
-                etf = row.get('ETF', '').strip()
-                
-                # Skip empty symbols
-                if not symbol:
-                    continue
-                
-                # Filter out delisted stocks (Financial Status = 'D')
-                if financial_status == 'D':
-                    delisted_count += 1
-                    continue
-                
-                # Filter out ETFs (ETF = 'Y')
-                if etf == 'Y':
-                    etf_count += 1
-                    continue
-                
-                # Only include active stocks
-                symbols.append(symbol)
-                active_count += 1
-                
-                # Limit to 100 for test mode
-                if test_mode and len(symbols) >= 100:
-                    break
-                
-                # Limit to max_symbols if specified
-                if max_symbols and len(symbols) >= max_symbols:
-                    break
-    
-    except FileNotFoundError:
-        logger.error(f"CSV file not found: {csv_file}")
-        return []
-    except Exception as e:
-        logger.error(f"Error reading CSV file: {e}")
-        return []
-    
-    logger.info(f"Loaded {len(symbols)} active NYSE symbols")
-    logger.info(f"Filtered out {delisted_count} delisted stocks")
-    logger.info(f"Filtered out {etf_count} ETFs")
-    logger.info(f"Active stocks: {active_count}")
-    
-    return symbols
+    """Load NYSE symbols from CSV file, filtering delisted stocks - wrapper for shared utility"""
+    return load_nyse_symbols_from_csv(csv_file, test_mode, max_symbols)
 
 def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True, max_retries=3):
     """Process a single symbol with retry logic and proxy rotation"""
@@ -420,38 +314,52 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Minimal delay to avoid rate limiting
     time.sleep(random.uniform(0.01, 0.02))
 
+    def yfinance_retry_wrapper(func, max_attempts=3, backoff_factor=0.5):
+        """Wrapper to add retry logic with exponential backoff to yfinance calls"""
+        for attempt in range(max_attempts):
+            try:
+                return func()
+            except Exception as e:
+                if attempt == max_attempts - 1:  # Last attempt
+                    if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
+                        raise
+                    return None
+                # Exponential backoff
+                sleep_time = backoff_factor * (2 ** attempt)
+                time.sleep(sleep_time)
+        return None
+
     # Try multiple approaches to get data letting yfinance manage its own session
     ticker_obj = yf.Ticker(symbol)
     info = None
     hist = None
     current_price = None
 
-    # Approach 1: Try to get basic info
-    try:
-        info = ticker_obj.info
+    # Approach 1: Try fast_info first for speed, then fall back to full info with retry
+    info = None
+    
+    # Try fast_info with retry - it's faster and has key price/market cap data
+    fast_info = yfinance_retry_wrapper(lambda: ticker_obj.fast_info)
+    if fast_info and hasattr(fast_info, 'last_price') and fast_info.last_price:
+        current_price = fast_info.last_price
+    
+    # Try full info with retry if we need more comprehensive data
+    if fast_info is None or not hasattr(fast_info, 'market_cap') or not fast_info.market_cap:
+        info = yfinance_retry_wrapper(lambda: ticker_obj.info)
         if info and len(info) <= 3:
             info = None
-    except Exception as e:
-        if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
-            raise
-        pass
 
-    # Approach 2: Try to get historical data with multiple periods
+    # Approach 2: Try to get historical data with multiple periods using retry
     for period in ["1d", "5d", "1mo"]:
-        try:
-            # Newer yfinance supports timeout in history
-            hist = ticker_obj.history(period=period, timeout=timeout)
-            if hist is not None and not hist.empty and len(hist) > 0:
-                try:
-                    current_price = hist['Close'].iloc[-1]
-                    if current_price is not None and not pd.isna(current_price):
-                        break
-                except Exception:
-                    continue
-        except Exception as e:
-            if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
-                raise
-            continue
+        hist = yfinance_retry_wrapper(lambda: ticker_obj.history(period=period, timeout=timeout))
+        if hist is not None and not hist.empty and len(hist) > 0:
+            try:
+                current_price = hist['Close'].iloc[-1]
+                if current_price is not None and not pd.isna(current_price):
+                    break
+            except (KeyError, IndexError, ValueError) as e:
+                logger.debug(f"Failed to extract price from history for {symbol}: {e}")
+                continue
 
     # Approach 3: Try to get current price from info if historical failed
     if current_price is None and info:
@@ -484,7 +392,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'symbol': symbol,
         'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
         'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-        'current_price': _safe_decimal(current_price) if current_price else None,
+        'current_price': safe_decimal_conversion(current_price) if current_price else None,
         'price_change_today': None,
         'price_change_week': None,
         'price_change_month': None,
@@ -494,25 +402,17 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'ask_price': None,
         'bid_ask_spread': '',
         'days_range': '',
-        'days_low': _safe_decimal(info.get('dayLow')) if info else None,
-        'days_high': _safe_decimal(info.get('dayHigh')) if info else None,
-        'volume': _safe_decimal(info.get('volume')) if info else None,
-        'volume_today': _safe_decimal(info.get('volume')) if info else None,
-        'avg_volume_3mon': _safe_decimal(info.get('averageVolume')) if info else None,
+        # Use shared utility for extracting stock data from info
+        **extract_stock_data_from_info(info, symbol, current_price) if info else {
+            'days_low': None, 'days_high': None, 'volume': None, 'volume_today': None,
+            'avg_volume_3mon': None, 'market_cap': None, 'pe_ratio': None, 'dividend_yield': None,
+            'one_year_target': None, 'week_52_low': None, 'week_52_high': None,
+            'earnings_per_share': None, 'book_value': None, 'price_to_book': None, 'exchange': 'NYSE'
+        },
         'dvav': None,
         'shares_available': None,
-        'market_cap': _safe_decimal(info.get('marketCap')) if info else None,
         'market_cap_change_3mon': None,
-        'pe_ratio': _safe_decimal(_extract_pe_ratio(info)) if info else None,
         'pe_change_3mon': None,
-        'dividend_yield': _safe_decimal(_extract_dividend_yield(info)) if info else None,
-        'one_year_target': _safe_decimal(info.get('targetMeanPrice')) if info else None,
-        'week_52_low': _safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
-        'week_52_high': _safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
-        'earnings_per_share': _safe_decimal(info.get('trailingEps')) if info else None,
-        'book_value': _safe_decimal(info.get('bookValue')) if info else None,
-        'price_to_book': _safe_decimal(info.get('priceToBook')) if info else None,
-        'exchange': info.get('exchange', 'NYSE') if info else 'NYSE',
         'last_updated': timezone.now(),
         'created_at': timezone.now()
     }
@@ -539,35 +439,35 @@ def run_stock_update(args):
     """Run a single stock update cycle"""
     global shutdown_flag
     
-    print(f"\n{'='*60}")
-    print(f"STOCK UPDATE CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"{'='*60}")
+    logger.info(f"{'='*60}")
+    logger.info(f"STOCK UPDATE CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"{'='*60}")
     
     # Load NYSE symbols
-    print(f"Loading NYSE symbols from {args.csv}...")
+    logger.info(f"Loading NYSE symbols from {args.csv}...")
     symbols = load_nyse_symbols(args.csv, args.test, args.max_symbols)
     
     if not symbols:
-        print("ERROR: No symbols loaded. Skipping cycle.")
+        logger.error("No symbols loaded. Skipping cycle.")
         return
     
-    print(f"Processing {len(symbols)} symbols...")
+    logger.info(f"Processing {len(symbols)} symbols...")
     
     # Load proxies directly (without validation)
     proxies = []
     if not args.noproxy:
-        print(f"Loading proxies from {args.proxy_file}...")
+        logger.info(f"Loading proxies from {args.proxy_file}...")
         proxies = load_proxies_direct(args.proxy_file)
         if proxies:
-            print(f"SUCCESS: Loaded {len(proxies)} proxies (no validation)")
+            logger.info(f"SUCCESS: Loaded {len(proxies)} proxies (no validation)")
         else:
-            print("WARNING: No proxies loaded - continuing without proxies")
+            logger.warning("No proxies loaded - continuing without proxies")
     else:
-        print("DISABLED: Proxy usage disabled")
+        logger.info("DISABLED: Proxy usage disabled")
     
     # Process stocks
-    print(f"Starting to process {len(symbols)} symbols...")
-    print("=" * 60)
+    logger.info(f"Starting to process {len(symbols)} symbols...")
+    logger.info("=" * 60)
     
     start_time = time.time()
     successful = 0
@@ -575,7 +475,7 @@ def run_stock_update(args):
     results = []
     
     # Use ThreadPoolExecutor for parallel processing with better timeout handling
-    print(f"Submitting {len(symbols)} tasks to thread pool...")
+    logger.info(f"Submitting {len(symbols)} tasks to thread pool...")
     
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
@@ -586,12 +486,12 @@ def run_stock_update(args):
                 future = executor.submit(process_symbol_with_retry, symbol, i, proxies, args.timeout, args.test, args.save_to_db)
                 future_to_symbol[future] = symbol
             
-            print(f"Submitted {len(future_to_symbol)} tasks. Processing...")
+            logger.info(f"Submitted {len(future_to_symbol)} tasks. Processing...")
             completed = 0
             
             for future in as_completed(future_to_symbol):
                 if shutdown_flag:
-                    print("Shutdown requested. Cancelling remaining tasks...")
+                    logger.info("Shutdown requested. Cancelling remaining tasks...")
                     break
                     
                 symbol = future_to_symbol[future]
@@ -614,33 +514,33 @@ def run_stock_update(args):
                 
                 # Show progress every 10 completed or at the end
                 if completed % 10 == 0 or completed == len(symbols):
-                    print(f"[PROGRESS] {completed}/{len(symbols)} completed ({successful} successful, {failed} failed)")
+                    logger.info(f"[PROGRESS] {completed}/{len(symbols)} completed ({successful} successful, {failed} failed)")
                     
                 # Add a small delay to prevent overwhelming
                 time.sleep(0.01)
     
     except KeyboardInterrupt:
-        print("\nInterrupted by user. Shutting down gracefully...")
+        logger.info("Interrupted by user. Shutting down gracefully...")
         shutdown_flag = True
     except Exception as e:
-        print(f"ERROR: Thread pool execution failed: {e}")
+        logger.error(f"Thread pool execution failed: {e}")
     
     elapsed = time.time() - start_time
     
     # Results
-    print("\n" + "=" * 60)
-    print("CYCLE RESULTS")
-    print("=" * 60)
-    print(f"SUCCESSFUL: {successful}")
-    print(f"FAILED: {failed}")
+    logger.info("=" * 60)
+    logger.info("CYCLE RESULTS")
+    logger.info("=" * 60)
+    logger.info(f"SUCCESSFUL: {successful}")
+    logger.info(f"FAILED: {failed}")
     if len(symbols) > 0:
-        print(f"SUCCESS RATE: {(successful/len(symbols)*100):.1f}%")
-    print(f"TIME: {elapsed:.2f}s")
+        logger.info(f"SUCCESS RATE: {(successful/len(symbols)*100):.1f}%")
+    logger.info(f"TIME: {elapsed:.2f}s")
     if elapsed > 0:
-        print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
+        logger.info(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
     
     if proxies:
-        print(f"PROXY STATS: Used {len(proxies)} proxies")
+        logger.info(f"PROXY STATS: Used {len(proxies)} proxies")
         
         # Show proxy health summary
         healthy_count = 0
@@ -648,25 +548,26 @@ def run_stock_update(args):
         total_failures = 0
         total_successes = 0
         
-        for proxy in proxies:
-            health = proxy_health[proxy]
-            if health["blocked"]:
-                blocked_count += 1
-            else:
-                healthy_count += 1
-            total_failures += health["failures"]
-            total_successes += health["successes"]
+        with proxy_health_lock:
+            for proxy in proxies:
+                health = proxy_health[proxy]
+                if health["blocked"]:
+                    blocked_count += 1
+                else:
+                    healthy_count += 1
+                total_failures += health["failures"]
+                total_successes += health["successes"]
         
-        print(f"PROXY HEALTH: {healthy_count} healthy, {blocked_count} blocked")
+        logger.info(f"PROXY HEALTH: {healthy_count} healthy, {blocked_count} blocked")
         if total_successes + total_failures > 0:
             success_rate = (total_successes / (total_successes + total_failures)) * 100
-            print(f"PROXY SUCCESS RATE: {success_rate:.1f}% ({total_successes} successes, {total_failures} failures)")
+            logger.info(f"PROXY SUCCESS RATE: {success_rate:.1f}% ({total_successes} successes, {total_failures} failures)")
     
     if args.save_to_db and not args.test:
-        print(f"DATABASE: Saved {successful} stocks to database")
+        logger.info(f"DATABASE: Saved {successful} stocks to database")
     
-    print(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
+    logger.info(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 60)
 
 def _build_subprocess_args(args) -> list[str]:
     """Build argument list to spawn a one-off cycle in a separate process."""
@@ -714,7 +615,7 @@ def start_cycle_in_subprocess(args):
     """
     try:
         cmd = _build_subprocess_args(args)
-        print(f"Spawning new stock cycle subprocess: {' '.join(cmd)}")
+        logger.info(f"Spawning new stock cycle subprocess: {' '.join(cmd)}")
         subprocess.Popen(cmd)
     except Exception as e:
         logger.error(f"Failed to start subprocess cycle: {e}")
@@ -727,7 +628,7 @@ def start_all_cycles_in_subprocess(args):
     now_et = datetime.now(EASTERN_TZ)
     current_hhmm = now_et.strftime("%H:%M")
     if now_et.weekday() >= 5 or not (PREMARKET_START <= current_hhmm < POSTMARKET_END):
-        print(f"Skipping cycle spawn (outside market window) at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        logger.info(f"Skipping cycle spawn (outside market window) at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         return
     
     # Stocks
@@ -735,14 +636,14 @@ def start_all_cycles_in_subprocess(args):
     # News scraper
     try:
         news_cmd = _build_news_subprocess_args()
-        print(f"Spawning news scraper subprocess: {' '.join(news_cmd)}")
+        logger.info(f"Spawning news scraper subprocess: {' '.join(news_cmd)}")
         subprocess.Popen(news_cmd)
     except Exception as e:
         logger.error(f"Failed to start news scraper subprocess: {e}")
     # Email sender
     try:
         email_cmd = _build_email_subprocess_args()
-        print(f"Spawning email sender subprocess: {' '.join(email_cmd)}")
+        logger.info(f"Spawning email sender subprocess: {' '.join(email_cmd)}")
         subprocess.Popen(email_cmd)
     except Exception as e:
         logger.error(f"Failed to start email sender subprocess: {e}")
@@ -753,24 +654,24 @@ def main():
     
     args = parse_arguments()
     
-    print("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
-    print("=" * 60)
-    print(f"Configuration:")
-    print(f"  CSV File: {args.csv}")
-    print(f"  Test Mode: {args.test}")
-    print(f"  Use Proxies: {not args.noproxy}")
-    print(f"  Proxy File: {args.proxy_file}")
-    print(f"  Threads: {args.threads}")
-    print(f"  Timeout: {args.timeout}s")
-    print(f"  Max Symbols: {args.max_symbols or 'All'}")
-    print(f"  Save to DB: {args.save_to_db}")
-    print(f"  Schedule Mode: {args.schedule}")
-    print("=" * 60)
+    logger.info("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
+    logger.info("=" * 60)
+    logger.info(f"Configuration:")
+    logger.info(f"  CSV File: {args.csv}")
+    logger.info(f"  Test Mode: {args.test}")
+    logger.info(f"  Use Proxies: {not args.noproxy}")
+    logger.info(f"  Proxy File: {args.proxy_file}")
+    logger.info(f"  Threads: {args.threads}")
+    logger.info(f"  Timeout: {args.timeout}s")
+    logger.info(f"  Max Symbols: {args.max_symbols or 'All'}")
+    logger.info(f"  Save to DB: {args.save_to_db}")
+    logger.info(f"  Schedule Mode: {args.schedule}")
+    logger.info("=" * 60)
     
     if args.schedule:
-        print(f"\nSCHEDULER MODE: Spawning stock, news, and email cycles every 3 minutes (overlap allowed)")
-        print(f"Press Ctrl+C to stop the scheduler")
-        print("=" * 60)
+        logger.info("SCHEDULER MODE: Spawning stock, news, and email cycles every 3 minutes (overlap allowed)")
+        logger.info("Press Ctrl+C to stop the scheduler")
+        logger.info("=" * 60)
         
         # Immediate run of all three
         start_all_cycles_in_subprocess(args)
@@ -785,18 +686,18 @@ def main():
                 now_et = datetime.now(EASTERN_TZ)
                 current_hhmm = now_et.strftime("%H:%M")
                 if now_et.weekday() < 5 and current_hhmm >= POSTMARKET_END:
-                    print(f"Postmarket ended at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}. Stopping scheduler.")
+                    logger.info(f"Postmarket ended at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}. Stopping scheduler.")
                     break
                 
                 time.sleep(1)
         except KeyboardInterrupt:
-            print("\nScheduler stopped by user")
+            logger.info("Scheduler stopped by user")
             shutdown_flag = True
     else:
         # Run single update in the current process
         run_stock_update(args)
     
-    print("\nScript completed!")
+    logger.info("Script completed!")
 
 if __name__ == "__main__":
     main()

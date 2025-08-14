@@ -432,7 +432,8 @@ class Command(BaseCommand):
             # Approach 1: Try to get basic info
             try:
                 info = ticker_obj.info
-            except:
+            except (Exception, KeyError, ValueError, ConnectionError, TimeoutError) as e:
+                logger.debug(f"Failed to get info for {ticker}: {e}")
                 pass
             
             # Approach 2: Try to get historical data with multiple periods
@@ -444,7 +445,8 @@ class Command(BaseCommand):
                             current_price = hist['Close'].iloc[-1]
                             if current_price is not None and not pd.isna(current_price):
                                 break
-                        except:
+                        except (KeyError, IndexError, ValueError) as e:
+                            logger.debug(f"Failed to extract price from history for {ticker}: {e}")
                             continue
                 except Exception as e:
                     continue
@@ -453,7 +455,8 @@ class Command(BaseCommand):
             if current_price is None and info:
                 try:
                     current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
-                except:
+                except (KeyError, TypeError, AttributeError) as e:
+                    logger.debug(f"Failed to extract current price from info for {ticker}: {e}")
                     pass
             
             # Approach 4: Try a simple quote request
@@ -463,7 +466,8 @@ class Command(BaseCommand):
                     if quote:
                         # If we can get quote type, symbol exists
                         pass
-                except:
+                except (Exception, KeyError, AttributeError) as e:
+                    logger.debug(f"Failed to get quote type for {ticker}: {e}")
                     pass
             
             # Determine if we have enough data to process
@@ -524,7 +528,8 @@ class Command(BaseCommand):
                         change_percent = (change / previous) * 100
                         stock_data['price_change_today'] = self._safe_decimal(change)
                         stock_data['change_percent'] = self._safe_decimal(change_percent)
-                except:
+                except (IndexError, KeyError, ZeroDivisionError, TypeError) as e:
+                    logger.debug(f"Failed to calculate price changes for {ticker}: {e}")
                     pass
             
             # Add volume analysis
@@ -532,7 +537,8 @@ class Command(BaseCommand):
                 try:
                     volume_ratio = stock_data['volume'] / stock_data['avg_volume_3mon']
                     stock_data['dvav'] = self._safe_decimal(volume_ratio)
-                except:
+                except (ZeroDivisionError, TypeError, ValueError) as e:
+                    logger.debug(f"Failed to calculate volume ratio for {ticker}: {e}")
                     pass
             
             # Save to database if not in test mode

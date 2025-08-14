@@ -8,6 +8,7 @@ import feedparser
 import time
 import logging
 import re
+import decimal
 from typing import List, Dict, Optional
 from datetime import datetime, timezone
 from bs4 import BeautifulSoup
@@ -322,7 +323,8 @@ class YahooFinanceNewsScraper:
                     try:
                         from decimal import Decimal
                         sentiment_score = Decimal(str(sentiment_score))
-                    except:
+                    except (ValueError, TypeError, decimal.InvalidOperation) as e:
+                        logger.debug(f"Failed to convert sentiment score to Decimal: {e}")
                         sentiment_score = None
                 
                 # Create article

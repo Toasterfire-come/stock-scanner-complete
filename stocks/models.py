@@ -66,6 +66,15 @@ class Stock(models.Model):
             models.Index(fields=['market_cap']),
             models.Index(fields=['current_price']),
             models.Index(fields=['volume']),
+            models.Index(fields=['last_updated']),
+            models.Index(fields=['change_percent']),
+            models.Index(fields=['exchange']),
+            models.Index(fields=['pe_ratio']),
+            models.Index(fields=['price_change_today']),
+            # Composite indexes for common query patterns
+            models.Index(fields=['exchange', 'last_updated']),
+            models.Index(fields=['current_price', 'last_updated']),
+            models.Index(fields=['market_cap', 'last_updated']),
         ]
     
     def __str__(self):
