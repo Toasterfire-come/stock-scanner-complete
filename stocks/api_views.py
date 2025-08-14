@@ -11,7 +11,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
-from django.db.models import Q, F, FieldError
+from django.db.models import Q, F
+from django.core.exceptions import FieldError
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
