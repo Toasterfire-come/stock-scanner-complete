@@ -8,6 +8,9 @@ import sys
 import subprocess
 import socket
 import requests
+import shutil
+import re
+from datetime import datetime
 
 def get_local_ip():
     """Get local IP address"""
@@ -22,11 +25,20 @@ def get_local_ip():
         return "127.0.0.1"
 
 def update_django_settings():
-    """Update Django settings for external access"""
+    """Update Django settings for external access with backup and robust parsing"""
     settings_file = "stockscanner_django/settings.py"
     
     if not os.path.exists(settings_file):
         print("ERROR: Django settings file not found!")
+        return False
+    
+    # Create backup with timestamp
+    backup_file = f"{settings_file}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    try:
+        shutil.copy2(settings_file, backup_file)
+        print(f"SUCCESS: Created backup at {backup_file}")
+    except Exception as e:
+        print(f"ERROR: Failed to create backup: {e}")
         return False
     
     # Read current settings
@@ -37,19 +49,31 @@ def update_django_settings():
     local_ip = get_local_ip()
     print(f"Your local IP: {local_ip}")
     
-    # Update ALLOWED_HOSTS
-    if '0.0.0.0' not in content:
-        # Find ALLOWED_HOSTS line and update it
-        lines = content.split('\n')
-        for i, line in enumerate(lines):
-            if 'ALLOWED_HOSTS =' in line:
-                # Update the line to include external access
-                lines[i] = f"ALLOWED_HOSTS = ['localhost', '127.0.0.1', '{local_ip}', '0.0.0.0']"
-                break
+    # Use regex to find and update ALLOWED_HOSTS more robustly
+    allowed_hosts_pattern = r'ALLOWED_HOSTS\s*=\s*\[([^\]]*)\]'
+    match = re.search(allowed_hosts_pattern, content)
+    
+    if not match:
+        print("ERROR: Could not find ALLOWED_HOSTS in settings.py")
+        return False
+    
+    current_hosts = match.group(1)
+    required_hosts = ['localhost', '127.0.0.1', local_ip, '0.0.0.0']
+    
+    # Check if all required hosts are already present
+    hosts_present = all(host in current_hosts for host in required_hosts)
+    
+    if not hosts_present:
+        # Build new ALLOWED_HOSTS list
+        new_hosts_str = ', '.join([f"'{host}'" for host in required_hosts])
+        new_line = f"ALLOWED_HOSTS = [{new_hosts_str}]"
+        
+        # Replace the ALLOWED_HOSTS line
+        updated_content = re.sub(allowed_hosts_pattern, new_line, content)
         
         # Write back to file
         with open(settings_file, 'w') as f:
-            f.write('\n'.join(lines))
+            f.write(updated_content)
         
         print("SUCCESS: Updated ALLOWED_HOSTS for external access")
     else:
