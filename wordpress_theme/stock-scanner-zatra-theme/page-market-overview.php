@@ -5,10 +5,59 @@
  * The template for displaying comprehensive market data and analysis
  */
 
+// Add page-specific structured data
+add_action('wp_head', function() {
+    ?>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Market Overview - Real-time Stock Market Data",
+        "description": "Comprehensive market overview with real-time indices, sector performance, market movers, and detailed financial market analysis.",
+        "url": "<?php echo esc_url(get_permalink()); ?>",
+        "mainEntity": {
+            "@type": "FinancialService",
+            "name": "Market Data Analysis",
+            "serviceType": "Market Overview",
+            "description": "Real-time market indices, sector performance tracking, and comprehensive market analysis tools",
+            "provider": {
+                "@type": "Organization",
+                "name": "<?php echo esc_js(get_bloginfo('name')); ?>"
+            }
+        },
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "<?php echo esc_url(home_url()); ?>"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Market Overview",
+                    "item": "<?php echo esc_url(get_permalink()); ?>"
+                }
+            ]
+        }
+    }
+    </script>
+    <?php
+});
+
 get_header(); 
 ?>
 
-<div class="market-overview-container">
+<!-- SEO-enhanced page content with semantic HTML5 -->
+<article class="market-overview-container" itemscope itemtype="https://schema.org/WebPage">
+    <!-- Hidden SEO content for search engines -->
+    <div style="display:none;" itemprop="description">
+        Comprehensive market overview featuring real-time stock market indices including S&P 500, NASDAQ, Dow Jones, 
+        sector performance analysis, top gainers and losers, most active stocks, and latest financial market news. 
+        Professional market analysis tools for investors and traders.
+    </div>
     <div class="page-header">
         <div class="container">
             <h1 class="page-title">
@@ -1185,5 +1234,7 @@ function viewStock(symbol) {
     window.location.href = `/stock-lookup/?symbol=${symbol}`;
 }
 </script>
+
+</article><!-- .market-overview-container -->
 
 <?php get_footer(); ?>

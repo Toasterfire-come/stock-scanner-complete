@@ -5,10 +5,87 @@
  * The template for displaying premium subscription plans
  */
 
+// Add page-specific structured data for pricing
+add_action('wp_head', function() {
+    ?>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Premium Plans - Professional Stock Analysis Tools",
+        "description": "Upgrade to premium for unlimited API calls, advanced screening tools, real-time alerts, and professional investment analysis features. Choose monthly or yearly billing with 20% savings.",
+        "url": "<?php echo esc_url(get_permalink()); ?>",
+        "mainEntity": [
+            {
+                "@type": "Product",
+                "name": "Basic Plan",
+                "description": "Essential stock analysis tools with basic screening and limited API calls",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "9.99",
+                    "priceCurrency": "USD",
+                    "billingIncrement": "Monthly",
+                    "availability": "https://schema.org/InStock"
+                }
+            },
+            {
+                "@type": "Product", 
+                "name": "Pro Plan",
+                "description": "Advanced features with real-time data, unlimited screening, and priority support",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "29.99",
+                    "priceCurrency": "USD",
+                    "billingIncrement": "Monthly",
+                    "availability": "https://schema.org/InStock"
+                }
+            },
+            {
+                "@type": "Product",
+                "name": "Enterprise Plan", 
+                "description": "Full-featured platform with API access, custom alerts, and institutional-grade tools",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "99.99",
+                    "priceCurrency": "USD",
+                    "billingIncrement": "Monthly",
+                    "availability": "https://schema.org/InStock"
+                }
+            }
+        ],
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "<?php echo esc_url(home_url()); ?>"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Premium Plans",
+                    "item": "<?php echo esc_url(get_permalink()); ?>"
+                }
+            ]
+        }
+    }
+    </script>
+    <?php
+});
+
 get_header(); 
 ?>
 
-<div class="premium-plans-container">
+<!-- SEO-enhanced page content with semantic HTML5 -->
+<article class="premium-plans-container" itemscope itemtype="https://schema.org/WebPage">
+    <!-- Hidden SEO content for search engines -->
+    <div style="display:none;" itemprop="description">
+        Professional stock market analysis subscription plans featuring unlimited API calls, advanced stock screening tools, 
+        real-time market alerts, portfolio analytics, and institutional-grade investment research tools. 
+        Monthly and yearly billing options with significant savings for annual subscriptions.
+    </div>
     <!-- Hero Section -->
     <div class="hero-section">
         <div class="container">
@@ -910,5 +987,7 @@ function scrollToComparison() {
     });
 }
 </script>
+
+</article><!-- .premium-plans-container -->
 
 <?php get_footer(); ?>
