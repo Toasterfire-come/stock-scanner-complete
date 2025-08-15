@@ -38,7 +38,7 @@ $plans = [
     'bronze' => [
         'name' => 'Bronze',
         'monthly' => 24.99,
-        'annual' => 249.99,
+        'annual' => 24.99 * 12,
         'features' => [
             '1,500 Monthly API Calls',
             '5 Portfolios',
@@ -50,22 +50,21 @@ $plans = [
     ],
     'silver' => [
         'name' => 'Silver',
-        'monthly' => 39.99,
-        'annual' => 399.99,
+        'monthly' => 49.99,
+        'annual' => 49.99 * 12,
         'features' => [
             '5,000 Monthly API Calls',
             'Unlimited Portfolios',
             '200 Stocks per Watchlist',
             '100 Price Alerts',
             'Real-time Data',
-            'Email + Chat Support',
-            'REST API Access'
+            'Email + Chat Support'
         ]
     ],
     'gold' => [
         'name' => 'Gold',
-        'monthly' => 89.99,
-        'annual' => 899.99,
+        'monthly' => 79.99,
+        'annual' => 79.99 * 12,
         'features' => [
             'Unlimited API Calls',
             'Unlimited Everything',

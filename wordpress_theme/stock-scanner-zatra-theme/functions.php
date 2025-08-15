@@ -2627,7 +2627,9 @@ add_action('wp_head', 'zatra_financial_meta_tags', 15);
 add_action('init', function() {
 	$map = array(
 		'compare-plans' => 'page-compare-plans.php',
-		'paypal-checkout' => 'page-paypal-checkout.php'
+		'paypal-checkout' => 'page-paypal-checkout.php',
+		'payment-success' => 'page-payment-success.php',
+		'payment-cancelled' => 'page-payment-cancelled.php'
 	);
 	foreach ($map as $slug => $template_file) {
 		$page = get_page_by_path($slug);

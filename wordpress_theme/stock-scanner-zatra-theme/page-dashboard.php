@@ -171,24 +171,34 @@ get_header();
                 <h3>Upgrade your plan</h3>
                 <div class="plans-grid">
                     <div class="plan-mini">
-                        <div class="plan-head">Pro</div>
-                        <div class="plan-price"><span class="amount">$29</span><span class="period">/mo</span></div>
+                        <div class="plan-head">Bronze</div>
+                        <div class="plan-price"><span class="amount">$24.99</span><span class="period">/mo</span></div>
                         <ul class="plan-list">
                             <li>Advanced Screener</li>
-                            <li>Unlimited Watchlists</li>
-                            <li>Portfolio Analytics</li>
+                            <li>1,500 monthly API calls</li>
+                            <li>Email support</li>
                         </ul>
-                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Pro</a>
+                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Bronze</a>
                     </div>
                     <div class="plan-mini">
-                        <div class="plan-head">Enterprise</div>
-                        <div class="plan-price"><span class="amount">$99</span><span class="period">/mo</span></div>
+                        <div class="plan-head">Silver</div>
+                        <div class="plan-price"><span class="amount">$49.99</span><span class="period">/mo</span></div>
                         <ul class="plan-list">
-                            <li>AI Insights</li>
-                            <li>API Access</li>
-                            <li>24/7 Support</li>
+                            <li>Portfolio analytics</li>
+                            <li>5,000 monthly API calls</li>
+                            <li>Priority email support</li>
                         </ul>
-                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Enterprise</a>
+                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Silver</a>
+                    </div>
+                    <div class="plan-mini">
+                        <div class="plan-head">Gold</div>
+                        <div class="plan-price"><span class="amount">$79.99</span><span class="period">/mo</span></div>
+                        <ul class="plan-list">
+                            <li>AI market insights</li>
+                            <li>Unlimited monthly API calls</li>
+                            <li>White-label options</li>
+                        </ul>
+                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Gold</a>
                     </div>
                 </div>
                 <div class="plans-note">See full details on the <a href="/compare-plans/">Compare Plans</a> page.</div>

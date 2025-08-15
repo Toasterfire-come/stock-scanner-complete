@@ -10,14 +10,7 @@ get_header(); ?>
 	<div class="container">
 		<div class="page-header text-center">
 			<h1 class="page-title">Compare Our Plans</h1>
-			<p class="page-subtitle">Choose the perfect plan for your stock analysis needs. All plans include our core features with varying limits and advanced capabilities.</p>
-		</div>
-
-		<div class="billing-toggle">
-			<div class="toggle-group">
-				<button id="monthly-toggle" class="toggle-btn active">Monthly</button>
-				<button id="annual-toggle" class="toggle-btn">Annual <span class="save-label">(Save 20%)</span></button>
-			</div>
+			<p class="page-subtitle">Choose the plan that fits your workflow. Clear limits, honest features, and professional tools.</p>
 		</div>
 
 		<div class="comparison-card">
@@ -36,27 +29,25 @@ get_header(); ?>
 									<button class="btn btn-outline w-full mt-2" onclick="selectPlanCompare('free')">Current Plan</button>
 								</div>
 							</th>
-							<th class="plan-col pro popular">
+							<th class="plan-col silver popular">
 								<div class="popular-badge">Most Popular</div>
 								<div class="plan-header">
-									<h3>Pro</h3>
+									<h3>Silver</h3>
 									<div class="price-display">
-										<span class="price monthly-price">$29</span>
-										<span class="price annual-price" style="display:none;">$23</span>
+										<span class="price">$49.99</span>
 										<span class="period">/month</span>
 									</div>
-									<button class="btn btn-primary w-full mt-2" onclick="selectPlanCompare('pro')">Upgrade to Pro</button>
+									<button class="btn btn-primary w-full mt-2" onclick="selectPlanCompare('silver')">Upgrade to Silver</button>
 								</div>
 							</th>
-							<th class="plan-col enterprise">
+							<th class="plan-col gold">
 								<div class="plan-header">
-									<h3>Enterprise</h3>
+									<h3>Gold</h3>
 									<div class="price-display">
-										<span class="price monthly-price">$99</span>
-										<span class="price annual-price" style="display:none;">$79</span>
+										<span class="price">$79.99</span>
 										<span class="period">/month</span>
 									</div>
-									<button class="btn btn-primary w-full mt-2" onclick="selectPlanCompare('enterprise')">Upgrade to Enterprise</button>
+									<button class="btn btn-primary w-full mt-2" onclick="selectPlanCompare('gold')">Upgrade to Gold</button>
 								</div>
 							</th>
 						</tr>
@@ -121,7 +112,7 @@ get_header(); ?>
 							<td>Support Level</td>
 							<td>Community</td>
 							<td>Email</td>
-							<td>24/7 Phone</td>
+							<td>Priority Email</td>
 						</tr>
 					</tbody>
 				</table>
@@ -134,10 +125,6 @@ get_header(); ?>
 .compare-plans-container { padding: 2rem 0; background:#ffffff; }
 .compare-plans-container .page-title { font-size:2.25rem; font-weight:700; margin:0; }
 .compare-plans-container .page-subtitle { color:#6b7280; margin-top:.5rem; }
-.billing-toggle { display:flex; justify-content:center; margin:1.25rem 0 2rem; }
-.toggle-group { background:#f3f4f6; padding:.25rem; border-radius:9999px; }
-.toggle-btn { border:none; background:transparent; padding:.5rem 1rem; border-radius:9999px; font-weight:600; color:#374151; }
-.toggle-btn.active { background:#ffffff; color:#111827; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
 .comparison-card { background:#ffffff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
 .table-wrapper { overflow-x:auto; }
 .comparison-table { width:100%; border-collapse:separate; border-spacing:0; }
@@ -158,34 +145,13 @@ get_header(); ?>
 .comparison-table tbody tr td:first-child { text-align:left; font-weight:500; color:#374151; }
 .feature-yes { color:#10b981; font-weight:700; }
 .feature-no { color:#ef4444; font-weight:700; }
-@media (max-width: 768px) {
-	.feature-col { min-width:180px; }
-	.plan-col { min-width:180px; }
-}
+@media (max-width: 768px) { .feature-col { min-width:180px; } .plan-col { min-width:180px; } }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-	const monthlyBtn = document.getElementById('monthly-toggle');
-	const annualBtn = document.getElementById('annual-toggle');
-	const monthlyPrices = document.querySelectorAll('.monthly-price');
-	const annualPrices = document.querySelectorAll('.annual-price');
-
-	function setBilling(isAnnual) {
-		monthlyBtn.classList.toggle('active', !isAnnual);
-		annualBtn.classList.toggle('active', isAnnual);
-		monthlyPrices.forEach(el => el.style.display = isAnnual ? 'none' : 'inline');
-		annualPrices.forEach(el => el.style.display = isAnnual ? 'inline' : 'none');
-	}
-
-	monthlyBtn.addEventListener('click', () => setBilling(false));
-	annualBtn.addEventListener('click', () => setBilling(true));
-});
-
 function selectPlanCompare(plan) {
 	const isLoggedIn = <?php echo is_user_logged_in() ? 'true' : 'false'; ?>;
-	const isAnnual = document.getElementById('annual-toggle').classList.contains('active');
-	const billing = isAnnual ? 'yearly' : 'monthly';
+	const billing = 'monthly';
 	if (!isLoggedIn) { window.location.href = `/signup/?plan=${plan}`; return; }
 	window.location.href = `/paypal-checkout/?plan=${plan}&billing=${billing}`;
 }
