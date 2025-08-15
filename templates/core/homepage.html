@@ -7,246 +7,62 @@
 {% block extra_css %}
 <style>
     .hero-section {
-        background: #4a5a3a;
-        color: white;
-        padding: 4rem 0;
+        background: var(--bg-white);
+        color: var(--text-primary);
+        padding: 3rem 0;
         text-align: center;
         margin: -2rem -2rem 2rem -2rem;
-        animation: professional-glow 8s ease-in-out infinite;
+        border: 1px solid var(--border-light);
+        border-left: 0;
+        border-right: 0;
     }
 
-    @keyframes professional-glow {
-        0%, 100% { 
-            transform: translateY(0) scale(1);
-            opacity: 0.8;
-        }
-        50% { 
-            transform: translateY(-10px) scale(1.05);
-            opacity: 0.6;
-        }
-    }
-
-    .hero-section h1 {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-
-    .hero-section p {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        margin-bottom: 2rem;
-    }
+    .hero-section h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.02em; }
+    .hero-section p { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1rem; }
 
     .api-status {
         display: inline-flex;
         align-items: center;
         padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-    }
-
-    .status-indicator {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--accent-green);
-        margin-right: 0.5rem;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(56, 161, 105, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0); }
-    }
-
-    .section {
-        padding: 3rem 0;
-    }
-
-    .section-title {
-        font-size: 2.5rem;
-        text-align: center;
-        margin-bottom: 3rem;
-        color: var(--text-primary);
-        background: #4a5a3a;
-        color: white;
-        padding: 2rem;
-        border-radius: var(--border-radius);
-        animation: professional-glow 8s ease-in-out infinite;
-    }
-
-    .grid {
-        display: grid;
-        gap: 2rem;
-    }
-
-    .grid-2 {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-
-    .grid-3 {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-
-    .feature-card {
-        background: var(--bg-white);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--border-light);
-        transition: transform 0.2s, box-shadow 0.2s;
-        text-align: center;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .card-icon {
-        width: 60px;
-        height: 60px;
-        background: #4a5a3a;
-        border-radius: var(--border-radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        font-size: 1.5rem;
-        color: white;
-        font-weight: bold;
-    }
-
-    .endpoint-list {
-        background: var(--bg-light);
-        border-radius: var(--border-radius-sm);
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .endpoint {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        background: var(--bg-white);
-        border-radius: var(--border-radius-sm);
-        border-left: 4px solid var(--primary-blue);
-    }
-
-    .endpoint:last-child {
-        margin-bottom: 0;
-    }
-
-    .endpoint-path {
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        font-size: 0.9rem;
-        color: var(--text-primary);
-        font-weight: 600;
-    }
-
-    .endpoint-method {
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .method-get {
-        background: var(--success-bg);
-        color: var(--success-text);
-    }
-
-    .method-post {
-        background: var(--error-bg);
-        color: var(--error-text);
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
-    }
-
-    .stat-card {
-        text-align: center;
-        padding: 1.5rem;
-        background: var(--bg-white);
-        border-radius: var(--border-radius-sm);
-        border: 1px solid var(--border-light);
-    }
-
-    .stat-number {
-        font-size: 2.5rem;
+        border-radius: 999px;
         font-weight: 700;
-        color: var(--primary-blue);
-        display: block;
-    }
-
-    .stat-label {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-top: 0.5rem;
-    }
-
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-
-    .feature-icon {
-        font-size: 1rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        background: #4a5a3a;
-        color: white;
-        padding: 1rem;
-        border-radius: var(--border-radius);
-        display: inline-block;
-        text-align: center;
-        min-width: 80px;
-    }
-
-    .code-block {
         background: var(--bg-dark);
-        color: var(--text-dark);
-        padding: 1.5rem;
-        border-radius: var(--border-radius-sm);
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        font-size: 0.9rem;
-        overflow-x: auto;
-        margin-top: 1rem;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
     }
+    .status-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); margin-right: 0.5rem; box-shadow: 0 0 0 2px rgba(16,185,129,.25); }
 
-    .banner {
-        background: var(--warning-bg);
-        border: 1px solid var(--error-border);
-        color: var(--error-text);
-        padding: 1rem 1.25rem;
-        border-radius: var(--border-radius-sm);
-        margin: -2rem -2rem 2rem -2rem;
-    }
+    .section { padding: 3rem 0; }
+    .section-title { font-size: 2rem; text-align: center; margin-bottom: 2rem; color: var(--text-primary); }
 
-    .banner strong { 
-        color: var(--warning-text); 
-    }
+    .grid { display: grid; gap: 1.25rem; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    .feature-card { background: var(--bg-white); border-radius: var(--border-radius); padding: 1.5rem; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); text-align: center; transition: transform .2s, box-shadow .2s; }
+    .feature-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .card-icon { width: 56px; height: 56px; background: var(--bg-dark); border: 1px solid var(--border-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: .95rem; color: var(--text-secondary); font-weight: 800; }
+
+    .endpoint-list { background: var(--bg-light); border-radius: var(--border-radius-sm); padding: 1rem; margin-top: 1rem; border: 1px solid var(--border-light); }
+    .endpoint { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; margin-bottom: 0.5rem; background: var(--bg-white); border-radius: var(--border-radius-sm); border-left: 4px solid var(--primary-blue); border: 1px solid var(--border-light); }
+    .endpoint:last-child { margin-bottom: 0; }
+    .endpoint-path { font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace); font-size: 0.9rem; color: var(--text-primary); font-weight: 600; }
+    .endpoint-method { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: 1px solid var(--border-light); }
+    .method-get { background: var(--info-bg); color: var(--info-text); }
+    .method-post { background: var(--warning-bg); color: var(--warning-text); }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+    .stat-card { text-align: center; padding: 1.25rem; background: var(--bg-white); border-radius: var(--border-radius-sm); border: 1px solid var(--border-light); }
+    .stat-number { font-size: 2rem; font-weight: 800; color: var(--secondary-blue); display: block; }
+    .stat-label { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    .code-block { background: var(--bg-dark); color: var(--text-dark); padding: 1rem; border-radius: var(--border-radius-sm); font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace); font-size: 0.9rem; overflow-x: auto; margin-top: 1rem; border: 1px solid var(--border-light); }
+
+    .banner { background: var(--warning-bg); border: 1px solid var(--error-border); color: var(--error-text); padding: 1rem 1.25rem; border-radius: var(--border-radius-sm); margin: -2rem -2rem 2rem -2rem; }
+    .banner strong { color: var(--warning-text); }
 
     @media (max-width: 768px) {
-        .hero-section h1 {
-            font-size: 2rem;
-        }
-        .grid-2, .grid-3 {
-            grid-template-columns: 1fr;
-        }
+        .hero-section h1 { font-size: 2rem; }
+        .grid-2 { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -296,7 +112,7 @@
                 <h3>Revenue Analytics</h3>
                 <p>Comprehensive revenue tracking and discount management system. Monitor subscription metrics, payment analytics, and promotional code performance.</p>
                 <a href="/revenue/revenue-analytics/" class="btn">View Revenue</a>
-                <a href="/revenue/revenue-analytics/?format=json" class="btn btn-secondary" style="background: var(--border-light); color: var(--text-primary); margin-top: 0.5rem;">API Endpoint</a>
+                <a href="/revenue/revenue-analytics/?format=json" class="btn btn-secondary" style="margin-top: 0.5rem;">API Endpoint</a>
             </div>
         </div>
     </div>
@@ -379,29 +195,6 @@
             <div class="stat-card">
                 <span class="stat-number">24/7</span>
                 <div class="stat-label">Market Coverage</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section" style="background: var(--bg-white);">
-    <div class="container">
-        <h2 class="section-title">Key Features</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">SPEED</div>
-                <h3>High Performance</h3>
-                <p>Optimized for speed with sub-100ms response times and 99.9% uptime guarantee.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">SECURE</div>
-                <h3>Secure & Reliable</h3>
-                <p>Enterprise-grade security with API authentication and rate limiting protection.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">API</div>
-                <h3>RESTful API</h3>
-                <p>Clean, intuitive REST API design with JSON responses and comprehensive documentation.</p>
             </div>
         </div>
     </div>
