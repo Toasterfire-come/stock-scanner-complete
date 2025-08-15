@@ -126,9 +126,11 @@
                     </div>
                     
                     <div class="footer-legal">
-                        <a href="/privacy-policy/">Privacy Policy</a>
-                        <a href="/terms-of-service/">Terms of Service</a>
-                        <a href="/contact/">Contact</a>
+                        <a href="/">Home</a>
+                        <a href="/docs/">API Documentation</a>
+                        <a href="/status/">System Status</a>
+                        <a href="/market-overview/">Market Overview</a>
+                        <a href="/premium-plans/">Premium Plans</a>
                     </div>
                 </div>
             </div>
@@ -205,3 +207,13 @@ function stock_scanner_fallback_menu() {
     echo '</ul>';
 }
 ?>
+<style>
+.app-menu { margin-left: 1rem; position: relative; }
+.app-menu-toggle { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; border:1px solid var(--border-secondary, #334155); background: var(--bg-dark, #0b1220); cursor:pointer; }
+.waffle { display:grid; grid-template-columns: repeat(3, 6px); grid-auto-rows:6px; gap:4px; }
+.waffle span { display:block; width:6px; height:6px; border-radius:50%; background: var(--text-secondary, #cbd5e1); }
+.dropdown-menu { position:absolute; top: calc(100% + 8px); right:0; background: var(--bg-white, #1e293b); border:1px solid var(--border-light, #334155); border-radius:12px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); min-width:220px; opacity:0; visibility:hidden; transform: translateY(-10px); transition: all .2s ease; z-index:1001; }
+.dropdown-menu.active { opacity:1; visibility:visible; transform: translateY(0); }
+.dropdown-item { display:flex; align-items:center; padding: 0.6rem 0.9rem; color: var(--text-secondary, #cbd5e1); text-decoration:none; font-weight:700; }
+.dropdown-item:hover { background: var(--bg-dark, #0b1220); color: var(--text-primary, #f8fafc); }
+</style>

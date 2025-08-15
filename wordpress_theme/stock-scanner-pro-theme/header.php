@@ -47,7 +47,8 @@
     <meta name="twitter:description" content="<?php echo esc_attr($description); ?>" />
     <meta name="twitter:image" content="<?php echo esc_url($image); ?>" />
 
-    <?php wp_head(); ?>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<?php wp_head(); ?>
   </head>
 
 <body <?php body_class(); ?>>
@@ -59,7 +60,7 @@
     <header id="masthead" class="site-header">
         <div class="header-container">
             <div class="site-branding">
-                <a href="<?php echo esc_url(home_url('/')); ?>" class="site-logo">
+                <a href="<?php echo esc_url(home_url('/')); ?>" class="site-logo" aria-label="Home">
                     <span class="logo-text"><?php bloginfo('name'); ?></span>
                 </a>
                 <?php
@@ -69,7 +70,7 @@
                 <?php endif; ?>
             </div>
 
-            <nav id="site-navigation" class="main-navigation">
+            <nav id="site-navigation" class="main-navigation" aria-label="Primary">
                 <button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">
                     <span class="hamburger-line"></span>
                     <span class="hamburger-line"></span>
@@ -162,7 +163,22 @@
                     </div>
                 <?php endif; ?>
             </div>
+            <div class="app-menu">
+        <button class="app-menu-toggle" onclick="document.getElementById('wp-app-menu').classList.toggle('active')" aria-controls="wp-app-menu" aria-expanded="false" title="Menu">
+            <span class="waffle">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </span>
+        </button>
+        <div class="dropdown-menu" id="wp-app-menu">
+            <a href="<?php echo esc_url(home_url('/')); ?>" class="dropdown-item">Home</a>
+            <a href="<?php echo esc_url(home_url('/docs/')); ?>" class="dropdown-item">API Docs</a>
+            <a href="<?php echo esc_url(home_url('/market-overview/')); ?>" class="dropdown-item">Market Overview</a>
+            <a href="<?php echo esc_url(home_url('/premium-plans/')); ?>" class="dropdown-item">Premium Plans</a>
+            <a href="<?php echo esc_url(home_url('/status/')); ?>" class="dropdown-item">Status</a>
         </div>
+    </div>
     </header>
 
     <div id="content" class="site-content">
@@ -225,3 +241,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<style>
+.app-menu { margin-left: 1rem; position: relative; }
+.app-menu-toggle { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; border:1px solid var(--border-secondary, #334155); background: var(--bg-dark, #0b1220); cursor:pointer; }
+.waffle { display:grid; grid-template-columns: repeat(3, 6px); grid-auto-rows:6px; gap:4px; }
+.waffle span { display:block; width:6px; height:6px; border-radius:50%; background: var(--text-secondary, #cbd5e1); }
+.dropdown-menu { position:absolute; top: calc(100% + 8px); right:0; background: var(--bg-white, #1e293b); border:1px solid var(--border-light, #334155); border-radius:12px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); min-width:220px; opacity:0; visibility:hidden; transform: translateY(-10px); transition: all .2s ease; z-index:1001; }
+.dropdown-menu.active { opacity:1; visibility:visible; transform: translateY(0); }
+.dropdown-item { display:flex; align-items:center; padding: 0.6rem 0.9rem; color: var(--text-secondary, #cbd5e1); text-decoration:none; font-weight:700; }
+.dropdown-item:hover { background: var(--bg-dark, #0b1220); color: var(--text-primary, #f8fafc); }
+</style>
