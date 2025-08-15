@@ -860,73 +860,42 @@ function loadPortfolioData() {
     emptyPortfolio.style.display = 'none';
     
     // Simulate loading delay
-    setTimeout(() => {
-        const portfolioData = getPortfolioData();
-        
-        if (portfolioData.holdings.length === 0) {
+    getPortfolioData()
+        .then(portfolioData => {
+            const holdings = Array.isArray(portfolioData.holdings) ? portfolioData.holdings : [];
+            if (holdings.length === 0) {
+                loadingIndicator.style.display = 'none';
+                emptyPortfolio.style.display = 'block';
+            } else {
+                updatePortfolioSummary(portfolioData);
+                displayHoldings(holdings);
+                updateAllocationChart(holdings);
+                updatePortfolioChart('1D');
+                loadingIndicator.style.display = 'none';
+                holdingsTable.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            console.error('Portfolio error:', err);
             loadingIndicator.style.display = 'none';
             emptyPortfolio.style.display = 'block';
-        } else {
-            updatePortfolioSummary(portfolioData);
-            displayHoldings(portfolioData.holdings);
-            updateAllocationChart(portfolioData.holdings);
-            updatePortfolioChart('1D');
-            loadingIndicator.style.display = 'none';
-            holdingsTable.style.display = 'block';
-        }
-    }, 1000);
+        });
 }
 
 function getPortfolioData() {
-    // This would normally fetch from the backend
-    // For demo, return sample data
-    return {
-        totalValue: 125430.67,
-        totalCost: 118500.00,
-        todayChange: 2340.56,
-        totalReturn: 5.85,
-        holdings: [
-            {
-                symbol: 'AAPL',
-                name: 'Apple Inc.',
-                shares: 100,
-                currentPrice: 175.43,
-                purchasePrice: 165.00,
-                marketValue: 17543.00,
-                costBasis: 16500.00,
-                todayChange: 235.00,
-                todayChangePercent: 1.36,
-                totalReturn: 6.32,
-                allocation: 14.0
-            },
-            {
-                symbol: 'GOOGL',
-                name: 'Alphabet Inc.',
-                shares: 5,
-                currentPrice: 2734.89,
-                purchasePrice: 2600.00,
-                marketValue: 13674.45,
-                costBasis: 13000.00,
-                todayChange: -78.35,
-                todayChangePercent: -0.57,
-                totalReturn: 5.19,
-                allocation: 10.9
-            },
-            {
-                symbol: 'MSFT',
-                name: 'Microsoft Corp.',
-                shares: 75,
-                currentPrice: 334.85,
-                purchasePrice: 320.00,
-                marketValue: 25113.75,
-                costBasis: 24000.00,
-                todayChange: 241.50,
-                todayChangePercent: 0.97,
-                totalReturn: 4.64,
-                allocation: 20.0
-            }
-        ]
-    };
+    const params = new URLSearchParams();
+    params.append('action', 'get_formatted_portfolio_data');
+    params.append('nonce', (window.stockScannerAjax && stockScannerAjax.nonce) || '');
+    return fetch((window.stockScannerAjax && stockScannerAjax.ajaxurl) || '/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (!res || !res.success) throw new Error(res && res.data ? res.data : 'Failed to load portfolio');
+        return res.data || {};
+    });
 }
 
 function updatePortfolioSummary(data) {

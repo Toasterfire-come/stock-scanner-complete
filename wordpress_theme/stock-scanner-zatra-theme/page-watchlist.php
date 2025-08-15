@@ -689,67 +689,40 @@ function loadWatchlist() {
     emptyWatchlist.style.display = 'none';
     
     // Simulate loading delay
-    setTimeout(() => {
-        const watchlistData = getWatchlistData();
-        
-        if (watchlistData.length === 0) {
+    getWatchlistData()
+        .then(watchlistData => {
+            if (watchlistData.length === 0) {
+                loadingIndicator.style.display = 'none';
+                emptyWatchlist.style.display = 'block';
+                updateStats(watchlistData);
+            } else {
+                displayWatchlist(watchlistData);
+                updateStats(watchlistData);
+                loadingIndicator.style.display = 'none';
+                watchlistTable.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            console.error('Watchlist error:', err);
             loadingIndicator.style.display = 'none';
             emptyWatchlist.style.display = 'block';
-            updateStats(watchlistData);
-        } else {
-            displayWatchlist(watchlistData);
-            updateStats(watchlistData);
-            loadingIndicator.style.display = 'none';
-            watchlistTable.style.display = 'block';
-        }
-    }, 1000);
+        });
 }
 
 function getWatchlistData() {
-    // This would normally fetch from the backend
-    // For demo, return sample data
-    return [
-        {
-            symbol: 'AAPL',
-            name: 'Apple Inc.',
-            price: 175.43,
-            change: 2.35,
-            changePercent: 1.36,
-            volume: 58234567
-        },
-        {
-            symbol: 'GOOGL',
-            name: 'Alphabet Inc.',
-            price: 2734.89,
-            change: -15.67,
-            changePercent: -0.57,
-            volume: 1234567
-        },
-        {
-            symbol: 'MSFT',
-            name: 'Microsoft Corporation',
-            price: 334.85,
-            change: 3.21,
-            changePercent: 0.97,
-            volume: 23456789
-        },
-        {
-            symbol: 'TSLA',
-            name: 'Tesla Inc.',
-            price: 245.67,
-            change: 12.45,
-            changePercent: 5.34,
-            volume: 89234567
-        },
-        {
-            symbol: 'NVDA',
-            name: 'NVIDIA Corporation',
-            price: 892.34,
-            change: 25.67,
-            changePercent: 2.96,
-            volume: 12345678
-        }
-    ];
+    const params = new URLSearchParams();
+    params.append('action', 'get_formatted_watchlist_data');
+    params.append('nonce', (window.stockScannerAjax && stockScannerAjax.nonce) || '');
+    return fetch((window.stockScannerAjax && stockScannerAjax.ajaxurl) || '/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (!res || !res.success) throw new Error(res && res.data ? res.data : 'Failed to load watchlist');
+        return Array.isArray(res.data) ? res.data : [];
+    });
 }
 
 function displayWatchlist(data) {

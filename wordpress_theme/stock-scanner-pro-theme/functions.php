@@ -1832,7 +1832,7 @@ function stock_scanner_resource_hints() {
     // Preload critical theme assets
     $theme_dir = get_template_directory_uri();
     echo '<link rel="preload" href="' . $theme_dir . '/assets/js/performance-optimized.js" as="script">';
-    echo '<link rel="preload" href="' . $theme_dir . '/assets/css/shared-styles.css" as="style">';
+    echo '<link rel="preload" href="' . $theme_dir . '/assets/css/shared-styles.css" as="style">'; // keep preload only for pro theme where file definitely exists
 }
 
 /**

@@ -1,0 +1,33 @@
+/* Shared Styles for Zatra Theme - borrowed from Pro theme for consistency */
+:root {
+	--color-bg: #ffffff;
+	--color-surface: #ffffff;
+	--color-text: #111827;
+	--color-text-muted: #4b5563;
+	--color-border: #e5e7eb;
+	--color-primary: #3685fb;
+	--color-primary-contrast: #ffffff;
+	--shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+	--shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+	--radius-md: 10px;
+	--radius-lg: 12px;
+}
+
+.site-header { background: var(--color-primary); color: var(--color-primary-contrast); box-shadow: var(--shadow-md); }
+.site-header a { color: var(--color-primary-contrast); }
+
+.container { padding-left: 16px; padding-right: 16px; }
+
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; border-radius: 8px; padding: 10px 16px; line-height: 1.2; cursor: pointer; border: 2px solid transparent; }
+.btn-primary { background: var(--color-primary); color: var(--color-primary-contrast); }
+.btn-secondary { background: #374151; color: #ffffff; }
+.btn-outline { background: transparent; color: var(--color-primary); border-color: var(--color-primary); }
+
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px 10px; border-bottom: 1px solid var(--color-border); text-align: left; }
+.table thead th { background: #f8fafc; color: var(--color-text); position: sticky; top: 0; }
+
+.positive { color: #16a34a !important; font-weight: 600; }
+.negative { color: #dc2626 !important; font-weight: 600; }
