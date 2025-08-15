@@ -1,0 +1,44 @@
+/*
+Theme Name: Zatra
+Theme URI: https://dezigndigital.com.au/themes/zatra/
+Author: Dezign Digital
+Author URI: https://dezigndigital.com.au/
+Description: Zatra offers full-site editing flexibility and cross-browser compatibility. It is a responsive and mobile-friendly theme. Customizing the colors, fonts, typography, layouts, and more is easy. With the help of the powerful block editor, it will be simple to tailor your website to your needs. This theme is carefully crafted and meticulously developed.
+Requires at least: 6.0
+Tested up to: 6.6
+Requires PHP: 5.7
+Version: 1.0.1
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: zatra
+Tags: one-column, custom-colors, custom-menu, custom-logo, editor-style, featured-images, full-site-editing, block-patterns, rtl-language-support, sticky-post, threaded-comments, translation-ready, wide-blocks, block-styles, style-variations, blog, portfolio, news
+*/
+
+.home-about-section .home-icon-wrap {
+    text-align: center;
+}
+
+.home-about-section .home-icon-wrap i {
+    font-size: 54px;
+    border-width: 4px;
+    border-style: solid;
+    border-radius: 20px;
+    border-color: inherit;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.home-about-section .home-icon-wrap.home-icon-wrap-1 i {
+    color: #f17e00;
+}
+
+.home-about-section .home-icon-wrap.home-icon-wrap-2 i {
+    color: #3685fb;
+}
+
+.home-about-section .home-icon-wrap.home-icon-wrap-3 i {
+    color: #bbd700;
+}
