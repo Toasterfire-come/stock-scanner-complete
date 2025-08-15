@@ -42,6 +42,11 @@ add_action('after_setup_theme', 'stock_scanner_zatra_setup');
 function stock_scanner_zatra_scripts() {
     // Theme stylesheet
     wp_enqueue_style('stock-scanner-zatra-style', get_stylesheet_uri(), array(), '1.0.0');
+    // Shared styles for consistent UI
+    $shared_css = get_template_directory_uri() . '/assets/css/shared-styles.css';
+    if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
+        wp_enqueue_style('stock-scanner-zatra-shared', $shared_css, array('stock-scanner-zatra-style'), '1.0.0');
+    }
     
     // Font Awesome (local)
     wp_enqueue_style(
@@ -2568,10 +2573,7 @@ function zatra_optimize_resources() {
         return $tag;
     }, 10, 2);
     
-    // Add preload for critical resources
-    add_action('wp_head', function() {
-        echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">';
-    }, 1);
+    // Removed stylesheet preload to avoid "preloaded but not used" warnings when versions differ
 }
 add_action('init', 'zatra_optimize_resources');
 

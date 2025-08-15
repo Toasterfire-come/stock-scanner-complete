@@ -445,100 +445,112 @@ function loadDashboardData() {
 }
 
 function loadPortfolioData() {
-    // This would make an AJAX call to get portfolio data from the backend
-    // For now, we'll use placeholder data
-    const portfolioData = {
-        value: '$125,430.67',
-        change: '+2,340.56',
-        changePercent: '+1.90%',
-        holdings: [
-            { symbol: 'AAPL', name: 'Apple Inc.', shares: 100, value: '$17,500', change: '+2.3%' },
-            { symbol: 'GOOGL', name: 'Alphabet Inc.', shares: 50, value: '$13,750', change: '-0.8%' },
-            { symbol: 'MSFT', name: 'Microsoft Corp.', shares: 75, value: '$25,125', change: '+1.5%' }
-        ]
-    };
-    
-    // Update portfolio stats
-    document.getElementById('portfolio-value').textContent = portfolioData.value;
-    document.getElementById('day-change').textContent = portfolioData.change;
-    document.getElementById('day-change-percent').textContent = portfolioData.changePercent;
-    document.getElementById('day-change-percent').className = 'stat-change ' + 
-        (portfolioData.change.startsWith('+') ? 'positive' : 'negative');
-    
-    // Update portfolio holdings
-    const holdingsContainer = document.getElementById('portfolio-holdings');
-    holdingsContainer.innerHTML = portfolioData.holdings.map(stock => `
-        <div class="holding-item">
-            <div class="holding-info">
-                <strong>${stock.symbol}</strong>
-                <span>${stock.name}</span>
+    const params = new URLSearchParams();
+    params.append('action', 'get_formatted_portfolio_data');
+    params.append('nonce', (window.stockScannerAjax && stockScannerAjax.nonce) || '');
+
+    fetch((window.stockScannerAjax && stockScannerAjax.ajaxurl) || '/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (!res || !res.success) throw new Error(res && res.data ? res.data : 'Failed to load portfolio');
+        const data = res.data || {};
+        document.getElementById('portfolio-value').textContent = data.total_value || '--';
+        document.getElementById('day-change').textContent = data.total_gain_loss || '--';
+        const pctEl = document.getElementById('day-change-percent');
+        const pctText = (data.total_gain_loss_percent || '').replace(/<[^>]*>/g, '');
+        pctEl.textContent = pctText || '0.00%';
+        pctEl.className = 'stat-change ' + ((data.raw_total_gain_loss || 0) >= 0 ? 'positive' : 'negative');
+
+        const holdings = Array.isArray(data.holdings) ? data.holdings.slice(0, 5) : [];
+        const holdingsContainer = document.getElementById('portfolio-holdings');
+        holdingsContainer.innerHTML = holdings.length ? holdings.map(h => `
+            <div class="holding-item">
+                <div class="holding-info">
+                    <strong>${h.symbol || ''}</strong>
+                    <span>${h.name || ''}</span>
+                </div>
+                <div class="holding-value">
+                    <div>${h.market_value || '--'}</div>
+                    <div class="change">${h.gain_loss_percent || ''}</div>
+                </div>
             </div>
-            <div class="holding-value">
-                <div>${stock.value}</div>
-                <div class="change ${stock.change.startsWith('+') ? 'positive' : 'negative'}">${stock.change}</div>
-            </div>
-        </div>
-    `).join('');
+        `).join('') : '<div class="loading-spinner">No holdings yet</div>';
+    })
+    .catch(err => {
+        console.error('Portfolio load error:', err);
+    });
 }
 
 function loadWatchlistData() {
-    // Load watchlist from backend
-    const watchlistData = [
-        { symbol: 'TSLA', name: 'Tesla Inc.', price: '$245.67', change: '+3.2%' },
-        { symbol: 'NVDA', name: 'NVIDIA Corp.', price: '$892.34', change: '+5.7%' },
-        { symbol: 'AMD', name: 'Advanced Micro Devices', price: '$142.89', change: '-1.2%' }
-    ];
-    
-    document.getElementById('watchlist-count').textContent = watchlistData.length;
-    
-    const watchlistContainer = document.getElementById('watchlist-items');
-    watchlistContainer.innerHTML = watchlistData.map(stock => `
-        <div class="watchlist-item">
-            <div class="stock-info">
-                <strong>${stock.symbol}</strong>
-                <span>${stock.name}</span>
+    const params = new URLSearchParams();
+    params.append('action', 'get_formatted_watchlist_data');
+    params.append('nonce', (window.stockScannerAjax && stockScannerAjax.nonce) || '');
+
+    fetch((window.stockScannerAjax && stockScannerAjax.ajaxurl) || '/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (!res || !res.success) throw new Error(res && res.data ? res.data : 'Failed to load watchlist');
+        const items = Array.isArray(res.data) ? res.data.slice(0, 5) : [];
+        document.getElementById('watchlist-count').textContent = items.length;
+        const watchlistContainer = document.getElementById('watchlist-items');
+        watchlistContainer.innerHTML = items.length ? items.map(stock => `
+            <div class="watchlist-item">
+                <div class="stock-info">
+                    <strong>${stock.symbol || ''}</strong>
+                    <span>${stock.name || ''}</span>
+                </div>
+                <div class="stock-price">
+                    <div>${stock.price || '--'}</div>
+                    <div class="change">${stock.change_percent || ''}</div>
+                </div>
             </div>
-            <div class="stock-price">
-                <div>${stock.price}</div>
-                <div class="change ${stock.change.startsWith('+') ? 'positive' : 'negative'}">${stock.change}</div>
-            </div>
-        </div>
-    `).join('');
+        `).join('') : '<div class="loading-spinner">No items</div>';
+    })
+    .catch(err => console.error('Watchlist load error:', err));
 }
 
 function loadMarketData() {
-    // Load market indices
-    const marketData = [
-        { name: 'S&P 500', value: '4,567.23', change: '+1.2%' },
-        { name: 'NASDAQ', value: '14,234.56', change: '+2.1%' },
-        { name: 'DOW', value: '34,567.89', change: '+0.8%' }
-    ];
-    
-    const marketContainer = document.getElementById('market-indices');
-    marketContainer.innerHTML = marketData.map(index => `
-        <div class="market-item">
-            <div class="index-name">${index.name}</div>
-            <div class="index-value">${index.value}</div>
-            <div class="change ${index.change.startsWith('+') ? 'positive' : 'negative'}">${index.change}</div>
-        </div>
-    `).join('');
+    fetch('/wp-json/stock-scanner/v1/market-data')
+    .then(res => res.json())
+    .then(res => {
+        if (!res || !res.success) throw new Error('Failed to load market data');
+        const data = res.data || {};
+        const indices = Array.isArray(data.indices) ? data.indices : [];
+        const marketContainer = document.getElementById('market-indices');
+        marketContainer.innerHTML = indices.length ? indices.map(i => `
+            <div class="market-item">
+                <div class="index-name">${i.name || i.symbol || ''}</div>
+                <div class="index-value">${i.price || '--'}</div>
+                <div class="change">${i.change_percent || ''}</div>
+            </div>
+        `).join('') : '<div class="loading-spinner">No market data</div>';
+    })
+    .catch(err => console.error('Market load error:', err));
 }
 
 function loadNewsData() {
-    // Load recent news
-    const newsData = [
-        { title: 'Market Rally Continues as Tech Stocks Surge', time: '2 hours ago' },
-        { title: 'Federal Reserve Announces Interest Rate Decision', time: '4 hours ago' },
-        { title: 'Earnings Season Kicks Off with Strong Results', time: '6 hours ago' }
-    ];
-    
-    const newsContainer = document.getElementById('news-feed');
-    newsContainer.innerHTML = newsData.map(news => `
-        <div class="news-item">
-            <div class="news-title">${news.title}</div>
-            <div class="news-time">${news.time}</div>
-        </div>
-    `).join('');
+    fetch('/wp-json/stock-scanner/v1/news?limit=5')
+    .then(res => res.json())
+    .then(res => {
+        if (!res || !res.success) throw new Error('Failed to load news');
+        const articles = (res.data && res.data.articles) || [];
+        const newsContainer = document.getElementById('news-feed');
+        newsContainer.innerHTML = articles.length ? articles.map(n => `
+            <div class="news-item">
+                <div class="news-title">${n.title || ''}</div>
+                <div class="news-time">${n.published_at || ''}</div>
+            </div>
+        `).join('') : '<div class="loading-spinner">No recent news</div>';
+    })
+    .catch(err => console.error('News load error:', err));
 }
 </script>
 

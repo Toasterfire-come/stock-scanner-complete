@@ -177,11 +177,21 @@
     <?php endif; ?>
     
     <!-- Favicon and App Icons -->
+    <?php if (file_exists(get_template_directory() . '/assets/images/favicon.ico')): ?>
     <link rel="icon" type="image/x-icon" href="<?php echo get_template_directory_uri(); ?>/assets/images/favicon.ico">
+    <?php endif; ?>
+    <?php if (file_exists(get_template_directory() . '/assets/images/favicon-32x32.png')): ?>
     <link rel="icon" type="image/png" sizes="32x32" href="<?php echo get_template_directory_uri(); ?>/assets/images/favicon-32x32.png">
+    <?php endif; ?>
+    <?php if (file_exists(get_template_directory() . '/assets/images/favicon-16x16.png')): ?>
     <link rel="icon" type="image/png" sizes="16x16" href="<?php echo get_template_directory_uri(); ?>/assets/images/favicon-16x16.png">
+    <?php endif; ?>
+    <?php if (file_exists(get_template_directory() . '/assets/images/apple-touch-icon.png')): ?>
     <link rel="apple-touch-icon" sizes="180x180" href="<?php echo get_template_directory_uri(); ?>/assets/images/apple-touch-icon.png">
+    <?php endif; ?>
+    <?php if (file_exists(get_template_directory() . '/manifest.json') && file_exists(get_template_directory() . '/assets/images/icon-144x144.png')): ?>
     <link rel="manifest" href="<?php echo get_template_directory_uri(); ?>/manifest.json">
+    <?php endif; ?>
     
     <!-- Preconnect to external domains for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
