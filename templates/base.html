@@ -88,6 +88,8 @@
             --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
             --border-radius: 12px;
             --border-radius-sm: 6px;
+            /* Zatra-inspired brand */
+            --brand-gradient: linear-gradient(135deg, #3685fb 0%, #2563eb 100%);
         }
 
         * {
@@ -106,15 +108,16 @@
             flex-direction: column;
         }
 
+        /* Header */
         .header {
-            background: #4a5a3a;
-            color: white;
-            padding: 1rem 0;
-            box-shadow: var(--shadow-md);
+            background: var(--brand-gradient);
+            color: #fff;
+            padding: 0.75rem 0;
+            box-shadow: var(--shadow-lg);
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(6px);
         }
 
         .header .container {
@@ -124,6 +127,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            min-height: 60px;
         }
 
         .header .logo {
@@ -136,26 +140,27 @@
             width: 36px;
             height: 36px;
             background: rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            backdrop-filter: blur(10px);
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
         .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.25rem;
+            font-weight: 800;
             margin: 0;
+            letter-spacing: 0.2px;
         }
 
         .header h1 a {
             color: white;
             text-decoration: none;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s ease;
         }
 
         .header h1 a:hover {
@@ -164,43 +169,52 @@
 
         .nav {
             display: flex;
-            gap: 2rem;
+            gap: 1.25rem;
             align-items: center;
         }
 
         .nav a {
-            color: white;
+            color: #fff;
             text-decoration: none;
-            opacity: 0.9;
-            transition: all 0.2s;
-            padding: 0.5rem 1rem;
-            border-radius: var(--border-radius-sm);
-            font-weight: 500;
+            opacity: 0.95;
+            transition: all 0.2s ease;
+            padding: 0.5rem 0.25rem;
+            font-weight: 600;
             position: relative;
+            letter-spacing: 0.2px;
         }
 
         .nav a:hover {
             opacity: 1;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
         }
 
-        .nav a.active {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+        .nav a::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -6px;
+            width: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.95);
+            transition: width 0.20s ease;
+        }
+
+        .nav a:hover::after,
+        .nav a.active::after {
+            width: 100%;
         }
 
         .mobile-menu-toggle {
             display: none;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 0.9rem;
-            font-weight: 600;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: var(--border-radius-sm);
-            backdrop-filter: blur(10px);
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            letter-spacing: 0.4px;
         }
 
         .main-content {
@@ -214,6 +228,7 @@
             padding: 0 2rem;
         }
 
+        /* Footer */
         .footer {
             background: var(--text-primary);
             color: white;
@@ -362,11 +377,11 @@
                 top: 100%;
                 left: 0;
                 right: 0;
-                background: var(--primary-gradient);
+                background: var(--brand-gradient);
                 flex-direction: column;
-                padding: 1rem 2rem;
+                padding: 0.75rem 2rem 1rem 2rem;
                 box-shadow: var(--shadow-md);
-                gap: 0.5rem;
+                gap: 0.25rem;
             }
             
             .nav.active {
@@ -376,7 +391,7 @@
             .nav a {
                 width: 100%;
                 text-align: left;
-                padding: 0.75rem 1rem;
+                padding: 0.75rem 0.25rem;
             }
             
             .container {
@@ -390,7 +405,7 @@
 
         @media (max-width: 480px) {
             .header h1 {
-                font-size: 1.25rem;
+                font-size: 1.15rem;
             }
             
             .card {
@@ -413,7 +428,7 @@
                 <div class="logo-icon">SS</div>
                 <h1><a href="/">Stock Scanner API</a></h1>
             </div>
-            <nav class="nav" id="nav-menu">
+            <nav class="nav" id="nav-menu" aria-label="Primary">
                 <a href="/" {% if request.resolver_match.url_name == 'homepage' %}class="active"{% endif %}>Home</a>
                 <a href="/docs/" {% if 'docs' in request.path %}class="active"{% endif %}>API</a>
                 <a href="/revenue/revenue-analytics/" {% if 'revenue' in request.path %}class="active"{% endif %}>Analytics</a>
@@ -421,7 +436,7 @@
                 <a href="/health/" {% if 'health' in request.path %}class="active"{% endif %}>Health</a>
                 <a href="/admin/" {% if 'admin' in request.path %}class="active"{% endif %}>Admin</a>
             </nav>
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">MENU</button>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-controls="nav-menu" aria-expanded="false">MENU</button>
         </div>
     </header>
 
@@ -443,11 +458,11 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-links">
-                <a href="/health/">Health Check</a>
-                <a href="/endpoint-status/">Status</a>
-                <a href="/admin/">Admin</a>
                 <a href="/docs/">API Documentation</a>
+                <a href="/endpoint-status/">Status</a>
+                <a href="/health/">Health Check</a>
                 <a href="/revenue/revenue-analytics/">Analytics</a>
+                <a href="/admin/">Admin</a>
             </div>
             <div class="footer-copyright">
                 <p>&copy; 2025 Stock Scanner API. Professional market data solutions.</p>
@@ -463,6 +478,8 @@
         function toggleMobileMenu() {
             const nav = document.getElementById('nav-menu');
             if (nav) nav.classList.toggle('active');
+            const btn = document.querySelector('.mobile-menu-toggle');
+            if (btn) btn.setAttribute('aria-expanded', btn.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
         }
     </script>
 
