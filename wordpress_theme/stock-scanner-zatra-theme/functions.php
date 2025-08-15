@@ -43,6 +43,14 @@ function stock_scanner_zatra_scripts() {
     // Theme stylesheet
     wp_enqueue_style('stock-scanner-zatra-style', get_stylesheet_uri(), array(), '1.0.0');
     
+    // Font Awesome (local)
+    wp_enqueue_style(
+        'font-awesome-6',
+        get_template_directory_uri() . '/assets/framework/Font-Awesome-6/css/all.min.css',
+        array(),
+        '6.5.0'
+    );
+    
     // Enqueue Chart.js for stock charts
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
     
@@ -275,6 +283,12 @@ function stock_scanner_zatra_body_classes($classes) {
     return $classes;
 }
 add_filter('body_class', 'stock_scanner_zatra_body_classes');
+
+// Add a global theme marker class for styling hooks
+add_filter('body_class', function($classes) {
+    $classes[] = 'theme-zatra';
+    return $classes;
+});
 
 /**
  * Template redirect for protected pages
@@ -2608,3 +2622,19 @@ function zatra_financial_meta_tags() {
     }
 }
 add_action('wp_head', 'zatra_financial_meta_tags', 15);
+
+// Ensure critical pages use the correct templates even if they pre-exist
+add_action('init', function() {
+	$map = array(
+		'compare-plans' => 'page-compare-plans.php',
+		'paypal-checkout' => 'page-paypal-checkout.php',
+		'payment-success' => 'page-payment-success.php',
+		'payment-cancelled' => 'page-payment-cancelled.php'
+	);
+	foreach ($map as $slug => $template_file) {
+		$page = get_page_by_path($slug);
+		if ($page && get_post_meta($page->ID, '_wp_page_template', true) !== $template_file) {
+			update_post_meta($page->ID, '_wp_page_template', $template_file);
+		}
+	}
+});

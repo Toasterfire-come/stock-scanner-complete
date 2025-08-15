@@ -27,6 +27,17 @@ get_header();
 
     <div class="dashboard-content">
         <div class="container">
+            <?php if (function_exists('get_user_membership_level') && get_user_membership_level() === 'free'): ?>
+            <div class="upgrade-banner">
+                <div class="banner-content">
+                    <div class="banner-text">
+                        <strong>On Free plan</strong> — Unlock real-time data, unlimited watchlists, and more.
+                    </div>
+                    <a class="banner-action" href="/compare-plans/">Compare Plans</a>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Quick Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -154,6 +165,45 @@ get_header();
                     </a>
                 </div>
             </div>
+
+            <?php if (function_exists('get_user_membership_level') && get_user_membership_level() === 'free'): ?>
+            <div class="plans-inline">
+                <h3>Upgrade your plan</h3>
+                <div class="plans-grid">
+                    <div class="plan-mini">
+                        <div class="plan-head">Bronze</div>
+                        <div class="plan-price"><span class="amount">$24.99</span><span class="period">/mo</span></div>
+                        <ul class="plan-list">
+                            <li>Advanced Screener</li>
+                            <li>1,500 monthly API calls</li>
+                            <li>Email support</li>
+                        </ul>
+                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Bronze</a>
+                    </div>
+                    <div class="plan-mini">
+                        <div class="plan-head">Silver</div>
+                        <div class="plan-price"><span class="amount">$49.99</span><span class="period">/mo</span></div>
+                        <ul class="plan-list">
+                            <li>Portfolio analytics</li>
+                            <li>5,000 monthly API calls</li>
+                            <li>Priority email support</li>
+                        </ul>
+                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Silver</a>
+                    </div>
+                    <div class="plan-mini">
+                        <div class="plan-head">Gold</div>
+                        <div class="plan-price"><span class="amount">$79.99</span><span class="period">/mo</span></div>
+                        <ul class="plan-list">
+                            <li>AI market insights</li>
+                            <li>Unlimited monthly API calls</li>
+                            <li>White-label options</li>
+                        </ul>
+                        <a href="/compare-plans/" class="btn btn-primary w-full">Choose Gold</a>
+                    </div>
+                </div>
+                <div class="plans-note">See full details on the <a href="/compare-plans/">Compare Plans</a> page.</div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -334,6 +384,23 @@ get_header();
 .premium-btn:hover {
     background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
+
+.upgrade-banner { background:#fef3c7; border:1px solid #fde68a; border-radius:10px; padding: .85rem 1rem; margin-bottom: 1.25rem; }
+.upgrade-banner .banner-content { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.upgrade-banner .banner-text { color:#92400e; }
+.upgrade-banner .banner-action { background:#f59e0b; color:#fff; padding:.5rem .9rem; border-radius:8px; text-decoration:none; font-weight:600; }
+@media (max-width:768px){ .upgrade-banner .banner-content{ flex-direction:column; align-items:flex-start; } }
+
+.plans-inline { background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:1.25rem; margin-top:1.25rem; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+.plans-inline h3 { margin:0 0 .75rem 0; font-size:1.1rem; font-weight:700; }
+.plans-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; }
+.plan-mini { border:1px solid #e5e7eb; border-radius:10px; padding:1rem; }
+.plan-head { font-weight:700; margin-bottom:.25rem; }
+.plan-price { font-weight:800; font-size:1.25rem; color:#111827; margin-bottom:.5rem; }
+.plan-price .period{ color:#6b7280; font-weight:600; margin-left:.25rem; }
+.plan-list { margin:0 0 .75rem 1rem; color:#374151; }
+.plans-note { margin-top:.75rem; color:#6b7280; }
+@media (max-width:768px){ .plans-grid{ grid-template-columns:1fr; } }
 
 @media (max-width: 768px) {
     .stats-grid {

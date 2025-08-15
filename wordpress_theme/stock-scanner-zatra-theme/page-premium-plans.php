@@ -12,64 +12,10 @@ add_action('wp_head', function() {
     {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "Premium Plans - Professional Stock Analysis Tools",
-        "description": "Upgrade to premium for unlimited API calls, advanced screening tools, real-time alerts, and professional investment analysis features. Choose monthly or yearly billing with 20% savings.",
-        "url": "<?php echo esc_url(get_permalink()); ?>",
-        "mainEntity": [
-            {
-                "@type": "Product",
-                "name": "Basic Plan",
-                "description": "Essential stock analysis tools with basic screening and limited API calls",
-                "offers": {
-                    "@type": "Offer",
-                    "price": "9.99",
-                    "priceCurrency": "USD",
-                    "billingIncrement": "Monthly",
-                    "availability": "https://schema.org/InStock"
-                }
-            },
-            {
-                "@type": "Product", 
-                "name": "Pro Plan",
-                "description": "Advanced features with real-time data, unlimited screening, and priority support",
-                "offers": {
-                    "@type": "Offer",
-                    "price": "29.99",
-                    "priceCurrency": "USD",
-                    "billingIncrement": "Monthly",
-                    "availability": "https://schema.org/InStock"
-                }
-            },
-            {
-                "@type": "Product",
-                "name": "Enterprise Plan", 
-                "description": "Full-featured platform with API access, custom alerts, and institutional-grade tools",
-                "offers": {
-                    "@type": "Offer",
-                    "price": "99.99",
-                    "priceCurrency": "USD",
-                    "billingIncrement": "Monthly",
-                    "availability": "https://schema.org/InStock"
-                }
-            }
-        ],
-        "breadcrumb": {
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-                {
-                    "@type": "ListItem",
-                    "position": 1,
-                    "name": "Home",
-                    "item": "<?php echo esc_url(home_url()); ?>"
-                },
-                {
-                    "@type": "ListItem",
-                    "position": 2,
-                    "name": "Premium Plans",
-                    "item": "<?php echo esc_url(get_permalink()); ?>"
-                }
-            ]
-        }
+        "name": "Retailtradescanner Plans - Professional Stock Analysis Tools",
+        "description": "Transparent pricing for Retailtradescanner. Honest features, clear limits. Choose Bronze, Silver, or Gold.",
+        "url": "https://retailtradescanner.com/premium-plans/",
+        "publisher": { "@type": "Organization", "name": "Retailtradescanner", "url": "https://retailtradescanner.com", "email": "Admin@retailtradescanner.com" }
     }
     </script>
     <?php
@@ -90,18 +36,11 @@ get_header();
     <div class="hero-section">
         <div class="container">
             <div class="hero-content">
-                <h1 class="hero-title">Unlock Premium Features</h1>
-                <p class="hero-subtitle">Choose the perfect plan to supercharge your trading and investment analysis</p>
+                <h1 class="hero-title">Choose a plan built for retail traders</h1>
+                <p class="hero-subtitle">No hype. Clear limits. Tools that help you research and track opportunities.</p>
                 
                 <!-- Billing Toggle -->
-                <div class="billing-toggle">
-                    <span class="toggle-label monthly active">Monthly</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="billingToggle">
-                        <span class="slider"></span>
-                    </label>
-                    <span class="toggle-label yearly">Yearly <span class="save-badge">Save 20%</span></span>
-                </div>
+                <div class="billing-toggle" style="display:none"></div>
             </div>
         </div>
     </div>
@@ -113,13 +52,13 @@ get_header();
                 <!-- Free Plan -->
                 <div class="pricing-card free-plan">
                     <div class="plan-header">
-                        <h3 class="plan-name">Free Plan</h3>
+                        <h3 class="plan-name">Free</h3>
                         <div class="plan-price">
                             <span class="currency">$</span>
                             <span class="amount">0</span>
                             <span class="period">/month</span>
                         </div>
-                        <p class="plan-description">Perfect for getting started with basic market analysis</p>
+                        <p class="plan-description">Evaluate core features at no cost</p>
                     </div>
                     
                     <div class="plan-features">
@@ -154,108 +93,79 @@ get_header();
                     </div>
                 </div>
 
-                <!-- Pro Plan -->
-                <div class="pricing-card pro-plan popular">
-                    <div class="popular-badge">Most Popular</div>
+                <!-- Bronze Plan -->
+                <div class="pricing-card bronze-plan">
                     <div class="plan-header">
-                        <h3 class="plan-name">Pro Plan</h3>
+                        <h3 class="plan-name">Bronze</h3>
                         <div class="plan-price">
                             <span class="currency">$</span>
-                            <span class="amount monthly-price">29</span>
-                            <span class="amount yearly-price" style="display: none;">23</span>
-                            <span class="period monthly-period">/month</span>
-                            <span class="period yearly-period" style="display: none;">/month</span>
+                            <span class="amount">24.99</span>
+                            <span class="period">/month</span>
                         </div>
-                        <p class="plan-description">Advanced tools for serious traders and investors</p>
+                        <p class="plan-description">Great for active retail traders starting out</p>
                     </div>
                     
                     <div class="plan-features">
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span><strong>Everything in Free</strong></span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Advanced stock screener</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Unlimited watchlists</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Portfolio analytics & tracking</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Real-time price alerts</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Personalized news feed</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Priority email support</span>
-                        </div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Everything in Free</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Advanced stock screener</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>1,500 monthly API calls</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Email support</span></div>
                     </div>
                     
                     <div class="plan-action">
-                        <button class="btn btn-primary" onclick="selectPlan('pro')">
-                            Choose Pro Plan
-                        </button>
+                        <button class="btn btn-primary" onclick="selectPlan('bronze')">Choose Bronze</button>
                     </div>
                 </div>
 
-                <!-- Enterprise Plan -->
-                <div class="pricing-card enterprise-plan">
+                <!-- Silver Plan (Most Popular) -->
+                <div class="pricing-card silver-plan popular">
+                    <div class="popular-badge">Most Popular</div>
                     <div class="plan-header">
-                        <h3 class="plan-name">Enterprise</h3>
+                        <h3 class="plan-name">Silver</h3>
                         <div class="plan-price">
                             <span class="currency">$</span>
-                            <span class="amount monthly-price">99</span>
-                            <span class="amount yearly-price" style="display: none;">79</span>
-                            <span class="period monthly-period">/month</span>
-                            <span class="period yearly-period" style="display: none;">/month</span>
+                            <span class="amount">49.99</span>
+                            <span class="period">/month</span>
                         </div>
-                        <p class="plan-description">Professional-grade tools for institutional use</p>
+                        <p class="plan-description">Expanded limits and tools for growing traders</p>
                     </div>
                     
                     <div class="plan-features">
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span><strong>Everything in Pro</strong></span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>AI-powered market insights</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Advanced portfolio optimization</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Custom API access</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>White-label solutions</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>Dedicated account manager</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check"></i>
-                            <span>24/7 phone support</span>
-                        </div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Everything in Bronze</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Portfolio analytics & tracking</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>5,000 monthly API calls</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Real-time price alerts</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Personalized news feed</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Priority email support</span></div>
                     </div>
                     
                     <div class="plan-action">
-                        <button class="btn btn-primary" onclick="selectPlan('enterprise')">
-                            Choose Enterprise
-                        </button>
+                        <button class="btn btn-primary" onclick="selectPlan('silver')">Choose Silver</button>
+                    </div>
+                </div>
+
+                <!-- Gold Plan -->
+                <div class="pricing-card gold-plan">
+                    <div class="plan-header">
+                        <h3 class="plan-name">Gold</h3>
+                        <div class="plan-price">
+                            <span class="currency">$</span>
+                            <span class="amount">79.99</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">Top-tier limits and advanced capabilities</p>
+                    </div>
+                    
+                    <div class="plan-features">
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Everything in Silver</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>AI-powered market insights</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Unlimited monthly API calls</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>White-label options</span></div>
+                        <div class="feature-item"><i class="fas fa-check"></i><span>Dedicated account manager</span></div>
+                    </div>
+                    
+                    <div class="plan-action">
+                        <button class="btn btn-primary" onclick="selectPlan('gold')">Choose Gold</button>
                     </div>
                 </div>
             </div>
@@ -270,28 +180,32 @@ get_header();
                 <div class="table-header">
                     <div class="feature-col">Features</div>
                     <div class="plan-col">Free</div>
-                    <div class="plan-col">Pro</div>
-                    <div class="plan-col">Enterprise</div>
+                    <div class="plan-col">Bronze</div>
+                    <div class="plan-col">Silver</div>
+                    <div class="plan-col">Gold</div>
                 </div>
                 
                 <div class="table-body">
                     <div class="feature-row">
-                        <div class="feature-name">Stock Lookup & Basic Data</div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                    </div>
-                    
-                    <div class="feature-row">
-                        <div class="feature-name">Watchlist Limit</div>
-                        <div class="feature-value">5 stocks</div>
-                        <div class="feature-value">Unlimited</div>
+                        <div class="feature-name">Monthly API Calls</div>
+                        <div class="feature-value">100</div>
+                        <div class="feature-value">1,500</div>
+                        <div class="feature-value">5,000</div>
                         <div class="feature-value">Unlimited</div>
                     </div>
                     
                     <div class="feature-row">
-                        <div class="feature-name">Advanced Stock Screener</div>
+                        <div class="feature-name">Real-time Data</div>
                         <div class="feature-none"><i class="fas fa-times"></i></div>
+                        <div class="feature-none"><i class="fas fa-times"></i></div>
+                        <div class="feature-check"><i class="fas fa-check"></i></div>
+                        <div class="feature-check"><i class="fas fa-check"></i></div>
+                    </div>
+                    
+                    <div class="feature-row">
+                        <div class="feature-name">Stock Screener</div>
+                        <div class="feature-limited">Basic</div>
+                        <div class="feature-check"><i class="fas fa-check"></i></div>
                         <div class="feature-check"><i class="fas fa-check"></i></div>
                         <div class="feature-check"><i class="fas fa-check"></i></div>
                     </div>
@@ -299,36 +213,17 @@ get_header();
                     <div class="feature-row">
                         <div class="feature-name">Portfolio Analytics</div>
                         <div class="feature-none"><i class="fas fa-times"></i></div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                    </div>
-                    
-                    <div class="feature-row">
-                        <div class="feature-name">Real-time Alerts</div>
                         <div class="feature-none"><i class="fas fa-times"></i></div>
                         <div class="feature-check"><i class="fas fa-check"></i></div>
                         <div class="feature-check"><i class="fas fa-check"></i></div>
                     </div>
                     
                     <div class="feature-row">
-                        <div class="feature-name">AI Market Insights</div>
-                        <div class="feature-none"><i class="fas fa-times"></i></div>
-                        <div class="feature-none"><i class="fas fa-times"></i></div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                    </div>
-                    
-                    <div class="feature-row">
-                        <div class="feature-name">API Access</div>
-                        <div class="feature-none"><i class="fas fa-times"></i></div>
-                        <div class="feature-none"><i class="fas fa-times"></i></div>
-                        <div class="feature-check"><i class="fas fa-check"></i></div>
-                    </div>
-                    
-                    <div class="feature-row">
-                        <div class="feature-name">Support Level</div>
+                        <div class="feature-name">Support</div>
                         <div class="feature-value">Community</div>
                         <div class="feature-value">Email</div>
-                        <div class="feature-value">24/7 Phone</div>
+                        <div class="feature-value">Priority Email</div>
+                        <div class="feature-value">Priority Email</div>
                     </div>
                 </div>
             </div>
@@ -967,16 +862,10 @@ function initializePricingPage() {
 
 function selectPlan(planType) {
     if (!<?php echo is_user_logged_in() ? 'true' : 'false'; ?>) {
-        // Redirect to signup with plan parameter
         window.location.href = `/signup/?plan=${planType}`;
         return;
     }
-    
-    // Get billing type
-    const isYearly = document.getElementById('billingToggle').checked;
-    const billing = isYearly ? 'yearly' : 'monthly';
-    
-    // Redirect to PayPal checkout
+    const billing = 'monthly';
     window.location.href = `/paypal-checkout/?plan=${planType}&billing=${billing}`;
 }
 
