@@ -42,6 +42,11 @@ add_action('after_setup_theme', 'stock_scanner_zatra_setup');
 function stock_scanner_zatra_scripts() {
     // Theme stylesheet
     wp_enqueue_style('stock-scanner-zatra-style', get_stylesheet_uri(), array(), '1.0.0');
+    // Shared styles for consistent UI
+    $shared_css = get_template_directory_uri() . '/assets/css/shared-styles.css';
+    if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
+        wp_enqueue_style('stock-scanner-zatra-shared', $shared_css, array('stock-scanner-zatra-style'), '1.0.0');
+    }
     
     // Font Awesome (local)
     wp_enqueue_style(
@@ -303,6 +308,27 @@ function stock_scanner_zatra_template_redirect() {
     }
 }
 add_action('template_redirect', 'stock_scanner_zatra_template_redirect');
+
+// Redirect signed-in users visiting the Home page to the Dashboard (avoid self-redirect loops)
+add_action('template_redirect', function() {
+    if (!is_user_logged_in()) {
+        return;
+    }
+    if (!(is_front_page() || is_page('home'))) {
+        return;
+    }
+    $dashboard = get_page_by_path('dashboard');
+    if (!$dashboard) {
+        return;
+    }
+    $dashboard_url = get_permalink($dashboard->ID);
+    // If already on Dashboard or Dashboard is the static front page, do not redirect
+    if (is_page($dashboard->ID) || ((int) get_option('page_on_front') === (int) $dashboard->ID)) {
+        return;
+    }
+    wp_safe_redirect($dashboard_url, 302);
+    exit;
+});
 
 // =============================================================================
 // WORDPRESS REST API ENDPOINTS FOR FRONTEND CONNECTIVITY
@@ -2547,10 +2573,7 @@ function zatra_optimize_resources() {
         return $tag;
     }, 10, 2);
     
-    // Add preload for critical resources
-    add_action('wp_head', function() {
-        echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">';
-    }, 1);
+    // Removed stylesheet preload to avoid "preloaded but not used" warnings when versions differ
 }
 add_action('init', 'zatra_optimize_resources');
 
