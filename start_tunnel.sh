@@ -70,7 +70,7 @@ start_tunnel() {
         echo "🚀 Starting Cloudflare tunnel (attempt $((retry_count + 1))/$MAX_RETRIES)..."
         
         # Start tunnel with enhanced logging and configuration
-        cloudflared tunnel --loglevel info run $TUNNEL_NAME &
+        cloudflared tunnel --loglevel info --protocol http2 --edge-ip-version 4 run $TUNNEL_NAME &
         TUNNEL_PID=$!
         
         # Wait for tunnel to initialize
@@ -173,7 +173,7 @@ echo ""
 echo "Enhanced features:"
 echo "   • Automatic retry on connection failure"
 echo "   • Health monitoring every $HEALTH_CHECK_INTERVAL seconds"
-echo "   • QUIC protocol for better performance"
+echo "   • HTTP/2 protocol over IPv4 for better compatibility"
 echo "   • Graceful shutdown handling"
 echo ""
 echo "Press Ctrl+C to stop all services"

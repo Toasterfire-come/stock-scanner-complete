@@ -49,7 +49,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 echo "🚀 Starting Cloudflare tunnel..."
-cloudflared tunnel run $TUNNEL_NAME &
+cloudflared tunnel --protocol http2 --edge-ip-version 4 run $TUNNEL_NAME &
 TUNNEL_PID=$!
 
 # Wait a moment for tunnel to start

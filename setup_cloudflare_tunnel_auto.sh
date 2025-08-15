@@ -58,7 +58,7 @@ print_success "cloudflared is installed"
 
 # Get domain name
 DOMAIN=${1:-"retailtradescanner.com"}
-TUNNEL_NAME="stock-scanner"
+TUNNEL_NAME="django-api"
 API_SUBDOMAIN="api"
 CONFIG_DIR="$HOME/.cloudflared"
 
@@ -89,34 +89,17 @@ else
     print_success "Tunnel already exists with ID: $TUNNEL_ID"
 fi
 
-# Enhanced configuration with connection stability and DNS optimization
+# Minimal, valid configuration focused on stability
 cat > ~/.cloudflared/config.yml << EOF
 tunnel: $TUNNEL_ID
 credentials-file: ~/.cloudflared/$TUNNEL_ID.json
 
-# Enhanced connection settings for stability
-warp-routing:
-  enabled: false
+# Prefer TCP-based transport to avoid UDP/QUIC issues
+protocol: http2
+edge-ip-version: 4
 
-# DNS settings for better resolution
-dns:
-  fallback: 1.1.1.1,8.8.8.8
-
-# Connection optimization settings
-connection:
-  protocol: quic
-  max-connection-retries: 10
-  initial-connection-retries: 5
-  connection-timeout: 30s
-  keep-alive-timeout: 30s
-  no-autoupdate: false
-
-# Logging configuration
-log-level: info
-log-directory: ~/.cloudflared/logs/
-
-# Network optimizations
-edge-bind-address: 0.0.0.0
+# Logging and metrics
+loglevel: info
 metrics: 127.0.0.1:9090
 
 # Service configuration
@@ -125,10 +108,6 @@ ingress:
     service: http://localhost:8000
     originRequest:
       connectTimeout: 30s
-      tlsTimeout: 10s
-      tcpKeepAlive: 30s
-      keepAliveTimeout: 90s
-      keepAliveConnections: 100
       httpHostHeader: $API_SUBDOMAIN.$DOMAIN
       originServerName: $API_SUBDOMAIN.$DOMAIN
   # Catch-all rule (required, must be last)
@@ -191,7 +170,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$HOME
-ExecStart=/usr/local/bin/cloudflared tunnel run $TUNNEL_NAME
+ExecStart=/usr/local/bin/cloudflared tunnel --protocol http2 --edge-ip-version 4 run $TUNNEL_NAME
 Restart=always
 RestartSec=10
 
@@ -215,7 +194,7 @@ cat > start_tunnel.sh << 'EOF'
 # Start Cloudflare Tunnel and Django Server
 
 echo "Starting Cloudflare Tunnel..."
-cloudflared tunnel run stock-scanner &
+cloudflared tunnel --protocol http2 --edge-ip-version 4 run django-api &
 TUNNEL_PID=$!
 
 sleep 5
@@ -241,7 +220,7 @@ chmod +x start_tunnel.sh
 cat > start_tunnel.bat << 'EOF'
 @echo off
 echo Starting Cloudflare Tunnel...
-start /B cloudflared tunnel run stock-scanner
+start /B cloudflared tunnel --protocol http2 --edge-ip-version 4 run django-api
 
 timeout /t 5
 
@@ -266,6 +245,7 @@ echo "3. Start everything together: ./start_tunnel.sh"
 echo ""
 echo "Your API will be available at: https://$API_SUBDOMAIN.$DOMAIN"
 echo "Your IP address will be hidden behind Cloudflare's network"
+
 echo ""
 echo "Logs and monitoring:"
 echo "- Tunnel logs: cloudflared tunnel run $TUNNEL_NAME --loglevel debug"
