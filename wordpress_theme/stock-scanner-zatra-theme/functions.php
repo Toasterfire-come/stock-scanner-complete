@@ -42,10 +42,14 @@ add_action('after_setup_theme', 'stock_scanner_zatra_setup');
 function stock_scanner_zatra_scripts() {
     // Theme stylesheet
     wp_enqueue_style('stock-scanner-zatra-style', get_stylesheet_uri(), array(), '1.0.0');
-    // Shared styles for consistent UI
+    // Shared styles for consistent UI (dark tokens to match Django)
     $shared_css = get_template_directory_uri() . '/assets/css/shared-styles.css';
     if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
-        wp_enqueue_style('stock-scanner-zatra-shared', $shared_css, array('stock-scanner-zatra-style'), '1.0.0');
+        wp_enqueue_style('stock-scanner-zatra-shared', $shared_css, array('stock-scanner-zatra-style'), filemtime(get_template_directory() . '/assets/css/shared-styles.css'));
+    } else {
+        add_action('wp_head', function(){
+            echo '<style>:root{--primary-blue:#1e40af;--secondary-blue:#3b82f6;--accent-green:#10b981;--accent-red:#ef4444;--text-primary:#f8fafc;--text-secondary:#cbd5e1;--bg-light:#0f172a;--bg-white:#1e293b;--bg-dark:#0b1220;--border-light:#334155;--border-secondary:#475569}</style>';
+        }, 5);
     }
     
     // Font Awesome (local)

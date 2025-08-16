@@ -60,6 +60,11 @@ function stock_scanner_scripts() {
             }
             return $html;
         }, 10, 2);
+    } else {
+        // Fallback: inline minimal tokens to guarantee parity
+        add_action('wp_head', function(){
+            echo '<style>:root{--primary-blue:#1e40af;--secondary-blue:#3b82f6;--accent-green:#10b981;--accent-red:#ef4444;--text-primary:#f8fafc;--text-secondary:#cbd5e1;--bg-light:#0f172a;--bg-white:#1e293b;--bg-dark:#0b1220;--border-light:#334155;--border-secondary:#475569}</style>';
+        }, 5);
     }
     
     // Performance: Enqueue optimized JavaScript

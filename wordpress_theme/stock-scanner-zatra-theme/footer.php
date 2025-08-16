@@ -16,10 +16,10 @@
                 <div class="footer-section footer-links">
                     <h4>Quick Links</h4>
                     <ul>
+                        <li><a href="<?php echo esc_url(home_url('/')); ?>">Home</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/docs/')); ?>">API Documentation</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/status/')); ?>">System Status</a></li>
                         <li><a href="<?php echo esc_url(home_url('/market-overview/')); ?>">Market Overview</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/stock-screener/')); ?>">Stock Screener</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/portfolio/')); ?>">Portfolio</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/watchlist/')); ?>">Watchlist</a></li>
                         <li><a href="<?php echo esc_url(home_url('/premium-plans/')); ?>">Premium Plans</a></li>
                     </ul>
                 </div>
@@ -81,3 +81,14 @@
 
 </body>
 </html>
+
+<style>
+.app-menu { margin-left: 1rem; position: relative; }
+.app-menu-toggle { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; border:1px solid var(--border-secondary, #334155); background: var(--bg-dark, #0b1220); cursor:pointer; }
+.waffle { display:grid; grid-template-columns: repeat(3, 6px); grid-auto-rows:6px; gap:4px; }
+.waffle span { display:block; width:6px; height:6px; border-radius:50%; background: var(--text-secondary, #cbd5e1); }
+.dropdown-menu { position:absolute; top: calc(100% + 8px); right:0; background: var(--bg-white, #1e293b); border:1px solid var(--border-light, #334155); border-radius:12px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); min-width:220px; opacity:0; visibility:hidden; transform: translateY(-10px); transition: all .2s ease; z-index:1001; }
+.dropdown-menu.active { opacity:1; visibility:visible; transform: translateY(0); }
+.dropdown-item { display:flex; align-items:center; padding: 0.6rem 0.9rem; color: var(--text-secondary, #cbd5e1); text-decoration:none; font-weight:700; }
+.dropdown-item:hover { background: var(--bg-dark, #0b1220); color: var(--text-primary, #f8fafc); }
+</style>

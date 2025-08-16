@@ -36,6 +36,9 @@
     </script>
     {% endblock %}
     
+    <!-- Add Inter font for improved typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <!-- Critical CSS - Inline for fastest first paint -->
     <link rel="stylesheet" href="{{ url_for('static', filename='critical.css') }}" media="all">
     
@@ -92,14 +95,39 @@
             --brand-gradient: linear-gradient(135deg, #3685fb 0%, #2563eb 100%);
         }
 
+        /* Dark theme overrides to align all pages */
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-green-dark: #059669;
+            --accent-red: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-light: #94a3b8;
+            --bg-light: #0f172a;
+            --bg-white: #1e293b;
+            --bg-dark: #0b1220;
+            --text-dark: #e2e8f0;
+            --border-light: #334155;
+            --border-secondary: #475569;
+            --warning-bg: rgba(239, 68, 68, 0.08);
+            --warning-text: #f59e0b;
+            --info-bg: rgba(14, 165, 233, 0.1);
+            --info-text: #93c5fd;
+            --info-border: #334155;
+            --link-color: #0ea5e9;
+            --brand-gradient: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+        }
+ 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+ 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             color: var(--text-primary);
             background: var(--bg-light);
@@ -107,10 +135,10 @@
             display: flex;
             flex-direction: column;
         }
-
+ 
         /* Header */
         .header {
-            background: var(--brand-gradient);
+            background: var(--bg-white);
             color: #fff;
             padding: 0.75rem 0;
             box-shadow: var(--shadow-lg);
@@ -119,7 +147,7 @@
             z-index: 100;
             backdrop-filter: blur(6px);
         }
-
+ 
         .header .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -129,17 +157,17 @@
             align-items: center;
             min-height: 60px;
         }
-
+ 
         .header .logo {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
-
+ 
         .header .logo-icon {
             width: 36px;
             height: 36px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -147,68 +175,57 @@
             font-size: 0.95rem;
             font-weight: 800;
             letter-spacing: 0.5px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
         }
-
+ 
         .header h1 {
             font-size: 1.25rem;
             font-weight: 800;
             margin: 0;
             letter-spacing: 0.2px;
+            color: var(--text-primary);
         }
-
+ 
         .header h1 a {
-            color: white;
+            color: var(--text-primary);
             text-decoration: none;
             transition: opacity 0.2s ease;
         }
-
+ 
         .header h1 a:hover {
             opacity: 0.9;
         }
-
+ 
         .nav {
             display: flex;
             gap: 1.25rem;
             align-items: center;
         }
-
+ 
         .nav a {
-            color: #fff;
+            color: var(--text-secondary);
             text-decoration: none;
             opacity: 0.95;
             transition: all 0.2s ease;
-            padding: 0.5rem 0.25rem;
+            padding: 0.5rem 0.75rem;
             font-weight: 600;
             position: relative;
             letter-spacing: 0.2px;
+            border-radius: 12px;
         }
-
-        .nav a:hover {
-            opacity: 1;
+ 
+        .nav a:hover,
+        .nav a.active {
+            color: var(--text-primary);
+            background: var(--bg-dark);
         }
-
-        .nav a::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: -6px;
-            width: 0;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.95);
-            transition: width 0.20s ease;
-        }
-
-        .nav a:hover::after,
-        .nav a.active::after {
-            width: 100%;
-        }
-
+ 
         .mobile-menu-toggle {
             display: none;
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            color: #fff;
+            border: 1px solid var(--border-secondary);
+            color: var(--text-primary);
             font-size: 0.85rem;
             font-weight: 700;
             cursor: pointer;
@@ -217,32 +234,87 @@
             letter-spacing: 0.4px;
         }
 
+        /* App waffle menu */
+        .app-menu-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .app-menu-toggle:hover { box-shadow: var(--shadow-md); }
+        .waffle {
+            display: grid;
+            grid-template-columns: repeat(3, 6px);
+            grid-auto-rows: 6px;
+            gap: 4px;
+        }
+        .waffle span {
+            display: block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1001;
+        }
+        .dropdown-menu.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0.9rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .dropdown-item:hover { background: var(--bg-dark); color: var(--text-primary); }
+ 
         .main-content {
             flex: 1;
             padding: 2rem 0;
         }
-
+ 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
         }
-
+ 
         /* Footer */
         .footer {
-            background: var(--text-primary);
+            background: var(--bg-dark);
             color: white;
             text-align: center;
             padding: 3rem 0 2rem;
             margin-top: auto;
+            border-top: 1px solid var(--border-light);
         }
-
+ 
         .footer-content {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
         }
-
+ 
         .footer-links {
             display: flex;
             justify-content: center;
@@ -250,25 +322,26 @@
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
         }
-
+ 
         .footer-links a {
-            color: var(--link-color);
+            color: var(--text-secondary);
             text-decoration: none;
             transition: color 0.2s;
+            font-weight: 600;
         }
-
+ 
         .footer-links a:hover {
-            color: white;
+            color: var(--text-primary);
         }
-
+ 
         .footer-copyright {
             opacity: 0.8;
             font-size: 0.9rem;
         }
-
+ 
         .btn {
             display: inline-block;
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.1rem;
             background: var(--primary-blue);
             color: white;
             text-decoration: none;
@@ -279,30 +352,30 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
-
+ 
         .btn:hover {
             background: var(--secondary-blue);
             transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
-
+ 
         .btn-secondary {
             background: var(--border-light);
             color: var(--text-primary);
         }
-
+ 
         .btn-secondary:hover {
             background: var(--border-secondary);
         }
-
+ 
         .btn-success {
             background: var(--accent-green);
         }
-
+ 
         .btn-success:hover {
             background: var(--accent-green-dark);
         }
-
+ 
         .card {
             background: var(--bg-white);
             border-radius: var(--border-radius);
@@ -310,66 +383,50 @@
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border-light);
             margin-bottom: 2rem;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s, transform 0.2s;
         }
-
+ 
         .card:hover {
             box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
-
+ 
         .card h1, .card h2, .card h3 {
             color: var(--text-primary);
         }
-
-        .card h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .card h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 0.75rem;
-        }
-
+ 
+        .card h1 { font-size: 2rem; margin-bottom: 1rem; }
+        .card h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+        .card h3 { font-size: 1.25rem; margin-bottom: 0.75rem; }
+ 
         .alert {
             padding: 1rem 1.25rem;
             border-radius: var(--border-radius-sm);
             margin-bottom: 1rem;
             border: 1px solid;
         }
+ 
+        .alert-success { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+        .alert-error { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
+        .alert-info { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
 
-        .alert-success {
-            background: var(--success-bg);
-            color: var(--success-text);
-            border-color: var(--success-border);
+        /* Tables */
+        .table { width: 100%; border-collapse: collapse; }
+        .table thead { background: var(--bg-dark); }
+        .table th, .table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            text-align: left;
         }
-
-        .alert-error {
-            background: var(--error-bg);
-            color: var(--error-text);
-            border-color: var(--error-border);
-        }
-
-        .alert-info {
-            background: var(--info-bg);
-            color: var(--info-text);
-            border-color: var(--info-border);
-        }
-
+        .table th { color: var(--text-primary); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        .table td { color: var(--text-secondary); font-weight: 500; }
+        .table tr:hover { background: rgba(255,255,255,0.02); }
+ 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .header .container {
-                position: relative;
-            }
+            .header .container { position: relative; }
             
-            .mobile-menu-toggle {
-                display: block;
-            }
+            .mobile-menu-toggle { display: block; }
             
             .nav {
                 display: none;
@@ -377,47 +434,28 @@
                 top: 100%;
                 left: 0;
                 right: 0;
-                background: var(--brand-gradient);
+                background: var(--bg-white);
                 flex-direction: column;
                 padding: 0.75rem 2rem 1rem 2rem;
                 box-shadow: var(--shadow-md);
                 gap: 0.25rem;
             }
             
-            .nav.active {
-                display: flex;
-            }
+            .nav.active { display: flex; }
             
-            .nav a {
-                width: 100%;
-                text-align: left;
-                padding: 0.75rem 0.25rem;
-            }
+            .nav a { width: 100%; text-align: left; padding: 0.75rem 0.25rem; }
             
-            .container {
-                padding: 0 1rem;
-            }
+            .container { padding: 0 1rem; }
             
-            .footer-links {
-                gap: 1rem;
-            }
+            .footer-links { gap: 1rem; }
         }
-
+ 
         @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.15rem;
-            }
-            
-            .card {
-                padding: 1.5rem;
-            }
-            
-            .btn {
-                padding: 0.6rem 1.2rem;
-                font-size: 0.85rem;
-            }
+            .header h1 { font-size: 1.15rem; }
+            .card { padding: 1.5rem; }
+            .btn { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
         }
-
+ 
         {% block extra_css %}{% endblock %}
     </style>
 </head>
@@ -436,6 +474,21 @@
                 <a href="/health/" {% if 'health' in request.path %}class="active"{% endif %}>Health</a>
                 <a href="/admin/" {% if 'admin' in request.path %}class="active"{% endif %}>Admin</a>
             </nav>
+            <button class="app-menu-toggle" onclick="toggleAppMenu()" aria-controls="app-menu" aria-expanded="false" title="Menu">
+                <span class="waffle">
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                </span>
+            </button>
+            <div class="dropdown-menu" id="app-menu">
+                <a href="/" class="dropdown-item">Home</a>
+                <a href="/docs/" class="dropdown-item">API Docs</a>
+                <a href="/revenue/revenue-analytics/" class="dropdown-item">Analytics</a>
+                <a href="/endpoint-status/" class="dropdown-item">Status</a>
+                <a href="/health/" class="dropdown-item">Health</a>
+                <a href="/admin/" class="dropdown-item">Admin</a>
+            </div>
             <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-controls="nav-menu" aria-expanded="false">MENU</button>
         </div>
     </header>
@@ -458,6 +511,7 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-links">
+                <a href="/">Home</a>
                 <a href="/docs/">API Documentation</a>
                 <a href="/endpoint-status/">Status</a>
                 <a href="/health/">Health Check</a>
@@ -473,13 +527,30 @@
     <!-- Optimized JavaScript - Load asynchronously -->
     <script src="{{ url_for('static', filename='optimized-scripts.js') }}" async></script>
     
-    <!-- Fallback for critical mobile menu functionality -->
+    <!-- Fallback for critical mobile/app menu functionality -->
     <script>
         function toggleMobileMenu() {
             const nav = document.getElementById('nav-menu');
             if (nav) nav.classList.toggle('active');
             const btn = document.querySelector('.mobile-menu-toggle');
             if (btn) btn.setAttribute('aria-expanded', btn.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+        }
+        function toggleAppMenu() {
+            const menu = document.getElementById('app-menu');
+            if (menu) {
+                const isActive = menu.classList.toggle('active');
+                const btn = document.querySelector('.app-menu-toggle');
+                if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+            }
+            document.addEventListener('click', function handleOutside(e){
+                const toggle = document.querySelector('.app-menu-toggle');
+                const menuEl = document.getElementById('app-menu');
+                if (menuEl && toggle && !menuEl.contains(e.target) && !toggle.contains(e.target)) {
+                    menuEl.classList.remove('active');
+                    toggle.setAttribute('aria-expanded', 'false');
+                    document.removeEventListener('click', handleOutside);
+                }
+            });
         }
     </script>
 
