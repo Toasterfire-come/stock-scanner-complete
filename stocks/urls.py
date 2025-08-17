@@ -8,6 +8,9 @@ urlpatterns = [
     # Basic API endpoint
     path('', views.index, name='index'),
     
+    # Include authentication and user management endpoints
+    path('', include('stocks.auth_urls')),
+    
     # Stock data endpoints - using available api_views functions
     path('stock/<str:ticker>/', api_views.stock_detail_api, name='stock_detail'),
     # WordPress and search aliases should come BEFORE the generic stocks/<ticker> route
