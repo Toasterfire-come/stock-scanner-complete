@@ -13,6 +13,8 @@ class Stock(models.Model):
     
     # Current Price Data
     current_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    price_change = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price change amount")
+    price_change_percent = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Price change percentage")
     price_change_today = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
     price_change_week = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
     price_change_month = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
@@ -162,11 +164,31 @@ class Membership(models.Model):
 # New Portfolio Tracking Models
 
 class UserProfile(models.Model):
-    """Extended user profile with social features"""
+    """Extended user profile with social features and billing information"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     username = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="Public username for social features")
     bio = models.TextField(max_length=500, blank=True, help_text="User biography")
     avatar_url = models.URLField(blank=True, help_text="Profile picture URL")
+    
+    # Contact information
+    phone = models.CharField(max_length=20, blank=True, help_text="User phone number")
+    company = models.CharField(max_length=100, blank=True, help_text="User company")
+    
+    # Subscription and billing information
+    is_premium = models.BooleanField(default=False, help_text="Whether user has premium subscription")
+    plan_type = models.CharField(max_length=20, default='free', help_text="Current subscription plan")
+    plan_name = models.CharField(max_length=50, default='Free', help_text="Display name of current plan")
+    billing_cycle = models.CharField(max_length=20, default='monthly', help_text="Billing cycle (monthly/yearly)")
+    api_calls_limit = models.IntegerField(default=100, help_text="API calls limit per month")
+    next_billing_date = models.DateTimeField(null=True, blank=True, help_text="Next billing date")
+    
+    # Payment information
+    card_last_four = models.CharField(max_length=4, blank=True, help_text="Last 4 digits of payment card")
+    card_type = models.CharField(max_length=20, blank=True, help_text="Type of payment card (Visa, MasterCard, etc.)")
+    billing_address = models.TextField(blank=True, help_text="Billing address as JSON")
+    payment_updated_at = models.DateTimeField(null=True, blank=True, help_text="When payment method was last updated")
+    plan_changed_at = models.DateTimeField(null=True, blank=True, help_text="When plan was last changed")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -549,3 +571,98 @@ class MonthlyRevenueSummary(models.Model):
     
     def __str__(self):
         return f"Revenue Summary {self.month_year}: ${self.total_revenue}"
+
+
+class BillingHistory(models.Model):
+    """User billing and payment history"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='billing_history')
+    invoice_id = models.CharField(max_length=100, unique=True, help_text="Unique invoice identifier")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Payment amount")
+    description = models.CharField(max_length=200, help_text="Payment description")
+    status = models.CharField(max_length=50, default='Paid', help_text="Payment status")
+    payment_method = models.CharField(max_length=100, default='Credit Card', help_text="Payment method used")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['invoice_id']),
+        ]
+    
+    def __str__(self):
+        return f"{self.invoice_id} - {self.user.username} - ${self.amount}"
+
+
+class NotificationSettings(models.Model):
+    """User notification preferences"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_settings')
+    
+    # Trading notifications
+    price_alerts = models.BooleanField(default=True, help_text="Price movement alerts")
+    volume_alerts = models.BooleanField(default=True, help_text="Volume spike alerts")
+    market_hours = models.BooleanField(default=False, help_text="Market hours notifications")
+    
+    # Portfolio notifications
+    daily_summary = models.BooleanField(default=True, help_text="Daily portfolio summary")
+    weekly_report = models.BooleanField(default=True, help_text="Weekly performance report")
+    milestone_alerts = models.BooleanField(default=True, help_text="Portfolio milestone alerts")
+    
+    # News notifications
+    breaking_news = models.BooleanField(default=True, help_text="Breaking market news")
+    earnings_alerts = models.BooleanField(default=False, help_text="Earnings announcement alerts")
+    analyst_ratings = models.BooleanField(default=False, help_text="Analyst rating changes")
+    
+    # Security notifications
+    login_alerts = models.BooleanField(default=True, help_text="Login attempt notifications")
+    billing_updates = models.BooleanField(default=True, help_text="Billing and payment updates")
+    plan_updates = models.BooleanField(default=True, help_text="Plan change notifications")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Notification Settings - {self.user.username}"
+
+
+class NotificationHistory(models.Model):
+    """User notification history"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=200, help_text="Notification title")
+    message = models.TextField(help_text="Notification message")
+    notification_type = models.CharField(max_length=50, default='general', help_text="Type of notification")
+    is_read = models.BooleanField(default=False, help_text="Whether notification has been read")
+    metadata = models.TextField(blank=True, help_text="Additional notification data as JSON")
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True, help_text="When notification was read")
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['notification_type']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"
+
+
+class UsageStats(models.Model):
+    """Daily user usage statistics"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usage_stats')
+    date = models.DateField(help_text="Usage date")
+    api_calls = models.IntegerField(default=0, help_text="Number of API calls made")
+    requests = models.IntegerField(default=0, help_text="Total requests made")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'date']
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['user', '-date']),
+            models.Index(fields=['date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.date} - {self.api_calls} calls"

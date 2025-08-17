@@ -33,15 +33,43 @@ class StockScannerAPI {
      * Initialize API endpoints
      */
     private function init_api_endpoints() {
-        $this->api_endpoints = [
-            'stock_quote' => get_option('stock_api_quote_endpoint', ''),
-            'stock_search' => get_option('stock_api_search_endpoint', ''),
-            'market_data' => get_option('stock_api_market_endpoint', ''),
-            'technical_indicators' => get_option('stock_api_technical_endpoint', ''),
-            'news' => get_option('stock_api_news_endpoint', ''),
-            'options' => get_option('stock_api_options_endpoint', ''),
-            'level2' => get_option('stock_api_level2_endpoint', '')
-        ];
+        // Check if custom endpoints are enabled
+        $enable_custom = get_option('stock_scanner_enable_custom_endpoints', 0);
+        $base_url = get_option('stock_scanner_api_base_url', 'http://localhost:8000/api');
+        
+        if ($enable_custom && !empty($base_url)) {
+            // Use custom base URL for all endpoints
+            $base_url = rtrim($base_url, '/');
+            $this->api_endpoints = [
+                'stock_quote' => $base_url . '/stocks/',
+                'stock_search' => $base_url . '/stocks/search/',
+                'market_data' => $base_url . '/market-data/',
+                'technical_indicators' => $base_url . '/stocks/',
+                'news' => $base_url . '/news/',
+                'options' => $base_url . '/stocks/',
+                'level2' => $base_url . '/stocks/',
+                'trending' => $base_url . '/trending/',
+                'portfolio' => $base_url . '/portfolio/',
+                'watchlist' => $base_url . '/watchlist/',
+                'auth_login' => $base_url . '/auth/login/',
+                'auth_logout' => $base_url . '/auth/logout/',
+                'user_profile' => $base_url . '/user/profile/',
+                'billing_history' => $base_url . '/billing/history/',
+                'notifications' => $base_url . '/notifications/settings/',
+                'usage_stats' => $base_url . '/usage-stats/'
+            ];
+        } else {
+            // Use legacy endpoint configuration
+            $this->api_endpoints = [
+                'stock_quote' => get_option('stock_api_quote_endpoint', ''),
+                'stock_search' => get_option('stock_api_search_endpoint', ''),
+                'market_data' => get_option('stock_api_market_endpoint', ''),
+                'technical_indicators' => get_option('stock_api_technical_endpoint', ''),
+                'news' => get_option('stock_api_news_endpoint', ''),
+                'options' => get_option('stock_api_options_endpoint', ''),
+                'level2' => get_option('stock_api_level2_endpoint', '')
+            ];
+        }
     }
     
     /**
@@ -70,6 +98,31 @@ class StockScannerAPI {
                 'requests_per_hour' => -1   // unlimited
             ]
         ];
+    }
+    
+    /**
+     * Get endpoint URL for a specific API call
+     */
+    public function get_endpoint_url($endpoint_key) {
+        return isset($this->api_endpoints[$endpoint_key]) ? $this->api_endpoints[$endpoint_key] : '';
+    }
+    
+    /**
+     * Get the configured API base URL
+     */
+    public function get_api_base_url() {
+        $enable_custom = get_option('stock_scanner_enable_custom_endpoints', 0);
+        if ($enable_custom) {
+            return get_option('stock_scanner_api_base_url', 'http://localhost:8000/api');
+        }
+        return '';
+    }
+    
+    /**
+     * Check if custom endpoints are enabled
+     */
+    public function is_custom_endpoints_enabled() {
+        return get_option('stock_scanner_enable_custom_endpoints', 0) == 1;
     }
     
     /**

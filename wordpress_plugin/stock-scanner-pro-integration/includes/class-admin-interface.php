@@ -690,34 +690,205 @@ class Stock_Scanner_Admin_Interface {
      * Settings Page
      */
     public function settings_page() {
+        // Handle form submission
+        if (isset($_POST['submit']) && wp_verify_nonce($_POST['stock_scanner_settings_nonce'], 'stock_scanner_settings')) {
+            // Update endpoint URL settings
+            if (isset($_POST['stock_scanner_api_base_url'])) {
+                update_option('stock_scanner_api_base_url', sanitize_text_field($_POST['stock_scanner_api_base_url']));
+            }
+            if (isset($_POST['stock_scanner_security_mode'])) {
+                update_option('stock_scanner_security_mode', sanitize_text_field($_POST['stock_scanner_security_mode']));
+            }
+            if (isset($_POST['stock_scanner_enable_custom_endpoints'])) {
+                update_option('stock_scanner_enable_custom_endpoints', 1);
+            } else {
+                update_option('stock_scanner_enable_custom_endpoints', 0);
+            }
+            
+            echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
+        }
+        
+        // Get current settings
+        $api_base_url = get_option('stock_scanner_api_base_url', 'http://localhost:8000/api');
+        $security_mode = get_option('stock_scanner_security_mode', 'normal');
+        $enable_custom_endpoints = get_option('stock_scanner_enable_custom_endpoints', 0);
+        
         // Settings implementation
         ?>
         <div class="wrap">
-            <h1>⚙️ Stock Scanner Security Settings</h1>
+            <h1>⚙️ Stock Scanner Settings</h1>
             
-            <form method="post" action="options.php">
-                <?php 
-                settings_fields('stock_scanner_settings');
-                do_settings_sections('stock_scanner_settings');
-                ?>
+            <div class="nav-tab-wrapper">
+                <a href="#api-settings" class="nav-tab nav-tab-active">API Settings</a>
+                <a href="#security-settings" class="nav-tab">Security Settings</a>
+            </div>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field('stock_scanner_settings', 'stock_scanner_settings_nonce'); ?>
                 
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">Security Mode</th>
-                        <td>
-                            <select name="stock_scanner_security_mode">
-                                <option value="normal">Normal</option>
-                                <option value="strict">Strict</option>
-                                <option value="paranoid">Paranoid</option>
-                            </select>
-                            <p class="description">Choose security level for bot detection</p>
-                        </td>
-                    </tr>
-                </table>
+                <div id="api-settings" class="tab-content">
+                    <h2>🔗 API Endpoint Configuration</h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="stock_scanner_api_base_url">API Base URL</label>
+                            </th>
+                            <td>
+                                <input type="url" 
+                                       id="stock_scanner_api_base_url" 
+                                       name="stock_scanner_api_base_url" 
+                                       value="<?php echo esc_attr($api_base_url); ?>" 
+                                       class="regular-text" 
+                                       placeholder="https://your-api-domain.com/api" />
+                                <p class="description">
+                                    Base URL for the Stock Scanner API endpoints. Include the /api path.<br>
+                                    <strong>Examples:</strong><br>
+                                    • Local development: <code>http://localhost:8000/api</code><br>
+                                    • Production: <code>https://api.yoursite.com/api</code><br>
+                                    • Subdomain: <code>https://stocks.yoursite.com/api</code>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="stock_scanner_enable_custom_endpoints">Enable Custom Endpoints</label>
+                            </th>
+                            <td>
+                                <input type="checkbox" 
+                                       id="stock_scanner_enable_custom_endpoints" 
+                                       name="stock_scanner_enable_custom_endpoints" 
+                                       value="1" 
+                                       <?php checked($enable_custom_endpoints, 1); ?> />
+                                <label for="stock_scanner_enable_custom_endpoints">Use custom API endpoint URL instead of default</label>
+                                <p class="description">
+                                    When enabled, the plugin will use the custom API Base URL above for all API calls.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h3>📋 Available API Endpoints</h3>
+                    <div class="endpoint-list">
+                        <h4>Authentication & User Management</h4>
+                        <ul class="endpoint-group">
+                            <li><code>POST /auth/login</code> - User login</li>
+                            <li><code>POST /auth/logout</code> - User logout</li>
+                            <li><code>GET /user/profile</code> - Get user profile</li>
+                            <li><code>POST /user/profile</code> - Update user profile</li>
+                            <li><code>POST /user/change-password</code> - Change password</li>
+                        </ul>
+                        
+                        <h4>Market Data & Stocks</h4>
+                        <ul class="endpoint-group">
+                            <li><code>GET /market-data</code> - Market overview</li>
+                            <li><code>GET /stocks/search</code> - Search stocks</li>
+                            <li><code>GET /stocks/{symbol}</code> - Stock details</li>
+                            <li><code>GET /trending</code> - Trending stocks</li>
+                            <li><code>GET /news</code> - Market news</li>
+                        </ul>
+                        
+                        <h4>Portfolio & Watchlist</h4>
+                        <ul class="endpoint-group">
+                            <li><code>GET /portfolio</code> - Get portfolio</li>
+                            <li><code>POST /portfolio/add</code> - Add to portfolio</li>
+                            <li><code>DELETE /portfolio/{id}</code> - Remove from portfolio</li>
+                            <li><code>GET /watchlist</code> - Get watchlist</li>
+                            <li><code>POST /watchlist/add</code> - Add to watchlist</li>
+                            <li><code>DELETE /watchlist/{id}</code> - Remove from watchlist</li>
+                        </ul>
+                        
+                        <h4>Billing & Subscriptions</h4>
+                        <ul class="endpoint-group">
+                            <li><code>GET /billing/history</code> - Billing history</li>
+                            <li><code>GET /billing/current-plan</code> - Current plan</li>
+                            <li><code>POST /billing/change-plan</code> - Change plan</li>
+                            <li><code>GET /usage-stats</code> - Usage statistics</li>
+                        </ul>
+                        
+                        <h4>Notifications</h4>
+                        <ul class="endpoint-group">
+                            <li><code>GET /notifications/settings</code> - Get notification settings</li>
+                            <li><code>POST /notifications/settings</code> - Update notification settings</li>
+                            <li><code>GET /notifications/history</code> - Notification history</li>
+                            <li><code>POST /notifications/mark-read</code> - Mark notifications as read</li>
+                        </ul>
+                    </div>
+                </div>
                 
-                <?php submit_button(); ?>
+                <div id="security-settings" class="tab-content" style="display: none;">
+                    <h2>🛡️ Security Configuration</h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Security Mode</th>
+                            <td>
+                                <select name="stock_scanner_security_mode">
+                                    <option value="normal" <?php selected($security_mode, 'normal'); ?>>Normal</option>
+                                    <option value="strict" <?php selected($security_mode, 'strict'); ?>>Strict</option>
+                                    <option value="paranoid" <?php selected($security_mode, 'paranoid'); ?>>Paranoid</option>
+                                </select>
+                                <p class="description">Choose security level for bot detection and API access</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <?php submit_button('Save Settings'); ?>
             </form>
         </div>
+        
+        <style>
+        .endpoint-list {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+        .endpoint-list h4 {
+            color: #0073aa;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .endpoint-list h4:first-child {
+            margin-top: 0;
+        }
+        .endpoint-group {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        .endpoint-group li {
+            margin-bottom: 5px;
+        }
+        .endpoint-group code {
+            background: #fff;
+            padding: 2px 6px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family: Monaco, Consolas, monospace;
+            font-size: 12px;
+        }
+        .nav-tab-wrapper {
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-top: none;
+            padding: 20px;
+        }
+        </style>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            $('.nav-tab').click(function(e) {
+                e.preventDefault();
+                $('.nav-tab').removeClass('nav-tab-active');
+                $(this).addClass('nav-tab-active');
+                $('.tab-content').hide();
+                $($(this).attr('href')).show();
+            });
+        });
+        </script>
         <?php
     }
     
