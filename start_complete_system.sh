@@ -58,12 +58,12 @@ prepare_system() {
     $SUDO mkdir -p "$LOG_DIR"
     $SUDO chown $USER:$USER "$LOG_DIR" 2>/dev/null || true
     
-    # Set up DNS resolution fixes
-    if [ -f "./fix_dns_resolution.sh" ]; then
-        log_message "Applying DNS optimizations..."
+    # Set up DNS resolution fixes (opt-in)
+    if [ "${APPLY_DNS_FIXES:-0}" = "1" ] && [ -f "./fix_dns_resolution.sh" ]; then
+        log_message "Applying DNS optimizations (APPLY_DNS_FIXES=1)..."
         ./fix_dns_resolution.sh
     else
-        log_warning "DNS optimization script not found, skipping"
+        log_warning "Skipping DNS optimization (set APPLY_DNS_FIXES=1 to enable)"
     fi
     
     log_success "System preparation complete"
