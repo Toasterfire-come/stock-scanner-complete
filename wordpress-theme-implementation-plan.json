@@ -239,7 +239,13 @@
         "page-templates/page-paypal-checkout.php",
         "page-templates/page-payment-success.php",
         "page-templates/page-payment-cancelled.php",
-        "page-templates/page-signup.php"
+        "page-templates/page-signup.php",
+        "page-templates/page-login.php",
+        "page-templates/page-account.php",
+        "page-templates/page-subscription-management.php",
+        "page-templates/page-payment-methods.php",
+        "page-templates/page-invoice.php",
+        "page-templates/page-profile-settings.php"
       ],
       
       "assets": [
