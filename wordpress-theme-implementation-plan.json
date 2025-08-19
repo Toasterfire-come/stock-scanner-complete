@@ -100,7 +100,14 @@
           "/api/watchlist/ - Watchlist management",
           "/api/news/ - Stock news and sentiment",
           "/api/alerts/ - Price alerts",
-          "/api/subscription/ - Email subscriptions"
+          "/api/subscription/ - Email subscriptions",
+          "/api/payments/ - Payment processing",
+          "/api/billing/ - Billing and invoices",
+          "/api/users/ - User management",
+          "/api/user/profile/ - User profile management",
+          "/api/user/subscription/ - Subscription management",
+          "/api/webhooks/paypal/ - PayPal webhook handling",
+          "/api/webhooks/stripe/ - Stripe webhook handling"
         ]
       },
       
