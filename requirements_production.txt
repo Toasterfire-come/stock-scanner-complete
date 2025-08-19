@@ -1,0 +1,42 @@
+# Stock Scanner - Production Requirements
+# Optimized for Windows Git Bash deployment
+
+# Core Django Framework
+Django>=4.2.11,<5.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.1
+
+# Database (Windows MySQL compatibility)
+PyMySQL>=1.1.0
+mysqlclient>=2.2.0
+dj-database-url>=2.1.0
+
+# Stock Data APIs
+yfinance>=0.2.25
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Task Queue & Background Processing
+celery>=5.3.0
+redis>=5.0.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Text Processing
+textblob>=0.17.1
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Security & Cryptography
+cryptography>=41.0.0
+
+# Production Server (optional)
+gunicorn>=21.2.0
+whitenoise>=6.5.0
+
+# Development & Testing
+pytest>=7.4.0
+pytest-django>=4.5.2

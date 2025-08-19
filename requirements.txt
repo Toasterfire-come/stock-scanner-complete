@@ -1,0 +1,53 @@
+# =========================================================================
+# Stock Scanner - Linux Requirements
+# MySQL + yfinance + NASDAQ-only tickers
+# =========================================================================
+
+# ===== CORE DJANGO FRAMEWORK =====
+Django>=4.2.11,<5.0
+django-extensions>=3.2.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.1
+
+# ===== DATABASE & CACHING =====
+mysqlclient>=2.2.0
+dj-database-url>=2.1.0
+
+# ===== STOCK DATA & API =====
+yfinance>=0.2.25
+requests>=2.31.0
+urllib3>=2.0.0
+
+# ===== TASK QUEUE & SCHEDULING =====
+celery>=5.3.0
+redis>=5.0.0
+schedule>=1.2.0
+
+# ===== DATABASE SUPPORT =====
+dj-database-url>=3.0.0
+PyMySQL>=1.1.0
+cryptography>=45.0.0
+# psycopg2-binary>=2.9.0  # For PostgreSQL (commented out)
+
+# ===== ENVIRONMENT & UTILITIES =====
+python-dotenv>=1.0.0
+
+# ===== TEXT PROCESSING & NLP =====
+textblob>=0.17.1
+
+# ===== NEWS SCRAPING =====
+feedparser>=6.0.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# ===== DATA PROCESSING (OPTIONAL) =====
+# These are optional and will be installed if available
+numpy>=1.24.0
+pandas>=2.0.0
+
+# ===== SECURITY & CRYPTO =====
+cryptography>=41.0.0
+
+# ===== MARKET HOURS MANAGER =====
+pytz>=2023.3
+psutil>=5.9.0

@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Scanner API - Real-time Market Data{% endblock %}
+
+{% block description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: var(--bg-white);
+        color: var(--text-primary);
+        padding: 3rem 0;
+        text-align: center;
+        margin: -2rem -2rem 2rem -2rem;
+        border: 1px solid var(--border-light);
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .hero-section h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.02em; }
+    .hero-section p { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1rem; }
+
+    .api-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        font-weight: 700;
+        background: var(--bg-dark);
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+    }
+    .status-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); margin-right: 0.5rem; box-shadow: 0 0 0 2px rgba(16,185,129,.25); }
+
+    .section { padding: 3rem 0; }
+    .section-title { font-size: 2rem; text-align: center; margin-bottom: 2rem; color: var(--text-primary); }
+
+    .grid { display: grid; gap: 1.25rem; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    .feature-card { background: var(--bg-white); border-radius: var(--border-radius); padding: 1.5rem; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); text-align: center; transition: transform .2s, box-shadow .2s; }
+    .feature-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .card-icon { width: 56px; height: 56px; background: var(--bg-dark); border: 1px solid var(--border-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: .95rem; color: var(--text-secondary); font-weight: 800; }
+
+    .endpoint-list { background: var(--bg-light); border-radius: var(--border-radius-sm); padding: 1rem; margin-top: 1rem; border: 1px solid var(--border-light); }
+    .endpoint { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; margin-bottom: 0.5rem; background: var(--bg-white); border-radius: var(--border-radius-sm); border-left: 4px solid var(--primary-blue); border: 1px solid var(--border-light); }
+    .endpoint:last-child { margin-bottom: 0; }
+    .endpoint-path { font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace); font-size: 0.9rem; color: var(--text-primary); font-weight: 600; }
+    .endpoint-method { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: 1px solid var(--border-light); }
+    .method-get { background: var(--info-bg); color: var(--info-text); }
+    .method-post { background: var(--warning-bg); color: var(--warning-text); }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+    .stat-card { text-align: center; padding: 1.25rem; background: var(--bg-white); border-radius: var(--border-radius-sm); border: 1px solid var(--border-light); }
+    .stat-number { font-size: 2rem; font-weight: 800; color: var(--secondary-blue); display: block; }
+    .stat-label { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    .code-block { background: var(--bg-dark); color: var(--text-dark); padding: 1rem; border-radius: var(--border-radius-sm); font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace); font-size: 0.9rem; overflow-x: auto; margin-top: 1rem; border: 1px solid var(--border-light); }
+
+    .banner { background: var(--warning-bg); border: 1px solid var(--error-border); color: var(--error-text); padding: 1rem 1.25rem; border-radius: var(--border-radius-sm); margin: -2rem -2rem 2rem -2rem; }
+    .banner strong { color: var(--warning-text); }
+
+    @media (max-width: 768px) {
+        .hero-section h1 { font-size: 2rem; }
+        .grid-2 { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if market_is_closed %}
+<div class="banner">
+    <strong>Market Closed:</strong> Information will not be updated until the market reopens. Current phase: {{ market_phase|title }} ({{ market_now_et }} ET)
+</div>
+{% endif %}
+
+<div class="hero-section">
+    <div class="container">
+        <h1>Professional Market Data & Analytics</h1>
+        <p>Real-time stock data, advanced analytics, and trading insights at your fingertips</p>
+        <div class="api-status">
+            <div class="status-indicator"></div>
+            API Status: Online
+        </div>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">API Overview</h2>
+        <div class="grid grid-2">
+            <div class="feature-card">
+                <div class="card-icon">DATA</div>
+                <h3>Real-time Stock Data</h3>
+                <p>Access comprehensive real-time stock market data including prices, volumes, market caps, and financial ratios. Our API currently provides access to NYSE-listed stocks.</p>
+                <a href="/api/stocks/" class="btn">View Stock Data</a>
+            </div>
+            <div class="feature-card">
+                <div class="card-icon">TRENDS</div>
+                <h3>Market Analytics</h3>
+                <p>Advanced analytics and insights including trending stocks, market statistics, and performance metrics. Get the data you need for informed trading decisions.</p>
+                <a href="/api/trending/" class="btn">View Analytics</a>
+            </div>
+            <div class="feature-card">
+                <div class="card-icon">ALERTS</div>
+                <h3>Smart Alerts</h3>
+                <p>Create custom price alerts and notifications. Monitor your portfolio and get notified when your stocks hit target prices or significant market events occur.</p>
+                <a href="/api/alerts/create/" class="btn">Create Alerts</a>
+            </div>
+            <div class="feature-card">
+                <div class="card-icon">REVENUE</div>
+                <h3>Revenue Analytics</h3>
+                <p>Comprehensive revenue tracking and discount management system. Monitor subscription metrics, payment analytics, and promotional code performance.</p>
+                <a href="/revenue/revenue-analytics/" class="btn">View Revenue</a>
+                <a href="/revenue/revenue-analytics/?format=json" class="btn btn-secondary" style="margin-top: 0.5rem;">API Endpoint</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section" style="background: var(--bg-white);">
+    <div class="container">
+        <h2 class="section-title">API Endpoints</h2>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Stock Data Endpoints</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/stocks/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/stock/{ticker}/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/search/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/trending/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/realtime/{ticker}/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Analytics & Management</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint">
+                        <span class="endpoint-path">/revenue/revenue-analytics/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/alerts/create/</span>
+                        <span class="endpoint-method method-post">POST</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/health/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/api/statistics/</span>
+                        <span class="endpoint-method method-get">GET</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-path">/revenue/initialize-codes/</span>
+                        <span class="endpoint-method method-post">POST</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">API Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">5000+</span>
+                <div class="stat-label">Active Stocks</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">99.9%</span>
+                <div class="stat-label">Uptime</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">&lt;100ms</span>
+                <div class="stat-label">Response Time</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">24/7</span>
+                <div class="stat-label">Market Coverage</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Quick Start</h2>
+        <div class="card">
+            <h3>Get Stock Data</h3>
+            <p>Fetch real-time data for any stock symbol:</p>
+            <div class="code-block">curl -X GET "{{ request.build_absolute_uri }}/api/stock/AAPL/" \
+  -H "Accept: application/json"</div>
+            <p style="margin-top: 1rem;">Response includes current price, volume, market cap, and key financial metrics.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

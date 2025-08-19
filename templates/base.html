@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Stock Scanner API{% endblock %}</title>
+    <meta name="description" content="{% block description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}">
+    
+    {% load static %}
+    {% if request %}
+    <link rel="canonical" href="{{ request.build_absolute_uri|escape }}" />
+    {% endif %}
+    
+    {% block seo_meta %}
+    <meta property="og:title" content="{% block og_title %}Stock Scanner API{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}" />
+    {% if request %}<meta property="og:url" content="{{ request.build_absolute_uri|escape }}" />{% endif %}
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="{% static 'images/og-default.jpg' %}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{% block twitter_title %}Stock Scanner API{% endblock %}" />
+    <meta name="twitter:description" content="{% block twitter_description %}Professional Stock Scanner API providing real-time market data, analytics, and trading insights{% endblock %}" />
+    <meta name="twitter:image" content="{% static 'images/og-default.jpg' %}" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Stock Scanner API",
+      "url": "{{ request.build_absolute_uri|default:'' }}",
+      "logo": "{% static 'images/logo.png' %}",
+      "sameAs": [
+        "https://x.com/",
+        "https://www.linkedin.com/"
+      ]
+    }
+    </script>
+    {% endblock %}
+    
+    <!-- Add Inter font for improved typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Critical CSS - Inline for fastest first paint -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='critical.css') }}" media="all">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{{ url_for('static', filename='optimized-scripts.js') }}" as="script">
+    <link rel="preload" href="{{ url_for('static', filename='index_sub.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='index_sub.css') }}"></noscript>
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    
+    <!-- Optimized font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-blue: #667eea;
+            --primary-purple: #764ba2;
+            --secondary-blue: #5a6fd8;
+            --accent-green: #38a169;
+            --accent-green-dark: #2f855a;
+            --accent-red: #e53e3e;
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-light: #718096;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --bg-dark: #1a202c;
+            --text-dark: #e2e8f0;
+            --border-light: #e2e8f0;
+            --border-secondary: #cbd5e0;
+            --success-bg: #c6f6d5;
+            --success-text: #22543d;
+            --success-border: #9ae6b4;
+            --error-bg: #fed7d7;
+            --error-text: #742a2a;
+            --error-border: #feb2b2;
+            --error-accent: #f56565;
+            --warning-bg: #fff5f5;
+            --warning-text: #9b2c2c;
+            --info-bg: #bee3f8;
+            --info-text: #2a4365;
+            --info-border: #90cdf4;
+            --link-color: #90cdf4;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
+            --border-radius: 12px;
+            --border-radius-sm: 6px;
+            /* Zatra-inspired brand */
+            --brand-gradient: linear-gradient(135deg, #3685fb 0%, #2563eb 100%);
+        }
+
+        /* Dark theme overrides to align all pages */
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-green-dark: #059669;
+            --accent-red: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-light: #94a3b8;
+            --bg-light: #0f172a;
+            --bg-white: #1e293b;
+            --bg-dark: #0b1220;
+            --text-dark: #e2e8f0;
+            --border-light: #334155;
+            --border-secondary: #475569;
+            --warning-bg: rgba(239, 68, 68, 0.08);
+            --warning-text: #f59e0b;
+            --info-bg: rgba(14, 165, 233, 0.1);
+            --info-text: #93c5fd;
+            --info-border: #334155;
+            --link-color: #0ea5e9;
+            --brand-gradient: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+        }
+ 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+ 
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+ 
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            color: #fff;
+            padding: 0.75rem 0;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(6px);
+        }
+ 
+        .header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 60px;
+        }
+ 
+        .header .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+ 
+        .header .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+        }
+ 
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 0.2px;
+            color: var(--text-primary);
+        }
+ 
+        .header h1 a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+ 
+        .header h1 a:hover {
+            opacity: 0.9;
+        }
+ 
+        .nav {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+        }
+ 
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            opacity: 0.95;
+            transition: all 0.2s ease;
+            padding: 0.5rem 0.75rem;
+            font-weight: 600;
+            position: relative;
+            letter-spacing: 0.2px;
+            border-radius: 12px;
+        }
+ 
+        .nav a:hover,
+        .nav a.active {
+            color: var(--text-primary);
+            background: var(--bg-dark);
+        }
+ 
+        .mobile-menu-toggle {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border-secondary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            letter-spacing: 0.4px;
+        }
+
+        /* App waffle menu */
+        .app-menu-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .app-menu-toggle:hover { box-shadow: var(--shadow-md); }
+        .waffle {
+            display: grid;
+            grid-template-columns: repeat(3, 6px);
+            grid-auto-rows: 6px;
+            gap: 4px;
+        }
+        .waffle span {
+            display: block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1001;
+        }
+        .dropdown-menu.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0.9rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .dropdown-item:hover { background: var(--bg-dark); color: var(--text-primary); }
+ 
+        .main-content {
+            flex: 1;
+            padding: 2rem 0;
+        }
+ 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+ 
+        /* Footer */
+        .footer {
+            background: var(--bg-dark);
+            color: white;
+            text-align: center;
+            padding: 3rem 0 2rem;
+            margin-top: auto;
+            border-top: 1px solid var(--border-light);
+        }
+ 
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+ 
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+ 
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+            font-weight: 600;
+        }
+ 
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+ 
+        .footer-copyright {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+ 
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.1rem;
+            background: var(--primary-blue);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+ 
+        .btn:hover {
+            background: var(--secondary-blue);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+ 
+        .btn-secondary {
+            background: var(--border-light);
+            color: var(--text-primary);
+        }
+ 
+        .btn-secondary:hover {
+            background: var(--border-secondary);
+        }
+ 
+        .btn-success {
+            background: var(--accent-green);
+        }
+ 
+        .btn-success:hover {
+            background: var(--accent-green-dark);
+        }
+ 
+        .card {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            margin-bottom: 2rem;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+ 
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+ 
+        .card h1, .card h2, .card h3 {
+            color: var(--text-primary);
+        }
+ 
+        .card h1 { font-size: 2rem; margin-bottom: 1rem; }
+        .card h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+        .card h3 { font-size: 1.25rem; margin-bottom: 0.75rem; }
+ 
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            border: 1px solid;
+        }
+ 
+        .alert-success { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+        .alert-error { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
+        .alert-info { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+
+        /* Tables */
+        .table { width: 100%; border-collapse: collapse; }
+        .table thead { background: var(--bg-dark); }
+        .table th, .table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            text-align: left;
+        }
+        .table th { color: var(--text-primary); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        .table td { color: var(--text-secondary); font-weight: 500; }
+        .table tr:hover { background: rgba(255,255,255,0.02); }
+ 
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header .container { position: relative; }
+            
+            .mobile-menu-toggle { display: block; }
+            
+            .nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg-white);
+                flex-direction: column;
+                padding: 0.75rem 2rem 1rem 2rem;
+                box-shadow: var(--shadow-md);
+                gap: 0.25rem;
+            }
+            
+            .nav.active { display: flex; }
+            
+            .nav a { width: 100%; text-align: left; padding: 0.75rem 0.25rem; }
+            
+            .container { padding: 0 1rem; }
+            
+            .footer-links { gap: 1rem; }
+        }
+ 
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.15rem; }
+            .card { padding: 1.5rem; }
+            .btn { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+        }
+ 
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">SS</div>
+                <h1><a href="/">Stock Scanner API</a></h1>
+            </div>
+            <nav class="nav" id="nav-menu" aria-label="Primary">
+                <a href="/" {% if request.resolver_match.url_name == 'homepage' %}class="active"{% endif %}>Home</a>
+                <a href="/docs/" {% if 'docs' in request.path %}class="active"{% endif %}>API</a>
+                <a href="/revenue/revenue-analytics/" {% if 'revenue' in request.path %}class="active"{% endif %}>Analytics</a>
+                <a href="/endpoint-status/" {% if 'endpoint-status' in request.path %}class="active"{% endif %}>Status</a>
+                <a href="/health/" {% if 'health' in request.path %}class="active"{% endif %}>Health</a>
+                <a href="/admin/" {% if 'admin' in request.path %}class="active"{% endif %}>Admin</a>
+            </nav>
+            <button class="app-menu-toggle" onclick="toggleAppMenu()" aria-controls="app-menu" aria-expanded="false" title="Menu">
+                <span class="waffle">
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                </span>
+            </button>
+            <div class="dropdown-menu" id="app-menu">
+                <a href="/" class="dropdown-item">Home</a>
+                <a href="/docs/" class="dropdown-item">API Docs</a>
+                <a href="/revenue/revenue-analytics/" class="dropdown-item">Analytics</a>
+                <a href="/endpoint-status/" class="dropdown-item">Status</a>
+                <a href="/health/" class="dropdown-item">Health</a>
+                <a href="/admin/" class="dropdown-item">Admin</a>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-controls="nav-menu" aria-expanded="false">MENU</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/docs/">API Documentation</a>
+                <a href="/endpoint-status/">Status</a>
+                <a href="/health/">Health Check</a>
+                <a href="/revenue/revenue-analytics/">Analytics</a>
+                <a href="/admin/">Admin</a>
+            </div>
+            <div class="footer-copyright">
+                <p>&copy; 2025 Stock Scanner API. Professional market data solutions.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Optimized JavaScript - Load asynchronously -->
+    <script src="{{ url_for('static', filename='optimized-scripts.js') }}" async></script>
+    
+    <!-- Fallback for critical mobile/app menu functionality -->
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('nav-menu');
+            if (nav) nav.classList.toggle('active');
+            const btn = document.querySelector('.mobile-menu-toggle');
+            if (btn) btn.setAttribute('aria-expanded', btn.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+        }
+        function toggleAppMenu() {
+            const menu = document.getElementById('app-menu');
+            if (menu) {
+                const isActive = menu.classList.toggle('active');
+                const btn = document.querySelector('.app-menu-toggle');
+                if (btn) btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+            }
+            document.addEventListener('click', function handleOutside(e){
+                const toggle = document.querySelector('.app-menu-toggle');
+                const menuEl = document.getElementById('app-menu');
+                if (menuEl && toggle && !menuEl.contains(e.target) && !toggle.contains(e.target)) {
+                    menuEl.classList.remove('active');
+                    toggle.setAttribute('aria-expanded', 'false');
+                    document.removeEventListener('click', handleOutside);
+                }
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
