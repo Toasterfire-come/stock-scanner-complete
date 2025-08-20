@@ -103,33 +103,31 @@ class StockAPI extends StockScannerAPI {
 class PortfolioAPI extends StockScannerAPI {
     // Get user portfolio
     async getPortfolio() {
-        return await this.request('portfolio/');
+        return await this.ajaxRequest('stock_scanner_get_portfolio');
     }
 
     // Add stock to portfolio
-    async addToPortfolio(ticker, shares, price) {
-        return await this.request('portfolio/', {
-            method: 'POST',
-            body: JSON.stringify({
-                ticker: ticker.toUpperCase(),
-                shares: parseFloat(shares),
-                price: parseFloat(price)
-            })
-        });
-    }
-
-    // Update portfolio holding
-    async updateHolding(holdingId, data) {
-        return await this.request(`portfolio/holdings/${holdingId}/`, {
-            method: 'PATCH',
-            body: JSON.stringify(data)
+    async addToPortfolio(ticker, shares, costBasis, purchaseDate = null) {
+        return await this.ajaxRequest('stock_scanner_add_to_portfolio', {
+            ticker: ticker.toUpperCase(),
+            shares: parseFloat(shares),
+            cost_basis: parseFloat(costBasis),
+            purchase_date: purchaseDate
         });
     }
 
     // Remove from portfolio
     async removeFromPortfolio(holdingId) {
+        return await this.ajaxRequest('stock_scanner_remove_from_portfolio', {
+            holding_id: parseInt(holdingId)
+        });
+    }
+    
+    // Update portfolio holding (placeholder for future implementation)
+    async updateHolding(holdingId, data) {
         return await this.request(`portfolio/holdings/${holdingId}/`, {
-            method: 'DELETE'
+            method: 'PATCH',
+            body: JSON.stringify(data)
         });
     }
 }
