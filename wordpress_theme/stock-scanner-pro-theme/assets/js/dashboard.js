@@ -217,7 +217,7 @@
         },
 
         // Initialize news feed
-        initNewsMedia: function() {
+        initNewsFeed: function() {
             const $container = $('#news-feed');
             if ($container.length === 0) return;
 
