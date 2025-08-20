@@ -136,32 +136,30 @@ class PortfolioAPI extends StockScannerAPI {
 class WatchlistAPI extends StockScannerAPI {
     // Get user watchlist
     async getWatchlist() {
-        return await this.request('watchlist/');
+        return await this.ajaxRequest('stock_scanner_get_watchlist');
     }
 
     // Add to watchlist
-    async addToWatchlist(ticker, notes = '') {
-        return await this.request('watchlist/', {
-            method: 'POST',
-            body: JSON.stringify({
-                ticker: ticker.toUpperCase(),
-                notes: notes
-            })
-        });
-    }
-
-    // Update watchlist item
-    async updateWatchlistItem(itemId, data) {
-        return await this.request(`watchlist/${itemId}/`, {
-            method: 'PATCH',
-            body: JSON.stringify(data)
+    async addToWatchlist(ticker, notes = '', category = 'default') {
+        return await this.ajaxRequest('stock_scanner_add_to_watchlist', {
+            ticker: ticker.toUpperCase(),
+            notes: notes,
+            category: category
         });
     }
 
     // Remove from watchlist
     async removeFromWatchlist(itemId) {
+        return await this.ajaxRequest('stock_scanner_remove_from_watchlist', {
+            item_id: parseInt(itemId)
+        });
+    }
+
+    // Update watchlist item (placeholder for future implementation)
+    async updateWatchlistItem(itemId, data) {
         return await this.request(`watchlist/${itemId}/`, {
-            method: 'DELETE'
+            method: 'PATCH',
+            body: JSON.stringify(data)
         });
     }
 }
