@@ -186,23 +186,20 @@ class NewsAPI extends StockScannerAPI {
 class AlertsAPI extends StockScannerAPI {
     // Create price alert
     async createAlert(ticker, targetPrice, condition, email) {
-        return await this.request('alerts/create/', {
-            method: 'POST',
-            body: JSON.stringify({
-                ticker: ticker.toUpperCase(),
-                target_price: parseFloat(targetPrice),
-                condition: condition,
-                email: email
-            })
+        return await this.ajaxRequest('stock_scanner_create_price_alert', {
+            ticker: ticker.toUpperCase(),
+            target_price: parseFloat(targetPrice),
+            condition: condition,
+            email: email
         });
     }
 
-    // Get user alerts
+    // Get user alerts (placeholder for future implementation)
     async getAlerts() {
         return await this.request('alerts/');
     }
 
-    // Update alert
+    // Update alert (placeholder for future implementation)
     async updateAlert(alertId, data) {
         return await this.request(`alerts/${alertId}/`, {
             method: 'PATCH',
@@ -210,7 +207,7 @@ class AlertsAPI extends StockScannerAPI {
         });
     }
 
-    // Delete alert
+    // Delete alert (placeholder for future implementation)
     async deleteAlert(alertId) {
         return await this.request(`alerts/${alertId}/`, {
             method: 'DELETE'
