@@ -64,6 +64,13 @@ function stock_scanner_scripts() {
         array('stock-scanner-style'), 
         STOCK_SCANNER_VERSION
     );
+    
+    // Enhanced dashboard styles
+    wp_enqueue_style('stock-scanner-dashboard-enhanced', 
+        STOCK_SCANNER_THEME_URL . '/assets/css/dashboard-enhanced.css', 
+        array('stock-scanner-dashboard'), 
+        STOCK_SCANNER_VERSION
+    );
 
     // Charts CSS
     wp_enqueue_style('stock-scanner-charts', 
@@ -99,6 +106,14 @@ function stock_scanner_scripts() {
     wp_enqueue_script('stock-scanner-dashboard', 
         STOCK_SCANNER_THEME_URL . '/assets/js/dashboard.js', 
         array('jquery', 'stock-scanner-api'), 
+        STOCK_SCANNER_VERSION, 
+        true
+    );
+    
+    // Enhanced dashboard functionality
+    wp_enqueue_script('stock-scanner-dashboard-enhanced', 
+        STOCK_SCANNER_THEME_URL . '/assets/js/dashboard-enhanced.js', 
+        array('stock-scanner-dashboard', 'chart-js'), 
         STOCK_SCANNER_VERSION, 
         true
     );
