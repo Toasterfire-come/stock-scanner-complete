@@ -150,6 +150,9 @@ require_once STOCK_SCANNER_THEME_DIR . '/includes/user-functions.php';
 require_once STOCK_SCANNER_THEME_DIR . '/includes/stock-functions.php';
 require_once STOCK_SCANNER_THEME_DIR . '/includes/chart-functions.php';
 require_once STOCK_SCANNER_THEME_DIR . '/includes/security-functions.php';
+require_once STOCK_SCANNER_THEME_DIR . '/includes/portfolio-functions.php';
+require_once STOCK_SCANNER_THEME_DIR . '/includes/watchlist-functions.php';
+require_once STOCK_SCANNER_THEME_DIR . '/includes/realtime-functions.php';
 
 /**
  * Widget Areas
