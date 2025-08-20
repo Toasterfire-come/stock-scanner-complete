@@ -356,6 +356,164 @@ if (!defined('DISALLOW_FILE_EDIT')) {
 }
 
 /**
+ * Additional AJAX Handlers for Portfolio and Watchlist
+ */
+
+// Portfolio AJAX handlers
+function stock_scanner_ajax_add_to_portfolio() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $ticker = sanitize_text_field($_POST['ticker'] ?? '');
+    $shares = floatval($_POST['shares'] ?? 0);
+    $cost_basis = floatval($_POST['cost_basis'] ?? 0);
+    $purchase_date = sanitize_text_field($_POST['purchase_date'] ?? '');
+    
+    $result = stock_scanner_add_to_portfolio($user_id, $ticker, $shares, $cost_basis, $purchase_date);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_add_to_portfolio', 'stock_scanner_ajax_add_to_portfolio');
+
+function stock_scanner_ajax_remove_from_portfolio() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $holding_id = intval($_POST['holding_id'] ?? 0);
+    
+    $result = stock_scanner_remove_from_portfolio($user_id, $holding_id);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_remove_from_portfolio', 'stock_scanner_ajax_remove_from_portfolio');
+
+function stock_scanner_ajax_get_portfolio() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $result = stock_scanner_get_user_portfolio_complete($user_id);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_get_portfolio', 'stock_scanner_ajax_get_portfolio');
+
+// Watchlist AJAX handlers
+function stock_scanner_ajax_add_to_watchlist() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $ticker = sanitize_text_field($_POST['ticker'] ?? '');
+    $notes = sanitize_textarea_field($_POST['notes'] ?? '');
+    $category = sanitize_text_field($_POST['category'] ?? 'default');
+    
+    $result = stock_scanner_add_to_watchlist($user_id, $ticker, $notes, $category);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_add_to_watchlist', 'stock_scanner_ajax_add_to_watchlist');
+
+function stock_scanner_ajax_remove_from_watchlist() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $item_id = intval($_POST['item_id'] ?? 0);
+    
+    $result = stock_scanner_remove_from_watchlist($user_id, $item_id);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_remove_from_watchlist', 'stock_scanner_ajax_remove_from_watchlist');
+
+function stock_scanner_ajax_get_watchlist() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $result = stock_scanner_get_user_watchlist_complete($user_id);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_get_watchlist', 'stock_scanner_ajax_get_watchlist');
+
+// Price Alert AJAX handlers
+function stock_scanner_ajax_create_price_alert() {
+    check_ajax_referer('stock_scanner_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not authenticated');
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $ticker = sanitize_text_field($_POST['ticker'] ?? '');
+    $target_price = floatval($_POST['target_price'] ?? 0);
+    $condition = sanitize_text_field($_POST['condition'] ?? '');
+    $email = sanitize_email($_POST['email'] ?? '');
+    
+    $result = stock_scanner_create_price_alert($user_id, $ticker, $target_price, $condition, $email);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_stock_scanner_create_price_alert', 'stock_scanner_ajax_create_price_alert');
+
+/**
  * Theme activation hook
  */
 function stock_scanner_theme_activation() {
