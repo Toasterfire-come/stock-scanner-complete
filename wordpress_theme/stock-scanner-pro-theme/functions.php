@@ -140,6 +140,22 @@ function stock_scanner_scripts() {
         true
     );
 
+    // Market overview functionality
+    wp_enqueue_script('stock-scanner-market-overview', 
+        STOCK_SCANNER_THEME_URL . '/assets/js/market-overview.js', 
+        array('stock-scanner-api'), 
+        STOCK_SCANNER_VERSION, 
+        true
+    );
+
+    // Stock lookup functionality
+    wp_enqueue_script('stock-scanner-stock-lookup', 
+        STOCK_SCANNER_THEME_URL . '/assets/js/stock-lookup.js', 
+        array('stock-scanner-api', 'chart-js'), 
+        STOCK_SCANNER_VERSION, 
+        true
+    );
+
     // Main theme JavaScript
     wp_enqueue_script('stock-scanner-main', 
         STOCK_SCANNER_THEME_URL . '/assets/js/main.js', 
