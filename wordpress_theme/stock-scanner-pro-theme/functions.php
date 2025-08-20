@@ -156,6 +156,22 @@ function stock_scanner_scripts() {
         true
     );
 
+    // Portfolio functionality
+    wp_enqueue_script('stock-scanner-portfolio', 
+        STOCK_SCANNER_THEME_URL . '/assets/js/portfolio.js', 
+        array('stock-scanner-api', 'chart-js'), 
+        STOCK_SCANNER_VERSION, 
+        true
+    );
+
+    // Watchlist functionality
+    wp_enqueue_script('stock-scanner-watchlist', 
+        STOCK_SCANNER_THEME_URL . '/assets/js/watchlist.js', 
+        array('stock-scanner-api'), 
+        STOCK_SCANNER_VERSION, 
+        true
+    );
+
     // Main theme JavaScript
     wp_enqueue_script('stock-scanner-main', 
         STOCK_SCANNER_THEME_URL . '/assets/js/main.js', 
