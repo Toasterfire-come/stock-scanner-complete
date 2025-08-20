@@ -396,5 +396,10 @@ function stock_scanner_theme_activation() {
     if (!get_option('stock_scanner_cache_timeout')) {
         update_option('stock_scanner_cache_timeout', 300);
     }
+    
+    // Create database tables
+    stock_scanner_create_portfolio_table();
+    stock_scanner_create_watchlist_table();
+    stock_scanner_create_alerts_table();
 }
 add_action('after_switch_theme', 'stock_scanner_theme_activation');
