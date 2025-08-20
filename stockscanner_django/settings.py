@@ -9,16 +9,7 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# XAMPP Auto-Detection and Configuration
-XAMPP_PATH = r"C:\xampp"
-XAMPP_MYSQL_PATH = os.path.join(XAMPP_PATH, "mysql", "bin")
-IS_XAMPP_AVAILABLE = os.path.exists(XAMPP_PATH) and os.path.exists(XAMPP_MYSQL_PATH)
 
-if IS_XAMPP_AVAILABLE:
-    print("INFO: XAMPP detected - configuring for XAMPP MySQL")
-    # Add XAMPP MySQL to PATH
-    if XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
-        os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
