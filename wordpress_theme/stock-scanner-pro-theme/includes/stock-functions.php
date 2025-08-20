@@ -392,74 +392,53 @@ function stock_scanner_get_stock_recommendation($data) {
 }
 
 /**
- * Generate stock alert suggestions
+ * Get user subscription details
  */
-function stock_scanner_suggest_alerts($data) {
-    if (!is_array($data) || !isset($data['current_price'])) {
-        return array();
+function stock_scanner_get_user_subscription($user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
     }
     
-    $current_price = floatval($data['current_price']);
-    $suggestions = array();
-    
-    // Support/Resistance levels
-    if (isset($data['day_low']) && isset($data['day_high'])) {
-        $day_low = floatval($data['day_low']);
-        $day_high = floatval($data['day_high']);
-        
-        if ($day_low > 0 && $day_high > 0) {
-            $suggestions[] = array(
-                'type' => 'support',
-                'price' => $day_low,
-                'reason' => "Today's low - potential support level",
-            );
-            
-            $suggestions[] = array(
-                'type' => 'resistance',
-                'price' => $day_high,
-                'reason' => "Today's high - potential resistance level",
-            );
-        }
-    }
-    
-    // 52-week levels
-    if (isset($data['week_52_low']) && isset($data['week_52_high'])) {
-        $week_52_low = floatval($data['week_52_low']);
-        $week_52_high = floatval($data['week_52_high']);
-        
-        if ($week_52_low > 0 && $week_52_high > 0) {
-            $suggestions[] = array(
-                'type' => 'breakout',
-                'price' => $week_52_high,
-                'reason' => '52-week high breakout',
-            );
-            
-            $suggestions[] = array(
-                'type' => 'breakdown',
-                'price' => $week_52_low,
-                'reason' => '52-week low breakdown',
-            );
-        }
-    }
-    
-    // Percentage-based alerts
-    $percentage_levels = array(5, 10, 15, 20);
-    foreach ($percentage_levels as $percentage) {
-        $upper_price = $current_price * (1 + $percentage / 100);
-        $lower_price = $current_price * (1 - $percentage / 100);
-        
-        $suggestions[] = array(
-            'type' => 'gain',
-            'price' => $upper_price,
-            'reason' => "{$percentage}% gain target",
-        );
-        
-        $suggestions[] = array(
-            'type' => 'loss',
-            'price' => $lower_price,
-            'reason' => "{$percentage}% stop loss",
+    if (!$user_id) {
+        return array(
+            'plan' => 'free',
+            'status' => 'inactive',
+            'api_calls_used' => 0,
+            'api_calls_limit' => 100,
         );
     }
     
-    return $suggestions;
+    // Get subscription from user meta (in production, this would come from payment processor)
+    $subscription_plan = get_user_meta($user_id, 'stock_scanner_subscription_plan', true);
+    $subscription_status = get_user_meta($user_id, 'stock_scanner_subscription_status', true);
+    $api_calls_used = get_user_meta($user_id, 'stock_scanner_api_calls_used', true);
+    
+    // Default values
+    if (empty($subscription_plan)) {
+        $subscription_plan = 'free';
+    }
+    if (empty($subscription_status)) {
+        $subscription_status = 'active';
+    }
+    if (empty($api_calls_used)) {
+        $api_calls_used = 0;
+    }
+    
+    // Define plan limits
+    $plan_limits = array(
+        'free' => 100,
+        'basic' => 1000,
+        'pro' => 10000,
+        'unlimited' => PHP_INT_MAX,
+    );
+    
+    $api_calls_limit = isset($plan_limits[$subscription_plan]) ? $plan_limits[$subscription_plan] : 100;
+    
+    return array(
+        'plan' => $subscription_plan,
+        'status' => $subscription_status,
+        'api_calls_used' => intval($api_calls_used),
+        'api_calls_limit' => $api_calls_limit,
+        'user_id' => $user_id,
+    );
 }
