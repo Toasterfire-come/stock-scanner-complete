@@ -79,6 +79,20 @@ function stock_scanner_scripts() {
         STOCK_SCANNER_VERSION
     );
 
+    // Market pages CSS
+    wp_enqueue_style('stock-scanner-market-pages', 
+        STOCK_SCANNER_THEME_URL . '/assets/css/market-pages.css', 
+        array('stock-scanner-style'), 
+        STOCK_SCANNER_VERSION
+    );
+
+    // Portfolio CSS
+    wp_enqueue_style('stock-scanner-portfolio', 
+        STOCK_SCANNER_THEME_URL . '/assets/css/portfolio.css', 
+        array('stock-scanner-style'), 
+        STOCK_SCANNER_VERSION
+    );
+
     // Font Awesome
     wp_enqueue_style('font-awesome', 
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', 
