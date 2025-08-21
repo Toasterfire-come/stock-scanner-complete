@@ -89,7 +89,9 @@ function stock_scanner_scripts() {
     ));
     
     // Enqueue Chart.js for stock charts
-    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
+    if (!wp_script_is('chart-js', 'registered') && !wp_script_is('chart-js', 'enqueued')) {
+        wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
+    }
     
     // Enqueue theme JavaScript (check if file exists)
     if (file_exists(get_template_directory() . '/assets/js/theme.js')) {
@@ -97,7 +99,9 @@ function stock_scanner_scripts() {
     }
     // Chart.js theme defaults
     if (file_exists(get_template_directory() . '/assets/js/chart-theme.js')) {
-        wp_enqueue_script('stock-scanner-chart-theme', get_template_directory_uri() . '/assets/js/chart-theme.js', array('chart-js'), '1.0.0', true);
+        // Depend on chart-js only if registered/enqueued
+        $deps = wp_script_is('chart-js', 'registered') || wp_script_is('chart-js', 'enqueued') ? array('chart-js') : array();
+        wp_enqueue_script('stock-scanner-chart-theme', get_template_directory_uri() . '/assets/js/chart-theme.js', $deps, '1.0.0', true);
     }
     
     // Enqueue plugin integration JavaScript
@@ -107,9 +111,9 @@ function stock_scanner_scripts() {
     
     // Localize script for AJAX with WordPress admin colors
     // Localize both plugin integration and enhanced UI consumers
-    wp_localize_script('stock-scanner-plugin-js', 'stock_scanner_theme', array(
+    wp_localize_script('stock-scanner-plugin-js', 'ssTheme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('stock_scanner_theme_nonce'),
+        'nonce' => wp_create_nonce('ss_theme_nonce'),
         'colors' => array(
             'primary' => get_theme_mod('primary_color', '#2271b1'),
             'secondary' => '#646970',
@@ -127,6 +131,8 @@ function stock_scanner_scripts() {
         'settings' => (class_exists('StockScannerThemeSettings') ? StockScannerThemeSettings::get_settings() : array()),
         'rest_nonce' => wp_create_nonce('wp_rest')
     ));
+    // Back-compat global to avoid breaking existing JS expecting stock_scanner_theme
+    wp_add_inline_script('stock-scanner-plugin-js', 'window.stock_scanner_theme = window.stock_scanner_theme || window.ssTheme;', 'before');
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
 
@@ -143,7 +149,9 @@ add_action('wp_enqueue_scripts', function() {
     if ($is_home || $is_screener || $is_watchlist || $is_news || $is_portfolio) {
         // Bootstrap CSS removed to keep a single site-wide stylesheet
         // wp_enqueue_style('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', [], '5.3.2');
-        wp_enqueue_script('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', [], '5.3.2', true);
+        if (!wp_script_is('bootstrap-5', 'registered') && !wp_script_is('bootstrap-5', 'enqueued')) {
+            wp_enqueue_script('bootstrap-5', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', [], '5.3.2', true);
+        }
     }
 
     // Shared functions (managers for News/Watchlist/Portfolio)
@@ -170,8 +178,16 @@ require_once get_template_directory() . '/inc/admin-settings.php';
 
 // Create screener saved screens table on theme activation if it doesn't exist
 function stock_scanner_create_tables(){
+    // Avoid creating plugin-owned tables if plugin is active
+    if (function_exists('is_stock_scanner_plugin_active') && is_stock_scanner_plugin_active()) {
+        return;
+    }
     global $wpdb; $charset = $wpdb->get_charset_collate();
     $table = $wpdb->prefix . 'stock_scanner_screens';
+    // Only attempt creation if table does not exist
+    $like = $wpdb->esc_like($table);
+    $exists = (bool) $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $like));
+    if ($exists) { return; }
     $sql = "CREATE TABLE IF NOT EXISTS $table (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id BIGINT UNSIGNED NOT NULL,
@@ -1477,30 +1493,34 @@ new StockScannerImageOptimizer();
  */
 function stock_scanner_custom_post_types() {
     // Stock Analysis post type
-    register_post_type('stock_analysis', array(
-        'labels' => array(
-            'name' => 'Stock Analysis',
-            'singular_name' => 'Analysis',
-        ),
-        'public' => true,
-        'has_archive' => true,
-        'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
-        'rewrite' => array('slug' => 'analysis'),
-        'show_in_rest' => true,
-    ));
+    if (!post_type_exists('stock_analysis')) {
+        register_post_type('stock_analysis', array(
+            'labels' => array(
+                'name' => 'Stock Analysis',
+                'singular_name' => 'Analysis',
+            ),
+            'public' => true,
+            'has_archive' => true,
+            'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
+            'rewrite' => array('slug' => 'analysis'),
+            'show_in_rest' => true,
+        ));
+    }
     
     // Market News post type
-    register_post_type('market_news', array(
-        'labels' => array(
-            'name' => 'Market News',
-            'singular_name' => 'News',
-        ),
-        'public' => true,
-        'has_archive' => true,
-        'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
-        'rewrite' => array('slug' => 'news'),
-        'show_in_rest' => true,
-    ));
+    if (!post_type_exists('market_news')) {
+        register_post_type('market_news', array(
+            'labels' => array(
+                'name' => 'Market News',
+                'singular_name' => 'News',
+            ),
+            'public' => true,
+            'has_archive' => true,
+            'supports' => array('title', 'editor', 'thumbnail', 'excerpt'),
+            'rewrite' => array('slug' => 'news'),
+            'show_in_rest' => true,
+        ));
+    }
 }
 add_action('init', 'stock_scanner_custom_post_types');
 
@@ -1509,28 +1529,32 @@ add_action('init', 'stock_scanner_custom_post_types');
  */
 function stock_scanner_custom_taxonomies() {
     // Stock sectors taxonomy
-    register_taxonomy('stock_sector', array('stock_analysis'), array(
-        'labels' => array(
-            'name' => 'Stock Sectors',
-            'singular_name' => 'Sector',
-        ),
-        'public' => true,
-        'hierarchical' => true,
-        'rewrite' => array('slug' => 'sector'),
-        'show_in_rest' => true,
-    ));
+    if (!taxonomy_exists('stock_sector')) {
+        register_taxonomy('stock_sector', array('stock_analysis'), array(
+            'labels' => array(
+                'name' => 'Stock Sectors',
+                'singular_name' => 'Sector',
+            ),
+            'public' => true,
+            'hierarchical' => true,
+            'rewrite' => array('slug' => 'sector'),
+            'show_in_rest' => true,
+        ));
+    }
     
     // Market categories taxonomy
-    register_taxonomy('market_category', array('market_news'), array(
-        'labels' => array(
-            'name' => 'Market Categories',
-            'singular_name' => 'Category',
-        ),
-        'public' => true,
-        'hierarchical' => true,
-        'rewrite' => array('slug' => 'category'),
-        'show_in_rest' => true,
-    ));
+    if (!taxonomy_exists('market_category')) {
+        register_taxonomy('market_category', array('market_news'), array(
+            'labels' => array(
+                'name' => 'Market Categories',
+                'singular_name' => 'Category',
+            ),
+            'public' => true,
+            'hierarchical' => true,
+            'rewrite' => array('slug' => 'category'),
+            'show_in_rest' => true,
+        ));
+    }
 }
 add_action('init', 'stock_scanner_custom_taxonomies');
 

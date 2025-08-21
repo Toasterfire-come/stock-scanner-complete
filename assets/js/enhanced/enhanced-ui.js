@@ -1723,7 +1723,8 @@ document.head.appendChild(style);
 (function(){
   if (typeof window === 'undefined') return;
 
-  const settings = (window.stock_scanner_theme && window.stock_scanner_theme.settings) || {};
+  const THEME = window.ssTheme || window.stock_scanner_theme || {};
+  const settings = (THEME && THEME.settings) || {};
   const enableSkeletons = !!settings.feature_skeletons;
   const enableCmdPalette = !!settings.feature_command_palette;
 
