@@ -6,6 +6,9 @@
 (function($) {
     'use strict';
 
+    // Compatibility: prefer ssTheme but support existing stock_scanner_theme
+    var THEME = window.ssTheme || window.stock_scanner_theme || {};
+
     var StockScannerIntegration = {
         init: function() {
             this.bindEvents();
@@ -50,12 +53,12 @@
             $result.html('<div class="loading">Fetching quote for ' + symbol + '...</div>');
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'get_stock_quote',
+                    action: 'stock_scanner_get_quote',
                     symbol: symbol,
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -78,7 +81,8 @@
                         // Update usage display
                         StockScannerIntegration.updateUsageDisplay();
                     } else {
-                        $result.html('<div class="error">' + response.data + '</div>');
+                        var msg = typeof response.data === 'string' ? response.data : (response.data && response.data.message) || 'Unknown error';
+                        $result.html('<div class="error">' + msg + '</div>');
                     }
                 },
                 error: function() {
@@ -113,13 +117,13 @@
             $button.prop('disabled', true).text('Processing...');
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'upgrade_membership',
                     plan: plan,
                     price: price,
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -158,7 +162,7 @@
         addToWatchlist: function(e) {
             e.preventDefault();
             
-            var symbol = $(this).data('symbol');
+            var symbol = $(this).data('symbol') || $('#stock-symbol').val().trim().toUpperCase();
             var $button = $(this);
             
             if (!symbol) {
@@ -169,12 +173,12 @@
             $button.prop('disabled', true).text('Adding...');
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'add_to_watchlist',
                     symbol: symbol,
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -207,12 +211,12 @@
             $button.prop('disabled', true).text('Removing...');
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'remove_from_watchlist',
                     symbol: symbol,
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -241,11 +245,11 @@
             $container.addClass('loading');
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'get_market_overview',
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -275,9 +279,9 @@
             $button.prop('disabled', true).text('Sending...');
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
-                data: formData + '&action=submit_contact_form&nonce=' + stock_scanner_theme.nonce,
+                data: formData + '&action=submit_contact_form&nonce=' + THEME.nonce,
                 success: function(response) {
                     if (response.success) {
                         $form[0].reset();
@@ -303,11 +307,11 @@
             }
 
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'get_recent_calls',
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -354,11 +358,11 @@
 
         refreshUsageStats: function() {
             $.ajax({
-                url: stock_scanner_theme.ajax_url,
+                url: THEME.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'get_usage_stats',
-                    nonce: stock_scanner_theme.nonce
+                    nonce: THEME.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -395,7 +399,7 @@
 
     // Initialize when document is ready
     $(document).ready(function() {
-        if (typeof stock_scanner_theme !== 'undefined') {
+        if (typeof THEME !== 'undefined' && THEME.ajax_url) {
             StockScannerIntegration.init();
         }
     });

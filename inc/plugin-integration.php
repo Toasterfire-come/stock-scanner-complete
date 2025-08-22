@@ -17,6 +17,22 @@ function is_stock_scanner_plugin_active() {
 }
 
 /**
+ * Check if a database table exists (cached per request)
+ */
+function ss_theme_table_exists($table_name_full) {
+    static $cache = array();
+    if (isset($cache[$table_name_full])) {
+        return $cache[$table_name_full];
+    }
+    global $wpdb;
+    // Protect against accidental injection; $table_name_full should already be prefixed
+    $like = $wpdb->esc_like($table_name_full);
+    $found = (bool) $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $like));
+    $cache[$table_name_full] = $found;
+    return $found;
+}
+
+/**
  * Get user membership level
  */
 function get_user_membership_level($user_id = null) {
@@ -44,8 +60,34 @@ function get_user_api_usage($user_id = null) {
         return array('monthly_calls' => 0, 'daily_calls' => 0, 'hourly_calls' => 0, 'monthly_limit' => 15);
     }
     
+    // If plugin is not active or table missing, return safe defaults
+    if (!is_stock_scanner_plugin_active()) {
+        $limits = get_membership_limits(get_user_membership_level($user_id));
+        return array(
+            'monthly_calls' => 0,
+            'daily_calls' => 0,
+            'hourly_calls' => 0,
+            'suspicious_calls' => 0,
+            'monthly_limit' => $limits['monthly'],
+            'daily_limit' => $limits['daily'],
+            'hourly_limit' => $limits['hourly']
+        );
+    }
+    
     global $wpdb;
     $table = $wpdb->prefix . 'stock_scanner_usage';
+    if (!ss_theme_table_exists($table)) {
+        $limits = get_membership_limits(get_user_membership_level($user_id));
+        return array(
+            'monthly_calls' => 0,
+            'daily_calls' => 0,
+            'hourly_calls' => 0,
+            'suspicious_calls' => 0,
+            'monthly_limit' => $limits['monthly'],
+            'daily_limit' => $limits['daily'],
+            'hourly_limit' => $limits['hourly']
+        );
+    }
     
     $current_month = date('Y-m');
     $current_date = date('Y-m-d');
@@ -111,7 +153,17 @@ function check_user_security_status($user_id = null) {
         return array('status' => 'guest', 'message' => '');
     }
     
+    // If plugin inactive or table missing, assume active
+    if (!is_stock_scanner_plugin_active()) {
+        return array('status' => 'active', 'message' => '');
+    }
+    
     global $wpdb;
+    
+    $subs_table = $wpdb->prefix . 'stock_scanner_subscriptions';
+    if (!ss_theme_table_exists($subs_table)) {
+        return array('status' => 'active', 'message' => '');
+    }
     
     $subscription = $wpdb->get_row($wpdb->prepare(
         "SELECT is_banned, ban_reason, banned_at FROM {$wpdb->prefix}stock_scanner_subscriptions WHERE user_id = %d",
@@ -141,7 +193,16 @@ function get_user_notifications($user_id = null, $unread_only = false) {
         return array();
     }
     
+    // If plugin inactive or table missing, return empty
+    if (!is_stock_scanner_plugin_active()) {
+        return array();
+    }
+    
     global $wpdb;
+    $notif_table = $wpdb->prefix . 'stock_scanner_notifications';
+    if (!ss_theme_table_exists($notif_table)) {
+        return array();
+    }
     
     $where_clause = "user_id = %d";
     $params = array($user_id);
@@ -501,7 +562,7 @@ if (!shortcode_exists('stock_scanner_pricing')) { add_shortcode('stock_scanner_p
  * AJAX: Dismiss notification
  */
 function handle_dismiss_notification_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $notification_id = intval($_POST['notification_id'] ?? 0);
     $user_id = get_current_user_id();
@@ -518,13 +579,15 @@ function handle_dismiss_notification_ajax() {
         wp_send_json_error('Failed to dismiss notification');
     }
 }
-add_action('wp_ajax_dismiss_notification', 'handle_dismiss_notification_ajax');
+if (!has_action('wp_ajax_dismiss_notification')) {
+    add_action('wp_ajax_dismiss_notification', 'handle_dismiss_notification_ajax');
+}
 
 /**
  * AJAX: Get user notifications
  */
 function handle_get_notifications_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -538,13 +601,15 @@ function handle_get_notifications_ajax() {
         'count' => count($notifications)
     ));
 }
-add_action('wp_ajax_get_notifications', 'handle_get_notifications_ajax');
+if (!has_action('wp_ajax_get_notifications')) {
+    add_action('wp_ajax_get_notifications', 'handle_get_notifications_ajax');
+}
 
 /**
  * AJAX handler for stock quotes
  */
 function handle_stock_quote_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $symbol = sanitize_text_field($_POST['symbol'] ?? '');
     if (empty($symbol)) {
@@ -569,7 +634,7 @@ function handle_stock_quote_ajax() {
     }
     
     // Get real stock data from Django backend
-    $response = make_backend_api_request("stock/{$symbol}/");
+    $response = make_backend_api_request("stocks/{$symbol}/");
     
     if (is_wp_error($response) || empty($response)) {
         error_log("Stock API fallback for symbol: {$symbol}. Error: " . (is_wp_error($response) ? $response->get_error_message() : 'Empty response'));
@@ -620,14 +685,18 @@ function handle_stock_quote_ajax() {
     
     wp_send_json_success($data);
 }
-add_action('wp_ajax_stock_scanner_get_quote', 'handle_stock_quote_ajax');
-add_action('wp_ajax_nopriv_stock_scanner_get_quote', 'handle_stock_quote_ajax');
+if (!has_action('wp_ajax_stock_scanner_get_quote')) {
+    add_action('wp_ajax_stock_scanner_get_quote', 'handle_stock_quote_ajax');
+}
+if (!has_action('wp_ajax_nopriv_stock_scanner_get_quote')) {
+    add_action('wp_ajax_nopriv_stock_scanner_get_quote', 'handle_stock_quote_ajax');
+}
 
 /**
  * AJAX handler for recent API calls
  */
 function handle_recent_calls_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -642,6 +711,10 @@ function handle_recent_calls_ajax() {
     
     global $wpdb;
     $table_name = $wpdb->prefix . 'stock_scanner_usage';
+    if (!ss_theme_table_exists($table_name)) {
+        wp_send_json_success(array('calls' => array()));
+        return;
+    }
     
     $recent_calls = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table_name WHERE user_id = %d ORDER BY created_at DESC LIMIT 10",
@@ -650,13 +723,15 @@ function handle_recent_calls_ajax() {
     
     wp_send_json_success(array('calls' => $recent_calls));
 }
-add_action('wp_ajax_get_recent_calls', 'handle_recent_calls_ajax');
+if (!has_action('wp_ajax_get_recent_calls')) {
+    add_action('wp_ajax_get_recent_calls', 'handle_recent_calls_ajax');
+}
 
 /**
  * AJAX handler for membership upgrades
  */
 function handle_membership_upgrade_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -686,13 +761,15 @@ function handle_membership_upgrade_ajax() {
     
     wp_send_json_success($payment_data);
 }
-add_action('wp_ajax_upgrade_membership', 'handle_membership_upgrade_ajax');
+if (!has_action('wp_ajax_upgrade_membership')) {
+    add_action('wp_ajax_upgrade_membership', 'handle_membership_upgrade_ajax');
+}
 
 /**
  * AJAX handler for adding to watchlist
  */
 function handle_add_to_watchlist_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -718,13 +795,15 @@ function handle_add_to_watchlist_ajax() {
         wp_send_json_error('Stock is already in your watchlist.');
     }
 }
-add_action('wp_ajax_add_to_watchlist', 'handle_add_to_watchlist_ajax');
+if (!has_action('wp_ajax_add_to_watchlist')) {
+    add_action('wp_ajax_add_to_watchlist', 'handle_add_to_watchlist_ajax');
+}
 
 /**
  * AJAX handler for removing from watchlist
  */
 function handle_remove_from_watchlist_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -747,13 +826,15 @@ function handle_remove_from_watchlist_ajax() {
     
     wp_send_json_success(array('message' => 'Removed ' . $symbol . ' from watchlist'));
 }
-add_action('wp_ajax_remove_from_watchlist', 'handle_remove_from_watchlist_ajax');
+if (!has_action('wp_ajax_remove_from_watchlist')) {
+    add_action('wp_ajax_remove_from_watchlist', 'handle_remove_from_watchlist_ajax');
+}
 
 /**
  * AJAX handler for market overview
  */
 function handle_market_overview_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -770,15 +851,17 @@ function handle_market_overview_ajax() {
     if (is_stock_scanner_plugin_active()) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'stock_scanner_usage';
-        $wpdb->insert(
-            $table_name,
-            array(
-                'user_id' => $user_id,
-                'endpoint' => 'market_overview',
-                'symbol' => 'MARKET_DATA',
-                'created_at' => current_time('mysql')
-            )
-        );
+        if (ss_theme_table_exists($table_name)) {
+            $wpdb->insert(
+                $table_name,
+                array(
+                    'user_id' => $user_id,
+                    'endpoint' => 'market_overview',
+                    'symbol' => 'MARKET_DATA',
+                    'created_at' => current_time('mysql')
+                )
+            );
+        }
     }
     
     // Get real market data from Django backend
@@ -822,13 +905,15 @@ function handle_market_overview_ajax() {
     
     wp_send_json_success(array('data' => $market_data, 'html' => $html));
 }
-add_action('wp_ajax_get_market_overview', 'handle_market_overview_ajax');
+if (!has_action('wp_ajax_get_market_overview')) {
+    add_action('wp_ajax_get_market_overview', 'handle_market_overview_ajax');
+}
 
 /**
  * AJAX handler for market movers (gainers, losers, most active)
  */
 function handle_market_movers_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -845,15 +930,17 @@ function handle_market_movers_ajax() {
     if (is_stock_scanner_plugin_active()) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'stock_scanner_usage';
-        $wpdb->insert(
-            $table_name,
-            array(
-                'user_id' => $user_id,
-                'endpoint' => 'market_movers',
-                'symbol' => 'MARKET_MOVERS',
-                'created_at' => current_time('mysql')
-            )
-        );
+        if (ss_theme_table_exists($table_name)) {
+            $wpdb->insert(
+                $table_name,
+                array(
+                    'user_id' => $user_id,
+                    'endpoint' => 'market_movers',
+                    'symbol' => 'MARKET_MOVERS',
+                    'created_at' => current_time('mysql')
+                )
+            );
+        }
     }
     
     // Get real trending data from Django backend
@@ -880,13 +967,15 @@ function handle_market_movers_ajax() {
     
     wp_send_json_success($response);
 }
-add_action('wp_ajax_get_market_movers', 'handle_market_movers_ajax');
+if (!has_action('wp_ajax_get_market_movers')) {
+    add_action('wp_ajax_get_market_movers', 'handle_market_movers_ajax');
+}
 
 /**
  * AJAX handler for major indices data
  */
 function handle_major_indices_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -919,7 +1008,7 @@ function handle_major_indices_ajax() {
     $indices_data = array();
     
     foreach ($indices as $symbol) {
-        $response = make_backend_api_request("stock/{$symbol}/");
+        $response = make_backend_api_request("stocks/{$symbol}/");
         if (!is_wp_error($response) && !empty($response)) {
             $indices_data[] = $response;
         }
@@ -939,13 +1028,15 @@ function handle_major_indices_ajax() {
     
     wp_send_json_success($indices_data);
 }
-add_action('wp_ajax_get_major_indices', 'handle_major_indices_ajax');
+if (!has_action('wp_ajax_get_major_indices')) {
+    add_action('wp_ajax_get_major_indices', 'handle_major_indices_ajax');
+}
 
 /**
  * AJAX handler for contact form
  */
 function handle_contact_form_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $name = sanitize_text_field($_POST['name']);
     $email = sanitize_email($_POST['email']);
@@ -980,14 +1071,18 @@ function handle_contact_form_ajax() {
         wp_send_json_error('Failed to send message. Please try again later.');
     }
 }
-add_action('wp_ajax_submit_contact_form', 'handle_contact_form_ajax');
-add_action('wp_ajax_nopriv_submit_contact_form', 'handle_contact_form_ajax');
+if (!has_action('wp_ajax_submit_contact_form')) {
+    add_action('wp_ajax_submit_contact_form', 'handle_contact_form_ajax');
+}
+if (!has_action('wp_ajax_nopriv_submit_contact_form')) {
+    add_action('wp_ajax_nopriv_submit_contact_form', 'handle_contact_form_ajax');
+}
 
 /**
  * AJAX handler for usage stats
  */
 function handle_usage_stats_ajax() {
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     
     $user_id = get_current_user_id();
     if (!$user_id) {
@@ -998,7 +1093,9 @@ function handle_usage_stats_ajax() {
     $usage = get_user_api_usage($user_id);
     wp_send_json_success($usage);
 }
-add_action('wp_ajax_get_usage_stats', 'handle_usage_stats_ajax');
+if (!has_action('wp_ajax_get_usage_stats')) {
+    add_action('wp_ajax_get_usage_stats', 'handle_usage_stats_ajax');
+}
 
 /**
  * Stock Lookup Tool Shortcode
@@ -1145,23 +1242,34 @@ function stock_scanner_require_membership_level($min_level = 'silver') {
     }
 }
 
+function ss_theme_verify_nonce() {
+    // Accept both new and legacy nonce keys for backward compatibility
+    if (isset($_POST['nonce'])) {
+        if (wp_verify_nonce($_POST['nonce'], 'ss_theme_nonce')) return true;
+        if (wp_verify_nonce($_POST['nonce'], 'stock_scanner_theme_nonce')) return true;
+    }
+    return false;
+}
+
 function screener_sanitize_name($name){
     $name = sanitize_text_field($name);
     return wp_trim_words($name, 8, '');
 }
 
 function ajax_screener_list_screens(){
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     stock_scanner_require_membership_level('silver');
     global $wpdb; $uid = get_current_user_id();
     $table = $wpdb->prefix . 'stock_scanner_screens';
     $rows = $wpdb->get_results($wpdb->prepare("SELECT id,name,created_at,updated_at FROM $table WHERE user_id=%d ORDER BY updated_at DESC LIMIT 50", $uid), ARRAY_A);
     wp_send_json_success($rows ?: []);
 }
-add_action('wp_ajax_screener_list_screens', 'ajax_screener_list_screens');
+if (!has_action('wp_ajax_screener_list_screens')) {
+    add_action('wp_ajax_screener_list_screens', 'ajax_screener_list_screens');
+}
 
 function ajax_screener_save_screen(){
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     stock_scanner_require_membership_level('silver');
     global $wpdb; $uid = get_current_user_id();
     $name = screener_sanitize_name($_POST['name'] ?? '');
@@ -1177,10 +1285,12 @@ function ajax_screener_save_screen(){
     ], ['%d','%s','%s','%s','%s']);
     wp_send_json_success(['id'=>$wpdb->insert_id]);
 }
-add_action('wp_ajax_screener_save_screen', 'ajax_screener_save_screen');
+if (!has_action('wp_ajax_screener_save_screen')) {
+    add_action('wp_ajax_screener_save_screen', 'ajax_screener_save_screen');
+}
 
 function ajax_screener_get_screen(){
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     stock_scanner_require_membership_level('silver');
     global $wpdb; $uid = get_current_user_id();
     $id = absint($_POST['id'] ?? 0);
@@ -1190,10 +1300,12 @@ function ajax_screener_get_screen(){
     if (!$row) wp_send_json_error('Not found');
     wp_send_json_success($row);
 }
-add_action('wp_ajax_screener_get_screen', 'ajax_screener_get_screen');
+if (!has_action('wp_ajax_screener_get_screen')) {
+    add_action('wp_ajax_screener_get_screen', 'ajax_screener_get_screen');
+}
 
 function ajax_screener_delete_screen(){
-    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+    if (!ss_theme_verify_nonce()) { wp_send_json_error('Invalid nonce'); }
     stock_scanner_require_membership_level('silver');
     global $wpdb; $uid = get_current_user_id();
     $id = absint($_POST['id'] ?? 0);
@@ -1202,6 +1314,8 @@ function ajax_screener_delete_screen(){
     $wpdb->delete($table, ['id'=>$id,'user_id'=>$uid], ['%d','%d']);
     wp_send_json_success(true);
 }
-add_action('wp_ajax_screener_delete_screen', 'ajax_screener_delete_screen');
+if (!has_action('wp_ajax_screener_delete_screen')) {
+    add_action('wp_ajax_screener_delete_screen', 'ajax_screener_delete_screen');
+}
 
 ?>

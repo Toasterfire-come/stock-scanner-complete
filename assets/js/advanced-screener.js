@@ -1,9 +1,9 @@
 (function(){
-  if (typeof window === 'undefined') return;
+  const THEME = window.ssTheme || window.stock_scanner_theme || {};
   const lc = 'screenerSavedScreens';
-  const api = (action, body={}) => fetch(stock_scanner_theme.ajax_url, {
+  const api = (action, body={}) => fetch(THEME.ajax_url, {
     method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body: new URLSearchParams(Object.assign({ action, nonce: stock_scanner_theme.nonce }, body))
+    body: new URLSearchParams(Object.assign({ action, nonce: THEME.nonce }, body))
   }).then(r=>r.json());
 
   // Serialize filters to query safely (client-side only; server validates on use)
