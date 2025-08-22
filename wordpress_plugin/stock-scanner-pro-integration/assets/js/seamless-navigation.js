@@ -1,1 +1,0 @@
-document.addEventListener('click', function(e){ /* reserved for future smooth nav */ });
