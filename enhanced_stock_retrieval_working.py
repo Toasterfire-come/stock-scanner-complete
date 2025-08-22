@@ -403,12 +403,12 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'bid_ask_spread': '',
         'days_range': '',
         # Use shared utility for extracting stock data from info
-        **extract_stock_data_from_info(info, symbol, current_price) if info else {
+        **(extract_stock_data_from_info(info, symbol, current_price) if info else {
             'days_low': None, 'days_high': None, 'volume': None, 'volume_today': None,
             'avg_volume_3mon': None, 'market_cap': None, 'pe_ratio': None, 'dividend_yield': None,
             'one_year_target': None, 'week_52_low': None, 'week_52_high': None,
             'earnings_per_share': None, 'book_value': None, 'price_to_book': None, 'exchange': 'NYSE'
-        },
+        }),
         'dvav': None,
         'shares_available': None,
         'market_cap_change_3mon': None,

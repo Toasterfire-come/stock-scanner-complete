@@ -194,6 +194,6 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
     },
-}CSRF_TRUSTED_ORIGINS = ["https://api.retailtradescanner.com"]
+}
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = ["https://api.retailtradescanner.com"]

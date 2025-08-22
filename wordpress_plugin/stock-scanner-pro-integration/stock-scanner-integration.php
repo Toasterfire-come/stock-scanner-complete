@@ -245,6 +245,14 @@ class Stock_Scanner_Integration {
         add_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
         add_option('stock_scanner_version', STOCK_SCANNER_VERSION);
         
+        // Payment defaults (PayPal)
+        if (!get_option('paypal_mode')) { add_option('paypal_mode', 'sandbox'); }
+        if (!get_option('paypal_client_id')) { add_option('paypal_client_id', ''); }
+        if (!get_option('paypal_client_secret')) { add_option('paypal_client_secret', ''); }
+        if (!get_option('paypal_return_url')) { add_option('paypal_return_url', home_url('/premium-plans')); }
+        if (!get_option('paypal_cancel_url')) { add_option('paypal_cancel_url', home_url('/premium-plans')); }
+        if (!get_option('paypal_webhook_url')) { add_option('paypal_webhook_url', home_url('/wp-json/stock-scanner/v1/paypal-webhook')); }
+        
         // Anti-bot and rate limiting settings (admin discretion only)
         add_option('stock_scanner_rate_limits', json_encode(array(
             'requests_per_minute' => 10,
@@ -266,9 +274,6 @@ class Stock_Scanner_Integration {
             'suspicious_patterns' => array(
                 'rapid_requests' => 20, // requests per minute
                 'identical_timing' => 5, // identical intervals
-                'no_javascript' => true,
-                'missing_headers' => true,
-                'unusual_sequence' => true
             )
         )));
     }
@@ -371,76 +376,25 @@ class Stock_Scanner_Integration {
      */
     public function add_admin_menu() {
         try {
-            // Check if theme menu already exists
-            global $admin_page_hooks;
-            
-            if (isset($admin_page_hooks['stock-scanner-settings'])) {
-            // Theme menu exists, add as submenus to it
-            add_submenu_page(
-                'stock-scanner-settings',
-                'Security Analytics',
-                'Security',
-                'manage_options',
-                'stock-scanner-security',
-                array($this, 'admin_security_page')
-            );
-            
-            add_submenu_page(
-                'stock-scanner-settings',
-                'Rate Limiting',
-                'Rate Limits',
-                'manage_options',
-                'stock-scanner-rate-limits',
-                array($this, 'admin_rate_limits_page')
-            );
-            
-            add_submenu_page(
-                'stock-scanner-settings',
-                'Plugin Settings',
-                'Plugin Config',
-                'manage_options',
-                'stock-scanner-plugin-settings',
-                array($this, 'admin_settings_page')
-            );
-        } else {
-            // Theme menu doesn't exist, create our own
+            // Create a single top-level menu with one Settings submenu
             add_menu_page(
                 'Stock Scanner',
                 'Stock Scanner',
                 'manage_options',
                 'stock-scanner-main',
-                array($this, 'admin_security_page'),
+                array($this, 'admin_settings_page'),
                 'dashicons-chart-line',
                 30
             );
             
             add_submenu_page(
                 'stock-scanner-main',
-                'Security Analytics',
-                'Security',
-                'manage_options',
-                'stock-scanner-main',
-                array($this, 'admin_security_page')
-            );
-            
-            add_submenu_page(
-                'stock-scanner-main',
-                'Rate Limiting',
-                'Rate Limits',
-                'manage_options',
-                'stock-scanner-rate-limits',
-                array($this, 'admin_rate_limits_page')
-            );
-            
-            add_submenu_page(
-                'stock-scanner-main',
-                'Plugin Settings',
+                'Settings',
                 'Settings',
                 'manage_options',
                 'stock-scanner-plugin-settings',
-                                 array($this, 'admin_settings_page')
-             );
-         }
+                array($this, 'admin_settings_page')
+            );
         } catch (Exception $e) {
             error_log('Stock Scanner Menu Error: ' . $e->getMessage());
         }

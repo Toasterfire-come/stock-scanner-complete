@@ -705,6 +705,23 @@ class Stock_Scanner_Admin_Interface {
                 update_option('stock_scanner_enable_custom_endpoints', 0);
             }
             
+            // PayPal settings
+            if (isset($_POST['paypal_mode'])) {
+                update_option('paypal_mode', sanitize_text_field($_POST['paypal_mode']));
+            }
+            if (isset($_POST['paypal_client_id'])) {
+                update_option('paypal_client_id', sanitize_text_field($_POST['paypal_client_id']));
+            }
+            if (isset($_POST['paypal_client_secret'])) {
+                update_option('paypal_client_secret', sanitize_text_field($_POST['paypal_client_secret']));
+            }
+            if (isset($_POST['paypal_return_url'])) {
+                update_option('paypal_return_url', esc_url_raw($_POST['paypal_return_url']));
+            }
+            if (isset($_POST['paypal_cancel_url'])) {
+                update_option('paypal_cancel_url', esc_url_raw($_POST['paypal_cancel_url']));
+            }
+            
             echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
         }
         
@@ -713,6 +730,13 @@ class Stock_Scanner_Admin_Interface {
         $security_mode = get_option('stock_scanner_security_mode', 'normal');
         $enable_custom_endpoints = get_option('stock_scanner_enable_custom_endpoints', 0);
         
+        // PayPal settings
+        $paypal_mode = get_option('paypal_mode', 'sandbox');
+        $paypal_client_id = get_option('paypal_client_id', '');
+        $paypal_client_secret = get_option('paypal_client_secret', '');
+        $paypal_return_url = get_option('paypal_return_url', home_url('/premium-plans'));
+        $paypal_cancel_url = get_option('paypal_cancel_url', home_url('/premium-plans'));
+        
         // Settings implementation
         ?>
         <div class="wrap">
@@ -720,7 +744,8 @@ class Stock_Scanner_Admin_Interface {
             
             <div class="nav-tab-wrapper">
                 <a href="#api-settings" class="nav-tab nav-tab-active">API Settings</a>
-                <a href="#security-settings" class="nav-tab">Security Settings</a>
+                <a href="#paypal-settings" class="nav-tab">PayPal</a>
+                <a href="#security-settings" class="nav-tab">Security</a>
             </div>
             
             <form method="post" action="">
@@ -759,60 +784,50 @@ class Stock_Scanner_Admin_Interface {
                                        name="stock_scanner_enable_custom_endpoints" 
                                        value="1" 
                                        <?php checked($enable_custom_endpoints, 1); ?> />
-                                <label for="stock_scanner_enable_custom_endpoints">Use custom API endpoint URL instead of default</label>
-                                <p class="description">
-                                    When enabled, the plugin will use the custom API Base URL above for all API calls.
-                                </p>
+                                <label for="stock_scanner_enable_custom_endpoints">Use the custom API Base URL above for all API calls</label>
                             </td>
                         </tr>
                     </table>
-                    
-                    <h3>📋 Available API Endpoints</h3>
-                    <div class="endpoint-list">
-                        <h4>Authentication & User Management</h4>
-                        <ul class="endpoint-group">
-                            <li><code>POST /auth/login</code> - User login</li>
-                            <li><code>POST /auth/logout</code> - User logout</li>
-                            <li><code>GET /user/profile</code> - Get user profile</li>
-                            <li><code>POST /user/profile</code> - Update user profile</li>
-                            <li><code>POST /user/change-password</code> - Change password</li>
-                        </ul>
-                        
-                        <h4>Market Data & Stocks</h4>
-                        <ul class="endpoint-group">
-                            <li><code>GET /market-data</code> - Market overview</li>
-                            <li><code>GET /stocks/search</code> - Search stocks</li>
-                            <li><code>GET /stocks/{symbol}</code> - Stock details</li>
-                            <li><code>GET /trending</code> - Trending stocks</li>
-                            <li><code>GET /news</code> - Market news</li>
-                        </ul>
-                        
-                        <h4>Portfolio & Watchlist</h4>
-                        <ul class="endpoint-group">
-                            <li><code>GET /portfolio</code> - Get portfolio</li>
-                            <li><code>POST /portfolio/add</code> - Add to portfolio</li>
-                            <li><code>DELETE /portfolio/{id}</code> - Remove from portfolio</li>
-                            <li><code>GET /watchlist</code> - Get watchlist</li>
-                            <li><code>POST /watchlist/add</code> - Add to watchlist</li>
-                            <li><code>DELETE /watchlist/{id}</code> - Remove from watchlist</li>
-                        </ul>
-                        
-                        <h4>Billing & Subscriptions</h4>
-                        <ul class="endpoint-group">
-                            <li><code>GET /billing/history</code> - Billing history</li>
-                            <li><code>GET /billing/current-plan</code> - Current plan</li>
-                            <li><code>POST /billing/change-plan</code> - Change plan</li>
-                            <li><code>GET /usage-stats</code> - Usage statistics</li>
-                        </ul>
-                        
-                        <h4>Notifications</h4>
-                        <ul class="endpoint-group">
-                            <li><code>GET /notifications/settings</code> - Get notification settings</li>
-                            <li><code>POST /notifications/settings</code> - Update notification settings</li>
-                            <li><code>GET /notifications/history</code> - Notification history</li>
-                            <li><code>POST /notifications/mark-read</code> - Mark notifications as read</li>
-                        </ul>
-                    </div>
+                </div>
+                
+                <div id="paypal-settings" class="tab-content" style="display: none;">
+                    <h2>💳 PayPal Configuration</h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Mode</th>
+                            <td>
+                                <select name="paypal_mode">
+                                    <option value="sandbox" <?php selected($paypal_mode, 'sandbox'); ?>>Sandbox</option>
+                                    <option value="live" <?php selected($paypal_mode, 'live'); ?>>Live</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="paypal_client_id">Client ID</label></th>
+                            <td>
+                                <input type="text" name="paypal_client_id" id="paypal_client_id" value="<?php echo esc_attr($paypal_client_id); ?>" class="regular-text" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="paypal_client_secret">Client Secret</label></th>
+                            <td>
+                                <input type="text" name="paypal_client_secret" id="paypal_client_secret" value="<?php echo esc_attr($paypal_client_secret); ?>" class="regular-text" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="paypal_return_url">Return URL</label></th>
+                            <td>
+                                <input type="url" name="paypal_return_url" id="paypal_return_url" value="<?php echo esc_url($paypal_return_url); ?>" class="regular-text" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="paypal_cancel_url">Cancel URL</label></th>
+                            <td>
+                                <input type="url" name="paypal_cancel_url" id="paypal_cancel_url" value="<?php echo esc_url($paypal_cancel_url); ?>" class="regular-text" />
+                            </td>
+                        </tr>
+                    </table>
+                    <p class="description">Webhook URL: <code><?php echo esc_html(get_option('paypal_webhook_url', home_url('/wp-json/stock-scanner/v1/paypal-webhook'))); ?></code></p>
                 </div>
                 
                 <div id="security-settings" class="tab-content" style="display: none;">
@@ -826,7 +841,6 @@ class Stock_Scanner_Admin_Interface {
                                     <option value="strict" <?php selected($security_mode, 'strict'); ?>>Strict</option>
                                     <option value="paranoid" <?php selected($security_mode, 'paranoid'); ?>>Paranoid</option>
                                 </select>
-                                <p class="description">Choose security level for bot detection and API access</p>
                             </td>
                         </tr>
                     </table>
@@ -837,45 +851,8 @@ class Stock_Scanner_Admin_Interface {
         </div>
         
         <style>
-        .endpoint-list {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 20px;
-            margin-top: 10px;
-        }
-        .endpoint-list h4 {
-            color: #0073aa;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        .endpoint-list h4:first-child {
-            margin-top: 0;
-        }
-        .endpoint-group {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-        .endpoint-group li {
-            margin-bottom: 5px;
-        }
-        .endpoint-group code {
-            background: #fff;
-            padding: 2px 6px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-family: Monaco, Consolas, monospace;
-            font-size: 12px;
-        }
-        .nav-tab-wrapper {
-            margin-bottom: 20px;
-        }
-        .tab-content {
-            background: #fff;
-            border: 1px solid #ccc;
-            border-top: none;
-            padding: 20px;
-        }
+        .nav-tab-wrapper { margin-bottom: 20px; }
+        .tab-content { background: #fff; border: 1px solid #ccc; border-top: none; padding: 20px; }
         </style>
         
         <script>

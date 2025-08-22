@@ -52,18 +52,10 @@ class StockScannerPayPalIntegration {
         $this->paypal_mode = get_option('paypal_mode', 'sandbox');
         $this->client_id = get_option('paypal_client_id', '');
         $this->client_secret = get_option('paypal_client_secret', '');
-        $this->webhook_url = get_option('paypal_webhook_url', '');
-        $this->return_url = get_option('paypal_return_url', '');
-        $this->cancel_url = get_option('paypal_cancel_url', '');
+        $this->webhook_url = get_option('paypal_webhook_url', home_url('/wp-json/stock-scanner/v1/paypal-webhook'));
+        $this->return_url = get_option('paypal_return_url', home_url('/premium-plans'));
+        $this->cancel_url = get_option('paypal_cancel_url', home_url('/premium-plans'));
         
-        if (empty($this->return_url)) {
-            $this->return_url = home_url('/payment-success/');
-        }
-        if (empty($this->cancel_url)) {
-            $this->cancel_url = home_url('/payment-cancelled/');
-        }
-        
-        // Set API base URL based on mode
         $this->api_base_url = ($this->paypal_mode === 'live') 
             ? 'https://api-m.paypal.com' 
             : 'https://api-m.sandbox.paypal.com';
