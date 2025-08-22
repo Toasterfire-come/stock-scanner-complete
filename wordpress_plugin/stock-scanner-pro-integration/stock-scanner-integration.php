@@ -313,7 +313,10 @@ class Stock_Scanner_Integration {
     private function init_components() {
         // Initialize membership manager
         if (!class_exists('Stock_Scanner_Membership_Manager')) {
-            require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-membership-manager.php';
+            $membership_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-membership-manager.php';
+            if (file_exists($membership_file)) {
+                require_once $membership_file;
+            }
         }
         
         // Initialize security manager
@@ -1047,34 +1050,62 @@ class Stock_Scanner_Integration {
      */
     public function admin_security_page() {
         if (!class_exists('Stock_Scanner_Admin_Interface')) {
-            require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            $admin_interface_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            if (file_exists($admin_interface_file)) {
+                require_once $admin_interface_file;
+            }
         }
-        $admin_interface = new Stock_Scanner_Admin_Interface($this);
-        $admin_interface->security_analytics_page();
+        if (class_exists('Stock_Scanner_Admin_Interface')) {
+            $admin_interface = new Stock_Scanner_Admin_Interface($this);
+            $admin_interface->security_analytics_page();
+        } else {
+            echo '<div class="wrap"><h1>Security Analytics</h1><p>Admin interface is not available.</p></div>';
+        }
     }
     
     public function admin_rate_limits_page() {
         if (!class_exists('Stock_Scanner_Admin_Interface')) {
-            require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            $admin_interface_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            if (file_exists($admin_interface_file)) {
+                require_once $admin_interface_file;
+            }
         }
-        $admin_interface = new Stock_Scanner_Admin_Interface($this);
-        $admin_interface->rate_limits_page();
+        if (class_exists('Stock_Scanner_Admin_Interface')) {
+            $admin_interface = new Stock_Scanner_Admin_Interface($this);
+            $admin_interface->rate_limits_page();
+        } else {
+            echo '<div class="wrap"><h1>Rate Limits</h1><p>Admin interface is not available.</p></div>';
+        }
     }
     
     public function admin_users_page() {
         if (!class_exists('Stock_Scanner_Admin_Interface')) {
-            require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            $admin_interface_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            if (file_exists($admin_interface_file)) {
+                require_once $admin_interface_file;
+            }
         }
-        $admin_interface = new Stock_Scanner_Admin_Interface($this);
-        $admin_interface->user_management_page();
+        if (class_exists('Stock_Scanner_Admin_Interface')) {
+            $admin_interface = new Stock_Scanner_Admin_Interface($this);
+            $admin_interface->user_management_page();
+        } else {
+            echo '<div class="wrap"><h1>User Management</h1><p>Admin interface is not available.</p></div>';
+        }
     }
     
     public function admin_settings_page() {
         if (!class_exists('Stock_Scanner_Admin_Interface')) {
-            require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            $admin_interface_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-admin-interface.php';
+            if (file_exists($admin_interface_file)) {
+                require_once $admin_interface_file;
+            }
         }
-        $admin_interface = new Stock_Scanner_Admin_Interface($this);
-        $admin_interface->settings_page();
+        if (class_exists('Stock_Scanner_Admin_Interface')) {
+            $admin_interface = new Stock_Scanner_Admin_Interface($this);
+            $admin_interface->settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Settings</h1><p>Admin interface is not available.</p></div>';
+        }
     }
 }
 
