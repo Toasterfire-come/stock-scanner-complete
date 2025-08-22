@@ -7,7 +7,7 @@
     <h1 style="margin-bottom: 2rem; color: var(--text-primary);">API Documentation</h1>
     
     <div class="alert alert-info">
-        <strong>Base URL:</strong> {{ request.build_absolute_uri|slice:":"-1" }}
+        <strong>Base URL:</strong> {{ request.build_absolute_uri|slice:":-1" }}
     </div>
     
     <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Stock Data Endpoints</h2>
