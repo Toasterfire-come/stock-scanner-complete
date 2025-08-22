@@ -634,7 +634,7 @@ function handle_stock_quote_ajax() {
     }
     
     // Get real stock data from Django backend
-    $response = make_backend_api_request("stock/{$symbol}/");
+    $response = make_backend_api_request("stocks/{$symbol}/");
     
     if (is_wp_error($response) || empty($response)) {
         error_log("Stock API fallback for symbol: {$symbol}. Error: " . (is_wp_error($response) ? $response->get_error_message() : 'Empty response'));
@@ -1008,7 +1008,7 @@ function handle_major_indices_ajax() {
     $indices_data = array();
     
     foreach ($indices as $symbol) {
-        $response = make_backend_api_request("stock/{$symbol}/");
+        $response = make_backend_api_request("stocks/{$symbol}/");
         if (!is_wp_error($response) && !empty($response)) {
             $indices_data[] = $response;
         }
