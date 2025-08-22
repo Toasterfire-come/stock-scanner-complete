@@ -82,12 +82,13 @@ class Stock_Scanner_Integration {
      * Initialize performance optimizer
      */
     public function init_performance_optimizer() {
-        // Include the performance optimizer class
-        require_once STOCK_SCANNER_PLUGIN_DIR . 'includes/class-performance-optimizer.php';
-        
-        // Initialize performance optimizer
-        if (class_exists('Stock_Scanner_Performance_Optimizer')) {
-            new Stock_Scanner_Performance_Optimizer();
+        // Include the performance optimizer class only if present
+        $optimizer_file = STOCK_SCANNER_PLUGIN_DIR . 'includes/class-performance-optimizer.php';
+        if (file_exists($optimizer_file)) {
+            require_once $optimizer_file;
+            if (class_exists('Stock_Scanner_Performance_Optimizer')) {
+                new Stock_Scanner_Performance_Optimizer();
+            }
         }
     }
     
@@ -409,20 +410,29 @@ class Stock_Scanner_Integration {
             // Enqueue Chart.js for security analytics charts
             wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
             
-            wp_enqueue_script('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'chart-js'), STOCK_SCANNER_VERSION, true);
-            wp_enqueue_style('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/css/admin.css', array(), STOCK_SCANNER_VERSION);
+            // Only enqueue admin assets if files exist to avoid 404s
+            $admin_js_path = STOCK_SCANNER_PLUGIN_DIR . 'assets/js/admin.js';
+            $admin_css_path = STOCK_SCANNER_PLUGIN_DIR . 'assets/css/admin.css';
+            if (file_exists($admin_js_path)) {
+                wp_enqueue_script('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'chart-js'), STOCK_SCANNER_VERSION, true);
+            }
+            if (file_exists($admin_css_path)) {
+                wp_enqueue_style('stock-scanner-admin', STOCK_SCANNER_PLUGIN_URL . 'assets/css/admin.css', array(), STOCK_SCANNER_VERSION);
+            }
             
-            wp_localize_script('stock-scanner-admin', 'stockScannerAdmin', array(
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('stock_scanner_admin_nonce'),
-                'strings' => array(
-                    'confirm_ban' => 'Are you sure you want to ban this user?',
-                    'confirm_unban' => 'Are you sure you want to unban this user?',
-                    'loading' => 'Loading...',
-                    'error' => 'An error occurred. Please try again.',
-                    'success' => 'Operation completed successfully.'
-                )
-            ));
+            if (file_exists($admin_js_path)) {
+                wp_localize_script('stock-scanner-admin', 'stockScannerAdmin', array(
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('stock_scanner_admin_nonce'),
+                    'strings' => array(
+                        'confirm_ban' => 'Are you sure you want to ban this user?',
+                        'confirm_unban' => 'Are you sure you want to unban this user?',
+                        'loading' => 'Loading...',
+                        'error' => 'An error occurred. Please try again.',
+                        'success' => 'Operation completed successfully.'
+                    )
+                ));
+            }
         }
     }
     
