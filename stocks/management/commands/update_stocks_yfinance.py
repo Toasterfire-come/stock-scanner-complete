@@ -479,44 +479,44 @@ class Command(BaseCommand):
                 self.stdout.write(f"[NO DATA] {symbol}: No data available")
                 return None
             
-                         # Extract comprehensive data with better PE ratio and dividend yield handling
-             stock_data = {
-                 'ticker': symbol,  # Use ticker as the primary key
-                 'symbol': symbol,   # Keep symbol for compatibility
-                 'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                 'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                 'current_price': self._safe_decimal(current_price) if current_price else None,
-                 'price_change_today': None,
-                 'price_change_week': None,
-                 'price_change_month': None,
-                 'price_change_year': None,
-                 'change_percent': None,
-                 'bid_price': None,
-                 'ask_price': None,
-                 'bid_ask_spread': '',  # Empty string instead of None for CharField
-                 'days_range': '',  # Empty string instead of None for CharField
-                 'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
-                 'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
-                 'volume': self._safe_decimal(info.get('volume')) if info else None,
-                 'volume_today': self._safe_decimal(info.get('volume')) if info else None,
-                 'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
-                 'dvav': None,
-                 'shares_available': None,
-                 'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
-                 'market_cap_change_3mon': None,
-                 'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
-                 'pe_change_3mon': None,
-                 'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
-                 'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
-                 'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
-                 'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
-                 'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
-                 'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
-                 'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
-                 'exchange': info.get('exchange') if info else None,
-                 'last_updated': timezone.now(),
-                 'created_at': timezone.now()
-             }
+            # Extract comprehensive data with better PE ratio and dividend yield handling
+            stock_data = {
+                'ticker': symbol,  # Use ticker as the primary key
+                'symbol': symbol,   # Keep symbol for compatibility
+                'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+                'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+                'current_price': self._safe_decimal(current_price) if current_price else None,
+                'price_change_today': None,
+                'price_change_week': None,
+                'price_change_month': None,
+                'price_change_year': None,
+                'change_percent': None,
+                'bid_price': None,
+                'ask_price': None,
+                'bid_ask_spread': '',  # Empty string instead of None for CharField
+                'days_range': '',  # Empty string instead of None for CharField
+                'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
+                'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
+                'volume': self._safe_decimal(info.get('volume')) if info else None,
+                'volume_today': self._safe_decimal(info.get('volume')) if info else None,
+                'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
+                'dvav': None,
+                'shares_available': None,
+                'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
+                'market_cap_change_3mon': None,
+                'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
+                'pe_change_3mon': None,
+                'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
+                'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
+                'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
+                'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
+                'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
+                'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
+                'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
+                'exchange': info.get('exchange') if info else None,
+                'last_updated': timezone.now(),
+                'created_at': timezone.now()
+            }
             
             # Calculate price changes if historical data available
             if has_data and len(hist) > 1:
@@ -543,31 +543,31 @@ class Command(BaseCommand):
             
             # Save to database if not in test mode
             if not test_mode:
-                                 try:
-                     # Create or update Stock object
-                     stock, created = Stock.objects.update_or_create(
-                         ticker=symbol,  # Use ticker as the lookup field
-                         defaults=stock_data
-                     )
+                try:
+                    # Create or update Stock object
+                    stock, created = Stock.objects.update_or_create(
+                        ticker=symbol,  # Use ticker as the lookup field
+                        defaults=stock_data
+                    )
                     
-                                         # Create StockPrice record
-                     if stock_data.get('current_price'):
-                         StockPrice.objects.create(
-                             stock=stock,
-                             price=stock_data['current_price']
-                         )
-                    
-                    # Log successful data extraction (only every 50th success to reduce noise)
-                    if ticker_number % 50 == 0:
-                        pe_ratio = stock_data.get('pe_ratio', 'N/A')
-                        dividend_yield = stock_data.get('dividend_yield', 'N/A')
-                        self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
-                    
-                    return stock_data
-                    
+                    # Create StockPrice record
+                    if stock_data.get('current_price'):
+                        StockPrice.objects.create(
+                            stock=stock,
+                            price=stock_data['current_price']
+                        )
+                
                 except Exception as e:
-                    self.stdout.write(f"[DB ERROR] {symbol}: {e}")
-                    return None
+                    logger.error(f"Failed to save stock data for {symbol}: {e}")
+                    pass
+                
+                # Log successful data extraction (only every 50th success to reduce noise)
+                if ticker_number % 50 == 0:
+                    pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                    dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                    self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                
+                return stock_data
             else:
                 # Test mode - log the data without saving (only every 50th to reduce noise)
                 if ticker_number % 50 == 0:
