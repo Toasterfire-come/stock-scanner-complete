@@ -40,12 +40,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Critical CSS - Inline for fastest first paint -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='critical.css') }}" media="all">
+    <link rel="stylesheet" href="{% static 'critical.css' %}" media="all">
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="{{ url_for('static', filename='optimized-scripts.js') }}" as="script">
-    <link rel="preload" href="{{ url_for('static', filename='index_sub.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='index_sub.css') }}"></noscript>
+    <link rel="preload" href="{% static 'optimized-scripts.js' %}" as="script">
+    <link rel="preload" href="{% static 'index_sub.css' %}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{% static 'index_sub.css' %}"></noscript>
     
     <!-- DNS prefetch for external resources -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
@@ -525,7 +525,7 @@
     </footer>
 
     <!-- Optimized JavaScript - Load asynchronously -->
-    <script src="{{ url_for('static', filename='optimized-scripts.js') }}" async></script>
+    <script src="{% static 'optimized-scripts.js' %}" async></script>
     
     <!-- Fallback for critical mobile/app menu functionality -->
     <script>
