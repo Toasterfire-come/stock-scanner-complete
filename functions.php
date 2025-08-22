@@ -50,16 +50,14 @@ function stock_scanner_scripts() {
     // Performance: Load CSS non-blocking
     add_filter('style_loader_tag', 'stock_scanner_async_css', 10, 2);
     
-    // Add shared styles for unified color scheme across pages with proper MIME type
-    if (file_exists(get_template_directory() . '/assets/css/shared-styles.css')) {
-        wp_enqueue_style('stock-scanner-shared', get_template_directory_uri() . '/assets/css/shared-styles.css', array(), $style_ver, 'all');
-        // Ensure proper content type for CSS files
-        add_filter('style_loader_tag', function($html, $handle) {
-            if ($handle === 'stock-scanner-shared') {
-                $html = str_replace("rel='stylesheet'", "rel='stylesheet' type='text/css'", $html);
-            }
-            return $html;
-        }, 10, 2);
+    // Add enhanced production-ready styles
+    if (file_exists(get_template_directory() . '/assets/css/enhanced-styles.css')) {
+        wp_enqueue_style('stock-scanner-enhanced', get_template_directory_uri() . '/assets/css/enhanced-styles.css', array('stock-scanner-style'), $style_ver, 'all');
+    }
+    
+    // Add CSS variables fix for comprehensive variable coverage
+    if (file_exists(get_template_directory() . '/assets/css/css-variables-fix.css')) {
+        wp_enqueue_style('stock-scanner-css-vars', get_template_directory_uri() . '/assets/css/css-variables-fix.css', array('stock-scanner-style'), $style_ver, 'all');
     }
     
     // Add header consistency fixes to prevent styling conflicts
@@ -67,11 +65,11 @@ function stock_scanner_scripts() {
         wp_enqueue_style('stock-scanner-header-fixes', get_template_directory_uri() . '/assets/css/header-fixes.css', array('stock-scanner-style'), $style_ver, 'all');
     }
     
-    // Performance: Enqueue optimized JavaScript
+    // Performance: Enqueue optimized Vanilla JavaScript (No jQuery dependency)
     wp_enqueue_script(
-        'stock-scanner-performance',
-        get_template_directory_uri() . '/assets/js/performance-optimized.js',
-        array('jquery'),
+        'stock-scanner-performance-vanilla',
+        get_template_directory_uri() . '/assets/js/performance-optimized-vanilla.js',
+        array(), // No dependencies - pure vanilla JS
         $style_ver,
         true // Load in footer
     );
@@ -79,13 +77,22 @@ function stock_scanner_scripts() {
     // Performance: Add preload hints for critical resources
     add_action('wp_head', 'stock_scanner_resource_hints', 2);
     
-    // Performance: Localize script with theme settings
-    wp_localize_script('stock-scanner-performance', 'stockScannerTheme', array(
+    // Performance: Localize script with theme settings for vanilla JS
+    wp_localize_script('stock-scanner-performance-vanilla', 'stockScannerTheme', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_nonce'),
+        'api_url' => home_url('/wp-json/stocks/v1/'),
+        'current_user_id' => get_current_user_id(),
         'enablePerformanceMonitoring' => defined('WP_DEBUG') && WP_DEBUG,
         'lazyLoadOffset' => '50px',
-        'debounceDelay' => 300
+        'debounceDelay' => 300,
+        'features' => array(
+            'animations' => true,
+            'lazy_loading' => true,
+            'dark_mode' => true,
+            'offline_support' => true
+        ),
+        'version' => '2.1.0'
     ));
     
     // Enqueue Chart.js for stock charts
@@ -93,9 +100,19 @@ function stock_scanner_scripts() {
         wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
     }
     
-    // Enqueue theme JavaScript (check if file exists)
-    if (file_exists(get_template_directory() . '/assets/js/theme.js')) {
-        wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/assets/js/theme.js', array('jquery'), '2.0.0', true);
+    // Enqueue main theme JavaScript - Vanilla JS version (No jQuery dependency)
+    if (file_exists(get_template_directory() . '/js/theme-vanilla.js')) {
+        wp_enqueue_script('stock-scanner-theme-vanilla', get_template_directory_uri() . '/js/theme-vanilla.js', array(), '2.1.0', true);
+    }
+    
+    // Enqueue advanced UI - Vanilla JS version
+    if (file_exists(get_template_directory() . '/assets/js/advanced-ui-vanilla.js')) {
+        wp_enqueue_script('stock-scanner-advanced-ui-vanilla', get_template_directory_uri() . '/assets/js/advanced-ui-vanilla.js', array(), '2.1.0', true);
+    }
+    
+    // Enqueue shared functions - Vanilla JS version
+    if (file_exists(get_template_directory() . '/assets/js/shared/shared-functions-vanilla.js')) {
+        wp_enqueue_script('stock-scanner-shared-vanilla', get_template_directory_uri() . '/assets/js/shared/shared-functions-vanilla.js', array(), '2.1.0', true);
     }
     // Chart.js theme defaults
     if (file_exists(get_template_directory() . '/assets/js/chart-theme.js')) {
@@ -104,9 +121,9 @@ function stock_scanner_scripts() {
         wp_enqueue_script('stock-scanner-chart-theme', get_template_directory_uri() . '/assets/js/chart-theme.js', $deps, '1.0.0', true);
     }
     
-    // Enqueue plugin integration JavaScript
+    // Enqueue plugin integration JavaScript - Vanilla JS version
     if (file_exists(get_template_directory() . '/assets/js/plugin-integration.js')) {
-        wp_enqueue_script('stock-scanner-plugin-js', get_template_directory_uri() . '/assets/js/plugin-integration.js', array('jquery'), '2.0.0', true);
+        wp_enqueue_script('stock-scanner-plugin-js', get_template_directory_uri() . '/assets/js/plugin-integration.js', array(), '2.1.0', true);
     }
     
     // Localize script for AJAX with WordPress admin colors

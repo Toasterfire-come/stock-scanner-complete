@@ -6,10 +6,11 @@
     <meta name="wp-nonce" content="<?php echo esc_attr( wp_create_nonce('wp_rest') ); ?>">
     <?php 
     // SEO: Canonical URL
+    global $wp;
     if (function_exists('wp_get_canonical_url')) {
         $canonical = wp_get_canonical_url();
     } else {
-        $canonical = is_singular() ? get_permalink() : home_url(add_query_arg(array(),$wp->request));
+        $canonical = is_singular() ? get_permalink() : home_url(add_query_arg(array(), $wp->request ?? ''));
     }
     if ($canonical): ?>
         <link rel="canonical" href="<?php echo esc_url($canonical); ?>" />
