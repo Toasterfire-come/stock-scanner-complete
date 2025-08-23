@@ -4,13 +4,13 @@ Handles REF50 discount codes and marketer commission calculations
 """
 
 from decimal import Decimal
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.utils import timezone as django_timezone
 
-from ..models import DiscountCode, UserDiscountUsage, RevenueTracking, MonthlyRevenueSummary
+from ..models import DiscountCode, UserDiscountUsage, RevenueTracking, MonthlyRevenueSummary, UserProfile
 
 
 class DiscountService:
@@ -39,6 +39,23 @@ class DiscountService:
                 'valid': False,
                 'discount': None,
                 'message': 'Invalid discount code',
+                'discount_amount': Decimal('0.00'),
+                'applies_discount': False
+            }
+        
+        # Prevent stacking: if the user has used any other discount (got savings) before, disallow this one
+        has_other_discount_savings = UserDiscountUsage.objects.filter(
+            user=user
+        ).exclude(
+            discount_code=discount
+        ).filter(
+            total_savings__gt=Decimal('0.00')
+        ).exists()
+        if has_other_discount_savings:
+            return {
+                'valid': False,
+                'discount': discount,
+                'message': 'Cannot combine with other promotions',
                 'discount_amount': Decimal('0.00'),
                 'applies_discount': False
             }
@@ -119,11 +136,23 @@ class DiscountService:
         if discount_code:
             validation = DiscountService.validate_discount_code(discount_code.code, user)
             if validation['valid'] and validation['applies_discount']:
-                pricing = DiscountService.calculate_discounted_price(
-                    original_amount, 
-                    discount_code.discount_percentage
-                )
-                revenue_type = 'discount_generated'
+                if discount_code.code.upper() == 'TRIAL':
+                    # Special trial pricing: $1 for the first 7 days
+                    final_amount = Decimal('1.00')
+                    if original_amount < final_amount:
+                        final_amount = original_amount
+                    pricing = {
+                        'original_amount': original_amount,
+                        'discount_amount': (original_amount - final_amount),
+                        'final_amount': final_amount
+                    }
+                    revenue_type = 'discount_generated'
+                else:
+                    pricing = DiscountService.calculate_discounted_price(
+                        original_amount, 
+                        discount_code.discount_percentage
+                    )
+                    revenue_type = 'discount_generated'
             else:
                 # Code exists but doesn't apply discount (already used)
                 pricing = {
@@ -160,6 +189,12 @@ class DiscountService:
             )
             usage.total_savings += pricing['discount_amount']
             usage.save()
+        
+        # If trial, set next billing date to 7 days later
+        if discount_code and discount_code.code.upper() == 'TRIAL':
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.next_billing_date = payment_date + timedelta(days=7)
+            profile.save()
         
         # Update monthly summary
         DiscountService.update_monthly_summary(payment_date.strftime('%Y-%m'))
@@ -304,6 +339,22 @@ class DiscountService:
             code='REF50',
             defaults={
                 'discount_percentage': Decimal('50.00'),
+                'is_active': True,
+                'applies_to_first_payment_only': True,
+            }
+        )
+        return code, created
+
+    @staticmethod
+    def initialize_trial_code():
+        """
+        Initialize the TRIAL discount code if it doesn't exist
+        TRIAL: $1 for 7 days, applies to first payment only
+        """
+        code, created = DiscountCode.objects.get_or_create(
+            code='TRIAL',
+            defaults={
+                'discount_percentage': Decimal('0.00'),
                 'is_active': True,
                 'applies_to_first_payment_only': True,
             }
