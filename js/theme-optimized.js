@@ -100,6 +100,147 @@
         }
     };
 
+    // Complete API client
+    const API_BASE = '/api/';
+    const Api = {
+        base: API_BASE,
+        // Root and system
+        root: () => Api.get('/'),
+        health: () => Api.get('/health/'),
+        docs: () => Api.get('/docs/'),
+        endpointStatus: () => Api.get('/endpoint-status/'),
+        // Stocks (core)
+        index: () => Api.get('/'),
+        stocks: {
+            list: () => Api.get('/stocks/'),
+            detail: (ticker) => Api.get(`/stocks/${encodeURIComponent(ticker)}/`),
+            detailAlias: (ticker) => Api.get(`/stock/${encodeURIComponent(ticker)}/`),
+            search: (q) => Api.get(`/stocks/search/?q=${encodeURIComponent(q)}`),
+            realtime: (ticker) => Api.get(`/realtime/${encodeURIComponent(ticker)}/`),
+            trending: () => Api.get('/trending/'),
+            marketStats: () => Api.get('/market-stats/'),
+            filter: (params) => Api.get(`/filter/?${new URLSearchParams(params)}`),
+            statistics: () => Api.get('/statistics/'),
+        },
+        // WordPress-friendly
+        wordpress: {
+            stocks: () => Api.get('/wordpress/stocks/'),
+            news: () => Api.get('/wordpress/news/'),
+            alerts: () => Api.get('/wordpress/alerts/'),
+        },
+        // Content update triggers (secured)
+        content: {
+            updateStocks: (body) => Api.post('/stocks/update/', body),
+            updateNews: (body) => Api.post('/news/update/', body),
+        },
+        // Alerts
+        alerts: {
+            create: (body) => Api.post('/alerts/create/', body),
+        },
+        // Subscriptions
+        subscription: (body) => Api.post('/subscription/', body),
+        wordpressSubscribe: (body) => Api.post('/wordpress/subscribe/', body),
+        // Auth, user, billing, notifications
+        auth: {
+            login: (body) => Api.post('/auth/login/', body),
+            logout: (body) => Api.post('/auth/logout/', body),
+        },
+        user: {
+            profile: (body, method = 'GET') => Api.request('/user/profile/', { method, body }),
+            changePassword: (body) => Api.post('/user/change-password/', body),
+            marketData: () => Api.get('/market-data/'),
+            updatePayment: (body) => Api.post('/user/update-payment/', body),
+            billingHistory: () => Api.get('/user/billing-history/'),
+            billingHistoryAlt: () => Api.get('/billing/history/'),
+            billingDownload: (invoiceId) => Api.get(`/billing/download/${encodeURIComponent(invoiceId)}/`),
+            currentPlan: () => Api.get('/billing/current-plan/'),
+            changePlan: (body) => Api.post('/billing/change-plan/', body),
+            billingStats: () => Api.get('/billing/stats/'),
+            updatePaymentMethod: (body) => Api.post('/billing/update-payment-method/', body),
+            notificationSettings: (body, method='GET') => Api.request('/user/notification-settings/', { method, body }),
+            notificationSettingsAlt: (body, method='GET') => Api.request('/notifications/settings/', { method, body }),
+            notificationsHistory: () => Api.get('/notifications/history/'),
+            notificationsMarkRead: (body) => Api.post('/notifications/mark-read/', body),
+            usageStats: () => Api.get('/usage-stats/'),
+        },
+        // Portfolio (updated REST + legacy extras)
+        portfolio: {
+            get: () => Api.get('/portfolio/'),
+            add: (body) => Api.post('/portfolio/add/', body),
+            deleteHolding: (holdingId) => Api.delete(`/portfolio/${encodeURIComponent(holdingId)}/`),
+            // legacy extras
+            create: (body) => Api.post('/portfolio/create/', body),
+            list: () => Api.get('/portfolio/list/'),
+            deletePortfolio: (portfolioId) => Api.delete(`/portfolio/${encodeURIComponent(portfolioId)}/delete/`),
+            updatePortfolio: (portfolioId, body) => Api.put(`/portfolio/${encodeURIComponent(portfolioId)}/update/`, body),
+            performance: (portfolioId) => Api.get(`/portfolio/${encodeURIComponent(portfolioId)}/performance/`),
+            addHolding: (body) => Api.post('/portfolio/add-holding/', body),
+            sellHolding: (body) => Api.post('/portfolio/sell-holding/', body),
+            importCsv: (body) => Api.post('/portfolio/import-csv/', body),
+            alertRoi: () => Api.get('/portfolio/alert-roi/'),
+        },
+        // Watchlist (updated REST + legacy extras)
+        watchlist: {
+            get: () => Api.get('/watchlist/'),
+            add: (body) => Api.post('/watchlist/add/', body),
+            delete: (itemId) => Api.delete(`/watchlist/${encodeURIComponent(itemId)}/`),
+            create: (body) => Api.post('/watchlist/create/', body),
+            list: () => Api.get('/watchlist/list/'),
+            update: (watchlistId, body) => Api.put(`/watchlist/${encodeURIComponent(watchlistId)}/update/`, body),
+            deleteLegacy: (watchlistId) => Api.delete(`/watchlist/${encodeURIComponent(watchlistId)}/delete/`),
+            performance: (watchlistId) => Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/performance/`),
+            addStock: (body) => Api.post('/watchlist/add-stock/', body),
+            removeStock: (body) => Api.post('/watchlist/remove-stock/', body),
+            updateItem: (itemId, body) => Api.put(`/watchlist/item/${encodeURIComponent(itemId)}/`, body),
+            exportCsv: (watchlistId) => Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/export/csv/`),
+            exportJson: (watchlistId) => Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/export/json/`),
+            importCsv: (body) => Api.post('/watchlist/import/csv/', body),
+            importJson: (body) => Api.post('/watchlist/import/json/', body),
+        },
+        // News personalization
+        news: {
+            feed: () => Api.get('/news/feed/'),
+            markRead: (body) => Api.post('/news/mark-read/', body),
+            markClicked: (body) => Api.post('/news/mark-clicked/', body),
+            preferences: (body) => Api.post('/news/preferences/', body),
+            syncPortfolio: (body) => Api.post('/news/sync-portfolio/', body),
+            analytics: () => Api.get('/news/analytics/'),
+        },
+        // Revenue and discounts
+        revenue: {
+            validateDiscount: (body) => Api.post('/revenue/validate-discount/', body),
+            applyDiscount: (body) => Api.post('/revenue/apply-discount/', body),
+            recordPayment: (body) => Api.post('/revenue/record-payment/', body),
+            revenueAnalytics: (monthYear) => monthYear ? Api.get(`/revenue/revenue-analytics/${encodeURIComponent(monthYear)}/`) : Api.get('/revenue/revenue-analytics/'),
+            initializeCodes: (body) => Api.post('/revenue/initialize-codes/', body),
+            monthlySummary: (monthYear) => Api.get(`/revenue/monthly-summary/${encodeURIComponent(monthYear)}/`),
+        },
+        // Core request helpers
+        async request(endpoint, options={}) {
+            const url = endpoint.startsWith('http') ? endpoint : `${Api.base.replace(/\/$/, '')}${endpoint}`;
+            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+            const body = options.body && headers['Content-Type'] === 'application/json'
+                ? JSON.stringify(options.body)
+                : options.body || undefined;
+            const resp = await fetch(url, Object.assign({}, options, { headers, body }));
+            const contentType = resp.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            if (!resp.ok) {
+                const errData = isJson ? await resp.json().catch(() => ({})) : await resp.text().catch(() => '');
+                const error = new Error(`HTTP ${resp.status}`);
+                error.data = errData;
+                throw error;
+            }
+            return isJson ? resp.json() : resp.text();
+        },
+        get(endpoint, options={}) { return Api.request(endpoint, Object.assign({ method: 'GET' }, options)); },
+        post(endpoint, body, options={}) { return Api.request(endpoint, Object.assign({ method: 'POST', body }, options)); },
+        put(endpoint, body, options={}) { return Api.request(endpoint, Object.assign({ method: 'PUT', body }, options)); },
+        delete(endpoint, options={}) { return Api.request(endpoint, Object.assign({ method: 'DELETE' }, options)); },
+    };
+
+    window.StockScannerAPI = Api;
+
     // Main Theme Controller
     class StockScannerTheme {
         constructor() {
@@ -703,22 +844,15 @@
 
         // API and data methods
         async loadDashboardData() {
-            if (typeof stockScannerData === 'undefined') return;
+            if (typeof window.StockScannerAPI === 'undefined') return;
 
             try {
-                const response = await fetch(`${stockScannerData.apiEndpoint}portfolio/1`, {
-                    headers: {
-                        'X-WP-Nonce': stockScannerData.nonce
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    this.updateDashboardData(data.data);
-                }
+                const data = await StockScannerAPI.portfolio.get();
+                // Normalize shape if backend returns {success,data}
+                const payload = data && data.data ? data.data : data;
+                this.updateDashboardData(payload);
             } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-                this.createNotification('Failed to load dashboard data', 'error');
+                console.error('Failed to load dashboard data', error);
             }
         }
 

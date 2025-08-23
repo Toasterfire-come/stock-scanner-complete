@@ -100,7 +100,7 @@ function stock_scanner_scripts() {
         'isLoggedIn' => is_user_logged_in(),
         'userId' => get_current_user_id(),
         'themeUrl' => get_template_directory_uri(),
-        'apiEndpoint' => home_url('/wp-json/stock-scanner/v1/'),
+        'apiBase' => home_url('/api/'),
         'strings' => array(
             'loading' => __('Loading...', 'stock-scanner'),
             'error' => __('An error occurred', 'stock-scanner'),
