@@ -24,7 +24,7 @@ get_header(); ?>
                     </div>
                 <?php else: ?>
                     <div class="hero-actions" style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-                        <a href="<?php echo wp_registration_url(); ?>" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; min-width: 180px;">Start Free Trial</a>
+                        <a href="<?php echo wp_registration_url(); ?>" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; min-width: 180px;">Start 7‑Day Trial for $1</a>
                         <a href="<?php echo wp_login_url(); ?>" class="btn btn-outline" style="border-color: white; color: white; min-width: 180px;">🔑 Login</a>
                     </div>
                 <?php endif; ?>
@@ -101,6 +101,32 @@ get_header(); ?>
         </div>
     </section>
 
+    <!-- Trial Promo Section -->
+    <section class="trial-promo-section" style="padding: var(--space-10) 0; background: white;">
+        <div class="container">
+            <div class="trial-promo card" style="display: grid; grid-template-columns: 1fr; gap: var(--space-6); padding: var(--space-8); align-items: center; text-align: center;">
+                <div>
+                    <h2 class="section-title" style="font-size: 2.25rem; color: var(--color-text); margin-bottom: var(--space-3);">Try Basic for 7 Days — Only $1</h2>
+                    <p style="color: var(--color-text-muted); font-size: 1.125rem; max-width: 720px; margin: 0 auto var(--space-6);">
+                        Full access to the Basic plan. Cancel anytime in one click. Perfect to evaluate our real‑time data, scanning, and portfolio tools.
+                    </p>
+                    <div class="cta-buttons" style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
+                        <?php if (!is_user_logged_in()): ?>
+                            <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-lg">Start 7‑Day Trial for $1</a>
+                            <a href="/compare-plans/" class="btn btn-outline btn-lg">Compare Plans</a>
+                        <?php else: ?>
+                            <a href="/premium-plans/" class="btn btn-primary btn-lg">Upgrade for $1 Trial</a>
+                            <a href="/compare-plans/" class="btn btn-outline btn-lg">Compare Plans</a>
+                        <?php endif; ?>
+                    </div>
+                    <p style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted);">
+                        $1 covers 7 days of Basic. Then standard Basic pricing applies unless you cancel.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Pricing Section -->
     <section class="pricing-section" style="padding: var(--space-10) 0; background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);">
         <div class="container">
@@ -119,7 +145,7 @@ get_header(); ?>
                 <h2 style="font-size: 2.5rem; margin-bottom: var(--space-4); font-weight: 700;">Ready to Start Scanning?</h2>
                 <p style="font-size: 1.125rem; margin-bottom: var(--space-6); opacity: 0.9; line-height: 1.6;">Join thousands of traders who trust our platform for their stock analysis needs.</p>
                 <?php if (!is_user_logged_in()): ?>
-                    <a href="<?php echo wp_registration_url(); ?>" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; font-size: 1.125rem; padding: var(--space-4) var(--space-6);">Get Started Free</a>
+                    <a href="<?php echo wp_registration_url(); ?>" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; font-size: 1.125rem; padding: var(--space-4) var(--space-6);">Start 7‑Day Trial for $1</a>
                 <?php else: ?>
                     <a href="/premium-plans/" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; font-size: 1.125rem; padding: var(--space-4) var(--space-6);">Upgrade Your Plan</a>
                 <?php endif; ?>

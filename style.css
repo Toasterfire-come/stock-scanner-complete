@@ -1571,3 +1571,25 @@ body.theme-fully-loaded .will-change-opacity {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-3px); }
 }
+
+.trial-promo-section {
+    /* Keeps spacing and background consistent when used globally */
+}
+
+.trial-promo-section .trial-promo {
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.trial-promo-section .cta-buttons .btn-lg {
+    min-width: 220px;
+}
+
+@media (min-width: 900px) {
+    .trial-promo-section .trial-promo {
+        grid-template-columns: 1fr 1fr;
+        text-align: left;
+    }
+}
