@@ -14,20 +14,67 @@ const StockScanner = {
     async apiCall(endpoint, options = {}) {
         const defaultOptions = {
             method: 'GET',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-WP-Nonce': this.nonce
             }
         };
         
         const response = await fetch(this.apiUrl + endpoint, { ...defaultOptions, ...options });
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        const payload = isJson ? await response.json() : await response.text();
         
-        if (!data.success) {
-            throw new Error(data.error || 'API request failed');
+        if (!response.ok) {
+            const message = isJson && payload && payload.message ? payload.message : ('HTTP ' + response.status);
+            throw new Error(message);
         }
         
-        return data.data;
+        if (!isJson) {
+            return payload;
+        }
+        
+        return this.normalizeResponse(endpoint, payload);
+    },
+
+    // Normalizes various REST shapes to what the UI expects
+    normalizeResponse(endpoint, json) {
+        try {
+            const path = (endpoint || '').toLowerCase();
+            if (json && typeof json === 'object') {
+                if (Object.prototype.hasOwnProperty.call(json, 'success')) {
+                    // Common wrapper { success, data }
+                    if (Object.prototype.hasOwnProperty.call(json, 'data')) {
+                        // Special-case list endpoints used by UI
+                        if (path.includes('watchlist/list')) {
+                            return (json.data && json.data.watchlists) ? json.data.watchlists : (json.data || []);
+                        }
+                        if (path.includes('portfolio/list')) {
+                            return (json.data && json.data.portfolios) ? json.data.portfolios : (json.data || []);
+                        }
+                        if (path.includes('news/feed')) {
+                            if (json.data && Array.isArray(json.data.news_items)) {
+                                return json.data.news_items;
+                            }
+                        }
+                        return json.data;
+                    }
+                }
+                // Search endpoints often return { results }
+                if (Object.prototype.hasOwnProperty.call(json, 'results')) {
+                    return json.results;
+                }
+                // Some feeds return { news_items }
+                if (Object.prototype.hasOwnProperty.call(json, 'news_items')) {
+                    return json.news_items;
+                }
+            }
+            return json;
+        } catch (e) {
+            return json;
+        }
     },
     
     // Utility functions
@@ -254,8 +301,10 @@ class PortfolioManager {
         try {
             const response = await fetch(StockScanner.apiUrl + 'portfolio/import-csv/', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
-                    'X-WP-Nonce': StockScanner.nonce
+                    'X-WP-Nonce': StockScanner.nonce,
+                    'Accept': 'application/json'
                 },
                 body: formData
             });
@@ -699,8 +748,10 @@ class WatchlistManager {
             const endpoint = isCSV ? 'watchlist/import/csv/' : 'watchlist/import/json/';
             const response = await fetch(StockScanner.apiUrl + endpoint, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
-                    'X-WP-Nonce': StockScanner.nonce
+                    'X-WP-Nonce': StockScanner.nonce,
+                    'Accept': 'application/json'
                 },
                 body: formData
             });
@@ -732,6 +783,7 @@ class WatchlistManager {
         try {
             const response = await fetch(`${StockScanner.apiUrl}watchlist/${watchlistId}/export/${format}/`, {
                 method: 'GET',
+                credentials: 'include',
                 headers: {
                     'X-WP-Nonce': StockScanner.nonce
                 }
