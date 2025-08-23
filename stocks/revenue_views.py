@@ -48,10 +48,13 @@ def validate_discount_code(request):
         }
         
         if validation['valid']:
+            description = f"{validation['discount_amount']}% off"
+            if validation['discount'].code.upper() == 'TRIAL':
+                description = '7-day $1 trial'
             response_data.update({
                 'code': validation['discount'].code,
                 'discount_percentage': float(validation['discount_amount']),
-                'description': f"{validation['discount_amount']}% off"
+                'description': description
             })
         
         return JsonResponse(response_data)
@@ -104,16 +107,33 @@ def apply_discount_code(request):
             }, status=400)
         
         if validation['applies_discount']:
-            pricing = DiscountService.calculate_discounted_price(
-                original_amount, 
-                validation['discount_amount']
-            )
+            if validation['discount'].code.upper() == 'TRIAL':
+                final_amount = Decimal('1.00') if original_amount > Decimal('1.00') else original_amount
+                discount_amount = original_amount - final_amount
+                pricing = {
+                    'original_amount': original_amount,
+                    'discount_amount': discount_amount,
+                    'final_amount': final_amount
+                }
+            else:
+                pricing = DiscountService.calculate_discounted_price(
+                    original_amount, 
+                    validation['discount_amount']
+                )
         else:
             pricing = {
                 'original_amount': original_amount,
                 'discount_amount': Decimal('0.00'),
                 'final_amount': original_amount
             }
+        
+        savings_percentage = 0.0
+        if validation['applies_discount']:
+            if validation['discount'].code.upper() == 'TRIAL':
+                if original_amount > 0:
+                    savings_percentage = float(((original_amount - pricing['final_amount']) / original_amount) * 100)
+            else:
+                savings_percentage = float(validation['discount_amount'])
         
         return JsonResponse({
             'success': True,
@@ -122,7 +142,7 @@ def apply_discount_code(request):
             'original_amount': float(pricing['original_amount']),
             'discount_amount': float(pricing['discount_amount']),
             'final_amount': float(pricing['final_amount']),
-            'savings_percentage': float(validation['discount_amount']) if validation['applies_discount'] else 0,
+            'savings_percentage': savings_percentage,
             'message': validation['message']
         })
         
@@ -348,15 +368,26 @@ def initialize_discount_codes(request):
     Always returns JSON response
     """
     try:
-        code, created = DiscountService.initialize_ref50_code()
+        ref_code, ref_created = DiscountService.initialize_ref50_code()
+        trial_code, trial_created = DiscountService.initialize_trial_code()
         
         return JsonResponse({
             'success': True,
             'data': {
-                'code': code.code,
-                'discount_percentage': float(code.discount_percentage),
-                'created': created,
-                'message': 'REF50 code created' if created else 'REF50 code already exists'
+                'ref50': {
+                    'code': ref_code.code,
+                    'discount_percentage': float(ref_code.discount_percentage),
+                    'created': ref_created,
+                    'message': 'REF50 code created' if ref_created else 'REF50 code already exists'
+                },
+                'trial': {
+                    'code': trial_code.code,
+                    'trial_price': 1.00,
+                    'trial_days': 7,
+                    'created': trial_created,
+                    'message': 'TRIAL code created' if trial_created else 'TRIAL code already exists'
+                },
+                'message': 'Discount codes initialized'
             },
             'timestamp': timezone.now().isoformat(),
             'endpoint': request.path,
