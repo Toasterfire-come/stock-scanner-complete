@@ -5,6 +5,11 @@
  * Description: Creates 19 pages from XML export with live stock widgets, membership paywall, and seamless Django API integration
  * Version: 2.0.0
  * Author: Stock Scanner Team
+ * Author URI: https://retailtradescanner.com
+ * Text Domain: stock-scanner-integration
+ * Requires at least: 6.0
+ * Tested up to: 6.5
+ * Requires PHP: 7.4
  * License: GPL v2 or later
  */
 
@@ -80,14 +85,27 @@ class StockScannerIntegration {
         add_action('wp_ajax_get_stock_data', array($this, 'ajax_get_stock_data'));
         add_action('wp_ajax_nopriv_get_stock_data', array($this, 'ajax_get_stock_data'));
         
+        // Admin test API endpoint
+        add_action('wp_ajax_test_stock_scanner_api', array($this, 'ajax_test_api'));
+        
         // Hook into PMP membership changes
         add_action('pmpro_after_change_membership_level', array($this, 'sync_membership_level'), 10, 2);
     }
     
     public function enqueue_scripts() {
-        wp_enqueue_script('stock-scanner-js', plugin_dir_url(__FILE__) . 'assets/stock-scanner.js', array('jquery'), '1.0.0', true);
-        wp_enqueue_script('paypal-integration', plugin_dir_url(__FILE__) . 'assets/paypal-integration.js', array('jquery'), '1.0.0', true);
-        wp_enqueue_style('stock-scanner-css', plugin_dir_url(__FILE__) . 'assets/stock-scanner.css', array(), '1.0.0');
+        $assets_dir = plugin_dir_path(__FILE__) . 'assets/';
+        $assets_url = plugin_dir_url(__FILE__) . 'assets/';
+
+        // Enqueue Chart.js when shortcode is present or globally if needed
+        wp_register_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js', array(), null, true);
+
+        $stock_js_ver = file_exists($assets_dir . 'stock-scanner.js') ? filemtime($assets_dir . 'stock-scanner.js') : '1.0.0';
+        $paypal_js_ver = file_exists($assets_dir . 'paypal-integration.js') ? filemtime($assets_dir . 'paypal-integration.js') : '1.0.0';
+        $css_ver = file_exists($assets_dir . 'stock-scanner.css') ? filemtime($assets_dir . 'stock-scanner.css') : '1.0.0';
+
+        wp_enqueue_script('stock-scanner-js', $assets_url . 'stock-scanner.js', array('jquery', 'chartjs'), $stock_js_ver, true);
+        wp_enqueue_script('paypal-integration', $assets_url . 'paypal-integration.js', array('jquery'), $paypal_js_ver, true);
+        wp_enqueue_style('stock-scanner-css', $assets_url . 'stock-scanner.css', array(), $css_ver);
         
         // Localize script for AJAX
         wp_localize_script('stock-scanner-js', 'stock_scanner_ajax', array(
@@ -158,28 +176,45 @@ class StockScannerIntegration {
     }
     
     private function api_request($endpoint, $data = array()) {
-        $url = $this->api_base_url . $endpoint;
+        $url = trailingslashit($this->api_base_url) . ltrim($endpoint, '/');
         
         $args = array(
-            'body' => json_encode($data),
+            'method' => 'POST',
+            'body' => $data ? wp_json_encode($data) : null,
             'headers' => array(
                 'Content-Type' => 'application/json',
                 'X-API-Secret' => $this->api_secret,
                 'X-User-Level' => $this->get_user_membership_level(),
                 'X-User-ID' => get_current_user_id()
             ),
-            'timeout' => 30
+            'timeout' => 20
         );
         
-        $response = wp_remote_post($url, $args);
+        if (empty($data)) {
+            unset($args['body']);
+            $args['method'] = 'GET';
+        }
+        
+        $response = wp_remote_request($url, $args);
         
         if (is_wp_error($response)) {
             error_log('Stock Scanner API Error: ' . $response->get_error_message());
             return false;
         }
         
+        $status = wp_remote_retrieve_response_code($response);
+        if ($status < 200 || $status >= 300) {
+            error_log('Stock Scanner API HTTP ' . $status . ' for ' . $url);
+            return false;
+        }
+        
         $body = wp_remote_retrieve_body($response);
-        return json_decode($body, true);
+        $decoded = json_decode($body, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('Stock Scanner API JSON decode error: ' . json_last_error_msg());
+            return false;
+        }
+        return $decoded;
     }
     
     private function get_user_membership_level() {
@@ -193,7 +228,10 @@ class StockScannerIntegration {
     
     private function get_user_usage($user_id) {
         $response = $this->api_request('user/usage/', array('user_id' => $user_id));
-        return $response ? $response['usage'] : array('monthly' => 0, 'daily' => 0);
+        if (!$response || !isset($response['usage'])) {
+            return array('monthly' => PHP_INT_MAX, 'daily' => PHP_INT_MAX);
+        }
+        return $response['usage'];
     }
     
     private function can_user_access_stock($user_level, $usage) {
@@ -319,9 +357,14 @@ class StockScannerIntegration {
     
     public function admin_page() {
         if (isset($_POST['submit'])) {
-            update_option('stock_scanner_api_url', sanitize_url($_POST['api_url']));
+            if (!current_user_can('manage_options')) {
+                wp_die(__('You do not have sufficient permissions to access this page.', 'stock-scanner-integration'));
+            }
+            check_admin_referer('stock_scanner_settings');
+
+            update_option('stock_scanner_api_url', esc_url_raw($_POST['api_url']));
             update_option('stock_scanner_api_secret', sanitize_text_field($_POST['api_secret']));
-            echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
+            echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved!', 'stock-scanner-integration') . '</p></div>';
         }
         
         $api_url = get_option('stock_scanner_api_url', '');
@@ -330,6 +373,7 @@ class StockScannerIntegration {
         <div class="wrap">
             <h1>Stock Scanner Settings</h1>
             <form method="post">
+                <?php wp_nonce_field('stock_scanner_settings'); ?>
                 <table class="form-table">
                     <tr>
                         <th scope="row">API URL</th>
@@ -355,7 +399,6 @@ class StockScannerIntegration {
             
             <script>
             function testApiConnection() {
-                // Add API test functionality
                 document.getElementById('test-result').innerHTML = '<p>Testing connection...</p>';
                 
                 jQuery.post(ajaxurl, {
@@ -382,16 +425,17 @@ class StockScannerIntegration {
      * Detect user location for tax calculation
      */
     public function detect_user_location() {
-        if (!session_id()) {
-            session_start();
-        }
-        
-        // Try to get location from IP if not already detected
-        if (!isset($_SESSION['user_state']) || !isset($_SESSION['user_country'])) {
+        $cookie_key = 'stock_scanner_geo';
+        $geo_json = isset($_COOKIE[$cookie_key]) ? wp_unslash($_COOKIE[$cookie_key]) : '';
+        $geo = $geo_json ? json_decode($geo_json, true) : null;
+        if (!is_array($geo) || empty($geo['country'])) {
             $location = $this->get_location_from_ip();
-            $_SESSION['user_state'] = $location['state'];
-            $_SESSION['user_country'] = $location['country'];
-            $_SESSION['user_city'] = $location['city'];
+            $geo = array(
+                'country' => $location['country'],
+                'state' => $location['state'],
+                'city' => $location['city']
+            );
+            setcookie($cookie_key, wp_json_encode($geo), time() + DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
         }
     }
     
@@ -400,18 +444,24 @@ class StockScannerIntegration {
      */
     private function get_location_from_ip() {
         $ip = $this->get_user_ip();
-        
-        // Use ipapi.co for free IP geolocation
-        $response = wp_remote_get("http://ipapi.co/{$ip}/json/");
+        $transient_key = 'stock_geo_' . md5($ip);
+        $cached = get_transient($transient_key);
+        if ($cached) {
+            return $cached;
+        }
+        // Use HTTPS
+        $response = wp_remote_get("https://ipapi.co/{$ip}/json/");
         
         if (!is_wp_error($response)) {
             $data = json_decode(wp_remote_retrieve_body($response), true);
             
-            return array(
+            $location = array(
                 'country' => isset($data['country_code']) ? $data['country_code'] : 'US',
                 'state' => isset($data['region_code']) ? $data['region_code'] : '',
                 'city' => isset($data['city']) ? $data['city'] : ''
             );
+            set_transient($transient_key, $location, DAY_IN_SECONDS);
+            return $location;
         }
         
         // Default to US if detection fails
@@ -426,11 +476,14 @@ class StockScannerIntegration {
      * Get user's IP address
      */
     private function get_user_ip() {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            return $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $forwarded = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            $ip = trim($forwarded[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+        if (!empty($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
             return $_SERVER['REMOTE_ADDR'];
         }
         return '127.0.0.1';
@@ -440,12 +493,11 @@ class StockScannerIntegration {
      * Calculate sales tax based on location
      */
     public function calculate_sales_tax($tax, $values, $order) {
-        if (!session_id()) {
-            session_start();
-        }
-        
-        $country = isset($_SESSION['user_country']) ? $_SESSION['user_country'] : 'US';
-        $state = isset($_SESSION['user_state']) ? $_SESSION['user_state'] : '';
+        $cookie_key = 'stock_scanner_geo';
+        $geo_json = isset($_COOKIE[$cookie_key]) ? wp_unslash($_COOKIE[$cookie_key]) : '';
+        $geo = $geo_json ? json_decode($geo_json, true) : array();
+        $country = isset($geo['country']) ? $geo['country'] : 'US';
+        $state = isset($geo['state']) ? $geo['state'] : '';
         
         // Only calculate tax for US customers
         if ($country !== 'US') {
@@ -523,12 +575,11 @@ class StockScannerIntegration {
      * Add tax to checkout order
      */
     public function add_tax_to_order($order) {
-        if (!session_id()) {
-            session_start();
-        }
-        
-        $country = isset($_SESSION['user_country']) ? $_SESSION['user_country'] : 'US';
-        $state = isset($_SESSION['user_state']) ? $_SESSION['user_state'] : '';
+        $cookie_key = 'stock_scanner_geo';
+        $geo_json = isset($_COOKIE[$cookie_key]) ? wp_unslash($_COOKIE[$cookie_key]) : '';
+        $geo = $geo_json ? json_decode($geo_json, true) : array();
+        $country = isset($geo['country']) ? $geo['country'] : 'US';
+        $state = isset($geo['state']) ? $geo['state'] : '';
         
         if ($country === 'US') {
             $tax_rate = $this->get_tax_rate_for_state($state);
@@ -735,6 +786,20 @@ class StockScannerIntegration {
         });
         </script>
         <?php
+    }
+    
+    public function ajax_test_api() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Unauthorized', 'stock-scanner-integration'), 403);
+        }
+        check_ajax_referer('test_api', 'nonce');
+
+        $response = $this->api_request('health/');
+        if ($response && (!isset($response['success']) || $response['success'] === true)) {
+            wp_send_json_success(array('ok' => true));
+        }
+        $message = is_array($response) ? wp_json_encode($response) : 'Unknown error';
+        wp_send_json_error($message);
     }
 }
 

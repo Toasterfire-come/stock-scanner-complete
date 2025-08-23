@@ -67,11 +67,8 @@ class StockScannerPayPalIntegration {
      */
     private function add_hooks() {
         add_action('wp_ajax_create_paypal_order', array($this, 'create_paypal_order'));
-        add_action('wp_ajax_nopriv_create_paypal_order', array($this, 'create_paypal_order'));
         add_action('wp_ajax_capture_paypal_order', array($this, 'capture_paypal_order'));
-        add_action('wp_ajax_nopriv_capture_paypal_order', array($this, 'capture_paypal_order'));
         add_action('wp_ajax_create_paypal_subscription', array($this, 'create_paypal_subscription'));
-        add_action('wp_ajax_nopriv_create_paypal_subscription', array($this, 'create_paypal_subscription'));
         
         // Webhook endpoint
         add_action('rest_api_init', array($this, 'register_webhook_endpoint'));
@@ -124,18 +121,22 @@ class StockScannerPayPalIntegration {
     public function create_paypal_order() {
         check_ajax_referer('paypal_nonce', 'nonce');
         
+        if (!is_user_logged_in()) {
+            wp_send_json_error(__('Please log in to continue.', 'stock-scanner-integration'), 401);
+        }
+        
         $plan = sanitize_text_field($_POST['plan']);
         $billing_cycle = sanitize_text_field($_POST['billing_cycle']);
         
         if (!isset($this->plan_prices[$plan . '_' . $billing_cycle])) {
-            wp_die('Invalid plan');
+            wp_send_json_error(__('Invalid plan', 'stock-scanner-integration'), 400);
         }
         
         $amount = $this->plan_prices[$plan . '_' . $billing_cycle];
         
         $access_token = $this->get_access_token();
         if (!$access_token) {
-            wp_die('Failed to get PayPal access token');
+            wp_send_json_error(__('Failed to get PayPal access token', 'stock-scanner-integration'), 500);
         }
         
         $order_data = array(
@@ -171,14 +172,23 @@ class StockScannerPayPalIntegration {
         
         if (is_wp_error($response)) {
             $this->log_error('PayPal order creation error: ' . $response->get_error_message());
-            wp_die('Failed to create PayPal order');
+            wp_send_json_error(__('Failed to create PayPal order', 'stock-scanner-integration'));
         }
         
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
         if (isset($data['id'])) {
-            // Store order details in user meta
+            $approval_url = '';
+            if (!empty($data['links'])) {
+                foreach ($data['links'] as $link) {
+                    if (isset($link['rel']) && $link['rel'] === 'approve') {
+                        $approval_url = $link['href'];
+                        break;
+                    }
+                }
+            }
+            
             $user_id = get_current_user_id();
             update_user_meta($user_id, 'paypal_order_id', $data['id']);
             update_user_meta($user_id, 'paypal_plan', $plan);
@@ -186,12 +196,12 @@ class StockScannerPayPalIntegration {
             
             wp_send_json_success(array(
                 'order_id' => $data['id'],
-                'approval_url' => $data['links'][1]['href']
+                'approval_url' => $approval_url
             ));
         }
         
         $this->log_error('PayPal order response: ' . $body);
-        wp_die('Failed to create PayPal order');
+        wp_send_json_error(__('Failed to create PayPal order', 'stock-scanner-integration'));
     }
     
     /**
@@ -200,11 +210,15 @@ class StockScannerPayPalIntegration {
     public function capture_paypal_order() {
         check_ajax_referer('paypal_nonce', 'nonce');
         
+        if (!is_user_logged_in()) {
+            wp_send_json_error(__('Please log in to continue.', 'stock-scanner-integration'), 401);
+        }
+        
         $order_id = sanitize_text_field($_POST['order_id']);
         
         $access_token = $this->get_access_token();
         if (!$access_token) {
-            wp_die('Failed to get PayPal access token');
+            wp_send_json_error(__('Failed to get PayPal access token', 'stock-scanner-integration'), 500);
         }
         
         $url = $this->api_base_url . '/v2/checkout/orders/' . $order_id . '/capture';
@@ -219,7 +233,7 @@ class StockScannerPayPalIntegration {
         
         if (is_wp_error($response)) {
             $this->log_error('PayPal capture error: ' . $response->get_error_message());
-            wp_die('Failed to capture PayPal order');
+            wp_send_json_error(__('Failed to capture PayPal order', 'stock-scanner-integration'));
         }
         
         $body = wp_remote_retrieve_body($response);
@@ -230,20 +244,20 @@ class StockScannerPayPalIntegration {
             $plan = get_user_meta($user_id, 'paypal_plan', true);
             $billing_cycle = get_user_meta($user_id, 'paypal_billing_cycle', true);
             
-            // Update user membership
+            // Update user membership (consider PMPro APIs)
             $this->update_user_membership($user_id, $plan, $billing_cycle);
             
-            // Log successful payment
-            $this->log_payment($user_id, $order_id, $data['purchase_units'][0]['amount']['value'], 'completed');
+            $amount_value = $data['purchase_units'][0]['payments']['captures'][0]['amount']['value'] ?? '';
+            $this->log_payment($user_id, $order_id, $amount_value, 'completed');
             
             wp_send_json_success(array(
                 'status' => 'completed',
-                'message' => 'Payment completed successfully'
+                'message' => __('Payment completed successfully', 'stock-scanner-integration')
             ));
         }
         
         $this->log_error('PayPal capture response: ' . $body);
-        wp_die('Failed to capture PayPal order');
+        wp_send_json_error(__('Failed to capture PayPal order', 'stock-scanner-integration'));
     }
     
     /**
@@ -419,6 +433,51 @@ class StockScannerPayPalIntegration {
     public function handle_webhook($request) {
         $body = $request->get_body();
         $data = json_decode($body, true);
+
+        // Verify PayPal webhook signature
+        $transmission_id = $request->get_header('paypal-transmission-id');
+        $transmission_time = $request->get_header('paypal-transmission-time');
+        $cert_url = $request->get_header('paypal-cert-url');
+        $auth_algo = $request->get_header('paypal-auth-algo');
+        $transmission_sig = $request->get_header('paypal-transmission-sig');
+        $webhook_id = get_option('paypal_webhook_id');
+
+        if (!$webhook_id || !$transmission_id || !$transmission_time || !$cert_url || !$auth_algo || !$transmission_sig) {
+            return new WP_REST_Response(array('status' => 'forbidden'), 403);
+        }
+
+        $verify_url = $this->api_base_url . '/v1/notifications/verify-webhook-signature';
+        $access_token = $this->get_access_token();
+        if (!$access_token) {
+            return new WP_REST_Response(array('status' => 'forbidden'), 403);
+        }
+
+        $verify_payload = array(
+            'transmission_id' => $transmission_id,
+            'transmission_time' => $transmission_time,
+            'cert_url' => $cert_url,
+            'auth_algo' => $auth_algo,
+            'transmission_sig' => $transmission_sig,
+            'webhook_id' => $webhook_id,
+            'webhook_event' => $data
+        );
+
+        $verify_response = wp_remote_post($verify_url, array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $access_token,
+                'Content-Type' => 'application/json'
+            ),
+            'body' => wp_json_encode($verify_payload),
+            'timeout' => 20
+        ));
+
+        if (is_wp_error($verify_response)) {
+            return new WP_REST_Response(array('status' => 'forbidden'), 403);
+        }
+        $verify_body = json_decode(wp_remote_retrieve_body($verify_response), true);
+        if (!isset($verify_body['verification_status']) || $verify_body['verification_status'] !== 'SUCCESS') {
+            return new WP_REST_Response(array('status' => 'forbidden'), 403);
+        }
         
         $this->log_payment('webhook', 'webhook', json_encode($data), 'webhook_received');
         
@@ -527,6 +586,7 @@ class StockScannerPayPalIntegration {
         register_setting('paypal_settings', 'paypal_webhook_url');
         register_setting('paypal_settings', 'paypal_return_url');
         register_setting('paypal_settings', 'paypal_cancel_url');
+        register_setting('paypal_settings', 'paypal_webhook_id');
     }
     
     /**
@@ -568,6 +628,13 @@ class StockScannerPayPalIntegration {
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row">Webhook ID</th>
+                        <td>
+                            <input type="text" name="paypal_webhook_id" value="<?php echo esc_attr(get_option('paypal_webhook_id')); ?>" class="regular-text" />
+                            <p class="description">The Webhook ID from PayPal used for signature verification</p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row">Return URL</th>
                         <td>
                             <input type="url" name="paypal_return_url" value="<?php echo esc_attr(get_option('paypal_return_url')); ?>" class="regular-text" />
@@ -598,8 +665,14 @@ class StockScannerPayPalIntegration {
             'status' => $status
         );
         
-        $log_file = WP_CONTENT_DIR . '/paypal_payments.log';
-        file_put_contents($log_file, json_encode($log_entry) . "\n", FILE_APPEND | LOCK_EX);
+        $upload_dir = wp_upload_dir();
+        $log_dir = trailingslashit($upload_dir['basedir']) . 'stock-scanner-logs/';
+        if (!file_exists($log_dir)) {
+            wp_mkdir_p($log_dir);
+            @file_put_contents($log_dir . 'index.php', "<?php\n// Silence is golden.\n");
+        }
+        $log_file = $log_dir . 'paypal_payments.log';
+        file_put_contents($log_file, wp_json_encode($log_entry) . "\n", FILE_APPEND | LOCK_EX);
     }
     
     /**
@@ -611,8 +684,14 @@ class StockScannerPayPalIntegration {
             'error' => $message
         );
         
-        $log_file = WP_CONTENT_DIR . '/paypal_errors.log';
-        file_put_contents($log_file, json_encode($log_entry) . "\n", FILE_APPEND | LOCK_EX);
+        $upload_dir = wp_upload_dir();
+        $log_dir = trailingslashit($upload_dir['basedir']) . 'stock-scanner-logs/';
+        if (!file_exists($log_dir)) {
+            wp_mkdir_p($log_dir);
+            @file_put_contents($log_dir . 'index.php', "<?php\n// Silence is golden.\n");
+        }
+        $log_file = $log_dir . 'paypal_errors.log';
+        file_put_contents($log_file, wp_json_encode($log_entry) . "\n", FILE_APPEND | LOCK_EX);
     }
 }
 
