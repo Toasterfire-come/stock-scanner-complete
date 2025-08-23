@@ -14,24 +14,66 @@ const StockScannerVanilla = {
     async apiCall(endpoint, options = {}) {
         const defaultOptions = {
             method: 'GET',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-WP-Nonce': this.nonce
             }
         };
         
         try {
             const response = await fetch(this.apiUrl + endpoint, { ...defaultOptions, ...options });
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            const payload = isJson ? await response.json() : await response.text();
             
-            if (!data.success) {
-                throw new Error(data.error || 'API request failed');
+            if (!response.ok) {
+                const message = isJson && payload && payload.message ? payload.message : ('HTTP ' + response.status);
+                throw new Error(message);
             }
             
-            return data.data;
+            if (!isJson) {
+                return payload;
+            }
+            
+            return this.normalizeResponse(endpoint, payload);
         } catch (error) {
             console.error('API call failed:', error);
             throw error;
+        }
+    },
+
+    normalizeResponse(endpoint, json) {
+        try {
+            const path = (endpoint || '').toLowerCase();
+            if (json && typeof json === 'object') {
+                if (Object.prototype.hasOwnProperty.call(json, 'success')) {
+                    if (Object.prototype.hasOwnProperty.call(json, 'data')) {
+                        if (path.includes('watchlist/list')) {
+                            return (json.data && json.data.watchlists) ? json.data.watchlists : (json.data || []);
+                        }
+                        if (path.includes('portfolio/list')) {
+                            return (json.data && json.data.portfolios) ? json.data.portfolios : (json.data || []);
+                        }
+                        if (path.includes('news/feed')) {
+                            if (json.data && Array.isArray(json.data.news_items)) {
+                                return json.data.news_items;
+                            }
+                        }
+                        return json.data;
+                    }
+                }
+                if (Object.prototype.hasOwnProperty.call(json, 'results')) {
+                    return json.results;
+                }
+                if (Object.prototype.hasOwnProperty.call(json, 'news_items')) {
+                    return json.news_items;
+                }
+            }
+            return json;
+        } catch (e) {
+            return json;
         }
     },
     

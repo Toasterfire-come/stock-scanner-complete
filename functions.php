@@ -130,6 +130,11 @@ function stock_scanner_enqueue_scripts() {
     }
     
     // ===== COMPREHENSIVE LOCALIZATION DATA =====
+    // Compute API base from settings (falls back to same-origin /api/)
+    $api_settings = get_option('stock_scanner_api_settings', array());
+    $backend_origin = !empty($api_settings['backend_url']) ? rtrim($api_settings['backend_url'], '/') : rtrim(home_url(), '/');
+    $api_base = trailingslashit($backend_origin . '/api');
+
     $localize_data = array(
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_nonce'),
@@ -140,6 +145,8 @@ function stock_scanner_enqueue_scripts() {
         'currentUser' => is_user_logged_in() ? wp_get_current_user()->ID : 0,
         'restUrl' => rest_url('stock-scanner/v1/'),
         'restNonce' => wp_create_nonce('wp_rest'),
+        // Base URL for external REST API
+        'apiBase' => $api_base,
         
         // Enhanced theme settings
         'settings' => array(
