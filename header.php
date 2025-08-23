@@ -22,15 +22,16 @@
     <?php wp_head(); ?>
     
     <!-- Schema.org markup for SEO -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "<?php bloginfo('name'); ?>",
-        "description": "<?php bloginfo('description'); ?>",
-        "url": "<?php echo esc_url(home_url('/')); ?>"
-    }
-    </script>
+    <?php
+    $schema_data = array(
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => get_bloginfo('name', 'display'),
+        'description' => get_bloginfo('description', 'display'),
+        'url' => home_url('/')
+    );
+    ?>
+    <script type="application/ld+json"><?php echo wp_json_encode($schema_data); ?></script>
 </head>
 
 <body <?php body_class(); ?>>
@@ -44,21 +45,21 @@
         
         <!-- Logo and Brand Section -->
         <div class="site-branding">
-            <a href="<?php echo esc_url(home_url('/')); ?>" class="logo-link" rel="home" aria-label="<?php bloginfo('name'); ?> - Home">
+            <a href="<?php echo esc_url(home_url('/')); ?>" class="logo-link" rel="home" aria-label="<?php echo esc_attr( get_bloginfo('name', 'display') ); ?> - Home">
                 <div class="logo-container">
                     <img src="<?php echo esc_url(get_template_directory_uri()); ?>/assets/images/logo.png" 
-                         alt="<?php bloginfo('name'); ?> Logo" 
+                         alt="<?php echo esc_attr( get_bloginfo('name', 'display') ); ?> Logo" 
                          class="logo-image"
                          width="120" 
                          height="60"
                          loading="eager"
                          decoding="async">
                     <div class="brand-text">
-                        <span class="logo-text"><?php bloginfo('name'); ?></span>
+                        <span class="logo-text"><?php echo esc_html( get_bloginfo('name', 'display') ); ?></span>
                         <?php 
                         $description = get_bloginfo('description', 'display');
                         if ($description || is_customize_preview()) : ?>
-                            <span class="site-description"><?php echo $description; ?></span>
+                            <span class="site-description"><?php echo esc_html( $description ); ?></span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -92,7 +93,7 @@
         <div class="header-actions">
             
             <!-- Theme Toggle -->
-            <button class="theme-toggle btn-icon" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle Theme">
+            <button class="theme-toggle btn-icon" aria-label="Toggle dark mode" title="Toggle Theme">
                 <span class="theme-icon light-icon">🌙</span>
                 <span class="theme-icon dark-icon">☀️</span>
             </button>

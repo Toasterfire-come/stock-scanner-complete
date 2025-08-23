@@ -27,7 +27,7 @@ get_header(); ?>
                     <li><a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">Sign out</a></li>
                 </ul>
             </aside>
-            <main class="account-content">
+            <section class="account-content" role="region" aria-label="Account content">
                 <div class="card account-card">
                     <h2>Your Membership</h2>
                     <?php echo do_shortcode('[stock_scanner_dashboard show_notifications="false" show_security_status="true"]'); ?>
@@ -36,7 +36,7 @@ get_header(); ?>
                     <h3>Usage & Limits</h3>
                     <?php echo do_shortcode('[stock_scanner_dashboard show_notifications="false" show_security_status="false"]'); ?>
                 </div>
-            </main>
+            </section>
         </div>
     </div>
 </div>

@@ -5,7 +5,7 @@
 
 // Global configuration
 const StockScannerVanilla = {
-    apiUrl: '/wp-json/stocks/v1/',
+    apiUrl: (typeof stockScannerData !== 'undefined' && stockScannerData.apiBase) ? stockScannerData.apiBase : '/api/',
     nonce: document.querySelector('meta[name="wp-nonce"]')?.content || '',
     currentUser: null,
     cache: new Map(),

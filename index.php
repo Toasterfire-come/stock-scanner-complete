@@ -128,31 +128,5 @@ get_header(); ?>
     </section>
 </div>
 
-<style>
-.feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-}
-
-@media (max-width: 768px) {
-    .hero-title {
-        font-size: 2rem !important;
-    }
-    
-    .hero-actions {
-        flex-direction: column !important;
-        align-items: center;
-    }
-    
-    .hero-actions .btn {
-        width: 100%;
-        max-width: 300px;
-    }
-    
-    .section-title {
-        font-size: 2rem !important;
-    }
-}
-</style>
 
 <?php get_footer(); ?>

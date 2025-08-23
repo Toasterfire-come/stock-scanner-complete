@@ -1,4 +1,4 @@
-    </div><!-- #content -->
+    </main><!-- #main -->
 
     <footer id="colophon" class="site-footer">
         <div class="footer-container">
@@ -139,69 +139,5 @@
 
 <?php wp_footer(); ?>
 
-
-<script>
-// Footer interaction enhancements
-document.addEventListener('DOMContentLoaded', function() {
-    // Smooth scroll for footer links
-    const footerLinks = document.querySelectorAll('.footer-menu a[href^="#"]');
-    footerLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-    
-    // Add loading states to CTA buttons
-    const ctaButtons = document.querySelectorAll('.cta-buttons .btn');
-    ctaButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            this.style.opacity = '0.7';
-            this.textContent = 'Loading...';
-        });
-    });
-});
-</script>
-
 </body>
-</html><?php
-
-/**
- * Fallback menu for footer
- */
-function stock_scanner_footer_fallback_menu() {
-    echo '<ul class="footer-menu">';
-    echo '<li><a href="' . home_url('/about/') . '">About</a></li>';
-    echo '<li><a href="' . home_url('/contact/') . '">Contact</a></li>';
-    echo '<li><a href="' . home_url('/privacy-policy/') . '">Privacy</a></li>';
-    echo '<li><a href="' . home_url('/terms-of-service/') . '">Terms</a></li>';
-    echo '<li><a href="' . home_url('/faq/') . '">FAQ</a></li>';
-    echo '</ul>';
-}
-
-/**
- * Fallback menu for primary navigation
- */
-function stock_scanner_fallback_menu() {
-    echo '<ul class="primary-menu">';
-    echo '<li><a href="' . home_url('/dashboard/') . '">Dashboard</a></li>';
-    echo '<li><a href="' . home_url('/stock-scanner/') . '">Scanner</a></li>';
-    
-    // New feature menu items (only show if user is logged in)
-    if (is_user_logged_in()) {
-        echo '<li><a href="' . home_url('/portfolio/') . '"><span class="menu-icon"></span> My Portfolios</a></li>';
-        echo '<li><a href="' . home_url('/watchlist/') . '"><span class="menu-icon">👁️</span> Watchlist</a></li>';
-        echo '<li><a href="' . home_url('/personalized-news/') . '"><span class="menu-icon">📰</span> My News Feed</a></li>';
-    }
-    
-    echo '<li><a href="' . home_url('/premium-plans/') . '">Plans</a></li>';
-    echo '<li><a href="' . home_url('/contact/') . '">Contact</a></li>';
-    echo '</ul>';
-}
-?>
+</html>
