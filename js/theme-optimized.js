@@ -119,10 +119,7 @@
             this.setupThemeToggle();
             this.setupUserDropdown();
             this.setupFormHandling();
-            this.setupModalSystem();
-            this.setupPerformanceMonitoring();
-            this.setupSearchFunctionality();
-            this.initializeComponents();
+            this.enhanceFooterInteractions();
         }
 
         setupMobileMenu() {
@@ -407,6 +404,17 @@
                     metaThemeColor.setAttribute('content', newTheme === 'dark' ? '#1a1a1a' : '#ffffff');
                 }
             };
+
+            // Attach click handler to header theme toggle button
+            Utils.ready(() => {
+                const themeToggleBtn = Utils.select('.theme-toggle');
+                if (themeToggleBtn) {
+                    themeToggleBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.toggleTheme();
+                    });
+                }
+            });
 
             // Listen for system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
@@ -761,6 +769,29 @@
                 Utils.removeClass(dropdown, 'show');
             });
         }
+
+        enhanceFooterInteractions() {
+            // Smooth scroll for footer in-page links
+            const footerLinks = Utils.selectAll('.footer-menu a[href^="#"]');
+            footerLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            // Add loading states to CTA buttons
+            const ctaButtons = Utils.selectAll('.cta-buttons .btn');
+            ctaButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.opacity = '0.7';
+                    this.textContent = 'Loading...';
+                });
+            });
+        }
     }
 
     // Initialize theme when DOM is ready
@@ -772,6 +803,7 @@
         
         // Mark as initialized
         Utils.addClass(document.body, 'vanilla-js-initialized');
+        document.body.classList.add('theme-fully-loaded');
         
         console.log('🚀 Stock Scanner Theme loaded (100% Vanilla JS)');
     });

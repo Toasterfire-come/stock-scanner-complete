@@ -14,6 +14,19 @@ function stock_scanner_fallback_menu() {
 }
 
 /**
+ * Footer fallback menu
+ */
+function stock_scanner_footer_fallback_menu() {
+    echo '<ul class="footer-menu">';
+    echo '<li><a href="' . esc_url(home_url('/about/')) . '">About</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/contact/')) . '">Contact</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/privacy-policy/')) . '">Privacy</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/terms-of-service/')) . '">Terms</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/faq/')) . '">FAQ</a></li>';
+    echo '</ul>';
+}
+
+/**
  * Stock Scanner Pro Theme - Production Ready Functions
  * 100% Vanilla JavaScript - No jQuery Dependencies
  * Version: 2.2.0 - Optimized
@@ -108,8 +121,11 @@ add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
  */
 function stock_scanner_remove_jquery() {
     if (!is_admin()) {
-        wp_deregister_script('jquery');
-        wp_deregister_script('jquery-migrate');
+        // Only deregister if no plugin explicitly enqueued jQuery already
+        if (!wp_script_is('jquery', 'enqueued') && !wp_script_is('jquery', 'to_print')) {
+            wp_deregister_script('jquery');
+            wp_deregister_script('jquery-migrate');
+        }
     }
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_remove_jquery', 1);
@@ -461,8 +477,8 @@ function stock_scanner_security_headers() {
     if (!is_admin()) {
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: SAMEORIGIN');
-        header('X-XSS-Protection: 1; mode=block');
         header('Referrer-Policy: strict-origin-when-cross-origin');
+        // Consider adding a Content-Security-Policy header via server config or plugin
     }
 }
 add_action('send_headers', 'stock_scanner_security_headers');
@@ -475,7 +491,7 @@ function stock_scanner_performance_optimizations() {
     add_action('wp_head', function() {
         echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/enhanced-styles.css" as="style">';
         echo '<link rel="preload" href="' . get_template_directory_uri() . '/js/theme-optimized.js" as="script">';
-        echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">';
+
         echo '<link rel="dns-prefetch" href="//api.stockmarket.com">';
     });
     
@@ -539,5 +555,18 @@ remove_action('wp_head', 'rsd_link');
 
 // Theme loaded - mark as ready
 add_action('wp_footer', function() {
-    echo '<script>document.body.classList.add("theme-fully-loaded");</script>';
+    // Moved to theme JS to avoid inline script for CSP
 });
+
+// Use WordPress resource hints API for preconnect/dns-prefetch
+function stock_scanner_resource_hints($urls, $relation_type) {
+    if ('preconnect' === $relation_type) {
+        $urls[] = array('href' => 'https://fonts.googleapis.com', 'crossorigin');
+        $urls[] = array('href' => 'https://fonts.gstatic.com', 'crossorigin');
+    }
+    if ('dns-prefetch' === $relation_type) {
+        $urls[] = '//api.stockmarket.com';
+    }
+    return $urls;
+}
+add_filter('wp_resource_hints', 'stock_scanner_resource_hints', 10, 2);
