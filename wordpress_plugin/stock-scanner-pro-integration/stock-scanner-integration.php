@@ -3,7 +3,7 @@
  * Plugin Name: Stock Scanner Integration
  * Plugin URI: https://retailtradescanner.com
  * Description: Stock scanner with membership integration, anti-bot protection, and advanced analytics
- * Version: 2.1.0
+ * Version: 1.5.0
  * Author: Stock Scanner Team
  * License: GPL v2 or later
  * Text Domain: stock-scanner
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('STOCK_SCANNER_VERSION', '2.1.0');
+define('STOCK_SCANNER_VERSION', '1.5.0');
 define('STOCK_SCANNER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('STOCK_SCANNER_PLUGIN_URL', plugin_dir_url(__FILE__));
 
