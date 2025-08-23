@@ -101,119 +101,170 @@
     };
 
     // Complete API client
-    const API_BASE = '/api/';
+    const API_BASE = (typeof stockScannerData !== 'undefined' && stockScannerData.apiBase) ? stockScannerData.apiBase : '/api/';
+
+    function isObject(value) {
+        return value !== null && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    function unwrapJson(json) {
+        if (!json) return json;
+        if (isObject(json) && Object.prototype.hasOwnProperty.call(json, 'success')) {
+            if (json.success === false) {
+                const err = new Error(json.error || 'Request failed');
+                err.data = json;
+                throw err;
+            }
+            if (Object.prototype.hasOwnProperty.call(json, 'data')) return json.data;
+            if (Object.prototype.hasOwnProperty.call(json, 'result')) return json.result;
+            return json;
+        }
+        if (isObject(json) && Object.keys(json).length === 1 && Object.prototype.hasOwnProperty.call(json, 'data')) {
+            return json.data;
+        }
+        return json;
+    }
+
+    function ensureArray(value, context = 'array') {
+        if (Array.isArray(value)) return value;
+        if (isObject(value)) {
+            if (Array.isArray(value.results)) return value.results;
+            if (Array.isArray(value.data)) return value.data;
+        }
+        throw new Error(`Unexpected response shape: expected ${context}`);
+    }
+
+    function ensureObject(value, context = 'object') {
+        if (isObject(value)) return value;
+        if (Array.isArray(value)) {
+            return { items: value };
+        }
+        throw new Error(`Unexpected response shape: expected ${context}`);
+    }
+
+    function ensureAck(value) {
+        if (isObject(value)) {
+            if (Object.prototype.hasOwnProperty.call(value, 'success')) return value;
+            if (Object.prototype.hasOwnProperty.call(value, 'status')) return value;
+        }
+        // Coerce plain true to { success: true }
+        if (value === true) return { success: true };
+        return { success: true, data: value };
+    }
+ 
     const Api = {
         base: API_BASE,
+        defaultTimeoutMs: 12000,
         // Root and system
-        root: () => Api.get('/'),
-        health: () => Api.get('/health/'),
-        docs: () => Api.get('/docs/'),
-        endpointStatus: () => Api.get('/endpoint-status/'),
+        root: async () => Api.get('/'),
+        health: async () => ensureObject(await Api.get('/health/'), 'health object'),
+        docs: async () => Api.get('/docs/'),
+        endpointStatus: async () => ensureObject(await Api.get('/endpoint-status/'), 'endpoint status'),
         // Stocks (core)
-        index: () => Api.get('/'),
+        index: async () => Api.get('/'),
         stocks: {
-            list: () => Api.get('/stocks/'),
-            detail: (ticker) => Api.get(`/stocks/${encodeURIComponent(ticker)}/`),
-            detailAlias: (ticker) => Api.get(`/stock/${encodeURIComponent(ticker)}/`),
-            search: (q) => Api.get(`/stocks/search/?q=${encodeURIComponent(q)}`),
-            realtime: (ticker) => Api.get(`/realtime/${encodeURIComponent(ticker)}/`),
-            trending: () => Api.get('/trending/'),
-            marketStats: () => Api.get('/market-stats/'),
-            filter: (params) => Api.get(`/filter/?${new URLSearchParams(params)}`),
-            statistics: () => Api.get('/statistics/'),
+            list: async () => ensureArray(unwrapJson(await Api.get('/stocks/')), 'stocks array'),
+            detail: async (ticker) => ensureObject(unwrapJson(await Api.get(`/stocks/${encodeURIComponent(ticker)}/`)), 'stock detail'),
+            detailAlias: async (ticker) => ensureObject(unwrapJson(await Api.get(`/stock/${encodeURIComponent(ticker)}/`)), 'stock detail'),
+            search: async (q) => ensureArray(unwrapJson(await Api.get(`/stocks/search/?q=${encodeURIComponent(q)}`)), 'search results'),
+            realtime: async (ticker) => ensureObject(unwrapJson(await Api.get(`/realtime/${encodeURIComponent(ticker)}/`)), 'realtime object'),
+            trending: async () => ensureArray(unwrapJson(await Api.get('/trending/')), 'trending array'),
+            marketStats: async () => ensureObject(unwrapJson(await Api.get('/market-stats/')), 'market stats'),
+            filter: async (params) => ensureArray(unwrapJson(await Api.get(`/filter/?${new URLSearchParams(params)}`)), 'filtered stocks'),
+            statistics: async () => ensureObject(unwrapJson(await Api.get('/statistics/')), 'market statistics'),
         },
         // WordPress-friendly
         wordpress: {
-            stocks: () => Api.get('/wordpress/stocks/'),
-            news: () => Api.get('/wordpress/news/'),
-            alerts: () => Api.get('/wordpress/alerts/'),
+            stocks: async () => ensureArray(unwrapJson(await Api.get('/wordpress/stocks/')), 'wp stocks array'),
+            news: async () => ensureArray(unwrapJson(await Api.get('/wordpress/news/')), 'wp news array'),
+            alerts: async () => ensureArray(unwrapJson(await Api.get('/wordpress/alerts/')), 'wp alerts array'),
         },
         // Content update triggers (secured)
         content: {
-            updateStocks: (body) => Api.post('/stocks/update/', body),
-            updateNews: (body) => Api.post('/news/update/', body),
+            updateStocks: async (body) => ensureAck(unwrapJson(await Api.post('/stocks/update/', body))),
+            updateNews: async (body) => ensureAck(unwrapJson(await Api.post('/news/update/', body))),
         },
         // Alerts
         alerts: {
-            create: (body) => Api.post('/alerts/create/', body),
+            create: async (body) => ensureObject(unwrapJson(await Api.post('/alerts/create/', body)), 'alert'),
         },
         // Subscriptions
-        subscription: (body) => Api.post('/subscription/', body),
-        wordpressSubscribe: (body) => Api.post('/wordpress/subscribe/', body),
+        subscription: async (body) => ensureAck(unwrapJson(await Api.post('/subscription/', body))),
+        wordpressSubscribe: async (body) => ensureAck(unwrapJson(await Api.post('/wordpress/subscribe/', body))),
         // Auth, user, billing, notifications
         auth: {
-            login: (body) => Api.post('/auth/login/', body),
-            logout: (body) => Api.post('/auth/logout/', body),
+            login: async (body) => ensureObject(unwrapJson(await Api.post('/auth/login/', body)), 'login response'),
+            logout: async (body) => ensureAck(unwrapJson(await Api.post('/auth/logout/', body))),
         },
         user: {
-            profile: (body, method = 'GET') => Api.request('/user/profile/', { method, body }),
-            changePassword: (body) => Api.post('/user/change-password/', body),
-            marketData: () => Api.get('/market-data/'),
-            updatePayment: (body) => Api.post('/user/update-payment/', body),
-            billingHistory: () => Api.get('/user/billing-history/'),
-            billingHistoryAlt: () => Api.get('/billing/history/'),
-            billingDownload: (invoiceId) => Api.get(`/billing/download/${encodeURIComponent(invoiceId)}/`),
-            currentPlan: () => Api.get('/billing/current-plan/'),
-            changePlan: (body) => Api.post('/billing/change-plan/', body),
-            billingStats: () => Api.get('/billing/stats/'),
-            updatePaymentMethod: (body) => Api.post('/billing/update-payment-method/', body),
-            notificationSettings: (body, method='GET') => Api.request('/user/notification-settings/', { method, body }),
-            notificationSettingsAlt: (body, method='GET') => Api.request('/notifications/settings/', { method, body }),
-            notificationsHistory: () => Api.get('/notifications/history/'),
-            notificationsMarkRead: (body) => Api.post('/notifications/mark-read/', body),
-            usageStats: () => Api.get('/usage-stats/'),
+            profile: async (body, method = 'GET') => ensureObject(unwrapJson(await Api.request('/user/profile/', { method, body })), 'user profile'),
+            changePassword: async (body) => ensureAck(unwrapJson(await Api.post('/user/change-password/', body))),
+            marketData: async () => ensureObject(unwrapJson(await Api.get('/market-data/')), 'market data'),
+            updatePayment: async (body) => ensureAck(unwrapJson(await Api.post('/user/update-payment/', body))),
+            billingHistory: async () => ensureArray(unwrapJson(await Api.get('/user/billing-history/')), 'billing history'),
+            billingHistoryAlt: async () => ensureArray(unwrapJson(await Api.get('/billing/history/')), 'billing history'),
+            billingDownload: async (invoiceId) => await Api.get(`/billing/download/${encodeURIComponent(invoiceId)}/`),
+            currentPlan: async () => ensureObject(unwrapJson(await Api.get('/billing/current-plan/')), 'current plan'),
+            changePlan: async (body) => ensureAck(unwrapJson(await Api.post('/billing/change-plan/', body))),
+            billingStats: async () => ensureObject(unwrapJson(await Api.get('/billing/stats/')), 'billing stats'),
+            updatePaymentMethod: async (body) => ensureAck(unwrapJson(await Api.post('/billing/update-payment-method/', body))),
+            notificationSettings: async (body, method='GET') => ensureObject(unwrapJson(await Api.request('/user/notification-settings/', { method, body })), 'notification settings'),
+            notificationSettingsAlt: async (body, method='GET') => ensureObject(unwrapJson(await Api.request('/notifications/settings/', { method, body })), 'notification settings'),
+            notificationsHistory: async () => ensureArray(unwrapJson(await Api.get('/notifications/history/')), 'notifications history'),
+            notificationsMarkRead: async (body) => ensureAck(unwrapJson(await Api.post('/notifications/mark-read/', body))),
+            usageStats: async () => ensureObject(unwrapJson(await Api.get('/usage-stats/')), 'usage stats'),
         },
         // Portfolio (updated REST + legacy extras)
         portfolio: {
-            get: () => Api.get('/portfolio/'),
-            add: (body) => Api.post('/portfolio/add/', body),
-            deleteHolding: (holdingId) => Api.delete(`/portfolio/${encodeURIComponent(holdingId)}/`),
+            get: async () => ensureObject(unwrapJson(await Api.get('/portfolio/')), 'portfolio'),
+            add: async (body) => ensureAck(unwrapJson(await Api.post('/portfolio/add/', body))),
+            deleteHolding: async (holdingId) => ensureAck(unwrapJson(await Api.delete(`/portfolio/${encodeURIComponent(holdingId)}/`))),
             // legacy extras
-            create: (body) => Api.post('/portfolio/create/', body),
-            list: () => Api.get('/portfolio/list/'),
-            deletePortfolio: (portfolioId) => Api.delete(`/portfolio/${encodeURIComponent(portfolioId)}/delete/`),
-            updatePortfolio: (portfolioId, body) => Api.put(`/portfolio/${encodeURIComponent(portfolioId)}/update/`, body),
-            performance: (portfolioId) => Api.get(`/portfolio/${encodeURIComponent(portfolioId)}/performance/`),
-            addHolding: (body) => Api.post('/portfolio/add-holding/', body),
-            sellHolding: (body) => Api.post('/portfolio/sell-holding/', body),
-            importCsv: (body) => Api.post('/portfolio/import-csv/', body),
-            alertRoi: () => Api.get('/portfolio/alert-roi/'),
+            create: async (body) => ensureAck(unwrapJson(await Api.post('/portfolio/create/', body))),
+            list: async () => ensureArray(unwrapJson(await Api.get('/portfolio/list/')), 'portfolio list'),
+            deletePortfolio: async (portfolioId) => ensureAck(unwrapJson(await Api.delete(`/portfolio/${encodeURIComponent(portfolioId)}/delete/`))),
+            updatePortfolio: async (portfolioId, body) => ensureAck(unwrapJson(await Api.put(`/portfolio/${encodeURIComponent(portfolioId)}/update/`, body))),
+            performance: async (portfolioId) => ensureObject(unwrapJson(await Api.get(`/portfolio/${encodeURIComponent(portfolioId)}/performance/`)), 'portfolio performance'),
+            addHolding: async (body) => ensureAck(unwrapJson(await Api.post('/portfolio/add-holding/', body))),
+            sellHolding: async (body) => ensureAck(unwrapJson(await Api.post('/portfolio/sell-holding/', body))),
+            importCsv: async (body) => ensureAck(unwrapJson(await Api.post('/portfolio/import-csv/', body))),
+            alertRoi: async () => ensureObject(unwrapJson(await Api.get('/portfolio/alert-roi/')), 'portfolio alert roi'),
         },
         // Watchlist (updated REST + legacy extras)
         watchlist: {
-            get: () => Api.get('/watchlist/'),
-            add: (body) => Api.post('/watchlist/add/', body),
-            delete: (itemId) => Api.delete(`/watchlist/${encodeURIComponent(itemId)}/`),
-            create: (body) => Api.post('/watchlist/create/', body),
-            list: () => Api.get('/watchlist/list/'),
-            update: (watchlistId, body) => Api.put(`/watchlist/${encodeURIComponent(watchlistId)}/update/`, body),
-            deleteLegacy: (watchlistId) => Api.delete(`/watchlist/${encodeURIComponent(watchlistId)}/delete/`),
-            performance: (watchlistId) => Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/performance/`),
-            addStock: (body) => Api.post('/watchlist/add-stock/', body),
-            removeStock: (body) => Api.post('/watchlist/remove-stock/', body),
-            updateItem: (itemId, body) => Api.put(`/watchlist/item/${encodeURIComponent(itemId)}/`, body),
-            exportCsv: (watchlistId) => Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/export/csv/`),
-            exportJson: (watchlistId) => Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/export/json/`),
-            importCsv: (body) => Api.post('/watchlist/import/csv/', body),
-            importJson: (body) => Api.post('/watchlist/import/json/', body),
+            get: async () => ensureObject(unwrapJson(await Api.get('/watchlist/')), 'watchlist'),
+            add: async (body) => ensureAck(unwrapJson(await Api.post('/watchlist/add/', body))),
+            delete: async (itemId) => ensureAck(unwrapJson(await Api.delete(`/watchlist/${encodeURIComponent(itemId)}/`))),
+            create: async (body) => ensureAck(unwrapJson(await Api.post('/watchlist/create/', body))),
+            list: async () => ensureArray(unwrapJson(await Api.get('/watchlist/list/')), 'watchlist list'),
+            update: async (watchlistId, body) => ensureAck(unwrapJson(await Api.put(`/watchlist/${encodeURIComponent(watchlistId)}/update/`, body))),
+            deleteLegacy: async (watchlistId) => ensureAck(unwrapJson(await Api.delete(`/watchlist/${encodeURIComponent(watchlistId)}/delete/`))),
+            performance: async (watchlistId) => ensureObject(unwrapJson(await Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/performance/`)), 'watchlist performance'),
+            addStock: async (body) => ensureAck(unwrapJson(await Api.post('/watchlist/add-stock/', body))),
+            removeStock: async (body) => ensureAck(unwrapJson(await Api.post('/watchlist/remove-stock/', body))),
+            updateItem: async (itemId, body) => ensureAck(unwrapJson(await Api.put(`/watchlist/item/${encodeURIComponent(itemId)}/`, body))),
+            exportCsv: async (watchlistId) => await Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/export/csv/`),
+            exportJson: async (watchlistId) => await Api.get(`/watchlist/${encodeURIComponent(watchlistId)}/export/json/`),
+            importCsv: async (body) => ensureAck(unwrapJson(await Api.post('/watchlist/import/csv/', body))),
+            importJson: async (body) => ensureAck(unwrapJson(await Api.post('/watchlist/import/json/', body))),
         },
         // News personalization
         news: {
-            feed: () => Api.get('/news/feed/'),
-            markRead: (body) => Api.post('/news/mark-read/', body),
-            markClicked: (body) => Api.post('/news/mark-clicked/', body),
-            preferences: (body) => Api.post('/news/preferences/', body),
-            syncPortfolio: (body) => Api.post('/news/sync-portfolio/', body),
-            analytics: () => Api.get('/news/analytics/'),
+            feed: async () => ensureArray(unwrapJson(await Api.get('/news/feed/')), 'news feed'),
+            markRead: async (body) => ensureAck(unwrapJson(await Api.post('/news/mark-read/', body))),
+            markClicked: async (body) => ensureAck(unwrapJson(await Api.post('/news/mark-clicked/', body))),
+            preferences: async (body) => ensureAck(unwrapJson(await Api.post('/news/preferences/', body))),
+            syncPortfolio: async (body) => ensureAck(unwrapJson(await Api.post('/news/sync-portfolio/', body))),
+            analytics: async () => ensureObject(unwrapJson(await Api.get('/news/analytics/')), 'news analytics'),
         },
         // Revenue and discounts
         revenue: {
-            validateDiscount: (body) => Api.post('/revenue/validate-discount/', body),
-            applyDiscount: (body) => Api.post('/revenue/apply-discount/', body),
-            recordPayment: (body) => Api.post('/revenue/record-payment/', body),
-            revenueAnalytics: (monthYear) => monthYear ? Api.get(`/revenue/revenue-analytics/${encodeURIComponent(monthYear)}/`) : Api.get('/revenue/revenue-analytics/'),
-            initializeCodes: (body) => Api.post('/revenue/initialize-codes/', body),
-            monthlySummary: (monthYear) => Api.get(`/revenue/monthly-summary/${encodeURIComponent(monthYear)}/`),
+            validateDiscount: async (body) => ensureObject(unwrapJson(await Api.post('/revenue/validate-discount/', body)), 'validate discount'),
+            applyDiscount: async (body) => ensureAck(unwrapJson(await Api.post('/revenue/apply-discount/', body))),
+            recordPayment: async (body) => ensureAck(unwrapJson(await Api.post('/revenue/record-payment/', body))),
+            revenueAnalytics: async (monthYear) => ensureObject(unwrapJson(await (monthYear ? Api.get(`/revenue/revenue-analytics/${encodeURIComponent(monthYear)}/`) : Api.get('/revenue/revenue-analytics/'))), 'revenue analytics'),
+            initializeCodes: async (body) => ensureAck(unwrapJson(await Api.post('/revenue/initialize-codes/', body))),
+            monthlySummary: async (monthYear) => ensureObject(unwrapJson(await Api.get(`/revenue/monthly-summary/${encodeURIComponent(monthYear)}/`)), 'monthly summary'),
         },
         // Core request helpers
         async request(endpoint, options={}) {
@@ -222,16 +273,34 @@
             const body = options.body && headers['Content-Type'] === 'application/json'
                 ? JSON.stringify(options.body)
                 : options.body || undefined;
-            const resp = await fetch(url, Object.assign({}, options, { headers, body }));
-            const contentType = resp.headers.get('content-type') || '';
-            const isJson = contentType.includes('application/json');
-            if (!resp.ok) {
-                const errData = isJson ? await resp.json().catch(() => ({})) : await resp.text().catch(() => '');
-                const error = new Error(`HTTP ${resp.status}`);
-                error.data = errData;
-                throw error;
+
+            const controller = new AbortController();
+            const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : Api.defaultTimeoutMs;
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const resp = await fetch(url, Object.assign({}, options, {
+                    headers,
+                    body,
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    signal: controller.signal
+                }));
+
+                const contentType = resp.headers.get('content-type') || '';
+                const isJson = contentType.includes('application/json');
+                const payload = isJson ? await resp.json().catch(() => ({})) : await resp.text().catch(() => '');
+
+                if (!resp.ok) {
+                    const error = new Error(`HTTP ${resp.status}`);
+                    error.data = payload;
+                    throw error;
+                }
+
+                return payload;
+            } finally {
+                clearTimeout(timeoutId);
             }
-            return isJson ? resp.json() : resp.text();
         },
         get(endpoint, options={}) { return Api.request(endpoint, Object.assign({ method: 'GET' }, options)); },
         post(endpoint, body, options={}) { return Api.request(endpoint, Object.assign({ method: 'POST', body }, options)); },
