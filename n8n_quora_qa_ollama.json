@@ -1,0 +1,139 @@
+{
+  "name": "Quora Q&A Generator (Ollama, 10 at a time)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "quora-qa",
+        "responseMode": "responseNode"
+      },
+      "id": "87e816ea-b6a9-4062-8baf-4dd965ea0c31",
+      "name": "Webhook (Prompt)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "topic",
+              "value": "={{$json.body?.topic || $json.body?.prompt || $json.query?.topic || $json.query?.prompt || 'Remote work productivity'}}"
+            }
+          ]
+        }
+      },
+      "id": "cd831af7-26f2-4f11-bc3e-c607ed2b2e12",
+      "name": "Prepare Topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "method": "POST",
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"model\": \"llama3.1:8b-instruct\",\n  \"messages\": [\n    { \n      \"role\": \"system\", \n      \"content\": \"You are a content generator. Produce exactly ten Quora-style question-and-answer pairs about a given topic. Return ONLY valid JSON without code fences or extra text. Use this exact structure: {\\\"results\\\": [ {\\\"question\\\": string, \\\"answer\\\": string} x10 ] }. Keep each answer helpful, specific, and 120-200 words. Avoid repetition.\"\n    },\n    { \n      \"role\": \"user\", \n      \"content\": \"Generate 10 Quora-style Q&A pairs on the topic: {{$json['topic']}}. Output only JSON with key \\\"results\\\" (array of 10 objects with \\\"question\\\" and \\\"answer\\\").\"\n    }\n  ],\n  \"temperature\": 0.8,\n  \"max_tokens\": 2048\n}",
+        "options": {
+          "responseFormat": "json"
+        }
+      },
+      "id": "9bb8f4b0-8ea1-4d80-9992-d2b7c86bd67e",
+      "name": "Call Ollama",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const extractJsonObject = (text) => {\n  if (typeof text !== 'string') return null;\n  try {\n    return JSON.parse(text);\n  } catch (e) {\n    const match = text.match(/\n?\{[\s\S]*\}/m);\n    if (match) {\n      try {\n        return JSON.parse(match[0]);\n      } catch (e2) {}\n    }\n  }\n  return null;\n};\n\nconst raw = items[0]?.json?.choices?.[0]?.message?.content ?? '';\nconst obj = extractJsonObject(raw) || {};\nlet results = [];\nif (Array.isArray(obj.results)) {\n  results = obj.results;\n} else if (Array.isArray(obj.items)) {\n  results = obj.items;\n}\n\nresults = (results || []).slice(0, 10).map((r, idx) => ({\n  index: idx + 1,\n  question: (r?.question || '').trim(),\n  answer: (r?.answer || '').trim()\n}));\n\nreturn [{ json: { results } }];"
+      },
+      "id": "6e3d1ea3-a304-46f5-95a2-a7a89b3f2c3f",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json['results']}}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "8be16b4f-93af-4deb-9a48-6760ddfd2a42",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (Prompt)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Topic": {
+      "main": [
+        [
+          {
+            "node": "Call Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}
