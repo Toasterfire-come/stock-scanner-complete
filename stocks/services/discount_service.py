@@ -43,6 +43,23 @@ class DiscountService:
                 'applies_discount': False
             }
         
+        # Prevent stacking: if the user has used any other discount (got savings) before, disallow this one
+        has_other_discount_savings = UserDiscountUsage.objects.filter(
+            user=user
+        ).exclude(
+            discount_code=discount
+        ).filter(
+            total_savings__gt=Decimal('0.00')
+        ).exists()
+        if has_other_discount_savings:
+            return {
+                'valid': False,
+                'discount': discount,
+                'message': 'Cannot combine with other promotions',
+                'discount_amount': Decimal('0.00'),
+                'applies_discount': False
+            }
+        
         # Check if user has already used this discount code
         usage, created = UserDiscountUsage.objects.get_or_create(
             user=user,
