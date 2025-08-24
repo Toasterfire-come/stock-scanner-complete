@@ -70,6 +70,7 @@ class StockScannerIntegration {
         add_shortcode('stock_scanner', array($this, 'stock_scanner_shortcode'));
         add_action('admin_menu', array($this, 'admin_menu'));
         add_action('wp_dashboard_setup', array($this, 'add_dashboard_widget'));
+        add_action('admin_notices', array($this, 'settings_notices'));
         
         // Sales tax hooks
         add_filter('pmpro_tax', array($this, 'calculate_sales_tax'), 10, 3);
@@ -78,6 +79,15 @@ class StockScannerIntegration {
         
         // Include PayPal integration
         require_once plugin_dir_path(__FILE__) . 'includes/class-paypal-integration.php';
+    public function settings_notices() {
+        if (!current_user_can('manage_options')) return;
+        $api_url = get_option('stock_scanner_api_url', '');
+        $api_secret = get_option('stock_scanner_api_secret', '');
+        if (empty($api_url) || empty($api_secret)) {
+            echo '<div class="notice notice-error"><p>Stock Scanner Integration: Please configure API URL and API Secret in Settings → Stock Scanner.</p></div>';
+        }
+    }
+
     }
     
     public function init() {
@@ -110,7 +120,8 @@ class StockScannerIntegration {
         // Localize script for AJAX
         wp_localize_script('stock-scanner-js', 'stock_scanner_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('stock_scanner_nonce')
+            'nonce' => wp_create_nonce('stock_scanner_nonce'),
+            'api_base' => trailingslashit(get_option('stock_scanner_api_url', ''))
         ));
         
         // Localize PayPal script
@@ -119,7 +130,8 @@ class StockScannerIntegration {
             'nonce' => wp_create_nonce('paypal_nonce'),
             'clientId' => get_option('paypal_client_id', ''),
             'successUrl' => get_option('paypal_return_url', ''),
-            'cancelUrl' => get_option('paypal_cancel_url', '')
+            'cancelUrl' => get_option('paypal_cancel_url', ''),
+            'mode' => get_option('paypal_mode', 'sandbox')
         ));
     }
     
@@ -146,9 +158,19 @@ class StockScannerIntegration {
     
     public function ajax_get_stock_data() {
         check_ajax_referer('stock_scanner_nonce', 'nonce');
-        
-        $symbol = sanitize_text_field($_POST['symbol']);
+
+        $symbol = isset($_POST['symbol']) ? sanitize_text_field($_POST['symbol']) : '';
+        if (empty($symbol)) {
+            wp_send_json_error(array('message' => 'Missing symbol'));
+        }
         $user_id = get_current_user_id();
+        
+        // Check config
+        $api_url = get_option('stock_scanner_api_url', '');
+        $api_secret = get_option('stock_scanner_api_secret', '');
+        if (empty($api_url) || empty($api_secret)) {
+            wp_send_json_error(array('message' => 'API not configured. Please set API URL and Secret in Settings → Stock Scanner.'));
+        }
         
         // Check user permissions
         $user_level = $this->get_user_membership_level();
@@ -171,12 +193,18 @@ class StockScannerIntegration {
         if ($stock_data) {
             wp_send_json_success($stock_data);
         } else {
-            wp_send_json_error('Failed to fetch stock data');
+            wp_send_json_error(array('message' => 'Failed to fetch stock data from API'));
         }
     }
     
     private function api_request($endpoint, $data = array()) {
-        $url = trailingslashit($this->api_base_url) . ltrim($endpoint, '/');
+        $url = trailingslashit(apply_filters('stock_scanner_api_base_url', $this->api_base_url)) . ltrim($endpoint, '/');
+
+        // Validate configuration
+        if (empty($this->api_base_url) || empty($this->api_secret)) {
+            error_log('Stock Scanner API not configured: missing API URL or Secret');
+            return false;
+        }
         
         $args = array(
             'method' => 'POST',
@@ -189,6 +217,10 @@ class StockScannerIntegration {
             ),
             'timeout' => 20
         );
+        
+        // Allow sites to customize the request (e.g., add Authorization header or adjust timeouts)
+        $args = apply_filters('stock_scanner_api_request_args', $args, $endpoint, $data);
+
         
         if (empty($data)) {
             unset($args['body']);
@@ -214,6 +246,8 @@ class StockScannerIntegration {
             error_log('Stock Scanner API JSON decode error: ' . json_last_error_msg());
             return false;
         }
+        // Normalize success structure
+        if (!is_array($decoded)) { $decoded = array('data' => $decoded); }
         return $decoded;
     }
     
@@ -361,6 +395,16 @@ class StockScannerIntegration {
                 wp_die(__('You do not have sufficient permissions to access this page.', 'stock-scanner-integration'));
             }
             check_admin_referer('stock_scanner_settings');
+                <tr>
+                    <th scope="row">Quick status</th>
+                    <td>
+                        <ul>
+                            <li>API URL set: <strong><?php echo $api_url ? 'Yes' : 'No'; ?></strong></li>
+                            <li>API Secret set: <strong><?php echo $api_secret ? 'Yes' : 'No'; ?></strong></li>
+                        </ul>
+                    </td>
+                </tr>
+
 
             update_option('stock_scanner_api_url', esc_url_raw($_POST['api_url']));
             update_option('stock_scanner_api_secret', sanitize_text_field($_POST['api_secret']));
@@ -369,6 +413,10 @@ class StockScannerIntegration {
         
         $api_url = get_option('stock_scanner_api_url', '');
         $api_secret = get_option('stock_scanner_api_secret', '');
+        <?php if (empty($api_url) || empty($api_secret)) : ?>
+            <div class="notice notice-warning"><p><strong>Heads up:</strong> API URL and/or API Secret are empty. The plugin will not be able to reach the Django API until configured.</p></div>
+        <?php endif; ?>
+
         ?>
         <div class="wrap">
             <h1>Stock Scanner Settings</h1>
@@ -794,6 +842,11 @@ class StockScannerIntegration {
         }
         check_ajax_referer('test_api', 'nonce');
 
+        $api_url = get_option('stock_scanner_api_url', '');
+        $api_secret = get_option('stock_scanner_api_secret', '');
+        if (empty($api_url) || empty($api_secret)) {
+            wp_send_json_error('API not configured. Please set API URL and Secret in Settings → Stock Scanner.');
+        }
         $response = $this->api_request('health/');
         if ($response && (!isset($response['success']) || $response['success'] === true)) {
             wp_send_json_success(array('ok' => true));
