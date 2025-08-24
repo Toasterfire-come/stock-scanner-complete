@@ -54,7 +54,7 @@ function stock_scanner_enqueue_scripts() {
         'stock-scanner-style',
         get_stylesheet_uri(),
         array(),
-        STOCK_SCANNER_VERSION . '-' . time(),
+        STOCK_SCANNER_VERSION,
         'all'
     );
 
@@ -68,30 +68,36 @@ function stock_scanner_enqueue_scripts() {
     );
 
     // Enhanced premium styles - CREATE AND LOAD
-    wp_enqueue_style(
-        'stock-scanner-enhanced-styles',
-        STOCK_SCANNER_THEME_URI . '/assets/css/enhanced-styles.css',
-        array('stock-scanner-style'),
-        STOCK_SCANNER_VERSION . '-enhanced',
-        'all'
-    );
+    $enhanced_css_path = STOCK_SCANNER_THEME_DIR . '/assets/css/enhanced-styles.css';
+    if (file_exists($enhanced_css_path)) {
+        wp_enqueue_style(
+            'stock-scanner-enhanced-styles',
+            STOCK_SCANNER_THEME_URI . '/assets/css/enhanced-styles.css',
+            array('stock-scanner-style'),
+            STOCK_SCANNER_VERSION,
+            'all'
+        );
+    }
 
     // Vanilla JS modules (ensure jQuery conflict-free if present)
-    wp_enqueue_script(
-        'stock-scanner-theme-enhanced',
-        STOCK_SCANNER_THEME_URI . '/js/theme-enhanced.js',
-        stock_scanner_plugin_uses_jquery() ? array('jquery') : array(),
-        STOCK_SCANNER_VERSION . '-enhanced',
-        true
-    );
-
-    // Localize script for AJAX
-    wp_localize_script('stock-scanner-theme-enhanced', 'stockScannerAjax', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('stock_scanner_nonce'),
-        'homeUrl' => home_url('/'),
-        'themeUrl' => STOCK_SCANNER_THEME_URI
-    ));
+    $enhanced_js_path = STOCK_SCANNER_THEME_DIR . '/js/theme-enhanced.js';
+    if (file_exists($enhanced_js_path)) {
+        wp_enqueue_script(
+            'stock-scanner-theme-enhanced',
+            STOCK_SCANNER_THEME_URI . '/js/theme-enhanced.js',
+            stock_scanner_plugin_uses_jquery() ? array('jquery') : array(),
+            STOCK_SCANNER_VERSION,
+            true
+        );
+        
+        // Localize script for AJAX
+        wp_localize_script('stock-scanner-theme-enhanced', 'stockScannerAjax', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('stock_scanner_nonce'),
+            'homeUrl' => home_url('/'),
+            'themeUrl' => STOCK_SCANNER_THEME_URI
+        ));
+    }
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_enqueue_scripts');
 

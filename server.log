@@ -1,5 +1,5 @@
-Serving HTTP on 0.0.0.0 port 8080 (http://0.0.0.0:8080/) ...
-127.0.0.1 - - [24/Aug/2025 14:20:49] "HEAD /test-styling.html HTTP/1.1" 200 -
-127.0.0.1 - - [24/Aug/2025 14:21:22] "GET /test-styling.html HTTP/1.1" 200 -
-127.0.0.1 - - [24/Aug/2025 14:21:25] "HEAD /style.css HTTP/1.1" 200 -
-127.0.0.1 - - [24/Aug/2025 14:21:29] "HEAD /assets/css/enhanced-styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2025 12:05:30] "HEAD /style.css HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2025 12:05:31] "HEAD /assets/css/enhanced-styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2025 12:05:33] "HEAD /js/theme-enhanced.js HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2025 12:05:38] "GET /test-styling.html HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2025 16:42:03] "GET /test-styling.html HTTP/1.1" 200 -
