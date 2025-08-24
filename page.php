@@ -1,22 +1,22 @@
 <?php
 /**
- * Default Page Template
- * Ensures each page displays its own content
+ * Default Page Template (Modernized for v3 styles)
  */
-
 get_header(); ?>
 
-<div class="page-wrapper">
-    <div class="container">
-        <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
-            <header class="page-header">
-                <h1 class="page-title"><?php the_title(); ?></h1>
-            </header>
-            <div class="page-content">
-                <?php the_content(); ?>
-            </div>
-        <?php endwhile; endif; ?>
-    </div>
-</div>
+<section class="glass-section">
+  <div class="container">
+    <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
+      <header class="section-intro">
+        <h1 class="section-title text-gradient"><?php the_title(); ?></h1>
+      </header>
+      <div class="card glass-card">
+        <div class="card-body page-content">
+          <?php the_content(); ?>
+        </div>
+      </div>
+    <?php endwhile; endif; ?>
+  </div>
+</section>
 
 <?php get_footer(); ?>

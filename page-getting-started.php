@@ -1,23 +1,29 @@
 <?php
 /**
- * Template Name: Getting Started
+ * Template Name: Getting Started (v3)
  */
 get_header(); ?>
-<div class="getting-started">
-  <div class="container" style="max-width:1000px;margin:40px auto;padding:0 20px;">
-    <h1>Getting Started</h1>
-    <ol class="card" style="padding:24px;">
-      <li>Create your account or sign in</li>
-      <li>Explore the free Dashboard and Stock Lookup</li>
-      <li>Build a Watchlist to track tickers you care about</li>
-      <li>Upgrade to unlock advanced scanning, alerts, and more</li>
-    </ol>
-    <div class="grid" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
-      <a class="card btn" href="/stock-lookup/">Stock Lookup</a>
-      <a class="card btn" href="/stock-news/">Stock News</a>
-      <a class="card btn" href="/market-overview/">Market Overview</a>
-      <a class="card btn" href="/premium-plans/">Premium Plans</a>
+<section class="glass-section">
+  <div class="container" style="max-width:1000px;margin:0 auto;">
+    <header class="section-intro">
+      <h1 class="section-title text-gradient"><?php the_title(); ?></h1>
+    </header>
+    <div class="card glass-card">
+      <div class="card-body">
+        <ol style="display:grid;gap:.5rem;">
+          <li><?php _e('Create your account or sign in', 'stock-scanner'); ?></li>
+          <li><?php _e('Explore the free Dashboard and Stock Lookup', 'stock-scanner'); ?></li>
+          <li><?php _e('Build a Watchlist to track tickers you care about', 'stock-scanner'); ?></li>
+          <li><?php _e('Upgrade to unlock advanced scanning, alerts, and more', 'stock-scanner'); ?></li>
+        </ol>
+      </div>
+    </div>
+    <div class="features-grid" style="margin-top:1rem;">
+      <a class="card glass-card btn" href="/stock-lookup/"><?php _e('Stock Lookup', 'stock-scanner'); ?></a>
+      <a class="card glass-card btn" href="/stock-news/"><?php _e('Stock News', 'stock-scanner'); ?></a>
+      <a class="card glass-card btn" href="/market-overview/"><?php _e('Market Overview', 'stock-scanner'); ?></a>
+      <a class="card glass-card btn" href="/premium-plans/"><?php _e('Premium Plans', 'stock-scanner'); ?></a>
     </div>
   </div>
-</div>
+</section>
 <?php get_footer(); ?>

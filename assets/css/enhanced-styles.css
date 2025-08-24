@@ -25,6 +25,11 @@ Ultra-modern design system with glassmorphism, premium animations, and enterpris
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* ===== GLOBAL BUTTON FALLBACK (just in case) ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-4) var(--space-8); font-size: var(--text-base); font-weight: 600; border: 2px solid transparent; border-radius: var(--radius-xl); cursor: pointer; transition: all var(--transition-bounce); text-decoration: none; box-shadow: var(--shadow-sm); }
+.btn-primary { background: var(--gradient-primary); color: var(--color-white); border-color: var(--color-primary); }
+.btn-outline { background: transparent; color: var(--color-primary); border-color: var(--color-primary); }
+
 /* ===== PREMIUM HERO SECTION ===== */
 .hero-section {
     position: relative;
@@ -649,6 +654,13 @@ Ultra-modern design system with glassmorphism, premium animations, and enterpris
 .gradient-hero { background: var(--gradient-hero); }
 .text-gradient { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
+/* Fallback for hamburger lines (paired with JS menu toggle) */
+.menu-toggle .hamburger-line { display: block; width: 24px; height: 2px; background: currentColor; border-radius: 2px; transition: transform var(--transition-normal), opacity var(--transition-normal); }
+.menu-toggle .hamburger-line + .hamburger-line { margin-top: 5px; }
+.menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(2) { opacity: 0; }
+.menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
 /* Dark theme adjustments */
 [data-theme="dark"] .skeleton {
     background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
@@ -672,6 +684,25 @@ Ultra-modern design system with glassmorphism, premium animations, and enterpris
 
 [data-theme="dark"] .stock-scanner-widget {
     background: linear-gradient(145deg, rgba(31, 41, 55, 0.9) 0%, rgba(31, 41, 55, 0.7) 100%);
+}
+
+/* ===== MOBILE NAVIGATION (JS toggles .mobile-active) ===== */
+@media (max-width: 768px) {
+  .main-navigation {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--gradient-primary);
+    flex-direction: column;
+    padding: var(--space-4) var(--space-6);
+    box-shadow: var(--shadow-md);
+    gap: var(--space-2);
+    z-index: var(--z-dropdown);
+    border-radius: var(--radius-xl);
+  }
+  .main-navigation.mobile-active { display: flex; }
 }
 
 /* ===== RESPONSIVE ENHANCEMENTS ===== */

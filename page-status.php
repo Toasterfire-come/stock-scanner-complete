@@ -1,18 +1,23 @@
 <?php
 /**
- * Template Name: System Status
+ * Template Name: System Status (v3)
  */
 get_header(); ?>
-<div class="status-page">
-  <div class="container" style="max-width:900px;margin:40px auto;padding:0 20px;">
-    <h1>System Status</h1>
-    <div class="card" style="padding:24px;display:grid;gap:12px;">
-      <div><strong>Website:</strong> Operational</div>
-      <div><strong>WordPress:</strong> Operational</div>
-      <div><strong>Payments:</strong> Operational</div>
-      <div><strong>Market Data:</strong> Operational</div>
-      <small>Updated just now</small>
+<section class="glass-section">
+  <div class="container" style="max-width:900px;margin:0 auto;">
+    <header class="section-intro">
+      <h1 class="section-title text-gradient"><?php the_title(); ?></h1>
+      <p class="section-subtitle"><?php _e('Live status of key systems', 'stock-scanner'); ?></p>
+    </header>
+    <div class="card glass-card">
+      <div class="card-body" style="display:grid;gap:.75rem">
+        <div><strong><?php _e('Website:', 'stock-scanner'); ?></strong> <?php _e('Operational', 'stock-scanner'); ?></div>
+        <div><strong><?php _e('WordPress:', 'stock-scanner'); ?></strong> <?php _e('Operational', 'stock-scanner'); ?></div>
+        <div><strong><?php _e('Payments:', 'stock-scanner'); ?></strong> <?php _e('Operational', 'stock-scanner'); ?></div>
+        <div><strong><?php _e('Market Data:', 'stock-scanner'); ?></strong> <?php _e('Operational', 'stock-scanner'); ?></div>
+        <small><?php _e('Updated just now', 'stock-scanner'); ?></small>
+      </div>
     </div>
   </div>
-</div>
+</section>
 <?php get_footer(); ?>
