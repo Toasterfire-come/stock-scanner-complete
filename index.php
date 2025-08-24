@@ -5,102 +5,301 @@
 get_header(); ?>
 
 <div class="stock-scanner-homepage enhanced-layout">
-  <!-- Hero: Clear Value Proposition -->
+  <!-- Hero: Clear Value Proposition with Enhanced Design -->
   <section class="hero-section gradient-hero">
+    <div class="hero-overlay"></div>
     <div class="container">
       <div class="hero-content scroll-reveal">
-        <h1 class="hero-title text-gradient">
+        <div class="hero-badge animate-fade-in">
+          <span class="badge-icon">🚀</span>
+          <span class="badge-text"><?php _e('Professional Stock Analysis Platform', 'stock-scanner'); ?></span>
+        </div>
+        
+        <h1 class="hero-title text-gradient animate-slide-up">
           <?php _e('Find Winning Stocks Fast', 'stock-scanner'); ?>
         </h1>
-        <p class="hero-subtitle" style="font-size:1.25rem">
+        
+        <p class="hero-subtitle animate-slide-up" style="font-size:1.25rem; animation-delay: 0.2s;">
           <?php _e('Real‑time data, pro‑level screening, and portfolio analytics — in a platform built for speed and clarity.', 'stock-scanner'); ?>
         </p>
-        <ul style="display:grid;gap:.5rem;margin:1rem 0;color:var(--color-white)">
-          <li>✅ <?php _e('50+ indicators with AI insights', 'stock-scanner'); ?></li>
-          <li>✅ <?php _e('Unlimited real‑time quotes', 'stock-scanner'); ?></li>
-          <li>✅ <?php _e('Alerts, risk metrics, and 360° portfolio view', 'stock-scanner'); ?></li>
-        </ul>
-        <div class="hero-actions">
+        
+        <div class="hero-features animate-slide-up" style="animation-delay: 0.4s;">
+          <div class="feature-highlight">
+            <span class="feature-icon">📊</span>
+            <span class="feature-text"><?php _e('50+ indicators with AI insights', 'stock-scanner'); ?></span>
+          </div>
+          <div class="feature-highlight">
+            <span class="feature-icon">⚡</span>
+            <span class="feature-text"><?php _e('Unlimited real‑time quotes', 'stock-scanner'); ?></span>
+          </div>
+          <div class="feature-highlight">
+            <span class="feature-icon">🔔</span>
+            <span class="feature-text"><?php _e('Alerts, risk metrics, and 360° portfolio view', 'stock-scanner'); ?></span>
+          </div>
+        </div>
+        
+        <div class="hero-actions animate-slide-up" style="animation-delay: 0.6s;">
           <?php if (!is_user_logged_in()): ?>
-            <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-lg glass shadow-glass" data-cta>
-              🚀 <?php _e('Start 7‑Day Trial for $1', 'stock-scanner'); ?>
+            <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-lg glass shadow-glass cta-button" data-cta>
+              <span class="btn-icon">🚀</span>
+              <span class="btn-text"><?php _e('Start 7‑Day Trial for $1', 'stock-scanner'); ?></span>
+              <span class="btn-shimmer"></span>
             </a>
             <a href="/compare-plans/" class="btn btn-outline btn-lg glass" data-cta>
-              <?php _e('Compare Plans', 'stock-scanner'); ?>
+              <span class="btn-text"><?php _e('Compare Plans', 'stock-scanner'); ?></span>
             </a>
           <?php else: ?>
-            <a href="/dashboard/" class="btn btn-primary btn-lg glass shadow-glass" data-cta>
-              📊 <?php _e('Go to Dashboard', 'stock-scanner'); ?>
+            <a href="/dashboard/" class="btn btn-primary btn-lg glass shadow-glass cta-button" data-cta>
+              <span class="btn-icon">📊</span>
+              <span class="btn-text"><?php _e('Go to Dashboard', 'stock-scanner'); ?></span>
+              <span class="btn-shimmer"></span>
             </a>
             <a href="/stock-screener/" class="btn btn-outline btn-lg glass" data-cta>
-              🔎 <?php _e('Open Screener', 'stock-scanner'); ?>
+              <span class="btn-icon">🔎</span>
+              <span class="btn-text"><?php _e('Open Screener', 'stock-scanner'); ?></span>
             </a>
           <?php endif; ?>
         </div>
-        <div style="margin-top:.5rem;color:var(--color-white);opacity:.9">
-          🛡️ <?php _e('30‑day money‑back guarantee • Cancel anytime', 'stock-scanner'); ?>
+        
+        <div class="hero-guarantee animate-fade-in" style="animation-delay: 0.8s;">
+          <span class="guarantee-icon">🛡️</span>
+          <span class="guarantee-text"><?php _e('30‑day money‑back guarantee • Cancel anytime', 'stock-scanner'); ?></span>
         </div>
       </div>
 
-      <!-- Social Proof: Logo Grid -->
-      <div class="logo-grid scroll-reveal" style="margin-top:2rem">
-        <div class="logo">Bloomberg</div>
-        <div class="logo">Reuters</div>
-        <div class="logo">CNBC</div>
-        <div class="logo">WSJ</div>
-        <div class="logo">MarketWatch</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Outcomes Section: What You Achieve -->
-  <section class="glass-section">
-    <div class="container">
-      <div class="section-intro scroll-reveal">
-        <h2 class="section-title text-gradient"><?php _e('What You’ll Achieve In Your First Week', 'stock-scanner'); ?></h2>
-        <p class="section-subtitle"><?php _e('Ship a repeatable workflow for discovering, evaluating, and acting on opportunities.', 'stock-scanner'); ?></p>
-      </div>
-      <div class="features-grid">
-        <div class="card glass-card scroll-reveal"><div class="card-body"><h3>Day 1</h3><p><?php _e('Set up your scanners and watchlists', 'stock-scanner'); ?></p></div></div>
-        <div class="card glass-card scroll-reveal"><div class="card-body"><h3>Day 3</h3><p><?php _e('Run advanced screens and save candidates', 'stock-scanner'); ?></p></div></div>
-        <div class="card glass-card scroll-reveal"><div class="card-body"><h3>Day 5</h3><p><?php _e('Analyze risk and set alerts', 'stock-scanner'); ?></p></div></div>
-        <div class="card glass-card scroll-reveal"><div class="card-body"><h3>Day 7</h3><p><?php _e('Execute with confidence using live data', 'stock-scanner'); ?></p></div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Comparison Table: Us vs Alternatives -->
-  <section class="glass-section">
-    <div class="container">
-      <div class="section-intro">
-        <h2 class="section-title"><?php _e('Why Traders Choose Stock Scanner', 'stock-scanner'); ?></h2>
-        <p class="section-subtitle"><?php _e('Serious power without the enterprise bloat', 'stock-scanner'); ?></p>
-      </div>
-      <div class="card glass-card">
-        <div class="card-body">
-          <div class="table-responsive">
-            <table data-sortable>
-              <thead>
-                <tr>
-                  <th><?php _e('Feature', 'stock-scanner'); ?></th>
-                  <th><?php _e('Stock Scanner', 'stock-scanner'); ?></th>
-                  <th><?php _e('Alternatives', 'stock-scanner'); ?></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td><?php _e('Real‑time quotes', 'stock-scanner'); ?></td><td><span class="badge-yes">Yes</span></td><td><span class="badge-no">Often delayed</span></td></tr>
-                <tr><td><?php _e('50+ indicators', 'stock-scanner'); ?></td><td><span class="badge-yes">Yes</span></td><td><span class="badge-no">Limited</span></td></tr>
-                <tr><td><?php _e('AI insights', 'stock-scanner'); ?></td><td><span class="badge-yes">Built‑in</span></td><td><span class="badge-no">Add‑ons</span></td></tr>
-                <tr><td><?php _e('Portfolio analytics', 'stock-scanner'); ?></td><td><span class="badge-yes">Full suite</span></td><td><span class="badge-no">Basic</span></td></tr>
-                <tr><td><?php _e('Setup time', 'stock-scanner'); ?></td><td><span class="badge-yes"><?php _e('Minutes', 'stock-scanner'); ?></span></td><td><span class="badge-no"><?php _e('Days', 'stock-scanner'); ?></span></td></tr>
-              </tbody>
-            </table>
+      <!-- Enhanced Social Proof: Logo Grid -->
+      <div class="logo-grid scroll-reveal animate-fade-in" style="animation-delay: 1s;">
+        <div class="logos-label"><?php _e('Trusted by traders from:', 'stock-scanner'); ?></div>
+        <div class="logos-container">
+          <div class="logo-item">
+            <span class="logo-text">Bloomberg</span>
+          </div>
+          <div class="logo-item">
+            <span class="logo-text">Reuters</span>
+          </div>
+          <div class="logo-item">
+            <span class="logo-text">CNBC</span>
+          </div>
+          <div class="logo-item">
+            <span class="logo-text">WSJ</span>
+          </div>
+          <div class="logo-item">
+            <span class="logo-text">MarketWatch</span>
           </div>
         </div>
       </div>
-      <div class="hero-actions" style="margin-top:1rem">
-        <a href="/premium-plans/" class="btn btn-primary btn-lg" data-cta><?php _e('Start 7‑Day Trial for $1', 'stock-scanner'); ?></a>
-        <a href="/compare-plans/" class="btn btn-outline btn-lg" data-cta><?php _e('Compare Plans', 'stock-scanner'); ?></a>
+    </div>
+  </section>
+
+  <!-- Outcomes Section: What You Achieve with Enhanced Design -->
+  <section class="section-padding" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);">
+    <div class="visual-container">
+      <div class="text-center stack-12">
+        <div class="badge-system badge-glass fade-up">
+          <span>🎯</span>
+          <span><?php _e('Proven Results', 'stock-scanner'); ?></span>
+        </div>
+        
+        <h2 class="display-2 fade-up delay-100"><?php _e('What You'll Achieve In Your First Week', 'stock-scanner'); ?></h2>
+        
+        <p class="body-large fade-up delay-200" style="max-width: 700px; margin: 0 auto; color: var(--color-text-light);">
+          <?php _e('Ship a repeatable workflow for discovering, evaluating, and acting on opportunities.', 'stock-scanner'); ?>
+        </p>
+      </div>
+
+      <div class="grid-4" style="margin-top: var(--space-16);">
+        <div class="card-system card-interactive fade-up delay-100">
+          <div class="stack-4 text-center">
+            <div class="badge-system badge-primary" style="margin: 0 auto;">
+              <span><?php _e('Day 1', 'stock-scanner'); ?></span>
+            </div>
+            <div class="icon-system">
+              <span>⚙️</span>
+            </div>
+            <h3 class="headline-3"><?php _e('Setup & Configuration', 'stock-scanner'); ?></h3>
+            <p class="body-medium">
+              <?php _e('Set up your scanners and watchlists with our guided onboarding process', 'stock-scanner'); ?>
+            </p>
+          </div>
+        </div>
+
+        <div class="card-system card-interactive fade-up delay-200">
+          <div class="stack-4 text-center">
+            <div class="badge-system badge-success" style="margin: 0 auto;">
+              <span><?php _e('Day 3', 'stock-scanner'); ?></span>
+            </div>
+            <div class="icon-system">
+              <span>🔍</span>
+            </div>
+            <h3 class="headline-3"><?php _e('Advanced Screening', 'stock-scanner'); ?></h3>
+            <p class="body-medium">
+              <?php _e('Run advanced screens and save candidates using professional-grade filters', 'stock-scanner'); ?>
+            </p>
+          </div>
+        </div>
+
+        <div class="card-system card-interactive fade-up delay-300">
+          <div class="stack-4 text-center">
+            <div class="badge-system badge-warning" style="margin: 0 auto;">
+              <span><?php _e('Day 5', 'stock-scanner'); ?></span>
+            </div>
+            <div class="icon-system">
+              <span>⚖️</span>
+            </div>
+            <h3 class="headline-3"><?php _e('Risk Analysis', 'stock-scanner'); ?></h3>
+            <p class="body-medium">
+              <?php _e('Analyze risk metrics and set intelligent alerts for your portfolio', 'stock-scanner'); ?>
+            </p>
+          </div>
+        </div>
+
+        <div class="card-system card-interactive fade-up delay-400">
+          <div class="stack-4 text-center">
+            <div class="badge-system badge-success" style="margin: 0 auto;">
+              <span><?php _e('Day 7', 'stock-scanner'); ?></span>
+            </div>
+            <div class="icon-system">
+              <span>🎯</span>
+            </div>
+            <h3 class="headline-3"><?php _e('Execute with Confidence', 'stock-scanner'); ?></h3>
+            <p class="body-medium">
+              <?php _e('Execute trades with confidence using real-time data and proven strategies', 'stock-scanner'); ?>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Table: Us vs Alternatives with Enhanced Design -->
+  <section class="section-padding">
+    <div class="visual-container">
+      <div class="text-center stack-12">
+        <div class="badge-system badge-glass fade-up">
+          <span>⚔️</span>
+          <span><?php _e('Competitive Edge', 'stock-scanner'); ?></span>
+        </div>
+        
+        <h2 class="display-2 fade-up delay-100"><?php _e('Why Traders Choose Stock Scanner', 'stock-scanner'); ?></h2>
+        
+        <p class="body-large fade-up delay-200" style="max-width: 600px; margin: 0 auto; color: var(--color-text-light);">
+          <?php _e('Serious power without the enterprise bloat', 'stock-scanner'); ?>
+        </p>
+      </div>
+
+      <div class="card-system fade-up delay-300" style="margin-top: var(--space-16); overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: var(--gradient-primary); color: var(--color-white);">
+              <th style="padding: var(--space-4) var(--space-6); text-align: left; font-weight: 600; border-radius: var(--radius-lg) 0 0 0;">
+                <?php _e('Feature', 'stock-scanner'); ?>
+              </th>
+              <th style="padding: var(--space-4) var(--space-6); text-align: center; font-weight: 600;">
+                <?php _e('Stock Scanner', 'stock-scanner'); ?>
+              </th>
+              <th style="padding: var(--space-4) var(--space-6); text-align: center; font-weight: 600; border-radius: 0 var(--radius-lg) 0 0;">
+                <?php _e('Alternatives', 'stock-scanner'); ?>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: var(--space-4) var(--space-6); font-weight: 500;">
+                <?php _e('Real‑time quotes', 'stock-scanner'); ?>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-success">
+                  <span>✅</span>
+                  <span><?php _e('Yes', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-error">
+                  <span>❌</span>
+                  <span><?php _e('Often delayed', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: var(--space-4) var(--space-6); font-weight: 500;">
+                <?php _e('50+ indicators', 'stock-scanner'); ?>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-success">
+                  <span>✅</span>
+                  <span><?php _e('Yes', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-error">
+                  <span>❌</span>
+                  <span><?php _e('Limited', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: var(--space-4) var(--space-6); font-weight: 500;">
+                <?php _e('AI insights', 'stock-scanner'); ?>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-success">
+                  <span>🤖</span>
+                  <span><?php _e('Built‑in', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-warning">
+                  <span>💰</span>
+                  <span><?php _e('Add‑ons', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: var(--space-4) var(--space-6); font-weight: 500;">
+                <?php _e('Portfolio analytics', 'stock-scanner'); ?>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-success">
+                  <span>📊</span>
+                  <span><?php _e('Full suite', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-error">
+                  <span>📈</span>
+                  <span><?php _e('Basic', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: var(--space-4) var(--space-6); font-weight: 500;">
+                <?php _e('Setup time', 'stock-scanner'); ?>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-success">
+                  <span>⚡</span>
+                  <span><?php _e('Minutes', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+              <td style="padding: var(--space-4) var(--space-6); text-align: center;">
+                <div class="badge-system badge-error">
+                  <span>🐌</span>
+                  <span><?php _e('Days', 'stock-scanner'); ?></span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cluster-4" style="margin-top: var(--space-8); justify-content: center;">
+        <a href="/premium-plans/" class="btn-primary-system btn-large" data-cta>
+          <span>🚀</span>
+          <span><?php _e('Start 7‑Day Trial for $1', 'stock-scanner'); ?></span>
+        </a>
+        <a href="/compare-plans/" class="btn-secondary-system btn-large" data-cta>
+          <span><?php _e('Compare Plans', 'stock-scanner'); ?></span>
+        </a>
       </div>
     </div>
   </section>

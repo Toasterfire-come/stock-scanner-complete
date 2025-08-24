@@ -62,6 +62,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
     --color-bg-dark: #111827;
     --color-bg-card: rgba(255, 255, 255, 0.9);
     --color-bg-glass: rgba(255, 255, 255, 0.1);
+    --color-surface: #ffffff;
     
     /* ===== SOPHISTICATED BORDER COLORS ===== */
     --color-border: #e5e7eb;

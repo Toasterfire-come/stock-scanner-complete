@@ -78,18 +78,18 @@ if (post_password_required()) {
 .comments-area {
     margin-top: 3rem;
     padding: 2rem;
-    background: var(--bg-primary);
+    background: var(--color-bg);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--color-border);
 }
 
 .comments-title {
-    color: var(--text-primary);
+    color: var(--color-text);
     font-size: 1.5rem;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .comment-navigation {
@@ -105,9 +105,9 @@ if (post_password_required()) {
 .comment {
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background: var(--bg-secondary);
+    background: var(--color-bg-light);
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--color-border);
 }
 
 .comment-author {
@@ -119,33 +119,33 @@ if (post_password_required()) {
 
 .comment-author img {
     border-radius: 50%;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--color-border);
 }
 
 .comment-author-name {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--color-text);
     font-size: 1.1rem;
 }
 
 .comment-meta {
-    color: var(--text-secondary);
+    color: var(--color-text-muted);
     font-size: 0.875rem;
 }
 
 .comment-meta a {
-    color: var(--text-secondary);
+    color: var(--color-text-muted);
     text-decoration: none;
 }
 
 .comment-meta a:hover {
-    color: var(--primary-color);
+    color: var(--color-primary);
 }
 
 .comment-content {
     margin: 1rem 0;
     line-height: 1.6;
-    color: var(--text-primary);
+    color: var(--color-text);
 }
 
 .comment-content p {
@@ -165,7 +165,7 @@ if (post_password_required()) {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--primary-color);
+    background: var(--color-primary);
     color: white;
     text-decoration: none;
     border-radius: var(--radius-sm);
@@ -175,10 +175,11 @@ if (post_password_required()) {
 }
 
 .comment-reply-link:hover {
-    background: var(--primary-hover);
+    background: var(--color-primary);
     color: white;
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
+    filter: brightness(1.1);
 }
 
 .children {
@@ -188,16 +189,16 @@ if (post_password_required()) {
 }
 
 .children .comment {
-    background: var(--bg-primary);
-    border-left: 3px solid var(--primary-color);
+    background: var(--color-bg);
+    border-left: 3px solid var(--color-primary);
 }
 
 .comment-reply-title {
-    color: var(--text-primary);
+    color: var(--color-text);
     font-size: 1.25rem;
     margin: 2rem 0 1.5rem;
     padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--color-border);
 }
 
 .comment-form {
@@ -214,13 +215,13 @@ if (post_password_required()) {
 
 .comment-form label {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--color-text);
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
 }
 
 .required {
-    color: var(--danger-color);
+    color: var(--color-error);
 }
 
 .comment-form input[type="text"],
@@ -228,10 +229,10 @@ if (post_password_required()) {
 .comment-form input[type="url"],
 .comment-form textarea {
     padding: 1rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    background: var(--color-bg);
+    color: var(--color-text);
     font-size: 0.95rem;
     font-family: inherit;
     transition: all var(--transition-normal);
@@ -240,8 +241,8 @@ if (post_password_required()) {
 .comment-form input:focus,
 .comment-form textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .comment-form textarea {
@@ -251,7 +252,7 @@ if (post_password_required()) {
 }
 
 .comment-form textarea::placeholder {
-    color: var(--text-secondary);
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -281,9 +282,9 @@ if (post_password_required()) {
 .no-comments {
     text-align: center;
     padding: 2rem;
-    color: var(--text-secondary);
+    color: var(--color-text-muted);
     font-style: italic;
-    background: var(--bg-secondary);
+    background: var(--color-bg-light);
     border-radius: var(--radius-md);
     margin: 2rem 0;
 }

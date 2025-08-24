@@ -16,6 +16,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="dns-prefetch" href="//fonts.googleapis.com">
 <?php wp_head(); ?>
+  <link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/style.css?v=<?php echo filemtime(get_template_directory() . '/style.css'); ?>">
+  <link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/enhanced-styles.css?v=<?php echo filemtime(get_template_directory() . '/assets/css/enhanced-styles.css'); ?>">
+  <link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/visual-consistency.css?v=<?php echo filemtime(get_template_directory() . '/assets/css/visual-consistency.css'); ?>">
 <?php
 $schema_data = array(
   '@context' => 'https://schema.org',

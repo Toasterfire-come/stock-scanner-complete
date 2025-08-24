@@ -138,6 +138,6 @@
 </div><!-- #page -->
 
 <?php wp_footer(); ?>
-
+<script src="<?php echo get_template_directory_uri(); ?>/assets/js/visual-enhancements.js?v=<?php echo filemtime(get_template_directory() . '/assets/js/visual-enhancements.js'); ?>" defer></script>
 </body>
 </html>

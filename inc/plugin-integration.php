@@ -559,6 +559,51 @@ function stock_scanner_pricing_shortcode($atts) {
 if (!shortcode_exists('stock_scanner_pricing')) { add_shortcode('stock_scanner_pricing', 'stock_scanner_pricing_shortcode'); }
 
 /**
+ * Verify WordPress nonce for AJAX requests
+ */
+function ss_theme_verify_nonce() {
+    return isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'stock_scanner_ajax_nonce');
+}
+
+/**
+ * Make backend API request with error handling
+ */
+function make_backend_api_request($endpoint, $method = 'GET', $data = null) {
+    $base_url = get_option('stock_scanner_backend_url', 'http://localhost:8000/api/');
+    $url = rtrim($base_url, '/') . '/' . ltrim($endpoint, '/');
+    
+    $args = array(
+        'method' => $method,
+        'timeout' => 30,
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            'User-Agent' => 'WordPress-StockScanner-Theme/' . STOCK_SCANNER_VERSION,
+        ),
+    );
+    
+    if ($data && $method !== 'GET') {
+        $args['body'] = json_encode($data);
+    }
+    
+    $response = wp_remote_request($url, $args);
+    
+    if (is_wp_error($response)) {
+        error_log('Backend API Error: ' . $response->get_error_message());
+        return $response;
+    }
+    
+    $body = wp_remote_retrieve_body($response);
+    $decoded = json_decode($body, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log('Backend API JSON Error: ' . json_last_error_msg());
+        return new WP_Error('json_error', 'Invalid JSON response');
+    }
+    
+    return $decoded;
+}
+
+/**
  * AJAX: Dismiss notification
  */
 function handle_dismiss_notification_ajax() {
