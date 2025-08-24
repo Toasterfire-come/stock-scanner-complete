@@ -1,17 +1,26 @@
-# FinMarkets Theme: Pages & Templates Map
+# FinMarkets Theme: Pages, Templates, and External API Integration
 
-Core templates
-- header.php, footer.php, front-page.php, page.php, single.php, archive.php, search.php, searchform.php, comments.php, 404.php
+- Admin: Appearance → FinMarkets Settings
+  - API Base URL (e.g., https://api.example.com)
+  - API Key (optional for endpoints that require Authorization)
+  - Test connection button (calls /wp-json/finm/v1/health)
 
-Custom pages (templates)
-- template-screener.php, template-market-overview.php, template-portfolio.php, template-lookup.php, template-news.php, template-watchlist.php, template-user-settings.php
-- template-payments-checkout.php, template-payments-success.php, template-payments-cancel.php
-- template-about.php, template-help.php, template-faq.php, template-contact.php, template-glossary.php
-- template-how-it-works.php, template-getting-started.php, template-roadmap.php
-- template-login.php, template-dashboard.php, template-account.php, template-billing-history.php
-- template-premium-plans.php, template-compare-plans.php
-- template-privacy.php, template-terms.php, template-security.php, template-accessibility.php, template-status.php, template-sitemap.php, template-market-hours.php, template-newsletter.php
+- Theme REST proxy (no CORS issues, CSP connect-src stays 'self'):
+  - GET /wp-json/finm/v1/health → /health/ (fallback /api/health/)
+  - GET /wp-json/finm/v1/stocks → /api/stocks/
+  - GET /wp-json/finm/v1/stock/{ticker} → /api/stock/{ticker}/ (fallback /api/stocks/{ticker}/)
+  - GET /wp-json/finm/v1/search → /api/search/
+  - GET /wp-json/finm/v1/trending → /api/trending/
+  - GET /wp-json/finm/v1/market-stats → /api/market-stats/
+  - GET /wp-json/finm/v1/endpoint-status → /endpoint-status/
+  - GET /wp-json/finm/v1/revenue/analytics [month?] → /revenue/revenue-analytics/[month?]
 
-Notes
-- All interactive features use vanilla JS and localStorage. No external APIs.
-- Colors follow the professional palette and avoid overuse of gradients per guidance.
+- Front-end API utility (assets/js/api.js)
+  - window.finmApi.{health,stocks,stock,search,trending,marketStats,endpointStatus,revenueAnalytics}
+  - Progressive enhancement hydrates MockData.stocks when API is configured.
+
+- Demo pages
+  - Endpoint Status (template-endpoint-status.php)
+  - Revenue Analytics (template-revenue-analytics.php)
+
+All JS is vanilla; scripts are deferred. To tighten CSP, move any inline template scripts into assets/js/app.js and remove 'unsafe-inline' if added.
