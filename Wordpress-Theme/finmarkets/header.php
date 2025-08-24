@@ -24,10 +24,12 @@
           <a href="#pricing">Pricing</a>
         <?php } ?>
       </nav>
-      <div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="themeToggle" class="btn" aria-pressed="false" title="Toggle theme">Dark Theme</button>
         <button class="btn" id="loginBtn" aria-haspopup="dialog">Sign in</button>
         <a class="btn btn-primary" href="#pricing">Get Pro</a>
       </div>
     </div>
   </header>
   <main id="main">
+  <script defer src="<?php echo esc_url( get_template_directory_uri() . '/assets/js/ui.js' ); ?>"></script>
