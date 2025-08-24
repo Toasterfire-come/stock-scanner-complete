@@ -180,10 +180,11 @@ def main():
     # Ensure category-specific data
     populator.ensure_category_data()
     
-    print(f"✅ Fallback data population complete!")
-    print(f"   Processed {count} stocks")
-    print(f"   Total stocks in database: {Stock.objects.count()}")
-    print(f"   Recent stocks (24h): {Stock.objects.filter(last_updated__gte=timezone.now() - timedelta(hours=24)).count()}")
+    # Use ASCII-only output for Windows console compatibility
+    print("Fallback data population complete.")
+    print(f"Processed {count} stocks")
+    print(f"Total stocks in database: {Stock.objects.count()}")
+    print(f"Recent stocks (24h): {Stock.objects.filter(last_updated__gte=timezone.now() - timedelta(hours=24)).count()}")
 
 if __name__ == "__main__":
     main()

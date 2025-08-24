@@ -55,6 +55,10 @@ class MarketHoursManager:
         self.python_exe = sys.executable
         self.processes = {}
         self.is_running = True
+        # Track a trading session span (from first premarket/market/postmarket after a closed period until next close)
+        self.session_active = False
+        self.exit_after_market_close = True
+        self._previous_phase = None
         
         # Market hours in Eastern Time
         self.eastern_tz = pytz.timezone('US/Eastern')
@@ -240,13 +244,28 @@ class MarketHoursManager:
         
         logger.info(f"Current market phase: {current_phase} ({now_et.strftime('%Y-%m-%d %H:%M:%S %Z')})")
         
+        # Session lifecycle: start session on first non-closed phase after being closed; end session on next closed
+        if self._previous_phase is None:
+            self._previous_phase = current_phase
+        
+        # Start session when we leave 'closed'
+        if (not self.session_active) and (self._previous_phase == 'closed') and (current_phase in ['premarket', 'market', 'postmarket']):
+            logger.info("Detected market session start window. Activating session management.")
+            self.session_active = True
+        
+        # End session at the next 'closed' after a session has started
+        if self.session_active and current_phase == 'closed' and self.exit_after_market_close:
+            logger.info("Market closed detected. Ending session and exiting manager.")
+            self.stop_all_components()
+            self.is_running = False
+            self._previous_phase = current_phase
+            return
+        
         # Handle market closed period specially
         if current_phase == 'closed':
-            # Check if we've already handled this closed period
-            if not hasattr(self, '_last_closed_handling') or \
-               (datetime.now() - self._last_closed_handling).total_seconds() > 3600:  # Once per hour
-                self.handle_market_closed()
-                self._last_closed_handling = datetime.now()
+            # Ensure all components are stopped during closed hours; no fallback jobs
+            self.handle_market_closed()
+            self._previous_phase = current_phase
             return
         
         for component_name, component in self.components.items():
@@ -259,6 +278,8 @@ class MarketHoursManager:
             elif not should_be_active and is_currently_running:
                 logger.info(f"Stopping {component_name} (not active during {current_phase})")
                 self.stop_component(component_name)
+        
+        self._previous_phase = current_phase
                 
     def setup_scheduled_tasks(self):
         """Setup scheduled tasks for component management"""
@@ -333,28 +354,10 @@ class MarketHoursManager:
 
     def handle_market_closed(self):
         """Handle market closed period - ensure fallback data is available"""
-        logger.info("Market is closed - ensuring fallback data availability")
-        
+        logger.info("Market is closed - stopping all components (no fallback tasks)")
         # Stop all active components
         for component_name in list(self.components.keys()):
             self.stop_component(component_name)
-        
-        # Populate fallback data to ensure API functionality
-        try:
-            import subprocess
-            result = subprocess.run([
-                self.python_exe, 
-                os.path.join(self.project_root, 'populate_fallback_data.py')
-            ], capture_output=True, text=True, timeout=300)
-            
-            if result.returncode == 0:
-                logger.info("Fallback data populated successfully")
-            else:
-                logger.error(f"Failed to populate fallback data: {result.stderr}")
-        except Exception as e:
-            logger.error(f"Error running fallback data script: {e}")
-        
-        logger.info("Market closed period handling complete")
 
 def main():
     """Main entry point"""
