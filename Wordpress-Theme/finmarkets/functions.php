@@ -26,9 +26,7 @@ function finm_get_settings() {
 function finm_sanitize_url($url){
   $url = trim($url);
   if ($url === '') return '';
-  // Ensure scheme
   if (!preg_match('#^https?://#i', $url)) { $url = 'https://' . $url; }
-  // Remove trailing slashes
   return rtrim($url, "/ ");
 }
 add_action('admin_init', function(){
@@ -55,34 +53,31 @@ add_action('admin_init', function(){
 });
 add_action('admin_menu', function(){
   add_theme_page(__('FinMarkets Settings','finmarkets'), __('FinMarkets Settings','finmarkets'), 'manage_options', 'finm-settings', function(){
+    $s = finm_get_settings();
     echo '<div class="wrap"><h1>FinMarkets Settings</h1><form method="post" action="options.php">';
     settings_fields('finm_group');
     do_settings_sections('finm_settings');
     submit_button();
-    echo '</form><hr><h2>Connection Test</h2><p>Click to test your API /health endpoint via theme proxy.</p><p><button class="button button-primary" id="finmTest">Run health check</button></p><pre id="finmOut" style="max-height:260px; overflow:auto; background:#111; color:#0f0; padding:12px;">(results here)</pre></div>';
+    echo '</form><hr><h2>Connection Test</h2><p>Click to test your API /health endpoint via theme proxy.</p><p><button class="button button-primary" id="finmTest">Run health check</button></p><pre id="finmOut" style="max-height:260px; overflow:auto; background:#111; color:#0f0; padding:12px;">(results here)</pre>';
+    echo '<p class="description">REST base: ' . esc_html( rest_url('finm/v1') ) . ' • API base: ' . esc_html($s['api_base'] ?: '(not set)') . '</p>';
+    echo '</div>';
     echo '<script>document.getElementById("finmTest").addEventListener("click", async ()=>{ const out=document.getElementById("finmOut"); out.textContent="Testing..."; try{ const r=await fetch("' . esc_url_raw( rest_url('finm/v1/health') ) . '"); const j=await r.json(); out.textContent=JSON.stringify(j,null,2);}catch(e){ out.textContent=String(e);} });</script>';
   });
 });
 
 // ---------- Enqueue styles and scripts ----------
 add_action('wp_enqueue_scripts', function () {
-  // Inter
   wp_enqueue_style('finmarkets-inter', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap', [], null);
-  // Main stylesheet
   wp_enqueue_style('finmarkets-style', get_stylesheet_uri(), ['finmarkets-inter'], wp_get_theme()->get('Version'));
-  // Mock + API + App
   wp_enqueue_script('finmarkets-mock', get_template_directory_uri() . '/assets/js/mock.js', [], wp_get_theme()->get('Version'), true);
   wp_enqueue_script('finmarkets-api', get_template_directory_uri() . '/assets/js/api.js', [], wp_get_theme()->get('Version'), true);
   wp_enqueue_script('finmarkets-app', get_template_directory_uri() . '/assets/js/app.js', ['finmarkets-mock','finmarkets-api'], wp_get_theme()->get('Version'), true);
-
-  // Pass REST base
   wp_localize_script('finmarkets-api', 'finmConfig', [
     'restBase' => esc_url_raw( rest_url('finm/v1') ),
     'hasApiBase' => (bool) finm_get_settings()['api_base'],
   ]);
 });
 
-// Defer our scripts
 add_filter('script_loader_tag', function ($tag, $handle, $src) {
   $defer = ['finmarkets-mock', 'finmarkets-api', 'finmarkets-app'];
   if (in_array($handle, $defer, true)) { return '<script src="' . esc_url($src) . '" defer></script>'; }
@@ -98,6 +93,7 @@ add_action('send_headers', function () {
 
 // ---------- REST proxy routes ----------
 add_action('rest_api_init', function(){
+  // Specific routes matching the shared spec
   register_rest_route('finm/v1', '/health', ['methods' => 'GET', 'callback' => 'finm_route_health']);
   register_rest_route('finm/v1', '/stocks', ['methods' => 'GET', 'callback' => 'finm_route_stocks']);
   register_rest_route('finm/v1', '/stock/(?P<ticker>[A-Za-z0-9\.-]+)', ['methods' => 'GET', 'callback' => 'finm_route_stock']);
@@ -107,6 +103,18 @@ add_action('rest_api_init', function(){
   register_rest_route('finm/v1', '/endpoint-status', ['methods' => 'GET', 'callback' => 'finm_route_endpoint_status']);
   register_rest_route('finm/v1', '/revenue/analytics', ['methods' => 'GET', 'callback' => 'finm_route_revenue_analytics']);
   register_rest_route('finm/v1', '/revenue/analytics/(?P<month>[^/]+)', ['methods' => 'GET', 'callback' => 'finm_route_revenue_analytics_month']);
+
+  // Generic pass-throughs for the rest of the spec
+  register_rest_route('finm/v1', '/api/(?P<path>.+)', [
+    'methods' => ['GET','POST','DELETE'],
+    'callback' => function(WP_REST_Request $req){ return finm_route_generic($req, 'api'); },
+    'args' => ['path' => ['sanitize_callback' => 'sanitize_text_field']]
+  ]);
+  register_rest_route('finm/v1', '/revenue/(?P<path>.+)', [
+    'methods' => ['GET','POST','DELETE'],
+    'callback' => function(WP_REST_Request $req){ return finm_route_generic($req, 'revenue'); },
+    'args' => ['path' => ['sanitize_callback' => 'sanitize_text_field']]
+  ]);
 });
 
 function finm_api_base(){
@@ -116,7 +124,6 @@ function finm_api_base(){
 function finm_build_url($path){
   $base = finm_api_base();
   if (!$base) return '';
-  // ensure single slash
   return $base . (str_starts_with($path, '/') ? $path : '/' . $path);
 }
 function finm_req_headers($needs_key=false){
@@ -128,9 +135,24 @@ function finm_req_headers($needs_key=false){
 function finm_proxy_get($path, $args=[], $needs_key=false){
   $url = finm_build_url($path);
   if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400);
-  $q = ['timeout' => 10, 'headers' => finm_req_headers($needs_key)];
-  if (!empty($args)) { $url = add_query_arg(array_map('rawurlencode', $args), $url); }
+  $q = ['timeout' => 12, 'headers' => finm_req_headers($needs_key)];
+  if (!empty($args)) { $url = add_query_arg($args, $url); }
   $r = wp_remote_get($url, $q);
+  return finm_format_response($r);
+}
+function finm_proxy_send($method, $path, $payload=null, $needs_key=true){
+  $url = finm_build_url($path);
+  if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400);
+  $args = [
+    'timeout' => 15,
+    'method' => $method,
+    'headers' => array_merge(finm_req_headers($needs_key), ['Content-Type' => 'application/json'])
+  ];
+  if ($payload !== null) { $args['body'] = wp_json_encode($payload); }
+  $r = wp_remote_request($url, $args);
+  return finm_format_response($r);
+}
+function finm_format_response($r){
   if (is_wp_error($r)) return new WP_REST_Response(['success'=>false,'message'=>$r->get_error_message()], 502);
   $code = wp_remote_retrieve_response_code($r);
   $body = wp_remote_retrieve_body($r);
@@ -139,40 +161,33 @@ function finm_proxy_get($path, $args=[], $needs_key=false){
   return new WP_REST_Response(['html' => $body, 'status_code' => $code], $code);
 }
 
-// Route handlers
-function finm_route_health(WP_REST_Request $req){
-  // Try /health then /api/health
-  $r = finm_proxy_get('/health/');
-  if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/health/'); }
-  return $r;
-}
-function finm_route_stocks(WP_REST_Request $req){
-  $args = $req->get_params();
-  return finm_proxy_get('/api/stocks/', $args);
-}
-function finm_route_stock(WP_REST_Request $req){
-  $ticker = strtoupper(sanitize_text_field($req['ticker']));
-  $r = finm_proxy_get('/api/stock/' . rawurlencode($ticker) . '/');
-  if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/stocks/' . rawurlencode($ticker) . '/'); }
-  return $r;
-}
-function finm_route_search(WP_REST_Request $req){
-  $q = [ 'q' => $req->get_param('q') ];
-  return finm_proxy_get('/api/search/', $q);
-}
-function finm_route_trending(WP_REST_Request $req){
-  return finm_proxy_get('/api/trending/');
-}
-function finm_route_market_stats(WP_REST_Request $req){
-  return finm_proxy_get('/api/market-stats/');
-}
-function finm_route_endpoint_status(WP_REST_Request $req){
-  return finm_proxy_get('/endpoint-status/');
-}
-function finm_route_revenue_analytics(WP_REST_Request $req){
-  return finm_proxy_get('/revenue/revenue-analytics/');
-}
-function finm_route_revenue_analytics_month(WP_REST_Request $req){
-  $m = sanitize_text_field($req['month']);
-  return finm_proxy_get('/revenue/revenue-analytics/' . rawurlencode($m) . '/');
+// Specific handlers
+function finm_route_health(WP_REST_Request $req){ $r = finm_proxy_get('/health/'); if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/health/'); } return $r; }
+function finm_route_stocks(WP_REST_Request $req){ return finm_proxy_get('/api/stocks/', $req->get_params()); }
+function finm_route_stock(WP_REST_Request $req){ $t = strtoupper(sanitize_text_field($req['ticker'])); $r = finm_proxy_get('/api/stock/' . rawurlencode($t) . '/'); if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/stocks/' . rawurlencode($t) . '/'); } return $r; }
+function finm_route_search(WP_REST_Request $req){ return finm_proxy_get('/api/search/', ['q'=>$req->get_param('q')]); }
+function finm_route_trending(WP_REST_Request $req){ return finm_proxy_get('/api/trending/'); }
+function finm_route_market_stats(WP_REST_Request $req){ return finm_proxy_get('/api/market-stats/'); }
+function finm_route_endpoint_status(WP_REST_Request $req){ return finm_proxy_get('/endpoint-status/'); }
+function finm_route_revenue_analytics(WP_REST_Request $req){ return finm_proxy_get('/revenue/revenue-analytics/'); }
+function finm_route_revenue_analytics_month(WP_REST_Request $req){ return finm_proxy_get('/revenue/revenue-analytics/' . rawurlencode($req['month']) . '/'); }
+
+// Generic handler for any path under /api/* or /revenue/* according to spec
+function finm_route_generic(WP_REST_Request $req, $prefix){
+  $path = sanitize_text_field($req['path']);
+  $method = strtoupper($req->get_method());
+  // Only allow safe characters in path
+  if (!preg_match('#^[A-Za-z0-9_\-/\.,]+$#', $path)) {
+    return new WP_REST_Response(['success'=>false,'message'=>'Invalid path'], 400);
+  }
+  $full = '/' . trim($prefix, '/') . '/' . ltrim($path, '/');
+  if ($method === 'GET') {
+    return finm_proxy_get($full, $req->get_params(), false);
+  } elseif ($method === 'POST') {
+    $payload = $req->get_json_params();
+    return finm_proxy_send('POST', $full, $payload, true);
+  } elseif ($method === 'DELETE') {
+    return finm_proxy_send('DELETE', $full, null, true);
+  }
+  return new WP_REST_Response(['success'=>false,'message'=>'Method not allowed'], 405);
 }

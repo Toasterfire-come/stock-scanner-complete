@@ -17,18 +17,12 @@
         <span>FinMarkets</span>
       </a>
       <nav class="nav" aria-label="Main menu">
-        <?php wp_nav_menu([
-          'theme_location' => 'primary',
-          'container' => false,
-          'items_wrap' => '%3$s',
-          'link_before' => '',
-          'link_after' => '',
-          'fallback_cb' => false
-        ]); ?>
-        <a href="#screener">Screener</a>
-        <a href="#watchlist">Watchlist</a>
-        <a href="#news">News</a>
-        <a href="#pricing">Pricing</a>
+        <?php if (has_nav_menu('primary')) { wp_nav_menu(['theme_location'=>'primary','container'=>false,'items_wrap'=>'<ul>%3$s</ul>']); } else { ?>
+          <a href="#screener">Screener</a>
+          <a href="#watchlist">Watchlist</a>
+          <a href="#news">News</a>
+          <a href="#pricing">Pricing</a>
+        <?php } ?>
       </nav>
       <div>
         <button class="btn" id="loginBtn" aria-haspopup="dialog">Sign in</button>
