@@ -1,0 +1,2 @@
+<?php /* Template Name: Accessibility */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Accessibility</h1><div class="card" style="padding:20px;"><p>WCAG 2.1 AA goals. Keyboard and screen-reader support included.</p></div></div></section><?php get_footer(); ?>

@@ -1,0 +1,2 @@
+<?php /* Template Name: Status */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Status</h1><div class="card" style="padding:20px;"><p>All systems operational.</p></div></div></section><?php get_footer(); ?>

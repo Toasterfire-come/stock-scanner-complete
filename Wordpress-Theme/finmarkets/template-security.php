@@ -1,0 +1,2 @@
+<?php /* Template Name: Security */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Security</h1><div class="card" style="padding:20px;"><p>We recommend enabling HSTS and strict CSP at the server level.</p></div></div></section><?php get_footer(); ?>
