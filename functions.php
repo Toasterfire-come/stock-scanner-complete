@@ -15,6 +15,14 @@ define('STOCK_SCANNER_THEME_DIR', get_template_directory());
 define('STOCK_SCANNER_THEME_URI', get_template_directory_uri());
 
 /**
+ * Compatibility: allow jQuery when required by active plugins (e.g., Stock Scanner Integration)
+ */
+function stock_scanner_plugin_uses_jquery() {
+    // If the integration plugin is active (class exists) or any code opts in via filter, keep jQuery
+    return class_exists('StockScannerIntegration') || apply_filters('stock_scanner_allow_jquery', false);
+}
+
+/**
  * Theme setup and support
  */
 function stock_scanner_setup() {
@@ -35,9 +43,11 @@ add_action('after_setup_theme', 'stock_scanner_setup');
  * ===== ENHANCED JAVASCRIPT LOADING v3.0.0 - FIXED CSS LOADING =====
  */
 function stock_scanner_enqueue_scripts() {
-    // Remove jQuery
-    wp_deregister_script('jquery');
-    wp_deregister_script('jquery-migrate');
+    // Remove jQuery unless a plugin requires it
+    if (!stock_scanner_plugin_uses_jquery()) {
+        wp_deregister_script('jquery');
+        wp_deregister_script('jquery-migrate');
+    }
 
     // Main stylesheet - KEEP THIS LOADED
     wp_enqueue_style(
@@ -66,11 +76,11 @@ function stock_scanner_enqueue_scripts() {
         'all'
     );
 
-    // Vanilla JS modules
+    // Vanilla JS modules (ensure jQuery conflict-free if present)
     wp_enqueue_script(
         'stock-scanner-theme-enhanced',
         STOCK_SCANNER_THEME_URI . '/js/theme-enhanced.js',
-        array(),
+        stock_scanner_plugin_uses_jquery() ? array('jquery') : array(),
         STOCK_SCANNER_VERSION . '-enhanced',
         true
     );
@@ -85,15 +95,18 @@ function stock_scanner_enqueue_scripts() {
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_enqueue_scripts');
 
-/** Force remove jQuery on frontend */
-function stock_scanner_remove_jquery() {
-    if (!is_admin()) {
+/** Adjust jQuery handling on frontend for plugin compatibility */
+function stock_scanner_adjust_jquery() {
+    if (!is_admin() && !stock_scanner_plugin_uses_jquery()) {
         wp_deregister_script('jquery');
         wp_deregister_script('jquery-migrate');
         wp_deregister_script('jquery-core');
         wp_deregister_script('jquery-ui-core');
+    } else {
+        // Ensure jQuery is available if a plugin relies on it
+        wp_enqueue_script('jquery');
     }
 }
-add_action('wp_enqueue_scripts', 'stock_scanner_remove_jquery', 1);
+add_action('wp_enqueue_scripts', 'stock_scanner_adjust_jquery', 1);
 
 // ... the remainder of functions.php stays unchanged (widgets, walkers, CPTs, etc.)
