@@ -69,11 +69,9 @@ start_tunnel() {
     while [ $retry_count -lt $MAX_RETRIES ]; do
         echo "🚀 Starting Cloudflare tunnel (attempt $((retry_count + 1))/$MAX_RETRIES)..."
 
-        # Correct flags for cloudflared on Windows/MINGW64
+        # Start tunnel with minimal, broadly compatible flags
         cloudflared tunnel run \
-            --protocol auto \
-            --loglevel info \
-            $TUNNEL_NAME &
+            "$TUNNEL_NAME" &
 
         TUNNEL_PID=$!
 
