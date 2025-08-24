@@ -1,0 +1,2 @@
+<?php /* Template Name: Cookie Policy */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Cookie Policy</h1><div class="card" style="padding:20px;"><p>We use strictly necessary cookies for basic functionality. This demo does not track users.</p></div></div></section><?php get_footer(); ?>
