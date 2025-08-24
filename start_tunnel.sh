@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# Start Cloudflare Tunnel and Market Hours Manager with Enhanced Stability
-# This script starts both the tunnel and the stock scanner components with retry logic
+# ===============================================
+#   Stock Scanner with Cloudflare Tunnel
+#          Stable Version (PID-safe)
+# ===============================================
 
+echo ""
 echo "==============================================="
 echo "    Stock Scanner with Cloudflare Tunnel"
-echo "           Enhanced Stability Version"
+echo "           Stable & Monitored Version"
 echo "==============================================="
 echo ""
 
@@ -32,51 +35,50 @@ if ! cloudflared tunnel list 2>/dev/null | grep -q "$TUNNEL_NAME"; then
     exit 1
 fi
 
-# Improved cleanup function
+# Cleanup function for Ctrl+C / SIGTERM
 cleanup() {
     echo ""
     echo "🛑 Shutting down services..."
-    
-    # Kill tunnel process
+
     if [ ! -z "$TUNNEL_PID" ]; then
         echo "   Stopping Cloudflare tunnel (PID: $TUNNEL_PID)..."
         kill -TERM $TUNNEL_PID 2>/dev/null
-        sleep 3
+        sleep 2
         kill -KILL $TUNNEL_PID 2>/dev/null
     fi
-    
-    # Kill Django server
+
     if [ ! -z "$SERVER_PID" ]; then
         echo "   Stopping Django server (PID: $SERVER_PID)..."
         kill -TERM $SERVER_PID 2>/dev/null
-        sleep 3
+        sleep 2
         kill -KILL $SERVER_PID 2>/dev/null
     fi
-    
-    # Kill health check process
+
     if [ ! -z "$HEALTH_PID" ]; then
         kill -TERM $HEALTH_PID 2>/dev/null
     fi
-    
+
     echo "✅ All services stopped"
     exit 0
 }
 
-# Function to start tunnel with retries
+# Start Cloudflare Tunnel with retries
 start_tunnel() {
     local retry_count=0
-    
+
     while [ $retry_count -lt $MAX_RETRIES ]; do
         echo "🚀 Starting Cloudflare tunnel (attempt $((retry_count + 1))/$MAX_RETRIES)..."
-        
-        # Start tunnel with enhanced logging and configuration
-        cloudflared tunnel --loglevel info run $TUNNEL_NAME &
+
+        # Correct flags for cloudflared on Windows/MINGW64
+        cloudflared tunnel run \
+            --protocol auto \
+            --loglevel info \
+            $TUNNEL_NAME &
+
         TUNNEL_PID=$!
-        
-        # Wait for tunnel to initialize
+
         sleep 5
-        
-        # Check if tunnel started successfully
+
         if ps -p $TUNNEL_PID > /dev/null 2>&1; then
             echo "✅ Cloudflare tunnel started successfully (PID: $TUNNEL_PID)"
             return 0
@@ -86,21 +88,19 @@ start_tunnel() {
             sleep $RETRY_DELAY
         fi
     done
-    
+
     echo "❌ ERROR: Failed to start tunnel after $MAX_RETRIES attempts"
     return 1
 }
 
-# Function to start Django server
+# Start Django server
 start_django() {
     echo "🚀 Starting Django server..."
     python3 manage.py runserver 0.0.0.0:8000 &
     SERVER_PID=$!
-    
-    # Wait for server to start
+
     sleep 3
-    
-    # Check if server started successfully
+
     if ps -p $SERVER_PID > /dev/null 2>&1; then
         echo "✅ Django server started successfully (PID: $SERVER_PID)"
         return 0
@@ -110,12 +110,11 @@ start_django() {
     fi
 }
 
-# Function to monitor and restart services if needed
+# Health monitor loop
 health_monitor() {
     while true; do
         sleep $HEALTH_CHECK_INTERVAL
-        
-        # Check tunnel health
+
         if ! ps -p $TUNNEL_PID > /dev/null 2>&1; then
             echo "⚠️  Tunnel process died, attempting restart..."
             if start_tunnel; then
@@ -126,8 +125,7 @@ health_monitor() {
                 exit 1
             fi
         fi
-        
-        # Check Django server health
+
         if ! ps -p $SERVER_PID > /dev/null 2>&1; then
             echo "⚠️  Django server died, attempting restart..."
             if start_django; then
@@ -138,15 +136,14 @@ health_monitor() {
                 exit 1
             fi
         fi
-        
-        # Optional: Check tunnel connectivity
+
         if ! cloudflared tunnel list 2>/dev/null | grep -q "$TUNNEL_NAME"; then
             echo "⚠️  Tunnel not visible in list, may need reconnection..."
         fi
     done
 }
 
-# Set up signal handlers
+# Trap signals
 trap cleanup SIGINT SIGTERM
 
 # Start services
@@ -164,20 +161,19 @@ health_monitor &
 HEALTH_PID=$!
 
 echo ""
-echo "🌐 Services running with enhanced stability:"
+echo "🌐 Services running with monitoring enabled:"
 echo "   📡 Cloudflare Tunnel: Active (PID: $TUNNEL_PID)"
 echo "   🐍 Django Server: Active (PID: $SERVER_PID)"
 echo "   🔍 Health Monitor: Active (PID: $HEALTH_PID)"
 echo "   🔗 Your app is accessible via Cloudflare URL"
 echo ""
-echo "Enhanced features:"
+echo "Features:"
 echo "   • Automatic retry on connection failure"
 echo "   • Health monitoring every $HEALTH_CHECK_INTERVAL seconds"
-echo "   • QUIC protocol for better performance"
+echo "   • Stable TCP/HTTP2 connection"
 echo "   • Graceful shutdown handling"
 echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
 
-# Wait for processes to complete
 wait $TUNNEL_PID $SERVER_PID
