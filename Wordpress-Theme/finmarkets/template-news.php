@@ -3,7 +3,7 @@
   <div class="container">
     <div class="content">
       <h1 style="color:var(--navy);">Market News</h1>
-      <p class="muted">Mock headlines to demonstrate layout and accessibility.</p>
+      <p class="muted">Fetched via external API if set, otherwise mock data.</p>
     </div>
     <div id="newsGrid" class="grid cols-3"></div>
   </div>
@@ -11,9 +11,15 @@
 <script defer>
 (function(){
   const $ = s => document.querySelector(s);
-  document.addEventListener('DOMContentLoaded', function(){
-    const grid = $('#newsGrid');
-    grid.innerHTML = (window.MockData?.news||[]).map(n=>`<article class="card" style="padding:14px;"><div class="badge">${n.source}</div><h4 style="margin:8px 0; color:var(--navy);">${n.title}</h4><div class="muted">${n.time}</div></article>`).join('');
+  function render(items){
+    const grid=$('#newsGrid');
+    grid.innerHTML = items.map(n=>`<article class=\"card\" style=\"padding:14px;\"><div class=\"badge\">${n.source||''}</div><h4 style=\"margin:8px 0; color:var(--navy);\">${n.title||n.name||'—'}</h4><div class=\"muted\">${n.published_at||n.time||''}</div></article>`).join('')||'<div class="muted">No news available.</div>';
+  }
+  document.addEventListener('DOMContentLoaded', async function(){
+    try{
+      const r = await (window.finmApi? window.finmApi.wpNews({ limit: 9 }): Promise.reject('no api'));
+      render(r.data||[]);
+    }catch(e){ render((window.MockData?.news)||[]); }
   });
 })();
 </script>

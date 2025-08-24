@@ -2,29 +2,37 @@
 <section class="section">
   <div class="container grid cols-3">
     <div class="card" style="padding:16px;">
-      <h3>Indices</h3>
-      <ul>
-        <li>S&amp;P 500 <span class="badge badge-green">+0.6%</span></li>
-        <li>Nasdaq <span class="badge badge-green">+1.1%</span></li>
-        <li>Dow Jones <span class="badge badge-red">-0.2%</span></li>
-      </ul>
+      <h3>Market Overview</h3>
+      <div id="moOverview" class="muted">Loading…</div>
     </div>
     <div class="card" style="padding:16px;">
-      <h3>Sectors</h3>
-      <ul>
-        <li>Tech <span class="badge badge-green">+1.4%</span></li>
-        <li>Energy <span class="badge badge-green">+0.8%</span></li>
-        <li>Healthcare <span class="badge badge-red">-0.3%</span></li>
-      </ul>
+      <h3>Top Gainers</h3>
+      <ul id="moGainers"></ul>
     </div>
     <div class="card" style="padding:16px;">
-      <h3>Movers</h3>
-      <ul>
-        <li class="mono">NVDA</li>
-        <li class="mono">AAPL</li>
-        <li class="mono">TSLA</li>
-      </ul>
+      <h3>Most Active</h3>
+      <ul id="moActive"></ul>
     </div>
   </div>
 </section>
+<script defer>
+(function(){
+  const $=s=>document.querySelector(s);
+  const it=(arr,fmt)=> (arr||[]).slice(0,5).map(x=>`<li style="display:flex; justify-content:space-between; border-bottom:1px solid var(--gray-200); padding:6px 0;"><span class=\"mono\">${x.ticker||x.symbol||x.name}</span><span>${(x.current_price!=null? x.current_price : x.price)||'-'}</span></li>`).join('')||'<li class="muted">No data.</li>';
+  document.addEventListener('DOMContentLoaded', async function(){
+    try{
+      const s = await (window.finmApi? window.finmApi.marketStats(): Promise.reject('no api'));
+      const o = s.market_overview || {};
+      $('#moOverview').textContent = `Total: ${o.total_stocks||'-'} • Gainers: ${o.gainers||'-'} • Losers: ${o.losers||'-'} • Unchanged: ${o.unchanged||'-'}`;
+      $('#moGainers').innerHTML = it(s.top_gainers||[]);
+      $('#moActive').innerHTML = it(s.most_active||[]);
+    }catch(e){
+      // fallback to mock
+      $('#moOverview').textContent = 'External API unavailable — showing mock preview';
+      $('#moGainers').innerHTML = it((window.MockData?.stocks||[]).slice(0,5));
+      $('#moActive').innerHTML = it((window.MockData?.stocks||[]).slice(5,10));
+    }
+  });
+})();
+</script>
 <?php get_footer(); ?>

@@ -4,9 +4,10 @@
     <div>
       <h1>Research faster. Trade smarter.</h1>
       <p>Lightning-fast stock screener, real-time watchlists, and clean portfolio tracking. Secure. Accessible. Beautiful.</p>
-      <div style="display:flex; gap:12px;">
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <a class="btn btn-primary" href="#screener">Launch Screener</a>
         <a class="btn btn-ghost" href="#how">How it works</a>
+        <span id="healthBadge" class="badge" aria-live="polite">Checking API…</span>
       </div>
       <div class="stat" style="margin-top:24px;">
         <div class="stat-item"><span class="muted">Coverage</span><strong>8,000+ stocks</strong></div>
@@ -28,7 +29,7 @@
   <div class="container">
     <div class="content">
       <h2 style="margin:0 0 12px; color:var(--navy);">Stock Screener</h2>
-      <p class="muted" style="margin:0 0 20px;">Client-side demo with mock data. Search, filter by sector, sort by price.</p>
+      <p class="muted" style="margin:0 0 20px;">Search, filter by sector, sort by price. Hydrates with external API if configured.</p>
     </div>
     <div class="card" style="padding:16px;">
       <div class="toolbar" role="region" aria-label="Screener controls">
@@ -59,7 +60,7 @@
   <div class="container">
     <div class="content">
       <h2 style="margin:0 0 12px; color:var(--navy);">Market News</h2>
-      <p class="muted" style="margin:0 0 20px;">Mock headlines for layout and motion.</p>
+      <p class="muted" style="margin:0 0 20px;">If the external API is set, this will fetch live items.</p>
     </div>
     <div class="grid cols-3">
       <div id="newsGrid" class="grid cols-3" style="grid-template-columns: repeat(3, minmax(0, 1fr));"></div>
@@ -78,7 +79,7 @@
           <li>Community screens</li>
           <li>News summaries</li>
         </ul>
-        <button class="btn btn-ghost">Start free</button>
+        <a class="btn btn-ghost" href="<?php echo esc_url(home_url('/checkout')); ?>">Start free</a>
       </div>
       <div class="card" style="padding:20px; border:2px solid #d7e3ff; box-shadow: 0 10px 24px rgba(27,110,243,0.15);">
         <h3>Pro</h3>
@@ -88,7 +89,7 @@
           <li>Advanced screeners</li>
           <li>Unlimited portfolios</li>
         </ul>
-        <button class="btn btn-primary">Upgrade</button>
+        <a class="btn btn-primary" href="<?php echo esc_url(home_url('/checkout')); ?>">Upgrade</a>
       </div>
       <div class="card" style="padding:20px;">
         <h3>Enterprise</h3>
@@ -98,9 +99,24 @@
           <li>Audit logs</li>
           <li>Dedicated support</li>
         </ul>
-        <button class="btn">Contact sales</button>
+        <a class="btn" href="<?php echo esc_url(home_url('/contact')); ?>">Contact sales</a>
       </div>
     </div>
   </div>
 </section>
+<script defer src="<?php echo esc_url( get_template_directory_uri() . '/assets/js/ui.js' ); ?>"></script>
+<script defer>
+(function(){
+  document.addEventListener('DOMContentLoaded', async function(){
+    // Health badge
+    const badge = document.getElementById('healthBadge');
+    try{
+      const h = await (window.finmApi ? window.finmApi.health() : Promise.reject('no api'));
+      const status = (h.status||'').toLowerCase();
+      if(status==='healthy'){ badge.textContent='API: Healthy'; badge.classList.add('badge-green'); }
+      else { badge.textContent='API: Degraded'; badge.classList.add('badge-red'); }
+    }catch(e){ badge.textContent='API: Offline'; badge.classList.add('badge-red'); }
+  });
+})();
+</script>
 <?php get_footer(); ?>
