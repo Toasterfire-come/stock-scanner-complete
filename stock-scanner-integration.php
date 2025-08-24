@@ -79,6 +79,8 @@ class StockScannerIntegration {
         
         // Include PayPal integration
         require_once plugin_dir_path(__FILE__) . 'includes/class-paypal-integration.php';
+    }
+    
     public function settings_notices() {
         if (!current_user_can('manage_options')) return;
         $api_url = get_option('stock_scanner_api_url', '');
