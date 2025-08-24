@@ -1,0 +1,2 @@
+<?php /* Template Name: Newsletter Signup */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Newsletter</h1><div class="card" style="padding:20px;"><form onsubmit="alert('Subscribed (demo)'); return false;"><input class="input" type="email" placeholder="Email" /><button class="btn btn-primary" style="margin-left:8px;">Subscribe</button></form></div></div></section><?php get_footer(); ?>
