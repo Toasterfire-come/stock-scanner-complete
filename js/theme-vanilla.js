@@ -458,7 +458,7 @@
                         const loadTime = performance.getEntriesByName('page-load-time')[0];
                         
                         if (loadTime && window.console && window.location.hostname === 'localhost') {
-                            console.log(`📊 Stock Scanner page loaded in ${Math.round(loadTime.duration)}ms`);
+                            // Performance measurement complete
                         }
                     } catch (e) {
                         // Ignore errors in performance measurement

@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="assets/css/enhanced-styles.css">
     
+    <!-- JavaScript for Enhanced Functionality -->
+    <script src="js/theme-enhanced.js" defer></script>
+    
     <style>
         /* Additional test styles */
         body { margin: 0; padding: 0; }
@@ -215,16 +218,45 @@
     </footer>
 
     <script>
-        // Basic theme toggle functionality for testing
+        // Enhanced theme functionality for static HTML testing
         document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.querySelector('.theme-toggle');
+            console.log('Theme loaded successfully!');
+            
+            // Provide WordPress-like globals for the enhanced JS
+            window.stockScannerAjax = {
+                ajaxurl: '/wp-admin/admin-ajax.php',
+                nonce: 'static-test',
+                homeUrl: '/',
+                themeUrl: '.'
+            };
+            
+            // Theme toggle functionality
+            const themeToggle = document.querySelector('.theme-toggle, [data-theme-toggle]');
             if (themeToggle) {
                 themeToggle.addEventListener('click', function() {
-                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
                     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                     document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
                 });
             }
+            
+            // Initialize saved theme
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            
+            // Add interactive functionality to buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (!this.href || this.href === '#') {
+                        e.preventDefault();
+                        console.log('Button clicked:', this.textContent.trim());
+                    }
+                });
+            });
         });
     </script>
 </body>

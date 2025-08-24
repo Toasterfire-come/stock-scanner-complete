@@ -766,9 +766,7 @@
                         performance.measure('page-load-time', 'navigationStart', 'page-loaded');
                         const loadTime = performance.getEntriesByName('page-load-time')[0];
                         
-                        if (loadTime && console.log) {
-                            console.log(`📊 Stock Scanner (Vanilla JS) loaded in ${Math.round(loadTime.duration)}ms`);
-                        }
+                        // Performance logging removed for production
                     } catch (e) {
                         // Ignore performance measurement errors
                     }
@@ -854,7 +852,7 @@
 
         performSearch(query, input) {
             // Add search functionality here
-            console.log('Searching for:', query);
+            // Search query processing
         }
 
         initializeComponents() {
@@ -921,7 +919,7 @@
                 const payload = data && data.data ? data.data : data;
                 this.updateDashboardData(payload);
             } catch (error) {
-                console.error('Failed to load dashboard data', error);
+                // Dashboard data loading failed - handled gracefully
             }
         }
 
@@ -1008,7 +1006,7 @@
         Utils.addClass(document.body, 'vanilla-js-initialized');
         document.body.classList.add('theme-fully-loaded');
         
-        console.log('🚀 Stock Scanner Theme loaded (100% Vanilla JS)');
+        // Theme successfully loaded
     });
 
 })();
