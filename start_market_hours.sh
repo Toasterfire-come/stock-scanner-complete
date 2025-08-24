@@ -4,6 +4,11 @@
 
 set -e
 
+# Force UTF-8 to avoid Unicode issues on Windows/Git Bash consoles
+export PYTHONIOENCODING="utf-8"
+export LANG="C.UTF-8"
+export LC_ALL="C.UTF-8"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

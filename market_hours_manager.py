@@ -342,10 +342,15 @@ class MarketHoursManager:
         # Populate fallback data to ensure API functionality
         try:
             import subprocess
+            # Ensure UTF-8 encoding to avoid Unicode issues on Windows consoles
+            env = os.environ.copy()
+            env.setdefault('PYTHONIOENCODING', 'utf-8')
+            env.setdefault('LANG', 'C.UTF-8')
+            env.setdefault('LC_ALL', 'C.UTF-8')
             result = subprocess.run([
-                self.python_exe, 
+                self.python_exe,
                 os.path.join(self.project_root, 'populate_fallback_data.py')
-            ], capture_output=True, text=True, timeout=300)
+            ], capture_output=True, text=True, timeout=300, env=env)
             
             if result.returncode == 0:
                 logger.info("Fallback data populated successfully")
