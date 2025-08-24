@@ -155,9 +155,9 @@ class SimpleMarketHoursManager:
         for component_name in self.components.keys():
             if self.check_component_health(component_name):
                 pid = self.processes[component_name].pid
-                print(f"✅ {component_name}: Running (PID: {pid})")
+                print(f"OK  {component_name}: Running (PID: {pid})")
             else:
-                print(f"❌ {component_name}: Stopped")
+                print(f"ERR {component_name}: Stopped")
         
         print("\n" + "="*50)
 
