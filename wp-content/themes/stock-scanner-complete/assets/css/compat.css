@@ -1,0 +1,116 @@
+/* Stock Scanner Pro - Legacy Compatibility Layer (v3)
+   Purpose: Provide minimal definitions for legacy selectors referenced by templates
+   without re-enqueuing the older theme/style.css. Uses v3 CSS variables. */
+
+/* Hamburger icon lines inside the menu toggle */
+.menu-toggle .hamburger-line {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+.menu-toggle .hamburger-line + .hamburger-line { margin-top: 5px; }
+.menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(2) { opacity: 0; }
+.menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Membership badge */
+.membership-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.membership-badge.free { background: #e5e7eb; color: #111827; }
+.membership-badge.premium { background: #fff7ed; color: #b45309; border-color: #f59e0b; }
+.membership-badge.professional { background: #f5f3ff; color: #6b21a8; border-color: #8b5cf6; }
+
+/* User menu items */
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-light);
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.user-menu-item:hover {
+  background: var(--color-bg-lighter);
+  color: var(--color-text);
+}
+
+/* Section scaffolding */
+.section-intro { margin-bottom: var(--space-10); text-align: center; }
+.section-title { font-size: var(--text-4xl); font-weight: 800; margin-bottom: var(--space-4); }
+.section-subtitle { color: var(--color-text-muted); max-width: 800px; margin: 0 auto var(--space-8); }
+
+/* Features grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-8);
+}
+
+/* Hero actions */
+.hero-actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Trust item */
+.trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  color: var(--color-white);
+}
+
+/* Glass section wrapper */
+.glass-section {
+  padding: var(--space-16) 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0));
+}
+[data-theme="dark"] .glass-section {
+  background: linear-gradient(180deg, rgba(31,41,55,0.6), rgba(31,41,55,0));
+}
+
+/* Large button helper (legacy alias) */
+.btn-large {
+  padding: var(--space-5) var(--space-10);
+  font-size: 1.125rem;
+  border-radius: var(--radius-2xl);
+}
+
+/* Loading bar */
+.page-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--gradient-primary);
+  z-index: var(--z-modal);
+}
+
+
+/* User dropdown visibility */
+.user-dropdown { position: relative; }
+.user-menu { position: absolute; top: 100%; right: 0; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); min-width: 220px; padding: var(--space-2) 0; opacity: 0; visibility: hidden; transform: translateY(8px); transition: all var(--transition-normal); z-index: var(--z-dropdown); }
+.user-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* Testimonial card fallback */
+.testimonial-card { background: var(--gradient-card); backdrop-filter: var(--glass-blur-light); border: 1px solid var(--glass-border); border-radius: var(--radius-2xl); box-shadow: var(--shadow-lg); padding: var(--space-8); }
