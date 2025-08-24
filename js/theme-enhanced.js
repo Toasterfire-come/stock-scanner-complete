@@ -1,6 +1,6 @@
 /**
- * Stock Scanner Pro - Vanilla JS Enhancements (conversion v6.1)
- * Removes micro-survey; adds refined brand palettes to Preferences.
+ * Stock Scanner Pro - Vanilla JS Enhancements (v6.1 - CSS Fixed)
+ * Complete vanilla JavaScript functionality with traditional CSS loading
  */
 (function(){
   'use strict';

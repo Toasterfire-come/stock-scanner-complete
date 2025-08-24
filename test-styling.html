@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Scanner Theme - Styling Test</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Main Theme Styles -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/css/enhanced-styles.css">
+    
+    <style>
+        /* Additional test styles */
+        body { margin: 0; padding: 0; }
+        .test-section { padding: 2rem 0; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0; }
+    </style>
+</head>
+<body>
+    <!-- Header Test -->
+    <header class="site-header glass-nav">
+        <div class="header-container">
+            <div class="site-branding">
+                <a href="#" class="logo-link">
+                    <div class="logo-container glass-card">
+                        <img src="assets/images/logo.png" alt="Stock Scanner Logo" class="logo-image" width="120" height="45">
+                        <div class="brand-text">
+                            <span class="logo-text text-gradient">Stock Scanner</span>
+                            <span class="site-description">Professional Trading Platform</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <nav class="main-navigation glass-nav">
+                <ul class="nav-menu enhanced-nav">
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Screener</a></li>
+                    <li><a href="#">Portfolio</a></li>
+                    <li><a href="#">Watchlist</a></li>
+                    <li><a href="#">Plans</a></li>
+                </ul>
+            </nav>
+            
+            <div class="header-actions">
+                <button class="theme-toggle btn-icon glass">
+                    <span class="theme-icon light-icon">🌙</span>
+                    <span class="theme-icon dark-icon">☀️</span>
+                </button>
+                <button class="search-toggle btn-icon glass">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                </button>
+                <div class="auth-actions">
+                    <a href="#" class="btn btn-outline btn-sm glass">Login</a>
+                    <a href="#" class="btn btn-primary btn-sm gradient-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <!-- Hero Section Test -->
+        <section class="hero-section gradient-hero test-section">
+            <div class="container">
+                <div class="hero-content scroll-reveal">
+                    <h1 class="hero-title text-gradient">Find Winning Stocks Fast</h1>
+                    <p class="hero-subtitle" style="font-size:1.25rem">
+                        Real‑time data, pro‑level screening, and portfolio analytics — in a platform built for speed and clarity.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#" class="btn btn-primary btn-lg glass shadow-glass">
+                            🚀 Start 7‑Day Trial for $1
+                        </a>
+                        <a href="#" class="btn btn-outline btn-lg glass">
+                            Compare Plans
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards Test Section -->
+        <section class="glass-section test-section">
+            <div class="container">
+                <h2 class="section-title text-gradient">Premium Card Components</h2>
+                <div class="test-grid">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3>Basic Card</h3>
+                        </div>
+                        <div class="card-body">
+                            <p>This is a test card with glassmorphism effects and premium styling.</p>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-primary">Action</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card glass-card">
+                        <div class="card-body">
+                            <h3>Feature Card</h3>
+                            <p>Advanced screening tools with real-time data and AI insights.</p>
+                            <ul>
+                                <li>✅ 50+ indicators</li>
+                                <li>✅ Real-time quotes</li>
+                                <li>✅ Portfolio analytics</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card glass-card">
+                        <div class="card-body">
+                            <h3>Pricing Card</h3>
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--color-primary);">$29/mo</div>
+                            <p>Professional plan with all features included.</p>
+                            <button class="btn btn-primary btn-lg" style="width: 100%;">Get Started</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Button Variants Test -->
+        <section class="test-section" style="background: var(--color-bg-light);">
+            <div class="container">
+                <h2 class="section-title">Button System Test</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin: 2rem 0;">
+                    <button class="btn btn-primary">Primary Button</button>
+                    <button class="btn btn-secondary">Secondary Button</button>
+                    <button class="btn btn-outline">Outline Button</button>
+                    <button class="btn btn-primary btn-sm">Small Button</button>
+                    <button class="btn btn-primary btn-lg">Large Button</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form Components Test -->
+        <section class="test-section">
+            <div class="container">
+                <h2 class="section-title">Form Components</h2>
+                <div class="card glass-card" style="max-width: 500px; margin: 0 auto;">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" placeholder="Enter your email">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" placeholder="Enter your password">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                                Sign In
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Test -->
+        <section class="test-section" style="background: var(--color-bg-light);">
+            <div class="container">
+                <h1>Heading 1 - Typography Test</h1>
+                <h2>Heading 2 - Secondary Title</h2>
+                <h3>Heading 3 - Section Title</h3>
+                <h4>Heading 4 - Subsection</h4>
+                <p>This is a paragraph with regular text. It should have proper line height, color, and spacing according to the design system.</p>
+                <p class="text-muted">This is muted text that should be lighter in color.</p>
+                <a href="#">This is a link with hover effects</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Test -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-widgets">
+                    <div class="footer-widget-area">
+                        <div class="widget footer-about">
+                            <h3 class="widget-title">Stock Scanner</h3>
+                            <p>Professional stock analysis platform providing real-time market data and advanced screening tools.</p>
+                        </div>
+                    </div>
+                    <div class="footer-widget-area">
+                        <div class="widget footer-nav">
+                            <h3 class="widget-title">Quick Links</h3>
+                            <ul class="footer-menu">
+                                <li><a href="#">Dashboard</a></li>
+                                <li><a href="#">Screener</a></li>
+                                <li><a href="#">Portfolio</a></li>
+                                <li><a href="#">Plans</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <div class="copyright">
+                        <p>&copy; 2024 Stock Scanner. All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Basic theme toggle functionality for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.querySelector('.theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
