@@ -3,3 +3,4 @@
 127.0.0.1 - - [19/Aug/2025 12:05:33] "HEAD /js/theme-enhanced.js HTTP/1.1" 200 -
 127.0.0.1 - - [19/Aug/2025 12:05:38] "GET /test-styling.html HTTP/1.1" 200 -
 127.0.0.1 - - [24/Aug/2025 16:42:03] "GET /test-styling.html HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2025 16:53:19] "HEAD /test-styling.html HTTP/1.1" 200 -

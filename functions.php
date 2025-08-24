@@ -90,6 +90,14 @@ function stock_scanner_enqueue_scripts() {
             true
         );
         
+        // Add async/defer for performance
+        add_filter('script_loader_tag', function($tag, $handle) {
+            if ($handle === 'stock-scanner-theme-enhanced') {
+                return str_replace(' src', ' defer src', $tag);
+            }
+            return $tag;
+        }, 10, 2);
+        
         // Localize script for AJAX
         wp_localize_script('stock-scanner-theme-enhanced', 'stockScannerAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -114,5 +122,87 @@ function stock_scanner_adjust_jquery() {
     }
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_adjust_jquery', 1);
+
+/**
+ * Production Performance Optimizations
+ */
+function stock_scanner_performance_optimizations() {
+    // Remove WordPress emoji scripts and styles
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('admin_print_scripts', 'print_emoji_detection_script');
+    remove_action('wp_print_styles', 'print_emoji_styles');
+    remove_action('admin_print_styles', 'print_emoji_styles');
+    remove_filter('the_content_feed', 'wp_staticize_emoji');
+    remove_filter('comment_text_rss', 'wp_staticize_emoji');
+    remove_filter('wp_mail', 'wp_staticize_emoji_for_email');
+    
+    // Remove WordPress block editor styles on front end if not needed
+    if (!is_admin()) {
+        wp_dequeue_style('wp-block-library');
+        wp_dequeue_style('wp-block-library-theme');
+        wp_dequeue_style('wc-block-style');
+    }
+    
+    // Optimize Google Fonts loading
+    add_filter('style_loader_tag', function($html, $handle) {
+        if ($handle === 'stock-scanner-fonts') {
+            return str_replace("rel='stylesheet'", "rel='preload' as='style' onload=\"this.onload=null;this.rel='stylesheet'\"", $html) . 
+                   '<noscript>' . $html . '</noscript>';
+        }
+        return $html;
+    }, 10, 2);
+}
+add_action('init', 'stock_scanner_performance_optimizations');
+
+/**
+ * Security Headers for Production
+ */
+function stock_scanner_security_headers() {
+    if (!is_admin()) {
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN');
+        header('X-XSS-Protection: 1; mode=block');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+    }
+}
+add_action('send_headers', 'stock_scanner_security_headers');
+
+/**
+ * Clean up WordPress head for production
+ */
+function stock_scanner_clean_head() {
+    remove_action('wp_head', 'rsd_link');
+    remove_action('wp_head', 'wlwmanifest_link');
+    remove_action('wp_head', 'wp_generator');
+    remove_action('wp_head', 'start_post_rel_link');
+    remove_action('wp_head', 'index_rel_link');
+    remove_action('wp_head', 'adjacent_posts_rel_link');
+    remove_action('wp_head', 'wp_shortlink_wp_head');
+    remove_action('wp_head', 'rest_output_link_wp_head');
+    remove_action('wp_head', 'wp_oembed_add_discovery_links');
+}
+add_action('after_setup_theme', 'stock_scanner_clean_head');
+
+/**
+ * Optimize images for production
+ */
+function stock_scanner_optimize_images() {
+    // Enable WebP support if available
+    add_filter('wp_image_editors', function($editors) {
+        return array('WP_Image_Editor_Imagick', 'WP_Image_Editor_GD');
+    });
+    
+    // Add loading="lazy" to images
+    add_filter('wp_get_attachment_image_attributes', function($attr) {
+        if (!isset($attr['loading'])) {
+            $attr['loading'] = 'lazy';
+        }
+        if (!isset($attr['decoding'])) {
+            $attr['decoding'] = 'async';
+        }
+        return $attr;
+    });
+}
+add_action('init', 'stock_scanner_optimize_images');
 
 // ... the remainder of functions.php stays unchanged (widgets, walkers, CPTs, etc.)
