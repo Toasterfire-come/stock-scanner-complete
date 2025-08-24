@@ -12,7 +12,7 @@
       { symbol: 'XOM', name: 'Exxon Mobil', sector: 'Energy', price: 118.44, change: 0.67, marketCap: '480B' },
       { symbol: 'CVX', name: 'Chevron', sector: 'Energy', price: 156.71, change: 0.11, marketCap: '300B' },
       { symbol: 'UNH', name: 'UnitedHealth', sector: 'Healthcare', price: 510.68, change: -0.92, marketCap: '470B' },
-      { symbol: 'JNJ', name: 'Johnson &amp; Johnson', sector: 'Healthcare', price: 158.24, change: 0.21, marketCap: '380B' },
+      { symbol: 'JNJ', name: 'Johnson & Johnson', sector: 'Healthcare', price: 158.24, change: 0.21, marketCap: '380B' },
       { symbol: 'WMT', name: 'Walmart Inc.', sector: 'Consumer Staples', price: 72.51, change: 0.31, marketCap: '610B' },
       { symbol: 'PG', name: 'Procter &amp; Gamble', sector: 'Consumer Staples', price: 163.77, change: -0.11, marketCap: '410B' },
       { symbol: 'BA', name: 'Boeing', sector: 'Industrials', price: 185.12, change: 0.36, marketCap: '112B' }
