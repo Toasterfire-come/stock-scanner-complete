@@ -15,13 +15,85 @@ add_action('after_setup_theme', function () {
   ]);
 });
 
+// Auto-create key pages on theme activation
+add_action('after_switch_theme', function(){
+  $pages = [
+    // title => [slug, template]
+    'Home' => ['home', ''],
+    'Stock Screener' => ['screener', 'template-screener.php'],
+    'Market Overview' => ['market-overview', 'template-market-overview.php'],
+    'Portfolio Management' => ['portfolio', 'template-portfolio.php'],
+    'Stock Lookup' => ['stock-lookup', 'template-lookup.php'],
+    'News' => ['news', 'template-news.php'],
+    'Watchlist' => ['watchlist', 'template-watchlist.php'],
+    'User Settings' => ['user-settings', 'template-user-settings.php'],
+    'Checkout' => ['checkout', 'template-payments-checkout.php'],
+    'Payment Success' => ['payment-success', 'template-payments-success.php'],
+    'Payment Canceled' => ['payment-cancel', 'template-payments-cancel.php'],
+    'About' => ['about', 'template-about.php'],
+    'Help Center' => ['help-center', 'template-help.php'],
+    'FAQ' => ['faq', 'template-faq.php'],
+    'Contact' => ['contact', 'template-contact.php'],
+    'Glossary' => ['glossary', 'template-glossary.php'],
+    'How It Works' => ['how-it-works', 'template-how-it-works.php'],
+    'Getting Started' => ['getting-started', 'template-getting-started.php'],
+    'Roadmap' => ['roadmap', 'template-roadmap.php'],
+    'Login' => ['login', 'template-login.php'],
+    'Signup' => ['signup', 'template-signup.php'],
+    'Dashboard' => ['dashboard', 'template-dashboard.php'],
+    'Account' => ['account', 'template-account.php'],
+    'Billing History' => ['billing-history', 'template-billing-history.php'],
+    'Premium Plans' => ['premium-plans', 'template-premium-plans.php'],
+    'Compare Plans' => ['compare-plans', 'template-compare-plans.php'],
+    'Privacy Policy' => ['privacy', 'template-privacy.php'],
+    'Terms of Service' => ['terms', 'template-terms.php'],
+    'Security' => ['security', 'template-security.php'],
+    'Accessibility' => ['accessibility', 'template-accessibility.php'],
+    'Status' => ['status', 'template-status.php'],
+    'Sitemap' => ['sitemap', 'template-sitemap.php'],
+    'Market Hours' => ['market-hours', 'template-market-hours.php'],
+    'Endpoint Status' => ['endpoint-status', 'template-endpoint-status.php'],
+    'Revenue Analytics' => ['revenue-analytics', 'template-revenue-analytics.php'],
+    'Components' => ['components', 'template-components.php'],
+    'Keyboard Shortcuts' => ['keyboard-shortcuts', 'template-keyboard-shortcuts.php'],
+    'Notifications' => ['notifications', 'template-notifications.php'],
+    'Subscriptions' => ['subscriptions', 'template-subscriptions.php'],
+    'Newsletter' => ['newsletter', 'template-newsletter.php'],
+    'Data Request' => ['data-request', 'template-data-request.php'],
+    'Cookie Policy' => ['cookie-policy', 'template-cookies.php'],
+  ];
+
+  foreach($pages as $title => $info){
+    list($slug, $tpl) = $info;
+    $existing = get_page_by_path($slug);
+    if(!$existing){
+      $pid = wp_insert_post([
+        'post_title' => $title,
+        'post_name' => $slug,
+        'post_status' => 'publish',
+        'post_type' => 'page'
+      ]);
+      if($pid && $tpl){ update_post_meta($pid, '_wp_page_template', $tpl); }
+      if($title === 'Home'){
+        update_option('page_on_front', $pid);
+        update_option('show_on_front', 'page');
+      }
+    } else {
+      if($tpl){ update_post_meta($existing->ID, '_wp_page_template', $tpl); }
+      if($title === 'Home'){
+        update_option('page_on_front', $existing->ID);
+        update_option('show_on_front', 'page');
+      }
+    }
+  }
+});
+
 // ---------- Options (API + PayPal) ----------
 const FINM_OPTION_KEY = 'finm_settings';
 function finm_get_settings() {
   $defaults = [
     'api_base' => '',
     'api_key' => '',
-    // PayPal
     'paypal_client_id' => '',
     'paypal_currency' => 'USD',
     'paypal_env' => 'sandbox',
@@ -32,12 +104,9 @@ function finm_get_settings() {
   if (!is_array($opt)) $opt = [];
   return array_merge($defaults, $opt);
 }
-function finm_sanitize_url($url){
-  $url = trim($url);
-  if ($url === '') return '';
-  if (!preg_match('#^https?://#i', $url)) { $url = 'https://' . $url; }
-  return rtrim($url, "/ ");
-}
+function finm_sanitize_url($url){ $url = trim($url); if ($url === '') return ''; if (!preg_match('#^https?://#i', $url)) { $url = 'https://' . $url; } return rtrim($url, "/ "); }
+
+// Settings sections and fields (API + PayPal)
 add_action('admin_init', function(){
   register_setting('finm_group', FINM_OPTION_KEY, [
     'type' => 'array',
@@ -53,39 +122,17 @@ add_action('admin_init', function(){
       ];
     }
   ]);
-  add_settings_section('finm_section', __('External API', 'finmarkets'), function(){
-    echo '<p>Configure base URL for your market data API. Requests are proxied via WP REST to avoid CORS.</p>';
-  }, 'finm_settings');
-  add_settings_field('finm_api_base', __('API Base URL', 'finmarkets'), function(){
-    $s = finm_get_settings();
-    echo '<input type="url" class="regular-text" name="' . FINM_OPTION_KEY . '[api_base]" value="' . esc_attr($s['api_base']) . '" placeholder="https://api.example.com" />';
-  }, 'finm_settings', 'finm_section');
-  add_settings_field('finm_api_key', __('API Key (optional)', 'finmarkets'), function(){
-    $s = finm_get_settings();
-    echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[api_key]" value="' . esc_attr($s['api_key']) . '" placeholder="Bearer token or key" />';
-  }, 'finm_settings', 'finm_section');
-
-  // PayPal section
-  add_settings_section('finm_pp', __('PayPal', 'finmarkets'), function(){
-    echo '<p>Enter your PayPal Client ID and defaults. Buttons are rendered on the Checkout template.</p>';
-  }, 'finm_settings');
-  add_settings_field('finm_pp_id', __('Client ID', 'finmarkets'), function(){
-    $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[paypal_client_id]" value="' . esc_attr($s['paypal_client_id']) . '" placeholder="Abc123..." />';
-  }, 'finm_settings', 'finm_pp');
-  add_settings_field('finm_pp_env', __('Environment', 'finmarkets'), function(){
-    $s = finm_get_settings();
-    echo '<select name="' . FINM_OPTION_KEY . '[paypal_env]"><option value="sandbox"' . selected($s['paypal_env'],'sandbox',false) . '>Sandbox</option><option value="live"' . selected($s['paypal_env'],'live',false) . '>Live</option></select>';
-  }, 'finm_settings', 'finm_pp');
-  add_settings_field('finm_pp_currency', __('Currency', 'finmarkets'), function(){
-    $s = finm_get_settings(); echo '<input type="text" name="' . FINM_OPTION_KEY . '[paypal_currency]" value="' . esc_attr($s['paypal_currency']) . '" size="6" />';
-  }, 'finm_settings', 'finm_pp');
-  add_settings_field('finm_pp_amount', __('Pro Plan Price', 'finmarkets'), function(){
-    $s = finm_get_settings(); echo '<input type="text" name="' . FINM_OPTION_KEY . '[paypal_amount_pro]" value="' . esc_attr($s['paypal_amount_pro']) . '" size="8" />';
-  }, 'finm_settings', 'finm_pp');
-  add_settings_field('finm_pp_brand', __('Brand Name', 'finmarkets'), function(){
-    $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[paypal_brand_name]" value="' . esc_attr($s['paypal_brand_name']) . '" />';
-  }, 'finm_settings', 'finm_pp');
+  add_settings_section('finm_section', __('External API', 'finmarkets'), function(){ echo '<p>Configure base URL for your market data API. Requests are proxied via WP REST to avoid CORS.</p>'; }, 'finm_settings');
+  add_settings_field('finm_api_base', __('API Base URL', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="url" class="regular-text" name="' . FINM_OPTION_KEY . '[api_base]" value="' . esc_attr($s['api_base']) . '" placeholder="https://api.example.com" />'; }, 'finm_settings', 'finm_section');
+  add_settings_field('finm_api_key', __('API Key (optional)', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[api_key]" value="' . esc_attr($s['api_key']) . '" placeholder="Bearer token or key" />'; }, 'finm_settings', 'finm_section');
+  add_settings_section('finm_pp', __('PayPal', 'finmarkets'), function(){ echo '<p>Enter your PayPal Client ID and defaults. Buttons are rendered on the Checkout template.</p>'; }, 'finm_settings');
+  add_settings_field('finm_pp_id', __('Client ID', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[paypal_client_id]" value="' . esc_attr($s['paypal_client_id']) . '" placeholder="Abc123..." />'; }, 'finm_settings', 'finm_pp');
+  add_settings_field('finm_pp_env', __('Environment', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<select name="' . FINM_OPTION_KEY . '[paypal_env]'><option value="sandbox"' . selected($s['paypal_env'],'sandbox',false) . '>Sandbox</option><option value="live"' . selected($s['paypal_env'],'live',false) . '>Live</option></select>'; }, 'finm_settings', 'finm_pp');
+  add_settings_field('finm_pp_currency', __('Currency', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" name="' . FINM_OPTION_KEY . '[paypal_currency]" value="' . esc_attr($s['paypal_currency']) . '" size="6" />'; }, 'finm_settings', 'finm_pp');
+  add_settings_field('finm_pp_amount', __('Pro Plan Price', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" name="' . FINM_OPTION_KEY . '[paypal_amount_pro]" value="' . esc_attr($s['paypal_amount_pro']) . '" size="8" />'; }, 'finm_settings', 'finm_pp');
+  add_settings_field('finm_pp_brand', __('Brand Name', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[paypal_brand_name]" value="' . esc_attr($s['paypal_brand_name']) . '" />'; }, 'finm_settings', 'finm_pp');
 });
+
 add_action('admin_menu', function(){
   add_theme_page(__('FinMarkets Settings','finmarkets'), __('FinMarkets Settings','finmarkets'), 'manage_options', 'finm-settings', function(){
     $s = finm_get_settings();
@@ -107,21 +154,18 @@ add_action('wp_enqueue_scripts', function () {
   wp_enqueue_script('finmarkets-mock', get_template_directory_uri() . '/assets/js/mock.js', [], wp_get_theme()->get('Version'), true);
   wp_enqueue_script('finmarkets-api', get_template_directory_uri() . '/assets/js/api.js', [], wp_get_theme()->get('Version'), true);
   wp_enqueue_script('finmarkets-app', get_template_directory_uri() . '/assets/js/app.js', ['finmarkets-mock','finmarkets-api'], wp_get_theme()->get('Version'), true);
+  wp_enqueue_script('finmarkets-ui', get_template_directory_uri() . '/assets/js/ui.js', [], wp_get_theme()->get('Version'), true);
   wp_localize_script('finmarkets-api', 'finmConfig', [
     'restBase' => esc_url_raw( rest_url('finm/v1') ),
     'hasApiBase' => (bool) finm_get_settings()['api_base'],
   ]);
 });
 add_filter('script_loader_tag', function ($tag, $handle, $src) {
-  $defer = ['finmarkets-mock', 'finmarkets-api', 'finmarkets-app'];
+  $defer = ['finmarkets-mock', 'finmarkets-api', 'finmarkets-app', 'finmarkets-ui'];
   if (in_array($handle, $defer, true)) { return '<script src="' . esc_url($src) . '" defer></script>'; }
   return $tag;
 }, 10, 3);
-add_action('send_headers', function () {
-  header('X-Frame-Options: SAMEORIGIN');
-  header('X-XSS-Protection: 1; mode=block');
-  header('X-Content-Type-Options: nosniff');
-});
+add_action('send_headers', function () { header('X-Frame-Options: SAMEORIGIN'); header('X-XSS-Protection: 1; mode=block'); header('X-Content-Type-Options: nosniff'); });
 
 // ---------- REST proxy routes ----------
 add_action('rest_api_init', function(){
@@ -134,11 +178,7 @@ add_action('rest_api_init', function(){
   register_rest_route('finm/v1', '/endpoint-status', ['methods' => 'GET', 'callback' => 'finm_route_endpoint_status']);
   register_rest_route('finm/v1', '/revenue/analytics', ['methods' => 'GET', 'callback' => 'finm_route_revenue_analytics']);
   register_rest_route('finm/v1', '/revenue/analytics/(?P<month>[^/]+)', ['methods' => 'GET', 'callback' => 'finm_route_revenue_analytics_month']);
-  // PayPal config
-  register_rest_route('finm/v1', '/paypal-config', ['methods'=>'GET','callback'=>function(){ $s=finm_get_settings(); return [
-    'client_id'=>$s['paypal_client_id'], 'currency'=>$s['paypal_currency'], 'env'=>$s['paypal_env'], 'amount_pro'=>$s['paypal_amount_pro'], 'brand'=>$s['paypal_brand_name']
-  ]; }]);
-
+  register_rest_route('finm/v1', '/paypal-config', ['methods'=>'GET','callback'=>function(){ $s=finm_get_settings(); return [ 'client_id'=>$s['paypal_client_id'], 'currency'=>$s['paypal_currency'], 'env'=>$s['paypal_env'], 'amount_pro'=>$s['paypal_amount_pro'], 'brand'=>$s['paypal_brand_name'] ]; }]);
   register_rest_route('finm/v1', '/api/(?P<path>.+)', ['methods' => ['GET','POST','DELETE'], 'callback' => function(WP_REST_Request $req){ return finm_route_generic($req, 'api'); }, 'args' => ['path' => ['sanitize_callback' => 'sanitize_text_field']]]);
   register_rest_route('finm/v1', '/revenue/(?P<path>.+)', ['methods' => ['GET','POST','DELETE'], 'callback' => function(WP_REST_Request $req){ return finm_route_generic($req, 'revenue'); }, 'args' => ['path' => ['sanitize_callback' => 'sanitize_text_field']]]);
 });
