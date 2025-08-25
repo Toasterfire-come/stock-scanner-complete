@@ -1,4 +1,4 @@
-<?php /* Template Name: Dashboard */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
+<?php /* Template Name: Dashboard */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; $finm_requires_api = true; get_header(); ?>
 <section class="section" data-page="dashboard">
   <div class="container content">
     <?php if (shortcode_exists('stock_scanner_dashboard')) { echo do_shortcode('[stock_scanner_dashboard]'); } ?>

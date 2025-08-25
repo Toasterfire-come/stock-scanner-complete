@@ -1,4 +1,4 @@
-<?php /* Template Name: Stock Lookup */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<?php /* Template Name: Stock Lookup */ if (!defined('ABSPATH')) { exit; } $finm_requires_api = true; get_header(); ?>
 <section class="section">
   <div class="container">
     <div class="content">
