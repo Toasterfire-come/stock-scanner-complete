@@ -1,6 +1,6 @@
 <?php
 /**
- * FinMarkets Theme setup + External API integration (proxy via WP REST API) + PayPal config
+ * FinMarkets Theme setup + External API integration (proxy via WP REST API) + PayPal config + Plugin bridge
  */
 if (!defined('ABSPATH')) { exit; }
 
@@ -68,14 +68,40 @@ add_action('after_switch_theme', function(){
 });
 
 const FINM_OPTION_KEY = 'finm_settings';
-function finm_get_settings(){ $defaults=['api_base'=>'','api_key'=>'','paypal_client_id'=>'','paypal_currency'=>'USD','paypal_env'=>'sandbox','paypal_amount_pro'=>'19.00','paypal_brand_name'=>'FinMarkets Pro']; $opt=get_option(FINM_OPTION_KEY,[]); if(!is_array($opt)) $opt=[]; return array_merge($defaults,$opt);} 
+function finm_get_settings(){
+  $defaults=[
+    'api_base'=>'',
+    'api_key'=>'',
+    'api_secret'=>'', // plugin compatibility
+    'paypal_client_id'=>'',
+    'paypal_currency'=>'USD',
+    'paypal_env'=>'sandbox',
+    'paypal_amount_pro'=>'19.00',
+    'paypal_brand_name'=>'FinMarkets Pro'
+  ];
+  $opt=get_option(FINM_OPTION_KEY,[]); if(!is_array($opt)) $opt=[]; return array_merge($defaults,$opt);
+}
 function finm_sanitize_url($url){ $url=trim($url); if($url==='') return ''; if(!preg_match('#^https?://#i',$url)){ $url='https://'.$url; } return rtrim($url, "/ "); }
+function finm_plugin_api_url_from_base($base){ $b=rtrim($base,'/'); if(!$b) return ''; if(!preg_match('#/api$#',$b)) $b.='/api'; return $b.'/'; }
 
 add_action('admin_init', function(){
-  register_setting('finm_group', FINM_OPTION_KEY, ['type'=>'array','sanitize_callback'=>function($value){ return [ 'api_base'=>finm_sanitize_url($value['api_base']??''), 'api_key'=>sanitize_text_field($value['api_key']??''), 'paypal_client_id'=>sanitize_text_field($value['paypal_client_id']??''), 'paypal_currency'=>sanitize_text_field($value['paypal_currency']??'USD'), 'paypal_env'=>in_array($value['paypal_env']??'sandbox',['sandbox','live'],true)?($value['paypal_env']??'sandbox'):'sandbox', 'paypal_amount_pro'=>preg_replace('#[^0-9\.]#','',$value['paypal_amount_pro']??'19.00'), 'paypal_brand_name'=>sanitize_text_field($value['paypal_brand_name']??'FinMarkets Pro'), ]; }]);
-  add_settings_section('finm_section', __('External API','finmarkets'), function(){ echo '<p>Set API Base URL for your market data backend. All calls are proxied via WP REST.</p>'; }, 'finm_settings');
+  register_setting('finm_group', FINM_OPTION_KEY, [
+    'type'=>'array',
+    'sanitize_callback'=>function($value){ return [
+      'api_base'=>finm_sanitize_url($value['api_base']??''),
+      'api_key'=>sanitize_text_field($value['api_key']??''),
+      'api_secret'=>sanitize_text_field($value['api_secret']??''),
+      'paypal_client_id'=>sanitize_text_field($value['paypal_client_id']??''),
+      'paypal_currency'=>sanitize_text_field($value['paypal_currency']??'USD'),
+      'paypal_env'=>in_array($value['paypal_env']??'sandbox',['sandbox','live'],true)?($value['paypal_env']??'sandbox'):'sandbox',
+      'paypal_amount_pro'=>preg_replace('#[^0-9\.]#','',$value['paypal_amount_pro']??'19.00'),
+      'paypal_brand_name'=>sanitize_text_field($value['paypal_brand_name']??'FinMarkets Pro'),
+    ]; }
+  ]);
+  add_settings_section('finm_section', __('External API','finmarkets'), function(){ echo '<p>Set API Base URL for your market data backend. All calls are proxied via WP REST. Also bridges to Stock Scanner plugin settings.</p>'; }, 'finm_settings');
   add_settings_field('finm_api_base', __('API Base URL','finmarkets'), function(){ $s=finm_get_settings(); echo '<input type="url" class="regular-text" name="'.FINM_OPTION_KEY.'[api_base]" value="'.esc_attr($s['api_base']).'" placeholder="https://api.example.com" />'; }, 'finm_settings', 'finm_section');
-  add_settings_field('finm_api_key', __('API Key (optional)','finmarkets'), function(){ $s=finm_get_settings(); echo '<input type="text" class="regular-text" name="'.FINM_OPTION_KEY.'[api_key]" value="'.esc_attr($s['api_base']?$s['api_key']:'').'" placeholder="Bearer token or key" />'; }, 'finm_settings', 'finm_section');
+  add_settings_field('finm_api_key', __('API Key (Bearer, optional)','finmarkets'), function(){ $s=finm_get_settings(); echo '<input type="text" class="regular-text" name="'.FINM_OPTION_KEY.'[api_key]" value="'.esc_attr($s['api_base']?$s['api_key']:'').'" placeholder="Abc123..." />'; }, 'finm_settings', 'finm_section');
+  add_settings_field('finm_api_secret', __('API Secret (Plugin, optional)','finmarkets'), function(){ $s=finm_get_settings(); echo '<input type="text" class="regular-text" name="'.FINM_OPTION_KEY.'[api_secret]" value="'.esc_attr($s['api_secret']).'" placeholder="Shared secret for plugin" />'; }, 'finm_settings', 'finm_section');
   add_settings_section('finm_pp', __('PayPal','finmarkets'), function(){ echo '<p>PayPal smart buttons render on the Checkout template.</p>'; }, 'finm_settings');
   add_settings_field('finm_pp_id', __('Client ID','finmarkets'), function(){ $s=finm_get_settings(); echo '<input type="text" class="regular-text" name="'.FINM_OPTION_KEY.'[paypal_client_id]" value="'.esc_attr($s['paypal_client_id']).'" />'; }, 'finm_settings','finm_pp');
   add_settings_field('finm_pp_env', __('Environment','finmarkets'), function(){ $s=finm_get_settings(); echo '<select name="'.FINM_OPTION_KEY.'[paypal_env]'><option value="sandbox"'.selected($s['paypal_env'],'sandbox',false).'>Sandbox</option><option value="live"'.selected($s['paypal_env'],'live',false).'>Live</option></select>'; }, 'finm_settings','finm_pp');
@@ -84,9 +110,17 @@ add_action('admin_init', function(){
   add_settings_field('finm_pp_brand', __('Brand Name','finmarkets'), function(){ $s=finm_get_settings(); echo '<input type="text" class="regular-text" name="'.FINM_OPTION_KEY.'[paypal_brand_name]" value="'.esc_attr($s['paypal_brand_name']).'" />'; }, 'finm_settings','finm_pp');
 });
 
+// Keep plugin settings in sync when theme settings change
+add_action('update_option_'.FINM_OPTION_KEY, function($old, $new){
+  $api = isset($new['api_base']) ? $new['api_base'] : '';
+  $secret = isset($new['api_secret']) ? $new['api_secret'] : '';
+  if($api){ update_option('stock_scanner_api_url', finm_plugin_api_url_from_base($api)); }
+  update_option('stock_scanner_api_secret', $secret);
+}, 10, 2);
+
 add_action('admin_menu', function(){
   add_theme_page(__('FinMarkets Settings','finmarkets'), __('FinMarkets Settings','finmarkets'), 'manage_options', 'finm-settings', function(){
-    $s=finm_get_settings(); echo '<div class="wrap"><h1>FinMarkets Settings</h1><form method="post" action="options.php">'; settings_fields('finm_group'); do_settings_sections('finm_settings'); submit_button(); echo '</form><hr><h2>Connection Test</h2><p>Test /health via theme proxy.</p><p><button class="button button-primary" id="finmTest">Run health check</button></p><pre id="finmOut" style="max-height:260px; overflow:auto; background:#111; color:#0f0; padding:12px;">(results here)</pre>'; echo '<p class="description">REST base: '.esc_html(rest_url('finm/v1')).' • API base: '.esc_html($s['api_base']?:'(not set)').' • PayPal: '.esc_html(($s['paypal_client_id']?'configured':'not set')).'</p></div>'; echo '<script>document.getElementById("finmTest").addEventListener("click", async ()=>{ const out=document.getElementById("finmOut"); out.textContent="Testing..."; try{ const r=await fetch("'.esc_url_raw(rest_url('finm/v1/health')).'"); const j=await r.json(); out.textContent=JSON.stringify(j,null,2);}catch(e){ out.textContent=String(e);} });</script>'; });
+    $s=finm_get_settings(); echo '<div class="wrap"><h1>FinMarkets Settings</h1><form method="post" action="options.php">'; settings_fields('finm_group'); do_settings_sections('finm_settings'); submit_button(); echo '</form><hr><h2>Connection Test</h2><p>Test /health via theme proxy.</p><p><button class="button button-primary" id="finmTest">Run health check</button></p><pre id="finmOut" style="max-height:260px; overflow:auto; background:#111; color:#0f0; padding:12px;">(results here)</pre>'; echo '<p class="description">REST base: '.esc_html(rest_url('finm/v1')).' • API base: '.esc_html($s['api_base']?:'(not set)').' • Plugin API URL: '.esc_html(finm_plugin_api_url_from_base($s['api_base'])).' • PayPal: '.esc_html(($s['paypal_client_id']?'configured':'not set')).'</p></div>'; echo '<script>document.getElementById("finmTest").addEventListener("click", async ()=>{ const out=document.getElementById("finmOut"); out.textContent="Testing..."; try{ const r=await fetch("'.esc_url_raw(rest_url('finm/v1/health')).'"); const j=await r.json(); out.textContent=JSON.stringify(j,null,2);}catch(e){ out.textContent=String(e);} });</script>'; });
 });
 
 add_action('wp_enqueue_scripts', function () {
@@ -102,8 +136,8 @@ add_filter('script_loader_tag', function ($tag,$handle,$src){ $defer=['finmarket
 add_action('send_headers', function () { header('X-Frame-Options: SAMEORIGIN'); header('X-XSS-Protection: 1; mode=block'); header('X-Content-Type-Options: nosniff'); });
 
 // Bridge theme settings to the Stock Scanner plugin if installed
-add_filter('stock_scanner_api_base_url', function($url){ $b = finm_get_settings()['api_base'] ?? ''; return $b ? rtrim($b,'/').'/' : $url; });
-add_filter('stock_scanner_api_request_args', function($args){ $key = finm_get_settings()['api_key'] ?? ''; if($key){ $args['headers']['Authorization'] = 'Bearer '.$key; } return $args; });
+add_filter('stock_scanner_api_base_url', function($url){ $b = finm_get_settings()['api_base'] ?? ''; return $b ? finm_plugin_api_url_from_base($b) : $url; });
+add_filter('stock_scanner_api_request_args', function($args){ $s = finm_get_settings(); if(!isset($args['headers'])) $args['headers']=[]; if(!empty($s['api_key'])){ $args['headers']['Authorization'] = 'Bearer '.$s['api_key']; } if(!empty($s['api_secret'])){ $args['headers']['X-API-Secret'] = $s['api_secret']; } return $args; });
 
 add_action('rest_api_init', function(){
   register_rest_route('finm/v1','/health',['methods'=>'GET','callback'=>'finm_route_health']);
@@ -125,7 +159,7 @@ add_action('rest_api_init', function(){
 
 function finm_api_base(){ $b=finm_get_settings()['api_base']; return $b? rtrim($b,'/') : ''; }
 function finm_build_url($path){ $base=finm_api_base(); if(!$base) return ''; return $base.(str_starts_with($path,'/')?$path:'/'.$path); }
-function finm_req_headers(){ $h=['Accept'=>'application/json']; $key=finm_get_settings()['api_key']; if($key){ $h['Authorization']='Bearer '.$key; } return $h; }
+function finm_req_headers(){ $h=['Accept'=>'application/json']; $s=finm_get_settings(); if(!empty($s['api_key'])){ $h['Authorization']='Bearer '.$s['api_key']; } if(!empty($s['api_secret'])){ $h['X-API-Secret']=$s['api_secret']; } return $h; }
 function finm_format_response($r){ if(is_wp_error($r)) return new WP_REST_Response(['success'=>false,'message'=>$r->get_error_message()],502); $code=wp_remote_retrieve_response_code($r); $body=wp_remote_retrieve_body($r); $json=json_decode($body,true); if(json_last_error()===JSON_ERROR_NONE) return new WP_REST_Response($json,$code); return new WP_REST_Response(['html'=>$body,'status_code'=>$code],$code); }
 function finm_proxy_get($path,$args=[]){ $url=finm_build_url($path); if(!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'],400); if(!empty($args)){ $url=add_query_arg($args,$url);} $r=wp_remote_get($url,['timeout'=>12,'headers'=>finm_req_headers()]); return finm_format_response($r); }
 function finm_proxy_send($method,$path,$payload=null){ $url=finm_build_url($path); if(!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'],400); $args=['timeout'=>20,'method'=>$method,'headers'=>array_merge(finm_req_headers(),['Content-Type'=>'application/json'])]; if($payload!==null){ $args['body']=wp_json_encode($payload);} $r=wp_remote_request($url,$args); return finm_format_response($r); }

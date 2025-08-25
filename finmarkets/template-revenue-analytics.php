@@ -1,4 +1,4 @@
-<?php /* Template Name: Revenue Analytics */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<?php /* Template Name: Revenue Analytics */ if (!defined('ABSPATH')) { exit; } $finm_requires_api = true; get_header(); ?>
 <section class="section">
   <div class="container">
     <div class="content"><h1 style="color:var(--navy);">Revenue Analytics</h1><p class="muted">Fetched via /wp-json/finm/v1/revenue/analytics</p></div>

@@ -1,4 +1,4 @@
-<?php /* Template Name: Market Overview */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<?php /* Template Name: Market Overview */ if (!defined('ABSPATH')) { exit; } $finm_requires_api = true; get_header(); ?>
 <section class="section">
   <div class="container grid cols-3">
     <div class="card" style="padding:16px;">
@@ -27,7 +27,6 @@
       $('#moGainers').innerHTML = it(s.top_gainers||[]);
       $('#moActive').innerHTML = it(s.most_active||[]);
     }catch(e){
-      // fallback to mock
       $('#moOverview').textContent = 'External API unavailable — showing mock preview';
       $('#moGainers').innerHTML = it((window.MockData?.stocks||[]).slice(0,5));
       $('#moActive').innerHTML = it((window.MockData?.stocks||[]).slice(5,10));
