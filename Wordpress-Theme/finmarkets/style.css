@@ -1,26 +1,16 @@
-/* existing styles preserved above … appending search + header polish */
-/* Search (magnifying glass that expands) */
-.search { display:flex; align-items:center; gap:8px; position: relative; }
-.search-btn { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:999px; border:1px solid var(--gray-200); background: var(--surface); color: var(--slate); cursor: pointer; }
-.dark .search-btn { border-color: var(--border, #1f2a3a); background:#121c2e; color:#a3b1c6; }
-.search-input { width: 0px; opacity: 0; border:1px solid var(--gray-300); background: var(--surface); color: inherit; border-radius: 999px; padding: 8px 12px; transition: width 220ms ease, opacity 150ms ease, border-color 150ms ease; }
-.dark .search-input { border-color: var(--border, #1f2a3a); background:#101827; }
-.search:focus-within .search-input { width: 220px; opacity: 1; margin-left: 4px; }
-.search-input:focus-visible { outline:none; border-color:#9bbcff; box-shadow:0 0 0 4px #e4edff; }
-.dark .search-input:focus-visible { box-shadow:0 0 0 4px rgba(27,110,243,0.25); }
+/* keep existing content and append improvements */
 
-/* Header layout tweaks */
-.header-cta { display:flex; align-items:center; gap:8px; }
-.home-icon { padding:8px 10px; }
-
-/* Guest banner (shown when guest on protected pages) */
-.guest-banner { display:none; gap:8px; align-items:center; justify-content:center; padding:8px; border-top:1px solid var(--gray-200); background: var(--surface-2); }
-.dark .guest-banner { border-top-color: var(--border, #1f2a3a); background:#0d1626; }
-
-/* States controlled by JS */
+/* Header guest protection tweaks */
+body.guest[data-requires-auth="true"] .brand { display:none; }
 body.guest[data-requires-auth="true"] .nav { display:none; }
 body.guest[data-requires-auth="true"] .search { display:none; }
-body.guest[data-requires-auth="true"] .guest-banner { display:flex; }
+body.guest[data-requires-auth="true"] #signupLink { display:none; }
+body.guest[data-requires-auth="true"] #themeToggle { display:none; }
+body.guest[data-requires-auth="true"] .home-icon { display:inline-flex; }
 
-/* Minor footer polish */
+/* Footer improved nav spacing */
 .footer nav ul { list-style:none; padding:0; margin:0; display:flex; gap:12px; }
+
+/* Minimal tweaks to forms */
+.input + .input { margin-top: 8px; }
+.card form .btn { align-self:flex-start; }
