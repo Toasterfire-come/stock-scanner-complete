@@ -101,6 +101,10 @@ add_action('wp_enqueue_scripts', function () {
 add_filter('script_loader_tag', function ($tag,$handle,$src){ $defer=['finmarkets-mock','finmarkets-api','finmarkets-app','finmarkets-ui']; if(in_array($handle,$defer,true)){ return '<script src="'.esc_url($src).'" defer></script>'; } return $tag; },10,3);
 add_action('send_headers', function () { header('X-Frame-Options: SAMEORIGIN'); header('X-XSS-Protection: 1; mode=block'); header('X-Content-Type-Options: nosniff'); });
 
+// Bridge theme settings to the Stock Scanner plugin if installed
+add_filter('stock_scanner_api_base_url', function($url){ $b = finm_get_settings()['api_base'] ?? ''; return $b ? rtrim($b,'/').'/' : $url; });
+add_filter('stock_scanner_api_request_args', function($args){ $key = finm_get_settings()['api_key'] ?? ''; if($key){ $args['headers']['Authorization'] = 'Bearer '.$key; } return $args; });
+
 add_action('rest_api_init', function(){
   register_rest_route('finm/v1','/health',['methods'=>'GET','callback'=>'finm_route_health']);
   register_rest_route('finm/v1','/docs',['methods'=>'GET','callback'=>'finm_route_docs']);
@@ -124,7 +128,7 @@ function finm_build_url($path){ $base=finm_api_base(); if(!$base) return ''; ret
 function finm_req_headers(){ $h=['Accept'=>'application/json']; $key=finm_get_settings()['api_key']; if($key){ $h['Authorization']='Bearer '.$key; } return $h; }
 function finm_format_response($r){ if(is_wp_error($r)) return new WP_REST_Response(['success'=>false,'message'=>$r->get_error_message()],502); $code=wp_remote_retrieve_response_code($r); $body=wp_remote_retrieve_body($r); $json=json_decode($body,true); if(json_last_error()===JSON_ERROR_NONE) return new WP_REST_Response($json,$code); return new WP_REST_Response(['html'=>$body,'status_code'=>$code],$code); }
 function finm_proxy_get($path,$args=[]){ $url=finm_build_url($path); if(!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'],400); if(!empty($args)){ $url=add_query_arg($args,$url);} $r=wp_remote_get($url,['timeout'=>12,'headers'=>finm_req_headers()]); return finm_format_response($r); }
-function finm_proxy_send($method,$path,$payload=null){ $url=finm_build_url($path); if(!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'],400); $args=['timeout'=>20,'method'=>$method,'headers'=>array_merge(fnm_req_headers(),['Content-Type'=>'application/json'])]; if($payload!==null){ $args['body']=wp_json_encode($payload);} $r=wp_remote_request($url,$args); return finm_format_response($r); }
+function finm_proxy_send($method,$path,$payload=null){ $url=finm_build_url($path); if(!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'],400); $args=['timeout'=>20,'method'=>$method,'headers'=>array_merge(finm_req_headers(),['Content-Type'=>'application/json'])]; if($payload!==null){ $args['body']=wp_json_encode($payload);} $r=wp_remote_request($url,$args); return finm_format_response($r); }
 
 function finm_route_health(WP_REST_Request $req){ $r=finm_proxy_get('/health/'); if($r->get_status()>=400){ $r=finm_proxy_get('/api/health/'); } return $r; }
 function finm_route_docs(WP_REST_Request $req){ return finm_proxy_get('/docs/'); }
