@@ -28,7 +28,26 @@
 
   function headerCta(){ const link=$('#signupLink'); if(link){ link.style.display = isSignedIn() ? 'none':'inline-flex'; } }
 
-  // Pricing toggle + accordion
+  // API connectivity guard: if page requires API, redirect to /backend-offline/ when not connected
+  async function apiGuard(){
+    try{
+      const requiresApi = (body.getAttribute('data-requires-api') === 'true');
+      if(!requiresApi) return; // Only guard API pages
+      const path = (location.pathname||'').replace(/\/+/g,'/');
+      if(path.startsWith('/backend-offline')) return; // Don't guard offline page
+      // No API base configured
+      if(!(window.finmConfig && window.finmConfig.hasApiBase)) { window.location.href = '/backend-offline/'; return; }
+      // Health check with timeout
+      const controller = new AbortController(); const t = setTimeout(()=>controller.abort(), 3500);
+      const r = await fetch(String(window.finmConfig.restBase||'/wp-json/finm/v1').replace(/\/$/,'') + '/health', { signal: controller.signal });
+      clearTimeout(t);
+      if(!r.ok){ window.location.href = '/backend-offline/'; return; }
+      let j={}; try{ j = await r.json(); }catch(e){}
+      const status = (j.status||'').toLowerCase();
+      if(status && status !== 'healthy'){ window.location.href = '/backend-offline/'; return; }
+    }catch(e){ window.location.href = '/backend-offline/'; }
+  }
+
   function initPricing(){ const root = document.querySelector('[data-pricing-toggle]'); if(!root) return; root.addEventListener('click', ()=>{ document.body.classList.toggle('pricing-annual'); }); }
   function initAccordion(){ $$('.accordion .accordion-header').forEach(h=>{ h.addEventListener('click', ()=>{ const item=h.parentElement; item.classList.toggle('open'); }); }); }
 
@@ -43,5 +62,6 @@
     headerCta();
     initPricing();
     initAccordion();
+    apiGuard();
   });
 })();
