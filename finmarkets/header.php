@@ -59,5 +59,3 @@
   </header>
 
   <main id="main">
-</body>
-</html>

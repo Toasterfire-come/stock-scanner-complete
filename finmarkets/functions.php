@@ -4,8 +4,8 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-// Polyfill for PHP &lt; 8 for better compatibility
-yif (!function_exists('str_starts_with')) {
+// Polyfill for PHP < 8 for better compatibility
+if (!function_exists('str_starts_with')) {
   function str_starts_with($haystack, $needle) {
     return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
   }
