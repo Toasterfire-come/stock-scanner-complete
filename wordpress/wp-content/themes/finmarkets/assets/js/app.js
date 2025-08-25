@@ -10,7 +10,7 @@
     if(!tbody || !window.MockData) return;
     tbody.innerHTML = (window.MockData.stocks||[]).slice(0,6).map(s => `
       <tr>
-        <td class="mono">${s.symbol}</td>
+        <td class="mono symbol-cell" data-symbol="${s.symbol}">${s.symbol}</td>
         <td>${s.name}</td>
         <td>${fmt.format(s.price)}</td>
         <td>${s.change >= 0 ? `<span class="badge badge-green">+${s.change}%</span>` : `<span class="badge badge-red">${s.change}%</span>`}</td>
@@ -44,7 +44,7 @@
       const inWl = wl.has(s.symbol);
       return `
         <tr>
-          <td class="mono">${s.symbol}</td>
+          <td class="mono symbol-cell" data-symbol="${s.symbol}">${s.symbol}</td>
           <td>${s.name}</td>
           <td>${s.sector}</td>
           <td>${fmt.format(s.price)}</td>
@@ -65,7 +65,9 @@
       sort.setAttribute('aria-pressed', sort.dataset.dir ? 'true' : 'false');
       renderScreener();
     });
-    $('#screenerBody').addEventListener('click', (e) => {
+    $('#screenerBody').addEventListener('click', async (e) => {
+      const symCell = e.target.closest('.symbol-cell');
+      if(symCell && window.finmApi){ try { await window.finmApi.usageTrack('view', symCell.dataset.symbol); } catch(_){} }
       const btn = e.target.closest('button[data-symbol]');
       if(!btn) return;
       const sym = btn.getAttribute('data-symbol');
@@ -74,6 +76,7 @@
       setWL(Array.from(wl));
       renderScreener();
       renderWatchlist();
+      if(window.finmApi){ try { await window.finmApi.usageTrack('watchlist_add', sym); } catch(_){} }
     });
   }
 
@@ -108,13 +111,7 @@
     try { const u = JSON.parse(localStorage.getItem('finm_user')||'null'); if(u){ btn.textContent = 'Signed in'; } } catch(e){}
   }
 
-  function refreshAll(){
-    renderPreview();
-    uniqueSectors();
-    renderScreener();
-    renderWatchlist();
-    renderNews();
-  }
+  function refreshAll(){ renderPreview(); uniqueSectors(); renderScreener(); renderWatchlist(); renderNews(); }
 
   document.addEventListener('DOMContentLoaded', function(){
     if(!window.MockData){ console.warn('Mock data not loaded'); return; }
@@ -123,8 +120,8 @@
     loginDemo();
   });
 
-  // Re-render when API hydration completes
-  document.addEventListener('finm:api-ready', function(){
-    refreshAll();
-  });
+  document.addEventListener('finm:api-ready', function(){ refreshAll(); });
+
+  // Global unauthorized handler
+  window.addEventListener('finm:unauthorized', function(){ try { localStorage.removeItem('finm_user'); }catch(_){} window.location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); });
 })();

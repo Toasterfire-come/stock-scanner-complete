@@ -1,14 +1,27 @@
 (function(){
   const base = (window.finmConfig && window.finmConfig.restBase) ? window.finmConfig.restBase.replace(/\/$/, '') : '/wp-json/finm/v1';
+  function getCid(){
+    try{
+      const m = document.cookie.match(/(?:^|; )finm_cid=([^;]+)/); if(m) return decodeURIComponent(m[1]);
+    }catch(e){}
+    try{ const s = localStorage.getItem('finm_cid'); if(s) return s; }catch(e){}
+    const gen = (Math.random().toString(36).slice(2)+Date.now().toString(36));
+    try{ localStorage.setItem('finm_cid', gen); }catch(e){}
+    return gen;
+  }
   async function http(method, p, params, body){
     let url = base + p;
     if (params) url += '?' + new URLSearchParams(params);
     const r = await fetch(url, {
       method,
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined,
-      credentials: 'same-origin'
+      credentials: 'same-origin',
+      body: body ? JSON.stringify(body) : undefined
     });
+    if(r.status === 401){
+      try { window.dispatchEvent(new CustomEvent('finm:unauthorized')); }catch(e){}
+      throw new Error('HTTP 401');
+    }
     if(!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }
@@ -22,8 +35,8 @@
     docs: () => GET('/docs'),
 
     // Market data
-    stocks: (params) => GET('/stocks', params), // proxy to /api/stocks/
-    stock: (ticker) => GET('/stock/' + encodeURIComponent(ticker)), // /api/stock/{ticker}/ with fallback
+    stocks: (params) => GET('/stocks', params),
+    stock: (ticker) => GET('/stock/' + encodeURIComponent(ticker)),
     search: (q) => GET('/search', { q }),
     trending: () => GET('/trending'),
     marketStats: () => GET('/market-stats'),
@@ -56,7 +69,7 @@
     subscription: (payload) => finmApi.apiPost('subscription/', payload),
     subscribeWordPress: (payload) => finmApi.apiPost('wordpress/subscribe/', payload),
 
-    // Auth + user
+    // Auth + user (server sets cookies)
     authLogin: (username, password) => finmApi.apiPost('auth/login/', { username, password }),
     authLogout: () => finmApi.apiPost('auth/logout/', {}),
     userProfileGet: () => finmApi.apiGet('user/profile/'),
@@ -84,6 +97,9 @@
     watchlistGet: () => finmApi.apiGet('watchlist/'),
     watchlistAdd: (symbol, watchlist_name, notes, alert_price) => finmApi.apiPost('watchlist/add/', { symbol, watchlist_name, notes, alert_price }),
     watchlistDelete: (item_id) => finmApi.apiDelete('watchlist/' + encodeURIComponent(item_id) + '/'),
+
+    // Usage tracking
+    usageTrack: (action, ticker) => finmApi.apiPost('usage/track/', { client_id: getCid(), action, ticker, timestamp: new Date().toISOString() })
   };
   window.finmApi = finmApi;
 
@@ -91,7 +107,6 @@
   async function enhanceMock(){
     if(!(window.finmConfig && window.finmConfig.hasApiBase)) return;
     try {
-      // Stocks hydration
       const st = await finmApi.stocks({ limit: 50, sort_by: 'market_cap', sort_order: 'desc' });
       const arr = Array.isArray(st) ? st : (st?.data || []);
       const mapped = arr.map(x => ({
@@ -109,7 +124,6 @@
     } catch(e){ console.warn('FinMarkets API stocks not available', e); }
 
     try {
-      // News hydration (attempt multiple fallbacks)
       let news = [];
       try { news = await finmApi.wpNews({ limit: 12 }); } catch(_) {}
       if (!Array.isArray(news) || !news.length) {

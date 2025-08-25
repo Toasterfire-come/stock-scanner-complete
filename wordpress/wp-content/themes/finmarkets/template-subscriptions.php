@@ -5,6 +5,7 @@
     <div class="card" style="padding:16px;">
       <div id="subStatus" class="muted">Loading…</div>
       <div id="subDetails" style="margin-top:12px;"></div>
+      <div id="subStats" style="margin-top:12px;"></div>
       <form id="planForm" class="toolbar" onsubmit="return false;" style="margin-top:12px;">
         <select id="planType" class="select">
           <option value="free">Free</option>
@@ -26,14 +27,19 @@
 (function(){
   const $=s=>document.querySelector(s);
   const setMsg=(t,ok)=>{ const el=$('#planMsg'); el.textContent=t; el.style.color=ok?'#0f8a42':'var(--muted)'; };
+  function renderStats(d){ if(!d) return ''; return `<div class="grid cols-2"><div class="card" style="padding:12px;"><div class="muted">Total Spent</div><strong>$${(d.total_spent||0).toLocaleString()}</strong></div><div class="card" style="padding:12px;"><div class="muted">Recent Payments</div><strong>${d.recent_payments||0}</strong></div><div class="card" style="padding:12px;"><div class="muted">Account Status</div><strong>${d.account_status||'-'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Next Billing</div><strong>${d.next_billing_date||'-'}</strong></div></div>`; }
   async function load(){
     try{
-      const j = await window.finmApi.billingCurrentPlan();
-      const d = j?.data || {};
-      $('#subStatus').textContent = j?.success===false ? (j?.message||'Failed to load') : 'Loaded';
-      $('#subDetails').innerHTML = `<div class="grid cols-2"><div class="card" style="padding:12px;"><div class="muted">Plan</div><strong>${d.plan_name||'-'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Billing</div><strong>${d.billing_cycle||'-'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Premium</div><strong>${d.is_premium?'Yes':'No'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Next billing date</div><strong>${d.next_billing_date||'-'}</strong></div></div>`;
+      const [plan, stats] = await Promise.all([
+        window.finmApi.billingCurrentPlan(),
+        window.finmApi.billingStats().catch(()=>null)
+      ]);
+      const d = plan?.data || {};
+      $('#subStatus').textContent = plan?.success===false ? (plan?.message||'Failed to load') : 'Loaded';
+      $('#subDetails').innerHTML = `<div class="grid cols-2"><div class="card" style="padding:12px;"><div class="muted">Plan</div><strong>${d.plan_name||'-'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Billing</div><strong>${d.billing_cycle||'-'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Premium</div><strong>${d.is_premium?'Yes':'No'}</strong></div><div class="card" style="padding:12px;"><div class="muted">Next billing date</div><strong>${d.next_billing_date||'-'}</strong></div><div class="card" style="padding:12px; grid-column: 1 / -1;"><div class="muted">Features</div><pre style="white-space:pre-wrap;">${JSON.stringify(d.features||{}, null, 2)}</pre></div></div>`;
       $('#planType').value = d.plan_type || 'free';
       $('#billingCycle').value = d.billing_cycle || 'monthly';
+      if(stats && stats.success!==false){ $('#subStats').innerHTML = renderStats(stats.data||{}); }
     }catch(e){ $('#subStatus').textContent = 'Failed to load'; }
   }
   async function save(){
@@ -44,10 +50,7 @@
       else { setMsg(j?.message||'Update failed'); }
     }catch(e){ setMsg('Update failed'); }
   }
-  document.addEventListener('DOMContentLoaded', function(){
-    load();
-    $('#planSave').addEventListener('click', save);
-  });
+  document.addEventListener('DOMContentLoaded', function(){ load(); $('#planSave').addEventListener('click', save); });
 })();
 </script>
 <?php get_footer(); ?>
