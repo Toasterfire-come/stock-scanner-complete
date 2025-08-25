@@ -28,24 +28,25 @@
 
   function headerCta(){ const link=$('#signupLink'); if(link){ link.style.display = isSignedIn() ? 'none':'inline-flex'; } }
 
-  // API connectivity guard: if page requires API, redirect to /backend-offline/ when not connected
+  // API connectivity guard + badge
   async function apiGuard(){
+    const requiresApi = (body.getAttribute('data-requires-api') === 'true');
+    const badge = $('#connBadge');
+    async function setBadge(state){ if(!badge) return; badge.classList.remove('badge-green','badge-red'); if(state==='ok'){ badge.textContent='Connected'; badge.classList.add('badge-green'); } else if(state==='degraded'){ badge.textContent='Degraded'; badge.classList.add('badge-red'); } else { badge.textContent='Offline'; badge.classList.add('badge-red'); } }
+
     try{
-      const requiresApi = (body.getAttribute('data-requires-api') === 'true');
-      if(!requiresApi) return; // Only guard API pages
       const path = (location.pathname||'').replace(/\/+/g,'/');
-      if(path.startsWith('/backend-offline')) return; // Don't guard offline page
-      // No API base configured
-      if(!(window.finmConfig && window.finmConfig.hasApiBase)) { window.location.href = '/backend-offline/'; return; }
-      // Health check with timeout
+      if(path.startsWith('/backend-offline')){ await setBadge('offline'); return; }
+      if(!(window.finmConfig && window.finmConfig.hasApiBase)) { await setBadge('offline'); if(requiresApi){ window.location.href = '/backend-offline/'; } return; }
       const controller = new AbortController(); const t = setTimeout(()=>controller.abort(), 3500);
       const r = await fetch(String(window.finmConfig.restBase||'/wp-json/finm/v1').replace(/\/$/,'') + '/health', { signal: controller.signal });
       clearTimeout(t);
-      if(!r.ok){ window.location.href = '/backend-offline/'; return; }
+      if(!r.ok){ await setBadge('offline'); if(requiresApi){ window.location.href = '/backend-offline/'; } return; }
       let j={}; try{ j = await r.json(); }catch(e){}
       const status = (j.status||'').toLowerCase();
-      if(status && status !== 'healthy'){ window.location.href = '/backend-offline/'; return; }
-    }catch(e){ window.location.href = '/backend-offline/'; }
+      if(status==='healthy'){ await setBadge('ok'); }
+      else { await setBadge('degraded'); if(requiresApi){ window.location.href = '/backend-offline/'; } }
+    }catch(e){ await setBadge('offline'); if(requiresApi){ window.location.href = '/backend-offline/'; } }
   }
 
   function initPricing(){ const root = document.querySelector('[data-pricing-toggle]'); if(!root) return; root.addEventListener('click', ()=>{ document.body.classList.toggle('pricing-annual'); }); }

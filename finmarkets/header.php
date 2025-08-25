@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 </head>
 <?php
-  // Determine auth/api requirements (set by templates via globals)
   global $finm_requires_auth, $finm_requires_api;
   $requires_auth = isset($finm_requires_auth) ? (bool)$finm_requires_auth : false;
   $requires_api = isset($finm_requires_api) ? (bool)$finm_requires_api : false;
@@ -24,7 +23,6 @@
         <span>FinMarkets</span>
       </a>
 
-      <!-- Expanding Search -->
       <form class="search" role="search" method="get" action="<?php echo esc_url(home_url('/')); ?>">
         <button class="search-btn" aria-label="Search">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/></svg>
@@ -41,7 +39,8 @@
         <?php } ?>
       </nav>
 
-      <div class="header-cta">
+      <div class="header-cta" style="display:flex; gap:8px; align-items:center;">
+        <span id="connBadge" class="badge" title="API connectivity status">Checking…</span>
         <a class="btn btn-ghost home-icon" href="<?php echo esc_url(home_url('/')); ?>" title="Home" aria-label="Home">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 10.5l9-7 9 7V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
         </a>
