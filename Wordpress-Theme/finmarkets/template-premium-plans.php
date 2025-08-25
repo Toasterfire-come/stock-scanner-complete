@@ -1,6 +1,9 @@
 <?php /* Template Name: Premium Plans */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
 <section class="section" id="pricing" aria-label="Pricing plans">
-  <div class="container">
+  <div class="container content">
+    <?php if (shortcode_exists('stock_scanner_pricing')) { echo do_shortcode('[stock_scanner_pricing]'); } ?>
+  </div>
+  <div class="container" style="margin-top:16px;">
     <div class="grid cols-3">
       <div class="card" style="padding:20px;">
         <h3>Free</h3>
@@ -30,7 +33,7 @@
           <li>Audit logs</li>
           <li>Dedicated support</li>
         </ul>
-        <a class="btn" href="#contact">Contact sales</a>
+        <a class="btn" href="<?php echo esc_url(home_url('/contact')); ?>">Contact sales</a>
       </div>
     </div>
   </div>

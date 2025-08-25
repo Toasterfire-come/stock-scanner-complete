@@ -1,4 +1,4 @@
-<?php /* Template Name: Billing History */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<?php /* Template Name: Billing History */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
 <section class="section">
   <div class="container content">
     <h1 style="color:var(--navy);">Billing History</h1>

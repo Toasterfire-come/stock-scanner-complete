@@ -1,4 +1,4 @@
-<?php /* Template Name: User Settings */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<?php /* Template Name: User Settings */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
 <section class="section">
   <div class="container content">
     <h1 style="color:var(--navy);">User Settings</h1>
@@ -22,19 +22,17 @@
 <script defer>
 (function(){
   const $ = s => document.querySelector(s);
-  const getU = () => JSON.parse(localStorage.getItem('finm_user')||'{}');
+  const getU = () => { try {return JSON.parse(localStorage.getItem('finm_user')||'{}');}catch(e){return {};}};
   const setU = (x) => localStorage.setItem('finm_user', JSON.stringify(x));
-  function render(){
-    const u=getU();
-    $('#usName').value = u.name||'';
-    $('#usTheme').value = u.theme||'light';
-  }
   document.addEventListener('DOMContentLoaded', function(){
-    render();
+    const u=getU(); if(!u.name && !u.email){ window.location.href='/'; return; }
+    $('#usName').value = u.name||'';
+    $('#usTheme').value = (localStorage.getItem('finm_theme')||'light');
     $('#usSave').addEventListener('click', ()=>{
-      setU({ name: $('#usName').value.trim(), theme: $('#usTheme').value });
+      u.name = $('#usName').value.trim(); setU(u);
+      localStorage.setItem('finm_theme', $('#usTheme').value);
       alert('Saved!');
-    })
+    });
   });
 })();
 </script>

@@ -1,6 +1,9 @@
 <?php /* Template Name: Dashboard */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
 <section class="section" data-page="dashboard">
-  <div class="container grid cols-3">
+  <div class="container content">
+    <?php if (shortcode_exists('stock_scanner_dashboard')) { echo do_shortcode('[stock_scanner_dashboard]'); } ?>
+  </div>
+  <div class="container grid cols-3" style="margin-top:16px;">
     <div class="card" style="padding:16px;">
       <h3>Welcome</h3>
       <div id="dashUser" class="muted">Signed out</div>
@@ -27,7 +30,6 @@
     if(!u){ window.location.href = '/'; return; }
     $('#dashUser').textContent = `Hello, ${u.name || u.email || 'User'}`;
 
-    // Initialize usage if absent
     let usage = getUsage();
     if(!usage){ usage = { limit: 1000, used: 0, month: new Date().toISOString().slice(0,7) }; setUsage(usage); }
     const nowMonth = new Date().toISOString().slice(0,7);
@@ -36,9 +38,8 @@
     $('#usageBox').textContent = `Monthly limit: ${usage.limit} • Used: ${usage.used} • Left: ${left}`;
     $('#usageBadge').textContent = left > 0 ? `You have ${left} actions left` : 'Limit reached';
 
-    // News
     try{
-      const news = (window.MockData?.news)||[]; // or finmApi.wpNews
+      const news = (window.MockData?.news)||[];
       $('#dashNews').innerHTML = news.slice(0,3).map(n=>`<div class="muted">${n.source} — ${n.title}</div>`).join('');
     }catch(e){ $('#dashNews').textContent = '—'; }
   });

@@ -1,4 +1,4 @@
-<?php /* Template Name: Account */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<?php /* Template Name: Account */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
 <section class="section">
   <div class="container content">
     <h1 style="color:var(--navy);">Account</h1>
@@ -15,9 +15,10 @@
 (function(){
   document.addEventListener('DOMContentLoaded', function(){
     const u = JSON.parse(localStorage.getItem('finm_user')||'null');
-    document.getElementById('accStatus').textContent = u?`Signed in as ${u.name}`:'Signed out';
+    if(!u){ window.location.href='/'; return; }
+    document.getElementById('accStatus').textContent = `Signed in as ${u.name||u.email}`;
     document.getElementById('accSignOut').addEventListener('click', function(){
-      localStorage.removeItem('finm_user'); location.reload();
+      localStorage.removeItem('finm_user'); location.href='/';
     });
   });
 })();
