@@ -3,8 +3,11 @@
   <div class="container">
     <div class="content">
       <h1 style="color:var(--navy);">Stock Screener</h1>
-      <p class="muted">Client-side demo powered by mock data. Real data integration can be added later.</p>
+      <p class="muted">Client-side demo powered by mock data. If the plugin is installed, its screener will render below.</p>
     </div>
+
+    <?php if (shortcode_exists('stock_scanner_screener')) { echo do_shortcode('[stock_scanner_screener]'); } ?>
+
     <div class="card" style="padding:16px;">
       <div class="toolbar" role="region" aria-label="Screener controls">
         <input id="q" class="input" type="search" placeholder="Search by symbol or name" aria-label="Search stocks" />
@@ -27,6 +30,7 @@
     <aside id="watchlist" class="card" style="padding:12px;">
       <h3 style="margin:8px 0 4px; color:var(--navy);">Watchlist</h3>
       <p class="muted" style="margin:0 0 8px;">Saves in your browser.</p>
+      <?php if (shortcode_exists('stock_scanner_watchlist')) { echo do_shortcode('[stock_scanner_watchlist]'); } ?>
       <ul id="watchlistItems" style="list-style:none; padding:0; margin:0;"></ul>
     </aside>
   </div>
