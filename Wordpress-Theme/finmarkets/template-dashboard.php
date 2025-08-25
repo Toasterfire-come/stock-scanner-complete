@@ -1,13 +1,14 @@
-<?php /* Template Name: Dashboard */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
-<section class="section">
+<?php /* Template Name: Dashboard */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
+<section class="section" data-page="dashboard">
   <div class="container grid cols-3">
     <div class="card" style="padding:16px;">
       <h3>Welcome</h3>
       <div id="dashUser" class="muted">Signed out</div>
     </div>
     <div class="card" style="padding:16px;">
-      <h3>Watchlist</h3>
-      <ul id="dashWl" style="list-style:none; padding:0; margin:0;"></ul>
+      <h3>Usage</h3>
+      <div id="usageBox" class="muted">Loading…</div>
+      <div class="badge" id="usageBadge" style="margin-top:8px;">—</div>
     </div>
     <div class="card" style="padding:16px;">
       <h3>News</h3>
@@ -18,15 +19,28 @@
 <script defer>
 (function(){
   const $ = s => document.querySelector(s);
-  const getU=()=>JSON.parse(localStorage.getItem('finm_user')||'null');
-  const getWL=()=>JSON.parse(localStorage.getItem('finm_wl')||'[]');
-  const fmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'});
+  function getU(){ try { return JSON.parse(localStorage.getItem('finm_user')||'null'); } catch(e){ return null; } }
+  function getUsage(){ try { return JSON.parse(localStorage.getItem('finm_usage')||'null'); } catch(e){ return null; } }
+  function setUsage(u){ localStorage.setItem('finm_usage', JSON.stringify(u)); }
   document.addEventListener('DOMContentLoaded', function(){
-    const u=getU(); $('#dashUser').textContent = u?`Hello, ${u.name}`:'Signed out';
-    const wl=new Set(getWL());
-    const items=(window.MockData?.stocks||[]).filter(s=>wl.has(s.symbol));
-    $('#dashWl').innerHTML = items.map(s=>`<li style="display:flex; justify-content:space-between; border-bottom:1px solid var(--gray-200); padding:6px 0;"><span class="mono">${s.symbol}</span><span>${fmt.format(s.price)}</span></li>`).join('') || '<li class="muted">Empty.</li>';
-    $('#dashNews').innerHTML = (window.MockData?.news||[]).slice(0,3).map(n=>`<div class="muted">${n.source} — ${n.title}</div>`).join('');
+    const u = getU();
+    if(!u){ window.location.href = '/'; return; }
+    $('#dashUser').textContent = `Hello, ${u.name || u.email || 'User'}`;
+
+    // Initialize usage if absent
+    let usage = getUsage();
+    if(!usage){ usage = { limit: 1000, used: 0, month: new Date().toISOString().slice(0,7) }; setUsage(usage); }
+    const nowMonth = new Date().toISOString().slice(0,7);
+    if(usage.month !== nowMonth){ usage = { limit: usage.limit, used: 0, month: nowMonth }; setUsage(usage); }
+    const left = Math.max(usage.limit - usage.used, 0);
+    $('#usageBox').textContent = `Monthly limit: ${usage.limit} • Used: ${usage.used} • Left: ${left}`;
+    $('#usageBadge').textContent = left > 0 ? `You have ${left} actions left` : 'Limit reached';
+
+    // News
+    try{
+      const news = (window.MockData?.news)||[]; // or finmApi.wpNews
+      $('#dashNews').innerHTML = news.slice(0,3).map(n=>`<div class="muted">${n.source} — ${n.title}</div>`).join('');
+    }catch(e){ $('#dashNews').textContent = '—'; }
   });
 })();
 </script>
