@@ -131,7 +131,7 @@ add_action('admin_init', function(){
   ]);
   add_settings_section('finm_section', __('External API', 'finmarkets'), function(){ echo '<p>Configure base URL for your market data API. Requests are proxied via WP REST to avoid CORS.</p>'; }, 'finm_settings');
   add_settings_field('finm_api_base', __('API Base URL', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="url" class="regular-text" name="' . FINM_OPTION_KEY . '[api_base]" value="' . esc_attr($s['api_base']) . '" placeholder="https://api.example.com" />'; }, 'finm_settings', 'finm_section');
-  add_settings_field('finm_api_key', __('API Key (optional)', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[api_key]" value="' . esc_attr($s['api_key']) . '" placeholder="Bearer token or key" />'; }, 'finm_settings', 'finm_section');
+  add_settings_field('finm_api_key', __('API Key (optional)', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[api_key]" value="' . esc_attr($s['api_base'] ? $s['api_key'] : '') . '" placeholder="Bearer token or key" />'; }, 'finm_settings', 'finm_section');
   add_settings_section('finm_pp', __('PayPal', 'finmarkets'), function(){ echo '<p>Enter your PayPal Client ID and defaults. Buttons are rendered on the Checkout template.</p>'; }, 'finm_settings');
   add_settings_field('finm_pp_id', __('Client ID', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<input type="text" class="regular-text" name="' . FINM_OPTION_KEY . '[paypal_client_id]" value="' . esc_attr($s['paypal_client_id']) . '" placeholder="Abc123..." />'; }, 'finm_settings', 'finm_pp');
   add_settings_field('finm_pp_env', __('Environment', 'finmarkets'), function(){ $s = finm_get_settings(); echo '<select name="' . FINM_OPTION_KEY . '[paypal_env]'><option value="sandbox"' . selected($s['paypal_env'],'sandbox',false) . '>Sandbox</option><option value="live"' . selected($s['paypal_env'],'live',false) . '>Live</option></select>'; }, 'finm_settings', 'finm_pp');
@@ -177,6 +177,8 @@ add_action('send_headers', function () { header('X-Frame-Options: SAMEORIGIN'); 
 // ---------- REST proxy routes ----------
 add_action('rest_api_init', function(){
   register_rest_route('finm/v1', '/health', ['methods' => 'GET', 'callback' => 'finm_route_health']);
+  register_rest_route('finm/v1', '/docs', ['methods' => 'GET', 'callback' => 'finm_route_docs']);
+
   register_rest_route('finm/v1', '/stocks', ['methods' => 'GET', 'callback' => 'finm_route_stocks']);
   register_rest_route('finm/v1', '/stock/(?P<ticker>[A-Za-z0-9\.-]+)', ['methods' => 'GET', 'callback' => 'finm_route_stock']);
   register_rest_route('finm/v1', '/search', ['methods' => 'GET', 'callback' => 'finm_route_search']);
@@ -185,7 +187,14 @@ add_action('rest_api_init', function(){
   register_rest_route('finm/v1', '/endpoint-status', ['methods' => 'GET', 'callback' => 'finm_route_endpoint_status']);
   register_rest_route('finm/v1', '/revenue/analytics', ['methods' => 'GET', 'callback' => 'finm_route_revenue_analytics']);
   register_rest_route('finm/v1', '/revenue/analytics/(?P<month>[^/]+)', ['methods' => 'GET', 'callback' => 'finm_route_revenue_analytics_month']);
+
   register_rest_route('finm/v1', '/paypal-config', ['methods'=>'GET','callback'=>function(){ $s=finm_get_settings(); return [ 'client_id'=>$s['paypal_client_id'], 'currency'=>$s['paypal_currency'], 'env'=>$s['paypal_env'], 'amount_pro'=>$s['paypal_amount_pro'], 'brand'=>$s['paypal_brand_name'] ]; }]);
+
+  // Root proxies for API and Revenue base (e.g. /api/ and /revenue/)
+  register_rest_route('finm/v1', '/api', ['methods' => 'GET', 'callback' => function(){ return finm_proxy_get('/api/'); }]);
+  register_rest_route('finm/v1', '/revenue', ['methods' => 'GET', 'callback' => function(){ return finm_proxy_get('/revenue/'); }]);
+
+  // Generic passthroughs
   register_rest_route('finm/v1', '/api/(?P<path>.+)', ['methods' => ['GET','POST','DELETE'], 'callback' => function(WP_REST_Request $req){ return finm_route_generic($req, 'api'); }, 'args' => ['path' => ['sanitize_callback' => 'sanitize_text_field']]]);
   register_rest_route('finm/v1', '/revenue/(?P<path>.+)', ['methods' => ['GET','POST','DELETE'], 'callback' => function(WP_REST_Request $req){ return finm_route_generic($req, 'revenue'); }, 'args' => ['path' => ['sanitize_callback' => 'sanitize_text_field']]]);
 });
@@ -203,6 +212,7 @@ function finm_proxy_get($path, $args=[], $needs_key=false){ $url = finm_build_ur
 function finm_proxy_send($method, $path, $payload=null, $needs_key=true){ $url = finm_build_url($path); if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400); $args=['timeout'=>20,'method'=>$method,'headers'=>array_merge(finm_req_headers(true), ['Content-Type'=>'application/json'])]; if ($payload !== null) { $args['body']=wp_json_encode($payload); } $r=wp_remote_request($url,$args); return finm_format_response($r); }
 
 function finm_route_health(WP_REST_Request $req){ $r = finm_proxy_get('/health/'); if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/health/'); } return $r; }
+function finm_route_docs(WP_REST_Request $req){ return finm_proxy_get('/docs/'); }
 function finm_route_stocks(WP_REST_Request $req){ return finm_proxy_get('/api/stocks/', $req->get_params()); }
 function finm_route_stock(WP_REST_Request $req){ $t = strtoupper(sanitize_text_field($req['ticker'])); $r = finm_proxy_get('/api/stock/' . rawurlencode($t) . '/'); if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/stocks/' . rawurlencode($t) . '/'); } return $r; }
 function finm_route_search(WP_REST_Request $req){ return finm_proxy_get('/api/search/', ['q'=>$req->get_param('q')]); }
