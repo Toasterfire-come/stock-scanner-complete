@@ -1,0 +1,2 @@
+<?php /* Template Name: Subscriptions */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Subscriptions</h1><div class="card" style="padding:20px;"><table class="table"><thead><tr><th>Plan</th><th>Status</th><th>Renewal</th></tr></thead><tbody><tr><td>Pro</td><td><span class="badge badge-green">Active</span></td><td>2025-09-01</td></tr></tbody></table></div></div></section><?php get_footer(); ?>

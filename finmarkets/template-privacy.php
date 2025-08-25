@@ -1,0 +1,2 @@
+<?php /* Template Name: Privacy */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Privacy Policy</h1><div class="card" style="padding:20px;"><p>Placeholder privacy text.</p></div></div></section><?php get_footer(); ?>

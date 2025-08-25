@@ -1,0 +1,60 @@
+/* appended: glass design system and utility classes to support scraped wording */
+
+/* Sections */
+.glass-section { padding: var(--space-8) 0; background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%); }
+.dark .glass-section { background: linear-gradient(135deg, #0b1220 0%, #0f172a 100%); }
+.section-intro { text-align: center; margin-bottom: var(--space-6); }
+.section-title { margin: 0 0 var(--space-2); font-size: clamp(24px, 4vw, 36px); }
+.section-subtitle { color: var(--muted); margin: 0; }
+.text-gradient { background: linear-gradient(90deg, var(--blue), #2dd4bf); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Glass cards */
+.glass-card { background: rgba(255,255,255,0.65); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow-1); backdrop-filter: blur(10px) saturate(120%); }
+.dark .glass-card { background: rgba(16,24,39,0.6); border-color: var(--border, #1f2a3a); }
+.p-6 { padding: 24px; }
+.mb-6 { margin-bottom: 24px; }
+.card-body { padding: 12px; }
+
+/* Grids */
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6); }
+.table-responsive { overflow-x: auto; }
+
+/* Buttons */
+.btn-outline { background: transparent; border: 1px solid var(--gray-300); color: var(--slate); }
+.dark .btn-outline { border-color: var(--border, #1f2a3a); color: #cbd5e1; }
+.btn-lg { padding: 12px 18px; font-weight: 600; }
+
+/* Badges */
+.badge-yes { display:inline-block; padding: 2px 8px; border-radius: 999px; background: #e8f7ee; color: #0f8a42; border: 1px solid #cfeedd; }
+.dark .badge-yes { background:#0f2a1a; color:#86efac; border-color:#16482b; }
+
+/* Pricing toggle */
+.toggle-switch { position: relative; width: 52px; height: 28px; border-radius: 999px; border: 1px solid var(--gray-300); background: var(--surface); cursor: pointer; }
+.toggle-switch .toggle-slider { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--blue); transition: left 180ms ease; }
+.dark .toggle-switch { border-color: var(--border, #1f2a3a); background: #101827; }
+.pricing-annual .toggle-switch .toggle-slider { left: 27px; }
+
+/* Accordion */
+.accordion .accordion-item { border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+.dark .accordion .accordion-item { border-color: var(--border, #1f2a3a); }
+.accordion-header { padding: 12px 14px; font-weight: 600; cursor: pointer; background: var(--surface); }
+.accordion-content { padding: 12px 14px; display: none; background: var(--surface-2); }
+.accordion .accordion-item.open .accordion-content { display: block; }
+
+/* Callouts */
+.callout { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--gray-200); }
+.callout.success { background: #ecfdf5; border-color: #d1fae5; }
+.callout.info { background: #eff6ff; border-color: #dbeafe; }
+.callout.warn { background: #fff7ed; border-color: #ffedd5; }
+.dark .callout.success { background:#052814; border-color:#0f4d2b; }
+.dark .callout.info { background:#0e1b2e; border-color:#15253f; }
+.dark .callout.warn { background:#2b1704; border-color:#4a2b10; }
+
+/* Page header blocks from scraped wording */
+.page-header { text-align:center; margin: 24px 0; }
+.page-description { color: var(--muted); }
+
+/* Utility radius to match scraped var(--radius-md) */
+:root { --radius-md: calc(var(--radius) - 2px); }
+
+@media (max-width: 768px){ .section-intro { margin-bottom: var(--space-5); } }

@@ -1,0 +1,2 @@
+<?php /* Template Name: Market Hours */ if (!defined('ABSPATH')) { exit; } get_header(); ?>
+<section class="section"><div class="container content"><h1 style="color:var(--navy);">Market Hours</h1><div class="card" style="padding:20px;"><p>US markets: 9:30 AM – 4:00 PM ET (Mon–Fri).</p></div></div></section><?php get_footer(); ?>
