@@ -4,6 +4,13 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
+// Polyfill for PHP &lt; 8 for better compatibility
+yif (!function_exists('str_starts_with')) {
+  function str_starts_with($haystack, $needle) {
+    return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
+  }
+}
+
 // ---------- Theme supports ----------
 add_action('after_setup_theme', function () {
   add_theme_support('title-tag');

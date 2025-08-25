@@ -59,4 +59,5 @@
   </header>
 
   <main id="main">
-  <script defer src="<?php echo esc_url( get_template_directory_uri() . '/assets/js/ui.js' ); ?>"></script>
+</body>
+</html>
