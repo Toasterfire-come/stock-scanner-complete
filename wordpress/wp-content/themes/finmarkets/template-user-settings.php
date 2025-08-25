@@ -1,4 +1,4 @@
-<?php /* Template Name: User Settings */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
+<?php /* Template Name: User Settings */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; $finm_requires_api = true; get_header(); ?>
 <section class="section">
   <div class="container content" style="max-width:720px;">
     <h1 style="color:var(--navy);">User Settings</h1>
@@ -35,7 +35,6 @@
   const setMsg = (t, ok)=>{ const el=$('#usMsg'); el.textContent=t; el.style.color = ok? '#0f8a42':'var(--muted)'; };
   function getU(){ try {return JSON.parse(localStorage.getItem('finm_user')||'{}');}catch(e){return {};}}
   document.addEventListener('DOMContentLoaded', async function(){
-    // Load profile + notification settings
     try{
       if(window.finmApi && (window.finmConfig?.hasApiBase)){
         try{ const prof = await window.finmApi.userProfileGet(); $('#usName').value = prof?.data?.first_name || prof?.data?.username || ''; }catch(e){}

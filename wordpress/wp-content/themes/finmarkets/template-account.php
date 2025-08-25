@@ -1,4 +1,4 @@
-<?php /* Template Name: Account */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; get_header(); ?>
+<?php /* Template Name: Account */ if (!defined('ABSPATH')) { exit; } $finm_requires_auth = true; $finm_requires_api = true; get_header(); ?>
 <section class="section">
   <div class="container content" style="max-width:720px;">
     <h1 style="color:var(--navy);">Account</h1>
