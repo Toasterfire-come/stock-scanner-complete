@@ -6,28 +6,44 @@
     const r = await fetch(url, {
       method,
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: 'same-origin'
     });
     if(!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }
   const GET = (p, params) => http('GET', p, params);
   const POST = (p, body) => http('POST', p, undefined, body);
+  const DEL = (p) => http('DELETE', p);
 
   const finmApi = {
-    // Specific helpers
+    // Health & docs
     health: () => GET('/health'),
-    stocks: (params) => GET('/stocks', params),
-    stock: (ticker) => GET('/stock/' + encodeURIComponent(ticker)),
+    docs: () => GET('/docs'),
+
+    // Market data
+    stocks: (params) => GET('/stocks', params), // proxy to /api/stocks/
+    stock: (ticker) => GET('/stock/' + encodeURIComponent(ticker)), // /api/stock/{ticker}/ with fallback
     search: (q) => GET('/search', { q }),
     trending: () => GET('/trending'),
     marketStats: () => GET('/market-stats'),
     endpointStatus: () => GET('/endpoint-status'),
-    revenueAnalytics: (month) => month ? GET('/revenue/analytics/' + encodeURIComponent(month)) : GET('/revenue/analytics'),
 
-    // Generic proxies aligned with the spec
+    // Revenue
+    revenueAnalytics: (month) => month ? GET('/revenue/analytics/' + encodeURIComponent(month)) : GET('/revenue/analytics'),
+    revenueValidate: (code) => POST('/revenue/validate-discount/', { code }),
+    revenueApply: (code, amount) => POST('/revenue/apply-discount/', { code, amount }),
+    revenueRecord: (payload) => POST('/revenue/record-payment/', payload),
+
+    // WordPress helpers on the backend
+    wpStocks: (params) => GET('/api/wordpress/stocks/', params),
+    wpNews: (params) => GET('/api/wordpress/news/', params),
+    wpAlerts: (params) => GET('/api/wordpress/alerts/', params),
+
+    // Generic API passthroughs
     apiGet: (path, params) => GET('/api/' + String(path).replace(/^\//,''), params),
     apiPost: (path, payload) => POST('/api/' + String(path).replace(/^\//,''), payload),
+    apiDelete: (path) => DEL('/api/' + String(path).replace(/^\//,'')),
     revenueGet: (path, params) => GET('/revenue/' + String(path).replace(/^\//,''), params),
     revenuePost: (path, payload) => POST('/revenue/' + String(path).replace(/^\//,''), payload),
 
@@ -38,15 +54,40 @@
     alertsCreateInfo: () => finmApi.apiGet('alerts/create/'),
     alertsCreate: (payload) => finmApi.apiPost('alerts/create/', payload),
     subscription: (payload) => finmApi.apiPost('subscription/', payload),
-    wpStocks: (params) => finmApi.apiGet('wordpress/stocks/', params),
-    wpNews: (params) => finmApi.apiGet('wordpress/news/', params),
-    wpAlerts: (params) => finmApi.apiGet('wordpress/alerts/', params),
-    revenueValidate: (code) => finmApi.revenuePost('validate-discount/', { code }),
-    revenueApply: (code, amount) => finmApi.revenuePost('apply-discount/', { code, amount }),
+    subscribeWordPress: (payload) => finmApi.apiPost('wordpress/subscribe/', payload),
+
+    // Auth + user
+    authLogin: (username, password) => finmApi.apiPost('auth/login/', { username, password }),
+    authLogout: () => finmApi.apiPost('auth/logout/', {}),
+    userProfileGet: () => finmApi.apiGet('user/profile/'),
+    userProfileUpdate: (data) => finmApi.apiPost('user/profile/', data),
+    userChangePassword: (current_password, new_password, confirm_password) => finmApi.apiPost('user/change-password/', { current_password, new_password, confirm_password }),
+
+    // Billing
+    billingHistory: (page=1, limit=20) => finmApi.apiGet('user/billing-history/', { page, limit }),
+    billingCurrentPlan: () => finmApi.apiGet('billing/current-plan/'),
+    billingChangePlan: (plan_type, billing_cycle) => finmApi.apiPost('billing/change-plan/', { plan_type, billing_cycle }),
+    billingStats: () => finmApi.apiGet('billing/stats/'),
+
+    // Notifications
+    notificationsHistory: (params) => finmApi.apiGet('notifications/history/', params),
+    notificationsMarkRead: (notification_ids, mark_all=false) => finmApi.apiPost('notifications/mark-read/', { notification_ids, mark_all }),
+    notificationsSettingsGet: () => finmApi.apiGet('notifications/settings/'),
+    notificationsSettingsUpdate: (payload) => finmApi.apiPost('notifications/settings/', payload),
+
+    // Portfolio
+    portfolioGet: () => finmApi.apiGet('portfolio/'),
+    portfolioAdd: (symbol, shares, avg_cost, portfolio_name) => finmApi.apiPost('portfolio/add/', { symbol, shares, avg_cost, portfolio_name }),
+    portfolioDelete: (holding_id) => finmApi.apiDelete('portfolio/' + encodeURIComponent(holding_id) + '/'),
+
+    // Watchlist
+    watchlistGet: () => finmApi.apiGet('watchlist/'),
+    watchlistAdd: (symbol, watchlist_name, notes, alert_price) => finmApi.apiPost('watchlist/add/', { symbol, watchlist_name, notes, alert_price }),
+    watchlistDelete: (item_id) => finmApi.apiDelete('watchlist/' + encodeURIComponent(item_id) + '/'),
   };
   window.finmApi = finmApi;
 
-  // Progressive enhancement: hydrate mock stocks from external API if configured
+  // Progressive enhancement: hydrate mock stocks/news from external API if configured
   async function enhanceMock(){
     if(!(window.finmConfig && window.finmConfig.hasApiBase)) return;
     try {
@@ -67,8 +108,8 @@
       }
     } catch(e){ console.warn('FinMarkets API stocks not available', e); }
 
-    // News hydration (attempt multiple fallbacks)
     try {
+      // News hydration (attempt multiple fallbacks)
       let news = [];
       try { news = await finmApi.wpNews({ limit: 12 }); } catch(_) {}
       if (!Array.isArray(news) || !news.length) {
@@ -85,7 +126,6 @@
       }
     } catch(e){ console.warn('FinMarkets API news not available', e); }
 
-    // Dispatch for listeners to re-render
     document.dispatchEvent(new CustomEvent('finm:api-ready'));
   }
   document.addEventListener('DOMContentLoaded', enhanceMock);
