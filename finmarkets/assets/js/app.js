@@ -8,7 +8,7 @@
   function renderPreview(){
     const tbody = $('#previewBody');
     if(!tbody || !window.MockData) return;
-    tbody.innerHTML = window.MockData.stocks.slice(0,6).map(s => `
+    tbody.innerHTML = (window.MockData.stocks||[]).slice(0,6).map(s => `
       <tr>
         <td class="mono">${s.symbol}</td>
         <td>${s.name}</td>
@@ -18,6 +18,7 @@
   }
 
   function uniqueSectors(){
+    if(!window.MockData || !window.MockData.stocks) return;
     const sectors = Array.from(new Set(window.MockData.stocks.map(s => s.sector)));
     const sel = $('#sector');
     if(!sel) return;
@@ -25,17 +26,20 @@
   }
 
   function renderScreener(){
-    const q = $('#q').value.trim().toLowerCase();
-    const sector = $('#sector').value;
-    const body = $('#screenerBody');
+    if(!window.MockData || !window.MockData.stocks) return;
+    const q = $('#q')?.value?.trim().toLowerCase() || '';
+    const sector = $('#sector')?.value || 'all';
+    const body = $('#screenerBody'); if(!body) return;
     const wl = new Set(getWL());
     let rows = window.MockData.stocks.filter(s => {
-      const matchText = s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q);
+      const matchText = (s.symbol||'').toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q);
       const matchSector = sector === 'all' || s.sector === sector;
       return matchText && matchSector;
     });
-    if($('#sortPrice').dataset.dir === 'asc') rows.sort((a,b) => a.price - b.price);
-    if($('#sortPrice').dataset.dir === 'desc') rows.sort((a,b) => b.price - a.price);
+    if($('#sortPrice')){
+      if($('#sortPrice').dataset.dir === 'asc') rows.sort((a,b) => a.price - b.price);
+      if($('#sortPrice').dataset.dir === 'desc') rows.sort((a,b) => b.price - a.price);
+    }
     body.innerHTML = rows.map(s => {
       const inWl = wl.has(s.symbol);
       return `
@@ -75,7 +79,7 @@
 
   function renderWatchlist(){
     const list = $('#watchlistItems');
-    if(!list) return;
+    if(!list || !window.MockData || !window.MockData.stocks) return;
     const wl = new Set(getWL());
     const items = window.MockData.stocks.filter(s => wl.has(s.symbol));
     list.innerHTML = items.map(s => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--gray-200);"><span class="mono">${s.symbol}</span> <span>${fmt.format(s.price)}</span></li>`).join('') || '<li class="muted">No symbols yet. Add from the Screener.</li>';
@@ -83,8 +87,8 @@
 
   function renderNews(){
     const grid = $('#newsGrid');
-    if(!grid) return;
-    grid.innerHTML = window.MockData.news.slice(0,6).map(n => `
+    if(!grid || !window.MockData) return;
+    grid.innerHTML = (window.MockData.news||[]).slice(0,6).map(n => `
       <article class="card" style="padding:14px;">
         <div class="badge">${n.source}</div>
         <h4 style="margin:8px 0; color:var(--navy);">${n.title}</h4>
@@ -104,14 +108,23 @@
     try { const u = JSON.parse(localStorage.getItem('finm_user')||'null'); if(u){ btn.textContent = 'Signed in'; } } catch(e){}
   }
 
-  document.addEventListener('DOMContentLoaded', function(){
-    if(!window.MockData){ console.warn('Mock data not loaded'); return; }
+  function refreshAll(){
     renderPreview();
     uniqueSectors();
-    bindScreener();
     renderScreener();
     renderWatchlist();
     renderNews();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    if(!window.MockData){ console.warn('Mock data not loaded'); return; }
+    bindScreener();
+    refreshAll();
     loginDemo();
+  });
+
+  // Re-render when API hydration completes
+  document.addEventListener('finm:api-ready', function(){
+    refreshAll();
   });
 })();

@@ -192,10 +192,15 @@ add_action('rest_api_init', function(){
 
 function finm_api_base(){ $b = finm_get_settings()['api_base']; return $b ? rtrim($b, '/') : ''; }
 function finm_build_url($path){ $base = finm_api_base(); if (!$base) return ''; return $base . (str_starts_with($path, '/') ? $path : '/' . $path); }
-function finm_req_headers($needs_key=false){ $h = [ 'Accept' => 'application/json' ]; $key = finm_get_settings()['api_key']; if ($needs_key && $key) { $h['Authorization'] = 'Bearer ' . $key; } return $h; }
+function finm_req_headers($unused=false){
+  $h = [ 'Accept' => 'application/json' ];
+  $key = finm_get_settings()['api_key'];
+  if ($key) { $h['Authorization'] = 'Bearer ' . $key; }
+  return $h;
+}
 function finm_format_response($r){ if (is_wp_error($r)) return new WP_REST_Response(['success'=>false,'message'=>$r->get_error_message()], 502); $code = wp_remote_retrieve_response_code($r); $body = wp_remote_retrieve_body($r); $json = json_decode($body, true); if (json_last_error() === JSON_ERROR_NONE) return new WP_REST_Response($json, $code); return new WP_REST_Response(['html' => $body, 'status_code' => $code], $code); }
-function finm_proxy_get($path, $args=[], $needs_key=false){ $url = finm_build_url($path); if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400); if (!empty($args)) { $url = add_query_arg($args, $url); } $r = wp_remote_get($url, ['timeout'=>12,'headers'=>finm_req_headers($needs_key)]); return finm_format_response($r); }
-function finm_proxy_send($method, $path, $payload=null, $needs_key=true){ $url = finm_build_url($path); if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400); $args=['timeout'=>15,'method'=>$method,'headers'=>array_merge(finm_req_headers($needs_key), ['Content-Type'=>'application/json'])]; if ($payload !== null) { $args['body']=wp_json_encode($payload); } $r=wp_remote_request($url,$args); return finm_format_response($r); }
+function finm_proxy_get($path, $args=[], $needs_key=false){ $url = finm_build_url($path); if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400); if (!empty($args)) { $url = add_query_arg($args, $url); } $r = wp_remote_get($url, ['timeout'=>12,'headers'=>finm_req_headers(true)]); return finm_format_response($r); }
+function finm_proxy_send($method, $path, $payload=null, $needs_key=true){ $url = finm_build_url($path); if (!$url) return new WP_REST_Response(['success'=>false,'message'=>'API base not configured'], 400); $args=['timeout'=>20,'method'=>$method,'headers'=>array_merge(finm_req_headers(true), ['Content-Type'=>'application/json'])]; if ($payload !== null) { $args['body']=wp_json_encode($payload); } $r=wp_remote_request($url,$args); return finm_format_response($r); }
 
 function finm_route_health(WP_REST_Request $req){ $r = finm_proxy_get('/health/'); if ($r->get_status() >= 400) { $r = finm_proxy_get('/api/health/'); } return $r; }
 function finm_route_stocks(WP_REST_Request $req){ return finm_proxy_get('/api/stocks/', $req->get_params()); }
