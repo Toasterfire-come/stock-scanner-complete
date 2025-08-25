@@ -50,6 +50,7 @@
   async function enhanceMock(){
     if(!(window.finmConfig && window.finmConfig.hasApiBase)) return;
     try {
+      // Stocks hydration
       const st = await finmApi.stocks({ limit: 50, sort_by: 'market_cap', sort_order: 'desc' });
       const arr = Array.isArray(st) ? st : (st?.data || []);
       const mapped = arr.map(x => ({
@@ -63,9 +64,29 @@
       if(mapped.length) {
         window.MockData = window.MockData || { news: [] };
         window.MockData.stocks = mapped;
-        document.dispatchEvent(new CustomEvent('finm:api-ready'));
       }
-    } catch(e){ console.warn('FinMarkets API not available', e); }
+    } catch(e){ console.warn('FinMarkets API stocks not available', e); }
+
+    // News hydration (attempt multiple fallbacks)
+    try {
+      let news = [];
+      try { news = await finmApi.wpNews({ limit: 12 }); } catch(_) {}
+      if (!Array.isArray(news) || !news.length) {
+        try { const n2 = await finmApi.apiGet('news/', { limit: 12 }); news = Array.isArray(n2) ? n2 : (n2?.data || []); } catch(_) {}
+      }
+      const mappedNews = (news||[]).map(n => ({
+        title: n.title || n.headline || n.name || '—',
+        source: n.source || n.publisher || '—',
+        time: n.published_at || n.time || ''
+      }));
+      if(mappedNews.length){
+        window.MockData = window.MockData || { stocks: [] };
+        window.MockData.news = mappedNews;
+      }
+    } catch(e){ console.warn('FinMarkets API news not available', e); }
+
+    // Dispatch for listeners to re-render
+    document.dispatchEvent(new CustomEvent('finm:api-ready'));
   }
   document.addEventListener('DOMContentLoaded', enhanceMock);
 })();
