@@ -143,7 +143,7 @@ function stock_scanner_options_page() {
     ?>
     <div class="wrap">
         <h1>📈 Stock Scanner Theme Options</h1>
-        <?php if (!empty($_GET['updated'])): ?><div class="notice notice-success is-dismissible"><p>Settings saved.</p></div><?php endif; ?>
+        <?php if (!empty($_GET['updated']) && $_GET['updated'] === '1'): ?><div class="notice notice-success is-dismissible"><p><?php _e('Settings saved.', 'finmarkets'); ?></p></div><?php endif; ?>
         <div class="card"><h2>🔗 Quick Links</h2><ul>
             <li><a href="<?php echo esc_url(admin_url('options-general.php?page=stock-scanner-settings')); ?>">Plugin Settings</a></li>
             <li><a href="<?php echo esc_url(admin_url('edit.php?post_type=page')); ?>">Manage Pages</a></li>
