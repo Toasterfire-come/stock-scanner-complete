@@ -96,10 +96,12 @@ function stock_scanner_body_classes($classes) {
 add_filter('body_class', 'stock_scanner_body_classes');
 
 /* ---------------- Login page styles are now in style.css ---------------- */
+/* ---------------- Login page customization ---------------- */
 function stock_scanner_login_logo_url() { return home_url(); }
 add_filter('login_headerurl', 'stock_scanner_login_logo_url');
+
 function stock_scanner_login_logo_url_title() { return get_bloginfo('name') . ' - Stock Scanner'; }
-add_filter('login_headertitle', 'stock_scanner_login_logo_url_title');
+add_filter('login_headertext', 'stock_scanner_login_logo_url_title'); // Updated from deprecated login_headertitle
 
 /* ---------------- Dashboard widget ---------------- */
 function stock_scanner_dashboard_widget() { wp_add_dashboard_widget('stock_scanner_widget','📈 Stock Scanner Quick View','stock_scanner_dashboard_widget_content'); }
