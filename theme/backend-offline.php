@@ -6,7 +6,7 @@ Description: Shows a friendly offline message and an Admin-only "Connectivity & 
 get_header();
 ?>
 
-<main class="site-main">
+<main id="main-content" class="site-main">
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">Service temporarily unavailable</h1>
