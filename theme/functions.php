@@ -4,6 +4,9 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
+/* ---------------- Include template parts ---------------- */
+require_once get_template_directory() . '/template-parts/nav-walker.php';
+
 /* ---------------- Theme setup ---------------- */
 function stock_scanner_theme_setup() {
     add_theme_support('title-tag');
@@ -11,7 +14,7 @@ function stock_scanner_theme_setup() {
     add_theme_support('custom-logo', [ 'height' => 80, 'width'  => 240, 'flex-height' => true, 'flex-width' => true ]);
     add_theme_support('html5', array('search-form', 'comment-form', 'comment-list', 'gallery', 'caption'));
     add_theme_support('customize-selective-refresh-widgets');
-    register_nav_menus(array('primary' => __('Primary Menu', 'stock-scanner')));
+    register_nav_menus(array('primary' => __('Primary Menu', 'finmarkets')));
 }
 add_action('after_setup_theme', 'stock_scanner_theme_setup');
 
