@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; <?php echo esc_html(date('Y')); ?> <?php echo esc_html(get_bloginfo('name')); ?>. All rights reserved.</p>
+            <p>&copy; <?php echo esc_html(wp_date('Y')); ?> <?php echo esc_html(get_bloginfo('name')); ?>. <?php _e('All rights reserved.', 'finmarkets'); ?></p>
         </div>
     </div>
 </footer>
