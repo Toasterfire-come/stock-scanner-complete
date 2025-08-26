@@ -38,6 +38,7 @@
                     ?>
                     <span class="membership-badge <?php echo esc_attr(isset($level_classes[$user_level]) ? $level_classes[$user_level] : ''); ?>"><?php echo esc_html(isset($level_names[$user_level]) ? $level_names[$user_level] : 'Member'); ?></span>
                     <span id="plan-badge" class="plan-badge" title="Billing plan">...</span>
+                    <a id="refresh-plan" class="refresh-plan" href="#" title="Refresh plan (hold Alt to reveal)">Refresh Plan</a>
                     <span id="session-timer" class="session-timer" aria-live="polite" title="Time remaining in session"></span>
                     <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>">Logout</a>
                 <?php else: ?>

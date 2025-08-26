@@ -1,6 +1,6 @@
 <?php
 /**
- * Stock Scanner Theme Functions (posts removed from public views)
+ * Stock Scanner Theme Functions (with admin-configurable idle policy)
  */
 if (!defined('ABSPATH')) { exit; }
 
@@ -31,16 +31,22 @@ add_action('widgets_init', 'stock_scanner_register_sidebars');
 
 /* ---------------- Enqueue styles/scripts ---------------- */
 function stock_scanner_scripts() {
-    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '1.3.0');
+    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '1.4.0');
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
-    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.3.0', true);
+    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.4.0', true);
     if (function_exists('wp_script_add_data')) { wp_script_add_data('stock-scanner-js', 'defer', true); wp_script_add_data('chart-js', 'defer', true); }
-    wp_localize_script('stock-scanner-js', 'stock_scanner_theme', array(
+    $idle_enabled = (int)get_option('ssc_idle_enabled', 1);
+    $idle_hours   = (int)get_option('ssc_idle_hours', 12);
+    $idle_hours   = max(1, $idle_hours);
+    wp_localize_script('stock_scanner-js', 'stock_scanner_theme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_theme_nonce'),
         'logged_in' => is_user_logged_in(),
         'logout_url' => wp_logout_url(home_url('/')),
         'user_id' => is_user_logged_in() ? get_current_user_id() : 0,
+        'idle_enabled' => (bool)$idle_enabled,
+        'idle_limit_ms' => $idle_hours * 60 * 60 * 1000,
+        'warn_threshold_ms' => 2 * 60 * 1000,
     ));
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
@@ -110,16 +116,59 @@ function stock_scanner_dashboard_widget_content() {
 /* ---------------- Admin menu quick links ---------------- */
 function stock_scanner_admin_menu() { add_theme_page('Stock Scanner Options','Stock Scanner','manage_options','stock-scanner-options','stock_scanner_options_page'); }
 add_action('admin_menu', 'stock_scanner_admin_menu');
+
+/* Save options */
+function stock_scanner_save_theme_options() {
+    if (!current_user_can('manage_options')) wp_die('Forbidden');
+    check_admin_referer('stock_scanner_save_theme');
+    $enabled = isset($_POST['ssc_idle_enabled']) ? 1 : 0;
+    $hours   = isset($_POST['ssc_idle_hours']) ? (int)$_POST['ssc_idle_hours'] : 12;
+    $hours   = max(1, $hours);
+    update_option('ssc_idle_enabled', $enabled);
+    update_option('ssc_idle_hours', $hours);
+    $redirect = add_query_arg('updated', '1', wp_get_referer() ?: admin_url('themes.php?page=stock-scanner-options'));
+    wp_safe_redirect($redirect); exit;
+}
+add_action('admin_post_stock_scanner_save_theme', 'stock_scanner_save_theme_options');
+
 function stock_scanner_options_page() {
+    $enabled = (int)get_option('ssc_idle_enabled', 1);
+    $hours   = (int)get_option('ssc_idle_hours', 12);
     ?>
     <div class="wrap">
         <h1>📈 Stock Scanner Theme Options</h1>
+        <?php if (!empty($_GET['updated'])): ?><div class="notice notice-success is-dismissible"><p>Settings saved.</p></div><?php endif; ?>
         <div class="card"><h2>🔗 Quick Links</h2><ul>
             <li><a href="<?php echo esc_url(admin_url('options-general.php?page=stock-scanner-settings')); ?>">Plugin Settings</a></li>
             <li><a href="<?php echo esc_url(admin_url('edit.php?post_type=page')); ?>">Manage Pages</a></li>
             <li><a href="<?php echo esc_url(admin_url('nav-menus.php')); ?>">Customize Menus</a></li>
             <li><a href="<?php echo esc_url(admin_url('users.php?page=pmpro-memberslist')); ?>">Member List</a></li>
         </ul></div>
+
+        <div class="card">
+            <h2>🔒 Session Policy</h2>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <?php wp_nonce_field('stock_scanner_save_theme'); ?>
+                <input type="hidden" name="action" value="stock_scanner_save_theme" />
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row"><label for="ssc_idle_enabled">Enable idle auto-logout</label></th>
+                        <td>
+                            <label><input type="checkbox" id="ssc_idle_enabled" name="ssc_idle_enabled" value="1" <?php checked($enabled, 1); ?> /> After inactivity, sign out users automatically</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="ssc_idle_hours">Idle timeout (hours)</label></th>
+                        <td>
+                            <input type="number" id="ssc_idle_hours" name="ssc_idle_hours" min="1" max="72" step="1" value="<?php echo esc_attr($hours); ?>" />
+                            <p class="description">Default: 12 hours. The browser-side timer logs the user out after this idle period.</p>
+                        </td>
+                    </tr>
+                </table>
+                <p><button type="submit" class="button button-primary">Save Changes</button></p>
+            </form>
+        </div>
+
         <div class="card"><h2>🚀 Getting Started</h2>
             <ol>
                 <li>Activate the Stock Scanner plugin and configure API settings</li>
@@ -149,6 +198,9 @@ function stock_scanner_membership_styles() {
         .skip-link{position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden}
         .skip-link:focus{position:absolute;left:12px;top:12px;width:auto;height:auto;padding:8px 12px;background:#111827;color:#fff;border-radius:8px;z-index:9999}
         a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #667eea;outline-offset:2px;border-radius:6px}
+        /* Refresh link */
+        .refresh-plan{display:none;margin-left:8px;font-size:.85rem;text-decoration:underline;cursor:pointer;color:#2563eb}
+        .refresh-plan.visible{display:inline-block}
     </style>
     <?php
 }
