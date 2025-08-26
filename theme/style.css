@@ -1452,6 +1452,53 @@ textarea:focus-visible {
 .gap-3 { gap: var(--spacing-lg); }
 .gap-4 { gap: var(--spacing-xl); }
 
+/* Search Form */
+.search-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.search-form .form-control {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  transition: all var(--transition-fast);
+}
+
+.search-form .form-control:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.screen-reader-text {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.screen-reader-text:focus {
+  position: absolute;
+  left: var(--spacing-lg);
+  top: var(--spacing-lg);
+  width: auto;
+  height: auto;
+  overflow: visible;
+  background: var(--gray-900);
+  color: var(--white);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  z-index: 9999;
+}
+
 /* =====================================
    WORDPRESS LOGIN PAGE STYLES
    ===================================== */
