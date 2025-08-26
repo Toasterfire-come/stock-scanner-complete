@@ -1,19 +1,47 @@
 <?php
 /**
- * Optional Simple Nav Walker for adding active classes
+ * Enhanced Nav Walker: adds active classes, ARIA, and submenu toggles
  */
 class StockScanner_Nav_Walker extends Walker_Nav_Menu {
-    function start_el( &$output, $item, $depth = 0, $args = null, $id = 0 ) {
+    public function start_lvl( &$output, $depth = 0, $args = null ) {
+        $indent = str_repeat("\t", $depth);
+        $output .= "\n$indent<ul class=\"sub-menu\" role=\"menu\">\n";
+    }
+
+    public function end_lvl( &$output, $depth = 0, $args = null ) {
+        $indent = str_repeat("\t", $depth);
+        $output .= "$indent</ul>\n";
+    }
+
+    public function start_el( &$output, $item, $depth = 0, $args = null, $id = 0 ) {
         $classes = empty($item->classes) ? array() : (array) $item->classes;
-        if (in_array('current-menu-item', $classes) || in_array('current_page_item', $classes)) {
+        $has_children = in_array('menu-item-has-children', $classes, true);
+        if (in_array('current-menu-item', $classes, true) || in_array('current_page_item', $classes, true)) {
             $classes[] = 'is-active';
         }
-        $class_names = join( ' ', array_map('esc_attr', array_filter($classes)) );
-        $output .= '<li class="menu-item ' . $class_names . '">';
-        $atts = !empty($item->url) ? ' href="' . esc_url($item->url) . '"' : '';
-        $output .= '<a' . $atts . '>' . apply_filters('the_title', $item->title, $item->ID) . '</a>';
+        $class_names = $classes ? ' class="menu-item ' . esc_attr(implode(' ', array_filter($classes))) . '"' : ' class="menu-item"';
+        $output .= '<li' . $class_names . '>';
+
+        $atts = '';
+        $atts .= ! empty( $item->url ) ? ' href="' . esc_url( $item->url ) . '"' : '';
+        $atts .= ' class="' . ( $depth === 0 ? 'top-link' : 'sub-link' ) . '"';
+        $atts .= ' role="menuitem"';
+        if ($has_children) {
+            $atts .= ' aria-haspopup="true" aria-expanded="false"';
+        }
+
+        $title = apply_filters('the_title', $item->title, $item->ID);
+        $output .= '<a' . $atts . '>' . $title . '</a>';
+
+        if ($has_children) {
+            $toggle_id = 'submenu-toggle-' . $item->ID;
+            $output .= '<button class="submenu-toggle" aria-controls="' . esc_attr($toggle_id) . '" aria-expanded="false" aria-label="Toggle submenu">'
+                    . '<span class="submenu-caret">▾</span>'
+                    . '</button>';
+        }
     }
-    function end_el( &$output, $item, $depth = 0, $args = null ) {
+
+    public function end_el( &$output, $item, $depth = 0, $args = null ) {
         $output .= '</li>';
     }
 }
