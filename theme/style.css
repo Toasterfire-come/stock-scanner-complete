@@ -776,10 +776,11 @@ a:hover, a:focus {
   max-width: 400px;
   width: 90%;
   text-align: center;
+  animation: modalSlideIn var(--transition-normal);
 }
 
 .session-modal-panel h3 {
-  color: var(--danger-red);
+  color: var(--gray-800);
   margin-bottom: var(--spacing-lg);
 }
 
@@ -791,6 +792,50 @@ a:hover, a:focus {
 
 .session-modal-actions .btn {
   flex: 1;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Success Notice */
+.notice {
+  position: fixed;
+  top: var(--spacing-xl);
+  right: var(--spacing-xl);
+  z-index: 10001;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: noticeSlideIn var(--transition-normal);
+}
+
+.notice-success {
+  background: var(--success-green);
+  color: var(--white);
+}
+
+.notice p {
+  margin: 0;
+  font-weight: 500;
+}
+
+@keyframes noticeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Policy Popovers */
