@@ -31,14 +31,16 @@ add_action('widgets_init', 'stock_scanner_register_sidebars');
 
 /* ---------------- Enqueue styles/scripts ---------------- */
 function stock_scanner_scripts() {
-    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '1.2.0');
+    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '1.3.0');
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
-    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.2.0', true);
+    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.3.0', true);
     if (function_exists('wp_script_add_data')) { wp_script_add_data('stock-scanner-js', 'defer', true); wp_script_add_data('chart-js', 'defer', true); }
-    wp_localize_script('stock_scanner-js', 'stock_scanner_theme', array(
+    wp_localize_script('stock-scanner-js', 'stock_scanner_theme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_theme_nonce'),
         'logged_in' => is_user_logged_in(),
+        'logout_url' => wp_logout_url(home_url('/')),
+        'user_id' => is_user_logged_in() ? get_current_user_id() : 0,
     ));
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
@@ -155,26 +157,14 @@ add_action('wp_head', 'stock_scanner_membership_styles');
 /* ---------------- Keep posts out: redirect/404 post views ---------------- */
 function stock_scanner_block_posts_templates() {
     if (is_admin()) return;
-    // Redirect blog index to home if not using a static front page
-    if (is_home() && !is_front_page()) {
-        wp_redirect(home_url('/'), 301); exit;
-    }
-    // Block single blog posts
-    if (is_single() && get_post_type() === 'post') {
-        global $wp_query; $wp_query->set_404(); status_header(404); include(get_query_template('404')); exit;
-    }
-    // Block typical post archives
-    if (is_category() || is_tag() || is_date() || (function_exists('is_post_type_archive') && is_post_type_archive('post'))) {
-        global $wp_query; $wp_query->set_404(); status_header(404); include(get_query_template('404')); exit;
-    }
+    if (is_home() && !is_front_page()) { wp_redirect(home_url('/'), 301); exit; }
+    if (is_single() && get_post_type() === 'post') { global $wp_query; $wp_query->set_404(); status_header(404); include(get_query_template('404')); exit; }
+    if (is_category() || is_tag() || is_date() || (function_exists('is_post_type_archive') && is_post_type_archive('post'))) { global $wp_query; $wp_query->set_404(); status_header(404); include(get_query_template('404')); exit; }
 }
 add_action('template_redirect', 'stock_scanner_block_posts_templates');
 
 /* Force search to pages only */
-function stock_scanner_filter_queries($q){
-    if (is_admin() || !$q->is_main_query()) return;
-    if ($q->is_search()) { $q->set('post_type', array('page')); }
-}
+function stock_scanner_filter_queries($q){ if (is_admin() || !$q->is_main_query()) return; if ($q->is_search()) { $q->set('post_type', array('page')); } }
 add_action('pre_get_posts','stock_scanner_filter_queries');
 
 /* ---------------- AJAX: plan badge via backend ---------------- */
@@ -183,15 +173,10 @@ function stock_scanner_get_current_plan_ajax() {
     check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
     $api_base = rtrim(get_option('stock_scanner_api_url', ''), '/');
     $secret = get_option('stock_scanner_api_secret', '');
-    if (empty($api_base) || empty($secret)) {
-        $user_id = get_current_user_id();
-        $plan = stock_scanner_plan_from_pmpro($user_id);
-        wp_send_json_success(array('source'=>'pmpro','plan'=>$plan));
-    }
+    if (empty($api_base) || empty($secret)) { $user_id = get_current_user_id(); $plan = stock_scanner_plan_from_pmpro($user_id); wp_send_json_success(array('source'=>'pmpro','plan'=>$plan)); }
     $url = $api_base . '/billing/current-plan';
     $user_id = get_current_user_id();
-    $level_id = 0;
-    if (function_exists('pmpro_getMembershipLevelForUser')) { $level = pmpro_getMembershipLevelForUser($user_id); $level_id = $level ? intval($level->id) : 0; }
+    $level_id = 0; if (function_exists('pmpro_getMembershipLevelForUser')) { $level = pmpro_getMembershipLevelForUser($user_id); $level_id = $level ? intval($level->id) : 0; }
     $response = wp_remote_get($url, array('headers'=>array('Content-Type'=>'application/json','X-API-Secret'=>$secret,'X-User-Level'=>$level_id,'X-User-ID'=>$user_id), 'timeout'=>20));
     if (is_wp_error($response)) { $plan = stock_scanner_plan_from_pmpro($user_id); wp_send_json_success(array('source'=>'fallback','plan'=>$plan,'error'=>$response->get_error_message())); }
     $code = wp_remote_retrieve_response_code($response); $body = wp_remote_retrieve_body($response);
@@ -207,12 +192,7 @@ function stock_scanner_plan_from_pmpro($user_id) {
         $level = pmpro_getMembershipLevelForUser($user_id);
         if ($level) {
             $plan['level_id'] = intval($level->id);
-            switch (intval($level->id)) {
-                case 2: $plan['name']='Premium'; $plan['slug']='premium'; $plan['premium']=true; break;
-                case 3: $plan['name']='Professional'; $plan['slug']='professional'; $plan['premium']=true; break;
-                case 4: $plan['name']='Gold'; $plan['slug']='gold'; $plan['premium']=true; break;
-                default: $plan['name']='Free'; $plan['slug']='free'; $plan['premium']=false; break;
-            }
+            switch (intval($level->id)) { case 2: $plan['name']='Premium'; $plan['slug']='premium'; $plan['premium']=true; break; case 3: $plan['name']='Professional'; $plan['slug']='professional'; $plan['premium']=true; break; case 4: $plan['name']='Gold'; $plan['slug']='gold'; $plan['premium']=true; break; default: $plan['name']='Free'; $plan['slug']='free'; $plan['premium']=false; break; }
         }
     }
     return $plan;
@@ -235,111 +215,41 @@ function stock_scanner_get_health_ajax() {
 add_action('wp_ajax_stock_scanner_get_health', 'stock_scanner_get_health_ajax');
 
 /* ---------------- Admin notice if API config missing ---------------- */
-function stock_scanner_admin_notices() {
-    if (!current_user_can('manage_options')) return;
-    $api_url = get_option('stock_scanner_api_url', '');
-    $api_secret = get_option('stock_scanner_api_secret', '');
-    if (empty($api_url) || empty($api_secret)) {
-        $settings_link = esc_url(admin_url('options-general.php?page=stock-scanner-settings'));
-        echo '<div class="notice notice-warning is-dismissible"><p>Stock Scanner: Please configure the API URL and Secret in <a href="' . $settings_link . '">Settings → Stock Scanner</a> to enable plan badges and health checks.</p></div>';
-    }
-}
+function stock_scanner_admin_notices() { if (!current_user_can('manage_options')) return; $api_url = get_option('stock_scanner_api_url', ''); $api_secret = get_option('stock_scanner_api_secret', ''); if (empty($api_url) || empty($api_secret)) { $settings_link = esc_url(admin_url('options-general.php?page=stock-scanner-settings')); echo '<div class="notice notice-warning is-dismissible"><p>Stock Scanner: Please configure the API URL and Secret in <a href="' . $settings_link . '">Settings → Stock Scanner</a> to enable plan badges and health checks.</p></div>'; } }
 add_action('admin_notices', 'stock_scanner_admin_notices');
 
 /* ---------------- Ensure screenshot.png exists ---------------- */
-function stock_scanner_ensure_screenshot() {
-    $path = get_stylesheet_directory() . '/screenshot.png';
-    if (file_exists($path)) return;
-    if (function_exists('imagecreatetruecolor')) {
-        $w=1200;$h=900; $im=imagecreatetruecolor($w,$h);
-        $bg=imagecolorallocate($im, 240, 242, 245); imagefilledrectangle($im,0,0,$w,$h,$bg);
-        $bar=imagecolorallocate($im, 102,126,234); imagefilledrectangle($im,0,0,$w,12,$bar);
-        $txt=imagecolorallocate($im, 51,65,85); imagestring($im, 5, 40, 40, 'Stock Scanner Theme', $txt);
-        imagestring($im, 3, 40, 70, 'Professional WordPress theme for stock analysis', $txt);
-        imagepng($im, $path); imagedestroy($im);
-        return;
-    }
-    $b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottQAAAABJRU5ErkJggg==';
-    file_put_contents($path, base64_decode($b64));
-}
+function stock_scanner_ensure_screenshot() { $path = get_stylesheet_directory() . '/screenshot.png'; if (file_exists($path)) return; if (function_exists('imagecreatetruecolor')) { $w=1200;$h=900; $im=imagecreatetruecolor($w,$h); $bg=imagecolorallocate($im, 240, 242, 245); imagefilledrectangle($im,0,0,$w,$h,$bg); $bar=imagecolorallocate($im, 102,126,234); imagefilledrectangle($im,0,0,$w,12,$bar); $txt=imagecolorallocate($im, 51,65,85); imagestring($im, 5, 40, 40, 'Stock Scanner Theme', $txt); imagestring($im, 3, 40, 70, 'Professional WordPress theme for stock analysis', $txt); imagepng($im, $path); imagedestroy($im); return; } $b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottQAAAABJRU5ErkJggg=='; file_put_contents($path, base64_decode($b64)); }
 add_action('admin_init', 'stock_scanner_ensure_screenshot');
 
 /* ---------------- Featured pages shortcode (no posts) ---------------- */
-function stock_scanner_featured_pages_shortcode($atts) {
-    $atts = shortcode_atts(array('ids'=>'','count'=>3,'parent'=>0), $atts, 'featured_pages');
-    $args = array('post_type'=>'page','posts_per_page'=>max(1,intval($atts['count'])),'orderby'=>'menu_order title','order'=>'ASC');
-    if (!empty($atts['ids'])) { $ids = array_map('intval', explode(',', $atts['ids'])); $args['post__in'] = $ids; $args['orderby']='post__in'; }
-    if (!empty($atts['parent'])) { $args['post_parent'] = intval($atts['parent']); }
-    $q = new WP_Query($args);
-    ob_start();
-    if ($q->have_posts()): ?>
-      <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-        <?php while($q->have_posts()): $q->the_post(); ?>
-          <article <?php post_class('card'); ?> >
-            <div class="card-header">
-              <h3 class="card-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
-            </div>
-            <div class="card-body">
-              <?php if (has_post_thumbnail()) { echo get_the_post_thumbnail(get_the_ID(),'medium_large',array('style'=>'border-radius:12px;width:100%;height:auto;margin-bottom:10px;','loading'=>'lazy','decoding'=>'async')); } ?>
-              <?php the_excerpt(); ?>
-            </div>
-            <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Learn More</span></a></div>
-          </article>
-        <?php endwhile; wp_reset_postdata(); ?>
-      </div>
-    <?php else: ?>
-      <div class="card"><div class="card-body">No pages selected.</div></div>
-    <?php endif; return ob_get_clean();
-}
+function stock_scanner_featured_pages_shortcode($atts) { $atts = shortcode_atts(array('ids'=>'','count'=>3,'parent'=>0), $atts, 'featured_pages'); $args = array('post_type'=>'page','posts_per_page'=>max(1,intval($atts['count'])),'orderby'=>'menu_order title','order'=>'ASC'); if (!empty($atts['ids'])) { $ids = array_map('intval', explode(',', $atts['ids'])); $args['post__in'] = $ids; $args['orderby']='post__in'; } if (!empty($atts['parent'])) { $args['post_parent'] = intval($atts['parent']); } $q = new WP_Query($args); ob_start(); if ($q->have_posts()): ?>
+  <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    <?php while($q->have_posts()): $q->the_post(); ?>
+      <article <?php post_class('card'); ?> >
+        <div class="card-header">
+          <h3 class="card-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+        </div>
+        <div class="card-body">
+          <?php if (has_post_thumbnail()) { echo get_the_post_thumbnail(get_the_ID(),'medium_large',array('style'=>'border-radius:12px;width:100%;height:auto;margin-bottom:10px;','loading'=>'lazy','decoding'=>'async')); } ?>
+          <?php the_excerpt(); ?>
+        </div>
+        <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Learn More</span></a></div>
+      </article>
+    <?php endwhile; wp_reset_postdata(); ?>
+  </div>
+<?php else: ?>
+  <div class="card"><div class="card-body">No pages selected.</div></div>
+<?php endif; return ob_get_clean(); }
 add_shortcode('featured_pages','stock_scanner_featured_pages_shortcode');
 
 /* ---------------- Customizer: brand colors & typography ---------------- */
-function stock_scanner_customize_register($wp_customize){
-    $wp_customize->add_section('ssc_branding', array('title'=>__('Branding','stock-scanner'),'priority'=>30));
-    $wp_customize->add_setting('ssc_primary_start', array('default'=>'#667eea','sanitize_callback'=>'sanitize_hex_color'));
-    $wp_customize->add_setting('ssc_primary_end', array('default'=>'#764ba2','sanitize_callback'=>'sanitize_hex_color'));
-    $wp_customize->add_setting('ssc_accent', array('default'=>'#f39c12','sanitize_callback'=>'sanitize_hex_color'));
-    $wp_customize->add_setting('ssc_radius', array('default'=>12,'sanitize_callback'=>'absint'));
-    $wp_customize->add_setting('ssc_body_font', array('default'=>'system','sanitize_callback'=>'sanitize_text_field'));
-    $wp_customize->add_setting('ssc_heading_font', array('default'=>'playfair','sanitize_callback'=>'sanitize_text_field'));
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize,'ssc_primary_start',array('label'=>__('Primary Gradient Start','stock-scanner'),'section'=>'ssc_branding')));
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize,'ssc_primary_end',array('label'=>__('Primary Gradient End','stock-scanner'),'section'=>'ssc_branding')));
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize,'ssc_accent',array('label'=>__('Accent Color','stock-scanner'),'section'=>'ssc_branding')));
-    $wp_customize->add_control('ssc_radius', array('type'=>'range','label'=>__('Corner Radius (px)','stock-scanner'),'section'=>'ssc_branding','input_attrs'=>array('min'=>0,'max'=>24,'step'=>1)));
-    $wp_customize->add_control('ssc_body_font', array('type'=>'select','label'=>__('Body Font','stock-scanner'),'section'=>'ssc_branding','choices'=>array('system'=>'System UI','inter'=>'Inter','poppins'=>'Poppins','georgia'=>'Georgia')));
-    $wp_customize->add_control('ssc_heading_font', array('type'=>'select','label'=>__('Heading Font','stock-scanner'),'section'=>'ssc_branding','choices'=>array('playfair'=>'Playfair Display','poppins'=>'Poppins','georgia'=>'Georgia','system'=>'System UI')));
-}
+function stock_scanner_customize_register($wp_customize){ $wp_customize->add_section('ssc_branding', array('title'=>__('Branding','stock-scanner'),'priority'=>30)); $wp_customize->add_setting('ssc_primary_start', array('default'=>'#667eea','sanitize_callback'=>'sanitize_hex_color')); $wp_customize->add_setting('ssc_primary_end', array('default'=>'#764ba2','sanitize_callback'=>'sanitize_hex_color')); $wp_customize->add_setting('ssc_accent', array('default'=>'#f39c12','sanitize_callback'=>'sanitize_hex_color')); $wp_customize->add_setting('ssc_radius', array('default'=>12,'sanitize_callback'=>'absint')); $wp_customize->add_setting('ssc_body_font', array('default'=>'system','sanitize_callback'=>'sanitize_text_field')); $wp_customize->add_setting('ssc_heading_font', array('default'=>'playfair','sanitize_callback'=>'sanitize_text_field')); $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize,'ssc_primary_start',array('label'=>__('Primary Gradient Start','stock-scanner'),'section'=>'ssc_branding'))); $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize,'ssc_primary_end',array('label'=>__('Primary Gradient End','stock-scanner'),'section'=>'ssc_branding'))); $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize,'ssc_accent',array('label'=>__('Accent Color','stock-scanner'),'section'=>'ssc_branding'))); $wp_customize->add_control('ssc_radius', array('type'=>'range','label'=>__('Corner Radius (px)','stock-scanner'),'section'=>'ssc_branding','input_attrs'=>array('min'=>0,'max'=>24,'step'=>1))); $wp_customize->add_control('ssc_body_font', array('type'=>'select','label'=>__('Body Font','stock-scanner'),'section'=>'ssc_branding','choices'=>array('system'=>'System UI','inter'=>'Inter','poppins'=>'Poppins','georgia'=>'Georgia'))); $wp_customize->add_control('ssc_heading_font', array('type'=>'select','label'=>__('Heading Font','stock-scanner'),'section'=>'ssc_branding','choices'=>array('playfair'=>'Playfair Display','poppins'=>'Poppins','georgia'=>'Georgia','system'=>'System UI'))); }
 add_action('customize_register', 'stock_scanner_customize_register');
 
-function stock_scanner_customizer_css() {
-    $start = get_theme_mod('ssc_primary_start', '#667eea');
-    $end = get_theme_mod('ssc_primary_end', '#764ba2');
-    $accent = get_theme_mod('ssc_accent', '#f39c12');
-    $radius = intval(get_theme_mod('ssc_radius', 12));
-    $body_font = get_theme_mod('ssc_body_font', 'system');
-    $heading_font = get_theme_mod('ssc_heading_font', 'playfair');
-    $fonts = array(
-        'system' => "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        'inter' => "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        'poppins' => "'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        'georgia' => "'Georgia', 'Times New Roman', serif",
-        'playfair' => "'Playfair Display', 'Georgia', serif",
-    );
-    $body_stack = isset($fonts[$body_font]) ? $fonts[$body_font] : $fonts['system'];
-    $heading_stack = isset($fonts[$heading_font]) ? $fonts[$heading_font] : $fonts['playfair'];
-    ?>
-    <style id="stock-scanner-customizer-vars">
-      :root{
-        --primary-gradient: linear-gradient(135deg, <?php echo esc_html($start); ?> 0%, <?php echo esc_html($end); ?> 100%);
-        --accent-gold: <?php echo esc_html($accent); ?>;
-        --radius-xl: <?php echo $radius; ?>px;
-        --font-primary: <?php echo esc_html($body_stack); ?>;
-        --font-heading: <?php echo esc_html($heading_stack); ?>;
-      }
-      .btn-gold{ background: linear-gradient(135deg, var(--accent-gold) 0%, #e67e22 100%); }
-    </style>
-    <?php
-}
+function stock_scanner_customizer_css() { $start = get_theme_mod('ssc_primary_start', '#667eea'); $end = get_theme_mod('ssc_primary_end', '#764ba2'); $accent = get_theme_mod('ssc_accent', '#f39c12'); $radius = intval(get_theme_mod('ssc_radius', 12)); $body_font = get_theme_mod('ssc_body_font', 'system'); $heading_font = get_theme_mod('ssc_heading_font', 'playfair'); $fonts = array('system' => "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif", 'inter' => "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif", 'poppins' => "'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif", 'georgia' => "'Georgia', 'Times New Roman', serif", 'playfair' => "'Playfair Display', 'Georgia', serif", ); $body_stack = isset($fonts[$body_font]) ? $fonts[$body_font] : $fonts['system']; $heading_stack = isset($fonts[$heading_font]) ? $fonts[$heading_font] : $fonts['playfair']; ?>
+<style id="stock-scanner-customizer-vars">:root{--primary-gradient: linear-gradient(135deg, <?php echo esc_html($start); ?> 0%, <?php echo esc_html($end); ?> 100%); --accent-gold: <?php echo esc_html($accent); ?>; --radius-xl: <?php echo $radius; ?>px; --font-primary: <?php echo esc_html($body_stack); ?>; --font-heading: <?php echo esc_html($heading_stack); ?>;} .btn-gold{ background: linear-gradient(135deg, var(--accent-gold) 0%, #e67e22 100%); }</style>
+<?php }
 add_action('wp_head','stock_scanner_customizer_css', 20);
 
 ?>

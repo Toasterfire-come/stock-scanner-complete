@@ -1,18 +1,24 @@
 /**
  * Stock Scanner Theme JavaScript
- * Enhanced functionality for the theme
+ * Enhanced functionality + session & plan badge behavior
  */
 
 jQuery(document).ready(function($) {
-    // Smooth scroll for anchors
-    $('a[href*="#"]').on('click', function(e) {
-        const href = $(this).attr('href') || '';
-        if (href.startsWith('#')) {
-            const target = $(href);
-            if (target.length) {
-                e.preventDefault();
-                $('html, body').stop().animate({ scrollTop: target.offset().top - 100 }, 600);
-            }
+    const cfg = window.stock_scanner_theme || {};
+    const isLoggedIn = !!cfg.logged_in;
+    const userId = cfg.user_id || 0;
+    const planKey = userId ? `ssc_plan_info_${userId}` : null;
+    const loginKey = 'ssc_logged_in_user';
+    const activityKey = 'ssc_last_activity';
+    const idleLimitMs = 12 * 60 * 60 * 1000; // 12 hours
+
+    // Smooth scroll for internal anchors
+    $('a[href^="#"]').on('click', function(e) {
+        const href = $(this).attr('href');
+        const target = $(href);
+        if (target.length) {
+            e.preventDefault();
+            $('html, body').animate({ scrollTop: target.offset().top - 100 }, 600);
         }
     });
 
@@ -27,64 +33,75 @@ jQuery(document).ready(function($) {
         });
     }
 
-    // Dropdown / mega submenu toggles (click and keyboard)
+    // Dropdown / mega submenu toggles
     $(document).on('click', '.submenu-toggle', function(e){
         e.preventDefault();
         const $btn = $(this);
         const $li = $btn.closest('li');
         const expanded = $li.toggleClass('open').hasClass('open');
         $btn.attr('aria-expanded', expanded);
-        const $link = $li.children('a.top-link');
-        $link.attr('aria-expanded', expanded);
+        $li.children('a.top-link').attr('aria-expanded', expanded);
     });
-    // Close on outside click
     $(document).on('click', function(e){
         if (!$(e.target).closest('.main-nav').length) {
             $('.main-nav .open').removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false');
         }
     });
-    // Keyboard support
-    $(document).on('keydown', '.main-nav .menu-item', function(e){
-        if (e.key === 'Escape') {
-            $(this).removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false').blur();
+    $(document).on('keydown', '.main-nav .menu-item', function(e){ if (e.key === 'Escape') { $(this).removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false').blur(); } });
+
+    // Session: track activity and auto-logout after 12h idle (browser-side)
+    function markActivity(){ localStorage.setItem(activityKey, String(Date.now())); }
+    function getLastActivity(){ const v = localStorage.getItem(activityKey); return v ? parseInt(v, 10) : 0; }
+    function shouldLogout(){ const last = getLastActivity(); if (!last) return false; return (Date.now() - last) > idleLimitMs; }
+    if (isLoggedIn) {
+        // Check idle on load
+        if (shouldLogout()) {
+            if (cfg.logout_url) window.location.assign(cfg.logout_url);
+        } else {
+            // Bind activity events and periodic check
+            ['click','keydown','mousemove','scroll','touchstart','visibilitychange'].forEach(ev => {
+                window.addEventListener(ev, function(){ if (document.visibilityState !== 'hidden') markActivity(); }, { passive: true });
+            });
+            markActivity();
+            setInterval(function(){ if (shouldLogout() && cfg.logout_url) window.location.assign(cfg.logout_url); }, 60000);
         }
-    });
-
-    // Sticky header hide/show on scroll
-    let lastScrollTop = 0;
-    $(window).on('scroll', function() {
-        const scrollTop = $(this).scrollTop();
-        const header = $('.site-header');
-        if (scrollTop > lastScrollTop && scrollTop > 100) header.addClass('header-hidden'); else header.removeClass('header-hidden');
-        lastScrollTop = scrollTop;
-    });
-
-    // Animate-in on scroll
-    function animateOnScroll() {
-        $('.stock-row, .pricing-plan, .watchlist-container, .card').each(function() {
-            const t = $(this).offset().top, b = t + $(this).outerHeight();
-            const vt = $(window).scrollTop(), vb = vt + $(window).height();
-            if (b > vt && t < vb) $(this).addClass('animate-in');
-        });
+    } else {
+        // Clear markers on logged-out
+        try { localStorage.removeItem(activityKey); localStorage.removeItem(loginKey); } catch(e){}
     }
-    $(window).on('scroll', animateOnScroll); animateOnScroll();
 
-    // Plan badge fetch
-    async function fetchPlanBadge() {
-        if (!window.stock_scanner_theme || !stock_scanner_theme.logged_in) return;
-        const $badge = $('#plan-badge'); if (!$badge.length) return;
-        try {
-            const res = await $.post(stock_scanner_theme.ajax_url, { action: 'stock_scanner_get_current_plan', nonce: stock_scanner_theme.nonce });
-            if (res && res.success) {
-                let plan = null;
-                if (res.data && res.data.data && res.data.data.plan) plan = res.data.data.plan; else if (res.data && res.data.plan) plan = res.data.plan;
-                let name = 'Free', slug = 'free';
-                if (plan && (plan.name || plan.slug)) { name = plan.name || plan.slug; slug = plan.slug || (name || 'free').toLowerCase(); }
-                $badge.text(name).removeClass('premium professional gold silver').addClass(slug).attr('title','Billing plan: ' + name);
-            } else { $badge.text('Free'); }
-        } catch (e) { console.error('Plan badge error', e); }
+    // Plan badge: only fetch on sign-in. Use cached value otherwise.
+    const $planBadge = $('#plan-badge');
+    function setPlanBadge(name, slug){ if (!$planBadge.length) return; name = name || 'Free'; slug = (slug || name || 'Free').toLowerCase(); $planBadge.text(name).removeClass('premium professional gold silver free').addClass(slug).attr('title','Billing plan: '+name); }
+    function loadPlanFromCache(){ if (!planKey) return null; try { const raw = localStorage.getItem(planKey); return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
+    function savePlanToCache(plan){ if (!planKey) return; try { localStorage.setItem(planKey, JSON.stringify({ plan, t: Date.now() })); } catch(e){} }
+
+    if (isLoggedIn) {
+        const prevUser = localStorage.getItem(loginKey);
+        const isNewLogin = String(userId || '') !== String(prevUser || '');
+        if (isNewLogin) {
+            // Fetch fresh on new login only
+            if ($planBadge.length) {
+                $.post(cfg.ajax_url, { action: 'stock_scanner_get_current_plan', nonce: cfg.nonce })
+                 .done(function(res){
+                    let plan = null; if (res && res.success) { if (res.data && res.data.data && res.data.data.plan) plan = res.data.data.plan; else if (res.data && res.data.plan) plan = res.data.plan; }
+                    const name = (plan && (plan.name || plan.slug)) ? (plan.name || plan.slug) : 'Free';
+                    const slug = (plan && (plan.slug || plan.name)) ? (plan.slug || plan.name).toLowerCase() : 'free';
+                    setPlanBadge(name, slug);
+                    savePlanToCache({ name, slug });
+                 })
+                 .fail(function(){ const c = loadPlanFromCache(); if (c && c.plan) setPlanBadge(c.plan.name, c.plan.slug); else setPlanBadge('Free','free'); });
+            }
+            localStorage.setItem(loginKey, String(userId || ''));
+        } else {
+            // Use cached plan on normal navigations
+            const cached = loadPlanFromCache();
+            if (cached && cached.plan) setPlanBadge(cached.plan.name, cached.plan.slug); else setPlanBadge('Free','free');
+        }
+    } else {
+        // Logged out: clear cached login marker (retain plan cache per user id if desired)
+        try { localStorage.removeItem(loginKey); } catch(e){}
     }
-    fetchPlanBadge();
 
     // Market status chip
     function updateMarketClock() {
@@ -104,20 +121,14 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Performance log
-    if (performance.mark && performance.measure) {
-        performance.mark('theme-js-loaded');
-        window.addEventListener('load', function(){ performance.mark('page-loaded'); performance.measure('page-load-time','navigationStart','page-loaded'); });
-    }
+    // Performance markers
+    if (performance.mark && performance.measure) { performance.mark('theme-js-loaded'); window.addEventListener('load', function(){ performance.mark('page-loaded'); performance.measure('page-load-time','navigationStart','page-loaded'); }); }
 });
 
-// Inject extra styles
+// Inject extra styles (dropdowns, mega-menu)
 const themeStyles = `
 <style>
-/* Mobile nav */
-@media (max-width: 768px){ .mobile-menu-toggle{display:block;background:none;border:none;color:#111827;font-size:1.5rem;cursor:pointer;padding:.5rem} .main-nav{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--medium-gray);border-radius:12px;box-shadow:var(--shadow-xl);padding:10px;margin:8px} .main-nav.mobile-active{display:block} .main-nav ul{flex-direction:column;gap:.25rem} }
-
-/* Dropdowns */
+@media (max-width: 768px){ .mobile-menu-toggle{display:block;background:none;border:none;color:#111827;font-size:1.5rem;cursor:pointer;padding:.5rem} .main-nav{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--medium-gray);border-radius:12px;box-shadow:var(--shadow-xl);padding:10px;margin:8px;z-index:1000} .main-nav.mobile-active{display:block} .main-nav ul{flex-direction:column;gap:.25rem} }
 .main-nav .menu-item{position:relative}
 .main-nav .sub-menu{position:absolute; top:calc(100% + 8px); left:0; background:#fff; border:1px solid var(--medium-gray); border-radius:12px; min-width:240px; box-shadow:var(--shadow-xl); opacity:0; transform: translateY(8px); pointer-events:none; transition: all .18s ease; z-index: 1000; padding:6px}
 .main-nav .menu-item.open > .sub-menu, .main-nav .menu-item:hover > .sub-menu{opacity:1; transform: translateY(0); pointer-events:auto}
@@ -127,15 +138,11 @@ const themeStyles = `
 .main-nav .menu-item.open > .submenu-toggle .submenu-caret{transform: rotate(180deg)}
 .main-nav .sub-menu a.sub-link{padding:8px 12px; display:block; border-radius:8px}
 .main-nav .sub-menu a.sub-link:hover{background:var(--light-gray)}
-
-/* Mega menu when a top-level item has class "mega" */
 .main-nav .menu-item.mega{position:static}
 .main-nav .menu-item.mega > .sub-menu{left:50%; transform: translate(-50%, 8px); width:min(1100px, calc(100% - 40px)); padding:16px}
 .main-nav .menu-item.mega > .sub-menu{display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px}
 .main-nav .menu-item.mega > .sub-menu > li{padding:8px 6px}
 .main-nav .menu-item.mega > .sub-menu > li > a{font-weight:600}
-
-/* Animations */
 .animate-in{animation: slideInUp .5s ease-out}
 @keyframes slideInUp{from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)}}
 </style>`;
