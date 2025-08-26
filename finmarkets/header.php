@@ -1,7 +1,5 @@
 <?php
-/**
- * Theme Header (updated to use optional walker)
- */
+/** Theme Header with Skip Link and ARIA nav */
 ?><!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -12,19 +10,14 @@
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
-<header class="site-header">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header" role="banner">
     <div class="container">
         <div class="header-content">
             <a href="<?php echo esc_url(home_url('/')); ?>" class="site-title">
-                <?php
-                if (function_exists('the_custom_logo') && has_custom_logo()) {
-                    the_custom_logo();
-                } else {
-                    echo '📈 ' . esc_html(get_bloginfo('name'));
-                }
-                ?>
+                <?php if (function_exists('the_custom_logo') && has_custom_logo()) { the_custom_logo(); } else { echo '📈 ' . esc_html(get_bloginfo('name')); } ?>
             </a>
-            <nav class="main-nav">
+            <nav class="main-nav" role="navigation" aria-label="Primary Navigation">
                 <?php
                 $walker = class_exists('StockScanner_Nav_Walker') ? new StockScanner_Nav_Walker() : null;
                 wp_nav_menu(array(
@@ -39,16 +32,11 @@
                 <?php if (is_user_logged_in()): ?>
                     <?php
                     $user_level = 0;
-                    if (function_exists('pmpro_getMembershipLevelForUser')) {
-                        $level = pmpro_getMembershipLevelForUser(get_current_user_id());
-                        $user_level = $level ? intval($level->id) : 0;
-                    }
+                    if (function_exists('pmpro_getMembershipLevelForUser')) { $level = pmpro_getMembershipLevelForUser(get_current_user_id()); $user_level = $level ? intval($level->id) : 0; }
                     $level_names = array(0 => 'Free', 1 => 'Free', 2 => 'Premium', 3 => 'Professional', 4 => 'Gold');
                     $level_classes = array(0 => '', 1 => '', 2 => 'premium', 3 => 'professional', 4 => 'gold');
                     ?>
-                    <span class="membership-badge <?php echo esc_attr(isset($level_classes[$user_level]) ? $level_classes[$user_level] : ''); ?>">
-                        <?php echo esc_html(isset($level_names[$user_level]) ? $level_names[$user_level] : 'Member'); ?>
-                    </span>
+                    <span class="membership-badge <?php echo esc_attr(isset($level_classes[$user_level]) ? $level_classes[$user_level] : ''); ?>"><?php echo esc_html(isset($level_names[$user_level]) ? $level_names[$user_level] : 'Member'); ?></span>
                     <span id="plan-badge" class="plan-badge" title="Billing plan">...</span>
                     <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>">Logout</a>
                 <?php else: ?>
