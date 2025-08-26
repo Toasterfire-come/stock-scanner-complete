@@ -980,10 +980,26 @@ a:hover, a:focus {
   color: var(--gray-600);
   text-decoration: none;
   transition: color var(--transition-fast);
+  position: relative;
+}
+
+.breadcrumb-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-gradient);
+  transition: width 0.2s ease;
 }
 
 .breadcrumb-link:hover {
   color: var(--primary-blue);
+}
+
+.breadcrumb-link:hover::after {
+  width: 100%;
 }
 
 .breadcrumb-current {
