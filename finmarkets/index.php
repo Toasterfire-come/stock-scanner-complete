@@ -44,6 +44,7 @@
                         <span class="membership-badge <?php echo $level_classes[$user_level]; ?>">
                             <?php echo $level_names[$user_level]; ?>
                         </span>
+                        <span id="plan-badge" class="plan-badge" title="Billing plan">...</span>
                         
                         <a href="<?php echo wp_logout_url(home_url()); ?>">Logout</a>
                     <?php else: ?>
@@ -59,7 +60,7 @@
         <div class="container">
             <?php if (have_posts()): ?>
                 <?php while (have_posts()): the_post(); ?>
-                    <article <?php post_class(); ?>>
+                    <article <?php post_class(); ?> >
                         <div class="page-header">
                             <h1 class="page-title"><?php the_title(); ?></h1>
                             <?php if (get_the_excerpt()): ?>

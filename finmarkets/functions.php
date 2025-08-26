@@ -42,7 +42,8 @@ function stock_scanner_scripts() {
     // Localize script for AJAX
     wp_localize_script('stock-scanner-js', 'stock_scanner_theme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('stock_scanner_theme_nonce')
+        'nonce' => wp_create_nonce('stock_scanner_theme_nonce'),
+        'logged_in' => is_user_logged_in(),
     ));
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
@@ -331,8 +332,168 @@ function stock_scanner_membership_styles() {
         .membership-professional .upgrade-notice {
             display: none;
         }
+        
+        /* Plan badge default styling */
+        .plan-badge {
+            background: #eef0f2;
+            border: 2px solid #cfd6dd;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .plan-badge.premium { border-color: #f39c12; color: #f39c12; }
+        .plan-badge.professional { border-color: #9b59b6; color: #9b59b6; }
+        .plan-badge.gold { border-color: #c9a961; color: #c9a961; }
+        .plan-badge.silver { border-color: #95a5a6; color: #95a5a6; }
     </style>
     <?php
 }
 add_action('wp_head', 'stock_scanner_membership_styles');
+
+/**
+ * AJAX: Fetch current plan by calling backend through server-side (do not expose secret)
+ */
+function stock_scanner_get_current_plan_ajax() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Unauthenticated'), 401);
+    }
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+
+    $api_base = rtrim(get_option('stock_scanner_api_url', ''), '/');
+    $secret = get_option('stock_scanner_api_secret', '');
+
+    if (empty($api_base) || empty($secret)) {
+        // Fall back to PMPro level mapping if API not configured
+        $user_id = get_current_user_id();
+        $plan = stock_scanner_plan_from_pmpro($user_id);
+        wp_send_json_success(array('source' => 'pmpro', 'plan' => $plan));
+    }
+
+    $url = $api_base . '/billing/current-plan';
+
+    $user_id = get_current_user_id();
+    $level_id = 0;
+    if (function_exists('pmpro_getMembershipLevelForUser')) {
+        $level = pmpro_getMembershipLevelForUser($user_id);
+        $level_id = $level ? intval($level->id) : 0;
+    }
+
+    $args = array(
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            'X-API-Secret' => $secret,
+            'X-User-Level' => $level_id,
+            'X-User-ID' => $user_id,
+        ),
+        'timeout' => 20,
+    );
+
+    $response = wp_remote_get($url, $args);
+    if (is_wp_error($response)) {
+        // Fallback to PMPro
+        $plan = stock_scanner_plan_from_pmpro($user_id);
+        wp_send_json_success(array('source' => 'fallback', 'plan' => $plan, 'error' => $response->get_error_message()));
+    }
+
+    $code = wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+
+    if ($code >= 200 && $code < 300) {
+        $data = json_decode($body, true);
+        if (!$data) {
+            // Not JSON, wrap raw
+            wp_send_json_success(array('source' => 'backend', 'raw' => $body));
+        }
+        wp_send_json_success(array('source' => 'backend', 'data' => $data));
+    }
+
+    // Non-2xx, fallback
+    $plan = stock_scanner_plan_from_pmpro($user_id);
+    wp_send_json_success(array('source' => 'fallback', 'plan' => $plan, 'status' => $code));
+}
+add_action('wp_ajax_stock_scanner_get_current_plan', 'stock_scanner_get_current_plan_ajax');
+// no_nopriv on purpose: only for signed-in users
+
+/**
+ * Map PMPro level to a simple plan descriptor
+ */
+function stock_scanner_plan_from_pmpro($user_id) {
+    $plan = array(
+        'name' => 'Free',
+        'slug' => 'free',
+        'premium' => false,
+        'level_id' => 0,
+    );
+    if (function_exists('pmpro_getMembershipLevelForUser')) {
+        $level = pmpro_getMembershipLevelForUser($user_id);
+        if ($level) {
+            $plan['level_id'] = intval($level->id);
+            switch (intval($level->id)) {
+                case 2:
+                    $plan['name'] = 'Premium';
+                    $plan['slug'] = 'premium';
+                    $plan['premium'] = true;
+                    break;
+                case 3:
+                    $plan['name'] = 'Professional';
+                    $plan['slug'] = 'professional';
+                    $plan['premium'] = true;
+                    break;
+                case 4:
+                    $plan['name'] = 'Gold';
+                    $plan['slug'] = 'gold';
+                    $plan['premium'] = true;
+                    break;
+                default:
+                    $plan['name'] = 'Free';
+                    $plan['slug'] = 'free';
+                    $plan['premium'] = false;
+            }
+        }
+    }
+    return $plan;
+}
+
+/**
+ * AJAX: Fetch backend health (Admin only)
+ */
+function stock_scanner_get_health_ajax() {
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => 'Forbidden'), 403);
+    }
+    check_ajax_referer('stock_scanner_theme_nonce', 'nonce');
+
+    $api_base = rtrim(get_option('stock_scanner_api_url', ''), '/');
+    $secret = get_option('stock_scanner_api_secret', '');
+
+    if (empty($api_base)) {
+        wp_send_json_error(array('message' => 'API base not configured'));
+    }
+
+    $url = $api_base . '/health';
+
+    $headers = array('Content-Type' => 'application/json');
+    if (!empty($secret)) {
+        $headers['X-API-Secret'] = $secret;
+    }
+
+    $response = wp_remote_get($url, array('headers' => $headers, 'timeout' => 15));
+    if (is_wp_error($response)) {
+        wp_send_json_error(array('message' => $response->get_error_message()));
+    }
+
+    $code = wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+
+    // Try decode JSON else return raw
+    $data = json_decode($body, true);
+    if ($data === null) {
+        wp_send_json_success(array('status' => $code, 'raw' => $body));
+    }
+    wp_send_json_success(array('status' => $code, 'data' => $data));
+}
+add_action('wp_ajax_stock_scanner_get_health', 'stock_scanner_get_health_ajax');
+
 ?>

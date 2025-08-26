@@ -4,7 +4,6 @@
  */
 
 jQuery(document).ready(function($) {
-    
     /**
      * Smooth scrolling for anchor links
      */
@@ -72,6 +71,44 @@ jQuery(document).ready(function($) {
     // Run on scroll and initial load
     $(window).on('scroll', animateOnScroll);
     animateOnScroll();
+
+    /**
+     * Plan badge: fetch billing/current-plan via server-side AJAX
+     */
+    async function fetchPlanBadge() {
+        if (!window.stock_scanner_theme || !stock_scanner_theme.logged_in) return;
+        const $badge = $('#plan-badge');
+        if (!$badge.length) return;
+        try {
+            const res = await $.post(stock_scanner_theme.ajax_url, {
+                action: 'stock_scanner_get_current_plan',
+                nonce: stock_scanner_theme.nonce,
+            });
+            if (res && res.success) {
+                let plan = null;
+                if (res.data && res.data.data && res.data.data.plan) {
+                    plan = res.data.data.plan;
+                } else if (res.data && res.data.plan) {
+                    plan = res.data.plan;
+                }
+                // res.data may be {plan:{name, slug}} or backend raw
+                let name = 'Free';
+                let slug = 'free';
+                if (plan && (plan.name || plan.slug)) {
+                    name = plan.name || plan.slug;
+                    slug = plan.slug || (name || 'free').toLowerCase();
+                }
+                $badge.text(name);
+                $badge.removeClass('premium professional gold silver').addClass(slug);
+                $badge.attr('title', 'Billing plan: ' + name);
+            } else {
+                $badge.text('Free');
+            }
+        } catch (e) {
+            console.error('Plan badge error', e);
+        }
+    }
+    fetchPlanBadge();
     
     /**
      * Real-time clock for market hours
@@ -220,7 +257,6 @@ jQuery(document).ready(function($) {
             }
         });
     });
-    
 });
 
 /**
