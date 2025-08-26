@@ -120,8 +120,56 @@ jQuery(document).ready(function($) {
     $(document).on('click', '#session-data-link', function(e){ e.preventDefault(); toggleDataPopover(this); });
     $(document).on('click', function(e){ if (!$(e.target).closest('#session-data-popover, #session-data-link').length) { $('#session-data-popover').removeClass('visible').addClass('hidden'); } });
 
-    // Clear session data link
-    $(document).on('click', '#clear-session-data', function(e){ e.preventDefault(); if (!confirm('Clear cached session data (plan cache and activity markers)?')) return; try { if (planKey) localStorage.removeItem(planKey); localStorage.removeItem(activityKey); delCookie('ssc_plan'); delCookie('ssc_last_activity'); } catch(err){} markActivity(); setPlanBadge('Free','free'); alert('Cleared. Some data may repopulate on next sign-in.'); });
+    // Clear session data link with better UX
+    $(document).on('click', '#clear-session-data', function(e){ 
+        e.preventDefault(); 
+        
+        // Create confirmation modal instead of alert
+        const modal = $(`
+            <div class="session-modal confirmation-modal" role="dialog" aria-modal="true">
+                <div class="session-modal-backdrop"></div>
+                <div class="session-modal-panel">
+                    <h3>Clear Session Data</h3>
+                    <p>This will clear cached session data including plan cache and activity markers. Continue?</p>
+                    <div class="session-modal-actions">
+                        <button class="btn btn-primary confirm-clear">Yes, Clear Data</button>
+                        <button class="btn btn-secondary cancel-clear">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        modal.removeClass('hidden').addClass('visible');
+        
+        // Handle confirmation
+        modal.find('.confirm-clear').on('click', function() {
+            try { 
+                if (planKey) localStorage.removeItem(planKey); 
+                localStorage.removeItem(activityKey); 
+                delCookie('ssc_plan'); 
+                delCookie('ssc_last_activity'); 
+            } catch(err){} 
+            markActivity(); 
+            setPlanBadge('Free','free');
+            
+            // Show success message
+            const successMsg = $('<div class="notice notice-success"><p>Session data cleared successfully. Some data may repopulate on next sign-in.</p></div>');
+            $('body').prepend(successMsg);
+            setTimeout(() => successMsg.fadeOut(), 3000);
+            
+            modal.remove();
+        });
+        
+        modal.find('.cancel-clear').on('click', function() {
+            modal.remove();
+        });
+        
+        // Close on backdrop click
+        modal.find('.session-modal-backdrop').on('click', function() {
+            modal.remove();
+        });
+    });
 });
 
 // Note: CSS styles are now handled by the main stylesheet (style.css)
