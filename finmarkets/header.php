@@ -1,6 +1,6 @@
 <?php
 /**
- * Theme Header
+ * Theme Header (updated to use optional walker)
  */
 ?><!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -26,10 +26,12 @@
             </a>
             <nav class="main-nav">
                 <?php
+                $walker = class_exists('StockScanner_Nav_Walker') ? new StockScanner_Nav_Walker() : null;
                 wp_nav_menu(array(
                     'theme_location' => 'primary',
                     'menu_class' => 'main-menu',
-                    'fallback_cb' => 'stock_scanner_fallback_menu'
+                    'fallback_cb' => 'stock_scanner_fallback_menu',
+                    'walker' => $walker
                 ));
                 ?>
             </nav>
