@@ -1,15 +1,14 @@
 <?php
 /**
- * Search Results Template
+ * Search pages only (no posts)
  */
 get_header();
 ?>
-<main class="site-main">
+<main id="main-content" class="site-main">
   <div class="container">
     <?php get_template_part('template-parts/breadcrumbs'); ?>
     <div class="page-header">
-      <h1 class="page-title">Search results for “<?php echo esc_html(get_search_query()); ?>”</h1>
-      <p class="page-description">Refine your search below if you don't see what you need.</p>
+      <h1 class="page-title">Search pages for “<?php echo esc_html(get_search_query()); ?>”</h1>
       <div style="max-width:640px; margin: 0 auto;"><?php get_search_form(); ?></div>
     </div>
 
@@ -19,27 +18,15 @@ get_header();
           <article <?php post_class('card'); ?> >
             <div class="card-header">
               <h2 class="card-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
-              <div class="card-subtitle"><?php echo esc_html(get_the_date()); ?></div>
             </div>
-            <div class="card-body">
-              <?php the_excerpt(); ?>
-            </div>
-            <div class="card-footer">
-              <a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Read More</span></a>
-            </div>
+            <div class="card-body"><?php the_excerpt(); ?></div>
+            <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Open Page</span></a></div>
           </article>
         <?php endwhile; ?>
       </div>
-      <div class="d-flex justify-content-center">
-        <?php the_posts_pagination(); ?>
-      </div>
+      <div class="d-flex justify-content-center"><?php the_posts_pagination(); ?></div>
     <?php else: ?>
-      <div class="card">
-        <div class="card-body">
-          <p>No results found. Try a different search.</p>
-          <?php get_search_form(); ?>
-        </div>
-      </div>
+      <div class="card"><div class="card-body">No pages found. Try another search.</div></div>
     <?php endif; ?>
   </div>
 </main>

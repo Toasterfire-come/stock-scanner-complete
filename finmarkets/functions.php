@@ -1,6 +1,6 @@
 <?php
 /**
- * Stock Scanner Theme Functions
+ * Stock Scanner Theme Functions (posts removed from public views)
  */
 if (!defined('ABSPATH')) { exit; }
 
@@ -31,15 +31,11 @@ add_action('widgets_init', 'stock_scanner_register_sidebars');
 
 /* ---------------- Enqueue styles/scripts ---------------- */
 function stock_scanner_scripts() {
-    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '1.1.0');
+    wp_enqueue_style('stock-scanner-style', get_stylesheet_uri(), array(), '1.2.0');
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '3.9.1', true);
-    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.1.0', true);
-    // Defer non-critical scripts for perf
-    if (function_exists('wp_script_add_data')) {
-        wp_script_add_data('stock-scanner-js', 'defer', true);
-        wp_script_add_data('chart-js', 'defer', true);
-    }
-    wp_localize_script('stock-scanner-js', 'stock_scanner_theme', array(
+    wp_enqueue_script('stock-scanner-js', get_template_directory_uri() . '/js/theme.js', array('jquery'), '1.2.0', true);
+    if (function_exists('wp_script_add_data')) { wp_script_add_data('stock-scanner-js', 'defer', true); wp_script_add_data('chart-js', 'defer', true); }
+    wp_localize_script('stock_scanner-js', 'stock_scanner_theme', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('stock_scanner_theme_nonce'),
         'logged_in' => is_user_logged_in(),
@@ -47,7 +43,6 @@ function stock_scanner_scripts() {
 }
 add_action('wp_enqueue_scripts', 'stock_scanner_scripts');
 
-/* Preconnect to Google Fonts for perf */
 function stock_scanner_resource_hints($hints, $relation_type) {
     if ('preconnect' === $relation_type) {
         $hints[] = 'https://fonts.googleapis.com';
@@ -138,7 +133,7 @@ function stock_scanner_options_page() {
 function stock_scanner_remove_admin_bar() { if (!current_user_can('administrator') && !is_admin()) { show_admin_bar(false); } }
 add_action('after_setup_theme', 'stock_scanner_remove_admin_bar');
 
-/* ---------------- Membership & plan badge styles ---------------- */
+/* ---------------- Membership & plan badge styles + a11y ---------------- */
 function stock_scanner_membership_styles() {
     ?>
     <style>
@@ -147,18 +142,40 @@ function stock_scanner_membership_styles() {
         .membership-premium .upgrade-notice,.membership-professional .upgrade-notice{display:none}
         .plan-badge{background:#eef0f2;border:2px solid #cfd6dd;padding:6px 12px;border-radius:999px;font-size:.85rem;font-weight:600;color:#334155}
         .plan-badge.premium{border-color:#f39c12;color:#f39c12}.plan-badge.professional{border-color:#9b59b6;color:#9b59b6}.plan-badge.gold{border-color:#c9a961;color:#c9a961}.plan-badge.silver{border-color:#95a5a6;color:#95a5a6}
-        /* Widgets */
         .widget{background:var(--white);border:1px solid var(--medium-gray);border-radius:12px;padding:18px;box-shadow:var(--shadow-sm)}
         .widget-title{margin:0 0 12px;background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        /* Skip link */
         .skip-link{position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden}
         .skip-link:focus{position:absolute;left:12px;top:12px;width:auto;height:auto;padding:8px 12px;background:#111827;color:#fff;border-radius:8px;z-index:9999}
-        /* Focus visible */
-        a:focus-visible, button:focus-visible, input:focus-visible{outline:3px solid #667eea;outline-offset:2px;border-radius:6px}
+        a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #667eea;outline-offset:2px;border-radius:6px}
     </style>
     <?php
 }
 add_action('wp_head', 'stock_scanner_membership_styles');
+
+/* ---------------- Keep posts out: redirect/404 post views ---------------- */
+function stock_scanner_block_posts_templates() {
+    if (is_admin()) return;
+    // Redirect blog index to home if not using a static front page
+    if (is_home() && !is_front_page()) {
+        wp_redirect(home_url('/'), 301); exit;
+    }
+    // Block single blog posts
+    if (is_single() && get_post_type() === 'post') {
+        global $wp_query; $wp_query->set_404(); status_header(404); include(get_query_template('404')); exit;
+    }
+    // Block typical post archives
+    if (is_category() || is_tag() || is_date() || (function_exists('is_post_type_archive') && is_post_type_archive('post'))) {
+        global $wp_query; $wp_query->set_404(); status_header(404); include(get_query_template('404')); exit;
+    }
+}
+add_action('template_redirect', 'stock_scanner_block_posts_templates');
+
+/* Force search to pages only */
+function stock_scanner_filter_queries($q){
+    if (is_admin() || !$q->is_main_query()) return;
+    if ($q->is_search()) { $q->set('post_type', array('page')); }
+}
+add_action('pre_get_posts','stock_scanner_filter_queries');
 
 /* ---------------- AJAX: plan badge via backend ---------------- */
 function stock_scanner_get_current_plan_ajax() {
@@ -247,14 +264,13 @@ function stock_scanner_ensure_screenshot() {
 }
 add_action('admin_init', 'stock_scanner_ensure_screenshot');
 
-/* ---------------- Featured posts shortcode ---------------- */
-function stock_scanner_featured_posts_shortcode($atts) {
-    $atts = shortcode_atts(array('count'=>3,'category'=>'','sticky'=>'auto'), $atts, 'featured_posts');
-    $count = max(1, intval($atts['count']));
-    $query_args = array('posts_per_page'=>$count, 'ignore_sticky_posts'=>false);
-    if ($atts['sticky']==='only') { $sticky = get_option('sticky_posts'); $query_args['post__in'] = $sticky; $query_args['orderby']='date'; }
-    if (!empty($atts['category'])) { $query_args['category_name'] = sanitize_text_field($atts['category']); }
-    $q = new WP_Query($query_args);
+/* ---------------- Featured pages shortcode (no posts) ---------------- */
+function stock_scanner_featured_pages_shortcode($atts) {
+    $atts = shortcode_atts(array('ids'=>'','count'=>3,'parent'=>0), $atts, 'featured_pages');
+    $args = array('post_type'=>'page','posts_per_page'=>max(1,intval($atts['count'])),'orderby'=>'menu_order title','order'=>'ASC');
+    if (!empty($atts['ids'])) { $ids = array_map('intval', explode(',', $atts['ids'])); $args['post__in'] = $ids; $args['orderby']='post__in'; }
+    if (!empty($atts['parent'])) { $args['post_parent'] = intval($atts['parent']); }
+    $q = new WP_Query($args);
     ob_start();
     if ($q->have_posts()): ?>
       <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
@@ -262,23 +278,20 @@ function stock_scanner_featured_posts_shortcode($atts) {
           <article <?php post_class('card'); ?> >
             <div class="card-header">
               <h3 class="card-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
-              <div class="card-subtitle"><?php echo esc_html(get_the_date()); ?></div>
             </div>
             <div class="card-body">
-              <?php if (has_post_thumbnail()) {
-                echo get_the_post_thumbnail(get_the_ID(), 'medium_large', array('style'=>'border-radius:12px;width:100%;height:auto;margin-bottom:10px;','loading'=>'lazy','decoding'=>'async'));
-              } ?>
+              <?php if (has_post_thumbnail()) { echo get_the_post_thumbnail(get_the_ID(),'medium_large',array('style'=>'border-radius:12px;width:100%;height:auto;margin-bottom:10px;','loading'=>'lazy','decoding'=>'async')); } ?>
               <?php the_excerpt(); ?>
             </div>
-            <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Read More</span></a></div>
+            <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Learn More</span></a></div>
           </article>
         <?php endwhile; wp_reset_postdata(); ?>
       </div>
     <?php else: ?>
-      <div class="card"><div class="card-body">No featured posts yet.</div></div>
+      <div class="card"><div class="card-body">No pages selected.</div></div>
     <?php endif; return ob_get_clean();
 }
-add_shortcode('featured_posts', 'stock_scanner_featured_posts_shortcode');
+add_shortcode('featured_pages','stock_scanner_featured_pages_shortcode');
 
 /* ---------------- Customizer: brand colors & typography ---------------- */
 function stock_scanner_customize_register($wp_customize){
@@ -328,12 +341,5 @@ function stock_scanner_customizer_css() {
     <?php
 }
 add_action('wp_head','stock_scanner_customizer_css', 20);
-
-/* ---------------- Accessibility: Skiplink target helper ---------------- */
-function stock_scanner_main_id_filter($content){ return $content; }
-// No filter needed, templates include id="main-content".
-
-/* ---------------- Keep existing Backend Offline template (backend-offline.php) ---------------- */
-// File exists separately.
 
 ?>
