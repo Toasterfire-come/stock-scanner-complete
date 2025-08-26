@@ -1,6 +1,6 @@
 /**
  * Stock Scanner Theme JavaScript
- * Client-side cookies + session data popover + clear cache
+ * Client-side UX + session mgmt + plan caching + policy/data popovers
  */
 
 jQuery(document).ready(function($) {
@@ -13,6 +13,7 @@ jQuery(document).ready(function($) {
     const idleEnabled = cfg.idle_enabled !== undefined ? !!cfg.idle_enabled : true;
     const idleLimitMs = (cfg.idle_limit_ms && Number(cfg.idle_limit_ms)) ? Number(cfg.idle_limit_ms) : 12 * 60 * 60 * 1000;
     const warnThresholdMs = (cfg.warn_threshold_ms && Number(cfg.warn_threshold_ms)) ? Number(cfg.warn_threshold_ms) : 2 * 60 * 1000;
+    const noBackend = !!cfg.no_backend; // skip backend calls entirely if true
 
     // Cookie helpers
     function setCookie(name, value, ms){ try{ const d=new Date(Date.now()+ms); document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/; SameSite=Lax`; }catch(e){} }
@@ -28,6 +29,12 @@ jQuery(document).ready(function($) {
     // Session timer UI
     const $timer = $('#session-timer');
     function updateTimerBadge(){ if (!$timer.length || !isLoggedIn || !idleEnabled) return; const ms = remainingMs(); $timer.text(fmt(ms)); }
+
+    // Smooth scroll for anchors
+    $('a[href^="#"]').on('click', function(e) {
+        const href = $(this).attr('href'); const target = $(href);
+        if (target.length) { e.preventDefault(); $('html, body').animate({ scrollTop: target.offset().top - 100 }, 600); }
+    });
 
     // Mobile menu toggle
     if (window.innerWidth <= 768) {
@@ -63,8 +70,7 @@ jQuery(document).ready(function($) {
         if (shouldLogout()) { if (cfg.logout_url) window.location.assign(cfg.logout_url); }
         else {
             ['click','keydown','mousemove','scroll','touchstart','visibilitychange'].forEach(ev => { window.addEventListener(ev, function(){ if (document.visibilityState !== 'hidden') { markActivity(); updateTimerBadge(); } }, { passive: true }); });
-            if (!getLastActivity()) markActivity();
-            updateTimerBadge();
+            if (!getLastActivity()) markActivity(); updateTimerBadge();
             setInterval(function(){ const ms = remainingMs(); updateTimerBadge(); if (ms <= Math.min(warnThresholdMs, idleLimitMs/2) && ms > 0 && !warningShown) { showWarning(); warningShown=true; } if (ms === 0 && cfg.logout_url) { window.location.assign(cfg.logout_url); } }, 1000);
         }
     } else if (!isLoggedIn) { try { localStorage.removeItem(activityKey); localStorage.removeItem(loginKey); } catch(e){} }
@@ -77,7 +83,7 @@ jQuery(document).ready(function($) {
     function loadPlanFromCache(){ if (!planKey) return null; try { const raw = localStorage.getItem(planKey); return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
     function savePlanToCache(plan){ if (!planKey) return; try { localStorage.setItem(planKey, JSON.stringify({ plan, t: Date.now() })); setCookie('ssc_plan', `${plan.slug}:${Date.now()}`, 24*60*60*1000); } catch(e){} }
     function clearPlanCache(){ if (!planKey) return; try { localStorage.removeItem(planKey); delCookie('ssc_plan'); } catch(e){} }
-    function fetchPlanAndRender(){ if (!$planBadge.length) return; return $.post(cfg.ajax_url, { action: 'stock_scanner_get_current_plan', nonce: cfg.nonce })
+    function fetchPlanAndRender(){ if (noBackend || !$planBadge.length) { const c = loadPlanFromCache(); if (c && c.plan) setPlanBadge(c.plan.name, c.plan.slug); else setPlanBadge('Free','free'); return Promise.resolve(); } return $.post(cfg.ajax_url, { action: 'stock_scanner_get_current_plan', nonce: cfg.nonce })
         .done(function(res){ let plan=null; if (res && res.success) { if (res.data && res.data.data && res.data.data.plan) plan=res.data.data.plan; else if (res.data && res.data.plan) plan=res.data.plan; } const name=(plan && (plan.name||plan.slug))?(plan.name||plan.slug):'Free'; const slug=(plan && (plan.slug||plan.name))?(plan.slug||plan.name).toLowerCase():'free'; setPlanBadge(name, slug); savePlanToCache({ name, slug }); setCookie('ssc_login_user', String(userId||''), 7*24*60*60*1000); })
         .fail(function(){ const c = loadPlanFromCache(); if (c && c.plan) setPlanBadge(c.plan.name, c.plan.slug); else setPlanBadge('Free','free'); }); }
 
@@ -85,7 +91,7 @@ jQuery(document).ready(function($) {
         const prevUser = localStorage.getItem(loginKey);
         const isNewLogin = String(userId || '') !== String(prevUser || '');
         if (isNewLogin) { fetchPlanAndRender(); localStorage.setItem(loginKey, String(userId || '')); setCookie('ssc_login_user', String(userId||''), 7*24*60*60*1000); }
-        else { const cached = loadPlanFromCache(); if (cached && cached.plan) setPlanBadge(cached.plan.name, cached.plan.slug); else setPlanBadge('Free','free'); }
+        else { const cached = loadPlanFromCache(); if (cached && cached.plan) setPlanBadge(cached.plan.name, cached.plan.slug); else { fetchPlanAndRender(); } }
     } else { try { localStorage.removeItem(loginKey); delCookie('ssc_login_user'); delCookie('ssc_plan'); delCookie('ssc_last_activity'); } catch(e){} }
 
     // Alt key reveal for Refresh Plan
@@ -96,14 +102,14 @@ jQuery(document).ready(function($) {
 
     // Session policy popover
     function buildPolicyText(){ const enabled = (cfg.idle_enabled !== undefined) ? !!cfg.idle_enabled : true; const hours = cfg.idle_limit_ms ? Math.max(1, Math.round(Number(cfg.idle_limit_ms)/(60*60*1000))) : 12; if (enabled) return `For your security, you will be signed out automatically after ${hours} hour${hours===1?'':'s'} of inactivity. You will receive a 2-minute warning to stay signed in.`; return 'Auto-logout after inactivity is currently disabled on this site.'; }
-    function ensurePolicyPopover(){ if ($('#session-policy-popover').length) return; const html = `<div id="session-policy-popover" role="dialog" aria-live="polite" class="policy-popover hidden"><div class="policy-popover-arrow"></div><div class="policy-popover-content"></div></div>`; $('body').append(html); }
+    function ensurePolicyPopover(){ if ($('#session-policy-popover').length) return; const html = `<div id=\"session-policy-popover\" role=\"dialog\" aria-live=\"polite\" class=\"policy-popover hidden\"><div class=\"policy-popover-arrow\"></div><div class=\"policy-popover-content\"></div></div>`; $('body').append(html); }
     function togglePolicyPopover(target){ ensurePolicyPopover(); const $p=$('#session-policy-popover'); const $c=$p.find('.policy-popover-content'); $c.text(buildPolicyText()); const rect=target.getBoundingClientRect(); const top=window.scrollY + rect.bottom + 10; const left=window.scrollX + rect.left + (rect.width/2) - 160; $p.css({ top: top + 'px', left: Math.max(12,left) + 'px' }).toggleClass('hidden visible'); }
     $(document).on('click', '#session-policy-link', function(e){ e.preventDefault(); togglePolicyPopover(this); });
     $(document).on('click', function(e){ if (!$(e.target).closest('#session-policy-popover, #session-policy-link').length) { $('#session-policy-popover').removeClass('visible').addClass('hidden'); } });
 
     // Session data popover (cookies + cache)
     function ensureDataPopover(){ if ($('#session-data-popover').length) return; const html = `<div id=\"session-data-popover\" role=\"dialog\" aria-live=\"polite\" class=\"policy-popover hidden\"><div class=\"policy-popover-arrow\"></div><div class=\"policy-popover-content\"></div></div>`; $('body').append(html); }
-    function renderDataContent(){ const lines=[]; const cookieNames=['wordpress_logged_in','ssc_login_user','ssc_last_activity','ssc_plan']; const cookies = document.cookie.split(';').map(s=>s.trim()).filter(Boolean); function hasPrefix(name){ return cookies.some(c => c.startsWith(name + '=')); }
+    function renderDataContent(){ const lines=[]; const cookies = document.cookie.split(';').map(s=>s.trim()).filter(Boolean); function hasPrefix(name){ return cookies.some(c => c.startsWith(name + '=')); }
         lines.push(`wordpress_logged_in: ${hasPrefix('wordpress_logged_in') ? 'present' : 'missing'}`);
         lines.push(`ssc_login_user: ${getCookie('ssc_login_user') || 'not set'}`);
         const la = getCookie('ssc_last_activity'); lines.push(`ssc_last_activity: ${la ? new Date(parseInt(la,10)).toLocaleString() : 'not set'}`);
@@ -115,20 +121,37 @@ jQuery(document).ready(function($) {
     $(document).on('click', function(e){ if (!$(e.target).closest('#session-data-popover, #session-data-link').length) { $('#session-data-popover').removeClass('visible').addClass('hidden'); } });
 
     // Clear session data link
-    $(document).on('click', '#clear-session-data', function(e){ e.preventDefault(); if (!confirm('Clear cached session data (plan cache and activity markers)?')) return; try { if (planKey) localStorage.removeItem(planKey); localStorage.removeItem(activityKey); delCookie('ssc_plan'); delCookie('ssc_last_activity'); } catch(err){} markActivity(); const c = getCookie('ssc_plan'); setPlanBadge('Free','free'); alert('Cleared. Some data may repopulate on next sign-in.'); });
+    $(document).on('click', '#clear-session-data', function(e){ e.preventDefault(); if (!confirm('Clear cached session data (plan cache and activity markers)?')) return; try { if (planKey) localStorage.removeItem(planKey); localStorage.removeItem(activityKey); delCookie('ssc_plan'); delCookie('ssc_last_activity'); } catch(err){} markActivity(); setPlanBadge('Free','free'); alert('Cleared. Some data may repopulate on next sign-in.'); });
 });
 
-// Inject styles for policy/session popovers and utility links
+// Inject styles for popovers + content consistency helpers
 (function(){
   const css = `
   <style>
+    /* Popover links */
     .session-policy-link,.session-data-link,.clear-session-data{margin-left:8px;font-size:.85rem;text-decoration:underline;color:#334155;opacity:.85}
     .session-policy-link:hover,.session-data-link:hover,.clear-session-data:hover{opacity:1}
+    /* Popovers */
     .policy-popover{position:absolute;z-index:10001;width:320px;background:#fff;border:1px solid var(--medium-gray);border-radius:12px;box-shadow:var(--shadow-2xl);padding:12px}
     .policy-popover.hidden{display:none}
     .policy-popover.visible{display:block}
     .policy-popover-arrow{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:16px;height:16px;background:#fff;border-left:1px solid var(--medium-gray);border-top:1px solid var(--medium-gray);transform: translateX(-50%) rotate(45deg)}
     .policy-popover-content{font-size:.9rem;color:#475569}
+    /* WordPress content consistency */
+    .page-content img{max-width:100%;height:auto;border-radius:12px}
+    .alignleft{float:left;margin:0 1rem 1rem 0}
+    .alignright{float:right;margin:0 0 1rem 1rem}
+    .aligncenter{display:block;margin:1rem auto}
+    .wp-caption{max-width:100%;text-align:center;color:#64748b;margin:1rem auto}
+    .wp-caption .wp-caption-text{font-size:.9rem;margin-top:.25rem}
+    .page-content blockquote{border-left:4px solid #667eea;padding:1rem;margin:1rem 0;background:rgba(102,126,234,.05);border-radius:8px}
+    .page-content pre,.page-content code{background:#0b1020;color:#e2e8f0;border-radius:8px}
+    .page-content pre{padding:1rem;overflow:auto}
+    .page-content table{width:100%;border-collapse:collapse;margin:1rem 0;border:1px solid var(--medium-gray);border-radius:12px;overflow:hidden}
+    .page-content th,.page-content td{border-bottom:1px solid var(--medium-gray);padding:.75rem .9rem}
+    .page-content th{background:var(--primary-gradient);color:#fff}
+    .page-content ul{list-style:disc;padding-left:1.25rem}
+    .page-content ol{list-style:decimal;padding-left:1.25rem}
   </style>`;
   document.head.insertAdjacentHTML('beforeend', css);
 })();
