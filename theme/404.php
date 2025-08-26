@@ -4,7 +4,7 @@
  */
 get_header();
 ?>
-<main class="site-main">
+<main id="main-content" class="site-main">
   <div class="container">
     <?php get_template_part('template-parts/breadcrumbs'); ?>
     <div class="page-header">
