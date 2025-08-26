@@ -21,9 +21,9 @@ add_action('after_setup_theme', 'stock_scanner_theme_setup');
 /* ---------------- Sidebar (widgets) ---------------- */
 function stock_scanner_register_sidebars() {
     register_sidebar(array(
-        'name'          => __('Primary Sidebar', 'stock-scanner'),
+        'name'          => __('Primary Sidebar', 'finmarkets'),
         'id'            => 'primary-sidebar',
-        'description'   => __('Add widgets here to appear in your sidebar.', 'stock-scanner'),
+        'description'   => __('Add widgets here to appear in your sidebar.', 'finmarkets'),
         'before_widget' => '<section id="%1$s" class="widget %2$s">',
         'after_widget'  => '</section>',
         'before_title'  => '<h3 class="widget-title">',
