@@ -13,7 +13,7 @@ get_header();
     </div>
 
     <?php if (have_posts()): ?>
-      <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+      <div class="pricing-table large-cards">
         <?php while (have_posts()): the_post(); ?>
           <article <?php post_class('card'); ?> >
             <div class="card-header">
