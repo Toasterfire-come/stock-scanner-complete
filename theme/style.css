@@ -1432,6 +1432,273 @@ textarea:focus-visible {
 }
 
 /* =====================================
+   LAYOUT UTILITY CLASSES
+   ===================================== */
+
+/* Call-to-Action Button Groups */
+.cta-buttons {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Content Layout with Sidebar */
+.content-layout {
+  display: grid;
+  gap: var(--spacing-2xl);
+}
+
+.content-layout.has-sidebar {
+  grid-template-columns: 1fr 320px;
+}
+
+.content-layout.no-sidebar {
+  grid-template-columns: 1fr;
+}
+
+/* Search Container */
+.search-container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Diagnostic Grid for Admin Pages */
+.diagnostic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-xl);
+}
+
+.diagnostic-card {
+  margin: 0;
+}
+
+.diagnostic-card.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Bootstrap-like Utility Classes */
+.d-flex {
+  display: flex;
+}
+
+.d-grid {
+  display: grid;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/* Pricing/Grid Tables */
+.pricing-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-xl);
+  margin: var(--spacing-2xl) 0;
+}
+
+.pricing-table.large-cards {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.pricing-table.small-cards {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* Action Buttons Container */
+.action-buttons {
+  margin-top: var(--spacing-xl);
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+/* Diagnostic Pre Block */
+.diagnostic-pre {
+  min-height: 160px;
+  background: var(--gray-900);
+  color: var(--gray-200);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+/* Status Indicators */
+.status-present {
+  color: var(--success-green);
+  font-weight: 600;
+}
+
+.status-missing {
+  color: var(--danger-red);
+  font-weight: 600;
+}
+
+/* =====================================
+   ENHANCED RESPONSIVE DESIGN
+   ===================================== */
+
+@media (max-width: 1200px) {
+  .content-layout.has-sidebar {
+    grid-template-columns: 1fr 280px;
+  }
+}
+
+@media (max-width: 992px) {
+  .content-layout.has-sidebar {
+    grid-template-columns: 1fr;
+  }
+  
+  .diagnostic-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .cta-buttons .btn {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pricing-table,
+  .pricing-table.large-cards,
+  .pricing-table.small-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+}
+
+/* =====================================
+   ACCESSIBILITY IMPROVEMENTS
+   ===================================== */
+
+/* Ensure minimum touch targets on mobile */
+@media (max-width: 768px) {
+  .session-policy-link,
+  .session-data-link,
+  .clear-session-data,
+  .refresh-plan {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Improved color contrast */
+.session-policy-link,
+.session-data-link,
+.clear-session-data {
+  opacity: 0.9; /* Increased from 0.85 for better contrast */
+}
+
+.footer-section a {
+  color: var(--gray-200); /* Improved contrast from gray-300 */
+}
+
+/* =====================================
+   CSS CUSTOM PROPERTY FALLBACKS
+   ===================================== */
+
+:root {
+  /* Ensure all variables have fallback values */
+  --primary-blue: #667eea;
+  --primary-purple: #764ba2;
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --success-green: #10b981;
+  --danger-red: #ef4444;
+  --warning-orange: #f59e0b;
+  --gold: #c9a961;
+}
+
+/* Apply fallbacks to critical styles */
+.site-header {
+  background: #ffffff;
+  background: var(--white, #ffffff);
+}
+
+.site-footer {
+  background: #1e293b;
+  background: var(--gray-800, #1e293b);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+}
+
+/* Z-Index Management System */
+:root {
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-notification: 1080;
+}
+
+.site-header {
+  z-index: var(--z-sticky, 1020);
+}
+
+.main-nav .sub-menu {
+  z-index: var(--z-dropdown, 1000);
+}
+
+.session-modal {
+  z-index: var(--z-modal, 1050);
+}
+
+.policy-popover {
+  z-index: var(--z-popover, 1060);
+}
+
+.notice {
+  z-index: var(--z-notification, 1080);
+}
+
+/* =====================================
    UTILITY CLASSES
    ===================================== */
 .text-center { text-align: center; }
