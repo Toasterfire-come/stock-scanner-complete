@@ -10,10 +10,10 @@ get_header();
       <?php if (get_the_archive_description()): ?><p class="page-description"><?php echo wp_kses_post(get_the_archive_description()); ?></p><?php endif; ?>
     </div>
 
-    <div class="content-layout" style="display:grid;grid-template-columns:1fr <?php echo is_active_sidebar('primary-sidebar') ? '320px' : '0'; ?>;gap:var(--spacing-2xl);">
+    <div class="content-layout <?php echo is_active_sidebar('primary-sidebar') ? 'has-sidebar' : 'no-sidebar'; ?>">
       <div>
         <?php if (have_posts()): ?>
-          <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+          <div class="pricing-table large-cards">
             <?php while (have_posts()): the_post(); ?>
               <article <?php post_class('card'); ?> >
                 <div class="card-header">
