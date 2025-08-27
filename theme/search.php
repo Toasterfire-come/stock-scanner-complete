@@ -9,7 +9,7 @@ get_header();
     <?php get_template_part('template-parts/breadcrumbs'); ?>
     <div class="page-header">
       <h1 class="page-title">Search pages for “<?php echo esc_html(get_search_query()); ?>”</h1>
-      <div style="max-width:640px; margin: 0 auto;"><?php get_search_form(); ?></div>
+      <div class="search-container"><?php get_search_form(); ?></div>
     </div>
 
     <?php if (have_posts()): ?>
