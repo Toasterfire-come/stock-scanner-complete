@@ -10,8 +10,8 @@ get_header();
     <div class="page-header">
       <h1 class="page-title">Page not found</h1>
       <p class="page-description">We couldn't find the page you were looking for. Try searching or head back to the homepage.</p>
-      <div style="max-width:640px; margin: 0 auto;"><?php get_search_form(); ?></div>
-      <div style="margin-top:1.5rem;">
+      <div class="search-container"><?php get_search_form(); ?></div>
+      <div class="action-buttons text-center">
         <a class="btn btn-secondary" href="<?php echo esc_url(home_url('/')); ?>"><span>Go to Homepage</span></a>
       </div>
     </div>
