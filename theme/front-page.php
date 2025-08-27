@@ -9,7 +9,7 @@ get_header();
     <section class="page-header">
       <h1 class="page-title">Smarter Stock Insights</h1>
       <p class="page-description">Scan, screen, and track the market with professional-grade tools.</p>
-      <div style="margin-top:1rem; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <div class="cta-buttons">
         <a class="btn btn-primary" href="/stock-dashboard/"><span>Open Dashboard</span></a>
         <a class="btn btn-gold" href="/membership-plans/"><span>See Plans</span></a>
       </div>
