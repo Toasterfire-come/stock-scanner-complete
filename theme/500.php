@@ -11,7 +11,7 @@ get_header();
     <div class="page-header">
       <h1 class="page-title"><?php _e('Server Error', 'finmarkets'); ?></h1>
       <p class="page-description"><?php _e('Something went wrong on our servers. We\'re working to fix this issue. Please try again in a few minutes.', 'finmarkets'); ?></p>
-      <div style="margin-top:var(--spacing-xl);">
+      <div class="cta-buttons">
         <a class="btn btn-primary" href="<?php echo esc_url(home_url('/')); ?>">
           <span><?php _e('Go to Homepage', 'finmarkets'); ?></span>
         </a>

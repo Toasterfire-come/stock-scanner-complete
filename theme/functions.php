@@ -125,7 +125,7 @@ function stock_scanner_dashboard_widget_content() {
     ?>
     <div class="stock-scanner-dashboard-widget">
         <p><strong>Popular Stocks Today:</strong></p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:15px 0;">
+        <div class="dashboard-widget-grid">
             <?php echo do_shortcode('[stock_scanner symbol="AAPL"]'); ?>
             <?php echo do_shortcode('[stock_scanner symbol="TSLA"]'); ?>
             <?php echo do_shortcode('[stock_scanner symbol="NVDA"]'); ?>
@@ -278,14 +278,14 @@ add_action('admin_init', 'stock_scanner_ensure_screenshot');
 
 /* ---------------- Featured pages shortcode (no posts) ---------------- */
 function stock_scanner_featured_pages_shortcode($atts) { $atts = shortcode_atts(array('ids'=>'','count'=>3,'parent'=>0), $atts, 'featured_pages'); $args = array('post_type'=>'page','posts_per_page'=>max(1,intval($atts['count'])),'orderby'=>'menu_order title','order'=>'ASC'); if (!empty($atts['ids'])) { $ids = array_map('intval', explode(',', $atts['ids'])); $args['post__in'] = $ids; $args['orderby']='post__in'; } if (!empty($atts['parent'])) { $args['post_parent'] = intval($atts['parent']); } $q = new WP_Query($args); ob_start(); if ($q->have_posts()): ?>
-  <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+  <div class="pricing-table">
     <?php while($q->have_posts()): $q->the_post(); ?>
       <article <?php post_class('card'); ?> >
         <div class="card-header">
           <h3 class="card-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
         </div>
         <div class="card-body">
-          <?php if (has_post_thumbnail()) { echo get_the_post_thumbnail(get_the_ID(),'medium_large',array('style'=>'border-radius:12px;width:100%;height:auto;margin-bottom:10px;','loading'=>'lazy','decoding'=>'async')); } ?>
+          <?php if (has_post_thumbnail()) { echo get_the_post_thumbnail(get_the_ID(),'medium_large',array('class'=>'card-thumbnail','loading'=>'lazy','decoding'=>'async')); } ?>
           <?php the_excerpt(); ?>
         </div>
         <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Learn More</span></a></div>

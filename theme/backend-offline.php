@@ -20,8 +20,8 @@ get_header();
           <p class="card-subtitle">Live diagnostics to help you debug connectivity issues</p>
         </div>
         <div class="card-body">
-          <div class="d-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div class="card" style="margin:0;">
+          <div class="diagnostic-grid">
+            <div class="card">
               <div class="card-header"><strong>Current User</strong></div>
               <div class="card-body">
                 <?php $u = wp_get_current_user(); ?>
@@ -38,7 +38,7 @@ get_header();
               </div>
             </div>
 
-            <div class="card" style="margin:0;">
+            <div class="card">
               <div class="card-header"><strong>Cookie Presence</strong></div>
               <div class="card-body">
                 <ul id="cookie-list">
@@ -47,13 +47,13 @@ get_header();
               </div>
             </div>
 
-            <div class="card" style="margin:0; grid-column: 1 / -1;">
+            <div class="card diagnostic-full-width">
               <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>Raw Health JSON</strong>
                 <button class="btn btn-sm btn-secondary" id="refresh-health">Refresh</button>
               </div>
               <div class="card-body">
-                <pre id="health-json" class="loading" style="min-height:160px; background:#0b1020; color:#e2e8f0; padding:16px; border-radius:8px; overflow:auto;">
+                <pre id="health-json" class="health-json-output loading">
 Fetching…
                 </pre>
               </div>
@@ -78,7 +78,7 @@ Fetching…
             ul.push(`<li>Total cookies: <strong>${items.length}</strong></li>`);
             important.forEach(key => {
               const found = items.find(i => i.startsWith(key));
-              ul.push(`<li>${key}: ${found ? '<span style=\'color:#16a34a\'>present</span>' : '<span style=\'color:#dc2626\'>missing</span>'}</li>`);
+              ul.push(`<li>${key}: ${found ? '<span class="status-present">present</span>' : '<span class="status-missing">missing</span>'}</li>`);
             });
             // Show first 5 full cookies for debug
             items.slice(0,5).forEach((c, idx) => ul.push(`<li>cookie[${idx}]: <code>${c.replace(/</g,'&lt;')}</code></li>`));

@@ -115,7 +115,7 @@ jQuery(document).ready(function($) {
         const la = getCookie('ssc_last_activity'); lines.push(`ssc_last_activity: ${la ? new Date(parseInt(la,10)).toLocaleString() : 'not set'}`);
         const sp = getCookie('ssc_plan'); lines.push(`ssc_plan: ${sp || 'not set'}`);
         const lsPlan = planKey ? localStorage.getItem(planKey) : null; lines.push(`localStorage plan: ${lsPlan ? 'present' : 'missing'}`);
-        return '<pre style="white-space:pre-wrap;margin:0;">' + lines.join('\n') + '</pre>'; }
+        return '<pre class="session-data-output">' + lines.join('\n') + '</pre>'; }
     function toggleDataPopover(target){ ensureDataPopover(); const $p=$('#session-data-popover'); const $c=$p.find('.policy-popover-content'); $c.html(renderDataContent()); const rect=target.getBoundingClientRect(); const top=window.scrollY + rect.bottom + 10; const left=window.scrollX + rect.left + (rect.width/2) - 160; $p.css({ top: top + 'px', left: Math.max(12,left) + 'px' }).toggleClass('hidden visible'); }
     $(document).on('click', '#session-data-link', function(e){ e.preventDefault(); toggleDataPopover(this); });
     $(document).on('click', function(e){ if (!$(e.target).closest('#session-data-popover, #session-data-link').length) { $('#session-data-popover').removeClass('visible').addClass('hidden'); } });
