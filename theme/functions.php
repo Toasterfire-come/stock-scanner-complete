@@ -55,6 +55,7 @@ function rts_scripts() {
     $idle_enabled = (int) get_option('rts_idle_enabled', 1);
     $idle_hours   = max(1, (int) get_option('rts_idle_hours', 12));
     $api_base = rtrim(get_option('stock_scanner_api_url', ''), '/');
+    if (empty($api_base)) { $api_base = rtrim(get_option('retail_trade_scanner_api_url', ''), '/'); }
 
     wp_localize_script('rts-js', 'retail_trade_scanner_theme', [
         'ajax_url'          => admin_url('admin-ajax.php'),
