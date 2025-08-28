@@ -1954,3 +1954,20 @@ textarea:focus-visible,
     border: 1px solid var(--gray-400);
   }
 }
+
+/* ===== Sidebar visibility for members only ===== */
+.site-sidebar { padding: var(--spacing-xl); background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
+
+/* Header layout polish */
+.header-content .btn { margin-left: var(--spacing-sm); }
+
+/* Comments styling */
+.comments-area { margin-top: var(--spacing-2xl); }
+.comment-list { list-style: none; padding: 0; margin: var(--spacing-xl) 0; }
+.comment-list .comment { border-bottom: 1px solid var(--gray-200); padding: var(--spacing-md) 0; }
+.comment-meta .comment-author { font-weight: 600; }
+.comment-respond { margin-top: var(--spacing-xl); }
+.comment-respond input[type="text"],
+.comment-respond input[type="email"],
+.comment-respond textarea { width: 100%; padding: var(--spacing-sm) var(--spacing-md); border:1px solid var(--gray-300); border-radius: var(--radius-md); }
+.comment-respond .submit { margin-top: var(--spacing-md); }
