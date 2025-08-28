@@ -1,0 +1,250 @@
+/*
+Editor Styles for Gutenberg Block Editor
+*/
+
+/* Import main theme variables */
+:root {
+  --primary-blue: #667eea;
+  --primary-purple: #764ba2;
+  --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+  --success-green: #10b981;
+  --danger-red: #ef4444;
+  --warning-orange: #f59e0b;
+  --gold: #c9a961;
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Body and Typography */
+.editor-styles-wrapper {
+  font-family: var(--font-family);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+
+/* Headings */
+.editor-styles-wrapper h1,
+.editor-styles-wrapper h2,
+.editor-styles-wrapper h3,
+.editor-styles-wrapper h4,
+.editor-styles-wrapper h5,
+.editor-styles-wrapper h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--gray-800);
+  margin-bottom: var(--spacing-md);
+}
+
+.editor-styles-wrapper h1 { font-size: var(--text-4xl); }
+.editor-styles-wrapper h2 { font-size: var(--text-3xl); }
+.editor-styles-wrapper h3 { font-size: var(--text-2xl); }
+.editor-styles-wrapper h4 { font-size: var(--text-xl); }
+.editor-styles-wrapper h5 { font-size: var(--text-lg); }
+.editor-styles-wrapper h6 { font-size: var(--text-base); }
+
+/* Paragraphs */
+.editor-styles-wrapper p {
+  margin-bottom: var(--spacing-md);
+  color: var(--gray-600);
+}
+
+/* Links */
+.editor-styles-wrapper a {
+  color: var(--primary-blue);
+  text-decoration: none;
+}
+
+.editor-styles-wrapper a:hover {
+  color: var(--primary-purple);
+  text-decoration: underline;
+}
+
+/* Blockquotes */
+.editor-styles-wrapper blockquote {
+  border-left: 4px solid var(--primary-blue);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: var(--radius-lg);
+  font-style: italic;
+}
+
+/* Code */
+.editor-styles-wrapper code {
+  background: var(--gray-900);
+  color: var(--gray-200);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+  font-family: 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+.editor-styles-wrapper pre {
+  background: var(--gray-900);
+  color: var(--gray-200);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  overflow: auto;
+  margin: var(--spacing-lg) 0;
+}
+
+/* Lists */
+.editor-styles-wrapper ul,
+.editor-styles-wrapper ol {
+  padding-left: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.editor-styles-wrapper li {
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Tables */
+.editor-styles-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-lg) 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.editor-styles-wrapper th,
+.editor-styles-wrapper td {
+  border-bottom: 1px solid var(--gray-200);
+  padding: var(--spacing-md);
+  text-align: left;
+}
+
+.editor-styles-wrapper th {
+  background: var(--primary-gradient);
+  color: var(--white);
+  font-weight: 600;
+}
+
+/* Images */
+.editor-styles-wrapper img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Wide and Full Width Alignments */
+.editor-styles-wrapper .alignwide {
+  margin-left: auto;
+  margin-right: auto;
+  clear: both;
+}
+
+.editor-styles-wrapper .alignfull {
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  max-width: 100vw;
+  clear: both;
+}
+
+/* Block Editor Specific Styles */
+.editor-styles-wrapper .wp-block-group {
+  margin-bottom: var(--spacing-xl);
+}
+
+.editor-styles-wrapper .wp-block-columns {
+  margin-bottom: var(--spacing-xl);
+}
+
+.editor-styles-wrapper .wp-block-button .wp-block-button__link {
+  background: var(--primary-gradient);
+  color: var(--white);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.editor-styles-wrapper .wp-block-button .wp-block-button__link:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Quote block */
+.editor-styles-wrapper .wp-block-quote {
+  border-left: 4px solid var(--primary-blue);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: var(--radius-lg);
+}
+
+.editor-styles-wrapper .wp-block-quote p {
+  font-size: var(--text-lg);
+  font-style: italic;
+  margin-bottom: var(--spacing-md);
+}
+
+.editor-styles-wrapper .wp-block-quote cite {
+  color: var(--gray-500);
+  font-size: var(--text-sm);
+  font-style: normal;
+}
+
+/* Cover block */
+.editor-styles-wrapper .wp-block-cover {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+/* Separator */
+.editor-styles-wrapper .wp-block-separator {
+  border: none;
+  border-top: 2px solid var(--gray-200);
+  margin: var(--spacing-xl) 0;
+}
+
+/* Pullquote */
+.editor-styles-wrapper .wp-block-pullquote {
+  border: none;
+  background: var(--gray-50);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.editor-styles-wrapper .wp-block-pullquote blockquote {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
