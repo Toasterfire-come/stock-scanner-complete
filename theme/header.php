@@ -17,10 +17,12 @@
             <a href="<?php echo esc_url(home_url('/')); ?>" class="site-title">
                 <?php if (function_exists('the_custom_logo') && has_custom_logo()) { the_custom_logo(); } else { echo '📈 ' . esc_html(get_bloginfo('name')); } ?>
             </a>
+            <?php if (!is_user_logged_in()): ?>
             <nav class="main-nav" role="navigation" aria-label="<?php esc_attr_e('Primary Navigation', 'retail-trade-scanner'); ?>">
                 <?php $walker = class_exists('RetailTradeScanner_Nav_Walker') ? new RetailTradeScanner_Nav_Walker() : null;
                 wp_nav_menu(['theme_location' => 'primary','menu_class' => 'main-menu','fallback_cb' => 'retail_trade_scanner_fallback_menu','walker' => $walker]); ?>
             </nav>
+            <?php endif; ?>
             <div class="user-menu">
                 <a class="btn btn-ghost" href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Home', 'retail-trade-scanner'); ?></a>
                 <?php if (is_user_logged_in()): ?>
