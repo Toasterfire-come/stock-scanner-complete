@@ -8,7 +8,12 @@ get_header();
   <div class="container">
     <?php get_template_part('template-parts/breadcrumbs'); ?>
     <div class="page-header">
-      <h1 class="page-title">Search pages for “<?php echo esc_html(get_search_query()); ?>”</h1>
+      <h1 class="page-title">
+          <?php 
+          /* translators: %s: search query */
+          printf(esc_html__('Search pages for "%s"', 'retail-trade-scanner'), '<span>' . esc_html(get_search_query()) . '</span>');
+          ?>
+      </h1>
       <div class="search-container"><?php get_search_form(); ?></div>
     </div>
 
@@ -20,13 +25,19 @@ get_header();
               <h2 class="card-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
             </div>
             <div class="card-body"><?php the_excerpt(); ?></div>
-            <div class="card-footer"><a class="btn btn-primary" href="<?php the_permalink(); ?>"><span>Open Page</span></a></div>
+            <div class="card-footer">
+                <a class="btn btn-primary" href="<?php the_permalink(); ?>">
+                    <span><?php esc_html_e('Open Page', 'retail-trade-scanner'); ?></span>
+                </a>
+            </div>
           </article>
         <?php endwhile; ?>
       </div>
       <div class="d-flex justify-content-center"><?php the_posts_pagination(); ?></div>
     <?php else: ?>
-      <div class="card"><div class="card-body">No pages found. Try another search.</div></div>
+      <div class="card">
+          <div class="card-body"><?php esc_html_e('No pages found. Try another search.', 'retail-trade-scanner'); ?></div>
+      </div>
     <?php endif; ?>
   </div>
 </main>

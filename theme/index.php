@@ -13,14 +13,18 @@ get_header();
 
     <div class="grid-2">
       <div class="feature-card">
-        <h4>Get Started</h4>
-        <p>Use the navigation to access Dashboard, Watchlist, and Membership.</p>
-        <a class="btn btn-primary" href="/stock-dashboard/"><span>Open Dashboard</span></a>
+        <h4><?php esc_html_e('Get Started', 'retail-trade-scanner'); ?></h4>
+        <p><?php esc_html_e('Use the navigation to access Dashboard, Watchlist, and Membership.', 'retail-trade-scanner'); ?></p>
+        <a class="btn btn-primary" href="<?php echo esc_url(home_url('/stock-dashboard/')); ?>">
+            <span><?php esc_html_e('Open Dashboard', 'retail-trade-scanner'); ?></span>
+        </a>
       </div>
       <div class="feature-card">
-        <h4>Upgrade Anytime</h4>
-        <p>Unlock more features and higher limits by upgrading your plan.</p>
-        <a class="btn btn-gold" href="/membership-plans/"><span>See Plans</span></a>
+        <h4><?php esc_html_e('Upgrade Anytime', 'retail-trade-scanner'); ?></h4>
+        <p><?php esc_html_e('Unlock more features and higher limits by upgrading your plan.', 'retail-trade-scanner'); ?></p>
+        <a class="btn btn-gold" href="<?php echo esc_url(home_url('/membership-plans/')); ?>">
+            <span><?php esc_html_e('See Plans', 'retail-trade-scanner'); ?></span>
+        </a>
       </div>
     </div>
   </div>

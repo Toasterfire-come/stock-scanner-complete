@@ -2,16 +2,18 @@
 /**
  * Simple Breadcrumbs
  */
-if (is_front_page()) return;
+if (is_front_page()) {
+    return;
+}
 ?>
-<nav class="breadcrumbs" aria-label="Breadcrumb">
+<nav class="breadcrumbs" aria-label="<?php esc_attr_e('Breadcrumb', 'retail-trade-scanner'); ?>">
   <ul class="breadcrumb-list">
     <li class="breadcrumb-item">
-      <a href="<?php echo esc_url(home_url('/')); ?>" class="breadcrumb-link">Home</a>
+      <a href="<?php echo esc_url(home_url('/')); ?>" class="breadcrumb-link"><?php esc_html_e('Home', 'retail-trade-scanner'); ?></a>
     </li>
     <?php if (is_home()): ?>
       <li class="breadcrumb-item">
-        <span class="breadcrumb-current">Blog</span>
+        <span class="breadcrumb-current"><?php esc_html_e('Blog', 'retail-trade-scanner'); ?></span>
       </li>
     <?php elseif (is_category() || is_tag()): ?>
       <li class="breadcrumb-item">
@@ -19,11 +21,11 @@ if (is_front_page()) return;
       </li>
     <?php elseif (is_search()): ?>
       <li class="breadcrumb-item">
-        <span class="breadcrumb-current">Search</span>
+        <span class="breadcrumb-current"><?php esc_html_e('Search', 'retail-trade-scanner'); ?></span>
       </li>
     <?php elseif (is_singular('post')): ?>
       <li class="breadcrumb-item">
-        <a href="<?php echo esc_url(get_permalink( get_option('page_for_posts') )); ?>" class="breadcrumb-link">Blog</a>
+        <a href="<?php echo esc_url(get_permalink( get_option('page_for_posts') )); ?>" class="breadcrumb-link"><?php esc_html_e('Blog', 'retail-trade-scanner'); ?></a>
       </li>
       <li class="breadcrumb-item">
         <span class="breadcrumb-current"><?php the_title(); ?></span>

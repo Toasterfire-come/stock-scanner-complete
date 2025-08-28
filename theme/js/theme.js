@@ -4,12 +4,12 @@
  */
 
 jQuery(document).ready(function($) {
-    const cfg = window.stock_scanner_theme || {};
+    const cfg = window.retail_trade_scanner_theme || {};
     const isLoggedIn = !!cfg.logged_in;
     const userId = cfg.user_id || 0;
-    const planKey = userId ? `ssc_plan_info_${userId}` : null;
-    const loginKey = 'ssc_logged_in_user';
-    const activityKey = 'ssc_last_activity';
+    const planKey = userId ? `rts_plan_info_${userId}` : null;
+    const loginKey = 'rts_logged_in_user';
+    const activityKey = 'rts_last_activity';
     const idleEnabled = cfg.idle_enabled !== undefined ? !!cfg.idle_enabled : true;
     const idleLimitMs = (cfg.idle_limit_ms && Number(cfg.idle_limit_ms)) ? Number(cfg.idle_limit_ms) : 12 * 60 * 60 * 1000;
     const warnThresholdMs = (cfg.warn_threshold_ms && Number(cfg.warn_threshold_ms)) ? Number(cfg.warn_threshold_ms) : 2 * 60 * 1000;
@@ -21,7 +21,7 @@ jQuery(document).ready(function($) {
     function delCookie(name){ try{ document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`; }catch(e){} }
 
     // Time helpers
-    function markActivity(){ localStorage.setItem(activityKey, String(Date.now())); if (idleEnabled) setCookie('ssc_last_activity', String(Date.now()), idleLimitMs + 5*60*1000); }
+    function markActivity(){ localStorage.setItem(activityKey, String(Date.now())); if (idleEnabled) setCookie('rts_last_activity', String(Date.now()), idleLimitMs + 5*60*1000); }
     function getLastActivity(){ const v = localStorage.getItem(activityKey); return v ? parseInt(v, 10) : 0; }
     function remainingMs(){ const last = getLastActivity(); if (!last) return idleLimitMs; const d = idleLimitMs - (Date.now() - last); return d < 0 ? 0 : d; }
     function fmt(ms){ let s = Math.floor(ms/1000); const h = Math.floor(s/3600); s -= h*3600; const m = Math.floor(s/60); s -= m*60; const pad = (n)=> (n<10? '0'+n : String(n)); if (h>0) return `${pad(h)}:${pad(m)}`; else return `${pad(m)}:${pad(s)}`; }
@@ -81,18 +81,18 @@ jQuery(document).ready(function($) {
 
     function setPlanBadge(name, slug){ if (!$planBadge.length) return; name = name || 'Free'; slug = (slug || name || 'Free').toLowerCase(); $planBadge.text(name).removeClass('premium professional gold silver free').addClass(slug).attr('title','Billing plan: '+name); }
     function loadPlanFromCache(){ if (!planKey) return null; try { const raw = localStorage.getItem(planKey); return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
-    function savePlanToCache(plan){ if (!planKey) return; try { localStorage.setItem(planKey, JSON.stringify({ plan, t: Date.now() })); setCookie('ssc_plan', `${plan.slug}:${Date.now()}`, 24*60*60*1000); } catch(e){} }
-    function clearPlanCache(){ if (!planKey) return; try { localStorage.removeItem(planKey); delCookie('ssc_plan'); } catch(e){} }
-    function fetchPlanAndRender(){ if (noBackend || !$planBadge.length) { const c = loadPlanFromCache(); if (c && c.plan) setPlanBadge(c.plan.name, c.plan.slug); else setPlanBadge('Free','free'); return Promise.resolve(); } return $.post(cfg.ajax_url, { action: 'stock_scanner_get_current_plan', nonce: cfg.nonce })
-        .done(function(res){ let plan=null; if (res && res.success) { if (res.data && res.data.data && res.data.data.plan) plan=res.data.data.plan; else if (res.data && res.data.plan) plan=res.data.plan; } const name=(plan && (plan.name||plan.slug))?(plan.name||plan.slug):'Free'; const slug=(plan && (plan.slug||plan.name))?(plan.slug||plan.name).toLowerCase():'free'; setPlanBadge(name, slug); savePlanToCache({ name, slug }); setCookie('ssc_login_user', String(userId||''), 7*24*60*60*1000); })
+    function savePlanToCache(plan){ if (!planKey) return; try { localStorage.setItem(planKey, JSON.stringify({ plan, t: Date.now() })); setCookie('rts_plan', `${plan.slug}:${Date.now()}`, 24*60*60*1000); } catch(e){} }
+    function clearPlanCache(){ if (!planKey) return; try { localStorage.removeItem(planKey); delCookie('rts_plan'); } catch(e){} }
+    function fetchPlanAndRender(){ if (noBackend || !$planBadge.length) { const c = loadPlanFromCache(); if (c && c.plan) setPlanBadge(c.plan.name, c.plan.slug); else setPlanBadge('Free','free'); return Promise.resolve(); } return $.post(cfg.ajax_url, { action: 'retail_trade_scanner_get_current_plan', nonce: cfg.nonce })
+        .done(function(res){ let plan=null; if (res && res.success) { if (res.data && res.data.data && res.data.data.plan) plan=res.data.data.plan; else if (res.data && res.data.plan) plan=res.data.plan; } const name=(plan && (plan.name||plan.slug))?(plan.name||plan.slug):'Free'; const slug=(plan && (plan.slug||plan.name))?(plan.slug||plan.name).toLowerCase():'free'; setPlanBadge(name, slug); savePlanToCache({ name, slug }); setCookie('rts_login_user', String(userId||''), 7*24*60*60*1000); })
         .fail(function(){ const c = loadPlanFromCache(); if (c && c.plan) setPlanBadge(c.plan.name, c.plan.slug); else setPlanBadge('Free','free'); }); }
 
     if (isLoggedIn) {
         const prevUser = localStorage.getItem(loginKey);
         const isNewLogin = String(userId || '') !== String(prevUser || '');
-        if (isNewLogin) { fetchPlanAndRender(); localStorage.setItem(loginKey, String(userId || '')); setCookie('ssc_login_user', String(userId||''), 7*24*60*60*1000); }
+        if (isNewLogin) { fetchPlanAndRender(); localStorage.setItem(loginKey, String(userId || '')); setCookie('rts_login_user', String(userId||''), 7*24*60*60*1000); }
         else { const cached = loadPlanFromCache(); if (cached && cached.plan) setPlanBadge(cached.plan.name, cached.plan.slug); else { fetchPlanAndRender(); } }
-    } else { try { localStorage.removeItem(loginKey); delCookie('ssc_login_user'); delCookie('ssc_plan'); delCookie('ssc_last_activity'); } catch(e){} }
+    } else { try { localStorage.removeItem(loginKey); delCookie('rts_login_user'); delCookie('rts_plan'); delCookie('rts_last_activity'); } catch(e){} }
 
     // Alt key reveal for Refresh Plan
     let altDown = false;
@@ -111,9 +111,9 @@ jQuery(document).ready(function($) {
     function ensureDataPopover(){ if ($('#session-data-popover').length) return; const html = `<div id=\"session-data-popover\" role=\"dialog\" aria-live=\"polite\" class=\"policy-popover hidden\"><div class=\"policy-popover-arrow\"></div><div class=\"policy-popover-content\"></div></div>`; $('body').append(html); }
     function renderDataContent(){ const lines=[]; const cookies = document.cookie.split(';').map(s=>s.trim()).filter(Boolean); function hasPrefix(name){ return cookies.some(c => c.startsWith(name + '=')); }
         lines.push(`wordpress_logged_in: ${hasPrefix('wordpress_logged_in') ? 'present' : 'missing'}`);
-        lines.push(`ssc_login_user: ${getCookie('ssc_login_user') || 'not set'}`);
-        const la = getCookie('ssc_last_activity'); lines.push(`ssc_last_activity: ${la ? new Date(parseInt(la,10)).toLocaleString() : 'not set'}`);
-        const sp = getCookie('ssc_plan'); lines.push(`ssc_plan: ${sp || 'not set'}`);
+        lines.push(`rts_login_user: ${getCookie('rts_login_user') || 'not set'}`);
+        const la = getCookie('rts_last_activity'); lines.push(`rts_last_activity: ${la ? new Date(parseInt(la,10)).toLocaleString() : 'not set'}`);
+        const sp = getCookie('rts_plan'); lines.push(`rts_plan: ${sp || 'not set'}`);
         const lsPlan = planKey ? localStorage.getItem(planKey) : null; lines.push(`localStorage plan: ${lsPlan ? 'present' : 'missing'}`);
         return '<pre class="session-data-output">' + lines.join('\n') + '</pre>'; }
     function toggleDataPopover(target){ ensureDataPopover(); const $p=$('#session-data-popover'); const $c=$p.find('.policy-popover-content'); $c.html(renderDataContent()); const rect=target.getBoundingClientRect(); const top=window.scrollY + rect.bottom + 10; const left=window.scrollX + rect.left + (rect.width/2) - 160; $p.css({ top: top + 'px', left: Math.max(12,left) + 'px' }).toggleClass('hidden visible'); }
@@ -147,8 +147,8 @@ jQuery(document).ready(function($) {
             try { 
                 if (planKey) localStorage.removeItem(planKey); 
                 localStorage.removeItem(activityKey); 
-                delCookie('ssc_plan'); 
-                delCookie('ssc_last_activity'); 
+                delCookie('rts_plan'); 
+                delCookie('rts_last_activity'); 
             } catch(err){} 
             markActivity(); 
             setPlanBadge('Free','free');

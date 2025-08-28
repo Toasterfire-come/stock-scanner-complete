@@ -9,14 +9,14 @@ get_header();
   <div class="container">
     <?php get_template_part('template-parts/breadcrumbs'); ?>
     <div class="page-header">
-      <h1 class="page-title"><?php _e('Server Error', 'finmarkets'); ?></h1>
-      <p class="page-description"><?php _e('Something went wrong on our servers. We\'re working to fix this issue. Please try again in a few minutes.', 'finmarkets'); ?></p>
+      <h1 class="page-title"><?php esc_html_e('Server Error', 'retail-trade-scanner'); ?></h1>
+      <p class="page-description"><?php esc_html_e('Something went wrong on our servers. We\'re working to fix this issue. Please try again in a few minutes.', 'retail-trade-scanner'); ?></p>
       <div class="cta-buttons">
         <a class="btn btn-primary" href="<?php echo esc_url(home_url('/')); ?>">
-          <span><?php _e('Go to Homepage', 'finmarkets'); ?></span>
+          <span><?php esc_html_e('Go to Homepage', 'retail-trade-scanner'); ?></span>
         </a>
         <button class="btn btn-secondary" onclick="history.back()">
-          <span><?php _e('Go Back', 'finmarkets'); ?></span>
+          <span><?php esc_html_e('Go Back', 'retail-trade-scanner'); ?></span>
         </button>
       </div>
     </div>
@@ -24,22 +24,22 @@ get_header();
     <div class="grid-2">
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><?php _e('What happened?', 'finmarkets'); ?></h3>
+          <h3 class="card-title"><?php esc_html_e('What happened?', 'retail-trade-scanner'); ?></h3>
         </div>
         <div class="card-body">
-          <p><?php _e('Our server encountered an unexpected condition that prevented it from fulfilling your request. This is usually a temporary issue.', 'finmarkets'); ?></p>
+          <p><?php esc_html_e('Our server encountered an unexpected condition that prevented it from fulfilling your request. This is usually a temporary issue.', 'retail-trade-scanner'); ?></p>
         </div>
       </div>
       
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><?php _e('What can you do?', 'finmarkets'); ?></h3>
+          <h3 class="card-title"><?php esc_html_e('What can you do?', 'retail-trade-scanner'); ?></h3>
         </div>
         <div class="card-body">
           <ul>
-            <li><?php _e('Wait a few minutes and try again', 'finmarkets'); ?></li>
-            <li><?php _e('Check our status page for updates', 'finmarkets'); ?></li>
-            <li><?php _e('Contact support if the issue persists', 'finmarkets'); ?></li>
+            <li><?php esc_html_e('Wait a few minutes and try again', 'retail-trade-scanner'); ?></li>
+            <li><?php esc_html_e('Check our status page for updates', 'retail-trade-scanner'); ?></li>
+            <li><?php esc_html_e('Contact support if the issue persists', 'retail-trade-scanner'); ?></li>
           </ul>
         </div>
       </div>
