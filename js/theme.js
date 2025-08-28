@@ -38,15 +38,16 @@ jQuery(document).ready(function($) {
 
     // Mobile menu toggle
     if (window.innerWidth <= 768) {
-        const nav = $('.main-nav'); const header = $('.site-header');
+        const nav = $('.main-nav').length ? $('.main-nav') : $('.guest-nav');
+        const header = $('.site-header');
         header.prepend('<button class="mobile-menu-toggle" aria-expanded="false" aria-label="Toggle menu">☰</button>');
         $('.mobile-menu-toggle').on('click', function() { const open = nav.toggleClass('mobile-active').hasClass('mobile-active'); $(this).text(open ? '✕' : '☰').attr('aria-expanded', open); });
     }
 
     // Dropdown / mega submenu toggles
     $(document).on('click', '.submenu-toggle', function(e){ e.preventDefault(); const $btn=$(this), $li=$btn.closest('li'); const expanded = $li.toggleClass('open').hasClass('open'); $btn.attr('aria-expanded', expanded); $li.children('a.top-link').attr('aria-expanded', expanded); });
-    $(document).on('click', function(e){ if (!$(e.target).closest('.main-nav').length) { $('.main-nav .open').removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false'); } });
-    $(document).on('keydown', '.main-nav .menu-item', function(e){ if (e.key === 'Escape') { $(this).removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false').blur(); } });
+    $(document).on('click', function(e){ if (!$(e.target).closest('.main-nav, .guest-nav').length) { $('.main-nav .open, .guest-nav .open').removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false'); } });
+    $(document).on('keydown', '.main-nav .menu-item, .guest-nav .menu-item', function(e){ if (e.key === 'Escape') { $(this).removeClass('open').find('.submenu-toggle,[aria-expanded]').attr('aria-expanded','false').blur(); } });
 
     // Idle logout behavior + warning modal
     function shouldLogout(){ return remainingMs() === 0; }
