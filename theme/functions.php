@@ -8,6 +8,8 @@ require_once get_template_directory() . '/template-parts/nav-walker.php';
 
 /* ---------------- Theme setup ---------------- */
 function rts_theme_setup() {
+    load_theme_textdomain('retail-trade-scanner', get_template_directory() . '/languages');
+    add_theme_support('automatic-feed-links');
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');
     add_theme_support('custom-logo', [ 'height' => 80, 'width' => 240, 'flex-height' => true, 'flex-width' => true ]);
@@ -64,10 +66,16 @@ function rts_needs_chart() {
 function rts_scripts() {
     wp_enqueue_style('rts-style', get_stylesheet_uri(), [], '2.2.0');
 
-    // Register local Chart.js (do not enqueue by default)
-    if (!wp_script_is('chartjs','registered') && !wp_script_is('chartjs','enqueued')) {
-        wp_register_script('chart-js', get_template_directory_uri() . '/js/vendor/chart.umd.min.js', [], '4.4.3', true);
-        if (function_exists('wp_script_add_data')) { wp_script_add_data('chart-js', 'defer', true); }
+    // Chart.js: prefer existing 'chartjs' handle (from plugins), else load local copy when needed
+    if (wp_script_is('chartjs', 'registered') || wp_script_is('chartjs', 'enqueued')) {
+        if (rts_needs_chart()) {
+            wp_enqueue_script('chartjs');
+        }
+    } else {
+        if (!wp_script_is('chart-js', 'registered') && !wp_script_is('chart-js', 'enqueued')) {
+            wp_register_script('chart-js', get_template_directory_uri() . '/js/vendor/chart.umd.min.js', [], '4.4.3', true);
+            if (function_exists('wp_script_add_data')) { wp_script_add_data('chart-js', 'defer', true); }
+        }
         if (rts_needs_chart()) {
             wp_enqueue_script('chart-js');
         }

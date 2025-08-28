@@ -19,7 +19,8 @@ get_header(); ?>
           </div>
         </div>
         <div class="card-footer">
-          <a class="btn btn-secondary" href="<?php echo esc_url(get_permalink(get_option('page_for_posts'))); ?>"><span><?php esc_html_e('Back to Blog', 'retail-trade-scanner'); ?></span></a>
+          <?php $posts_page = (int) get_option('page_for_posts'); $back_url = $posts_page ? get_permalink($posts_page) : home_url('/'); ?>
+          <a class="btn btn-secondary" href="<?php echo esc_url($back_url); ?>"><span><?php esc_html_e('Back', 'retail-trade-scanner'); ?></span></a>
         </div>
       </article>
 
