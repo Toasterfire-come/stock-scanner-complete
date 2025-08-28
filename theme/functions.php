@@ -4,7 +4,6 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-/* ---------------- Include template parts ---------------- */
 require_once get_template_directory() . '/template-parts/nav-walker.php';
 
 /* ---------------- Theme setup ---------------- */
@@ -40,20 +39,49 @@ function rts_register_sidebars() {
 }
 add_action('widgets_init', 'rts_register_sidebars');
 
-/* ---------------- Enqueue styles/scripts ---------------- */
+/* ---------------- Helper: detect if current view needs Chart.js ---------------- */
+function rts_needs_chart() {
+    // Front/home templates include stock widgets
+    if (is_front_page() || is_home()) return true;
+
+    // Scan posts in main query for [stock_scanner] shortcode
+    global $wp_query;
+    if (!empty($wp_query) && is_a($wp_query, 'WP_Query') && !empty($wp_query->posts)) {
+        foreach ($wp_query->posts as $p) {
+            if (!empty($p->post_content) && has_shortcode($p->post_content, 'stock_scanner')) {
+                return true;
+            }
+        }
+    }
+
+    // Common tool pages that typically render charts
+    if (is_page(array('stock-dashboard','stock-search','personalized-stock-finder'))) return true;
+
+    return false;
+}
+
+/* ---------------- Enqueue styles/scripts (with Chart.js lazy-loading) ---------------- */
 function rts_scripts() {
     wp_enqueue_style('rts-style', get_stylesheet_uri(), [], '2.2.0');
 
-    // Local Chart.js (no CDN)
-    wp_register_script('chart-js', get_template_directory_uri() . '/js/vendor/chart.umd.min.js', [], '4.4.3', true);
+    // Register local Chart.js (do not enqueue by default)
+    if (!wp_script_is('chartjs','registered') && !wp_script_is('chartjs','enqueued')) {
+        wp_register_script('chart-js', get_template_directory_uri() . '/js/vendor/chart.umd.min.js', [], '4.4.3', true);
+        if (function_exists('wp_script_add_data')) { wp_script_add_data('chart-js', 'defer', true); }
+        if (rts_needs_chart()) {
+            wp_enqueue_script('chart-js');
+        }
+    }
 
-    // Theme script
-    wp_enqueue_script('rts-js', get_template_directory_uri() . '/js/theme.js', ['jquery','chart-js'], '2.2.0', true);
-    if (function_exists('wp_script_add_data')) { wp_script_add_data('rts-js', 'defer', true); wp_script_add_data('chart-js', 'defer', true); }
+    // Theme script (no dependency on Chart.js)
+    wp_enqueue_script('rts-js', get_template_directory_uri() . '/js/theme.js', ['jquery'], '2.2.0', true);
+    if (function_exists('wp_script_add_data')) { wp_script_add_data('rts-js', 'defer', true); }
 
     // Localized data
     $idle_enabled = (int) get_option('rts_idle_enabled', 1);
     $idle_hours   = max(1, (int) get_option('rts_idle_hours', 12));
+
+    // Prefer stock_scanner_api_url, fallback to retail_trade_scanner_api_url
     $api_base = rtrim(get_option('stock_scanner_api_url', ''), '/');
     if (empty($api_base)) { $api_base = rtrim(get_option('retail_trade_scanner_api_url', ''), '/'); }
 
@@ -74,7 +102,7 @@ add_action('wp_enqueue_scripts', 'rts_scripts');
 /* Resource hints */
 add_filter('wp_resource_hints', function($hints, $rel){ if ($rel==='preconnect'){ $hints[]='https://fonts.googleapis.com'; $hints[]=['href'=>'https://fonts.gstatic.com','crossorigin']; } return $hints; }, 10, 2);
 
-/* Fallback menu */
+/* Fallback menu for nav walker */
 function rts_fallback_menu() {
     echo '<ul class="main-menu">';
     echo '<li><a href="' . esc_url(home_url('/membership-plans/')) . '">' . esc_html__('Plans', 'retail-trade-scanner') . '</a></li>';
@@ -104,7 +132,7 @@ add_action('wp_dashboard_setup', function(){ wp_add_dashboard_widget('rts_widget
 </div>
 <?php }); });
 
-/* Admin menu + options save */
+/* Admin menu + options page with Health test button */
 add_action('admin_menu', function(){ add_theme_page(esc_html__('Retail Trade Scanner Options','retail-trade-scanner'), esc_html__('Trade Scanner','retail-trade-scanner'), 'manage_options', 'retail-trade-scanner-options', 'rts_options_page'); });
 function rts_save_theme_options(){ if(!current_user_can('manage_options')){ wp_die(esc_html__('Insufficient permissions.','retail-trade-scanner')); } check_admin_referer('rts_save_theme'); $enabled = isset($_POST['rts_idle_enabled'])?1:0; $hours=max(1,(int)($_POST['rts_idle_hours']??12)); update_option('rts_idle_enabled',$enabled); update_option('rts_idle_hours',$hours); wp_safe_redirect(add_query_arg('updated','1', wp_get_referer()?: admin_url('themes.php?page=retail-trade-scanner-options'))); exit; }
 add_action('admin_post_rts_save_theme','rts_save_theme_options');
@@ -112,6 +140,7 @@ function rts_options_page(){ $enabled=(int)get_option('rts_idle_enabled',1); $ho
 <div class="wrap">
   <h1><?php esc_html_e('📈 Retail Trade Scanner Theme Options','retail-trade-scanner'); ?></h1>
   <?php if(!empty($_GET['updated'])): ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e('Settings saved.','retail-trade-scanner'); ?></p></div><?php endif; ?>
+
   <div class="card">
     <h2><?php esc_html_e('🔒 Session Policy','retail-trade-scanner'); ?></h2>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -123,28 +152,43 @@ function rts_options_page(){ $enabled=(int)get_option('rts_idle_enabled',1); $ho
       <?php submit_button(); ?>
     </form>
   </div>
+
+  <div class="card">
+    <h2><?php esc_html_e('🩺 Backend Health','retail-trade-scanner'); ?></h2>
+    <p><?php esc_html_e('Test the configured API health endpoint and view the response.','retail-trade-scanner'); ?></p>
+    <p><button id="rts-test-health" class="button button-secondary"><?php esc_html_e('Test Backend Health','retail-trade-scanner'); ?></button></p>
+    <pre id="rts-health-output" style="max-height:280px;overflow:auto;background:#111;color:#ddd;padding:12px;border-radius:8px;"></pre>
+    <script>
+      jQuery(function($){
+        $('#rts-test-health').on('click', function(){
+          var $out = $('#rts-health-output');
+          $out.text('<?php echo esc_js(__('Testing…', 'retail-trade-scanner')); ?>');
+          $.post(ajaxurl, { action: 'retail_trade_scanner_get_health', nonce: '<?php echo esc_js(wp_create_nonce('retail_trade_scanner_theme_nonce')); ?>' }, function(res){
+            try { $out.text(JSON.stringify(res, null, 2)); } catch(e){ $out.text(res ? String(res) : ''); }
+          }).fail(function(xhr){ $out.text('Error: ' + (xhr.responseText || xhr.status)); });
+        });
+      });
+    </script>
+  </div>
 </div>
 <?php }
-
-/* Remove admin bar for non-admins */
-add_action('after_setup_theme', function(){ if(!current_user_can('administrator') && !is_admin()){ show_admin_bar(false);} });
 
 /* ---------- Excerpt and Read More ---------- */
 add_filter('excerpt_length', function(){ return 26; });
 add_filter('excerpt_more', function(){ return ' …'; });
 
 /* ---------------- AJAX: plan badge via backend ---------------- */
-function rts_ajax_current_plan(){ if(!is_user_logged_in()){ wp_send_json_error(['message'=>'Unauthenticated'],401);} check_ajax_referer('retail_trade_scanner_theme_nonce','nonce'); $api_base=rtrim(get_option('stock_scanner_api_url',''),'/'); $secret=get_option('stock_scanner_api_secret',''); if(empty($api_base)||empty($secret)){ $plan=rts_plan_from_pmpro(get_current_user_id()); wp_send_json_success(['source'=>'pmpro','plan'=>$plan]); }
+function rts_ajax_current_plan(){ if(!is_user_logged_in()){ wp_send_json_error(['message'=>'Unauthenticated'],401);} check_ajax_referer('retail_trade_scanner_theme_nonce','nonce'); $api_base=rtrim(get_option('stock_scanner_api_url',''),'/'); if (empty($api_base)) { $api_base=rtrim(get_option('retail_trade_scanner_api_url',''),'/'); } $secret=get_option('stock_scanner_api_secret',''); if (empty($secret)) { $secret = get_option('retail_trade_scanner_api_secret',''); } if(empty($api_base)||empty($secret)){ $plan=rts_plan_from_pmpro(get_current_user_id()); wp_send_json_success(['source'=>'pmpro','plan'=>$plan]); }
     $url=$api_base.'/billing/current-plan/'; $user_id=get_current_user_id(); $level_id=0; if(function_exists('pmpro_getMembershipLevelForUser')){ $l=pmpro_getMembershipLevelForUser($user_id); $level_id=$l? (int)$l->id:0; }
     $res=wp_remote_get($url,['headers'=>['Content-Type'=>'application/json','X-API-Secret'=>$secret,'X-User-Level'=>$level_id,'X-User-ID'=>$user_id],'timeout'=>20]);
     if(is_wp_error($res)){ $plan=rts_plan_from_pmpro($user_id); wp_send_json_success(['source'=>'fallback','plan'=>$plan,'error'=>$res->get_error_message()]); }
     $code=wp_remote_retrieve_response_code($res); $body=wp_remote_retrieve_body($res); if($code>=200 && $code<300){ $data=json_decode($body,true); if(!$data){ wp_send_json_success(['source'=>'backend','raw'=>$body]); } wp_send_json_success(['source'=>'backend','data'=>$data]); }
     $plan=rts_plan_from_pmpro($user_id); wp_send_json_success(['source'=>'fallback','plan'=>$plan,'status'=>$code]); }
 add_action('wp_ajax_retail_trade_scanner_get_current_plan','rts_ajax_current_plan');
-function rts_plan_from_pmpro($user_id){ $plan=['name'=>'Free','slug'=>'free','premium'=>false,'level_id'=>0]; if(function_exists('pmpro_getMembershipLevelForUser')){ $l=pmpro_getMembershipLevelForUser($user_id); if($l){ $plan['level_id']=(int)$l->id; switch((int)$l->id){ case 2:$plan=['name'=>'Premium','slug'=>'premium','premium'=>true,'level_id'=>2];break; case 3:$plan=['name'=>'Professional','slug'=>'professional','premium'=>true,'level_id'=>3];break; case 4:$plan=['name'=>'Gold','slug'=>'gold','premium'=>true,'level_id'=>4];break; } } } return $plan; }
+function rts_plan_from_pmpro($user_id){ $plan=['name'=>'Free','slug'=>'free','premium'=>false,'level_id'=>0]; if(function_exists('pmpro_getMembershipLevelForUser')){ $l=pmpro_getMembershipLevelForUser($user_id); if($l){ $id=(int)$l->id; $plan['level_id']=$id; if ($id===2) { $plan=['name'=>'Premium','slug'=>'premium','premium'=>true,'level_id'=>2]; } elseif ($id===3) { $plan=['name'=>'Professional','slug'=>'professional','premium'=>true,'level_id'=>3]; } elseif ($id===4) { $plan=['name'=>'Gold','slug'=>'gold','premium'=>true,'level_id'=>4]; } } } return $plan; }
 
 /* ---------------- Admin notices if API config missing ---------------- */
-add_action('admin_notices', function(){ if(!current_user_can('manage_options')) return; $api_url=get_option('stock_scanner_api_url',''); $api_secret=get_option('stock_scanner_api_secret',''); if(empty($api_url)||empty($api_secret)){ $link=esc_url(admin_url('options-general.php?page=stock-scanner-settings')); echo '<div class="notice notice-warning is-dismissible"><p>'. sprintf(esc_html__('Retail Trade Scanner: Please configure the API URL and Secret in %s.','retail-trade-scanner'), '<a href="'.$link.'">'.esc_html__('Settings → Stock Scanner','retail-trade-scanner').'</a>').'</p></div>'; }});
+add_action('admin_notices', function(){ if(!current_user_can('manage_options')) return; $api_url=get_option('stock_scanner_api_url',''); if (empty($api_url)) { $api_url=get_option('retail_trade_scanner_api_url',''); } $api_secret=get_option('stock_scanner_api_secret',''); if (empty($api_secret)) { $api_secret=get_option('retail_trade_scanner_api_secret',''); } if(empty($api_url)||empty($api_secret)){ $link=esc_url(admin_url('options-general.php?page=stock-scanner-settings')); echo '<div class="notice notice-warning is-dismissible"><p>'. sprintf(esc_html__('Retail Trade Scanner: Please configure the API URL and Secret in %s.','retail-trade-scanner'), '<a href="'.$link.'">'.esc_html__('Settings → Stock Scanner','retail-trade-scanner').'</a>').'</p></div>'; }});
 
 /* ---------------- Ensure screenshot.png exists ---------------- */
 add_action('admin_init', function(){ $path=get_stylesheet_directory().'/screenshot.png'; if(file_exists($path)) return; if(function_exists('imagecreatetruecolor')){ $w=1200;$h=900;$im=imagecreatetruecolor($w,$h); $bg=imagecolorallocate($im,240,242,245); imagefilledrectangle($im,0,0,$w,$h,$bg); $bar=imagecolorallocate($im,102,126,234); imagefilledrectangle($im,0,0,$w,12,$bar); $txt=imagecolorallocate($im,51,65,85); imagestring($im,5,40,40,'Retail Trade Scanner Theme',$txt); imagestring($im,3,40,70,'Professional WordPress theme for retail trade analysis',$txt); imagepng($im,$path); imagedestroy($im); } else { $b64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottQAAAABJRU5ErkJggg=='; file_put_contents($path, base64_decode($b64)); } });
@@ -182,3 +226,40 @@ add_action('customize_register','rts_customize_register');
 
 /* ---------------- Basic Schema Markup ---------------- */
 add_action('wp_head', function(){ $schema=['@context'=>'https://schema.org','@type'=> is_front_page()? 'WebSite':'WebPage','name'=> get_bloginfo('name'),'url'=> home_url('/')]; if(is_singular()){ $schema['@type']='Article'; $schema['headline']=get_the_title(); $schema['datePublished']=get_post_time('c',true); $schema['dateModified']=get_post_modified_time('c',true);} echo '<script type="application/ld+json">'. wp_json_encode($schema) .'</script>'; }, 99);
+
+/* ---------------- Reusable Upgrade CTA ---------------- */
+function rts_upgrade_cta($atts = []) {
+    $defaults = ['style' => 'banner'];
+    $atts = shortcode_atts($defaults, $atts, 'upgrade_cta');
+
+    $is_logged = is_user_logged_in();
+    $plan = $is_logged ? rts_plan_from_pmpro(get_current_user_id()) : ['slug' => 'guest', 'name' => 'Guest', 'premium' => false];
+
+    // Hide CTA for high-tier users
+    if (!empty($plan['premium'])) return '';
+
+    ob_start(); ?>
+    <section class="card upgrade-cta">
+      <div class="card-header">
+        <h2 class="card-title"><?php echo $is_logged ? esc_html__('Unlock more with Premium', 'retail-trade-scanner') : esc_html__('Start free, upgrade anytime', 'retail-trade-scanner'); ?></h2>
+        <div class="card-subtitle"><?php echo $is_logged ? esc_html__('Higher limits, more tools, priority access.', 'retail-trade-scanner') : esc_html__('Create an account to access more tools and insights.', 'retail-trade-scanner'); ?></div>
+      </div>
+      <div class="card-body">
+        <ul class="feature-list">
+          <li><?php esc_html_e('Advanced screening & filters', 'retail-trade-scanner'); ?></li>
+          <li><?php esc_html_e('Real-time widgets & longer history', 'retail-trade-scanner'); ?></li>
+          <li><?php esc_html_e('Higher monthly usage limits', 'retail-trade-scanner'); ?></li>
+        </ul>
+      </div>
+      <div class="card-footer">
+        <?php if ($is_logged) : ?>
+          <a class="btn btn-gold" href="<?php echo esc_url(home_url('/membership-account/membership-checkout/')); ?>"><?php esc_html_e('Upgrade now', 'retail-trade-scanner'); ?></a>
+        <?php else: ?>
+          <a class="btn btn-primary" href="<?php echo esc_url(wp_registration_url()); ?>"><?php esc_html_e('Create account', 'retail-trade-scanner'); ?></a>
+          <a class="btn btn-secondary" href="<?php echo esc_url(home_url('/membership-plans/')); ?>"><?php esc_html_e('See plans', 'retail-trade-scanner'); ?></a>
+        <?php endif; ?>
+      </div>
+    </section>
+    <?php return ob_get_clean();
+}
+add_shortcode('upgrade_cta', 'rts_upgrade_cta');

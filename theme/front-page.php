@@ -37,6 +37,8 @@ get_header();
       </div>
     </section>
 
+    <?php get_template_part('template-parts/upgrade-cta'); ?>
+
     <section class="card">
       <div class="card-header">
         <h2 class="card-title"><?php esc_html_e('Explore Pages', 'retail-trade-scanner'); ?></h2>

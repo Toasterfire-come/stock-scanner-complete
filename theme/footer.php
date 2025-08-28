@@ -21,6 +21,8 @@
             <li><a href="<?php echo esc_url(home_url('/stock-dashboard/')); ?>"><?php esc_html_e('Dashboard', 'retail-trade-scanner'); ?></a></li>
             <li><a href="<?php echo esc_url(home_url('/membership-account/')); ?>"><?php esc_html_e('My Account', 'retail-trade-scanner'); ?></a></li>
             <li><a href="<?php echo esc_url(home_url('/membership-account/membership-checkout/')); ?>"><?php esc_html_e('Upgrade', 'retail-trade-scanner'); ?></a></li>
+            <li><a href="<?php echo esc_url(home_url('/membership-orders/')); ?>"><?php esc_html_e('Billing History', 'retail-trade-scanner'); ?></a></li>
+            <li><a href="<?php echo esc_url(home_url('/membership-billing/')); ?>"><?php esc_html_e('Invoices', 'retail-trade-scanner'); ?></a></li>
             <li><a href="<?php echo esc_url(home_url('/membership-account/membership-cancel/')); ?>"><?php esc_html_e('Cancel', 'retail-trade-scanner'); ?></a></li>
           <?php endif; ?>
         </ul>
