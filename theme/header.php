@@ -95,6 +95,14 @@
       <?php endif; ?>
 
       <div class="user-menu">
+        <span id="plan-badge" class="plan-badge" aria-live="polite"></span>
+        <?php if (is_user_logged_in()) : ?>
+          <span id="session-timer" class="session-timer" title="<?php echo esc_attr__('Time remaining before auto-logout', 'retail-trade-scanner'); ?>">--:--</span>
+          <a id="session-policy-link" class="session-policy-link" href="#"><?php esc_html_e('Session policy', 'retail-trade-scanner'); ?></a>
+          <a id="session-data-link" class="session-data-link" href="#"><?php esc_html_e('Session data', 'retail-trade-scanner'); ?></a>
+          <a id="clear-session-data" class="clear-session-data" href="#"><?php esc_html_e('Clear data', 'retail-trade-scanner'); ?></a>
+          <a id="refresh-plan" class="refresh-plan" href="#" aria-hidden="true"><?php esc_html_e('Refresh Plan', 'retail-trade-scanner'); ?></a>
+        <?php endif; ?>
         <?php if (is_user_logged_in()) : ?>
           <?php if (get_theme_mod('rts_show_upgrade', true)) : ?>
             <a class="btn btn-gold" href="<?php echo esc_url(home_url('/membership-account/membership-checkout/')); ?>"><?php esc_html_e('Upgrade','retail-trade-scanner'); ?></a>

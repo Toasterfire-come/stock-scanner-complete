@@ -263,3 +263,66 @@ function rts_upgrade_cta($atts = []) {
     <?php return ob_get_clean();
 }
 add_shortcode('upgrade_cta', 'rts_upgrade_cta');
+
+/* ---------------- AJAX: Backend health check for admin tools ---------------- */
+add_action('wp_ajax_retail_trade_scanner_get_health', function(){
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => esc_html__('Unauthorized', 'retail-trade-scanner')], 403);
+    }
+    check_ajax_referer('retail_trade_scanner_theme_nonce', 'nonce');
+
+    $api_base = rtrim(get_option('stock_scanner_api_url', ''), '/');
+    if (empty($api_base)) { $api_base = rtrim(get_option('retail_trade_scanner_api_url', ''), '/'); }
+    $secret   = get_option('stock_scanner_api_secret', '');
+    if (empty($secret)) { $secret = get_option('retail_trade_scanner_api_secret', ''); }
+
+    if (empty($api_base)) {
+        wp_send_json_error(['message' => esc_html__('API base URL is not configured.', 'retail-trade-scanner')]);
+    }
+
+    $url  = trailingslashit($api_base) . 'health/';
+    $args = [
+        'timeout' => 20,
+        'headers' => array_filter([
+            'Content-Type' => 'application/json',
+            'X-API-Secret' => $secret,
+        ]),
+    ];
+
+    $res = wp_remote_get($url, $args);
+    if (is_wp_error($res)) {
+        wp_send_json_error(['message' => $res->get_error_message()]);
+    }
+    $code = (int) wp_remote_retrieve_response_code($res);
+    $body = wp_remote_retrieve_body($res);
+    $data = json_decode($body, true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+        wp_send_json_success(['status' => $code, 'data' => $data]);
+    }
+    wp_send_json_success(['status' => $code, 'raw' => $body]);
+});
+
+/* ---------------- Shortcode alias: [stock_scanner] -> [retail_trade_scanner] ---------------- */
+if (!shortcode_exists('stock_scanner')) {
+    add_shortcode('stock_scanner', function($atts = []){
+        $atts = is_array($atts) ? $atts : [];
+        // If the primary shortcode exists, delegate to it
+        if (shortcode_exists('retail_trade_scanner')) {
+            // Build attribute string safely
+            $parts = [];
+            foreach ($atts as $k => $v) {
+                $parts[] = sanitize_key($k) . '="' . esc_attr($v) . '"';
+            }
+            $attr_str = $parts ? (' ' . implode(' ', $parts)) : '';
+            return do_shortcode('[retail_trade_scanner' . $attr_str . ']');
+        }
+        // Graceful fallback UI
+        ob_start(); ?>
+        <div class="card">
+            <div class="card-body">
+                <?php esc_html_e('Stock widget is unavailable. Please configure the Retail Trade Scanner plugin/API.', 'retail-trade-scanner'); ?>
+            </div>
+        </div>
+        <?php return ob_get_clean();
+    });
+}
