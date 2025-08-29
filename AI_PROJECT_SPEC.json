@@ -1,0 +1,158 @@
+{
+  "project": {
+    "name": "Retail Trade Scanner",
+    "description": "A premium stock scanning, screening, and dashboarding platform with modern UI, glassmorphism, animations, dark mode, and advanced data visualization.",
+    "design_language": "Glassmorphic, minimalistic, premium trading dashboards",
+    "theme_system": {
+      "mode": ["light", "dark", "auto"],
+      "colors": {
+        "primary": {
+          "50": "#eff6ff",
+          "100": "#dbeafe",
+          "500": "#3b82f6",
+          "600": "#2563eb",
+          "700": "#1d4ed8",
+          "900": "#1e3a8a"
+        },
+        "secondary": {
+          "50": "#fdf4ff",
+          "100": "#fae8ff",
+          "500": "#d946ef",
+          "900": "#701a75"
+        },
+        "semantic": {
+          "success": "#16a34a",
+          "warning": "#f59e0b",
+          "danger": "#ef4444",
+          "info": "#0ea5e9"
+        },
+        "surfaces": {
+          "raised": "#ffffff",
+          "overlay": "rgba(255,255,255,0.95)",
+          "glass": "rgba(255,255,255,0.1)",
+          "dark-raised": "#111111"
+        }
+      }
+    },
+    "typography": {
+      "font_families": {
+        "display": "\"InterDisplay\", \"SF Pro Display\", system-ui, sans-serif",
+        "body": "\"InterText\", \"SF Pro Text\", system-ui, sans-serif",
+        "monospace": "\"JetBrains Mono\", monospace"
+      },
+      "font_scale": "1.25",
+      "sizes": {
+        "xs": "clamp(0.75rem, 0.69rem + 0.31vw, 0.8rem)",
+        "sm": "clamp(0.875rem, 0.81rem + 0.33vw, 0.9rem)",
+        "base": "clamp(1rem, 0.95rem + 0.35vw, 1.05rem)",
+        "lg": "clamp(1.125rem, 1.05rem + 0.4vw, 1.2rem)",
+        "xl": "clamp(1.25rem, 1.15rem + 0.5vw, 1.4rem)",
+        "2xl": "clamp(1.5rem, 1.35rem + 0.7vw, 1.75rem)",
+        "3xl": "clamp(2rem, 1.8rem + 1vw, 2.5rem)"
+      }
+    },
+    "layout": {
+      "header": {
+        "height": "72px",
+        "background": "var(--surface-overlay)",
+        "style": "glassmorphic with subtle shadow",
+        "nav_links": [
+          { "icon": "scanner", "label": "Scanner", "href": "/scanner" },
+          { "icon": "search", "label": "Search", "href": "/search" },
+          { "icon": "popular", "label": "Popular", "href": "/popular" },
+          { "icon": "email", "label": "Email Lists", "href": "/emails" },
+          { "icon": "news", "label": "News", "href": "/news" },
+          { "icon": "finder", "label": "Finder", "href": "/finder" },
+          { "icon": "filters", "label": "Filters", "href": "/filters" },
+          { "icon": "plans", "label": "Plans", "href": "/plans" },
+          { "icon": "contact", "label": "Contact", "href": "/contact" }
+        ],
+        "cta_button": {
+          "label": "Sign In",
+          "variant": "btn-gradient btn-magnetic"
+        }
+      },
+      "sidebar": {
+        "width": "280px",
+        "background": "var(--surface-overlay)",
+        "style": "glassmorphic, collapsible, animated",
+        "sections": [
+          {
+            "label": "Dashboard",
+            "icon": "dashboard",
+            "href": "/dashboard"
+          },
+          {
+            "label": "Stock Scanner",
+            "icon": "scanner",
+            "href": "/scanner"
+          },
+          {
+            "label": "Watchlists",
+            "icon": "watchlist",
+            "href": "/watchlists"
+          },
+          {
+            "label": "Analytics",
+            "icon": "analytics",
+            "href": "/analytics"
+          },
+          {
+            "label": "Settings",
+            "icon": "settings",
+            "href": "/settings"
+          }
+        ]
+      },
+      "footer": {
+        "style": "glassmorphic with subtle top-border",
+        "links": [
+          { "label": "Privacy Policy", "href": "/privacy" },
+          { "label": "Terms of Service", "href": "/terms" },
+          { "label": "Contact Support", "href": "/support" }
+        ]
+      }
+    },
+    "animations": {
+      "hover": "scale(1.02) translateY(-2px)",
+      "entrance": "fade-up with spring easing",
+      "skeleton_loading": "animated shimmer gradients",
+      "particle_effects": "CSS-only particle float animations"
+    },
+    "components": {
+      "stock_widget": {
+        "style": "glassmorphic card with dynamic gradients",
+        "features": ["live price updates", "animated price change colors", "charts with tooltips"]
+      },
+      "buttons": {
+        "variants": ["gradient", "glass", "magnetic", "outline"],
+        "hover_effects": "micro-ripple + scale"
+      },
+      "forms": {
+        "floating_labels": true,
+        "validation_feedback": "animated, color-coded"
+      },
+      "cards": {
+        "variants": ["glass", "elevated", "bento", "masonry"]
+      }
+    },
+    "svg_icons": {
+      "scanner": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M4.5 19.5h15m-15-3h15m-15-3h15m-15-3h15m-15-3h15'/></svg>",
+      "search": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15z'/></svg>",
+      "popular": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M12 4.5v15m7.5-7.5h-15'/></svg>",
+      "email": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M3 8l9 6 9-6m-18 8V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/></svg>",
+      "news": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M3 5h18v14H3V5zm3 4h12m-12 4h12'/></svg>",
+      "finder": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><circle cx='12' cy='12' r='9'/><path stroke-linecap='round' stroke-linejoin='round' d='M12 6v6l3 3'/></svg>",
+      "filters": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M3 5h18l-7 9v5l-4 2v-7L3 5z'/></svg>",
+      "plans": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M12 6v12m6-6H6'/></svg>",
+      "contact": "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M21 10c0 7-9 11-9 11s-9-4-9-11a9 9 0 1 1 18 0z'/></svg>"
+    },
+    "templates": {
+      "dashboard": "Glassmorphic stock widgets, modular cards, animated graphs",
+      "scanner": "Live filtering + animated results + advanced charts",
+      "plans": "Interactive pricing tables + membership badges",
+      "contact": "Floating labels, advanced form validation",
+      "news": "Bento grid with image cards + skeleton loaders"
+    }
+  }
+}

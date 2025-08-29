@@ -1,0 +1,158 @@
+{
+  "design_system": {
+    "meta": {
+      "name": "Retail Trade Scanner UI",
+      "version": "1.0.0",
+      "brand": "Retail Trade Scanner",
+      "grid": { "columns": 12, "gutter": 24, "maxWidth": 1440 }
+    },
+    "tokens": {
+      "colors": {
+        "primary": "#2D5BE3",
+        "primaryHover": "#1B47C2",
+        "secondary": "#00B86B",
+        "secondaryHover": "#00A05F",
+        "accent": "#FFB300",
+        "bg": "#F9FAFB",
+        "surface": "#FFFFFF",
+        "surfaceAlt": "#F3F6FA",
+        "header": "#FFFFFF",
+        "sidebar": "#1C2536",
+        "footer": "#0D1B2A",
+        "text": "#141A21",
+        "muted": "#5F6B7A",
+        "border": "#E5E9F2",
+        "focus": "#94C0FF",
+        "success": "#16A34A",
+        "danger": "#DC2626",
+        "warning": "#D97706",
+        "info": "#2563EB",
+        "positive": "#16A34A",
+        "negative": "#DC2626",
+        "hoverRow": "#F2F6FF"
+      },
+      "radius": { "xs": 4, "sm": 6, "md": 10, "lg": 14, "xl": 18, "pill": 999 },
+      "shadow": {
+        "sm": "0 1px 2px rgba(0,0,0,.05)",
+        "md": "0 4px 10px rgba(0,0,0,.08)",
+        "lg": "0 10px 24px rgba(0,0,0,.10)"
+      },
+      "space": { "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "xxl": 32, "sectionY": 56 },
+      "typography": {
+        "fontFamily": "'Inter', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif",
+        "sizes": { "xs": 12, "sm": 14, "base": 16, "lg": 18, "xl": 22, "h3": 22, "h2": 28, "h1": 36 },
+        "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700 },
+        "lineHeights": { "tight": 1.2, "normal": 1.5, "relaxed": 1.65 }
+      }
+    },
+    "layout": {
+      "header": { "height": 72, "sticky": true, "shadow": "sm" },
+      "sidebar": { "width": 264, "collapsedWidth": 80, "sticky": true, "shadow": "md" },
+      "footer": { "height": 68, "borderTop": true }
+    },
+    "components": {
+      "button": {
+        "variants": {
+          "primary": {
+            "bg": "{colors.primary}",
+            "bgHover": "{colors.primaryHover}",
+            "text": "#FFFFFF",
+            "radius": "{radius.sm}",
+            "padY": 10,
+            "padX": 18,
+            "font": "{typography.weights.medium}"
+          },
+          "secondary": {
+            "bg": "{colors.secondary}",
+            "bgHover": "{colors.secondaryHover}",
+            "text": "#FFFFFF",
+            "radius": "{radius.sm}",
+            "padY": 10,
+            "padX": 18
+          },
+          "outline": {
+            "bg": "transparent",
+            "border": "1px solid {colors.primary}",
+            "text": "{colors.primary}",
+            "hoverBg": "rgba(45,91,227,.08)"
+          },
+          "ghost": {
+            "bg": "transparent",
+            "text": "{colors.text}",
+            "hoverBg": "rgba(0,0,0,.04)"
+          }
+        }
+      },
+      "card": {
+        "bg": "{colors.surface}",
+        "radius": "{radius.md}",
+        "shadow": "md",
+        "pad": "{space.xl}",
+        "headerSize": "{typography.sizes.lg}"
+      },
+      "table": {
+        "headerBg": "{colors.surfaceAlt}",
+        "rowHover": "{colors.hoverRow}",
+        "border": "1px solid {colors.border}",
+        "cellPadY": 12,
+        "cellPadX": 16
+      },
+      "badge": {
+        "radius": "{radius.pill}",
+        "padY": 4,
+        "padX": 10,
+        "variants": {
+          "positive": { "bg": "rgba(22,163,74,.12)", "text": "{colors.success}" },
+          "negative": { "bg": "rgba(220,38,38,.12)", "text": "{colors.danger}" },
+          "neutral":  { "bg": "rgba(95,107,122,.12)", "text": "{colors.muted}" }
+        }
+      },
+      "toast": { "bg": "{colors.surface}", "shadow": "lg", "radius": "{radius.md}" },
+      "modal": { "overlay": "rgba(0,0,0,.5)", "bg": "{colors.surface}", "radius": "{radius.lg}" },
+      "chartShell": {
+        "grid": "#E0E6F0",
+        "axis": "#566172",
+        "linePrimary": "{colors.primary}",
+        "lineSecondary": "{colors.secondary}",
+        "tooltipBg": "{colors.surface}",
+        "tooltipShadow": "md"
+      }
+    },
+    "nav": {
+      "items": [
+        { "id": "dashboard", "label": "Dashboard", "icon": "dashboard", "path": "/" },
+        { "id": "scanner", "label": "Scanner", "icon": "scanner", "path": "/scanner" },
+        { "id": "search", "label": "Search", "icon": "search", "path": "/search" },
+        { "id": "popular", "label": "Popular", "icon": "popular", "path": "/popular" },
+        { "id": "email", "label": "Email Lists", "icon": "email", "path": "/email" },
+        { "id": "news", "label": "News", "icon": "news", "path": "/news" },
+        { "id": "finder", "label": "Finder", "icon": "finder", "path": "/finder" },
+        { "id": "filters", "label": "Filters", "icon": "filters", "path": "/filters" },
+        { "id": "plans", "label": "Plans", "icon": "plans", "path": "/plans" },
+        { "id": "contact", "label": "Contact", "icon": "contact", "path": "/contact" }
+      ],
+      "aux": [
+        { "id": "portfolio", "label": "Portfolio", "icon": "portfolio", "path": "/portfolio" },
+        { "id": "settings", "label": "Settings", "icon": "settings", "path": "/settings" },
+        { "id": "alerts", "label": "Alerts", "icon": "alerts", "path": "/alerts" }
+      ],
+      "cta": { "label": "Sign in", "path": "/auth/sign-in" }
+    },
+    "pages": {
+      "dashboard":   { "title": "Stock Dashboard", "sections": ["overview-cards","indices","watchlist","top-movers","heatmap"] },
+      "scanner":     { "title": "Real-Time Scanner", "sections": ["filters-bar","results-table","chart-panel","save-scan"] },
+      "search":      { "title": "Search", "sections": ["symbol-input","autocomplete","quote-card","historical-table"] },
+      "popular":     { "title": "Popular Lists", "sections": ["trending","most-active","gainers","losers"] },
+      "email":       { "title": "Email Lists", "sections": ["subscribe-form","list-manager","history-table"] },
+      "news":        { "title": "Market News", "sections": ["sources-tabs","headline-stream","reading-pane"] },
+      "finder":      { "title": "Finder", "sections": ["sector-grid","factor-tiles","screen-results"] },
+      "filters":     { "title": "Filters", "sections": ["presets","custom-builder","save-preset"] },
+      "plans":       { "title": "Plans & Pricing", "sections": ["tiers","faq","cta"] },
+      "contact":     { "title": "Contact", "sections": ["contact-form","help-links"] },
+      "portfolio":   { "title": "Portfolio", "sections": ["positions","performance-chart","allocation"] },
+      "settings":    { "title": "Settings", "sections": ["profile","preferences","billing","api-keys"] },
+      "auth":        { "title": "Account", "sections": ["sign-in","sign-up","forgot-password"] },
+      "notFound":    { "title": "Page Not Found", "sections": ["message","search-link"] }
+    }
+  }
+}
