@@ -1245,4 +1245,6 @@ function initNewsPage() {
 }
 </style>
 
+<?php get_template_part('template-parts/layout/main-shell-end'); ?>
+
 <?php get_footer(); ?>
