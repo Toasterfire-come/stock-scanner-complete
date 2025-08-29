@@ -171,4 +171,6 @@ const data = await resp.json();</code></pre>
 .path { font-family: var(--font-mono); }
 </style>
 
+<?php get_template_part('template-parts/layout/main-shell-end'); ?>
+
 <?php get_footer(); ?>
