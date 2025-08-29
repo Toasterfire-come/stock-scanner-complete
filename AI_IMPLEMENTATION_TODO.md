@@ -44,13 +44,13 @@ Enqueue & build process
 [ ] Add a build pipeline (npm + webpack/rollup/parcel or sass + postcss) to produce minified assets; provide npm run build, npm run dev commands
 
 Core theme templates & structure
-[ ] header.php — left inline SVG logo, center search input (ticker/company), right user menu (avatar dropdown), notifications bell with badge, nav for desktop (ARIA, keyboard accessible)
-[ ] sidebar.php — collapsible, keyboard accessible, shows icons + labels; collapsed shows icons with tooltips; active link visual (glowing left border + darker bg)
-[ ] footer.php — terms/privacy/contact links, social icons, copyright, small sitemap
-[ ] index.php, page.php, single.php, archive.php, 404.php, front-page.php (front page template for landing/ui)
-[ ] searchform.php — consistent search UI used site-wide
-[ ] functions.php — theme setup, register nav menus (primary, footer), register sidebars/widgets (if used), add_theme_support (title-tag, post-thumbnails, html5, editor-styles), enqueue assets, register block styles/patterns
-[ ] theme.json — define color palette, font sizes, custom properties for editor parity and block styling
+[✓] header.php — left inline SVG logo, center search input (ticker/company), right user menu (avatar dropdown), notifications bell with badge, nav for desktop (ARIA, keyboard accessible)
+[✓] sidebar.php — collapsible, keyboard accessible, shows icons + labels; collapsed shows icons with tooltips; active link visual (glowing left border + darker bg)
+[✓] footer.php — terms/privacy/contact links, social icons, copyright, small sitemap
+[✓] index.php, page.php, single.php, archive.php, 404.php, front-page.php (front page template for landing/ui)
+[✓] searchform.php — consistent search UI used site-wide
+[✓] functions.php — theme setup, register nav menus (primary, footer), register sidebars/widgets (if used), add_theme_support (title-tag, post-thumbnails, html5, editor-styles), enqueue assets, register block styles/patterns
+[✓] theme.json — define color palette, font sizes, custom properties for editor parity and block styling
 
 Template parts (reusable components)
 [ ] template-parts/components/button.php — button variants (primary, secondary, outline, gradient, magnetic) with ARIA and focus styles
