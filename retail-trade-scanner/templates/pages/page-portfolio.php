@@ -665,6 +665,8 @@ document.addEventListener('DOMContentLoaded', function() {
 [data-theme="dark"] .metric-label,
 [data-theme="dark"] .transaction-meta {
     color: var(--gray-400);
+<?php get_template_part('template-parts/layout/main-shell-end'); ?>
+
 }
 </style>
 
