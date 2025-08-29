@@ -2,8 +2,7 @@
 /**
  * Theme functions and definitions
  *
- * Production hardening: i18n, supports, menus, sidebars, meta tags, forms handlers.
- * Non-destructive page creation on activation remains intact.
+ * Production hardening + Compatibility with Stock Scanner Integration plugin (plugin-only branch)
  *
  * @package RetailTradeScanner
  */
@@ -36,7 +35,26 @@ add_action('after_setup_theme', function () {
     'primary' => __('Primary Navigation', 'retail-trade-scanner'),
     'footer'  => __('Footer Navigation', 'retail-trade-scanner'),
   ]);
-});
+}, 5);
+
+// Assign plugin-created menu to theme locations if present and locations unassigned
+add_action('after_setup_theme', function(){
+  // Only run in non-CLI context
+  if (defined('WP_CLI') && WP_CLI) { return; }
+
+  $locations = get_nav_menu_locations();
+  $need_primary = empty($locations['primary']);
+  $need_footer  = empty($locations['footer']);
+  if (!$need_primary && !$need_footer) { return; }
+
+  $menu = wp_get_nav_menu_object('Stock Scanner Menu');
+  if (!$menu) { return; }
+
+  $menu_id = (int) $menu->term_id;
+  if ($need_primary) { $locations['primary'] = $menu_id; }
+  if ($need_footer)  { $locations['footer']  = $menu_id; }
+  set_theme_mod('nav_menu_locations', $locations);
+}, 50);
 
 // Sidebars
 add_action('widgets_init', function(){
@@ -86,18 +104,26 @@ add_action('wp_head', function(){
   if ($image) { echo "<meta name=\"twitter:image\" content=\"{$image}\">\n"; }
 }, 5);
 
-// Theme activation hook
+// Theme activation hook – skip creating pages if plugin provides them
 add_action('after_switch_theme', 'retail_trade_scanner_on_activate');
-
-/**
- * Run on theme activation.
- * - Creates required pages if they don't exist
- * - Assigns page templates when corresponding template files are present
- * - Does not overwrite existing page content
- */
 function retail_trade_scanner_on_activate() {
   // Prevent duplicate runs (e.g., multi-site switch)
   if (get_option('rts_activation_completed')) {
+    return;
+  }
+
+  // If Stock Scanner plugin is active, rely on its page creation
+  if (class_exists('StockScannerIntegration')) {
+    update_option('rts_activation_completed', 1);
+    // Try to bind plugin menu to theme locations if not set yet
+    $locations = get_nav_menu_locations();
+    $menu = wp_get_nav_menu_object('Stock Scanner Menu');
+    if ($menu) {
+      $menu_id = (int) $menu->term_id;
+      if (empty($locations['primary'])) { $locations['primary'] = $menu_id; }
+      if (empty($locations['footer']))  { $locations['footer']  = $menu_id; }
+      set_theme_mod('nav_menu_locations', $locations);
+    }
     return;
   }
 
@@ -156,7 +182,7 @@ function retail_trade_scanner_on_activate() {
   update_option('rts_activation_completed', 1);
 }
 
-// Forms handlers (Subscribe & Contact)
+// Forms handlers (Subscribe & Contact) – keep theme forms working; can be replaced by plugin endpoints if needed
 function rts_safe_redirect_back($param, $value){
   $url = wp_get_referer();
   if (!$url) { $url = home_url('/'); }
@@ -195,3 +221,16 @@ function rts_handle_contact(){
   @wp_mail($admin, $subject, $body);
   rts_safe_redirect_back('contact', 'sent');
 }
+
+// If plugin is active but API not configured, gently surface an admin notice in frontend for administrators
+add_action('wp_footer', function(){
+  if (!current_user_can('manage_options')) { return; }
+  if (!class_exists('StockScannerIntegration')) { return; }
+  $api_url = get_option('stock_scanner_api_url', '');
+  $api_secret = get_option('stock_scanner_api_secret', '');
+  if (empty($api_url) || empty($api_secret)) {
+    echo '<div style="position:fixed;bottom:12px;right:12px;background:#111827;color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:9999;opacity:.9">'
+       . esc_html__('Stock Scanner plugin needs configuration: set API URL and Secret in Settings → Stock Scanner.', 'retail-trade-scanner')
+       . '</div>';
+  }
+});
