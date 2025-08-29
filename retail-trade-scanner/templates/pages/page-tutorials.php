@@ -61,4 +61,6 @@ get_template_part('template-parts/layout/main-shell', null, $layout_args);
 .track-icon { color: var(--primary-600); margin-bottom: var(--spacing-sm); }
 </style>
 
+<?php get_template_part('template-parts/layout/main-shell-end'); ?>
+
 <?php get_footer(); ?>
