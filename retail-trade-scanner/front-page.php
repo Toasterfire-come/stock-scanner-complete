@@ -47,37 +47,107 @@ get_header();
             <div class="demo-dashboard glass-card">
                 <div class="demo-header">
                     <div class="demo-nav">
-                        <div class="demo-nav-item active">Dashboard</div>
-                        <div class="demo-nav-item">Scanner</div>
-                        <div class="demo-nav-item">Portfolio</div>
-                    </div>
-                </div>
-                <div class="demo-content bento-grid">
-                    <div class="demo-widget bento-item-large glass-card">
-                        <h3>Market Overview</h3>
-                        <div class="demo-chart skeleton" style="height: 120px;"></div>
-                    </div>
-                    <div class="demo-widget bento-item-medium glass-card">
-                        <h4>Top Movers</h4>
-                        <div class="demo-list">
-                            <div class="demo-stock">
-                                <span>AAPL</span>
-                                <span class="text-success">+2.34%</span>
-                            </div>
-                            <div class="demo-stock">
-                                <span>TSLA</span>
-                                <span class="text-danger">-1.28%</span>
-                            </div>
-                            <div class="demo-stock">
-                                <span>NVDA</span>
-                                <span class="text-success">+3.67%</span>
-                            </div>
+                        <div class="demo-nav-item active" data-demo-tab="dashboard">
+                            <?php echo rts_get_icon('dashboard', ['width' => '16', 'height' => '16']); ?>
+                            Dashboard
+                        </div>
+                        <div class="demo-nav-item" data-demo-tab="scanner">
+                            <?php echo rts_get_icon('scanner', ['width' => '16', 'height' => '16']); ?>
+                            Scanner
+                        </div>
+                        <div class="demo-nav-item" data-demo-tab="portfolio">
+                            <?php echo rts_get_icon('portfolio', ['width' => '16', 'height' => '16']); ?>
+                            Portfolio
                         </div>
                     </div>
-                    <div class="demo-widget bento-item-small glass-card">
-                        <h4>Portfolio</h4>
-                        <div class="demo-value">$124,567</div>
-                        <div class="demo-change text-success">+5.23%</div>
+                    <div class="demo-status">
+                        <span class="status-indicator status-online">Live</span>
+                    </div>
+                </div>
+                
+                <!-- Dashboard Demo -->
+                <div class="demo-content demo-dashboard-view active" id="demo-dashboard">
+                    <div class="demo-kpis">
+                        <div class="demo-kpi">
+                            <div class="demo-kpi-label">Portfolio</div>
+                            <div class="demo-kpi-value">$124,567</div>
+                            <div class="demo-kpi-change text-success">+5.23%</div>
+                        </div>
+                        <div class="demo-kpi">
+                            <div class="demo-kpi-label">P&L Today</div>
+                            <div class="demo-kpi-value">+$2,341</div>
+                            <div class="demo-kpi-change text-success">+1.92%</div>
+                        </div>
+                        <div class="demo-kpi">
+                            <div class="demo-kpi-label">Active</div>
+                            <div class="demo-kpi-value">23</div>
+                            <div class="demo-kpi-change text-muted">positions</div>
+                        </div>
+                    </div>
+                    <div class="demo-chart-area">
+                        <canvas id="demo-chart" width="400" height="150"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Scanner Demo -->
+                <div class="demo-content demo-scanner-view" id="demo-scanner">
+                    <div class="demo-filters">
+                        <div class="demo-filter-chip active">Price: $10-$100</div>
+                        <div class="demo-filter-chip active">Volume: >1M</div>
+                        <div class="demo-filter-chip">+5% Today</div>
+                    </div>
+                    <div class="demo-results">
+                        <div class="demo-stock-row">
+                            <span class="stock-symbol">NVDA</span>
+                            <span class="stock-price">$234.56</span>
+                            <span class="stock-change text-success">+8.45%</span>
+                        </div>
+                        <div class="demo-stock-row">
+                            <span class="stock-symbol">AMD</span>
+                            <span class="stock-price">$156.78</span>
+                            <span class="stock-change text-success">+6.23%</span>
+                        </div>
+                        <div class="demo-stock-row">
+                            <span class="stock-symbol">TSLA</span>
+                            <span class="stock-price">$234.56</span>
+                            <span class="stock-change text-success">+5.67%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Portfolio Demo -->
+                <div class="demo-content demo-portfolio-view" id="demo-portfolio">
+                    <div class="demo-holdings">
+                        <div class="demo-holding">
+                            <div class="holding-info">
+                                <span class="holding-symbol">AAPL</span>
+                                <span class="holding-shares">150 shares</span>
+                            </div>
+                            <div class="holding-value">
+                                <span class="holding-price">$26,250</span>
+                                <span class="holding-change text-success">+$1,125</span>
+                            </div>
+                        </div>
+                        <div class="demo-holding">
+                            <div class="holding-info">
+                                <span class="holding-symbol">MSFT</span>
+                                <span class="holding-shares">80 shares</span>
+                            </div>
+                            <div class="holding-value">
+                                <span class="holding-price">$28,800</span>
+                                <span class="holding-change text-success">+$960</span>
+                            </div>
+                        </div>
+                        <div class="demo-holding">
+                            <div class="holding-info">
+                                <span class="holding-symbol">GOOGL</span>
+                                <span class="holding-shares">45 shares</span>
+                            </div>
+                            <div class="holding-value">
+                                <span class="holding-price">$22,500</span>
+                                <span class="holding-change text-danger">-$450</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
