@@ -1,0 +1,221 @@
+/* Critical Above-the-fold Styles */
+
+/* Essential Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "InterText", "SF Pro Text", system-ui, sans-serif;
+    font-size: clamp(1rem, 0.95rem + 0.35vw, 1.05rem);
+    line-height: 1.6;
+    color: #111827;
+    background-color: #f9fafb;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Header Critical Styles */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.site-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.site-title-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #111827;
+    text-decoration: none;
+}
+
+/* Navigation Critical Styles */
+.main-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.main-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.main-menu a:hover {
+    color: #2563eb;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Button Critical Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid transparent;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    min-height: 44px;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: white;
+}
+
+/* Container Critical Styles */
+.container {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Hero Critical Styles */
+.hero-section {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.hero-title {
+    font-family: "InterDisplay", "SF Pro Display", system-ui, sans-serif;
+    font-size: clamp(2.5rem, 2.2rem + 1.5vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111827;
+    margin: 0 0 1.5rem;
+}
+
+.hero-description {
+    font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.2rem);
+    color: #4b5563;
+    margin: 0 0 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Responsive Critical Styles */
+@media (max-width: 640px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+    
+    .header-content {
+        padding: 0.75rem 1rem;
+    }
+    
+    .main-menu {
+        display: none;
+    }
+    
+    .hero-section {
+        padding: 2rem 0;
+    }
+}
+
+/* Loading States */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner-large {
+    text-align: center;
+    color: white;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Dark Mode Critical Styles */
+[data-theme="dark"] body {
+    background: #111827;
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .site-header {
+    background: rgba(17, 24, 39, 0.95);
+}
+
+[data-theme="dark"] .site-title-link {
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .main-menu a {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .hero-title {
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .hero-description {
+    color: #d1d5db;
+}
