@@ -358,4 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
 [data-theme="dark"] .badge { background: var(--gray-700); color: var(--gray-200); }
 </style>
 
+<?php get_template_part('template-parts/layout/main-shell-end'); ?>
+
 <?php get_footer(); ?>
