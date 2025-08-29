@@ -6,474 +6,341 @@
  */
 
 get_header();
-
-// Layout configuration
-$layout_args = array(
-    'page_title' => __('Page Not Found', 'retail-trade-scanner'),
-    'page_description' => __('The page you are looking for could not be found.', 'retail-trade-scanner'),
-    'page_class' => 'error-404-page',
-    'sidebar' => false,
-    'show_page_header' => false
-);
-
-get_template_part('template-parts/layout/main-shell', null, $layout_args);
 ?>
 
-<div class="error-404-container">
-    <div class="error-content text-center">
-        <!-- Error Illustration -->
-        <div class="error-illustration">
-            <div class="error-number">404</div>
-            <div class="error-icon">
-                <?php echo rts_get_icon('search', array('width' => '120', 'height' => '120', 'class' => 'error-icon-svg')); ?>
+<div class="error-page">
+    <div class="container">
+        <div class="error-content">
+            <!-- Error Visual -->
+            <div class="error-visual animate-fade-up">
+                <div class="error-icon">
+                    <?php echo rts_get_icon('search', ['width' => '120', 'height' => '120', 'class' => 'error-main-icon']); ?>
+                    <div class="error-number">404</div>
+                </div>
             </div>
-        </div>
-
-        <!-- Error Message -->
-        <div class="error-message">
-            <h1 class="error-title"><?php esc_html_e('Oops! Page Not Found', 'retail-trade-scanner'); ?></h1>
-            <p class="error-description">
-                <?php esc_html_e('The page you\'re looking for doesn\'t exist or has been moved. Don\'t worry, let\'s get you back on track.', 'retail-trade-scanner'); ?>
-            </p>
-        </div>
-
-        <!-- Search Form -->
-        <div class="error-search">
-            <h3><?php esc_html_e('Search for what you need', 'retail-trade-scanner'); ?></h3>
-            <div class="search-form-container">
-                <?php get_search_form(); ?>
-            </div>
-        </div>
-
-        <!-- Suggested Actions -->
-        <div class="error-suggestions">
-            <h3><?php esc_html_e('Try these instead', 'retail-trade-scanner'); ?></h3>
-            <div class="suggestion-grid">
-                <a href="<?php echo esc_url(home_url('/')); ?>" class="suggestion-item card glass-card">
-                    <div class="suggestion-icon">
-                        <?php echo rts_get_icon('home', array('width' => '32', 'height' => '32')); ?>
-                    </div>
-                    <h4><?php esc_html_e('Go Home', 'retail-trade-scanner'); ?></h4>
-                    <p><?php esc_html_e('Return to the homepage', 'retail-trade-scanner'); ?></p>
-                </a>
-
-                <a href="<?php echo esc_url(home_url('/scanner/')); ?>" class="suggestion-item card glass-card">
-                    <div class="suggestion-icon">
-                        <?php echo rts_get_icon('scanner', array('width' => '32', 'height' => '32')); ?>
-                    </div>
-                    <h4><?php esc_html_e('Stock Scanner', 'retail-trade-scanner'); ?></h4>
-                    <p><?php esc_html_e('Find stocks with our scanner', 'retail-trade-scanner'); ?></p>
-                </a>
-
-                <?php if (is_user_logged_in()) : ?>
-                    <a href="<?php echo esc_url(home_url('/dashboard/')); ?>" class="suggestion-item card glass-card">
-                        <div class="suggestion-icon">
-                            <?php echo rts_get_icon('dashboard', array('width' => '32', 'height' => '32')); ?>
-                        </div>
-                        <h4><?php esc_html_e('Dashboard', 'retail-trade-scanner'); ?></h4>
-                        <p><?php esc_html_e('View your dashboard', 'retail-trade-scanner'); ?></p>
-                    </a>
-                <?php endif; ?>
-
-                <a href="<?php echo esc_url(home_url('/popular/')); ?>" class="suggestion-item card glass-card">
-                    <div class="suggestion-icon">
-                        <?php echo rts_get_icon('trending-up', array('width' => '32', 'height' => '32')); ?>
-                    </div>
-                    <h4><?php esc_html_e('Popular Stocks', 'retail-trade-scanner'); ?></h4>
-                    <p><?php esc_html_e('Explore trending stocks', 'retail-trade-scanner'); ?></p>
-                </a>
-
-                <a href="<?php echo esc_url(home_url('/news/')); ?>" class="suggestion-item card glass-card">
-                    <div class="suggestion-icon">
-                        <?php echo rts_get_icon('news', array('width' => '32', 'height' => '32')); ?>
-                    </div>
-                    <h4><?php esc_html_e('Market News', 'retail-trade-scanner'); ?></h4>
-                    <p><?php esc_html_e('Latest market updates', 'retail-trade-scanner'); ?></p>
-                </a>
-
-                <a href="<?php echo esc_url(home_url('/contact/')); ?>" class="suggestion-item card glass-card">
-                    <div class="suggestion-icon">
-                        <?php echo rts_get_icon('contact', array('width' => '32', 'height' => '32')); ?>
-                    </div>
-                    <h4><?php esc_html_e('Contact Support', 'retail-trade-scanner'); ?></h4>
-                    <p><?php esc_html_e('Get help from our team', 'retail-trade-scanner'); ?></p>
-                </a>
-            </div>
-        </div>
-
-        <!-- Back Button -->
-        <div class="error-actions">
-            <button onclick="history.back()" class="btn btn-outline btn-lg">
-                <?php echo rts_get_icon('chevron-left', array('width' => '20', 'height' => '20')); ?>
-                <?php esc_html_e('Go Back', 'retail-trade-scanner'); ?>
-            </button>
             
-            <a href="<?php echo esc_url(home_url('/')); ?>" class="btn btn-primary btn-lg btn-magnetic">
-                <?php echo rts_get_icon('home', array('width' => '20', 'height' => '20')); ?>
-                <?php esc_html_e('Go Home', 'retail-trade-scanner'); ?>
-            </a>
-        </div>
-
-        <!-- Popular Search Terms -->
-        <div class="popular-searches">
-            <h4><?php esc_html_e('Popular Search Terms', 'retail-trade-scanner'); ?></h4>
-            <div class="search-tags">
-                <?php
-                $popular_terms = array('AAPL', 'TSLA', 'NVDA', 'S&P 500', 'Portfolio', 'Market News', 'Alerts');
-                foreach ($popular_terms as $term) :
-                ?>
-                    <a href="<?php echo esc_url(home_url('/?s=' . urlencode($term))); ?>" class="search-tag">
-                        <?php echo esc_html($term); ?>
+            <!-- Error Message -->
+            <div class="error-text animate-fade-up">
+                <h1 class="error-title">
+                    <?php esc_html_e('Page Not Found', 'retail-trade-scanner'); ?>
+                </h1>
+                <p class="error-description">
+                    <?php esc_html_e('Sorry, we couldn\'t find the page you\'re looking for. The page might have been moved, deleted, or you entered the wrong URL.', 'retail-trade-scanner'); ?>
+                </p>
+            </div>
+            
+            <!-- Search & Actions -->
+            <div class="error-actions animate-fade-up">
+                <div class="search-section">
+                    <h3><?php esc_html_e('Search our site', 'retail-trade-scanner'); ?></h3>
+                    <form class="error-search-form" role="search" method="get" action="<?php echo esc_url(home_url('/')); ?>">
+                        <div class="search-input-group">
+                            <input type="search" 
+                                   name="s" 
+                                   class="search-input" 
+                                   placeholder="<?php esc_attr_e('Search for stocks, features, or help...', 'retail-trade-scanner'); ?>"
+                                   value="<?php echo get_search_query(); ?>"
+                                   aria-label="<?php esc_attr_e('Search', 'retail-trade-scanner'); ?>">
+                            <button type="submit" class="search-button">
+                                <?php echo rts_get_icon('search', ['width' => '20', 'height' => '20']); ?>
+                                <span class="sr-only"><?php esc_html_e('Search', 'retail-trade-scanner'); ?></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="quick-actions">
+                    <h3><?php esc_html_e('Or try these popular pages', 'retail-trade-scanner'); ?></h3>
+                    <div class="action-links">
+                        <a href="<?php echo esc_url(home_url('/')); ?>" class="action-link">
+                            <?php echo rts_get_icon('home', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Home', 'retail-trade-scanner'); ?></span>
+                        </a>
+                        
+                        <a href="<?php echo esc_url(home_url('/dashboard/')); ?>" class="action-link">
+                            <?php echo rts_get_icon('dashboard', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Dashboard', 'retail-trade-scanner'); ?></span>
+                        </a>
+                        
+                        <a href="<?php echo esc_url(home_url('/scanner/')); ?>" class="action-link">
+                            <?php echo rts_get_icon('scanner', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Stock Scanner', 'retail-trade-scanner'); ?></span>
+                        </a>
+                        
+                        <a href="<?php echo esc_url(home_url('/contact/')); ?>" class="action-link">
+                            <?php echo rts_get_icon('email', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Contact Support', 'retail-trade-scanner'); ?></span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="back-button">
+                    <button onclick="history.back()" class="btn btn-outline">
+                        <?php echo rts_get_icon('arrow-left', ['width' => '16', 'height' => '16']); ?>
+                        <?php esc_html_e('Go Back', 'retail-trade-scanner'); ?>
+                    </button>
+                    
+                    <a href="<?php echo esc_url(home_url('/')); ?>" class="btn btn-primary">
+                        <?php echo rts_get_icon('home', ['width' => '16', 'height' => '16']); ?>
+                        <?php esc_html_e('Return Home', 'retail-trade-scanner'); ?>
                     </a>
-                <?php endforeach; ?>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="error-help animate-fade-up">
+                <div class="help-card glass-card">
+                    <h3><?php esc_html_e('Need Help?', 'retail-trade-scanner'); ?></h3>
+                    <p><?php esc_html_e('Our support team is available 24/7 to assist you with any questions or issues.', 'retail-trade-scanner'); ?></p>
+                    <div class="help-links">
+                        <a href="<?php echo esc_url(home_url('/contact/')); ?>" class="help-link">
+                            <?php echo rts_get_icon('help-circle', ['width' => '16', 'height' => '16']); ?>
+                            <?php esc_html_e('Contact Support', 'retail-trade-scanner'); ?>
+                        </a>
+                        <a href="<?php echo esc_url(home_url('/faq/')); ?>" class="help-link">
+                            <?php echo rts_get_icon('book-open', ['width' => '16', 'height' => '16']); ?>
+                            <?php esc_html_e('FAQ', 'retail-trade-scanner'); ?>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-                </div> <!-- .page-content -->
-            </div> <!-- .container -->
-        </div> <!-- .page-content-section -->
-    </main> <!-- .main-content-area -->
-</div> <!-- .page-wrapper -->
-
 <style>
-/* 404 Page Styles */
-.error-404-container {
-    padding: var(--spacing-4xl) 0;
-    min-height: 60vh;
+.error-page {
+    min-height: 80vh;
     display: flex;
     align-items: center;
-    justify-content: center;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    padding: var(--spacing-2xl) 0;
 }
 
 .error-content {
     max-width: 800px;
     margin: 0 auto;
+    text-align: center;
 }
 
-/* Error Illustration */
-.error-illustration {
-    position: relative;
-    margin-bottom: var(--spacing-3xl);
-}
-
-.error-number {
-    font-size: clamp(4rem, 15vw, 12rem);
-    font-weight: 900;
-    color: var(--primary-500);
-    line-height: 0.8;
-    margin-bottom: var(--spacing-xl);
-    opacity: 0.1;
-    position: relative;
-    z-index: 1;
+.error-visual {
+    margin-bottom: var(--spacing-2xl);
 }
 
 .error-icon {
+    position: relative;
+    display: inline-block;
+    margin-bottom: var(--spacing-xl);
+}
+
+.error-main-icon {
+    color: var(--gray-300);
+    opacity: 0.6;
+}
+
+.error-number {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2;
-}
-
-.error-icon-svg {
-    color: var(--primary-600);
-    opacity: 0.6;
-}
-
-/* Error Message */
-.error-message {
-    margin-bottom: var(--spacing-3xl);
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--primary-500);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .error-title {
-    font-size: var(--text-4xl);
-    font-weight: 800;
+    font-size: var(--text-3xl);
+    font-weight: 700;
     color: var(--gray-900);
-    margin-bottom: var(--spacing-lg);
-    line-height: 1.1;
+    margin: 0 0 var(--spacing-lg);
 }
 
 .error-description {
     font-size: var(--text-lg);
     color: var(--gray-600);
     line-height: 1.6;
+    margin: 0 0 var(--spacing-2xl);
+}
+
+.error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.search-section h3,
+.quick-actions h3 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: var(--spacing-lg);
+}
+
+.search-input-group {
+    display: flex;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-input {
+    flex: 1;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 2px solid var(--primary-200);
+    border-right: none;
+    font-size: var(--text-base);
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: var(--primary-500);
+}
+
+.search-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--primary-500);
+    color: white;
+    border: 2px solid var(--primary-500);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--easing-standard);
+}
+
+.search-button:hover {
+    background: var(--primary-600);
+    border-color: var(--primary-600);
+}
+
+.action-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
     max-width: 600px;
     margin: 0 auto;
 }
 
-/* Search Section */
-.error-search {
-    margin-bottom: var(--spacing-3xl);
+.action-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    background: var(--surface);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--gray-700);
+    transition: all var(--transition-fast) var(--easing-standard);
 }
 
-.error-search h3 {
-    font-size: var(--text-xl);
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: var(--spacing-lg);
+.action-link:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-200);
+    color: var(--primary-700);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
 }
 
-.search-form-container {
+.back-button {
+    display: flex;
+    gap: var(--spacing-lg);
+    justify-content: center;
+}
+
+.error-help {
     max-width: 500px;
     margin: 0 auto;
 }
 
-.search-form-container .search-form {
-    display: flex;
-    gap: var(--spacing-sm);
-    align-items: stretch;
+.help-card {
+    padding: var(--spacing-2xl);
+    text-align: center;
 }
 
-.search-form-container .search-field-wrapper {
-    flex: 1;
-}
-
-.search-form-container .search-field {
-    height: 56px;
-    font-size: var(--text-base);
-    border-radius: var(--radius-xl);
-}
-
-.search-form-container .search-submit {
-    height: 56px;
-    padding: 0 var(--spacing-xl);
-    border-radius: var(--radius-xl);
-}
-
-/* Suggestion Grid */
-.error-suggestions {
-    margin-bottom: var(--spacing-3xl);
-}
-
-.error-suggestions h3 {
+.help-card h3 {
     font-size: var(--text-xl);
     font-weight: 700;
     color: var(--gray-900);
-    margin-bottom: var(--spacing-xl);
+    margin: 0 0 var(--spacing-md);
 }
 
-.suggestion-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.help-card p {
+    color: var(--gray-600);
+    margin: 0 0 var(--spacing-lg);
+}
+
+.help-links {
+    display: flex;
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-2xl);
+    justify-content: center;
 }
 
-.suggestion-item {
-    padding: var(--spacing-xl);
-    text-decoration: none;
-    text-align: center;
-    transition: all var(--transition-normal) var(--easing-standard);
-    border: 1px solid transparent;
-}
-
-.suggestion-item:hover {
-    text-decoration: none;
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--primary-200);
-}
-
-.suggestion-icon {
+.help-link {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 64px;
-    height: 64px;
-    margin: 0 auto var(--spacing-lg);
-    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-    color: white;
-    border-radius: var(--radius-2xl);
-}
-
-.suggestion-item h4 {
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--gray-900);
-    margin: 0 0 var(--spacing-sm);
-}
-
-.suggestion-item p {
-    font-size: var(--text-sm);
-    color: var(--gray-600);
-    margin: 0;
-    line-height: 1.4;
-}
-
-/* Error Actions */
-.error-actions {
-    display: flex;
-    justify-content: center;
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-3xl);
-    flex-wrap: wrap;
-}
-
-/* Popular Searches */
-.popular-searches h4 {
-    font-size: var(--text-base);
-    font-weight: 600;
-    color: var(--gray-700);
-    margin-bottom: var(--spacing-lg);
-}
-
-.search-tags {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
     gap: var(--spacing-sm);
-}
-
-.search-tag {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    background: var(--gray-100);
-    color: var(--gray-700);
+    color: var(--primary-600);
+    font-weight: 600;
     text-decoration: none;
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    transition: all var(--transition-fast) var(--easing-standard);
-    border: 1px solid var(--gray-200);
+    transition: color var(--transition-fast) var(--easing-standard);
 }
 
-.search-tag:hover {
-    background: var(--primary-100);
+.help-link:hover {
     color: var(--primary-700);
-    border-color: var(--primary-300);
     text-decoration: none;
-    transform: translateY(-1px);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .error-404-container {
-        padding: var(--spacing-2xl) 0;
-    }
-    
-    .error-illustration {
-        margin-bottom: var(--spacing-2xl);
-    }
-    
+@media (max-width: 640px) {
     .error-number {
-        font-size: clamp(3rem, 20vw, 8rem);
-    }
-    
-    .error-icon svg {
-        width: 80px;
-        height: 80px;
+        font-size: 3rem;
     }
     
     .error-title {
-        font-size: var(--text-3xl);
+        font-size: var(--text-2xl);
     }
     
-    .error-description {
-        font-size: var(--text-base);
-    }
-    
-    .suggestion-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .action-links {
+        grid-template-columns: 1fr;
         gap: var(--spacing-md);
     }
     
-    .suggestion-item {
-        padding: var(--spacing-lg);
-    }
-    
-    .suggestion-icon {
-        width: 48px;
-        height: 48px;
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .suggestion-icon svg {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .error-actions {
+    .back-button {
         flex-direction: column;
         align-items: center;
     }
     
-    .error-actions .btn {
-        width: 100%;
-        max-width: 300px;
-    }
-}
-
-@media (max-width: 480px) {
-    .suggestion-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .search-form-container .search-form {
+    .help-links {
         flex-direction: column;
-    }
-    
-    .search-tags {
-        justify-content: center;
+        align-items: center;
     }
 }
 
-/* Dark mode adjustments */
 [data-theme="dark"] .error-title {
     color: var(--gray-100);
 }
 
 [data-theme="dark"] .error-description {
-    color: var(--gray-400);
-}
-
-[data-theme="dark"] .error-search h3,
-[data-theme="dark"] .error-suggestions h3 {
-    color: var(--gray-100);
-}
-
-[data-theme="dark"] .suggestion-item h4 {
-    color: var(--gray-100);
-}
-
-[data-theme="dark"] .suggestion-item p {
-    color: var(--gray-400);
-}
-
-[data-theme="dark"] .popular-searches h4 {
     color: var(--gray-300);
 }
 
-[data-theme="dark"] .search-tag {
+[data-theme="dark"] .search-input {
     background: var(--gray-800);
-    color: var(--gray-300);
+    border-color: var(--gray-600);
+    color: var(--gray-200);
+}
+
+[data-theme="dark"] .action-link {
+    background: var(--gray-800);
     border-color: var(--gray-700);
+    color: var(--gray-300);
 }
 
-[data-theme="dark"] .search-tag:hover {
-    background: var(--primary-900);
-    color: var(--primary-300);
-    border-color: var(--primary-700);
-}
-
-/* Animation for error illustration */
-@keyframes float {
-    0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
-    50% { transform: translate(-50%, -50%) translateY(-10px); }
-}
-
-.error-icon {
-    animation: float 3s ease-in-out infinite;
-}
-
-/* Pulse animation for error number */
-@keyframes pulse {
-    0%, 100% { opacity: 0.1; }
-    50% { opacity: 0.15; }
-}
-
-.error-number {
-    animation: pulse 4s ease-in-out infinite;
+[data-theme="dark"] .action-link:hover {
+    background: var(--gray-700);
+    color: var(--primary-400);
 }
 </style>
 
