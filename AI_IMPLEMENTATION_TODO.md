@@ -86,13 +86,13 @@ WordPress-only integration & editor parity
 [ ] Provide sample menu assignment instructions and recommended widget areas in readme.txt
 
 JS behavior & interactivity (theme-only)
-[ ] Sidebar collapse/expand with localStorage persistence, animated transitions, keyboard shortcuts, aria-expanded toggles
-[ ] Header search interactions: debounce, live autocomplete (client-side UI only; actual search backend must be provided separately)
-[ ] Notifications popover with aria roles and real-time badge hook (theme displays; data source plugin/backend)
-[ ] User avatar dropdown (profile/settings/logout links), keyboard accessible, closes on ESC or click outside
-[ ] Tables responsive: small screens show card view with same data (transform), support swipe/scroll for wide tables
-[ ] Respect prefers-reduced-motion in all animations; controlled micro-interactions (hover ripple/magnetic)
-[ ] Minimal JS bundling, deferred where safe; provide non-JS fallbacks for critical interactions
+[✓] Sidebar collapse/expand with localStorage persistence, animated transitions, keyboard shortcuts, aria-expanded toggles
+[✓] Header search interactions: debounce, live autocomplete (client-side UI only; actual search backend must be provided separately)
+[✓] Notifications popover with aria roles and real-time badge hook (theme displays; data source plugin/backend)
+[✓] User avatar dropdown (profile/settings/logout links), keyboard accessible, closes on ESC or click outside
+[✓] Tables responsive: small screens show card view with same data (transform), support swipe/scroll for wide tables
+[✓] Respect prefers-reduced-motion in all animations; controlled micro-interactions (hover ripple/magnetic)
+[✓] Minimal JS bundling, deferred where safe; provide non-JS fallbacks for critical interactions
 
 Responsiveness, container queries & accessibility
 [ ] Breakpoints and container queries for card scaling and component behavior; mobile-first approach
