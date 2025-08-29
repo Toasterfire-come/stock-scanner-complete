@@ -1,9 +1,9 @@
 Theme bootstrap & repo basics
-[ ] Create theme folder retail-trade-scanner/ with required theme header in style.css, functions.php, theme.json, screenshot.png, readme.txt
-[ ] Add .gitignore (node_modules, build artifacts, .DS_Store, vendor, .env, .zip) and a LICENSE (suggest MIT or other desired license)
-[ ] Add package.json or build tool config if using a toolchain (optional)
-[ ] Ensure text domain retail-trade-scanner and call load_theme_textdomain() in functions.php for translations
-[ ] Provide a CHANGELOG.md and CONTRIBUTING.md (optional but recommended)
+[✓] Create theme folder retail-trade-scanner/ with required theme header in style.css, functions.php, theme.json, screenshot.png, readme.txt
+[✓] Add .gitignore (node_modules, build artifacts, .DS_Store, vendor, .env, .zip) and a LICENSE (suggest MIT or other desired license)
+[✓] Add package.json or build tool config if using a toolchain (optional)
+[✓] Ensure text domain retail-trade-scanner and call load_theme_textdomain() in functions.php for translations
+[✓] Provide a CHANGELOG.md and CONTRIBUTING.md (optional but recommended)
 
 Directory layout (standardized)
 [ ] assets/css/ (compiled /minified CSS) and assets/scss/ (source)
