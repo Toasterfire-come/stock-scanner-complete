@@ -53,14 +53,14 @@ Core theme templates & structure
 [✓] theme.json — define color palette, font sizes, custom properties for editor parity and block styling
 
 Template parts (reusable components)
-[ ] template-parts/components/button.php — button variants (primary, secondary, outline, gradient, magnetic) with ARIA and focus styles
-[ ] template-parts/components/badge.php — positive/negative/neutral badges (semantic)
-[ ] template-parts/components/card.php — metric KPI card (title, value, delta badge, small sparkline)
-[ ] template-parts/components/table.php — data table shell with sortable headers, sticky head, responsive behavior
-[ ] template-parts/components/chart-shell.php — accessible chart container with legend + tooltip hooks; loadable client-side chart later
-[ ] template-parts/components/tabs.php — keyboard-accessible tabs with ARIA
-[ ] template-parts/layout/main-shell.php — main page wrapper providing sticky header/sidebar layout and content container
-[ ] template-parts/components/modal.php and toast.php — accessible modal and toast patterns (trap focus, ESC close)
+[✓] template-parts/components/button.php — button variants (primary, secondary, outline, gradient, magnetic) with ARIA and focus styles
+[✓] template-parts/components/badge.php — positive/negative/neutral badges (semantic)
+[✓] template-parts/components/card.php — metric KPI card (title, value, delta badge, small sparkline)
+[✓] template-parts/components/table.php — data table shell with sortable headers, sticky head, responsive behavior
+[✓] template-parts/components/chart-shell.php — accessible chart container with legend + tooltip hooks; loadable client-side chart later
+[✓] template-parts/components/tabs.php — keyboard-accessible tabs with ARIA
+[✓] template-parts/layout/main-shell.php — main page wrapper providing sticky header/sidebar layout and content container
+[✓] template-parts/components/modal.php and toast.php — accessible modal and toast patterns (trap focus, ESC close)
 
 Page templates (create for every page and analogous pages)
 [ ] templates/pages/page-dashboard.php — overview grid: kpis, top movers, indices, market sentiment, heatmap (bento/masonry)
