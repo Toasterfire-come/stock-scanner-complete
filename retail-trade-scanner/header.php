@@ -2,8 +2,6 @@
 /**
  * The header for our theme
  *
- * Displays the site header and primary navigation
- *
  * @package RetailTradeScanner
  */
 if (!defined('ABSPATH')) { exit; }
@@ -36,7 +34,7 @@ if (!defined('ABSPATH')) { exit; }
               'container'      => false,
               'menu_class'     => 'flex items-center gap-6 text-sm',
               'fallback_cb'    => false,
-              'depth'          => 2,
+              'depth'          => 3,
             ]);
           } else {
             echo '<ul class="flex items-center gap-6 text-sm">'
@@ -68,7 +66,7 @@ if (!defined('ABSPATH')) { exit; }
             'container'      => false,
             'menu_class'     => 'grid gap-2',
             'fallback_cb'    => false,
-            'depth'          => 1,
+            'depth'          => 2,
           ]);
         }
       ?>
@@ -84,6 +82,7 @@ if (!defined('ABSPATH')) { exit; }
     var btn = document.getElementById('mobile-menu-button');
     var menu = document.getElementById('mobile-menu');
     var header = document.querySelector('.site-header');
+    var main = document.getElementById('primary');
     var lastFocus = null;
 
     function getFocusable(container){
@@ -107,6 +106,7 @@ if (!defined('ABSPATH')) { exit; }
       menu.classList.remove('hidden');
       btn.setAttribute('aria-expanded','true');
       header && header.classList.add('is-open');
+      if (main) { main.setAttribute('aria-hidden','true'); }
       lastFocus = document.activeElement; // store
       var focusables = getFocusable(menu);
       if (focusables.length) { focusables[0].focus(); }
@@ -117,6 +117,7 @@ if (!defined('ABSPATH')) { exit; }
       menu.classList.add('hidden');
       btn.setAttribute('aria-expanded','false');
       header && header.classList.remove('is-open');
+      if (main) { main.removeAttribute('aria-hidden'); }
       document.removeEventListener('keydown', trapFocus);
     }
 
@@ -127,5 +128,37 @@ if (!defined('ABSPATH')) { exit; }
         else { openMenu(); }
       });
     }
+
+    // Enhance submenus: add toggles for items with children (mobile & desktop keyboard)
+    function enhanceSubmenus(root){
+      var items = root.querySelectorAll('li.menu-item-has-children');
+      items.forEach(function(li){
+        var link = li.querySelector(':scope > a');
+        if (!link) return;
+        // Create toggle button
+        var btnToggle = document.createElement('button');
+        btnToggle.setAttribute('type','button');
+        btnToggle.className = 'ml-2 inline-flex items-center justify-center rounded-md border px-2 py-1 text-xs';
+        btnToggle.setAttribute('aria-expanded','false');
+        btnToggle.setAttribute('aria-label','Toggle submenu');
+        btnToggle.textContent = '+';
+        link.after(btnToggle);
+        var submenu = li.querySelector(':scope > .sub-menu');
+        if (submenu) { submenu.style.display = 'none'; }
+        btnToggle.addEventListener('click', function(){
+          var expanded = btnToggle.getAttribute('aria-expanded') === 'true';
+          btnToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+          if (submenu) { submenu.style.display = expanded ? 'none' : 'block'; }
+        });
+        link.addEventListener('keydown', function(e){
+          if (e.key === 'ArrowDown' && submenu) { e.preventDefault(); btnToggle.click(); }
+        });
+      });
+    }
+
+    var desktopNav = document.querySelector('header nav ul');
+    var mobileNav = menu ? menu.querySelector('ul') : null;
+    if (desktopNav) enhanceSubmenus(desktopNav);
+    if (mobileNav) enhanceSubmenus(mobileNav);
   })();
 </script>

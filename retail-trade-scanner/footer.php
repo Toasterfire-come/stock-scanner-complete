@@ -1,6 +1,6 @@
 <?php
 /**
- * The template for displaying the footer
+ * Footer template
  *
  * @package RetailTradeScanner
  */
@@ -12,6 +12,9 @@ if (!defined('ABSPATH')) { exit; }
     <div>
       <a href="<?php echo esc_url( home_url('/') ); ?>" class="font-semibold text-lg hover:opacity-90"><?php bloginfo('name'); ?></a>
       <p class="mt-2 text-sm text-muted-foreground max-w-xs"><?php bloginfo('description'); ?></p>
+      <?php if ( isset($_GET['subscribed']) && $_GET['subscribed'] === '1') : ?>
+        <p class="mt-2 text-sm" role="status"><?php esc_html_e('Thanks for subscribing!', 'retail-trade-scanner'); ?></p>
+      <?php endif; ?>
     </div>
     <div>
       <h2 class="text-sm font-semibold mb-3"><?php esc_html_e('Navigate', 'retail-trade-scanner'); ?></h2>
@@ -43,9 +46,11 @@ if (!defined('ABSPATH')) { exit; }
     </div>
     <div>
       <h2 class="text-sm font-semibold mb-3"><?php esc_html_e('Subscribe', 'retail-trade-scanner'); ?></h2>
-      <form class="flex gap-2">
-        <input class="border rounded px-3 py-2 text-sm w-full" type="email" placeholder="<?php esc_attr_e('Your email','retail-trade-scanner'); ?>" />
-        <button class="rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm" type="button"><?php esc_html_e('Join','retail-trade-scanner'); ?></button>
+      <form class="flex gap-2" method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
+        <?php wp_nonce_field('rts_subscribe','rts_subscribe_nonce'); ?>
+        <input type="hidden" name="action" value="rts_subscribe" />
+        <input class="border rounded px-3 py-2 text-sm w-full" type="email" name="email" placeholder="<?php esc_attr_e('Your email','retail-trade-scanner'); ?>" required />
+        <button class="rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm" type="submit"><?php esc_html_e('Join','retail-trade-scanner'); ?></button>
       </form>
     </div>
   </div>
