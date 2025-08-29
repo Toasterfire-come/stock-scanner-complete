@@ -1,342 +1,755 @@
 <?php
 /**
- * Table Component Template Part - Data Tables with Sorting and Responsive Behavior
+ * Table Component Template Part
  *
  * @package RetailTradeScanner
  */
 
-// Default table attributes
-$defaults = array(
-    'headers' => array(), // Array of header definitions
-    'rows' => array(), // Array of row data
+$args = wp_parse_args($args, array(
+    'id' => 'data-table',
+    'headers' => array(),
+    'data' => array(),
     'sortable' => true,
-    'responsive' => true,
-    'striped' => true,
-    'hover' => true,
-    'sticky_header' => false,
+    'selectable' => false,
     'pagination' => false,
-    'per_page' => 10,
-    'current_page' => 1,
-    'search' => false,
-    'actions' => false, // Show action column
-    'variant' => 'default', // default, minimal, bordered, glass
-    'size' => 'base', // sm, base, lg
-    'classes' => '',
-    'attributes' => array(),
-    'empty_message' => '',
+    'variant' => 'default', // default, positions, scanner
+    'responsive' => true,
     'loading' => false,
-);
+    'empty_message' => __('No data available', 'retail-trade-scanner'),
+    'custom_class' => ''
+));
 
-// Parse attributes
-$args = wp_parse_args($args ?? array(), $defaults);
+extract($args);
 
-// Ensure we have data
-if (empty($args['headers']) && empty($args['rows'])) {
-    return;
-}
-
-// Build CSS classes
 $table_classes = array('data-table');
-$table_classes[] = 'table-' . esc_attr($args['variant']);
-$table_classes[] = 'table-' . esc_attr($args['size']);
+$table_classes[] = 'table-' . $variant;
 
-if ($args['sortable']) {
-    $table_classes[] = 'sortable';
+if ($responsive) {
+    $table_classes[] = 'table-responsive';
 }
 
-if ($args['responsive']) {
-    $table_classes[] = 'responsive';
+if ($selectable) {
+    $table_classes[] = 'table-selectable';
 }
 
-if ($args['striped']) {
-    $table_classes[] = 'table-striped';
+if ($custom_class) {
+    $table_classes[] = $custom_class;
 }
 
-if ($args['hover']) {
-    $table_classes[] = 'table-hover';
-}
-
-if ($args['sticky_header']) {
-    $table_classes[] = 'table-sticky';
-}
-
-if (!empty($args['classes'])) {
-    $table_classes[] = $args['classes'];
-}
-
-// Build attributes
-$attributes = array(
-    'class' => implode(' ', $table_classes),
-    'role' => 'table',
-    'aria-label' => __('Data table', 'retail-trade-scanner')
-);
-
-// Merge custom attributes
-$attributes = array_merge($attributes, $args['attributes']);
-
-// Build attribute string
-$attr_string = '';
-foreach ($attributes as $attr => $value) {
-    $attr_string .= ' ' . esc_attr($attr) . '="' . esc_attr($value) . '"';
-}
-
-// Generate unique table ID
-$table_id = 'table-' . wp_unique_id();
-
-// Paginate rows if needed
-$total_rows = count($args['rows']);
-$paginated_rows = $args['rows'];
-$total_pages = 1;
-
-if ($args['pagination'] && $total_rows > $args['per_page']) {
-    $total_pages = ceil($total_rows / $args['per_page']);
-    $offset = ($args['current_page'] - 1) * $args['per_page'];
-    $paginated_rows = array_slice($args['rows'], $offset, $args['per_page']);
-}
+$table_id = esc_attr($id);
 ?>
 
-<div class="table-container" data-table-id="<?php echo esc_attr($table_id); ?>">
-    <?php if ($args['search']) : ?>
-        <div class="table-search">
-            <div class="search-field-wrapper">
-                <input type="search" 
-                       id="<?php echo esc_attr($table_id); ?>-search"
-                       class="table-search-input form-input" 
-                       placeholder="<?php esc_attr_e('Search table data...', 'retail-trade-scanner'); ?>"
-                       aria-label="<?php esc_attr_e('Search table', 'retail-trade-scanner'); ?>">
-                <label for="<?php echo esc_attr($table_id); ?>-search" class="sr-only">
-                    <?php esc_html_e('Search', 'retail-trade-scanner'); ?>
-                </label>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($args['loading']) : ?>
-        <div class="table-loading">
+<div class="table-container">
+    
+    <?php if ($loading) : ?>
+        <div class="table-loading-overlay">
             <div class="loading-spinner"></div>
             <p><?php esc_html_e('Loading data...', 'retail-trade-scanner'); ?></p>
         </div>
-    <?php else : ?>
-        <div class="table-responsive">
-            <table id="<?php echo esc_attr($table_id); ?>" <?php echo $attr_string; ?>>
-                <?php if (!empty($args['headers'])) : ?>
-                    <thead>
-                        <tr>
-                            <?php foreach ($args['headers'] as $index => $header) : ?>
-                                <?php
-                                $header_classes = array('table-header');
-                                $header_attrs = array();
+    <?php endif; ?>
+    
+    <div class="table-wrapper">
+        <table class="<?php echo esc_attr(implode(' ', $table_classes)); ?>" id="<?php echo $table_id; ?>">
+            
+            <?php if (!empty($headers)) : ?>
+                <thead class="table-header">
+                    <tr>
+                        <?php if ($selectable) : ?>
+                            <th class="select-column">
+                                <input type="checkbox" class="select-all" aria-label="<?php esc_attr_e('Select all rows', 'retail-trade-scanner'); ?>">
+                            </th>
+                        <?php endif; ?>
+                        
+                        <?php foreach ($headers as $key => $label) : ?>
+                            <th class="table-header-cell <?php echo $sortable ? 'sortable' : ''; ?>" 
+                                data-column="<?php echo esc_attr($key); ?>"
+                                <?php if ($sortable) : ?>
+                                tabindex="0" 
+                                role="button" 
+                                aria-label="<?php echo esc_attr(sprintf(__('Sort by %s', 'retail-trade-scanner'), $label)); ?>"
+                                <?php endif; ?>>
                                 
-                                if (is_array($header)) {
-                                    $header_text = $header['text'] ?? '';
-                                    $header_key = $header['key'] ?? $index;
-                                    $sortable = $header['sortable'] ?? $args['sortable'];
-                                    $width = $header['width'] ?? '';
-                                    $align = $header['align'] ?? 'left';
+                                <div class="header-content">
+                                    <span class="header-label"><?php echo esc_html($label); ?></span>
                                     
-                                    if ($sortable) {
-                                        $header_classes[] = 'sortable';
-                                        $header_attrs['data-sort'] = $header_key;
-                                        $header_attrs['tabindex'] = '0';
-                                        $header_attrs['role'] = 'button';
-                                        $header_attrs['aria-label'] = sprintf(__('Sort by %s', 'retail-trade-scanner'), $header_text);
-                                    }
-                                    
-                                    if ($width) {
-                                        $header_attrs['style'] = 'width: ' . esc_attr($width);
-                                    }
-                                    
-                                    $header_attrs['class'] = implode(' ', $header_classes) . ' text-' . $align;
-                                } else {
-                                    $header_text = $header;
-                                    $header_key = $index;
-                                    
-                                    if ($args['sortable']) {
-                                        $header_classes[] = 'sortable';
-                                        $header_attrs['data-sort'] = $header_key;
-                                        $header_attrs['tabindex'] = '0';
-                                        $header_attrs['role'] = 'button';
-                                        $header_attrs['aria-label'] = sprintf(__('Sort by %s', 'retail-trade-scanner'), $header_text);
-                                    }
-                                    
-                                    $header_attrs['class'] = implode(' ', $header_classes);
-                                }
-                                
-                                $header_attr_string = '';
-                                foreach ($header_attrs as $attr => $value) {
-                                    $header_attr_string .= ' ' . esc_attr($attr) . '="' . esc_attr($value) . '"';
-                                }
-                                ?>
-                                <th<?php echo $header_attr_string; ?>>
-                                    <span class="header-content">
-                                        <?php echo esc_html($header_text); ?>
-                                        <?php if (isset($header_attrs['data-sort'])) : ?>
-                                            <span class="sort-indicator" aria-hidden="true">
-                                                <?php echo rts_get_icon('chevron-up-down', array('width' => '14', 'height' => '14')); ?>
-                                            </span>
-                                        <?php endif; ?>
-                                    </span>
-                                </th>
-                            <?php endforeach; ?>
-                            
-                            <?php if ($args['actions']) : ?>
-                                <th class="table-header actions-header">
-                                    <?php esc_html_e('Actions', 'retail-trade-scanner'); ?>
-                                </th>
-                            <?php endif; ?>
-                        </tr>
-                    </thead>
-                <?php endif; ?>
-
-                <tbody>
-                    <?php if (!empty($paginated_rows)) : ?>
-                        <?php foreach ($paginated_rows as $row_index => $row) : ?>
-                            <tr class="table-row" <?php echo is_array($row) && isset($row['_attributes']) ? $row['_attributes'] : ''; ?>>
-                                <?php 
-                                $row_data = is_array($row) && isset($row['data']) ? $row['data'] : $row;
-                                
-                                foreach ($args['headers'] as $header_index => $header) :
-                                    $header_key = is_array($header) ? ($header['key'] ?? $header_index) : $header_index;
-                                    $cell_value = is_array($row_data) ? ($row_data[$header_key] ?? '') : '';
-                                    $cell_classes = array('table-cell');
-                                    
-                                    // Add alignment class
-                                    if (is_array($header) && isset($header['align'])) {
-                                        $cell_classes[] = 'text-' . $header['align'];
-                                    }
-                                    
-                                    // Add data attribute for responsive view
-                                    $data_label = is_array($header) ? ($header['text'] ?? $header_key) : $header;
-                                ?>
-                                    <td class="<?php echo implode(' ', $cell_classes); ?>" 
-                                        data-label="<?php echo esc_attr($data_label); ?>"
-                                        data-sort="<?php echo esc_attr($header_key); ?>">
-                                        <?php
-                                        if (is_array($cell_value) && isset($cell_value['html'])) {
-                                            echo wp_kses_post($cell_value['html']);
-                                        } else {
-                                            echo esc_html($cell_value);
-                                        }
-                                        ?>
-                                    </td>
-                                <?php endforeach; ?>
-                                
-                                <?php if ($args['actions']) : ?>
-                                    <td class="table-cell actions-cell">
-                                        <div class="table-actions">
-                                            <?php
-                                            $row_actions = is_array($row) && isset($row['actions']) ? $row['actions'] : array();
-                                            foreach ($row_actions as $action) :
-                                                if (is_array($action)) {
-                                                    echo '<a href="' . esc_url($action['url'] ?? '#') . '" class="action-link ' . esc_attr($action['class'] ?? '') . '">';
-                                                    if (isset($action['icon'])) {
-                                                        echo rts_get_icon($action['icon'], array('width' => '16', 'height' => '16'));
-                                                    }
-                                                    echo esc_html($action['text'] ?? '');
-                                                    echo '</a>';
-                                                }
-                                            endforeach;
-                                            ?>
-                                        </div>
-                                    </td>
-                                <?php endif; ?>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else : ?>
-                        <tr class="table-empty">
-                            <td colspan="<?php echo count($args['headers']) + ($args['actions'] ? 1 : 0); ?>" class="table-cell text-center">
-                                <div class="empty-state">
-                                    <?php echo rts_get_icon('database', array('width' => '48', 'height' => '48', 'class' => 'empty-icon')); ?>
-                                    <p><?php echo esc_html($args['empty_message'] ?: __('No data available', 'retail-trade-scanner')); ?></p>
+                                    <?php if ($sortable) : ?>
+                                        <span class="sort-indicator">
+                                            <?php echo rts_get_icon('chevrons-up-down', ['width' => '14', 'height' => '14']); ?>
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
-                            </td>
+                            </th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+            <?php endif; ?>
+            
+            <tbody class="table-body">
+                <?php if (!empty($data)) : ?>
+                    <?php foreach ($data as $row_index => $row) : ?>
+                        <tr class="table-row" data-row="<?php echo esc_attr($row_index); ?>">
+                            
+                            <?php if ($selectable) : ?>
+                                <td class="select-cell">
+                                    <input type="checkbox" class="row-select" value="<?php echo esc_attr($row_index); ?>" aria-label="<?php esc_attr_e('Select row', 'retail-trade-scanner'); ?>">
+                                </td>
+                            <?php endif; ?>
+                            
+                            <?php foreach ($headers as $column_key => $column_label) : ?>
+                                <td class="table-cell cell-<?php echo esc_attr($column_key); ?>" data-column="<?php echo esc_attr($column_key); ?>">
+                                    
+                                    <?php if ($column_key === 'symbol' && isset($row['symbol'])) : ?>
+                                        <!-- Symbol with company name -->
+                                        <div class="symbol-cell">
+                                            <div class="symbol-info">
+                                                <span class="symbol-ticker"><?php echo esc_html($row['symbol']); ?></span>
+                                                <?php if (isset($row['company'])) : ?>
+                                                    <span class="symbol-company"><?php echo esc_html($row['company']); ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        
+                                    <?php elseif ($column_key === 'change' && isset($row['type'])) : ?>
+                                        <!-- Price change with badge -->
+                                        <?php
+                                        get_template_part('template-parts/components/badge', null, array(
+                                            'value' => $row['change'],
+                                            'type' => $row['type'],
+                                            'size' => 'sm'
+                                        ));
+                                        ?>
+                                        
+                                    <?php elseif ($column_key === 'unrealized_pl' && isset($row['unrealized_pl_percent'])) : ?>
+                                        <!-- P/L with percentage -->
+                                        <div class="pl-cell">
+                                            <span class="pl-amount <?php echo isset($row['type']) ? $row['type'] : ''; ?>">
+                                                <?php echo esc_html($row['unrealized_pl']); ?>
+                                            </span>
+                                            <span class="pl-percent <?php echo isset($row['type']) ? $row['type'] : ''; ?>">
+                                                <?php echo esc_html($row['unrealized_pl_percent']); ?>
+                                            </span>
+                                        </div>
+                                        
+                                    <?php elseif ($column_key === 'actions') : ?>
+                                        <!-- Action buttons -->
+                                        <div class="action-buttons">
+                                            <?php if ($variant === 'positions') : ?>
+                                                <button class="action-btn btn-ghost btn-sm" title="<?php esc_attr_e('View details', 'retail-trade-scanner'); ?>">
+                                                    <?php echo rts_get_icon('eye', ['width' => '14', 'height' => '14']); ?>
+                                                </button>
+                                                <button class="action-btn btn-ghost btn-sm" title="<?php esc_attr_e('Add to watchlist', 'retail-trade-scanner'); ?>">
+                                                    <?php echo rts_get_icon('plus', ['width' => '14', 'height' => '14']); ?>
+                                                </button>
+                                                <button class="action-btn btn-ghost btn-sm" title="<?php esc_attr_e('Trade', 'retail-trade-scanner'); ?>">
+                                                    <?php echo rts_get_icon('trending-up', ['width' => '14', 'height' => '14']); ?>
+                                                </button>
+                                            <?php else : ?>
+                                                <button class="action-btn btn-ghost btn-sm" title="<?php esc_attr_e('Add to watchlist', 'retail-trade-scanner'); ?>">
+                                                    <?php echo rts_get_icon('bookmark', ['width' => '14', 'height' => '14']); ?>
+                                                </button>
+                                                <button class="action-btn btn-ghost btn-sm" title="<?php esc_attr_e('View chart', 'retail-trade-scanner'); ?>">
+                                                    <?php echo rts_get_icon('bar-chart', ['width' => '14', 'height' => '14']); ?>
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                    <?php else : ?>
+                                        <!-- Default cell content -->
+                                        <span class="cell-content">
+                                            <?php echo isset($row[$column_key]) ? esc_html($row[$column_key]) : '—'; ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Mobile label for responsive view -->
+                                    <span class="mobile-label"><?php echo esc_html($column_label); ?></span>
+                                </td>
+                            <?php endforeach; ?>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <?php if ($args['pagination'] && $total_pages > 1) : ?>
-            <div class="table-pagination">
-                <div class="pagination-info">
-                    <?php
-                    $start = ($args['current_page'] - 1) * $args['per_page'] + 1;
-                    $end = min($args['current_page'] * $args['per_page'], $total_rows);
-                    printf(
-                        __('Showing %d to %d of %d entries', 'retail-trade-scanner'),
-                        $start,
-                        $end,
-                        $total_rows
-                    );
-                    ?>
+                    <?php endforeach; ?>
+                    
+                <?php else : ?>
+                    <tr class="empty-row">
+                        <td colspan="<?php echo count($headers) + ($selectable ? 1 : 0); ?>" class="empty-cell">
+                            <div class="empty-state">
+                                <?php echo rts_get_icon('search', ['width' => '48', 'height' => '48', 'class' => 'empty-icon']); ?>
+                                <p><?php echo esc_html($empty_message); ?></p>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+    
+    <?php if ($pagination && !empty($data)) : ?>
+        <div class="table-pagination">
+            <div class="pagination-info">
+                <span><?php esc_html_e('Showing', 'retail-trade-scanner'); ?> <strong>1-<?php echo count($data); ?></strong> <?php esc_html_e('of', 'retail-trade-scanner'); ?> <strong><?php echo count($data); ?></strong> <?php esc_html_e('results', 'retail-trade-scanner'); ?></span>
+            </div>
+            
+            <div class="pagination-controls">
+                <button class="pagination-btn" disabled>
+                    <?php echo rts_get_icon('chevron-left', ['width' => '16', 'height' => '16']); ?>
+                    <?php esc_html_e('Previous', 'retail-trade-scanner'); ?>
+                </button>
+                
+                <div class="pagination-pages">
+                    <button class="page-btn active">1</button>
                 </div>
                 
-                <nav class="pagination-nav" aria-label="<?php esc_attr_e('Table pagination', 'retail-trade-scanner'); ?>">
-                    <?php
-                    // Simple pagination implementation
-                    $prev_page = max(1, $args['current_page'] - 1);
-                    $next_page = min($total_pages, $args['current_page'] + 1);
-                    ?>
-                    
-                    <?php if ($args['current_page'] > 1) : ?>
-                        <button class="pagination-btn btn btn-outline btn-sm" data-page="<?php echo $prev_page; ?>">
-                            <?php echo rts_get_icon('chevron-left', array('width' => '16', 'height' => '16')); ?>
-                            <?php esc_html_e('Previous', 'retail-trade-scanner'); ?>
-                        </button>
-                    <?php endif; ?>
-                    
-                    <span class="pagination-current">
-                        <?php printf(__('Page %d of %d', 'retail-trade-scanner'), $args['current_page'], $total_pages); ?>
-                    </span>
-                    
-                    <?php if ($args['current_page'] < $total_pages) : ?>
-                        <button class="pagination-btn btn btn-outline btn-sm" data-page="<?php echo $next_page; ?>">
-                            <?php esc_html_e('Next', 'retail-trade-scanner'); ?>
-                            <?php echo rts_get_icon('chevron-right', array('width' => '16', 'height' => '16')); ?>
-                        </button>
-                    <?php endif; ?>
-                </nav>
+                <button class="pagination-btn" disabled>
+                    <?php esc_html_e('Next', 'retail-trade-scanner'); ?>
+                    <?php echo rts_get_icon('chevron-right', ['width' => '16', 'height' => '16']); ?>
+                </button>
             </div>
-        <?php endif; ?>
+        </div>
+    <?php endif; ?>
+    
+    <?php if ($selectable) : ?>
+        <div class="bulk-actions hidden">
+            <div class="bulk-actions-content">
+                <span class="selection-count">0 <?php esc_html_e('items selected', 'retail-trade-scanner'); ?></span>
+                <div class="bulk-action-buttons">
+                    <button class="btn btn-outline btn-sm bulk-action" data-action="watchlist">
+                        <?php echo rts_get_icon('bookmark', ['width' => '14', 'height' => '14']); ?>
+                        <?php esc_html_e('Add to Watchlist', 'retail-trade-scanner'); ?>
+                    </button>
+                    <button class="btn btn-outline btn-sm bulk-action" data-action="export">
+                        <?php echo rts_get_icon('download', ['width' => '14', 'height' => '14']); ?>
+                        <?php esc_html_e('Export', 'retail-trade-scanner'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
     <?php endif; ?>
 </div>
 
-<?php
-/*
-Usage example:
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTable('<?php echo $table_id; ?>');
+});
 
-$stock_data = array(
-    'headers' => array(
-        array('text' => 'Symbol', 'key' => 'symbol', 'sortable' => true, 'width' => '100px'),
-        array('text' => 'Company', 'key' => 'company', 'sortable' => true),
-        array('text' => 'Price', 'key' => 'price', 'sortable' => true, 'align' => 'right'),
-        array('text' => 'Change', 'key' => 'change', 'sortable' => true, 'align' => 'right'),
-        array('text' => 'Volume', 'key' => 'volume', 'sortable' => true, 'align' => 'right'),
-    ),
-    'rows' => array(
-        array(
-            'data' => array(
-                'symbol' => 'AAPL',
-                'company' => 'Apple Inc.',
-                'price' => '$182.34',
-                'change' => array('html' => '<span class="text-success">+2.45%</span>'),
-                'volume' => '89.2M'
-            ),
-            'actions' => array(
-                array('text' => 'View', 'url' => '/stock/aapl/', 'icon' => 'eye', 'class' => 'btn-sm'),
-                array('text' => 'Add to Watchlist', 'url' => '/watchlist/add/aapl/', 'icon' => 'plus', 'class' => 'btn-sm')
-            )
-        ),
-        // ... more rows
-    ),
-    'sortable' => true,
-    'responsive' => true,
-    'pagination' => true,
-    'per_page' => 25,
-    'search' => true,
-    'actions' => true,
-    'variant' => 'default'
-);
+function initializeTable(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    
+    const sortableHeaders = table.querySelectorAll('.sortable');
+    const selectAllCheckbox = table.querySelector('.select-all');
+    const rowCheckboxes = table.querySelectorAll('.row-select');
+    const bulkActions = document.querySelector('.bulk-actions');
+    
+    // Sorting functionality
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            sortTable(table, this.dataset.column);
+        });
+        
+        header.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                sortTable(table, this.dataset.column);
+            }
+        });
+    });
+    
+    // Selection functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateBulkActions();
+        });
+    }
+    
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllState();
+            updateBulkActions();
+        });
+    });
+    
+    // Action buttons
+    table.addEventListener('click', function(e) {
+        if (e.target.closest('.action-btn')) {
+            const btn = e.target.closest('.action-btn');
+            const row = btn.closest('.table-row');
+            const symbol = row.querySelector('.symbol-ticker')?.textContent;
+            
+            if (btn.title.includes('watchlist')) {
+                handleAddToWatchlist(symbol);
+            } else if (btn.title.includes('chart')) {
+                handleViewChart(symbol);
+            } else if (btn.title.includes('details')) {
+                handleViewDetails(symbol);
+            } else if (btn.title.includes('Trade')) {
+                handleTrade(symbol);
+            }
+        }
+    });
+    
+    function sortTable(table, column) {
+        const tbody = table.querySelector('.table-body');
+        const rows = Array.from(tbody.querySelectorAll('.table-row')).filter(row => !row.classList.contains('empty-row'));
+        
+        // Determine current sort direction
+        const header = table.querySelector(`[data-column="${column}"]`);
+        const currentSort = header.getAttribute('data-sort') || 'asc';
+        const newSort = currentSort === 'asc' ? 'desc' : 'asc';
+        
+        // Clear all sort indicators
+        table.querySelectorAll('.sortable').forEach(h => {
+            h.removeAttribute('data-sort');
+            h.querySelector('.sort-indicator').innerHTML = '<?php echo addslashes(rts_get_icon('chevrons-up-down', ['width' => '14', 'height' => '14'])); ?>';
+        });
+        
+        // Set new sort indicator
+        header.setAttribute('data-sort', newSort);
+        const sortIcon = newSort === 'asc' ? 'chevron-up' : 'chevron-down';
+        header.querySelector('.sort-indicator').innerHTML = `<?php echo addslashes(str_replace(['chevron-up', 'chevron-down'], ['{{ ICON }}'], rts_get_icon('{{ ICON }}', ['width' => '14', 'height' => '14']))); ?>`.replace('{{ ICON }}', sortIcon);
+        
+        // Sort rows
+        rows.sort((a, b) => {
+            const aCell = a.querySelector(`[data-column="${column}"] .cell-content, [data-column="${column}"] .symbol-ticker, [data-column="${column}"] .pl-amount`);
+            const bCell = b.querySelector(`[data-column="${column}"] .cell-content, [data-column="${column}"] .symbol-ticker, [data-column="${column}"] .pl-amount`);
+            
+            let aValue = aCell ? aCell.textContent.trim() : '';
+            let bValue = bCell ? bCell.textContent.trim() : '';
+            
+            // Handle numeric values
+            if (column === 'price' || column === 'market_value' || column === 'shares') {
+                aValue = parseFloat(aValue.replace(/[^0-9.-]+/g, '')) || 0;
+                bValue = parseFloat(bValue.replace(/[^0-9.-]+/g, '')) || 0;
+            }
+            
+            let result = 0;
+            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                result = aValue - bValue;
+            } else {
+                result = aValue.localeCompare(bValue);
+            }
+            
+            return newSort === 'desc' ? -result : result;
+        });
+        
+        // Reorder DOM
+        rows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function updateSelectAllState() {
+        const checkedCount = table.querySelectorAll('.row-select:checked').length;
+        const totalCount = table.querySelectorAll('.row-select').length;
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = checkedCount === totalCount && totalCount > 0;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+        }
+    }
+    
+    function updateBulkActions() {
+        const checkedCount = table.querySelectorAll('.row-select:checked').length;
+        
+        if (bulkActions) {
+            if (checkedCount > 0) {
+                bulkActions.classList.remove('hidden');
+                bulkActions.querySelector('.selection-count').textContent = `${checkedCount} items selected`;
+            } else {
+                bulkActions.classList.add('hidden');
+            }
+        }
+    }
+    
+    function handleAddToWatchlist(symbol) {
+        console.log('Adding to watchlist:', symbol);
+        // Implement watchlist functionality
+    }
+    
+    function handleViewChart(symbol) {
+        console.log('View chart for:', symbol);
+        // Implement chart view functionality
+    }
+    
+    function handleViewDetails(symbol) {
+        console.log('View details for:', symbol);
+        // Implement details view functionality
+    }
+    
+    function handleTrade(symbol) {
+        console.log('Trade:', symbol);
+        // Implement trade functionality
+    }
+}
+</script>
 
-get_template_part('template-parts/components/table', null, $stock_data);
-*/
+<style>
+/* Table Component Styles */
+.table-container {
+    position: relative;
+    background: var(--surface-raised);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    z-index: 2;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    min-height: 200px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-header {
+    background: var(--gray-50);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table-header-cell {
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    color: var(--gray-700);
+    white-space: nowrap;
+}
+
+.table-header-cell.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--transition-fast) var(--easing-standard);
+}
+
+.table-header-cell.sortable:hover {
+    background: var(--gray-100);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.sort-indicator {
+    opacity: 0.5;
+    transition: opacity var(--transition-fast) var(--easing-standard);
+}
+
+.sortable:hover .sort-indicator,
+.sortable[data-sort] .sort-indicator {
+    opacity: 1;
+}
+
+.table-row {
+    transition: background-color var(--transition-fast) var(--easing-standard);
+}
+
+.table-row:hover {
+    background: var(--gray-50);
+}
+
+.table-cell {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+    position: relative;
+}
+
+.select-column,
+.select-cell {
+    width: 50px;
+    text-align: center;
+}
+
+/* Cell-specific styles */
+.symbol-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.symbol-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.symbol-ticker {
+    font-weight: 700;
+    font-size: var(--text-sm);
+    color: var(--gray-900);
+}
+
+.symbol-company {
+    font-size: var(--text-xs);
+    color: var(--gray-500);
+    line-height: 1.2;
+}
+
+.pl-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pl-amount {
+    font-weight: 600;
+    font-size: var(--text-sm);
+}
+
+.pl-percent {
+    font-size: var(--text-xs);
+    opacity: 0.8;
+}
+
+.pl-amount.positive,
+.pl-percent.positive {
+    color: var(--success);
+}
+
+.pl-amount.negative,
+.pl-percent.negative {
+    color: var(--danger);
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.action-btn {
+    padding: var(--spacing-xs);
+    min-width: 32px;
+    aspect-ratio: 1;
+}
+
+/* Empty state */
+.empty-cell {
+    padding: var(--spacing-3xl);
+    text-align: center;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    color: var(--gray-500);
+}
+
+.empty-icon {
+    opacity: 0.5;
+}
+
+/* Pagination */
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast) var(--easing-standard);
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--gray-100);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.page-btn {
+    padding: var(--spacing-sm);
+    min-width: 32px;
+    background: transparent;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+
+.page-btn.active {
+    background: var(--primary-500);
+    color: white;
+    border-color: var(--primary-500);
+}
+
+/* Bulk actions */
+.bulk-actions {
+    position: fixed;
+    bottom: var(--spacing-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface-raised);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-sticky);
+}
+
+.bulk-actions-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.selection-count {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.bulk-action-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Mobile labels (hidden by default) */
+.mobile-label {
+    display: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .table-responsive .table-wrapper {
+        overflow: visible;
+    }
+    
+    .table-responsive .data-table,
+    .table-responsive .table-header,
+    .table-responsive .table-body,
+    .table-responsive .table-row,
+    .table-responsive .table-header-cell,
+    .table-responsive .table-cell {
+        display: block;
+    }
+    
+    .table-responsive .table-header {
+        display: none;
+    }
+    
+    .table-responsive .table-row {
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+    
+    .table-responsive .table-cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-sm) 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .table-responsive .table-cell:last-child {
+        border-bottom: none;
+    }
+    
+    .table-responsive .mobile-label {
+        display: block;
+        font-weight: 600;
+        font-size: var(--text-sm);
+        color: var(--gray-600);
+    }
+    
+    .table-responsive .select-cell,
+    .table-responsive .select-column {
+        display: none;
+    }
+    
+    .table-pagination {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: center;
+    }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .table-container {
+    background: var(--gray-800);
+}
+
+[data-theme="dark"] .table-header {
+    background: var(--gray-900);
+}
+
+[data-theme="dark"] .table-header-cell {
+    color: var(--gray-300);
+    border-color: var(--gray-700);
+}
+
+[data-theme="dark"] .table-row:hover {
+    background: var(--gray-700);
+}
+
+[data-theme="dark"] .table-cell {
+    border-color: var(--gray-700);
+}
+
+[data-theme="dark"] .symbol-ticker {
+    color: var(--gray-100);
+}
+
+[data-theme="dark"] .symbol-company {
+    color: var(--gray-400);
+}
+
+[data-theme="dark"] .table-pagination {
+    background: var(--gray-900);
+    border-color: var(--gray-700);
+}
+
+[data-theme="dark"] .bulk-actions {
+    background: var(--gray-800);
+    border-color: var(--gray-700);
+}
+</style>
