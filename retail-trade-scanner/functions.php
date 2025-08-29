@@ -5,10 +5,34 @@
  * Adds an activation routine that creates required pages if they do not exist
  * and assigns appropriate page templates when available. It will not overwrite
  * existing content.
+ * Also sets up theme supports and registers menus for professional header/footer navigation.
  *
  * @package RetailTradeScanner
  */
 if (!defined('ABSPATH')) { exit; }
+
+// Theme setup: supports and menus
+add_action('after_setup_theme', function () {
+  add_theme_support('title-tag');
+  add_theme_support('post-thumbnails');
+  add_theme_support('custom-logo', [
+    'height'      => 48,
+    'width'       => 48,
+    'flex-height' => true,
+    'flex-width'  => true,
+  ]);
+
+  register_nav_menus([
+    'primary' => __('Primary Navigation', 'retail-trade-scanner'),
+    'footer'  => __('Footer Navigation', 'retail-trade-scanner'),
+  ]);
+});
+
+// (Optional) enqueue placeholder stylesheet hook if needed
+add_action('wp_enqueue_scripts', function(){
+  // In a real setup, enqueue compiled CSS here.
+  // wp_enqueue_style('retail-trade-scanner-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
+});
 
 // Theme activation hook
 add_action('after_switch_theme', 'retail_trade_scanner_on_activate');
