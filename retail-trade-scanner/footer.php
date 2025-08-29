@@ -2,14 +2,12 @@
 /**
  * The template for displaying the footer
  *
- * Contains the closing of the #content div and all content after
- *
  * @package RetailTradeScanner
  */
 if (!defined('ABSPATH')) { exit; }
 ?>
 
-<footer class="mt-16 border-t bg-background">
+<footer class="site-footer mt-16 border-t bg-background" role="contentinfo">
   <div class="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-4">
     <div>
       <a href="<?php echo esc_url( home_url('/') ); ?>" class="font-semibold text-lg hover:opacity-90"><?php bloginfo('name'); ?></a>

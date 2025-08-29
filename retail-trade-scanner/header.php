@@ -16,8 +16,9 @@ if (!defined('ABSPATH')) { exit; }
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
+<a class="skip-link" href="#primary"><?php esc_html_e('Skip to content','retail-trade-scanner'); ?></a>
 
-<header class="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+<header class="site-header border-b bg-background/80 backdrop-blur" role="banner">
   <div class="container mx-auto px-4">
     <div class="flex items-center justify-between py-4 gap-4">
       <div class="flex items-center gap-3">
@@ -27,7 +28,7 @@ if (!defined('ABSPATH')) { exit; }
         </a>
       </div>
 
-      <nav class="hidden md:block" aria-label="Primary">
+      <nav class="hidden md:block" aria-label="Primary" role="navigation">
         <?php
           if ( has_nav_menu('primary') ) {
             wp_nav_menu([
@@ -58,7 +59,7 @@ if (!defined('ABSPATH')) { exit; }
     </div>
   </div>
 
-  <div id="mobile-menu" class="md:hidden hidden border-t">
+  <div id="mobile-menu" class="md:hidden hidden border-t" role="dialog" aria-modal="true" aria-label="Primary Menu">
     <div class="px-4 py-3">
       <?php
         if ( has_nav_menu('primary') ) {
@@ -82,10 +83,48 @@ if (!defined('ABSPATH')) { exit; }
   (function(){
     var btn = document.getElementById('mobile-menu-button');
     var menu = document.getElementById('mobile-menu');
-    if (btn && menu) {
+    var header = document.querySelector('.site-header');
+    var lastFocus = null;
+
+    function getFocusable(container){
+      return container ? container.querySelectorAll('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])') : [];
+    }
+
+    function trapFocus(e){
+      if (!menu || menu.classList.contains('hidden')) return;
+      var focusables = getFocusable(menu);
+      if (!focusables.length) return;
+      var first = focusables[0];
+      var last = focusables[focusables.length-1];
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+        else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+      }
+      if (e.key === 'Escape') { closeMenu(); btn.focus(); }
+    }
+
+    function openMenu(){
+      menu.classList.remove('hidden');
+      btn.setAttribute('aria-expanded','true');
+      header && header.classList.add('is-open');
+      lastFocus = document.activeElement; // store
+      var focusables = getFocusable(menu);
+      if (focusables.length) { focusables[0].focus(); }
+      document.addEventListener('keydown', trapFocus);
+    }
+
+    function closeMenu(){
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded','false');
+      header && header.classList.remove('is-open');
+      document.removeEventListener('keydown', trapFocus);
+    }
+
+    if (btn && menu){
       btn.addEventListener('click', function(){
-        if (menu.classList.contains('hidden')) { menu.classList.remove('hidden'); }
-        else { menu.classList.add('hidden'); }
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        if (expanded) { closeMenu(); if (lastFocus) lastFocus.focus(); }
+        else { openMenu(); }
       });
     }
   })();

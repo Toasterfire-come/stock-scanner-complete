@@ -28,10 +28,9 @@ add_action('after_setup_theme', function () {
   ]);
 });
 
-// (Optional) enqueue placeholder stylesheet hook if needed
+// Enqueue theme stylesheet
 add_action('wp_enqueue_scripts', function(){
-  // In a real setup, enqueue compiled CSS here.
-  // wp_enqueue_style('retail-trade-scanner-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
+  wp_enqueue_style('retail-trade-scanner-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
 });
 
 // Theme activation hook
