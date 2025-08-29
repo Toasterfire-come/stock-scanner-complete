@@ -1,11 +1,4 @@
-<?php
-/**
- * Footer template
- *
- * @package RetailTradeScanner
- */
-if (!defined('ABSPATH')) { exit; }
-?>
+<?php if (!defined('ABSPATH')) { exit; } ?>
 
 <footer class="site-footer mt-16 border-t bg-background" role="contentinfo">
   <div class="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-4">
@@ -18,23 +11,13 @@ if (!defined('ABSPATH')) { exit; }
     </div>
     <div>
       <h2 class="text-sm font-semibold mb-3"><?php esc_html_e('Navigate', 'retail-trade-scanner'); ?></h2>
-      <?php
-        if ( has_nav_menu('footer') ) {
-          wp_nav_menu([
-            'theme_location' => 'footer',
-            'container'      => false,
-            'menu_class'     => 'grid gap-2 text-sm',
-            'fallback_cb'    => false,
-            'depth'          => 1,
-          ]);
-        } else {
-          echo '<ul class="grid gap-2 text-sm">'
-            . '<li><a class="hover:underline" href="' . esc_url( home_url('/help') ) . '">' . esc_html__('Help','retail-trade-scanner') . '</a></li>'
-            . '<li><a class="hover:underline" href="' . esc_url( home_url('/tutorials') ) . '">' . esc_html__('Tutorials','retail-trade-scanner') . '</a></li>'
-            . '<li><a class="hover:underline" href="' . esc_url( home_url('/contact') ) . '">' . esc_html__('Contact','retail-trade-scanner') . '</a></li>'
-            . '</ul>';
-        }
-      ?>
+      <?php if ( has_nav_menu('footer') ) { wp_nav_menu(['theme_location'=>'footer','container'=>false,'menu_class'=>'grid gap-2 text-sm','fallback_cb'=>false,'depth'=>1]); } else { ?>
+        <ul class="grid gap-2 text-sm">
+          <li><a class="hover:underline" href="<?php echo esc_url( home_url('/help') ); ?>"><?php esc_html_e('Help','retail-trade-scanner'); ?></a></li>
+          <li><a class="hover:underline" href="<?php echo esc_url( home_url('/tutorials') ); ?>"><?php esc_html_e('Tutorials','retail-trade-scanner'); ?></a></li>
+          <li><a class="hover:underline" href="<?php echo esc_url( home_url('/contact') ); ?>"><?php esc_html_e('Contact','retail-trade-scanner'); ?></a></li>
+        </ul>
+      <?php } ?>
     </div>
     <div>
       <h2 class="text-sm font-semibold mb-3"><?php esc_html_e('Legal', 'retail-trade-scanner'); ?></h2>
@@ -46,12 +29,13 @@ if (!defined('ABSPATH')) { exit; }
     </div>
     <div>
       <h2 class="text-sm font-semibold mb-3"><?php esc_html_e('Subscribe', 'retail-trade-scanner'); ?></h2>
-      <form class="flex gap-2" method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
+      <form id="rts-subscribe-form" class="flex gap-2" method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
         <?php wp_nonce_field('rts_subscribe','rts_subscribe_nonce'); ?>
         <input type="hidden" name="action" value="rts_subscribe" />
         <input class="border rounded px-3 py-2 text-sm w-full" type="email" name="email" placeholder="<?php esc_attr_e('Your email','retail-trade-scanner'); ?>" required />
         <button class="rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm" type="submit"><?php esc_html_e('Join','retail-trade-scanner'); ?></button>
       </form>
+      <div id="rts-subscribe-note" class="notice mt-2" aria-live="polite"></div>
     </div>
   </div>
   <div class="border-t">

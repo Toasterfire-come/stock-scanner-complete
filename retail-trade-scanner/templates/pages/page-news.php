@@ -1,40 +1,23 @@
 <?php
-/**
- * Template Name: News
- *
- * @package RetailTradeScanner
- */
+/** Template Name: News (wired) */
 if (!defined('ABSPATH')) { exit; }
-
 get_header();
-
-$layout_args = array(
-  'page_title'       => __('News', 'retail-trade-scanner'),
-  'page_description' => __('Market news aggregation and reading pane.', 'retail-trade-scanner'),
-  'page_class'       => 'page-news',
-);
+$layout_args = ['page_title'=>__('News','retail-trade-scanner'),'page_description'=>__('Live market news with filters','retail-trade-scanner'),'page_class'=>'page-news'];
 ?>
 <section class="container mx-auto px-4 py-10">
-  <div class="grid gap-6 lg:grid-cols-3">
-    <div class="lg:col-span-2 grid gap-4">
-      <?php
-        for ($i=0; $i<3; $i++) {
-          get_template_part('template-parts/components/card', null, [
-            'title' => __('Sample headline', 'retail-trade-scanner'),
-            'subtitle' => __('Source · 2h ago', 'retail-trade-scanner'),
-            'content' => __('This is a placeholder for a news story. Integrate your news feed to populate items here.', 'retail-trade-scanner'),
-          ]);
-        }
-      ?>
-    </div>
-    <aside class="grid gap-6">
-      <?php get_template_part('template-parts/components/card', null, [
-        'title' => __('Filters', 'retail-trade-scanner'),
-        'content' => __('Industry, tickers, and impact filters can be added here as UI controls.', 'retail-trade-scanner'),
-      ]); ?>
-    </aside>
+  <form id="rts-news-filters" class="grid gap-3 md:grid-cols-4">
+    <input class="border rounded px-3 py-2" type="number" name="limit" placeholder="<?php esc_attr_e('Limit (<=50)','retail-trade-scanner'); ?>" />
+    <select class="border rounded px-3 py-2" name="sentiment">
+      <option value=""><?php esc_html_e('Any Sentiment','retail-trade-scanner'); ?></option>
+      <option value="positive"><?php esc_html_e('Positive','retail-trade-scanner'); ?></option>
+      <option value="negative"><?php esc_html_e('Negative','retail-trade-scanner'); ?></option>
+      <option value="neutral"><?php esc_html_e('Neutral','retail-trade-scanner'); ?></option>
+    </select>
+    <input class="border rounded px-3 py-2" type="text" name="ticker" placeholder="<?php esc_attr_e('Ticker (optional)','retail-trade-scanner'); ?>" />
+    <button class="rounded-md bg-primary text-primary-foreground px-4 py-2" type="submit"><?php esc_html_e('Apply','retail-trade-scanner'); ?></button>
+  </form>
+  <div id="rts-news" class="grid gap-3 mt-6">
+    <div class="text-muted-foreground"><?php esc_html_e('Loading news…','retail-trade-scanner'); ?></div>
   </div>
 </section>
-<?php
-get_template_part('template-parts/layout/main-shell', null, $layout_args);
-get_footer();
+<?php get_template_part('template-parts/layout/main-shell', null, $layout_args); get_footer(); ?>
