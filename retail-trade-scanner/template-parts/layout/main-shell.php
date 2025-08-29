@@ -84,5 +84,5 @@ extract($args);
                 </header>
             <?php endif; ?>
             
-            <main class="main-content-area <?php echo $sidebar_enabled ? 'with-sidebar' : ''; ?>" role="main">
+            <div class="main-content-area <?php echo $sidebar_enabled ? 'with-sidebar' : ''; ?>" role="region" aria-label="Page Content">
                 <div class="page-content animate-scale-in">
