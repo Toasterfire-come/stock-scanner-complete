@@ -1,562 +1,472 @@
 <?php
 /**
- * Template Name: Dashboard
- * 
- * Dashboard page template with overview grid, KPIs, top movers, indices, market sentiment
+ * Template for Dashboard Page
  *
  * @package RetailTradeScanner
  */
 
-// Restrict to logged-in users
-if (!is_user_logged_in()) {
-    wp_redirect(wp_login_url(get_permalink()));
-    exit;
-}
-
 get_header();
-
-// Sample data - in real implementation this would come from API/database
-$portfolio_value = '$124,567.89';
-$portfolio_change = '+5.23%';
-$day_pl = '+$2,845.32';
-$total_return = '+15.67%';
-
-$top_movers = array(
-    array('symbol' => 'AAPL', 'company' => 'Apple Inc.', 'price' => '$182.34', 'change' => '+2.45%', 'type' => 'positive'),
-    array('symbol' => 'TSLA', 'company' => 'Tesla Inc.', 'price' => '$245.67', 'change' => '-1.28%', 'type' => 'negative'),
-    array('symbol' => 'NVDA', 'company' => 'NVIDIA Corp.', 'price' => '$456.78', 'change' => '+3.67%', 'type' => 'positive'),
-    array('symbol' => 'AMZN', 'company' => 'Amazon.com Inc.', 'price' => '$134.56', 'change' => '+0.89%', 'type' => 'positive'),
-);
-
-$market_indices = array(
-    array('name' => 'S&P 500', 'value' => '4,567.23', 'change' => '+0.45%', 'type' => 'positive'),
-    array('name' => 'NASDAQ', 'value' => '14,234.56', 'change' => '+0.78%', 'type' => 'positive'),
-    array('name' => 'DOW JONES', 'value' => '34,567.89', 'change' => '-0.12%', 'type' => 'negative'),
-);
-
-$recent_alerts = array(
-    array('message' => 'AAPL price target reached: $180.00', 'time' => '2 minutes ago', 'type' => 'success'),
-    array('message' => 'High volume detected in TSLA', 'time' => '15 minutes ago', 'type' => 'info'),
-    array('message' => 'Market volatility increasing', 'time' => '1 hour ago', 'type' => 'warning'),
-);
-
-// Layout configuration
-$layout_args = array(
-    'page_title' => __('Dashboard', 'retail-trade-scanner'),
-    'page_description' => __('Overview of your portfolio performance and market activity', 'retail-trade-scanner'),
-    'page_class' => 'dashboard-page',
-    'header_actions' => array(
-        array(
-            'text' => __('Refresh Data', 'retail-trade-scanner'),
-            'variant' => 'outline',
-            'icon' => 'refresh',
-            'classes' => 'refresh-data-btn'
-        ),
-        array(
-            'text' => __('Export Report', 'retail-trade-scanner'),
-            'variant' => 'primary',
-            'icon' => 'download'
-        )
-    )
-);
-
-get_template_part('template-parts/layout/main-shell', null, $layout_args);
 ?>
 
-<!-- Dashboard Grid Layout -->
-<div class="dashboard-grid bento-grid">
-    <!-- Portfolio Overview Card -->
-    <div class="dashboard-section bento-item-large">
-        <?php
-        get_template_part('template-parts/components/card', null, array(
-            'title' => __('Portfolio Overview', 'retail-trade-scanner'),
-            'value' => $portfolio_value,
-            'change' => $portfolio_change,
-            'icon' => 'portfolio',
-            'variant' => 'glass',
-            'chart_data' => array(120000, 121000, 119000, 122000, 124567), // Sample chart data
-            'clickable' => true,
-            'url' => home_url('/portfolio/')
-        ));
-        ?>
-    </div>
+<div class="dashboard-page">
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li class="breadcrumb-item">
+                    <a href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Home', 'retail-trade-scanner'); ?></a>
+                </li>
+                <li class="breadcrumb-separator"><?php echo rts_get_icon('chevron-right', ['width' => '16', 'height' => '16']); ?></li>
+                <li class="breadcrumb-item active"><?php esc_html_e('Dashboard', 'retail-trade-scanner'); ?></li>
+            </ol>
+        </div>
+    </nav>
 
-    <!-- Daily P/L Card -->
-    <div class="dashboard-section bento-item-medium">
-        <?php
-        get_template_part('template-parts/components/card', null, array(
-            'title' => __('Today\'s P/L', 'retail-trade-scanner'),
-            'value' => $day_pl,
-            'change' => '+2.34%',
-            'icon' => 'trending-up',
-            'variant' => 'default',
-            'size' => 'base'
-        ));
-        ?>
-    </div>
-
-    <!-- Total Return Card -->
-    <div class="dashboard-section bento-item-small">
-        <?php
-        get_template_part('template-parts/components/card', null, array(
-            'title' => __('Total Return', 'retail-trade-scanner'),
-            'value' => $total_return,
-            'icon' => 'percent',
-            'variant' => 'elevated',
-            'size' => 'sm'
-        ));
-        ?>
-    </div>
-
-    <!-- Top Movers Section -->
-    <div class="dashboard-section bento-item-medium">
-        <div class="card glass-card">
-            <div class="card-header">
-                <h3 class="card-title"><?php esc_html_e('Top Movers', 'retail-trade-scanner'); ?></h3>
-                <a href="<?php echo esc_url(home_url('/popular/')); ?>" class="view-all-link">
-                    <?php esc_html_e('View All', 'retail-trade-scanner'); ?>
-                    <?php echo rts_get_icon('arrow-right', array('width' => '16', 'height' => '16')); ?>
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="movers-list">
-                    <?php foreach ($top_movers as $mover) : ?>
-                        <div class="mover-item">
-                            <div class="mover-info">
-                                <span class="mover-symbol"><?php echo esc_html($mover['symbol']); ?></span>
-                                <span class="mover-price"><?php echo esc_html($mover['price']); ?></span>
-                            </div>
-                            <div class="mover-change">
-                                <?php
-                                get_template_part('template-parts/components/badge', null, array(
-                                    'value' => $mover['change'],
-                                    'type' => $mover['type'],
-                                    'size' => 'sm'
-                                ));
-                                ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="page-header-content">
+                <div class="page-header-text">
+                    <h1 class="page-title">
+                        <?php echo rts_get_icon('dashboard', ['width' => '32', 'height' => '32', 'class' => 'page-title-icon']); ?>
+                        <?php esc_html_e('Trading Dashboard', 'retail-trade-scanner'); ?>
+                    </h1>
+                    <p class="page-description">
+                        <?php esc_html_e('Monitor your portfolio, track market trends, and manage your investments all in one place.', 'retail-trade-scanner'); ?>
+                    </p>
+                </div>
+                <div class="page-header-actions">
+                    <button class="btn btn-secondary" id="refresh-dashboard">
+                        <?php echo rts_get_icon('activity', ['width' => '20', 'height' => '20']); ?>
+                        <?php esc_html_e('Refresh Data', 'retail-trade-scanner'); ?>
+                    </button>
+                    <a href="<?php echo esc_url(home_url('/scanner/')); ?>" class="btn btn-primary">
+                        <?php echo rts_get_icon('scanner', ['width' => '20', 'height' => '20']); ?>
+                        <?php esc_html_e('Stock Scanner', 'retail-trade-scanner'); ?>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Market Indices -->
-    <div class="dashboard-section bento-item-medium">
-        <div class="card glass-card">
-            <div class="card-header">
-                <h3 class="card-title"><?php esc_html_e('Market Indices', 'retail-trade-scanner'); ?></h3>
-            </div>
-            <div class="card-body">
-                <div class="indices-grid">
-                    <?php foreach ($market_indices as $index) : ?>
-                        <div class="index-item">
-                            <h4 class="index-name"><?php echo esc_html($index['name']); ?></h4>
-                            <div class="index-value"><?php echo esc_html($index['value']); ?></div>
-                            <?php
-                            get_template_part('template-parts/components/badge', null, array(
-                                'value' => $index['change'],
-                                'type' => $index['type'],
-                                'size' => 'xs'
-                            ));
-                            ?>
+    <!-- Dashboard Content -->
+    <div class="container">
+        <!-- KPI Cards -->
+        <section class="kpi-section">
+            <div class="grid grid-4 gap-xl">
+                <div class="kpi-card glass-card animate-scale-in">
+                    <div class="kpi-header">
+                        <h3 class="kpi-title"><?php esc_html_e('Portfolio Value', 'retail-trade-scanner'); ?></h3>
+                        <?php echo rts_get_icon('portfolio', ['width' => '24', 'height' => '24', 'class' => 'kpi-icon']); ?>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value loading-value" data-endpoint="portfolio-value">$--</div>
+                        <div class="kpi-change">
+                            <span class="change-value loading-value" data-endpoint="portfolio-change">--</span>
+                            <span class="change-period"><?php esc_html_e('Today', 'retail-trade-scanner'); ?></span>
                         </div>
-                    <?php endforeach; ?>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Recent Alerts -->
-    <div class="dashboard-section bento-item-medium">
-        <div class="card glass-card">
-            <div class="card-header">
-                <h3 class="card-title"><?php esc_html_e('Recent Alerts', 'retail-trade-scanner'); ?></h3>
-                <a href="<?php echo esc_url(home_url('/alerts/')); ?>" class="view-all-link">
-                    <?php esc_html_e('Manage Alerts', 'retail-trade-scanner'); ?>
-                    <?php echo rts_get_icon('settings', array('width' => '16', 'height' => '16')); ?>
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="alerts-list">
-                    <?php foreach ($recent_alerts as $alert) : ?>
-                        <div class="alert-item">
-                            <div class="alert-content">
-                                <p class="alert-message"><?php echo esc_html($alert['message']); ?></p>
-                                <span class="alert-time"><?php echo esc_html($alert['time']); ?></span>
-                            </div>
-                            <div class="alert-indicator">
-                                <?php
-                                $alert_icons = array(
-                                    'success' => 'check-circle',
-                                    'info' => 'info-circle',
-                                    'warning' => 'alert-triangle'
-                                );
-                                echo rts_get_icon($alert_icons[$alert['type']] ?? 'info-circle', array(
-                                    'width' => '16',
-                                    'height' => '16',
-                                    'class' => 'text-' . $alert['type']
-                                ));
-                                ?>
-                            </div>
+                <div class="kpi-card glass-card animate-scale-in">
+                    <div class="kpi-header">
+                        <h3 class="kpi-title"><?php esc_html_e('Total P&L', 'retail-trade-scanner'); ?></h3>
+                        <?php echo rts_get_icon('trending-up', ['width' => '24', 'height' => '24', 'class' => 'kpi-icon']); ?>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value loading-value" data-endpoint="total-pl">$--</div>
+                        <div class="kpi-change">
+                            <span class="change-value loading-value" data-endpoint="pl-change">--</span>
+                            <span class="change-period"><?php esc_html_e('All Time', 'retail-trade-scanner'); ?></span>
                         </div>
-                    <?php endforeach; ?>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Market Heatmap Section -->
-    <div class="dashboard-section bento-item-large">
-        <div class="card glass-card">
-            <div class="card-header">
-                <h3 class="card-title"><?php esc_html_e('Market Heatmap', 'retail-trade-scanner'); ?></h3>
-                <div class="heatmap-controls">
-                    <button class="control-btn active" data-period="1d">1D</button>
-                    <button class="control-btn" data-period="1w">1W</button>
-                    <button class="control-btn" data-period="1m">1M</button>
+                <div class="kpi-card glass-card animate-scale-in">
+                    <div class="kpi-header">
+                        <h3 class="kpi-title"><?php esc_html_e('Active Positions', 'retail-trade-scanner'); ?></h3>
+                        <?php echo rts_get_icon('activity', ['width' => '24', 'height' => '24', 'class' => 'kpi-icon']); ?>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value loading-value" data-endpoint="active-positions">--</div>
+                        <div class="kpi-meta">
+                            <span class="loading-value" data-endpoint="winning-positions">--</span> <?php esc_html_e('winning', 'retail-trade-scanner'); ?>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="heatmap-container">
-                    <div class="heatmap-placeholder">
-                        <?php
-                        get_template_part('template-parts/components/chart-shell', null, array(
-                            'title' => '',
-                            'type' => 'heatmap',
-                            'height' => '300px',
-                            'loading' => false,
-                            'show_controls' => false,
-                            'variant' => 'minimal'
-                        ));
-                        ?>
+
+                <div class="kpi-card glass-card animate-scale-in">
+                    <div class="kpi-header">
+                        <h3 class="kpi-title"><?php esc_html_e('Watchlist Alerts', 'retail-trade-scanner'); ?></h3>
+                        <?php echo rts_get_icon('alerts', ['width' => '24', 'height' => '24', 'class' => 'kpi-icon']); ?>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value loading-value" data-endpoint="active-alerts">--</div>
+                        <div class="kpi-meta">
+                            <span class="loading-value" data-endpoint="triggered-alerts">--</span> <?php esc_html_e('triggered', 'retail-trade-scanner'); ?>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Quick Actions -->
-    <div class="dashboard-section bento-item-small">
-        <div class="card glass-card">
-            <div class="card-header">
-                <h3 class="card-title"><?php esc_html_e('Quick Actions', 'retail-trade-scanner'); ?></h3>
-            </div>
-            <div class="card-body">
-                <div class="quick-actions-grid">
-                    <a href="<?php echo esc_url(home_url('/scanner/')); ?>" class="quick-action-item">
-                        <?php echo rts_get_icon('scanner', array('width' => '24', 'height' => '24')); ?>
-                        <span><?php esc_html_e('Scanner', 'retail-trade-scanner'); ?></span>
-                    </a>
-                    <a href="<?php echo esc_url(home_url('/watchlists/')); ?>" class="quick-action-item">
-                        <?php echo rts_get_icon('watchlist', array('width' => '24', 'height' => '24')); ?>
-                        <span><?php esc_html_e('Watchlist', 'retail-trade-scanner'); ?></span>
-                    </a>
-                    <a href="<?php echo esc_url(home_url('/news/')); ?>" class="quick-action-item">
-                        <?php echo rts_get_icon('news', array('width' => '24', 'height' => '24')); ?>
-                        <span><?php esc_html_e('News', 'retail-trade-scanner'); ?></span>
-                    </a>
-                    <a href="<?php echo esc_url(home_url('/alerts/')); ?>" class="quick-action-item">
-                        <?php echo rts_get_icon('alerts', array('width' => '24', 'height' => '24')); ?>
-                        <span><?php esc_html_e('Alerts', 'retail-trade-scanner'); ?></span>
-                    </a>
+        <!-- Main Dashboard Grid -->
+        <section class="dashboard-grid bento-grid">
+            <!-- Market Overview -->
+            <div class="dashboard-widget bento-item-large glass-card">
+                <div class="widget-header">
+                    <h3 class="widget-title"><?php esc_html_e('Market Overview', 'retail-trade-scanner'); ?></h3>
+                    <div class="widget-actions">
+                        <button class="btn-icon btn-ghost" title="<?php esc_attr_e('Settings', 'retail-trade-scanner'); ?>">
+                            <?php echo rts_get_icon('settings', ['width' => '16', 'height' => '16']); ?>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="market-indices">
+                        <div class="index-item">
+                            <span class="index-name">S&P 500</span>
+                            <span class="index-value loading-value" data-endpoint="sp500">--</span>
+                            <span class="index-change loading-value" data-endpoint="sp500-change">--</span>
+                        </div>
+                        <div class="index-item">
+                            <span class="index-name">NASDAQ</span>
+                            <span class="index-value loading-value" data-endpoint="nasdaq">--</span>
+                            <span class="index-change loading-value" data-endpoint="nasdaq-change">--</span>
+                        </div>
+                        <div class="index-item">
+                            <span class="index-name">DOW</span>
+                            <span class="index-value loading-value" data-endpoint="dow">--</span>
+                            <span class="index-change loading-value" data-endpoint="dow-change">--</span>
+                        </div>
+                    </div>
+                    <div class="market-chart">
+                        <canvas id="market-chart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Top Movers -->
+            <div class="dashboard-widget bento-item-medium glass-card">
+                <div class="widget-header">
+                    <h3 class="widget-title"><?php esc_html_e('Top Movers', 'retail-trade-scanner'); ?></h3>
+                    <div class="widget-tabs">
+                        <button class="tab-btn active" data-tab="gainers"><?php esc_html_e('Gainers', 'retail-trade-scanner'); ?></button>
+                        <button class="tab-btn" data-tab="losers"><?php esc_html_e('Losers', 'retail-trade-scanner'); ?></button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="movers-list" id="gainers-list">
+                        <!-- Dynamic content loaded via JavaScript -->
+                        <div class="mover-skeleton">
+                            <div class="skeleton" style="width: 60px; height: 20px;"></div>
+                            <div class="skeleton" style="width: 80px; height: 20px;"></div>
+                            <div class="skeleton" style="width: 60px; height: 20px;"></div>
+                        </div>
+                        <div class="mover-skeleton">
+                            <div class="skeleton" style="width: 60px; height: 20px;"></div>
+                            <div class="skeleton" style="width: 80px; height: 20px;"></div>
+                            <div class="skeleton" style="width: 60px; height: 20px;"></div>
+                        </div>
+                        <div class="mover-skeleton">
+                            <div class="skeleton" style="width: 60px; height: 20px;"></div>
+                            <div class="skeleton" style="width: 80px; height: 20px;"></div>
+                            <div class="skeleton" style="width: 60px; height: 20px;"></div>
+                        </div>
+                    </div>
+                    <div class="movers-list hidden" id="losers-list">
+                        <!-- Dynamic content loaded via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio Allocation -->
+            <div class="dashboard-widget bento-item-medium glass-card">
+                <div class="widget-header">
+                    <h3 class="widget-title"><?php esc_html_e('Portfolio Allocation', 'retail-trade-scanner'); ?></h3>
+                    <a href="<?php echo esc_url(home_url('/portfolio/')); ?>" class="btn btn-sm btn-outline">
+                        <?php esc_html_e('View Details', 'retail-trade-scanner'); ?>
+                    </a>
+                </div>
+                <div class="widget-content">
+                    <div class="allocation-chart">
+                        <canvas id="allocation-chart" width="300" height="300"></canvas>
+                    </div>
+                    <div class="allocation-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #3b82f6;"></div>
+                            <span class="legend-label"><?php esc_html_e('Stocks', 'retail-trade-scanner'); ?></span>
+                            <span class="legend-value loading-value" data-endpoint="stocks-allocation">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #d946ef;"></div>
+                            <span class="legend-label"><?php esc_html_e('Crypto', 'retail-trade-scanner'); ?></span>
+                            <span class="legend-value loading-value" data-endpoint="crypto-allocation">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #16a34a;"></div>
+                            <span class="legend-label"><?php esc_html_e('Cash', 'retail-trade-scanner'); ?></span>
+                            <span class="legend-value loading-value" data-endpoint="cash-allocation">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="dashboard-widget bento-item-medium glass-card">
+                <div class="widget-header">
+                    <h3 class="widget-title"><?php esc_html_e('Recent Activity', 'retail-trade-scanner'); ?></h3>
+                    <div class="widget-actions">
+                        <button class="btn btn-sm btn-ghost"><?php esc_html_e('View All', 'retail-trade-scanner'); ?></button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="activity-list">
+                        <!-- Dynamic content loaded via JavaScript -->
+                        <div class="activity-skeleton">
+                            <div class="skeleton-circle" style="width: 32px; height: 32px;"></div>
+                            <div class="skeleton-content">
+                                <div class="skeleton" style="width: 120px; height: 16px;"></div>
+                                <div class="skeleton" style="width: 80px; height: 14px; margin-top: 4px;"></div>
+                            </div>
+                        </div>
+                        <div class="activity-skeleton">
+                            <div class="skeleton-circle" style="width: 32px; height: 32px;"></div>
+                            <div class="skeleton-content">
+                                <div class="skeleton" style="width: 120px; height: 16px;"></div>
+                                <div class="skeleton" style="width: 80px; height: 14px; margin-top: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-widget bento-item-small glass-card">
+                <div class="widget-header">
+                    <h3 class="widget-title"><?php esc_html_e('Quick Actions', 'retail-trade-scanner'); ?></h3>
+                </div>
+                <div class="widget-content">
+                    <div class="quick-actions">
+                        <a href="<?php echo esc_url(home_url('/scanner/')); ?>" class="action-btn">
+                            <?php echo rts_get_icon('scanner', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Scan Stocks', 'retail-trade-scanner'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(home_url('/alerts/')); ?>" class="action-btn">
+                            <?php echo rts_get_icon('alerts', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Set Alert', 'retail-trade-scanner'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(home_url('/watchlists/')); ?>" class="action-btn">
+                            <?php echo rts_get_icon('watchlist', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('Watchlist', 'retail-trade-scanner'); ?></span>
+                        </a>
+                        <a href="<?php echo esc_url(home_url('/news/')); ?>" class="action-btn">
+                            <?php echo rts_get_icon('news', ['width' => '20', 'height' => '20']); ?>
+                            <span><?php esc_html_e('News', 'retail-trade-scanner'); ?></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market News -->
+            <div class="dashboard-widget bento-item-medium glass-card">
+                <div class="widget-header">
+                    <h3 class="widget-title"><?php esc_html_e('Market News', 'retail-trade-scanner'); ?></h3>
+                    <a href="<?php echo esc_url(home_url('/news/')); ?>" class="btn btn-sm btn-outline">
+                        <?php esc_html_e('View All', 'retail-trade-scanner'); ?>
+                    </a>
+                </div>
+                <div class="widget-content">
+                    <div class="news-list">
+                        <!-- Dynamic content loaded via JavaScript -->
+                        <div class="news-skeleton">
+                            <div class="skeleton" style="width: 100%; height: 16px;"></div>
+                            <div class="skeleton" style="width: 80%; height: 14px; margin-top: 4px;"></div>
+                            <div class="skeleton" style="width: 60px; height: 12px; margin-top: 8px;"></div>
+                        </div>
+                        <div class="news-skeleton">
+                            <div class="skeleton" style="width: 100%; height: 16px;"></div>
+                            <div class="skeleton" style="width: 80%; height: 14px; margin-top: 4px;"></div>
+                            <div class="skeleton" style="width: 60px; height: 12px; margin-top: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
 
 <!-- Dashboard JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Refresh data functionality
-    const refreshBtn = document.querySelector('.refresh-data-btn');
+    // Initialize dashboard
+    initDashboard();
+    
+    // Tab switching
+    initTabSwitching();
+    
+    // Refresh functionality
+    initRefreshButton();
+    
+    // Load dashboard data
+    loadDashboardData();
+    
+    // Set up auto-refresh
+    setInterval(loadDashboardData, 60000); // Refresh every minute
+});
+
+function initDashboard() {
+    console.log('Dashboard initialized');
+    RTS.showInfo('Dashboard loaded successfully');
+}
+
+function initTabSwitching() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            
+            // Update active tab
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show/hide content
+            document.querySelectorAll('.movers-list').forEach(list => list.classList.add('hidden'));
+            const targetList = document.getElementById(tab + '-list');
+            if (targetList) {
+                targetList.classList.remove('hidden');
+            }
+        });
+    });
+}
+
+function initRefreshButton() {
+    const refreshBtn = document.getElementById('refresh-dashboard');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
-            // Show loading state
             this.classList.add('loading');
-            this.disabled = true;
+            loadDashboardData();
             
-            // Simulate data refresh
             setTimeout(() => {
                 this.classList.remove('loading');
-                this.disabled = false;
-                RTS.showSuccess('Dashboard data refreshed successfully!');
+                RTS.showSuccess('Dashboard refreshed');
             }, 2000);
         });
     }
+}
+
+function loadDashboardData() {
+    // Simulate loading real data
+    setTimeout(() => {
+        updateKPIs();
+        updateMarketData();
+        updatePortfolioData();
+        updateActivity();
+        updateNews();
+        hideSkeletons();
+    }, 1500);
+}
+
+function updateKPIs() {
+    // Update portfolio value
+    updateValue('[data-endpoint="portfolio-value"]', '$124,567.89');
+    updateValue('[data-endpoint="portfolio-change"]', '+$2,341.56 (+1.92%)', 'positive');
     
-    // Heatmap controls
-    document.querySelectorAll('.control-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Update heatmap based on period
-            const period = this.dataset.period;
-            console.log('Updating heatmap for period:', period);
-            // Implement heatmap update logic here
-        });
+    // Update P&L
+    updateValue('[data-endpoint="total-pl"]', '+$12,456.78');
+    updateValue('[data-endpoint="pl-change"]', '+15.67%', 'positive');
+    
+    // Update positions
+    updateValue('[data-endpoint="active-positions"]', '23');
+    updateValue('[data-endpoint="winning-positions"]', '18');
+    
+    // Update alerts
+    updateValue('[data-endpoint="active-alerts"]', '12');
+    updateValue('[data-endpoint="triggered-alerts"]', '3');
+}
+
+function updateMarketData() {
+    // Update market indices
+    updateValue('[data-endpoint="sp500"]', '4,234.56');
+    updateValue('[data-endpoint="sp500-change"]', '+0.45%', 'positive');
+    
+    updateValue('[data-endpoint="nasdaq"]', '12,987.34');
+    updateValue('[data-endpoint="nasdaq-change"]', '-0.23%', 'negative');
+    
+    updateValue('[data-endpoint="dow"]', '34,567.89');
+    updateValue('[data-endpoint="dow-change"]', '+0.12%', 'positive');
+}
+
+function updatePortfolioData() {
+    // Update allocation
+    updateValue('[data-endpoint="stocks-allocation"]', '65%');
+    updateValue('[data-endpoint="crypto-allocation"]', '25%');
+    updateValue('[data-endpoint="cash-allocation"]', '10%');
+}
+
+function updateActivity() {
+    const activityList = document.querySelector('.activity-list');
+    if (activityList) {
+        activityList.innerHTML = `
+            <div class="activity-item">
+                <div class="activity-icon bg-success">
+                    ${RTS.components.getIcon('trending-up', 16)}
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Bought 50 shares of AAPL</div>
+                    <div class="activity-time">2 hours ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon bg-danger">
+                    ${RTS.components.getIcon('trending-down', 16)}
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Sold 100 shares of TSLA</div>
+                    <div class="activity-time">4 hours ago</div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function updateNews() {
+    const newsList = document.querySelector('.news-list');
+    if (newsList) {
+        newsList.innerHTML = `
+            <div class="news-item">
+                <div class="news-title">Fed Considers Rate Cut Amid Economic Concerns</div>
+                <div class="news-excerpt">Federal Reserve officials signal potential monetary policy shift...</div>
+                <div class="news-time">1 hour ago</div>
+            </div>
+            <div class="news-item">
+                <div class="news-title">Tech Stocks Rally on AI Breakthrough</div>
+                <div class="news-excerpt">Major technology companies see gains following artificial intelligence...</div>
+                <div class="news-time">3 hours ago</div>
+            </div>
+        `;
+    }
+}
+
+function updateValue(selector, value, changeType = null) {
+    const element = document.querySelector(selector);
+    if (element) {
+        element.textContent = value;
+        element.classList.remove('loading-value');
+        
+        if (changeType) {
+            element.classList.add(changeType === 'positive' ? 'text-success' : 'text-danger');
+        }
+    }
+}
+
+function hideSkeletons() {
+    document.querySelectorAll('.skeleton, .mover-skeleton, .activity-skeleton, .news-skeleton').forEach(skeleton => {
+        skeleton.style.display = 'none';
     });
-    
-    // Auto-refresh dashboard data every 30 seconds
-    setInterval(function() {
-        // Implement background data refresh
-        console.log('Auto-refreshing dashboard data...');
-    }, 30000);
-});
+}
 </script>
 
-                </div> <!-- .page-content -->
-            </div> <!-- .container -->
-        </div> <!-- .page-content-section -->
-    </main> <!-- .main-content-area -->
-</div> <!-- .page-wrapper -->
-
-<style>
-/* Dashboard-specific styles */
-.dashboard-grid {
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-2xl);
-}
-
-.dashboard-section {
-    position: relative;
-}
-
-/* Top Movers Styles */
-.movers-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.mover-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-lg);
-    transition: all var(--transition-fast) var(--easing-standard);
-}
-
-.mover-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(4px);
-}
-
-.mover-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.mover-symbol {
-    font-weight: 700;
-    font-size: var(--text-sm);
-    color: var(--gray-900);
-}
-
-.mover-price {
-    font-size: var(--text-sm);
-    color: var(--gray-600);
-}
-
-/* Market Indices Styles */
-.indices-grid {
-    display: grid;
-    gap: var(--spacing-md);
-}
-
-.index-item {
-    text-align: center;
-    padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-lg);
-    transition: all var(--transition-fast) var(--easing-standard);
-}
-
-.index-item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.index-name {
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--gray-600);
-    margin: 0 0 var(--spacing-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.index-value {
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: var(--spacing-sm);
-}
-
-/* Alerts Styles */
-.alerts-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.alert-item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-lg);
-    transition: all var(--transition-fast) var(--easing-standard);
-}
-
-.alert-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.alert-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.alert-message {
-    font-size: var(--text-sm);
-    color: var(--gray-800);
-    margin: 0 0 var(--spacing-xs);
-    line-height: 1.4;
-}
-
-.alert-time {
-    font-size: var(--text-xs);
-    color: var(--gray-500);
-}
-
-.alert-indicator {
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-/* Heatmap Styles */
-.heatmap-controls {
-    display: flex;
-    gap: var(--spacing-xs);
-}
-
-.control-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-sm);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--gray-600);
-    cursor: pointer;
-    transition: all var(--transition-fast) var(--easing-standard);
-}
-
-.control-btn:hover,
-.control-btn.active {
-    background: var(--primary-500);
-    color: white;
-    border-color: var(--primary-500);
-}
-
-/* Quick Actions Styles */
-.quick-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
-}
-
-.quick-action-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-lg) var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-lg);
-    color: var(--gray-700);
-    text-decoration: none;
-    transition: all var(--transition-normal) var(--easing-standard);
-    font-size: var(--text-sm);
-    font-weight: 600;
-}
-
-.quick-action-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--primary-600);
-    transform: translateY(-2px);
-    text-decoration: none;
-    box-shadow: var(--shadow-md);
-}
-
-/* View All Links */
-.view-all-link {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--primary-600);
-    text-decoration: none;
-    transition: all var(--transition-fast) var(--easing-standard);
-}
-
-.view-all-link:hover {
-    color: var(--primary-700);
-    text-decoration: none;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .bento-item-large,
-    .bento-item-medium,
-    .bento-item-small {
-        grid-column: span 1;
-        grid-row: auto;
-    }
-}
-
-@media (max-width: 640px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .indices-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .quick-actions-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .quick-action-item {
-        padding: var(--spacing-md) var(--spacing-xs);
-    }
-}
-
-/* Dark mode adjustments */
-[data-theme="dark"] .mover-symbol,
-[data-theme="dark"] .index-value,
-[data-theme="dark"] .alert-message {
-    color: var(--gray-100);
-}
-
-[data-theme="dark"] .mover-price,
-[data-theme="dark"] .alert-time {
-    color: var(--gray-400);
-}
-</style>
-
-<?php get_footer(); ?>
+<?php
+get_footer();
+?>
