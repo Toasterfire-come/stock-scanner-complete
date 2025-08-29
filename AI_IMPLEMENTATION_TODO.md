@@ -6,14 +6,14 @@ Theme bootstrap & repo basics
 [✓] Provide a CHANGELOG.md and CONTRIBUTING.md (optional but recommended)
 
 Directory layout (standardized)
-[ ] assets/css/ (compiled /minified CSS) and assets/scss/ (source)
-[ ] assets/js/ and assets/js/vendor/ (polyfills/builds)
-[ ] assets/icons/ (svg sprite / raw svgs) and assets/fonts/ (webfont files + license)
-[ ] template-parts/ (components: header, footer, card, table, chart-shell, etc.)
-[ ] templates/pages/ (page templates listed below)
-[ ] inc/ for PHP helper files (setup, enqueue, icon helper, template helpers)
-[ ] patterns/ for Gutenberg block patterns (optional)
-[ ] build/ or dist/ if using a compile step (ignored by Git)
+[✓] assets/css/ (compiled /minified CSS) and assets/scss/ (source)
+[✓] assets/js/ and assets/js/vendor/ (polyfills/builds)
+[✓] assets/icons/ (svg sprite / raw svgs) and assets/fonts/ (webfont files + license)
+[✓] template-parts/ (components: header, footer, card, table, chart-shell, etc.)
+[✓] templates/pages/ (page templates listed below)
+[✓] inc/ for PHP helper files (setup, enqueue, icon helper, template helpers)
+[✓] patterns/ for Gutenberg block patterns (optional)
+[✓] build/ or dist/ if using a compile step (ignored by Git)
 
 Design tokens & theming parity
 [ ] Define CSS variables in a base stylesheet (:root) for colors, spacing, radii, shadows, type scale, easing – expose same palette and font settings in theme.json (editor parity)
