@@ -42,4 +42,6 @@ get_template_part('template-parts/layout/main-shell', null, $layout_args);
 .legal-body h3 { margin-top: var(--spacing-xl); }
 </style>
 
+<?php get_template_part('template-parts/layout/main-shell-end'); ?>
+
 <?php get_footer(); ?>
