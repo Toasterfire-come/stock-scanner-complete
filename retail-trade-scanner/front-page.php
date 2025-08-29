@@ -305,5 +305,458 @@ get_header();
     </div>
 </section>
 
+<!-- Demo Interaction JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initHeroDemo();
+    initAnimatedCounters();
+    initIntersectionObserver();
+});
+
+function initHeroDemo() {
+    const demoTabs = document.querySelectorAll('.demo-nav-item');
+    const demoViews = document.querySelectorAll('.demo-content');
+    
+    demoTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetTab = this.dataset.demoTab;
+            
+            // Update active tab
+            demoTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update active view
+            demoViews.forEach(view => {
+                view.classList.remove('active');
+                if (view.id === `demo-${targetTab}`) {
+                    view.classList.add('active');
+                }
+            });
+            
+            // Animate chart if dashboard is selected
+            if (targetTab === 'dashboard') {
+                setTimeout(() => {
+                    drawDemoChart();
+                }, 300);
+            }
+        });
+    });
+    
+    // Initialize chart
+    setTimeout(() => {
+        drawDemoChart();
+    }, 1000);
+    
+    // Auto-rotate demo tabs
+    let currentTab = 0;
+    const totalTabs = demoTabs.length;
+    
+    setInterval(() => {
+        currentTab = (currentTab + 1) % totalTabs;
+        demoTabs[currentTab].click();
+    }, 4000);
+}
+
+function drawDemoChart() {
+    const canvas = document.getElementById('demo-chart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Generate sample data
+    const dataPoints = 20;
+    const data = [];
+    let value = 100;
+    
+    for (let i = 0; i < dataPoints; i++) {
+        value += (Math.random() - 0.4) * 10;
+        value = Math.max(80, Math.min(120, value));
+        data.push(value);
+    }
+    
+    // Draw gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+    
+    // Draw line
+    ctx.beginPath();
+    ctx.moveTo(0, height);
+    
+    for (let i = 0; i < data.length; i++) {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - ((data[i] - 80) / 40) * height;
+        
+        if (i === 0) {
+            ctx.lineTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    
+    ctx.lineTo(width, height);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Draw line
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - ((data[i] - 80) / 40) * height;
+        
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}
+
+function initAnimatedCounters() {
+    const counters = document.querySelectorAll('.stat-number');
+    
+    counters.forEach(counter => {
+        const target = counter.textContent;
+        const isPercent = target.includes('%');
+        const isPlus = target.includes('+');
+        let numericValue = parseFloat(target.replace(/[^\d.]/g, ''));
+        
+        if (target.includes('M+')) {
+            numericValue = parseFloat(target.replace('M+', ''));
+        } else if (target.includes('K+')) {
+            numericValue = parseFloat(target.replace('K+', ''));
+        }
+        
+        let current = 0;
+        const increment = numericValue / 50; // 50 frames
+        
+        const timer = setInterval(() => {
+            current += increment;
+            
+            if (current >= numericValue) {
+                current = numericValue;
+                clearInterval(timer);
+            }
+            
+            let displayValue = Math.floor(current);
+            
+            if (target.includes('M+')) {
+                displayValue = Math.floor(current) + 'M+';
+            } else if (target.includes('K+')) {
+                displayValue = Math.floor(current) + 'K+';
+            } else if (isPercent) {
+                displayValue = Math.floor(current) + '%';
+            } else if (target.includes('/')) {
+                displayValue = target; // Don't animate text like "24/7"
+                clearInterval(timer);
+                return;
+            }
+            
+            counter.textContent = displayValue;
+        }, 50);
+    });
+}
+
+function initIntersectionObserver() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '50px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                
+                // Start counter animation for stats
+                if (entry.target.classList.contains('stats-section')) {
+                    setTimeout(() => {
+                        initAnimatedCounters();
+                    }, 500);
+                }
+                
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    // Observe animated elements
+    document.querySelectorAll('.animate-fade-up, .animate-scale-in, .stats-section').forEach(el => {
+        observer.observe(el);
+    });
+}
+</script>
+
+<!-- Demo Styles -->
+<style>
+.hero-visual {
+    margin-top: 4rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.demo-dashboard {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+}
+
+.demo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.demo-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.demo-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.demo-nav-item.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.demo-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.demo-content {
+    display: none;
+    min-height: 200px;
+}
+
+.demo-content.active {
+    display: block;
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dashboard Demo */
+.demo-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.demo-kpi {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.demo-kpi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.demo-kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.demo-kpi-change {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.demo-chart-area {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Scanner Demo */
+.demo-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.demo-filter-chip {
+    padding: 0.5rem 0.75rem;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.demo-filter-chip.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.demo-results {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.demo-stock-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.demo-stock-row:last-child {
+    border-bottom: none;
+}
+
+.stock-symbol {
+    font-weight: 700;
+    color: #111827;
+}
+
+.stock-price {
+    font-weight: 600;
+    color: #374151;
+}
+
+.stock-change {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+/* Portfolio Demo */
+.demo-holdings {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.demo-holding {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.demo-holding:last-child {
+    border-bottom: none;
+}
+
+.holding-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.holding-symbol {
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.holding-shares {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.holding-value {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+}
+
+.holding-price {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.holding-change {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .demo-kpis {
+        grid-template-columns: 1fr;
+    }
+    
+    .demo-nav {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .demo-nav-item {
+        justify-content: center;
+    }
+    
+    .demo-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+}
+</style>
+
 <?php
 get_footer();
