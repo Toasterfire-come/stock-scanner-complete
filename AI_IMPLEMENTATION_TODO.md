@@ -30,12 +30,12 @@ Assets & icons (content-referenced)
 [ ] Include fallback PNGs for email or legacy clients if required
 
 Global styling & componentized CSS
-[ ] Base: reset/normalize, base typography, anchors, lists, forms, tables using CSS variables
-[ ] Component styles colocated under assets/scss/components/ (buttons, badges, cards, table, chart-shell, toast, modal, tabs) and compiled to assets/css/main.css
-[ ] Utility classes (spacing, grid helpers, text utilities) and responsive breakpoints
-[ ] Fluid grid utilities, container widths, and masonry/bento helpers if used
-[ ] Use CSS cascade layers (@layer base, components, utilities) if possible for predictable CSS ordering
-[ ] Provide skeleton loading and accessible loading states for data-heavy components
+[✓] Base: reset/normalize, base typography, anchors, lists, forms, tables using CSS variables
+[✓] Component styles colocated under assets/scss/components/ (buttons, badges, cards, table, chart-shell, toast, modal, tabs) and compiled to assets/css/main.css
+[✓] Utility classes (spacing, grid helpers, text utilities) and responsive breakpoints
+[✓] Fluid grid utilities, container widths, and masonry/bento helpers if used
+[✓] Use CSS cascade layers (@layer base, components, utilities) if possible for predictable CSS ordering
+[✓] Provide skeleton loading and accessible loading states for data-heavy components
 
 Enqueue & build process
 [ ] Enqueue styles/scripts via wp_enqueue_scripts with proper dependencies and versioning (use filemtime or build hash)
