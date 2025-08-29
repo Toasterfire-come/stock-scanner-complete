@@ -16,12 +16,12 @@ Directory layout (standardized)
 [✓] build/ or dist/ if using a compile step (ignored by Git)
 
 Design tokens & theming parity
-[ ] Define CSS variables in a base stylesheet (:root) for colors, spacing, radii, shadows, type scale, easing – expose same palette and font settings in theme.json (editor parity)
-[ ] Colors: Primary #1E88E5, Secondary #43A047, Accent #E53935; Neutrals #F5F5F5, #E0E0E0, #212121, #757575 (and tints/shades & semantic success/warning/danger)
-[ ] Typography: Inter/Roboto font stacks; define sizes, weights, line-heights in theme.json and CSS; preload fonts and use font-display: swap
-[ ] Spacing scale and radii tokens; surface shadows; responsive scale variables
-[ ] Dark mode support via prefers-color-scheme and optional [data-theme="dark"] overrides
-[ ] Expose editor styles with add_editor_style() and theme.json editor settings
+[✓] Define CSS variables in a base stylesheet (:root) for colors, spacing, radii, shadows, type scale, easing – expose same palette and font settings in theme.json (editor parity)
+[✓] Colors: Primary #1E88E5, Secondary #43A047, Accent #E53935; Neutrals #F5F5F5, #E0E0E0, #212121, #757575 (and tints/shades & semantic success/warning/danger)
+[✓] Typography: Inter/Roboto font stacks; define sizes, weights, line-heights in theme.json and CSS; preload fonts and use font-display: swap
+[✓] Spacing scale and radii tokens; surface shadows; responsive scale variables
+[✓] Dark mode support via prefers-color-scheme and optional [data-theme="dark"] overrides
+[✓] Expose editor styles with add_editor_style() and theme.json editor settings
 
 Assets & icons (content-referenced)
 [ ] Create an inline SVG sprite (placed near top of <body> or output via PHP helper) containing: logo, bell/notifications, dashboard, screener, alerts, watchlist, portfolio, news, settings, search, LinkedIn, Twitter, GitHub, top-movers, volume, watchlist, alerts, charts placeholders, etc.
