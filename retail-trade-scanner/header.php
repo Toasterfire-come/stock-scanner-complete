@@ -1,11 +1,8 @@
 <?php
-/**
- * The header for our theme
- *
- * @package RetailTradeScanner
- */
+/** Header (extended health indicator) */
 if (!defined('ABSPATH')) { exit; }
-?><!doctype html>
+?>
+<!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
 <meta charset="<?php bloginfo('charset'); ?>" />
@@ -24,6 +21,7 @@ if (!defined('ABSPATH')) { exit; }
           <?php if ( function_exists('the_custom_logo') && has_custom_logo() ) { the_custom_logo(); } ?>
           <span class="leading-none"><?php bloginfo('name'); ?></span>
         </a>
+        <span id="rts-health-dot" aria-label="API health" style="width:10px;height:10px;border-radius:999px;display:inline-block;border:1px solid var(--border);"></span>
       </div>
 
       <nav class="hidden md:block" aria-label="Primary" role="navigation">
@@ -84,81 +82,10 @@ if (!defined('ABSPATH')) { exit; }
     var header = document.querySelector('.site-header');
     var main = document.getElementById('primary');
     var lastFocus = null;
-
-    function getFocusable(container){
-      return container ? container.querySelectorAll('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])') : [];
-    }
-
-    function trapFocus(e){
-      if (!menu || menu.classList.contains('hidden')) return;
-      var focusables = getFocusable(menu);
-      if (!focusables.length) return;
-      var first = focusables[0];
-      var last = focusables[focusables.length-1];
-      if (e.key === 'Tab') {
-        if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
-        else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
-      }
-      if (e.key === 'Escape') { closeMenu(); btn.focus(); }
-    }
-
-    function openMenu(){
-      menu.classList.remove('hidden');
-      btn.setAttribute('aria-expanded','true');
-      header && header.classList.add('is-open');
-      if (main) { main.setAttribute('aria-hidden','true'); }
-      lastFocus = document.activeElement; // store
-      var focusables = getFocusable(menu);
-      if (focusables.length) { focusables[0].focus(); }
-      document.addEventListener('keydown', trapFocus);
-    }
-
-    function closeMenu(){
-      menu.classList.add('hidden');
-      btn.setAttribute('aria-expanded','false');
-      header && header.classList.remove('is-open');
-      if (main) { main.removeAttribute('aria-hidden'); }
-      document.removeEventListener('keydown', trapFocus);
-    }
-
-    if (btn && menu){
-      btn.addEventListener('click', function(){
-        var expanded = btn.getAttribute('aria-expanded') === 'true';
-        if (expanded) { closeMenu(); if (lastFocus) lastFocus.focus(); }
-        else { openMenu(); }
-      });
-    }
-
-    // Enhance submenus: add toggles for items with children (mobile & desktop keyboard)
-    function enhanceSubmenus(root){
-      var items = root.querySelectorAll('li.menu-item-has-children');
-      items.forEach(function(li){
-        var link = li.querySelector(':scope > a');
-        if (!link) return;
-        // Create toggle button
-        var btnToggle = document.createElement('button');
-        btnToggle.setAttribute('type','button');
-        btnToggle.className = 'ml-2 inline-flex items-center justify-center rounded-md border px-2 py-1 text-xs';
-        btnToggle.setAttribute('aria-expanded','false');
-        btnToggle.setAttribute('aria-label','Toggle submenu');
-        btnToggle.textContent = '+';
-        link.after(btnToggle);
-        var submenu = li.querySelector(':scope > .sub-menu');
-        if (submenu) { submenu.style.display = 'none'; }
-        btnToggle.addEventListener('click', function(){
-          var expanded = btnToggle.getAttribute('aria-expanded') === 'true';
-          btnToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-          if (submenu) { submenu.style.display = expanded ? 'none' : 'block'; }
-        });
-        link.addEventListener('keydown', function(e){
-          if (e.key === 'ArrowDown' && submenu) { e.preventDefault(); btnToggle.click(); }
-        });
-      });
-    }
-
-    var desktopNav = document.querySelector('header nav ul');
-    var mobileNav = menu ? menu.querySelector('ul') : null;
-    if (desktopNav) enhanceSubmenus(desktopNav);
-    if (mobileNav) enhanceSubmenus(mobileNav);
+    function getFocusable(container){ return container ? container.querySelectorAll('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])') : []; }
+    function trapFocus(e){ if (!menu || menu.classList.contains('hidden')) return; var f=getFocusable(menu); if(!f.length) return; var first=f[0], last=f[f.length-1]; if(e.key==='Tab'){ if(e.shiftKey && document.activeElement===first){ last.focus(); e.preventDefault(); } else if(!e.shiftKey && document.activeElement===last){ first.focus(); e.preventDefault(); } } if(e.key==='Escape'){ closeMenu(); btn.focus(); } }
+    function openMenu(){ menu.classList.remove('hidden'); btn.setAttribute('aria-expanded','true'); header && header.classList.add('is-open'); if (main) { main.setAttribute('aria-hidden','true'); } lastFocus = document.activeElement; var f=getFocusable(menu); if(f.length) f[0].focus(); document.addEventListener('keydown', trapFocus); }
+    function closeMenu(){ menu.classList.add('hidden'); btn.setAttribute('aria-expanded','false'); header && header.classList.remove('is-open'); if (main) { main.removeAttribute('aria-hidden'); } document.removeEventListener('keydown', trapFocus); }
+    if (btn && menu){ btn.addEventListener('click', function(){ var expanded = btn.getAttribute('aria-expanded')==='true'; if(expanded){ closeMenu(); if(lastFocus) lastFocus.focus(); } else { openMenu(); } }); }
   })();
 </script>
