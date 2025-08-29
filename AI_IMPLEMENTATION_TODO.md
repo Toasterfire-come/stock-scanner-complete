@@ -24,9 +24,9 @@ Design tokens & theming parity
 [✓] Expose editor styles with add_editor_style() and theme.json editor settings
 
 Assets & icons (content-referenced)
-[ ] Create an inline SVG sprite (placed near top of <body> or output via PHP helper) containing: logo, bell/notifications, dashboard, screener, alerts, watchlist, portfolio, news, settings, search, LinkedIn, Twitter, GitHub, top-movers, volume, watchlist, alerts, charts placeholders, etc.
-[ ] Implement a PHP helper (e.g., rts_get_icon($content_hash_or_svg, $attrs = [])) that outputs accessible SVG by content or hash (not filename) and sets <title>/role="img"/aria-hidden appropriately
-[ ] Optimize SVGs (strip metadata, combine common defs, ensure viewBox and stroke/fill consistency)
+[✓] Create an inline SVG sprite (placed near top of <body> or output via PHP helper) containing: logo, bell/notifications, dashboard, screener, alerts, watchlist, portfolio, news, settings, search, LinkedIn, Twitter, GitHub, top-movers, volume, watchlist, alerts, charts placeholders, etc.
+[✓] Implement a PHP helper (e.g., rts_get_icon($content_hash_or_svg, $attrs = [])) that outputs accessible SVG by content or hash (not filename) and sets <title>/role="img"/aria-hidden appropriately
+[✓] Optimize SVGs (strip metadata, combine common defs, ensure viewBox and stroke/fill consistency)
 [ ] Include fallback PNGs for email or legacy clients if required
 
 Global styling & componentized CSS
