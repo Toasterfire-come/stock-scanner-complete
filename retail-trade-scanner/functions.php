@@ -11,6 +11,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Include required files
+require_once get_template_directory() . '/inc/class-walker-nav-menu.php';
+
 /**
  * Theme Setup
  */
