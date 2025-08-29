@@ -9,6 +9,9 @@
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
   const debounce = (fn, wait=250) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); }; };
 
+  // Derive origin from apiBase for non-/api endpoints like /docs or /endpoint-status
+  function apiOrigin(){ try { return apiBase ? new URL(apiBase).origin : ''; } catch(e){ return ''; } }
+
   // Toasts
   function ensureToastRoot(){ let r = $('#rts-toasts'); if (!r){ r = document.createElement('div'); r.id = 'rts-toasts'; document.body.appendChild(r); } return r; }
   function showToast(msg, type='info'){ const root = ensureToastRoot(); const div = document.createElement('div'); div.className = 'toast ' + (type==='error'?'toast-error':type==='success'?'toast-success':''); div.textContent = msg; root.appendChild(div); setTimeout(()=>{ div.classList.add('out'); setTimeout(()=>div.remove(), 300); }, 2500); }
@@ -42,7 +45,6 @@
     del(path){ return this.req('DELETE', path); }
   };
 
-  // If API base missing, tag containers for user feedback
   function notifyMissingApi(){ if (apiBase) return; $$('#rts-kpis, #rts-trending-gainers, #rts-trending-active, #rts-scanner-results, #rts-watchlist, #rts-portfolio, #rts-alerts-list, #rts-news, #rts-api-docs, #rts-endpoint-status').forEach(el => { if (el) el.textContent = 'API not configured. Please set API URL.'; }); }
 
   // Health indicator (header)
@@ -84,11 +86,11 @@
     if (filterForm){ filterForm.addEventListener('submit', function(e){ e.preventDefault(); const fd=new FormData(filterForm); load(Object.fromEntries(fd.entries())); }); }
     load({ limit:'20' }); }
 
-  // API Docs
-  async function initDocs(){ const container=$('#rts-api-docs'); if(!container) return; setSkeleton(container,true); const res = await API.get('../docs/'); setSkeleton(container,false); if (res && res.endpoints){ container.innerHTML = res.endpoints.map(ep=>'<div class="border rounded p-2"><code>'+ep.method+' '+ep.path+'</code><div class="text-sm text-muted-foreground">'+(ep.description||'')+'</div></div>').join(''); } else { container.textContent='Docs not available. Configure API URL or provide docs endpoint.'; } }
+  // API Docs – use site origin
+  async function initDocs(){ const container=$('#rts-api-docs'); if(!container) return; setSkeleton(container,true); const origin = apiOrigin(); let data=null; if (origin){ try{ const res = await fetch(origin + '/docs/', { credentials: 'include' }); if(res.ok){ const ct=res.headers.get('content-type')||''; data = ct.includes('application/json') ? await res.json() : null; } }catch(e){ /* ignore */ } } setSkeleton(container,false); if (data && data.endpoints){ container.innerHTML = data.endpoints.map(ep=>'<div class="border rounded p-2"><code>'+ep.method+' '+ep.path+'</code><div class="text-sm text-muted-foreground">'+(ep.description||'')+'</div></div>').join(''); } else { container.textContent='Docs not available. Configure API URL or provide docs endpoint.'; } }
 
-  // Endpoint Status
-  async function initEndpointStatus(){ const container=$('#rts-endpoint-status'); if(!container) return; setSkeleton(container,true); const data = await API.get('../endpoint-status/'); setSkeleton(container,false); if (!data || !data.success){ container.textContent='No data'; return; } const list = data.data && data.data.endpoints ? data.data.endpoints : []; container.innerHTML = list.map(e => '<div class="border rounded p-2 flex justify-between"><span>'+e.name+'</span><span>'+(e.status||'')+' • '+(e.status_code||'')+' • '+(e.response_time||'')+'ms</span></div>').join(''); }
+  // Endpoint Status – use site origin
+  async function initEndpointStatus(){ const container=$('#rts-endpoint-status'); if(!container) return; setSkeleton(container,true); const origin = apiOrigin(); let data=null; if (origin){ try{ const res = await fetch(origin + '/endpoint-status/', { credentials: 'include' }); if(res.ok){ const ct=res.headers.get('content-type')||''; data = ct.includes('application/json') ? await res.json() : null; } }catch(e){ /* ignore */ } } setSkeleton(container,false); if (!data || !data.success){ container.textContent='No data'; return; } const list = data.data && data.data.endpoints ? data.data.endpoints : []; container.innerHTML = list.map(e => '<div class="border rounded p-2 flex justify-between"><span>'+e.name+'</span><span>'+(e.status||'')+' • '+(e.status_code||'')+' • '+(e.response_time||'')+'ms</span></div>').join(''); }
 
   // Footer subscribe override (optional)
   function initSubscribe(){ const form=$('#rts-subscribe-form'); if(!form) return; form.addEventListener('submit', async function(e){ if(!apiBase) return; e.preventDefault(); const fd=new FormData(form); const email=fd.get('email'); if(!email) return; const res = await API.post('subscription/', { email }); const note = $('#rts-subscribe-note'); if(note){ note.textContent = (res&&res.success)?'Thanks for subscribing!':'Subscription failed.'; note.className = 'notice ' + ((res&&res.success)?'notice-success':'notice-error'); } showToast((res&&res.success)?'Subscribed':'Subscribe failed', (res&&res.success)?'success':'error'); }); }
