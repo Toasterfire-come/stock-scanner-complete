@@ -1,365 +1,207 @@
 <?php
 /**
- * Card Component Template Part - KPI/Metric Cards
+ * Card Component Template Part
  *
  * @package RetailTradeScanner
  */
 
-// Default card attributes
-$defaults = array(
+$args = wp_parse_args($args, array(
     'title' => '',
     'value' => '',
-    'change' => '', // Change value (can be positive/negative)
-    'change_type' => 'auto', // auto, positive, negative, neutral
-    'subtitle' => '',
-    'description' => '',
+    'change' => '',
+    'change_percent' => '',
     'icon' => '',
-    'chart_data' => array(), // Simple array for sparkline
-    'variant' => 'default', // default, glass, elevated, outline
-    'size' => 'base', // sm, base, lg
+    'variant' => 'default', // default, glass, elevated
+    'size' => 'base', // xs, sm, base, lg, xl
     'clickable' => false,
     'url' => '',
-    'classes' => '',
-    'attributes' => array(),
-    'show_trend' => true,
+    'chart_data' => array(),
     'loading' => false,
-);
+    'custom_class' => ''
+));
 
-// Parse attributes
-$args = wp_parse_args($args ?? array(), $defaults);
+extract($args);
 
-// Auto-detect change type
-if ($args['change_type'] === 'auto' && !empty($args['change'])) {
-    $change_value = floatval(str_replace(array('+', '%', '$', ','), '', $args['change']));
-    if ($change_value > 0) {
-        $args['change_type'] = 'positive';
-    } elseif ($change_value < 0) {
-        $args['change_type'] = 'negative';
-    } else {
-        $args['change_type'] = 'neutral';
-    }
-}
+$card_classes = array('metric-card', 'card');
+$card_classes[] = 'card-' . $variant;
+$card_classes[] = 'card-' . $size;
 
-// Build CSS classes
-$card_classes = array('card', 'metric-card');
-$card_classes[] = 'card-' . esc_attr($args['variant']);
-$card_classes[] = 'card-' . esc_attr($args['size']);
-
-if ($args['clickable']) {
+if ($clickable) {
     $card_classes[] = 'card-clickable';
 }
 
-if ($args['loading']) {
+if ($loading) {
     $card_classes[] = 'card-loading';
 }
 
-if (!empty($args['classes'])) {
-    $card_classes[] = $args['classes'];
+if ($custom_class) {
+    $card_classes[] = $custom_class;
 }
 
-// Build attributes
-$attributes = array(
-    'class' => implode(' ', $card_classes)
-);
+$card_tag = $clickable && $url ? 'a' : 'div';
+$card_href = $clickable && $url ? 'href="' . esc_url($url) . '"' : '';
 
-// Add click functionality if needed
-if ($args['clickable'] && !empty($args['url'])) {
-    $attributes['data-url'] = esc_url($args['url']);
-    $attributes['tabindex'] = '0';
-    $attributes['role'] = 'button';
-    $attributes['aria-label'] = sprintf(__('View details for %s', 'retail-trade-scanner'), $args['title']);
+// Determine change type for styling
+$change_type = '';
+if ($change || $change_percent) {
+    $change_value = $change ?: $change_percent;
+    if (strpos($change_value, '+') === 0) {
+        $change_type = 'positive';
+    } elseif (strpos($change_value, '-') === 0) {
+        $change_type = 'negative';
+    }
 }
-
-// Merge custom attributes
-$attributes = array_merge($attributes, $args['attributes']);
-
-// Build attribute string
-$attr_string = '';
-foreach ($attributes as $attr => $value) {
-    $attr_string .= ' ' . esc_attr($attr) . '="' . esc_attr($value) . '"';
-}
-
-// Generate unique ID for chart if needed
-$chart_id = 'chart-' . wp_unique_id();
 ?>
 
-<div<?php echo $attr_string; ?>>
-    <?php if ($args['loading']) : ?>
+<<?php echo $card_tag; ?> class="<?php echo esc_attr(implode(' ', $card_classes)); ?>" <?php echo $card_href; ?>>
+    
+    <?php if ($loading) : ?>
         <div class="card-loading-overlay">
-            <div class="loading-spinner" aria-label="<?php esc_attr_e('Loading...', 'retail-trade-scanner'); ?>"></div>
+            <div class="loading-spinner"></div>
         </div>
     <?php endif; ?>
-
+    
     <div class="card-header">
         <div class="card-header-content">
-            <?php if (!empty($args['icon'])) : ?>
+            <?php if ($icon) : ?>
                 <div class="card-icon">
-                    <?php echo rts_get_icon($args['icon'], array(
-                        'width' => $args['size'] === 'sm' ? '20' : '24',
-                        'height' => $args['size'] === 'sm' ? '20' : '24',
-                        'aria-hidden' => 'true'
-                    )); ?>
+                    <?php echo rts_get_icon($icon, ['width' => '24', 'height' => '24', 'class' => 'icon-primary']); ?>
                 </div>
             <?php endif; ?>
             
-            <div class="card-title-group">
-                <?php if (!empty($args['title'])) : ?>
-                    <h3 class="card-title"><?php echo esc_html($args['title']); ?></h3>
-                <?php endif; ?>
-                
-                <?php if (!empty($args['subtitle'])) : ?>
-                    <p class="card-subtitle"><?php echo esc_html($args['subtitle']); ?></p>
-                <?php endif; ?>
-            </div>
+            <?php if ($title) : ?>
+                <h3 class="card-title"><?php echo esc_html($title); ?></h3>
+            <?php endif; ?>
         </div>
-
-        <?php if (!empty($args['change']) && $args['show_trend']) : ?>
-            <div class="card-trend">
+        
+        <?php if ($change || $change_percent) : ?>
+            <div class="card-change">
                 <?php
                 get_template_part('template-parts/components/badge', null, array(
-                    'value' => $args['change'],
-                    'type' => $args['change_type'],
-                    'variant' => 'pill',
+                    'value' => $change ?: $change_percent,
+                    'type' => $change_type,
                     'size' => 'sm'
                 ));
                 ?>
             </div>
         <?php endif; ?>
     </div>
-
+    
     <div class="card-body">
-        <?php if (!empty($args['value'])) : ?>
-            <div class="card-value">
-                <span class="value-display"><?php echo esc_html($args['value']); ?></span>
+        <?php if ($value) : ?>
+            <div class="card-value <?php echo $change_type; ?>">
+                <?php echo esc_html($value); ?>
             </div>
         <?php endif; ?>
-
-        <?php if (!empty($args['description'])) : ?>
-            <p class="card-description"><?php echo esc_html($args['description']); ?></p>
-        <?php endif; ?>
-
-        <?php if (!empty($args['chart_data']) && is_array($args['chart_data'])) : ?>
+        
+        <?php if (!empty($chart_data)) : ?>
             <div class="card-chart">
-                <canvas id="<?php echo esc_attr($chart_id); ?>" 
-                        class="sparkline-chart" 
-                        width="100" 
-                        height="30"
-                        aria-label="<?php esc_attr_e('Trend chart', 'retail-trade-scanner'); ?>"
-                        role="img">
-                    <?php
-                    // Fallback text for accessibility
-                    $trend = count($args['chart_data']) > 1 && 
-                             end($args['chart_data']) > reset($args['chart_data']) ? 
-                             __('Trending up', 'retail-trade-scanner') : 
-                             __('Trending down', 'retail-trade-scanner');
-                    echo esc_html($trend);
-                    ?>
-                </canvas>
-                <script>
-                // Simple sparkline chart rendering
-                document.addEventListener('DOMContentLoaded', function() {
-                    const canvas = document.getElementById('<?php echo esc_js($chart_id); ?>');
-                    if (canvas && canvas.getContext) {
-                        const ctx = canvas.getContext('2d');
-                        const data = <?php echo wp_json_encode($args['chart_data']); ?>;
-                        
-                        if (data.length > 1) {
-                            RTS.renderSparkline(ctx, data, {
-                                width: canvas.width,
-                                height: canvas.height,
-                                color: '<?php echo $args['change_type'] === 'positive' ? '#16a34a' : ($args['change_type'] === 'negative' ? '#dc2626' : '#6b7280'); ?>'
-                            });
-                        }
-                    }
-                });
-                </script>
+                <div class="mini-chart" data-values="<?php echo esc_attr(implode(',', $chart_data)); ?>">
+                    <!-- Mini sparkline chart will be rendered here by JavaScript -->
+                    <svg class="sparkline" width="100%" height="40">
+                        <!-- SVG will be generated by JavaScript -->
+                    </svg>
+                </div>
             </div>
         <?php endif; ?>
     </div>
-
-    <?php if ($args['clickable'] && !empty($args['url'])) : ?>
-        <a href="<?php echo esc_url($args['url']); ?>" class="card-link-overlay" aria-hidden="true" tabindex="-1">
-            <span class="sr-only"><?php echo sprintf(__('View details for %s', 'retail-trade-scanner'), $args['title']); ?></span>
-        </a>
+    
+    <?php if ($clickable) : ?>
+        <div class="card-footer">
+            <span class="card-link-text">
+                <?php esc_html_e('View Details', 'retail-trade-scanner'); ?>
+                <?php echo rts_get_icon('arrow-right', ['width' => '16', 'height' => '16']); ?>
+            </span>
+        </div>
     <?php endif; ?>
-</div>
+    
+</<?php echo $card_tag; ?>>
 
-<?php
-/*
-Usage examples:
-
-// Basic KPI card
-get_template_part('template-parts/components/card', null, array(
-    'title' => 'Portfolio Value',
-    'value' => '$124,567.89',
-    'change' => '+5.23%',
-    'icon' => 'portfolio'
-));
-
-// Stock price card
-get_template_part('template-parts/components/card', null, array(
-    'title' => 'AAPL',
-    'subtitle' => 'Apple Inc.',
-    'value' => '$182.34',
-    'change' => '+2.45%',
-    'description' => 'Technology stock showing strong performance',
-    'chart_data' => array(175, 178, 180, 182, 185, 182),
-    'clickable' => true,
-    'url' => home_url('/stock/aapl/')
-));
-
-// Market index card
-get_template_part('template-parts/components/card', null, array(
-    'title' => 'S&P 500',
-    'value' => '4,567.23',
-    'change' => '-0.12%',
-    'variant' => 'glass',
-    'icon' => 'trending-up'
-));
-
-// Loading state card
-get_template_part('template-parts/components/card', null, array(
-    'title' => 'Loading Data',
-    'loading' => true,
-    'variant' => 'outline'
-));
-*/
-?>
+<?php if (!empty($chart_data)) : ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Render mini sparkline chart
+        const chartElement = document.querySelector('.mini-chart[data-values="<?php echo esc_js(implode(',', $chart_data)); ?>"]');
+        if (chartElement) {
+            renderSparkline(chartElement, [<?php echo implode(',', $chart_data); ?>]);
+        }
+    });
+    
+    function renderSparkline(container, data) {
+        const svg = container.querySelector('.sparkline');
+        const width = container.offsetWidth;
+        const height = 40;
+        const padding = 4;
+        
+        if (!svg || !data.length) return;
+        
+        // Calculate dimensions
+        const chartWidth = width - (padding * 2);
+        const chartHeight = height - (padding * 2);
+        
+        // Find min/max values
+        const minValue = Math.min(...data);
+        const maxValue = Math.max(...data);
+        const valueRange = maxValue - minValue || 1;
+        
+        // Create path
+        let path = '';
+        
+        data.forEach((value, index) => {
+            const x = padding + (index * chartWidth) / (data.length - 1);
+            const y = padding + chartHeight - ((value - minValue) / valueRange * chartHeight);
+            
+            if (index === 0) {
+                path += `M ${x} ${y}`;
+            } else {
+                path += ` L ${x} ${y}`;
+            }
+        });
+        
+        // Create SVG path element
+        svg.innerHTML = `
+            <defs>
+                <linearGradient id="sparkline-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:var(--primary-500);stop-opacity:0.3" />
+                    <stop offset="100%" style="stop-color:var(--primary-500);stop-opacity:0" />
+                </linearGradient>
+            </defs>
+            <path d="${path}" stroke="var(--primary-500)" stroke-width="2" fill="none" />
+            <path d="${path} L ${padding + chartWidth} ${padding + chartHeight} L ${padding} ${padding + chartHeight} Z" 
+                  fill="url(#sparkline-gradient)" />
+        `;
+        
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    }
+    </script>
+<?php endif; ?>
 
 <style>
-/* Metric Card Component Styles */
+/* Card Component Styles */
 .metric-card {
     position: relative;
+    overflow: hidden;
     transition: all var(--transition-normal) var(--easing-standard);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
 }
 
 .metric-card.card-clickable {
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
 }
 
 .metric-card.card-clickable:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-}
-
-.card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-}
-
-.card-header-content {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-    flex: 1;
-    min-width: 0;
-}
-
-.card-icon {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-    color: white;
-    border-radius: var(--radius-lg);
-}
-
-.card-sm .card-icon {
-    width: 40px;
-    height: 40px;
-}
-
-.card-lg .card-icon {
-    width: 56px;
-    height: 56px;
-}
-
-.card-title-group {
-    min-width: 0;
-    flex: 1;
-}
-
-.card-title {
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--gray-900);
-    margin: 0;
-    line-height: 1.2;
-}
-
-.card-sm .card-title {
-    font-size: var(--text-base);
-}
-
-.card-lg .card-title {
-    font-size: var(--text-xl);
-}
-
-.card-subtitle {
-    font-size: var(--text-sm);
-    color: var(--gray-600);
-    margin: var(--spacing-xs) 0 0;
-    line-height: 1.3;
-}
-
-.card-trend {
-    flex-shrink: 0;
-}
-
-.card-body {
-    padding: 0;
-}
-
-.card-value {
-    margin-bottom: var(--spacing-md);
-}
-
-.value-display {
-    font-size: var(--text-3xl);
-    font-weight: 900;
-    color: var(--gray-900);
-    line-height: 1;
-}
-
-.card-sm .value-display {
-    font-size: var(--text-2xl);
-}
-
-.card-lg .value-display {
-    font-size: var(--text-4xl);
-}
-
-.card-description {
-    font-size: var(--text-sm);
-    color: var(--gray-600);
-    margin: 0 0 var(--spacing-lg);
-    line-height: 1.4;
-}
-
-.card-chart {
-    margin-top: var(--spacing-lg);
-}
-
-.sparkline-chart {
-    width: 100%;
-    height: 30px;
-    display: block;
-}
-
-.card-link-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     text-decoration: none;
-    z-index: 1;
+    color: inherit;
+    box-shadow: var(--shadow-xl);
+}
+
+.metric-card.card-loading {
+    pointer-events: none;
 }
 
 .card-loading-overlay {
@@ -369,71 +211,186 @@ get_template_part('template-parts/components/card', null, array(
     right: 0;
     bottom: 0;
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: inherit;
-    z-index: 2;
+    z-index: 1;
+}
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.card-header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    min-width: 0;
+}
+
+.card-icon {
+    flex-shrink: 0;
+    padding: var(--spacing-sm);
+    background: rgba(var(--primary-500), 0.1);
+    border-radius: var(--radius-lg);
+    color: var(--primary-600);
+}
+
+.card-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--gray-600);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.card-value {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1.2;
+    margin-bottom: var(--spacing-sm);
+}
+
+.card-value.positive {
+    color: var(--success);
+}
+
+.card-value.negative {
+    color: var(--danger);
+}
+
+.card-chart {
+    margin-top: var(--spacing-md);
+}
+
+.mini-chart {
+    width: 100%;
+    height: 40px;
+}
+
+.sparkline {
+    width: 100%;
+    height: 100%;
+}
+
+.card-footer {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-link-text {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--primary-600);
+    transition: color var(--transition-fast) var(--easing-standard);
+}
+
+.metric-card.card-clickable:hover .card-link-text {
+    color: var(--primary-700);
 }
 
 /* Card Variants */
-.card-glass {
+.metric-card.card-glass {
     background: var(--surface-glass);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.card-elevated {
+.metric-card.card-elevated {
     box-shadow: var(--shadow-xl);
-}
-
-.card-outline {
-    background: transparent;
-    border: 2px solid var(--gray-200);
+    border: 1px solid var(--gray-200);
 }
 
 /* Card Sizes */
-.card-sm {
+.metric-card.card-xs {
+    padding: var(--spacing-sm);
+}
+
+.metric-card.card-xs .card-title {
+    font-size: var(--text-xs);
+}
+
+.metric-card.card-xs .card-value {
+    font-size: var(--text-lg);
+}
+
+.metric-card.card-sm {
     padding: var(--spacing-md);
 }
 
-.card-lg {
+.metric-card.card-sm .card-title {
+    font-size: var(--text-sm);
+}
+
+.metric-card.card-sm .card-value {
+    font-size: var(--text-xl);
+}
+
+.metric-card.card-lg {
     padding: var(--spacing-2xl);
 }
 
-/* Dark mode adjustments */
-[data-theme="dark"] .card-title {
-    color: var(--gray-100);
+.metric-card.card-lg .card-title {
+    font-size: var(--text-base);
 }
 
-[data-theme="dark"] .value-display {
-    color: var(--gray-100);
+.metric-card.card-lg .card-value {
+    font-size: var(--text-3xl);
 }
 
-[data-theme="dark"] .card-outline {
-    border-color: var(--gray-700);
+.metric-card.card-xl {
+    padding: var(--spacing-3xl);
 }
 
-/* Focus styles for accessibility */
-.card-clickable:focus-visible {
-    outline: 3px solid var(--primary-500);
-    outline-offset: 2px;
+.metric-card.card-xl .card-title {
+    font-size: var(--text-lg);
+}
+
+.metric-card.card-xl .card-value {
+    font-size: var(--text-4xl);
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
     .card-header {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
     }
     
-    .card-header-content {
-        align-items: center;
+    .card-value {
+        font-size: var(--text-xl);
     }
     
-    .value-display {
+    .metric-card.card-lg .card-value,
+    .metric-card.card-xl .card-value {
         font-size: var(--text-2xl);
     }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .card-title {
+    color: var(--gray-300);
+}
+
+[data-theme="dark"] .card-value {
+    color: var(--gray-100);
+}
+
+[data-theme="dark"] .card-loading-overlay {
+    background: rgba(17, 24, 39, 0.8);
+}
+
+[data-theme="dark"] .card-footer {
+    border-color: rgba(255, 255, 255, 0.1);
 }
 </style>
