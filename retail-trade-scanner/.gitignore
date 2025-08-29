@@ -2,18 +2,31 @@
 node_modules/
 vendor/
 
-# Build artifacts
-build/
+# Build outputs
 dist/
-*.min.css
-*.min.js
+build/
 
 # Environment files
 .env
 .env.local
 .env.production
 
-# OS Files
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -22,36 +35,40 @@ dist/
 ehthumbs.db
 Thumbs.db
 
-# Editor files
+# IDE/Editor files
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
-*~
 *.swp
 *.swo
+*~
 
-# Logs
-*.log
-logs/
-
-# Package files
-*.zip
-*.tar.gz
-*.tar.bz2
+# Temporary folders
+tmp/
+temp/
 
 # WordPress specific
 wp-config.php
 wp-content/uploads/
-wp-content/cache/
+wp-content/blogs.dir/
+wp-content/upgrade/
 wp-content/backup-db/
 wp-content/advanced-cache.php
 wp-content/wp-cache-config.php
 wp-content/cache/
-wp-content/uploads/
-wp-content/updraft/
+wp-content/cache/supercache/
 
-# Theme specific
-/screenshot-*.png
-/assets/css/*.map
-/assets/js/*.map
+# Plugin and theme development
+*.zip
+*.tar.gz
+
+# Compiled CSS and JS (if using build tools)
+assets/css/main.css.map
+assets/js/main.js.map
+
+# Package manager lock files (choose one)
+package-lock.json
+yarn.lock
+
+# Local development
+.htaccess
+error_log
