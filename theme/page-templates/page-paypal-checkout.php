@@ -143,6 +143,15 @@ get_header();
         <div class="payment-section">
             <h2>Payment Method</h2>
             
+            <div class="promo-code">
+                <label for="promo-input">Have a promo code?</label>
+                <div class="promo-row">
+                    <input id="promo-input" type="text" placeholder="Enter TRIAL or REF50" />
+                    <button type="button" class="btn btn-outline" onclick="applyPromo()">Apply</button>
+                </div>
+                <div id="promo-message" class="promo-message" style="display:none"></div>
+            </div>
+
             <div class="payment-options">
                 <div class="payment-option active">
                     <div class="option-header">
@@ -297,6 +306,11 @@ get_header();
     margin: 0 0 15px 0;
     color: #2c3e50;
 }
+
+.promo-code { margin-bottom: 20px; }
+.promo-row { display: flex; gap: 10px; }
+.promo-row input { flex: 1; padding: 10px; border: 1px solid #e1e5e9; border-radius: 6px; }
+.promo-message { margin-top: 8px; font-size: 0.95rem; color: #27ae60; }
 
 .toggle-group {
     display: flex;
@@ -489,6 +503,7 @@ get_header();
 <script>
 let currentPlan = '<?php echo esc_js($selected_plan); ?>';
 let currentBilling = '<?php echo esc_js($billing_cycle); ?>';
+let currentPromo = '';
 
 function changeBilling(cycle) {
     const url = new URL(window.location);
@@ -519,6 +534,7 @@ function initPayPalButtons() {
     
     paypal.Buttons({
         createOrder: function(data, actions) {
+            // Ask backend to compute first charge (handles TRIAL/REF50)
             return fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                 method: 'POST',
                 headers: {
@@ -528,39 +544,46 @@ function initPayPalButtons() {
                     'action': 'create_paypal_order',
                     'plan': currentPlan,
                     'billing_cycle': currentBilling,
+                    'promo_code': currentPromo,
                     'nonce': '<?php echo wp_create_nonce('paypal_nonce'); ?>'
                 })
-            }).then(function(res) {
-                return res.json();
-            }).then(function(data) {
-                if (data.success) {
-                    return data.data.order_id;
-                } else {
-                    throw new Error(data.data || 'Failed to create order');
-                }
-            });
+            }).then(function(res) { return res.json(); })
+              .then(function(payload) {
+                if (!payload.success) { throw new Error(payload.data || 'Failed to create order'); }
+                var amt = (payload.data && typeof payload.data.amount !== 'undefined') ? Number(payload.data.amount) : null;
+                if (amt !== null) { updateFirstChargeDisplay(amt, payload.data.message || ''); }
+                // Store local order reference for activation step
+                window.__ssLocalOrderId = payload.data.order_id;
+                // Create a real PayPal order for the computed amount
+                return actions.order.create({
+                    purchase_units: [{ amount: { value: String(amt ? amt.toFixed(2) : '0.00') } }]
+                });
+              });
         },
         
         onApprove: function(data, actions) {
-            return fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+            // Capture PayPal payment client-side to ensure funds
+            return actions.order.capture().then(function() {
+                // Notify backend to activate subscription and set renewals
+                return fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
                     'action': 'capture_paypal_order',
-                    'order_id': data.orderID,
+                    'order_id': (window.__ssLocalOrderId || data.orderID),
                     'nonce': '<?php echo wp_create_nonce('paypal_nonce'); ?>'
                 })
-            }).then(function(res) {
-                return res.json();
-            }).then(function(data) {
-                if (data.success) {
-                    window.location.href = '<?php echo home_url('/payment-success/'); ?>?order_id=' + data.orderID;
+            }).then(function(res) { return res.json(); })
+              .then(function(payload) {
+                if (payload.success) {
+                    var redirectOrder = encodeURIComponent(data.orderID || (payload.orderID || ''));
+                    window.location.href = '<?php echo home_url('/payment-success/'); ?>?order_id=' + redirectOrder;
                 } else {
-                    throw new Error(data.data || 'Payment capture failed');
+                    throw new Error(payload.data || 'Payment capture failed');
                 }
-            });
+              });
         },
         
         onError: function(err) {
@@ -580,6 +603,37 @@ function initPayPalButtons() {
         console.error('PayPal Setup Error:', err);
         showError('Failed to load PayPal. Please check your connection and try again.');
     });
+}
+
+function applyPromo() {
+    const input = document.getElementById('promo-input');
+    const msg = document.getElementById('promo-message');
+    const code = (input.value || '').trim().toUpperCase();
+    if (!code) { currentPromo = ''; msg.style.display='none'; return; }
+    if (code !== 'TRIAL' && code !== 'REF50') {
+        msg.textContent = 'Invalid code. Use TRIAL or REF50.';
+        msg.style.color = '#e74c3c';
+        msg.style.display = 'block';
+        currentPromo = '';
+        return;
+    }
+    currentPromo = code;
+    msg.textContent = code === 'TRIAL' ? 'TRIAL applied: $1 for 7 days then monthly.' : 'REF50 applied: 50% off first month then monthly.';
+    msg.style.color = '#27ae60';
+    msg.style.display = 'block';
+    // Re-init to reflect new first charge
+    initPayPalButtons();
+}
+
+function updateFirstChargeDisplay(amount, note) {
+    try {
+        const priceEl = document.querySelector('.billing-info .price');
+        if (priceEl && typeof amount !== 'undefined') {
+            priceEl.textContent = '$' + Number(amount).toFixed(2);
+        }
+        const msg = document.getElementById('promo-message');
+        if (note && msg) { msg.textContent = note; msg.style.display = 'block'; }
+    } catch(e) { /* noop */ }
 }
 
 // Initialize PayPal buttons when page loads

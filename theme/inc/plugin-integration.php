@@ -1033,6 +1033,180 @@ if (!has_action('wp_ajax_get_major_indices')) {
 }
 
 /**
+ * AJAX: Create PayPal order (with promo code support)
+ */
+function handle_create_paypal_order_ajax() {
+    // Verify nonce specific to PayPal flow
+    check_ajax_referer('paypal_nonce', 'nonce');
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('Not logged in');
+    }
+
+    $plan = sanitize_text_field($_POST['plan'] ?? '');
+    $billing_cycle = sanitize_text_field($_POST['billing_cycle'] ?? 'monthly');
+    $promo_code = strtoupper(sanitize_text_field($_POST['promo_code'] ?? ''));
+
+    $valid_plans = array('bronze', 'silver', 'gold');
+    if (!in_array($plan, $valid_plans, true)) {
+        wp_send_json_error('Invalid plan');
+    }
+
+    // Force monthly cycle for promo codes and renewals
+    $billing_cycle = 'monthly';
+
+    // Plan pricing (must match checkout template)
+    $plan_prices = array(
+        'bronze' => 24.99,
+        'silver' => 39.99,
+        'gold' => 89.99,
+    );
+
+    $base_amount = floatval($plan_prices[$plan]);
+    $first_charge = $base_amount;
+    $promo_applied = false;
+    $message = '';
+
+    if ($promo_code === 'TRIAL') {
+        // $1 for 7 days, then renew at full monthly price
+        $first_charge = 1.00;
+        $promo_applied = true;
+        $message = 'TRIAL applied: $1 for 7 days, then renews monthly at full price.';
+    } elseif ($promo_code === 'REF50') {
+        // 50% off first month, then renew at full monthly price
+        $first_charge = round($base_amount * 0.5, 2);
+        $promo_applied = true;
+        $message = 'REF50 applied: 50% off first month, then renews monthly at full price.';
+    }
+
+    // Generate a local order id (server-managed context for capture)
+    $order_id = 'ORD-' . wp_generate_uuid4();
+
+    // Persist order context for capture step (30 minutes)
+    set_transient('stock_scanner_order_' . $order_id, array(
+        'user_id' => $user_id,
+        'plan' => $plan,
+        'billing_cycle' => $billing_cycle,
+        'promo_code' => $promo_code,
+        'base_amount' => $base_amount,
+        'first_charge' => $first_charge,
+        'created_at' => time(),
+    ), 30 * MINUTE_IN_SECONDS);
+
+    wp_send_json_success(array(
+        'order_id' => $order_id,
+        'amount' => $first_charge,
+        'promo_applied' => $promo_applied,
+        'message' => $message,
+        'auto_renew' => 'monthly',
+    ));
+}
+if (!has_action('wp_ajax_create_paypal_order')) {
+    add_action('wp_ajax_create_paypal_order', 'handle_create_paypal_order_ajax');
+}
+
+/**
+ * AJAX: Capture PayPal order (finalize and activate subscription)
+ */
+function handle_capture_paypal_order_ajax() {
+    // Verify nonce specific to PayPal flow
+    check_ajax_referer('paypal_nonce', 'nonce');
+
+    $user_id = get_current_user_id();
+    if (!$user_id) {
+        wp_send_json_error('Not logged in');
+    }
+
+    $order_id = sanitize_text_field($_POST['order_id'] ?? '');
+    if (empty($order_id)) {
+        wp_send_json_error('Missing order id');
+    }
+
+    $context = get_transient('stock_scanner_order_' . $order_id);
+    if (!$context || empty($context['user_id']) || intval($context['user_id']) !== intval($user_id)) {
+        wp_send_json_error('Invalid or expired order');
+    }
+
+    // Extract context
+    $plan = $context['plan'];
+    $billing_cycle = 'monthly'; // enforce monthly auto-renew
+    $promo_code = strtoupper($context['promo_code'] ?? '');
+
+    // Update user membership meta for theme displays
+    update_user_meta($user_id, 'membership_level', $plan);
+    update_user_meta($user_id, 'membership_plan', $plan);
+    update_user_meta($user_id, 'billing_cycle', $billing_cycle);
+
+    // Create or update subscription record if table exists
+    if (function_exists('ss_theme_table_exists')) {
+        global $wpdb;
+        $subs_table = $wpdb->prefix . 'stock_scanner_subscriptions';
+        if (ss_theme_table_exists($subs_table)) {
+            $now = current_time('mysql');
+            $expires = null;
+
+            if ($promo_code === 'TRIAL') {
+                // Trial: 7 days from now
+                $expires = date('Y-m-d H:i:s', strtotime('+7 days', current_time('timestamp')));
+            } else {
+                // Regular/ref50: first period ends in 1 month
+                $expires = date('Y-m-d H:i:s', strtotime('+30 days', current_time('timestamp')));
+            }
+
+            $existing_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $subs_table WHERE user_id = %d",
+                $user_id
+            ));
+
+            if ($existing_id) {
+                $wpdb->update(
+                    $subs_table,
+                    array(
+                        'plan' => $plan,
+                        'status' => 'active',
+                        'expires_at' => $expires,
+                        'updated_at' => $now,
+                    ),
+                    array('id' => $existing_id),
+                    array('%s','%s','%s','%s'),
+                    array('%d')
+                );
+            } else {
+                $wpdb->insert(
+                    $subs_table,
+                    array(
+                        'user_id' => $user_id,
+                        'plan' => $plan,
+                        'status' => 'active',
+                        'started_at' => $now,
+                        'expires_at' => $expires,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ),
+                    array('%d','%s','%s','%s','%s','%s','%s')
+                );
+            }
+        }
+    }
+
+    // Clean up transient
+    delete_transient('stock_scanner_order_' . $order_id);
+
+    // Return both order_id and orderID for client compatibility
+    wp_send_json_success(array(
+        'order_id' => $order_id,
+        'orderID' => $order_id,
+        'activated_plan' => $plan,
+        'billing_cycle' => $billing_cycle,
+        'auto_renew' => 'monthly',
+    ));
+}
+if (!has_action('wp_ajax_capture_paypal_order')) {
+    add_action('wp_ajax_capture_paypal_order', 'handle_capture_paypal_order_ajax');
+}
+
+/**
  * AJAX handler for contact form
  */
 function handle_contact_form_ajax() {
