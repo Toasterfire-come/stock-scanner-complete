@@ -95,7 +95,7 @@ input:invalid,textarea:invalid{border-color:#ef4444}
 
 .cv-auto{content-visibility:auto;contain-intrinsic-size:300px}
 /* Promo banner (front page only) */
-.promo-banner{background:#fde047;color:#0f172a}
+.promo-banner{background:linear-gradient(135deg,#2271b1 0%,#135e96 100%);color:#ffffff}
 .promo-banner .inner{max-width:1200px;margin-left:auto;margin-right:auto;padding-left:var(--space-4);padding-right:var(--space-4);padding-top:.5rem;padding-bottom:.5rem;text-align:center}
 .promo-banner strong{font-weight:700}
 

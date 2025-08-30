@@ -19,10 +19,10 @@ get_header();
         Unlock all features on any plan. Apply code <strong>TRIAL</strong> at checkout.
       </p>
       <div class="mt-8 flex flex-col md:flex-row items-center justify-center gap-3">
-        <a href="#pricing" class="btn btn--primary rounded-md px-3 py-2" style="background:var(--foreground);color:var(--background);">
+        <a href="/payment-success/" class="btn btn--primary rounded-md px-3 py-2" style="background:var(--foreground);color:var(--background);">
           Start 7-day trial — $1
         </a>
-        <a href="#pricing" class="btn btn--ghost rounded-md px-3 py-2">
+        <a href="/premium-plans/" class="btn btn--ghost rounded-md px-3 py-2">
           View plans
         </a>
       </div>
@@ -51,7 +51,7 @@ get_header();
             <li>Core features</li>
             <li>Email support</li>
           </ul>
-          <a href="#" class="btn btn--primary mt-4 w-full rounded-md px-3 py-2">Start $1 trial</a>
+          <a href="/payment-success/" class="btn btn--primary mt-4 w-full rounded-md px-3 py-2">Start $1 trial</a>
           <p class="mt-2 text-xs text-muted-foreground">Use code TRIAL at checkout.</p>
         </div>
 
@@ -64,7 +64,7 @@ get_header();
             <li>Everything in Basic</li>
             <li>Priority support</li>
           </ul>
-          <a href="#" class="btn btn--primary mt-4 w-full rounded-md px-3 py-2">Start $1 trial</a>
+          <a href="/payment-success/" class="btn btn--primary mt-4 w-full rounded-md px-3 py-2">Start $1 trial</a>
           <p class="mt-2 text-xs text-muted-foreground">Use code TRIAL at checkout.</p>
         </div>
 
@@ -76,7 +76,7 @@ get_header();
             <li>Everything in Pro</li>
             <li>Dedicated support</li>
           </ul>
-          <a href="#" class="btn btn--primary mt-4 w-full rounded-md px-3 py-2">Start $1 trial</a>
+          <a href="/payment-success/" class="btn btn--primary mt-4 w-full rounded-md px-3 py-2">Start $1 trial</a>
           <p class="mt-2 text-xs text-muted-foreground">Use code TRIAL at checkout.</p>
         </div>
       </div>
