@@ -6,7 +6,7 @@ Version: 1.3.0
 Text Domain: retail-trade-scanner
 */
 
- :root { --background:#0f1115; --foreground:#e8eaed; --muted-foreground:#94a3b8; --card:#12151b; --card-foreground:#e8eaed; --primary:#3b82f6; --primary-foreground:#ffffff; --border:#1f2937; --ring:rgba(59,130,246,.5); --radius:12px; --elev-0:none; --elev-1:0 1px 2px rgba(0,0,0,.2); --elev-2:0 4px 12px rgba(0,0,0,.25); --elev-3:0 10px 20px rgba(0,0,0,.3); --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-16:4rem; }
+:root { --background:#0f1115; --foreground:#e8eaed; --muted-foreground:#94a3b8; --card:#12151b; --card-foreground:#e8eaed; --primary:#3b82f6; --primary-foreground:#ffffff; --border:#1f2937; --ring:rgba(59,130,246,.5); --radius:12px; --elev-0:none; --elev-1:0 1px 2px rgba(0,0,0,.2); --elev-2:0 4px 12px rgba(0,0,0,.25); --elev-3:0 10px 20px rgba(0,0,0,.3); --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-16:4rem; }
 @media (prefers-color-scheme: light){ :root{ --background:#fff; --foreground:#0f172a; --muted-foreground:#475569; --card:#fff; --card-foreground:#0f172a; --border:#e2e8f0; --ring:rgba(59,130,246,.35);} }
 
 html{scroll-behavior:smooth}body{background:var(--background);color:var(--foreground);line-height:1.6}img{max-width:100%;height:auto}
@@ -33,11 +33,11 @@ html{scroll-behavior:smooth}body{background:var(--background);color:var(--foregr
 
 .bg-background{background:var(--background)}.bg-card{background:var(--card)}.text-card-foreground{color:var(--card-foreground)}.text-muted-foreground{color:var(--muted-foreground)}.text-primary{color:var(--primary)}
 .bg-primary{background:var(--primary)}.text-primary-foreground{color:var(--primary-foreground)}
-.border{border:1px solid var(--border)}.border-t{border-top:1px solid var(--border)}
+.border{border:1px solid var(--border)}.border-t{border-top:1px solid var(--border)}.border-b{border-bottom:1px solid var(--border)}
 .rounded{border-radius:8px}.rounded-md{border-radius:10px}.rounded-xl{border-radius:var(--radius)}.rounded-full{border-radius:999px}
 .shadow-sm{box-shadow:var(--elev-1)}
 .supports-[backdrop-filter]\:bg-background\/60{background:color-mix(in oklab, var(--background) 60%, transparent)}.backdrop-blur{backdrop-filter:blur(8px)}
-.bg-muted\/50{background:color-mix(in oklab, var(--background) 90%, transparent)}
+.bg-muted\/50{background:color-mix(in oklab, var(--background) 90%, transparent)}.bg-background\/80{background:color-mix(in oklab, var(--background) 80%, transparent)}
 
 [class*="hover:underline"]:hover{text-decoration:underline}
 [class*="hover:shadow-sm"]:hover{box-shadow:var(--elev-1)}
