@@ -32,8 +32,71 @@ add_action('after_setup_theme', function(){ if (defined('WP_CLI') && WP_CLI) { r
 // Sidebars
 add_action('widgets_init', function(){ register_sidebar([ 'name' => __('Primary Sidebar', 'retail-trade-scanner'), 'id'=>'sidebar-1', 'description'=>__('Main sidebar area','retail-trade-scanner'), 'before_widget'=>'<section id="%1$s" class="widget %2$s">', 'after_widget'=>'</section>', 'before_title'=>'<h2 class="widget-title">', 'after_title'=>'</h2>' ]); for ($i=1;$i<=3;$i++){ register_sidebar([ 'name'=>sprintf(__('Footer %d', 'retail-trade-scanner'), $i), 'id'=>'footer-'.$i, 'description'=>__('Footer widget area','retail-trade-scanner'), 'before_widget'=>'<section id="%1$s" class="widget %2$s">', 'after_widget'=>'</section>', 'before_title'=>'<h2 class="widget-title">', 'after_title'=>'</h2>' ]); } });
 
-// Enqueue styles and integration script
-add_action('wp_enqueue_scripts', function(){ $ver = wp_get_theme()->get('Version'); wp_enqueue_style('retail-trade-scanner-style', get_stylesheet_uri(), [], $ver); $api_url = get_option('stock_scanner_api_url', ''); $revenue_base = $api_url ? trailingslashit(str_replace('/api/', '/revenue/', $api_url)) : ''; $js_path = get_template_directory() . '/assets/js/theme-integration.js'; $js_url  = get_template_directory_uri() . '/assets/js/theme-integration.js'; if (file_exists($js_path)){ wp_enqueue_script('rts-theme-js', $js_url, [], $ver, true); wp_localize_script('rts-theme-js', 'rtsConfig', [ 'apiBase' => trailingslashit($api_url), 'revenueBase' => $revenue_base ]); } }, 20);
+// Performance optimization: CSS/JS minification and optimization
+add_action('wp_enqueue_scripts', function(){
+  $ver = wp_get_theme()->get('Version');
+  $is_debug = defined('WP_DEBUG') && WP_DEBUG;
+  
+  // Enqueue main stylesheet with optimization
+  wp_enqueue_style('retail-trade-scanner-style', get_stylesheet_uri(), [], $ver);
+  
+  // Add performance optimizations for production
+  if (!$is_debug) {
+    // Add resource hints for better performance
+    add_action('wp_head', function() {
+      echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">';
+      echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">';
+    }, 1);
+  }
+  
+  // API configuration
+  $api_url = get_option('stock_scanner_api_url', '');
+  $revenue_base = $api_url ? trailingslashit(str_replace('/api/', '/revenue/', $api_url)) : '';
+  
+  // Enqueue JavaScript with optimization
+  $js_path = get_template_directory() . '/assets/js/theme-integration.js';
+  $js_url  = get_template_directory_uri() . '/assets/js/theme-integration.js';
+  
+  if (file_exists($js_path)){
+    // Load JS in footer for better performance
+    wp_enqueue_script('rts-theme-js', $js_url, [], $ver, true);
+    
+    // Localize script with configuration
+    wp_localize_script('rts-theme-js', 'rtsConfig', [
+      'apiBase' => trailingslashit($api_url),
+      'revenueBase' => $revenue_base,
+      'isDebug' => $is_debug,
+      'ajaxUrl' => admin_url('admin-ajax.php'),
+      'nonce' => wp_create_nonce('rts_nonce')
+    ]);
+  }
+}, 20);
+
+// Add critical CSS inline for above-the-fold content
+add_action('wp_head', function() {
+  if (!is_admin()) {
+    echo '<style id="critical-css">
+      :root{--background:#0f1115;--foreground:#e8eaed;--primary:#3b82f6;--border:#1f2937}
+      body{background:var(--background);color:var(--foreground);margin:0;font-family:system-ui,-apple-system,sans-serif}
+      .site-header{position:sticky;top:0;z-index:100;background:var(--background);border-bottom:1px solid var(--border)}
+      .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+      .hidden{display:none!important}
+    </style>';
+  }
+}, 1);
+
+// Optimize WordPress head cleanup
+add_action('init', function() {
+  // Remove unnecessary WordPress head elements
+  remove_action('wp_head', 'wp_generator');
+  remove_action('wp_head', 'wlwmanifest_link');
+  remove_action('wp_head', 'rsd_link');
+  remove_action('wp_head', 'wp_shortlink_wp_head');
+  
+  // Remove emoji scripts for better performance
+  remove_action('wp_head', 'print_emoji_detection_script', 7);
+  remove_action('wp_print_styles', 'print_emoji_styles');
+});
 
 // Resource hints (preconnect/dns-prefetch) for API host
 add_action('wp_head', function(){ $api_url = get_option('stock_scanner_api_url', ''); if (!$api_url) return; $p = wp_parse_url($api_url); if (!$p || empty($p['scheme']) || empty($p['host'])) return; $origin = esc_url($p['scheme'] . '://' . $p['host']); echo "\n<link rel=\"preconnect\" href=\"{$origin}\" crossorigin>"; echo "\n<link rel=\"dns-prefetch\" href=\"//{$p['host']}\">"; }, 3);
@@ -44,9 +107,10 @@ add_action('wp_head', function(){ $org = [ '@context'=>'https://schema.org', '@t
 // Basic Open Graph / Twitter meta
 add_action('wp_head', function(){ $title = wp_get_document_title(); $desc = get_bloginfo('description'); $url = esc_url(home_url(add_query_arg([],''))); $image = (is_singular() && has_post_thumbnail()) ? esc_url(get_the_post_thumbnail_url(null, 'large')) : ''; echo "\n<meta property=\"og:title\" content=\"".esc_attr($title)."\">\n<meta property=\"og:description\" content=\"".esc_attr($desc)."\">\n<meta property=\"og:url\" content=\"{$url}\">\n"; if ($image) echo "<meta property=\"og:image\" content=\"{$image}\">\n"; echo "<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"".esc_attr($title)."\">\n<meta name=\"twitter:description\" content=\"".esc_attr($desc)."\">\n"; if ($image) echo "<meta name=\"twitter:image\" content=\"{$image}\">\n"; }, 5);
 
-// Activation – skip creating pages if plugin provides them
+// Enhanced activation with comprehensive page creation and template assignment
 add_action('after_switch_theme', function(){
   if (get_option('rts_activation_completed')) return;
+  
   // Bind plugin-created menu to theme locations if available
   if (class_exists('StockScannerIntegration')){
     $locations = get_nav_menu_locations();
@@ -58,50 +122,85 @@ add_action('after_switch_theme', function(){
       set_theme_mod('nav_menu_locations', $locations);
     }
   }
-  // Always ensure core pages exist and apply templates when available
+  
+  // Comprehensive page creation with proper templates
   $pages = [
-    [ 'slug'=>'dashboard', 'title'=>__('Dashboard','retail-trade-scanner'), 'template'=>'templates/pages/page-dashboard.php' ],
-    [ 'slug'=>'scanner', 'title'=>__('Scanner','retail-trade-scanner'), 'template'=>'templates/pages/page-scanner.php' ],
-    [ 'slug'=>'watchlists', 'title'=>__('Watchlists','retail-trade-scanner'), 'template'=>'templates/pages/page-watchlists.php' ],
-    [ 'slug'=>'portfolio', 'title'=>__('Portfolio','retail-trade-scanner'), 'template'=>'templates/pages/page-portfolio.php' ],
-    [ 'slug'=>'alerts', 'title'=>__('Alerts','retail-trade-scanner'), 'template'=>'templates/pages/page-alerts.php' ],
-    [ 'slug'=>'news', 'title'=>__('News','retail-trade-scanner'), 'template'=>'templates/pages/page-news.php' ],
-    [ 'slug'=>'api-docs', 'title'=>__('API Docs','retail-trade-scanner'), 'template'=>'templates/pages/page-api-docs.php' ],
-    [ 'slug'=>'endpoint-status', 'title'=>__('Endpoint Status','retail-trade-scanner'), 'template'=>'templates/pages/page-endpoint-status.php' ],
-    [ 'slug'=>'help', 'title'=>__('Help','retail-trade-scanner'), 'template'=>'templates/pages/page-help.php' ],
-    [ 'slug'=>'tutorials', 'title'=>__('Tutorials','retail-trade-scanner'), 'template'=>'templates/pages/page-tutorials.php' ],
-    [ 'slug'=>'careers', 'title'=>__('Careers','retail-trade-scanner'), 'template'=>'templates/pages/page-careers.php' ],
-    [ 'slug'=>'privacy-policy', 'title'=>__('Privacy Policy','retail-trade-scanner'), 'template'=>'templates/pages/page-privacy-policy.php' ],
-    [ 'slug'=>'terms-of-service', 'title'=>__('Terms of Service','retail-trade-scanner'), 'template'=>'templates/pages/page-terms-of-service.php' ],
-    [ 'slug'=>'disclaimer', 'title'=>__('Disclaimer','retail-trade-scanner'), 'template'=>'templates/pages/page-disclaimer.php' ],
-    [ 'slug'=>'contact', 'title'=>__('Contact','retail-trade-scanner'), 'template'=>'templates/pages/page-contact.php' ],
-    [ 'slug'=>'paypal-checkout', 'title'=>__('PayPal Checkout','retail-trade-scanner'), 'template'=>'templates/pages/page-checkout-paypal.php' ],
-    [ 'slug'=>'payment-success', 'title'=>__('Payment Success','retail-trade-scanner'), 'template'=>'' ],
-    [ 'slug'=>'payment-cancelled', 'title'=>__('Payment Cancelled','retail-trade-scanner'), 'template'=>'' ],
+    [ 'slug'=>'dashboard', 'title'=>__('Dashboard','retail-trade-scanner'), 'template'=>'templates/pages/page-dashboard.php', 'content'=>__('Welcome to your trading dashboard. Monitor your portfolio, track market trends, and access key performance indicators.','retail-trade-scanner') ],
+    [ 'slug'=>'scanner', 'title'=>__('Stock Scanner','retail-trade-scanner'), 'template'=>'templates/pages/page-scanner.php', 'content'=>__('Advanced stock screening tool to find trading opportunities based on your criteria.','retail-trade-scanner') ],
+    [ 'slug'=>'watchlists', 'title'=>__('Watchlists','retail-trade-scanner'), 'template'=>'templates/pages/page-watchlists.php', 'content'=>__('Create and manage watchlists to track your favorite stocks and potential investments.','retail-trade-scanner') ],
+    [ 'slug'=>'portfolio', 'title'=>__('Portfolio','retail-trade-scanner'), 'template'=>'templates/pages/page-portfolio.php', 'content'=>__('Track your investments, monitor performance, and analyze your portfolio allocation.','retail-trade-scanner') ],
+    [ 'slug'=>'alerts', 'title'=>__('Price Alerts','retail-trade-scanner'), 'template'=>'templates/pages/page-alerts.php', 'content'=>__('Set up price alerts to stay informed about important market movements.','retail-trade-scanner') ],
+    [ 'slug'=>'news', 'title'=>__('Market News','retail-trade-scanner'), 'template'=>'templates/pages/page-news.php', 'content'=>__('Stay updated with the latest market news and sentiment analysis.','retail-trade-scanner') ],
+    [ 'slug'=>'api-docs', 'title'=>__('API Documentation','retail-trade-scanner'), 'template'=>'templates/pages/page-api-docs.php', 'content'=>__('Complete API documentation for developers and advanced users.','retail-trade-scanner') ],
+    [ 'slug'=>'endpoint-status', 'title'=>__('System Status','retail-trade-scanner'), 'template'=>'templates/pages/page-endpoint-status.php', 'content'=>__('Real-time monitoring of our API endpoints and system health.','retail-trade-scanner') ],
+    [ 'slug'=>'help', 'title'=>__('Help Center','retail-trade-scanner'), 'template'=>'templates/pages/page-help.php', 'content'=>__('Find answers to common questions and get the support you need.','retail-trade-scanner') ],
+    [ 'slug'=>'tutorials', 'title'=>__('Tutorials','retail-trade-scanner'), 'template'=>'templates/pages/page-tutorials.php', 'content'=>__('Step-by-step guides to help you master the platform.','retail-trade-scanner') ],
+    [ 'slug'=>'careers', 'title'=>__('Careers','retail-trade-scanner'), 'template'=>'templates/pages/page-careers.php', 'content'=>__('Join our team and help build the future of retail trading.','retail-trade-scanner') ],
+    [ 'slug'=>'privacy-policy', 'title'=>__('Privacy Policy','retail-trade-scanner'), 'template'=>'templates/pages/page-privacy-policy.php', 'content'=>__('Our commitment to protecting your privacy and personal information.','retail-trade-scanner') ],
+    [ 'slug'=>'terms-of-service', 'title'=>__('Terms of Service','retail-trade-scanner'), 'template'=>'templates/pages/page-terms-of-service.php', 'content'=>__('Terms and conditions for using our trading platform and services.','retail-trade-scanner') ],
+    [ 'slug'=>'disclaimer', 'title'=>__('Legal Disclaimer','retail-trade-scanner'), 'template'=>'templates/pages/page-disclaimer.php', 'content'=>__('Important legal and investment disclaimers for platform users.','retail-trade-scanner') ],
+    [ 'slug'=>'contact', 'title'=>__('Contact Us','retail-trade-scanner'), 'template'=>'templates/pages/page-contact.php', 'content'=>__('Get in touch with our team for support, feedback, or business inquiries.','retail-trade-scanner') ],
+    [ 'slug'=>'paypal-checkout', 'title'=>__('Checkout','retail-trade-scanner'), 'template'=>'templates/pages/page-checkout-paypal.php', 'content'=>__('Secure payment processing for premium subscriptions.','retail-trade-scanner') ],
+    [ 'slug'=>'payment-success', 'title'=>__('Payment Successful','retail-trade-scanner'), 'template'=>'', 'content'=>__('Thank you for your payment! Your subscription has been activated.','retail-trade-scanner') ],
+    [ 'slug'=>'payment-cancelled', 'title'=>__('Payment Cancelled','retail-trade-scanner'), 'template'=>'', 'content'=>__('Your payment was cancelled. You can try again anytime.','retail-trade-scanner') ],
   ];
+  
+  // Create pages with better error handling
+  $created_pages = [];
+  $failed_pages = [];
+  
   foreach ($pages as $p){
     $existing = get_page_by_path($p['slug']);
+    
     if (!$existing){
-      $pid = wp_insert_post([
-        'post_title'=>$p['title'],
-        'post_name'=>$p['slug'],
-        'post_status'=>'publish',
-        'post_type'=>'page',
-        'post_content'=>''
-      ]);
-      if ($pid && !is_wp_error($pid) && !empty($p['template']) && file_exists(get_theme_file_path($p['template']))){
-        update_post_meta($pid, '_wp_page_template', $p['template']);
+      $page_data = [
+        'post_title'   => $p['title'],
+        'post_name'    => $p['slug'],
+        'post_status'  => 'publish',
+        'post_type'    => 'page',
+        'post_content' => $p['content'],
+        'post_excerpt' => substr($p['content'], 0, 155) . '...'
+      ];
+      
+      $pid = wp_insert_post($page_data);
+      
+      if ($pid && !is_wp_error($pid)) {
+        $created_pages[] = $p['title'];
+        
+        // Assign template if it exists
+        if (!empty($p['template']) && file_exists(get_theme_file_path($p['template']))){
+          update_post_meta($pid, '_wp_page_template', $p['template']);
+        }
+        
+        // Set SEO-friendly meta
+        update_post_meta($pid, '_yoast_wpseo_metadesc', $p['content']);
+        
+      } else {
+        $failed_pages[] = $p['title'];
       }
-    } else if (!get_page_template_slug($existing->ID) && !empty($p['template']) && file_exists(get_theme_file_path($p['template']))){
-      update_post_meta($existing->ID, '_wp_page_template', $p['template']);
+    } else {
+      // Update existing page template if needed
+      if (!get_page_template_slug($existing->ID) && !empty($p['template']) && file_exists(get_theme_file_path($p['template']))){
+        update_post_meta($existing->ID, '_wp_page_template', $p['template']);
+      }
+      
+      // Update content if it's empty
+      if (empty($existing->post_content) && !empty($p['content'])) {
+        wp_update_post([
+          'ID' => $existing->ID,
+          'post_content' => $p['content']
+        ]);
+      }
     }
   }
+  
   // Set static front page to Dashboard and create/set Blog as posts page
   $dashboard_page = get_page_by_path('dashboard');
   if ($dashboard_page){
     update_option('show_on_front', 'page');
     update_option('page_on_front', intval($dashboard_page->ID));
   }
+  
   $blog_page = get_page_by_path('blog');
   if (!$blog_page){
     $blog_id = wp_insert_post([
@@ -109,7 +208,7 @@ add_action('after_switch_theme', function(){
       'post_name'   => 'blog',
       'post_status' => 'publish',
       'post_type'   => 'page',
-      'post_content'=> ''
+      'post_content'=> __('Stay updated with the latest market insights, trading tips, and platform updates.','retail-trade-scanner')
     ]);
     if ($blog_id && !is_wp_error($blog_id)){
       $blog_page = get_post($blog_id);
@@ -119,12 +218,12 @@ add_action('after_switch_theme', function(){
     update_option('page_for_posts', intval($blog_page->ID));
   }
 
-  // Create default menus (Primary and Footer) and populate with core pages if missing
+  // Enhanced menu creation with better organization
   $locations = get_nav_menu_locations();
   $existing_primary = !empty($locations['primary']) ? (int)$locations['primary'] : 0;
   $existing_footer  = !empty($locations['footer'])  ? (int)$locations['footer']  : 0;
 
-  // Ensure a shared "Stock Scanner Menu" exists for convenience
+  // Create comprehensive "Stock Scanner Menu"
   $menu_obj = wp_get_nav_menu_object('Stock Scanner Menu');
   if (!$menu_obj){
     $menu_id = wp_create_nav_menu('Stock Scanner Menu');
@@ -132,51 +231,98 @@ add_action('after_switch_theme', function(){
     $menu_id = (int)$menu_obj->term_id;
   }
 
-  // Helper: add item if page exists and not already in menu
-  $ensure_menu_item = function($menu_id, $page_slug){
+  // Helper: add menu item with better organization
+  $ensure_menu_item = function($menu_id, $page_slug, $parent_id = 0){
     $page = get_page_by_path($page_slug);
-    if (!$page) return;
+    if (!$page) return 0;
+    
     $items = wp_get_nav_menu_items($menu_id);
     $already = false;
     if (is_array($items)){
-      foreach ($items as $it){ if ((int)$it->object_id === (int)$page->ID){ $already = true; break; } }
+      foreach ($items as $it){ 
+        if ((int)$it->object_id === (int)$page->ID){ 
+          $already = true; 
+          break; 
+        } 
+      }
     }
+    
     if (!$already){
-      wp_update_nav_menu_item($menu_id, 0, [
-        'menu-item-title'  => get_the_title($page->ID),
-        'menu-item-object' => 'page',
+      return wp_update_nav_menu_item($menu_id, 0, [
+        'menu-item-title'     => get_the_title($page->ID),
+        'menu-item-object'    => 'page',
         'menu-item-object-id' => (int)$page->ID,
-        'menu-item-type'   => 'post_type',
-        'menu-item-status' => 'publish'
+        'menu-item-type'      => 'post_type',
+        'menu-item-status'    => 'publish',
+        'menu-item-parent-id' => $parent_id
       ]);
     }
+    return 0;
   };
 
-  // Populate the main menu with core navigation
+  // Populate main menu with organized structure
   if ($menu_id){
-    foreach (['dashboard','scanner','watchlists','portfolio','alerts','news','api-docs','endpoint-status','help','tutorials','careers','contact'] as $slug){
+    // Core trading features
+    foreach (['dashboard','scanner','watchlists','portfolio','alerts'] as $slug){
+      $ensure_menu_item($menu_id, $slug);
+    }
+    
+    // Information & support
+    foreach (['news','help','tutorials'] as $slug){
+      $ensure_menu_item($menu_id, $slug);
+    }
+    
+    // API & developer tools
+    foreach (['api-docs','endpoint-status'] as $slug){
       $ensure_menu_item($menu_id, $slug);
     }
   }
 
-  // Assign menu to theme locations if empty
-  if (!$existing_primary && $menu_id){ $locations['primary'] = (int)$menu_id; }
+  // Assign menu to primary location if empty
+  if (!$existing_primary && $menu_id){ 
+    $locations['primary'] = (int)$menu_id; 
+  }
 
-  // Create Footer menu and add legal/contact links
-  $footer_menu = wp_get_nav_menu_object('Footer');
+  // Create organized Footer menu
+  $footer_menu = wp_get_nav_menu_object('Footer Menu');
   if (!$footer_menu){
-    $footer_menu_id = wp_create_nav_menu('Footer');
+    $footer_menu_id = wp_create_nav_menu('Footer Menu');
   } else {
     $footer_menu_id = (int)$footer_menu->term_id;
   }
+  
   if ($footer_menu_id){
-    foreach (['privacy-policy','terms-of-service','disclaimer','contact'] as $slug){
+    // Legal pages
+    foreach (['privacy-policy','terms-of-service','disclaimer'] as $slug){
+      $ensure_menu_item($footer_menu_id, $slug);
+    }
+    // Support
+    foreach (['contact','help','careers'] as $slug){
       $ensure_menu_item($footer_menu_id, $slug);
     }
   }
-  if (!$existing_footer && !empty($footer_menu_id)){ $locations['footer'] = (int)$footer_menu_id; }
-  if (!empty($locations)){ set_theme_mod('nav_menu_locations', $locations); }
+  
+  if (!$existing_footer && !empty($footer_menu_id)){ 
+    $locations['footer'] = (int)$footer_menu_id; 
+  }
+  
+  if (!empty($locations)){ 
+    set_theme_mod('nav_menu_locations', $locations); 
+  }
+  
+  // Log activation results for debugging
+  if (!empty($created_pages)) {
+    error_log('RTS Theme: Created pages: ' . implode(', ', $created_pages));
+  }
+  if (!empty($failed_pages)) {
+    error_log('RTS Theme: Failed to create pages: ' . implode(', ', $failed_pages));
+  }
+  
+  // Set theme activation as completed
   update_option('rts_activation_completed', 1);
+  
+  // Flush rewrite rules to ensure clean URLs
+  flush_rewrite_rules();
 });
 
 // Forms – subscribe & contact (fallback if plugin not used)

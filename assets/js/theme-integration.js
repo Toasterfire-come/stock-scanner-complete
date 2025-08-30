@@ -1,19 +1,80 @@
 (function(window, document){
   'use strict';
+  
+  // Configuration and performance optimization
   const cfg = window.rtsConfig || {};
   const apiBase = (cfg.apiBase || '').replace(/\/?$/, '/');
   const revenueBase = (cfg.revenueBase || '').replace(/\/?$/, '/');
-
-  // Small utilities
-  const $ = (sel, root=document) => root.querySelector(sel);
+  const isDebug = cfg.isDebug || false;
+  
+  // Performance: Use requestIdleCallback for non-critical operations
+  const scheduleWork = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  
+  // Optimized DOM utilities with caching
+  const domCache = new Map();
+  const $ = (sel, root=document) => {
+    const key = `${sel}:${root === document ? 'doc' : 'other'}`;
+    if (!domCache.has(key)) {
+      domCache.set(key, root.querySelector(sel));
+    }
+    return domCache.get(key);
+  };
+  
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const debounce = (fn, wait=250) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); }; };
+  
+  // Optimized debounce with immediate option
+  const debounce = (fn, wait=250, immediate=false) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        timeout = null;
+        if (!immediate) fn.apply(this, args);
+      };
+      const callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) fn.apply(this, args);
+    };
+  };
+  
+  // Performance: Throttle for high-frequency events
+  const throttle = (fn, limit) => {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        fn.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    }
+  };
+  
+  // Utility functions with performance improvements
   const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
   const fmtInt = (n) => (typeof n === 'number') ? n.toLocaleString() : (n||'');
   const fmtMoney = (n) => (typeof n === 'number') ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : (n||'');
-
-  // Derive origin from apiBase for non-/api endpoints like /docs or /endpoint-status
-  function apiOrigin(){ try { return apiBase ? new URL(apiBase).origin : ''; } catch(e){ return ''; } }
+  
+  // Performance: Batch DOM updates
+  const batchDOMUpdates = (updates) => {
+    requestAnimationFrame(() => {
+      updates.forEach(update => update());
+    });
+  };
+  
+  // API origin derivation with caching
+  let _apiOrigin = null;
+  function apiOrigin(){ 
+    if (_apiOrigin === null) {
+      try { 
+        _apiOrigin = apiBase ? new URL(apiBase).origin : ''; 
+      } catch(e){ 
+        _apiOrigin = ''; 
+      }
+    }
+    return _apiOrigin;
+  }
 
   // Toasts
   function ensureToastRoot(){ let r = $('#rts-toasts'); if (!r){ r = document.createElement('div'); r.id = 'rts-toasts'; document.body.appendChild(r); } return r; }
