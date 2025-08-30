@@ -70,17 +70,72 @@ add_action('wp_enqueue_scripts', function(){
       'nonce' => wp_create_nonce('rts_nonce')
     ]);
   }
+  
+  // Enqueue mobile enhancements
+  $mobile_js_path = get_template_directory() . '/assets/js/mobile-enhancements.js';
+  $mobile_js_url  = get_template_directory_uri() . '/assets/js/mobile-enhancements.js';
+  
+  if (file_exists($mobile_js_path)){
+    wp_enqueue_script('rts-mobile-js', $mobile_js_url, [], $ver, true);
+  }
 }, 20);
 
-// Add critical CSS inline for above-the-fold content
+// Add critical CSS inline for above-the-fold content with new color scheme
 add_action('wp_head', function() {
   if (!is_admin()) {
     echo '<style id="critical-css">
-      :root{--background:#0f1115;--foreground:#e8eaed;--primary:#3b82f6;--border:#1f2937}
-      body{background:var(--background);color:var(--foreground);margin:0;font-family:system-ui,-apple-system,sans-serif}
-      .site-header{position:sticky;top:0;z-index:100;background:var(--background);border-bottom:1px solid var(--border)}
-      .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+      :root{
+        --drab-dark-brown:#433e0e;
+        --yinmn-blue:#374a67;
+        --indian-red:#e15554;
+        --silver:#c1bdb3;
+        --davys-gray:#5f5b6b;
+        --background:var(--drab-dark-brown);
+        --foreground:var(--silver);
+        --primary:var(--yinmn-blue);
+        --accent:var(--indian-red);
+        --border:rgba(193,189,179,0.2);
+        --sidebar-width:280px;
+        --sidebar-collapsed:64px;
+        --header-height:64px;
+      }
+      *{box-sizing:border-box}
+      body{
+        background:var(--background);
+        color:var(--foreground);
+        margin:0;
+        font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+        padding-left:var(--sidebar-collapsed);
+        transition:padding-left 0.3s cubic-bezier(0.4,0,0.2,1);
+      }
+      body.sidebar-expanded{padding-left:var(--sidebar-width)}
+      @media(max-width:768px){body,body.sidebar-expanded{padding-left:0}}
+      .site-header{
+        position:fixed;
+        top:0;
+        left:var(--sidebar-collapsed);
+        right:0;
+        height:var(--header-height);
+        background:rgba(67,62,14,0.95);
+        backdrop-filter:blur(12px);
+        border-bottom:1px solid var(--border);
+        z-index:90;
+        transition:left 0.3s cubic-bezier(0.4,0,0.2,1);
+      }
+      .container{max-width:1200px;margin:0 auto;padding:0 2rem}
       .hidden{display:none!important}
+      .sidebar{
+        position:fixed;
+        top:0;
+        left:0;
+        width:var(--sidebar-collapsed);
+        height:100vh;
+        background:linear-gradient(180deg,var(--drab-dark-brown) 0%,#3a3308 100%);
+        border-right:1px solid var(--border);
+        z-index:100;
+        transition:width 0.3s cubic-bezier(0.4,0,0.2,1);
+        overflow:hidden;
+      }
     </style>';
   }
 }, 1);
