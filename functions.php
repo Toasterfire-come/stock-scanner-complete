@@ -96,6 +96,86 @@ add_action('after_switch_theme', function(){
       update_post_meta($existing->ID, '_wp_page_template', $p['template']);
     }
   }
+  // Set static front page to Dashboard and create/set Blog as posts page
+  $dashboard_page = get_page_by_path('dashboard');
+  if ($dashboard_page){
+    update_option('show_on_front', 'page');
+    update_option('page_on_front', intval($dashboard_page->ID));
+  }
+  $blog_page = get_page_by_path('blog');
+  if (!$blog_page){
+    $blog_id = wp_insert_post([
+      'post_title'  => __('Blog','retail-trade-scanner'),
+      'post_name'   => 'blog',
+      'post_status' => 'publish',
+      'post_type'   => 'page',
+      'post_content'=> ''
+    ]);
+    if ($blog_id && !is_wp_error($blog_id)){
+      $blog_page = get_post($blog_id);
+    }
+  }
+  if ($blog_page){
+    update_option('page_for_posts', intval($blog_page->ID));
+  }
+
+  // Create default menus (Primary and Footer) and populate with core pages if missing
+  $locations = get_nav_menu_locations();
+  $existing_primary = !empty($locations['primary']) ? (int)$locations['primary'] : 0;
+  $existing_footer  = !empty($locations['footer'])  ? (int)$locations['footer']  : 0;
+
+  // Ensure a shared "Stock Scanner Menu" exists for convenience
+  $menu_obj = wp_get_nav_menu_object('Stock Scanner Menu');
+  if (!$menu_obj){
+    $menu_id = wp_create_nav_menu('Stock Scanner Menu');
+  } else {
+    $menu_id = (int)$menu_obj->term_id;
+  }
+
+  // Helper: add item if page exists and not already in menu
+  $ensure_menu_item = function($menu_id, $page_slug){
+    $page = get_page_by_path($page_slug);
+    if (!$page) return;
+    $items = wp_get_nav_menu_items($menu_id);
+    $already = false;
+    if (is_array($items)){
+      foreach ($items as $it){ if ((int)$it->object_id === (int)$page->ID){ $already = true; break; } }
+    }
+    if (!$already){
+      wp_update_nav_menu_item($menu_id, 0, [
+        'menu-item-title'  => get_the_title($page->ID),
+        'menu-item-object' => 'page',
+        'menu-item-object-id' => (int)$page->ID,
+        'menu-item-type'   => 'post_type',
+        'menu-item-status' => 'publish'
+      ]);
+    }
+  };
+
+  // Populate the main menu with core navigation
+  if ($menu_id){
+    foreach (['dashboard','scanner','watchlists','portfolio','alerts','news','api-docs','endpoint-status','help','tutorials','careers','contact'] as $slug){
+      $ensure_menu_item($menu_id, $slug);
+    }
+  }
+
+  // Assign menu to theme locations if empty
+  if (!$existing_primary && $menu_id){ $locations['primary'] = (int)$menu_id; }
+
+  // Create Footer menu and add legal/contact links
+  $footer_menu = wp_get_nav_menu_object('Footer');
+  if (!$footer_menu){
+    $footer_menu_id = wp_create_nav_menu('Footer');
+  } else {
+    $footer_menu_id = (int)$footer_menu->term_id;
+  }
+  if ($footer_menu_id){
+    foreach (['privacy-policy','terms-of-service','disclaimer','contact'] as $slug){
+      $ensure_menu_item($footer_menu_id, $slug);
+    }
+  }
+  if (!$existing_footer && !empty($footer_menu_id)){ $locations['footer'] = (int)$footer_menu_id; }
+  if (!empty($locations)){ set_theme_mod('nav_menu_locations', $locations); }
   update_option('rts_activation_completed', 1);
 });
 
