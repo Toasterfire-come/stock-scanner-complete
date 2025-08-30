@@ -416,7 +416,11 @@ textarea:invalid {
    COMPONENT STYLES
    =================================== */
 
-/* Cards */
+/* ===================================
+   ENHANCED DEFAULT STYLING & FIXES
+   =================================== */
+
+/* Better default card styling */
 .card {
   background: var(--card);
   color: var(--card-foreground);
@@ -424,6 +428,7 @@ textarea:invalid {
   border-radius: var(--radius);
   box-shadow: var(--elev-0);
   transition: box-shadow 0.2s ease, transform 0.1s ease;
+  padding: 1rem;
 }
 
 .card:hover {
@@ -431,10 +436,157 @@ textarea:invalid {
   transform: translateY(-1px);
 }
 
-.card--glass {
-  background: color-mix(in srgb, var(--background) 60%, transparent);
-  border-color: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
+/* Enhanced hero sections */
+.hero-section {
+  background: linear-gradient(135deg, var(--background) 0%, color-mix(in srgb, var(--primary) 5%, var(--background)) 100%);
+  border-radius: var(--radius);
+  padding: 3rem 1rem;
+}
+
+/* Better button consistency and spacing */
+.btn,
+button,
+input[type="submit"],
+a[class*="btn"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+}
+
+/* Primary button styling */
+.bg-primary,
+button[class*="primary"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.bg-primary:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Secondary/border button styling */
+.border {
+  border: 1px solid var(--border) !important;
+}
+
+/* Enhanced grid spacing */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid.gap-6 {
+  gap: 1.5rem;
+}
+
+.grid.gap-4 {
+  gap: 1rem;
+}
+
+.grid.gap-3 {
+  gap: 0.75rem;
+}
+
+/* Better responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+/* Enhanced form styling */
+input[type="search"],
+input[type="email"],
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Better search form styling */
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.search-form input[type="search"] {
+  flex: 1;
+}
+
+/* Enhanced notice styling */
+.notice {
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.notice-success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #16a34a;
+}
+
+.notice-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+.notice-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+}
+
+/* Better mobile spacing */
+@media (max-width: 768px) {
+  .py-16 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  
+  .py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  
+  .gap-6 {
+    gap: 1rem;
+  }
+  
+  .text-4xl {
+    font-size: 2rem;
+  }
+  
+  .text-3xl {
+    font-size: 1.75rem;
+  }
 }
 
 /* Tables */

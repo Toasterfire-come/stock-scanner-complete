@@ -107,9 +107,10 @@ add_action('wp_head', function(){ $org = [ '@context'=>'https://schema.org', '@t
 // Basic Open Graph / Twitter meta
 add_action('wp_head', function(){ $title = wp_get_document_title(); $desc = get_bloginfo('description'); $url = esc_url(home_url(add_query_arg([],''))); $image = (is_singular() && has_post_thumbnail()) ? esc_url(get_the_post_thumbnail_url(null, 'large')) : ''; echo "\n<meta property=\"og:title\" content=\"".esc_attr($title)."\">\n<meta property=\"og:description\" content=\"".esc_attr($desc)."\">\n<meta property=\"og:url\" content=\"{$url}\">\n"; if ($image) echo "<meta property=\"og:image\" content=\"{$image}\">\n"; echo "<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"".esc_attr($title)."\">\n<meta name=\"twitter:description\" content=\"".esc_attr($desc)."\">\n"; if ($image) echo "<meta name=\"twitter:image\" content=\"{$image}\">\n"; }, 5);
 
-// Enhanced activation with comprehensive page creation and template assignment
-add_action('after_switch_theme', function(){
-  if (get_option('rts_activation_completed')) return;
+// Force page creation - can be called multiple times safely
+function rts_create_essential_pages() {
+  // Always try to create pages, even if activation was marked complete
+  $force_create = true;
   
   // Bind plugin-created menu to theme locations if available
   if (class_exists('StockScannerIntegration')){
@@ -123,78 +124,130 @@ add_action('after_switch_theme', function(){
     }
   }
   
+  
   // Comprehensive page creation with proper templates
   $pages = [
-    [ 'slug'=>'dashboard', 'title'=>__('Dashboard','retail-trade-scanner'), 'template'=>'templates/pages/page-dashboard.php', 'content'=>__('Welcome to your trading dashboard. Monitor your portfolio, track market trends, and access key performance indicators.','retail-trade-scanner') ],
-    [ 'slug'=>'scanner', 'title'=>__('Stock Scanner','retail-trade-scanner'), 'template'=>'templates/pages/page-scanner.php', 'content'=>__('Advanced stock screening tool to find trading opportunities based on your criteria.','retail-trade-scanner') ],
-    [ 'slug'=>'watchlists', 'title'=>__('Watchlists','retail-trade-scanner'), 'template'=>'templates/pages/page-watchlists.php', 'content'=>__('Create and manage watchlists to track your favorite stocks and potential investments.','retail-trade-scanner') ],
-    [ 'slug'=>'portfolio', 'title'=>__('Portfolio','retail-trade-scanner'), 'template'=>'templates/pages/page-portfolio.php', 'content'=>__('Track your investments, monitor performance, and analyze your portfolio allocation.','retail-trade-scanner') ],
-    [ 'slug'=>'alerts', 'title'=>__('Price Alerts','retail-trade-scanner'), 'template'=>'templates/pages/page-alerts.php', 'content'=>__('Set up price alerts to stay informed about important market movements.','retail-trade-scanner') ],
-    [ 'slug'=>'news', 'title'=>__('Market News','retail-trade-scanner'), 'template'=>'templates/pages/page-news.php', 'content'=>__('Stay updated with the latest market news and sentiment analysis.','retail-trade-scanner') ],
-    [ 'slug'=>'api-docs', 'title'=>__('API Documentation','retail-trade-scanner'), 'template'=>'templates/pages/page-api-docs.php', 'content'=>__('Complete API documentation for developers and advanced users.','retail-trade-scanner') ],
-    [ 'slug'=>'endpoint-status', 'title'=>__('System Status','retail-trade-scanner'), 'template'=>'templates/pages/page-endpoint-status.php', 'content'=>__('Real-time monitoring of our API endpoints and system health.','retail-trade-scanner') ],
-    [ 'slug'=>'help', 'title'=>__('Help Center','retail-trade-scanner'), 'template'=>'templates/pages/page-help.php', 'content'=>__('Find answers to common questions and get the support you need.','retail-trade-scanner') ],
-    [ 'slug'=>'tutorials', 'title'=>__('Tutorials','retail-trade-scanner'), 'template'=>'templates/pages/page-tutorials.php', 'content'=>__('Step-by-step guides to help you master the platform.','retail-trade-scanner') ],
-    [ 'slug'=>'careers', 'title'=>__('Careers','retail-trade-scanner'), 'template'=>'templates/pages/page-careers.php', 'content'=>__('Join our team and help build the future of retail trading.','retail-trade-scanner') ],
-    [ 'slug'=>'privacy-policy', 'title'=>__('Privacy Policy','retail-trade-scanner'), 'template'=>'templates/pages/page-privacy-policy.php', 'content'=>__('Our commitment to protecting your privacy and personal information.','retail-trade-scanner') ],
-    [ 'slug'=>'terms-of-service', 'title'=>__('Terms of Service','retail-trade-scanner'), 'template'=>'templates/pages/page-terms-of-service.php', 'content'=>__('Terms and conditions for using our trading platform and services.','retail-trade-scanner') ],
-    [ 'slug'=>'disclaimer', 'title'=>__('Legal Disclaimer','retail-trade-scanner'), 'template'=>'templates/pages/page-disclaimer.php', 'content'=>__('Important legal and investment disclaimers for platform users.','retail-trade-scanner') ],
-    [ 'slug'=>'contact', 'title'=>__('Contact Us','retail-trade-scanner'), 'template'=>'templates/pages/page-contact.php', 'content'=>__('Get in touch with our team for support, feedback, or business inquiries.','retail-trade-scanner') ],
-    [ 'slug'=>'paypal-checkout', 'title'=>__('Checkout','retail-trade-scanner'), 'template'=>'templates/pages/page-checkout-paypal.php', 'content'=>__('Secure payment processing for premium subscriptions.','retail-trade-scanner') ],
-    [ 'slug'=>'payment-success', 'title'=>__('Payment Successful','retail-trade-scanner'), 'template'=>'', 'content'=>__('Thank you for your payment! Your subscription has been activated.','retail-trade-scanner') ],
-    [ 'slug'=>'payment-cancelled', 'title'=>__('Payment Cancelled','retail-trade-scanner'), 'template'=>'', 'content'=>__('Your payment was cancelled. You can try again anytime.','retail-trade-scanner') ],
+    [ 'slug'=>'dashboard', 'title'=>'Dashboard', 'template'=>'templates/pages/page-dashboard.php', 'content'=>'Welcome to your trading dashboard. Monitor your portfolio, track market trends, and access key performance indicators.' ],
+    [ 'slug'=>'scanner', 'title'=>'Stock Scanner', 'template'=>'templates/pages/page-scanner.php', 'content'=>'Advanced stock screening tool to find trading opportunities based on your criteria.' ],
+    [ 'slug'=>'watchlists', 'title'=>'Watchlists', 'template'=>'templates/pages/page-watchlists.php', 'content'=>'Create and manage watchlists to track your favorite stocks and potential investments.' ],
+    [ 'slug'=>'portfolio', 'title'=>'Portfolio', 'template'=>'templates/pages/page-portfolio.php', 'content'=>'Track your investments, monitor performance, and analyze your portfolio allocation.' ],
+    [ 'slug'=>'alerts', 'title'=>'Price Alerts', 'template'=>'templates/pages/page-alerts.php', 'content'=>'Set up price alerts to stay informed about important market movements.' ],
+    [ 'slug'=>'news', 'title'=>'Market News', 'template'=>'templates/pages/page-news.php', 'content'=>'Stay updated with the latest market news and sentiment analysis.' ],
+    [ 'slug'=>'help', 'title'=>'Help Center', 'template'=>'templates/pages/page-help.php', 'content'=>'Find answers to common questions and get the support you need.' ],
+    [ 'slug'=>'tutorials', 'title'=>'Tutorials', 'template'=>'templates/pages/page-tutorials.php', 'content'=>'Step-by-step guides to help you master the platform.' ],
+    [ 'slug'=>'contact', 'title'=>'Contact Us', 'template'=>'templates/pages/page-contact.php', 'content'=>'Get in touch with our team for support, feedback, or business inquiries.' ],
+    [ 'slug'=>'privacy-policy', 'title'=>'Privacy Policy', 'template'=>'templates/pages/page-privacy-policy.php', 'content'=>'Our commitment to protecting your privacy and personal information.' ],
+    [ 'slug'=>'terms-of-service', 'title'=>'Terms of Service', 'template'=>'templates/pages/page-terms-of-service.php', 'content'=>'Terms and conditions for using our trading platform and services.' ],
+    [ 'slug'=>'disclaimer', 'title'=>'Legal Disclaimer', 'template'=>'templates/pages/page-disclaimer.php', 'content'=>'Important legal and investment disclaimers for platform users.' ],
   ];
   
   // Create pages with better error handling
-  $created_pages = [];
-  $failed_pages = [];
+  $created_count = 0;
+  $updated_count = 0;
   
   foreach ($pages as $p){
     $existing = get_page_by_path($p['slug']);
     
-    if (!$existing){
-      $page_data = [
-        'post_title'   => $p['title'],
-        'post_name'    => $p['slug'],
-        'post_status'  => 'publish',
-        'post_type'    => 'page',
-        'post_content' => $p['content'],
-        'post_excerpt' => substr($p['content'], 0, 155) . '...'
-      ];
-      
-      $pid = wp_insert_post($page_data);
-      
-      if ($pid && !is_wp_error($pid)) {
-        $created_pages[] = $p['title'];
+    if (!$existing || $force_create){
+      if ($existing) {
+        // Update existing page
+        $page_data = [
+          'ID' => $existing->ID,
+          'post_title'   => $p['title'],
+          'post_content' => $p['content'],
+          'post_status'  => 'publish'
+        ];
+        wp_update_post($page_data);
+        $updated_count++;
+        $page_id = $existing->ID;
+      } else {
+        // Create new page
+        $page_data = [
+          'post_title'   => $p['title'],
+          'post_name'    => $p['slug'],
+          'post_status'  => 'publish',
+          'post_type'    => 'page',
+          'post_content' => $p['content'],
+          'post_excerpt' => substr($p['content'], 0, 155) . '...'
+        ];
         
-        // Assign template if it exists
+        $page_id = wp_insert_post($page_data);
+        if ($page_id && !is_wp_error($page_id)) {
+          $created_count++;
+        }
+      }
+      
+      // Assign template if it exists and we have a valid page ID
+      if (isset($page_id) && $page_id && !is_wp_error($page_id)) {
         if (!empty($p['template']) && file_exists(get_theme_file_path($p['template']))){
-          update_post_meta($pid, '_wp_page_template', $p['template']);
+          update_post_meta($page_id, '_wp_page_template', $p['template']);
         }
         
         // Set SEO-friendly meta
-        update_post_meta($pid, '_yoast_wpseo_metadesc', $p['content']);
-        
-      } else {
-        $failed_pages[] = $p['title'];
-      }
-    } else {
-      // Update existing page template if needed
-      if (!get_page_template_slug($existing->ID) && !empty($p['template']) && file_exists(get_theme_file_path($p['template']))){
-        update_post_meta($existing->ID, '_wp_page_template', $p['template']);
-      }
-      
-      // Update content if it's empty
-      if (empty($existing->post_content) && !empty($p['content'])) {
-        wp_update_post([
-          'ID' => $existing->ID,
-          'post_content' => $p['content']
-        ]);
+        update_post_meta($page_id, '_yoast_wpseo_metadesc', $p['content']);
       }
     }
   }
   
-  // Set static front page to Dashboard and create/set Blog as posts page
+  // Log results
+  error_log("RTS Theme: Created {$created_count} pages, updated {$updated_count} pages");
+  
+  return ['created' => $created_count, 'updated' => $updated_count];
+}
+// Add multiple activation hooks and manual trigger
+add_action('after_switch_theme', 'rts_create_essential_pages');
+add_action('init', function() {
+  // Also try on init if pages don't exist
+  $pages_exist = get_page_by_path('dashboard') && get_page_by_path('scanner');
+  if (!$pages_exist) {
+    rts_create_essential_pages();
+  }
+});
+
+// Manual trigger function for testing/debugging
+function rts_force_create_pages() {
+  $results = rts_create_essential_pages();
+  
+  // Create basic menu structure
+  $menu_obj = wp_get_nav_menu_object('Main Menu');
+  if (!$menu_obj) {
+    $menu_id = wp_create_nav_menu('Main Menu');
+    
+    // Add core pages to menu
+    $core_pages = ['dashboard', 'scanner', 'portfolio', 'watchlists', 'alerts', 'help', 'contact'];
+    foreach ($core_pages as $slug) {
+      $page = get_page_by_path($slug);
+      if ($page) {
+        wp_update_nav_menu_item($menu_id, 0, [
+          'menu-item-title'     => get_the_title($page->ID),
+          'menu-item-object'    => 'page',
+          'menu-item-object-id' => (int)$page->ID,
+          'menu-item-type'      => 'post_type',
+          'menu-item-status'    => 'publish'
+        ]);
+      }
+    }
+    
+    // Assign to primary location
+    $locations = get_nav_menu_locations();
+    $locations['primary'] = (int)$menu_id;
+    set_theme_mod('nav_menu_locations', $locations);
+  }
+  
+  // Set dashboard as front page
+  $dashboard_page = get_page_by_path('dashboard');
+  if ($dashboard_page) {
+    update_option('show_on_front', 'page');
+    update_option('page_on_front', intval($dashboard_page->ID));
+  }
+  
+  // Flush rewrite rules
+  flush_rewrite_rules();
+  
+  return $results;
+}
+
+// Set static front page to Dashboard and create/set Blog as posts page
   $dashboard_page = get_page_by_path('dashboard');
   if ($dashboard_page){
     update_option('show_on_front', 'page');
@@ -310,19 +363,71 @@ add_action('after_switch_theme', function(){
     set_theme_mod('nav_menu_locations', $locations); 
   }
   
-  // Log activation results for debugging
-  if (!empty($created_pages)) {
-    error_log('RTS Theme: Created pages: ' . implode(', ', $created_pages));
-  }
-  if (!empty($failed_pages)) {
-    error_log('RTS Theme: Failed to create pages: ' . implode(', ', $failed_pages));
+// Add admin menu for manual page creation
+add_action('admin_menu', function() {
+  add_theme_page(
+    'Create Pages',
+    'Create Pages', 
+    'manage_options',
+    'rts-create-pages',
+    'rts_admin_create_pages'
+  );
+});
+
+function rts_admin_create_pages() {
+  if (isset($_POST['create_pages'])) {
+    $results = rts_force_create_pages();
+    echo '<div class="notice notice-success"><p>Pages created successfully! Created: ' . $results['created'] . ', Updated: ' . $results['updated'] . '</p></div>';
   }
   
-  // Set theme activation as completed
-  update_option('rts_activation_completed', 1);
-  
-  // Flush rewrite rules to ensure clean URLs
-  flush_rewrite_rules();
+  ?>
+  <div class="wrap">
+    <h1>Create Theme Pages</h1>
+    <p>This will create all required pages for the Retail Trade Scanner theme.</p>
+    
+    <form method="post">
+      <table class="form-table">
+        <tr>
+          <th scope="row">Pages to Create</th>
+          <td>
+            <ul>
+              <li>Dashboard (Front Page)</li>
+              <li>Stock Scanner</li>
+              <li>Watchlists</li>
+              <li>Portfolio</li>
+              <li>Price Alerts</li>
+              <li>Market News</li>
+              <li>Help Center</li>
+              <li>Tutorials</li>
+              <li>Contact Us</li>
+              <li>Privacy Policy</li>
+              <li>Terms of Service</li>
+              <li>Legal Disclaimer</li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+      
+      <?php submit_button('Create All Pages', 'primary', 'create_pages'); ?>
+    </form>
+  </div>
+  <?php
+}
+
+// Also try to create pages on admin_init if they don't exist
+add_action('admin_init', function() {
+  if (is_admin() && current_user_can('manage_options')) {
+    $dashboard_exists = get_page_by_path('dashboard');
+    if (!$dashboard_exists) {
+      // Show admin notice
+      add_action('admin_notices', function() {
+        echo '<div class="notice notice-warning is-dismissible">';
+        echo '<p><strong>Retail Trade Scanner:</strong> Theme pages need to be created. ';
+        echo '<a href="' . admin_url('themes.php?page=rts-create-pages') . '">Create Pages Now</a>';
+        echo '</p></div>';
+      });
+    }
+  }
 });
 
 // Forms – subscribe & contact (fallback if plugin not used)
