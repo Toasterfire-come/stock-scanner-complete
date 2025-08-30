@@ -15,8 +15,8 @@ if (!defined('ABSPATH')) { exit; }
 
 <header class="site-header border-b bg-background/80 backdrop-blur" role="banner">
   <?php if ( is_front_page() ) : ?>
-  <div class="w-full" style="background:#fde047;color:#0f172a;">
-    <div class="container mx-auto px-4 py-2 text-center text-sm">
+  <div class="promo-banner">
+    <div class="inner text-sm">
       <strong>Limited-time:</strong> 7-day trial for $1 on any plan — Use code <strong>TRIAL</strong>
     </div>
   </div>

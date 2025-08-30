@@ -94,3 +94,14 @@ input:invalid,textarea:invalid{border-color:#ef4444}
 .current-menu-item > a,.current_page_item > a{text-decoration:underline;text-underline-offset:4px;font-weight:600}
 
 .cv-auto{content-visibility:auto;contain-intrinsic-size:300px}
+/* Promo banner (front page only) */
+.promo-banner{background:#fde047;color:#0f172a}
+.promo-banner .inner{max-width:1200px;margin-left:auto;margin-right:auto;padding-left:var(--space-4);padding-right:var(--space-4);padding-top:.5rem;padding-bottom:.5rem;text-align:center}
+.promo-banner strong{font-weight:700}
+
+/* Minimal checkout helpers */
+.btn{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s ease,box-shadow .2s ease,background-color .2s ease}
+.btn-primary{background:#2271b1;color:#fff;border-color:#2271b1}
+.btn-outline{background:transparent;border:1px solid var(--border)}
+.btn:hover{transform:translateY(-1px)}
+.pricing-card{background:var(--card);color:var(--card-foreground);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--elev-0)}
