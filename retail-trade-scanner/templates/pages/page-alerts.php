@@ -34,6 +34,16 @@ $layout_args = [
           <button class="rounded-md bg-primary text-primary-foreground px-4 py-2" type="submit"><?php esc_html_e('Create', 'retail-trade-scanner'); ?></button>
         </form>
         <div id="rts-alert-msg" class="notice mt-2" aria-live="polite"></div>
+        <details class="mt-3">
+          <summary class="text-sm text-muted-foreground cursor-pointer"><?php esc_html_e('Show required fields and usage','retail-trade-scanner'); ?></summary>
+          <div class="text-xs text-muted-foreground mt-2">
+            <div><?php esc_html_e('POST /api/alerts/create/','retail-trade-scanner'); ?></div>
+            <div><?php esc_html_e('ticker: string (required)','retail-trade-scanner'); ?></div>
+            <div><?php esc_html_e('target_price: number (required)','retail-trade-scanner'); ?></div>
+            <div><?php esc_html_e('condition: above|below (required)','retail-trade-scanner'); ?></div>
+            <div><?php esc_html_e('email: string (required)','retail-trade-scanner'); ?></div>
+          </div>
+        </details>
       </div>
     </aside>
   </div>
