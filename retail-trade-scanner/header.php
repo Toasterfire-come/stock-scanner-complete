@@ -14,6 +14,13 @@ if (!defined('ABSPATH')) { exit; }
 <a class="skip-link" href="#primary"><?php esc_html_e('Skip to content','retail-trade-scanner'); ?></a>
 
 <header class="site-header border-b bg-background/80 backdrop-blur" role="banner">
+  <?php if ( is_front_page() ) : ?>
+  <div class="promo-banner">
+    <div class="inner text-sm">
+      <strong>Limited-time:</strong> 7-day trial for $1 on any plan — Use code <strong>TRIAL</strong>
+    </div>
+  </div>
+  <?php endif; ?>
   <div class="container mx-auto px-4">
     <div class="flex items-center justify-between py-4 gap-4">
       <div class="flex items-center gap-3">

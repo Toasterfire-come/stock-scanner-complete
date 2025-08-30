@@ -18,6 +18,11 @@ get_header();
       </div>
     </article>
   <?php endwhile; endif; ?>
+  <?php if ( is_page_template('page-templates/page-paypal-checkout.php') ) : ?>
+    <section class="mt-10">
+      <a class="btn btn-primary rounded-md px-3 py-2" href="<?php echo esc_url( home_url('/payment-success/') ); ?>">Proceed to PayPal</a>
+    </section>
+  <?php endif; ?>
 </main>
 
 <?php get_footer(); ?>
