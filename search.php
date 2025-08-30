@@ -26,13 +26,13 @@ $allowed_markup = [ 'mark' => [] ];
     <div class="flex flex-wrap items-center gap-3 mt-4">
       <span class="text-sm text-muted-foreground"><?php esc_html_e('Filters (visual only):', 'retail-trade-scanner'); ?></span>
       <div class="flex gap-2">
-        <button type="button" class="inline-flex items-center rounded-full border px-3 py-1 text-sm hover:bg-accent">
+        <button type="button" class="inline-flex items-center rounded-full border px-3 py-1 text-sm hover:shadow-sm">
           <?php esc_html_e('All', 'retail-trade-scanner'); ?>
         </button>
-        <button type="button" class="inline-flex items-center rounded-full border px-3 py-1 text-sm hover:bg-accent">
+        <button type="button" class="inline-flex items-center rounded-full border px-3 py-1 text-sm hover:shadow-sm">
           <?php esc_html_e('Posts', 'retail-trade-scanner'); ?>
         </button>
-        <button type="button" class="inline-flex items-center rounded-full border px-3 py-1 text-sm hover:bg-accent">
+        <button type="button" class="inline-flex items-center rounded-full border px-3 py-1 text-sm hover:shadow-sm">
           <?php esc_html_e('Pages', 'retail-trade-scanner'); ?>
         </button>
       </div>
