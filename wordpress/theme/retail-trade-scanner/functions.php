@@ -5,6 +5,8 @@
 
 if (!defined('ABSPATH')) { exit; }
 
+require_once get_template_directory() . '/inc/auto-pages.php';
+
 function rts_setup() {
   add_theme_support('title-tag');
   add_theme_support('post-thumbnails');
