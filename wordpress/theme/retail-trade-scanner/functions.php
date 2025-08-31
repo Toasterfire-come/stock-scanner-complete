@@ -8,6 +8,9 @@ if (!defined('ABSPATH')) { exit; }
 require_once get_template_directory() . '/inc/auto-pages.php';
 require_once get_template_directory() . '/inc/seo-schema.php';
 require_once get_template_directory() . '/inc/meta-tags.php';
+require_once get_template_directory() . '/inc/sitemap-xml.php';
+require_once get_template_directory() . '/inc/breadcrumbs.php';
+require_once get_template_directory() . '/inc/consent-analytics.php';
 
 function rts_setup() {
   add_theme_support('title-tag');
@@ -77,3 +80,7 @@ add_action('wp_enqueue_scripts', 'rts_enqueue_assets');
 function rts_menu_fallback() {
   echo '<ul class="menu"><li><a href="' . esc_url(home_url('/')) . '">Home</a></li></ul>';
 }
+
+// Flush rewrite rules after theme switch to register sitemap/og endpoints
+function rts_flush_rewrites_on_switch() { flush_rewrite_rules(); }
+add_action('after_switch_theme', 'rts_flush_rewrites_on_switch');

@@ -22,6 +22,7 @@
     </div>
   </div>
 </header>
+<?php if (function_exists('rts_breadcrumbs') && !is_front_page()) { echo '<div style="border-bottom:1px solid var(--border);">'; rts_breadcrumbs(); echo '</div>'; } ?>
 <main class="site-main">
 <script>
 (function(){
