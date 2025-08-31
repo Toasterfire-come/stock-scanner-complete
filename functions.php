@@ -62,60 +62,6 @@ function rts_enqueue_assets() {
 
 // Create essential pages on theme activation
 add_action('after_switch_theme', 'rts_create_essential_pages');
-function rts_create_essential_pages() {
-    $pages = array(
-        'dashboard' => array(
-            'title' => __('Dashboard', 'retail-trade-scanner'),
-            'template' => 'page-dashboard'
-        ),
-        'scanner' => array(
-            'title' => __('Stock Scanner', 'retail-trade-scanner'),
-            'template' => 'page-scanner'
-        ),
-        'portfolio' => array(
-            'title' => __('Portfolio', 'retail-trade-scanner'),
-            'template' => 'page-portfolio'
-        ),
-        'watchlists' => array(
-            'title' => __('Watchlists', 'retail-trade-scanner'),
-            'template' => 'page-watchlists'
-        ),
-        'alerts' => array(
-            'title' => __('Price Alerts', 'retail-trade-scanner'),
-            'template' => 'page-alerts'
-        ),
-        'news' => array(
-            'title' => __('Market News', 'retail-trade-scanner'),
-            'template' => 'page-news'
-        ),
-        'tutorials' => array(
-            'title' => __('Tutorials', 'retail-trade-scanner'),
-            'template' => 'page-tutorials'
-        ),
-        'help' => array(
-            'title' => __('Help Center', 'retail-trade-scanner'),
-            'template' => 'page-help'
-        )
-    );
-    
-    foreach ($pages as $slug => $page_data) {
-        if (!get_page_by_path($slug)) {
-            wp_insert_post(array(
-                'post_title' => $page_data['title'],
-                'post_name' => $slug,
-                'post_content' => '',
-                'post_status' => 'publish',
-                'post_type' => 'page',
-                'meta_input' => array(
-                    '_wp_page_template' => 'templates/pages/' . $page_data['template'] . '.php'
-                )
-            ));
-        }
-    }
-    
-    // Flush rewrite rules
-    flush_rewrite_rules();
-}
 
 // AJAX handlers for theme functionality
 add_action('wp_ajax_rts_subscribe', 'rts_handle_subscription');
