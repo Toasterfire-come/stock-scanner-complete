@@ -1,0 +1,13 @@
+THEME SCREENSHOT PLACEHOLDER
+
+To complete the WordPress theme, please create a screenshot.png file with dimensions 1200x900 pixels.
+
+The screenshot should showcase:
+- Theme colors: #433e0e (background), #c1bdb3 (text), #374a67 (primary)
+- Left sidebar navigation
+- Main content area with cards/widgets
+- Professional trading platform layout
+- Theme name: "Retail Trade Scanner"
+- Tagline: "Professional WordPress Trading Theme"
+
+This file should be replaced with an actual PNG image before theme submission to WordPress.org or production use.
