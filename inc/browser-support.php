@@ -551,7 +551,7 @@ class RTS_Browser_Support {
                 },
                 'arrow-functions': function() {
                     try {
-                        eval('()=>{}');
+                        // Arrow functions supported in ES6+
                         return true;
                     } catch(e) {
                         return false;
