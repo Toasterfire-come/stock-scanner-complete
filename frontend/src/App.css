@@ -1,4 +1,0 @@
-/* App frame utility overrides for the new theme */
-.App { min-height: 100vh; background: hsl(var(--background)); color: hsl(var(--foreground)); }
-.App-header { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
-.App-link { color: hsl(var(--accent)); }
