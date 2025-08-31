@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html>
 <head>
-    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php _e('Website Temporarily Unavailable', 'retail-trade-scanner'); ?></title>
+    <title>Website Temporarily Unavailable</title>
     <style>
         :root {
             --drab-dark-brown: #433e0e;
@@ -104,16 +104,14 @@
 <body>
     <div class="error-container">
         <div class="error-code">500</div>
-        <h1 class="error-title"><?php _e('Website Temporarily Unavailable', 'retail-trade-scanner'); ?></h1>
+        <h1 class="error-title">Website Temporarily Unavailable</h1>
         <p class="error-message">
-            <?php _e('We apologize for the inconvenience. Our website is experiencing technical difficulties and our team has been notified. Please try again in a few minutes.', 'retail-trade-scanner'); ?>
+            We apologize for the inconvenience. Our website is experiencing technical difficulties and our team has been notified. Please try again in a few minutes.
         </p>
         <div class="error-actions">
-            <a href="<?php echo esc_url(home_url('/')); ?>" class="btn">
-                <?php _e('Go to Homepage', 'retail-trade-scanner'); ?>
-            </a>
+            <a href="/" class="btn">Go to Homepage</a>
             <a href="javascript:history.back()" class="btn btn-secondary">
-                <?php _e('Go Back', 'retail-trade-scanner'); ?>
+                Go Back
             </a>
         </div>
     </div>
@@ -123,7 +121,7 @@
         setTimeout(function() {
             const retryBtn = document.createElement('button');
             retryBtn.className = 'btn';
-            retryBtn.textContent = '<?php _e('Retry Now', 'retail-trade-scanner'); ?>';
+            retryBtn.textContent = 'Retry Now';
             retryBtn.onclick = function() { location.reload(); };
             document.querySelector('.error-actions').appendChild(retryBtn);
         }, 5000);
