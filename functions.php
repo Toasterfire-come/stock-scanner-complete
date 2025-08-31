@@ -775,3 +775,59 @@ function rts_handle_contact(){ if(!isset($_POST['rts_contact_nonce'])||!wp_verif
 
 // Admin notice for plugin config (frontend visible to admins)
 add_action('wp_footer', function(){ if(!current_user_can('manage_options')) return; if(!class_exists('StockScannerIntegration')) return; $api_url=get_option('stock_scanner_api_url',''); $api_secret=get_option('stock_scanner_api_secret',''); if(empty($api_url)||empty($api_secret)){ echo '<div style="position:fixed;bottom:12px;right:12px;background:#111827;color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:9999;opacity:.9">'.esc_html__('Stock Scanner plugin needs configuration: set API URL and Secret in Settings → Stock Scanner.','retail-trade-scanner').'</div>'; } });
+
+// Helper function for estimated reading time
+function estimated_reading_time($post_id = null) {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+    
+    $content = get_post_field('post_content', $post_id);
+    if (!$content) {
+        return '1 ' . __('min read', 'retail-trade-scanner');
+    }
+    
+    // Strip shortcodes and HTML tags
+    $content = strip_shortcodes($content);
+    $content = wp_strip_all_tags($content);
+    
+    // Count words
+    $word_count = str_word_count($content);
+    
+    // Calculate reading time (average 200 words per minute)
+    $reading_time = ceil($word_count / 200);
+    
+    // Handle singular/plural
+    if ($reading_time <= 1) {
+        return '1 ' . __('min read', 'retail-trade-scanner');
+    } else {
+        return $reading_time . ' ' . __('min read', 'retail-trade-scanner');
+    }
+}
+
+// Add excerpt length filter
+add_filter('excerpt_length', function($length) {
+    return 25;
+});
+
+// Custom excerpt more text
+add_filter('excerpt_more', function($more) {
+    return '...';
+});
+
+// Safe file include function
+function rts_safe_include_template($template_path, $variables = array()) {
+    if (!file_exists($template_path)) {
+        rts_log_error("Template file not found: {$template_path}");
+        return false;
+    }
+    
+    // Extract variables for template
+    if (!empty($variables)) {
+        extract($variables, EXTR_SKIP);
+    }
+    
+    ob_start();
+    include $template_path;
+    return ob_get_clean();
+}
