@@ -1,0 +1,41 @@
+/*
+Theme Name: Retail Trade Scanner
+Theme URI: https://example.com/retail-trade-scanner
+Author: Emergent
+Author URI: https://emergent.sh
+Description: Professional stock screening and alerts theme, integrated with Stock Scanner WP plugin REST API.
+Version: 1.0.0
+License: MIT
+Text Domain: rts
+*/
+
+/* Minimal base in case build isn't run */
+:root {
+  --background: #f7fff7; /* Mint Cream */
+  --foreground: #32373b; /* Onyx */
+  --accent: #ef8354; /* Coral */
+  --secondary: #6ca6c1; /* Air Superiority Blue */
+  --muted: #e8efe9; /* Reseda tint */
+  --border: #d6dde1;
+}
+html { box-sizing: border-box; }
+*, *:before, *:after { box-sizing: inherit; }
+body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; background: var(--background); color: var(--foreground); }
+h1,h2,h3,h4 { font-family: Poppins, Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; border-radius:10px; font-weight:600; padding:10px 16px; border:1px solid transparent; cursor:pointer; transition:filter .15s ease; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--secondary); color: #14212b; }
+.btn-outline { background: #fff; color: var(--foreground); border-color: var(--border); }
+.btn:hover { filter: brightness(0.95); }
+.input { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:#fff; color:var(--foreground); }
+.card { background:#fff; color:var(--foreground); border:1px solid var(--border); border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,.03); }
+.section { padding:56px 0; }
+.site-header { position:sticky; top:0; z-index:30; backdrop-filter: saturate(1.5) blur(6px); background: rgba(255,255,255,.85); border-bottom:1px solid var(--border); }
+.site-footer { margin-top:80px; border-top:1px solid var(--border); background:#fff; }
+.nav a { color:#6b7280; text-decoration:none; margin-right:16px; }
+.nav a.active, .nav a:hover { color: var(--accent); }
+.table { width:100%; border-collapse: collapse; }
+.table th, .table td { padding:10px 8px; border-bottom:1px solid var(--border); text-align:left; }
+.badge { display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background: var(--muted); }
+.hero { padding:72px 0; }
