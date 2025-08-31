@@ -188,8 +188,8 @@ if (!defined('WP_DEBUG') || !WP_DEBUG) {
     error_reporting(0);
     
     // Custom error page for fatal errors
-    register_shutdown_function('rts_fatal_error_handler');
-    function rts_fatal_error_handler() {
+    if (!function_exists('rts_fatal_error_handler')) {
+        function rts_fatal_error_handler() {
         $error = error_get_last();
         if ($error && in_array($error['type'], array(E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE))) {
             if (!headers_sent()) {
@@ -205,6 +205,12 @@ if (!defined('WP_DEBUG') || !WP_DEBUG) {
             }
             exit;
         }
+        }
+    }
+    
+    // Register after ensuring the handler exists
+    if (function_exists('rts_fatal_error_handler')) {
+        register_shutdown_function('rts_fatal_error_handler');
     }
 }
 
