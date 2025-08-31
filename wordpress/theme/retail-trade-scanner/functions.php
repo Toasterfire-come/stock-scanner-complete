@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) { exit; }
 
 require_once get_template_directory() . '/inc/auto-pages.php';
 require_once get_template_directory() . '/inc/seo-schema.php';
+require_once get_template_directory() . '/inc/meta-tags.php';
 
 function rts_setup() {
   add_theme_support('title-tag');

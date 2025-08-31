@@ -10,8 +10,12 @@
     <li>Alerts: /wp-json/stock-scanner/v1/alerts/create</li>
   </ul>
   <div class="card" style="padding:16px;margin-top:16px;">
-    <div class="text-sm" style="color:#6b7280;">Live sample</div>
+    <div class="text-sm" style="color:#6b7280;">Market overview</div>
     <div id="rts-docs-live" class="text-sm">Loading…</div>
+  </div>
+  <div class="card" style="padding:16px;margin-top:16px;">
+    <div class="text-sm" style="color:#6b7280;">Top performers</div>
+    <div id="rts-docs-perf" class="text-sm">Loading…</div>
   </div>
 </div></section>
 <script>
@@ -22,6 +26,15 @@
       const mv = d.market_overview || {}; const g = mv.gainers ?? '-'; const l = mv.losers ?? '-'; const t = mv.total_stocks ?? '-';
       el.innerHTML = `Total stocks: <strong>${t}</strong> • Gainers: <strong style=\"color:#16a34a\">${g}</strong> • Losers: <strong style=\"color:#b91c1c\">${l}</strong>`;
     }).catch(()=> el.textContent='Failed to load');
+
+  const perf = document.getElementById('rts-docs-perf');
+  fetch(RTS.rest.endpoints.trending, { headers: { 'X-WP-Nonce': RTS.rest.nonce } })
+    .then(r=>r.json()).then(d=>{
+      if(!d || (!d.top_gainers && !d.most_active)) { perf.textContent='No data'; return; }
+      const tg = (d.top_gainers||[]).slice(0,3).map(x=> x.ticker).join(', ');
+      const ma = (d.most_active||[]).slice(0,3).map(x=> x.ticker).join(', ');
+      perf.innerHTML = `Top gainers: <strong>${tg||'-'}</strong> • Most active: <strong>${ma||'-'}</strong>`;
+    }).catch(()=> perf.textContent='Failed to load');
 })();
 </script>
 <?php get_footer(); ?>

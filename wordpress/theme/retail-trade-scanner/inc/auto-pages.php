@@ -27,6 +27,7 @@ function rts_on_activate() {
     ['Watchlists','app/watchlists','page-app-watchlists.php'],
     ['Status','status','page-status.php'],
     ['Docs','docs','page-docs.php'],
+    ['Design System','design-system','page-design-system.php'],
     ['About','about','page-about.php'],
     ['Careers','careers','page-careers.php'],
     ['Contact','contact','page-contact.php'],
