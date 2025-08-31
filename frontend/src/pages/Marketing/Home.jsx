@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import PageHeader from "../../components/PageHeader";
 import Section from "../../components/Section";
-import { getTrending } from "../../lib/api";
+import { getTrending, getMarketStats } from "../../lib/api";
 import { Link } from "react-router-dom";
 
 export default function Home() {
   const [trending, setTrending] = useState(null);
+  const [stats, setStats] = useState(null);
   useEffect(() => {
     getTrending().then((r) => setTrending(r.data)).catch(() => setTrending(null));
+    getMarketStats().then((r)=> setStats(r.data)).catch(()=> setStats(null));
   }, []);
   return (
     <Layout>
@@ -31,25 +33,45 @@ export default function Home() {
           ))}
         </div>
       </Section>
-      <Section className="bg-white">
+      <Section className="bg-white dark:bg-[hsl(var(--background))]">
         <h3 className="text-xl font-semibold mb-4">Market highlights</h3>
-        {!trending ? (
+        {!stats && !trending ? (
           <div className="text-muted-foreground">Loading market data…</div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
-            {Object.entries(trending).filter(([k])=>k!=="last_updated").map(([key, list]) => (
-              <div key={key} className="card p-4">
-                <h4 className="font-medium mb-2 capitalize">{key.replace('_',' ')}</h4>
+            {stats?.top_gainers && (
+              <div className="card p-4">
+                <h4 className="font-medium mb-2">Top gainers</h4>
                 <ul className="divide-y">
-                  {(list || []).slice(0,5).map((s) => (
+                  {stats.top_gainers.slice(0,5).map((s) => (
                     <li key={s.ticker} className="py-2 flex items-center justify-between text-sm">
                       <span className="font-medium">{s.ticker}</span>
-                      <span className={s.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}>{s.change_percent?.toFixed?.(2)}%</span>
+                      <span className="text-green-600">{s.change_percent?.toFixed?.(2)}%</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            ))}
+            )}
+            {stats?.most_active && (
+              <div className="card p-4">
+                <h4 className="font-medium mb-2">Most active</h4>
+                <ul className="divide-y">
+                  {stats.most_active.slice(0,5).map((s) => (
+                    <li key={s.ticker} className="py-2 flex items-center justify-between text-sm">
+                      <span className="font-medium">{s.ticker}</span>
+                      <span className="text-muted-foreground">{s.volume?.toLocaleString?.()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {trending && (
+              <div className="card p-4">
+                <h4 className="font-medium mb-2">Trending lists</h4>
+                <p className="text-sm text-muted-foreground">Last updated: {new Date(trending.last_updated).toLocaleString?.()}</p>
+                <div className="mt-2 text-sm text-muted-foreground">High volume, top gainers and most active fetched from backend.</div>
+              </div>
+            )}
           </div>
         )}
       </Section>

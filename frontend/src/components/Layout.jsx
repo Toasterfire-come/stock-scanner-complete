@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
+import { subscribeEmail } from "../lib/api";
+import { toast } from "sonner";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -36,12 +38,22 @@ function Navbar() {
 }
 
 function Footer() {
+  const [email, setEmail] = useState("");
+  async function subscribe(e){
+    e.preventDefault();
+    try { await subscribeEmail({ email }); toast.success("Subscribed"); setEmail(""); }
+    catch { toast.error("Subscription failed"); }
+  }
   return (
     <footer className="mt-20 border-t border-border bg-white dark:bg-[hsl(var(--background))]">
       <div className="container-page py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div>
           <h4 className="text-lg font-semibold mb-2">Retail Trade Scanner</h4>
           <p className="text-sm text-muted-foreground">Professional stock screening, alerts and portfolio tools for serious traders.</p>
+          <form onSubmit={subscribe} className="mt-4 flex gap-2">
+            <input className="input" placeholder="Enter your email" value={email} onChange={(e)=> setEmail(e.target.value)} required />
+            <button className="btn btn-secondary px-3">Subscribe</button>
+          </form>
         </div>
         <div>
           <h5 className="font-semibold mb-2">Product</h5>
