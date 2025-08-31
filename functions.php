@@ -822,9 +822,9 @@ function rts_safe_include_template($template_path, $variables = array()) {
         return false;
     }
     
-    // Extract variables for template
-    if (!empty($variables)) {
-        extract($variables, EXTR_SKIP);
+    // Extract variables for template (safe extraction)
+    if (!empty($variables) && is_array($variables)) {
+        extract($variables, EXTR_SKIP | EXTR_REFS);
     }
     
     ob_start();
