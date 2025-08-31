@@ -27,6 +27,15 @@ function rts_on_activate() {
     ['Watchlists','app/watchlists','page-app-watchlists.php'],
     ['Status','status','page-status.php'],
     ['Docs','docs','page-docs.php'],
+    ['About','about','page-about.php'],
+    ['Careers','careers','page-careers.php'],
+    ['Contact','contact','page-contact.php'],
+    ['Guides','guides','page-guides.php'],
+    ['Tutorials','tutorials','page-tutorials.php'],
+    ['Terms','legal/terms','page-legal-terms.php'],
+    ['Privacy','legal/privacy','page-legal-privacy.php'],
+    ['Cookies','legal/cookies','page-legal-cookies.php'],
+    ['Security','legal/security','page-legal-security.php'],
     ['Generic','generic','page-generic.php'],
   ];
 
