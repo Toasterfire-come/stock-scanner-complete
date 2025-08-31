@@ -1,0 +1,261 @@
+/**
+ * Additional Styles for Retail Trade Scanner Theme
+ * Supplementary styles for enhanced functionality
+ */
+
+/* WordPress Admin Bar Compatibility */
+@media screen and (max-width: 782px) {
+  html:not(.no-js) body.admin-bar .site-header {
+    top: 46px;
+  }
+}
+
+@media screen and (min-width: 783px) {
+  html:not(.no-js) body.admin-bar .site-header {
+    top: 32px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .sidebar,
+  .site-header,
+  .site-footer,
+  .btn,
+  button,
+  .pagination,
+  .search-form,
+  .mobile-sidebar-toggle {
+    display: none !important;
+  }
+  
+  body {
+    padding-left: 0 !important;
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .site-main {
+    padding-top: 0 !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  .card {
+    border: 1px solid #ddd !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+    color: #666;
+  }
+  
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --background: #000000;
+    --foreground: #ffffff;
+    --primary: #ffffff;
+    --accent: #ffff00;
+    --border: #ffffff;
+    --muted-foreground: #cccccc;
+  }
+  
+  .card {
+    border: 2px solid var(--border) !important;
+  }
+  
+  .btn {
+    border: 2px solid var(--border) !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus Styles for Better Accessibility */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-link:focus {
+  position: absolute;
+  left: 6px;
+  top: 7px;
+  z-index: 999999;
+  width: auto;
+  height: auto;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+/* Custom Scrollbar for WebKit Browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--davys-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Enhanced Form Styles */
+.wp-block-search__input,
+.wp-block-search__button {
+  border-radius: var(--radius) !important;
+}
+
+.wp-block-button__link {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: var(--radius) !important;
+  transition: all 0.2s ease !important;
+}
+
+.wp-block-button__link:hover {
+  background: var(--primary-hover) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* WordPress Block Editor Styles */
+.wp-block-group {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.wp-block-quote {
+  border-left: 4px solid var(--primary);
+  padding-left: 1.5rem;
+  font-style: italic;
+  color: var(--muted-foreground);
+}
+
+.wp-block-code {
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+/* Loading States */
+.loading-skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Utility Classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* WordPress Compatibility */
+.wp-caption {
+  max-width: 100%;
+}
+
+.wp-caption-text {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-top: 0.5rem;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.gallery-item {
+  text-align: center;
+}
+
+.gallery-caption {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 0.5rem;
+}
+
+/* Responsive Embeds */
+.wp-block-embed {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.wp-block-embed iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}

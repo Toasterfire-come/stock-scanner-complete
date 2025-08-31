@@ -1,0 +1,117 @@
+/**
+ * Internet Explorer 11 Compatibility Styles
+ * Fallbacks for IE11 support
+ */
+
+/* CSS Variables Fallbacks for IE11 */
+body {
+  background: #433e0e;
+  color: #c1bdb3;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.site-header {
+  background: rgba(67, 62, 14, 0.95);
+  border-bottom: 1px solid rgba(193, 189, 179, 0.2);
+}
+
+.sidebar {
+  background: #433e0e;
+  border-right: 1px solid rgba(193, 189, 179, 0.2);
+}
+
+.card {
+  background: #2a2506;
+  border: 1px solid rgba(193, 189, 179, 0.2);
+  border-radius: 12px;
+}
+
+.btn-primary {
+  background: #374a67;
+  color: #ffffff;
+}
+
+.btn-accent {
+  background: #e15554;
+  color: #ffffff;
+}
+
+/* Grid Fallbacks */
+.grid {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: -12px;
+}
+
+.grid > * {
+  -ms-flex: 1 1 300px;
+  flex: 1 1 300px;
+  margin: 12px;
+}
+
+.grid-2 > * {
+  -ms-flex: 1 1 calc(50% - 24px);
+  flex: 1 1 calc(50% - 24px);
+}
+
+.grid-3 > * {
+  -ms-flex: 1 1 calc(33.333% - 24px);
+  flex: 1 1 calc(33.333% - 24px);
+}
+
+.grid-4 > * {
+  -ms-flex: 1 1 calc(25% - 24px);
+  flex: 1 1 calc(25% - 24px);
+}
+
+/* Flexbox Fallbacks */
+.flex {
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-center {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+/* Remove modern features that IE11 doesn't support */
+.sidebar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.site-header {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Object-fit fallback */
+.card img {
+  width: 100%;
+  height: auto;
+}
+
+/* Position sticky fallback */
+.site-header {
+  position: fixed;
+}
+
+.sidebar {
+  position: fixed;
+}
