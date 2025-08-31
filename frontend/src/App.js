@@ -13,6 +13,9 @@ import Contact from "./pages/Marketing/Contact";
 
 // App pages
 import AlertsPage from "./pages/App/Alerts";
+import Portfolio from "./pages/App/Portfolio";
+import Watchlists from "./pages/App/Watchlists";
+import Screeners from "./pages/App/Screeners";
 
 function App() {
   return (
