@@ -96,6 +96,9 @@ def stock_list_api(request):
         
         # Sorting - default to last_updated for better results
         sort_by = request.GET.get('sort_by', 'last_updated')
+        # Map spec alias 'price' -> model field 'current_price'
+        if sort_by == 'price':
+            sort_by = 'current_price'
         sort_order = request.GET.get('sort_order', 'desc')
         
         # Detect base request (no filters/search)
@@ -532,6 +535,7 @@ def stock_detail_api(request, ticker):
             'price_change_month': format_decimal_safe(stock.price_change_month),
             'price_change_year': format_decimal_safe(stock.price_change_year),
             'change_percent': format_decimal_safe(stock.change_percent) or change_percent,
+            'currency': getattr(stock, 'currency', 'USD') or 'USD',
             
             # Bid/Ask and daily range
             'bid_price': format_decimal_safe(stock.bid_price),
@@ -563,6 +567,7 @@ def stock_detail_api(request, ticker):
             
             # Price history (recent)
             'recent_prices': price_history,
+            'price_history': price_history,
             
             # Additional metadata
             'last_updated': stock.last_updated.isoformat() if getattr(stock, 'last_updated', None) else None,

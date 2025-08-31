@@ -158,7 +158,7 @@ def apply_discount_code(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-@secure_api_endpoint
+@secure_api_endpoint(require_auth=False)
 def record_payment(request):
     """
     Record a payment transaction with optional discount code
