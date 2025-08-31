@@ -5,8 +5,13 @@ Author: Emergent
 Author URI: https://emergent.sh
 Description: Professional stock screening and alerts theme, integrated with Stock Scanner WP plugin REST API.
 Version: 1.0.1
+Requires at least: 6.4
+Tested up to: 6.6
+Requires PHP: 8.0
 License: MIT
+License URI: https://opensource.org/licenses/MIT
 Text Domain: rts
+Domain Path: /languages
 */
 
 :root { --background:#f7fff7; --foreground:#32373b; --accent:#ef8354; --secondary:#6ca6c1; --muted:#e8efe9; --border:#d6dde1; }

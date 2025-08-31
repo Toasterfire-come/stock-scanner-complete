@@ -1,6 +1,6 @@
 {
   "name": "retail-trade-scanner-theme",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "build": "tailwindcss -i ./src/styles/tailwind.css -o ./assets/css/theme.css -m",

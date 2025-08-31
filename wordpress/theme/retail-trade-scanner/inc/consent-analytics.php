@@ -9,7 +9,7 @@ function rts_enqueue_consent_banner() {
   ?>
   <div id="rts-consent" style="position:fixed;bottom:20px;left:20px;right:20px;max-width:640px;margin:0 auto;background:#fff;border:1px solid var(--border);box-shadow:0 6px 24px rgba(0,0,0,.08);padding:12px 14px;border-radius:12px;z-index:9999;display:none;">
     <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;">
-      <div style="font-size:14px;">We use cookies to enhance your experience and analyze traffic. See our <a href="<?php echo esc_url(site_url('/legal/cookies')); ?>">Cookie Policy</a>.</div>
+      <div style="font-size:14px;"><?php echo wp_kses_post( sprintf( __( 'We use cookies to enhance your experience and analyze traffic. See our %s.', 'rts' ), '<a href="' . esc_url( site_url('/legal/cookies') ) . '">' . esc_html__( 'Cookie Policy', 'rts' ) . '</a>' ) ); ?></div>
       <div style="display:flex;gap:8px;">
         <button id="rts-consent-decline" class="btn btn-outline" type="button">Decline</button>
         <button id="rts-consent-accept" class="btn btn-primary" type="button">Accept</button>
