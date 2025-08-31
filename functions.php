@@ -476,8 +476,7 @@ function rts_create_essential_pages() {
   
   return ['created' => $created_count, 'updated' => $updated_count];
 }
-// Add multiple activation hooks and manual trigger
-add_action('after_switch_theme', 'rts_create_essential_pages');
+// Manual trigger for initialization
 add_action('init', function() {
   // Also try on init if pages don't exist
   $pages_exist = get_page_by_path('dashboard') && get_page_by_path('scanner');
