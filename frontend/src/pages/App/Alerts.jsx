@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import PageHeader from "../../components/PageHeader";
 import Section from "../../components/Section";
+import AlertBanner from "../../components/AlertBanner";
 import { getAllowedAlertSchema, createAlert, listAlerts } from "../../lib/api";
 import { Toaster, toast } from "sonner";
 
@@ -9,6 +10,7 @@ export default function AlertsPage(){
   const [schema, setSchema] = useState(null);
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState([]);
+  const [listState, setListState] = useState({ status: 'idle', message: '' });
   const [form, setForm] = useState({ ticker: "", target_price: "", condition: "above", email: "" });
 
   useEffect(()=>{
@@ -17,7 +19,16 @@ export default function AlertsPage(){
   },[]);
 
   function refreshList(){
-    listAlerts({ limit: 20, active: true }).then(r=> setAlerts(r.data?.data || [])).catch(()=> setAlerts([]));
+    setListState({ status: 'loading' });
+    listAlerts({ limit: 20, active: true })
+      .then(r=> {
+        setAlerts(r.data?.data || []);
+        setListState({ status: 'success', message: `Loaded ${r.data?.data?.length || 0} alerts` });
+      })
+      .catch(e=> {
+        setAlerts([]);
+        setListState({ status: 'error', message: 'Could not fetch alerts from the server.' });
+      });
   }
 
   const onSubmit = async (e) => {
@@ -70,8 +81,12 @@ export default function AlertsPage(){
               )}
             </form>
           </div>
-          <div className="card p-6">
-            <h3 className="font-semibold text-lg mb-4">Active alerts</h3>
+          <div className="card p-6 space-y-4">
+            <div className="flex flex-col gap-3">
+              {listState.status === 'success' && <AlertBanner type="success" title="Alerts loaded" message={listState.message} />}
+              {listState.status === 'error' && <AlertBanner type="error" title="Unable to load alerts" message={listState.message} />}
+            </div>
+            <h3 className="font-semibold text-lg">Active alerts</h3>
             <div className="overflow-auto">
               <table className="w-full text-sm">
                 <thead>

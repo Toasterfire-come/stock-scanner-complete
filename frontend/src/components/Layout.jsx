@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -8,11 +9,12 @@ const navItems = [
   { to: "/data", label: "Data" },
   { to: "/docs", label: "Docs" },
   { to: "/app/alerts", label: "Alerts" },
+  { to: "/design-system", label: "Design" },
 ];
 
 function Navbar() {
   return (
-    <header className="sticky top-0 z-30 backdrop-blur bg-white/80 border-b border-border">
+    <header className="sticky top-0 z-30 backdrop-blur bg-white/80 dark:bg-[hsl(var(--background))]/80 border-b border-border">
       <div className="container-page h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-[hsl(var(--accent))]"></div>
@@ -20,10 +22,11 @@ function Navbar() {
         </Link>
         <nav className="hidden md:flex items-center gap-6">
           {navItems.map((n) => (
-            <NavLink key={n.to} to={n.to} className={({isActive}) => `text-sm ${isActive ? 'text-[hsl(var(--accent))]' : 'text-muted-foreground hover:text-foreground'}`}>{n.label}</NavLink>
+            <NavLink key={n.to} to={n.to} className={({isActive}) => `text-sm ${isActive ? 'text-[hsl(var(--accent))] font-medium' : 'text-muted-foreground hover:text-foreground'}`}>{n.label}</NavLink>
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link to="/auth/sign-in" className="btn btn-outline px-3 py-2">Sign in</Link>
           <Link to="/auth/sign-up" className="btn btn-primary px-3 py-2">Get started</Link>
         </div>
@@ -34,7 +37,7 @@ function Navbar() {
 
 function Footer() {
   return (
-    <footer className="mt-20 border-t border-border bg-white">
+    <footer className="mt-20 border-t border-border bg-white dark:bg-[hsl(var(--background))]">
       <div className="container-page py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div>
           <h4 className="text-lg font-semibold mb-2">Retail Trade Scanner</h4>
