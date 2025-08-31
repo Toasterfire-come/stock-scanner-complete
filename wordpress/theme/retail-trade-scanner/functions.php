@@ -13,9 +13,14 @@ require_once get_template_directory() . '/inc/breadcrumbs.php';
 require_once get_template_directory() . '/inc/consent-analytics.php';
 
 function rts_setup() {
+  load_theme_textdomain('rts', get_template_directory() . '/languages');
   add_theme_support('title-tag');
   add_theme_support('post-thumbnails');
   add_theme_support('automatic-feed-links');
+  add_theme_support('html5', [ 'search-form', 'comment-form', 'comment-list', 'gallery', 'caption', 'style', 'script' ]);
+  add_theme_support('align-wide');
+  add_theme_support('responsive-embeds');
+  add_theme_support('custom-logo', [ 'height' => 64, 'width' => 64, 'flex-height' => true, 'flex-width' => true ]);
   register_nav_menus([
     'primary' => __('Primary Menu', 'rts'),
     'footer'  => __('Footer Menu', 'rts'),
@@ -40,6 +45,7 @@ function rts_enqueue_assets() {
 
   // Theme JS
   wp_enqueue_script('rts-theme', get_template_directory_uri() . '/assets/js/theme.js', ['jquery'], rts_asset_ver('/assets/js/theme.js'), true);
+  wp_script_add_data('rts-theme', 'defer', true);
 
   // REST endpoints (assume plugin registers routes under stock-scanner/v1)
   $endpoints = apply_filters('rts_endpoints', [

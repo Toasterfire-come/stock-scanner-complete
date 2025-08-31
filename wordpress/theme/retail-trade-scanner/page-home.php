@@ -4,8 +4,8 @@
     <h1 style="font-size:40px;line-height:1.1;">Retail Trade Scanner</h1>
     <p style="max-width:720px;color:#6b7280;">Scan, screen and monitor markets with professional‑grade tools. Create alerts, manage watchlists and stay on top of opportunities.</p>
     <div style="display:flex;gap:12px;">
-      <a class="btn btn-primary" href="<?php echo esc_url(site_url('/auth/sign-up')); ?>">Start free</a>
-      <a class="btn btn-secondary" href="<?php echo esc_url(site_url('/features')); ?>">See features</a>
+      <a class="btn btn-primary" href="<?php echo esc_url(site_url('/auth/sign-up')); ?>"><?php echo esc_html__( 'Start free', 'rts' ); ?></a>
+      <a class="btn btn-secondary" href="<?php echo esc_url(site_url('/features')); ?>"><?php echo esc_html__( 'See features', 'rts' ); ?></a>
     </div>
   </div>
 </section>

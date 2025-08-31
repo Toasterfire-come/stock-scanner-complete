@@ -1,0 +1,77 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Retail Trade Scanner 1.0.1\n"
+"POT-Creation-Date: 2025-08-31 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: rts\n"
+
+#: header.php:13
+msgid "Retail Trade Scanner"
+msgstr ""
+
+#: header.php:19
+msgid "Toggle theme"
+msgstr ""
+
+#: header.php:20
+msgid "Sign in"
+msgstr ""
+
+#: header.php:21
+msgid "Get started"
+msgstr ""
+
+#: footer.php:7
+msgid "Professional stock screening, alerts and portfolio tools for serious traders."
+msgstr ""
+
+#: footer.php:16
+msgid "Features"
+msgstr ""
+
+#: footer.php:17
+msgid "Pricing"
+msgstr ""
+
+#: footer.php:18
+msgid "Use cases"
+msgstr ""
+
+#: footer.php:23
+msgid "Resources"
+msgstr ""
+
+#: footer.php:25
+msgid "Docs"
+msgstr ""
+
+#: footer.php:26
+msgid "Guides"
+msgstr ""
+
+#: footer.php:27
+msgid "Tutorials"
+msgstr ""
+
+#: footer.php:31
+msgid "Legal"
+msgstr ""
+
+#: footer.php:33
+msgid "Terms"
+msgstr ""
+
+#: footer.php:34
+msgid "Privacy"
+msgstr ""
+
+#: footer.php:35
+msgid "Security"
+msgstr ""
+
+#: footer.php:45
+msgid "Trading involves risk. Past performance is not indicative of future results."
+msgstr ""
+
