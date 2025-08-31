@@ -4,20 +4,13 @@ Theme URI: https://example.com/retail-trade-scanner
 Author: Emergent
 Author URI: https://emergent.sh
 Description: Professional stock screening and alerts theme, integrated with Stock Scanner WP plugin REST API.
-Version: 1.0.0
+Version: 1.0.1
 License: MIT
 Text Domain: rts
 */
 
-/* Minimal base in case build isn't run */
-:root {
-  --background: #f7fff7; /* Mint Cream */
-  --foreground: #32373b; /* Onyx */
-  --accent: #ef8354; /* Coral */
-  --secondary: #6ca6c1; /* Air Superiority Blue */
-  --muted: #e8efe9; /* Reseda tint */
-  --border: #d6dde1;
-}
+:root { --background:#f7fff7; --foreground:#32373b; --accent:#ef8354; --secondary:#6ca6c1; --muted:#e8efe9; --border:#d6dde1; }
+html[data-theme="dark"] { --background:#111418; --foreground:#f2f3f5; --accent:#ef8354; --secondary:#5d90ab; --muted:#1b2126; --border:#2a3138; }
 html { box-sizing: border-box; }
 *, *:before, *:after { box-sizing: inherit; }
 body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; background: var(--background); color: var(--foreground); }
@@ -39,3 +32,7 @@ h1,h2,h3,h4 { font-family: Poppins, Inter, system-ui, -apple-system, Segoe UI, R
 .table th, .table td { padding:10px 8px; border-bottom:1px solid var(--border); text-align:left; }
 .badge { display:inline-flex; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background: var(--muted); }
 .hero { padding:72px 0; }
+/* Dark mode card and inputs */
+html[data-theme="dark"] .card { background:#0f1317; color:#e8eaec; border-color: var(--border);} 
+html[data-theme="dark"] .input { background:#0f1317; color:#e8eaec; border-color: var(--border);} 
+html[data-theme="dark"] .btn-outline { background:#0f1317; color:#e8eaec; border-color: var(--border);}

@@ -16,21 +16,27 @@ function rts_setup() {
 }
 add_action('after_setup_theme', 'rts_setup');
 
+function rts_asset_ver($path) {
+  $file = get_template_directory() . $path;
+  return file_exists($file) ? filemtime($file) : wp_get_theme()->get('Version');
+}
+
 function rts_enqueue_assets() {
   // Google fonts
   wp_enqueue_style('rts-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap', [], null);
-  // Theme CSS
-  wp_enqueue_style('rts-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
-  $theme_css = get_template_directory_uri() . '/assets/css/theme.css';
+  // Theme CSS (base)
+  wp_enqueue_style('rts-style', get_stylesheet_uri(), [], rts_asset_ver('/style.css'));
+  // Optional built CSS bundle
   if (file_exists(get_template_directory() . '/assets/css/theme.css')) {
-    wp_enqueue_style('rts-theme', $theme_css, ['rts-style'], wp_get_theme()->get('Version'));
+    wp_enqueue_style('rts-theme', get_template_directory_uri() . '/assets/css/theme.css', ['rts-style'], rts_asset_ver('/assets/css/theme.css'));
   }
 
   // Theme JS
-  wp_enqueue_script('rts-theme', get_template_directory_uri() . '/assets/js/theme.js', ['jquery'], wp_get_theme()->get('Version'), true);
+  wp_enqueue_script('rts-theme', get_template_directory_uri() . '/assets/js/theme.js', ['jquery'], rts_asset_ver('/assets/js/theme.js'), true);
 
   // REST endpoints (assume plugin registers routes under stock-scanner/v1)
   $endpoints = apply_filters('rts_endpoints', [
+    'health' => rest_url('stock-scanner/v1/health'),
     'alerts_create' => rest_url('stock-scanner/v1/alerts/create'),
     'alerts_list' => rest_url('stock-scanner/v1/alerts'),
     'trending' => rest_url('stock-scanner/v1/trending'),
@@ -41,8 +47,11 @@ function rts_enqueue_assets() {
     'notifications_mark_read' => rest_url('stock-scanner/v1/notifications/mark-read'),
     'portfolio' => rest_url('stock-scanner/v1/portfolio'),
     'portfolio_add' => rest_url('stock-scanner/v1/portfolio/add'),
+    'portfolio_delete' => rest_url('stock-scanner/v1/portfolio/delete'),
     'watchlist' => rest_url('stock-scanner/v1/watchlist'),
     'watchlist_add' => rest_url('stock-scanner/v1/watchlist/add'),
+    'watchlist_delete' => rest_url('stock-scanner/v1/watchlist/delete'),
+    'subscription' => rest_url('stock-scanner/v1/subscription'),
   ]);
 
   wp_localize_script('rts-theme', 'RTS', [
