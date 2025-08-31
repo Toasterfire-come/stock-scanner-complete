@@ -12,10 +12,284 @@ require_once get_template_directory() . '/inc/seo-analytics.php';
 require_once get_template_directory() . '/inc/error-handling.php';
 require_once get_template_directory() . '/inc/wordpress-standards.php';
 require_once get_template_directory() . '/inc/browser-support.php';
+require_once get_template_directory() . '/inc/monitoring.php';
 require_once get_template_directory() . '/inc/plugin-integration.php';
 
 // i18n
 add_action('after_setup_theme', function(){ load_theme_textdomain('retail-trade-scanner', get_template_directory() . '/languages'); });
+
+// Theme setup
+add_action('after_setup_theme', 'rts_theme_setup');
+function rts_theme_setup() {
+    // Add theme support for various features
+    add_theme_support('post-thumbnails');
+    add_theme_support('custom-logo');
+    add_theme_support('html5', array('search-form', 'comment-form', 'comment-list', 'gallery', 'caption'));
+    add_theme_support('title-tag');
+    add_theme_support('customize-selective-refresh-widgets');
+    
+    // Register navigation menus
+    register_nav_menus(array(
+        'primary' => __('Primary Navigation', 'retail-trade-scanner'),
+        'footer' => __('Footer Navigation', 'retail-trade-scanner'),
+        'social' => __('Social Media Menu', 'retail-trade-scanner'),
+    ));
+}
+
+// Enqueue scripts and styles
+add_action('wp_enqueue_scripts', 'rts_enqueue_assets');
+function rts_enqueue_assets() {
+    $theme_version = wp_get_theme()->get('Version');
+    
+    // Main stylesheet
+    wp_enqueue_style('rts-style', get_stylesheet_uri(), array(), $theme_version);
+    
+    // Main JavaScript
+    wp_enqueue_script('rts-theme-js', get_template_directory_uri() . '/assets/js/theme-integration.js', array('jquery'), $theme_version, true);
+    wp_enqueue_script('rts-mobile-js', get_template_directory_uri() . '/assets/js/mobile-enhancements.js', array(), $theme_version, true);
+    
+    // Localize script
+    wp_localize_script('rts-theme-js', 'rtsAjax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('rts_nonce'),
+        'strings' => array(
+            'loading' => __('Loading...', 'retail-trade-scanner'),
+            'error' => __('An error occurred. Please try again.', 'retail-trade-scanner'),
+            'success' => __('Success!', 'retail-trade-scanner'),
+        ),
+    ));
+}
+
+// Create essential pages on theme activation
+add_action('after_switch_theme', 'rts_create_essential_pages');
+function rts_create_essential_pages() {
+    $pages = array(
+        'dashboard' => array(
+            'title' => __('Dashboard', 'retail-trade-scanner'),
+            'template' => 'page-dashboard'
+        ),
+        'scanner' => array(
+            'title' => __('Stock Scanner', 'retail-trade-scanner'),
+            'template' => 'page-scanner'
+        ),
+        'portfolio' => array(
+            'title' => __('Portfolio', 'retail-trade-scanner'),
+            'template' => 'page-portfolio'
+        ),
+        'watchlists' => array(
+            'title' => __('Watchlists', 'retail-trade-scanner'),
+            'template' => 'page-watchlists'
+        ),
+        'alerts' => array(
+            'title' => __('Price Alerts', 'retail-trade-scanner'),
+            'template' => 'page-alerts'
+        ),
+        'news' => array(
+            'title' => __('Market News', 'retail-trade-scanner'),
+            'template' => 'page-news'
+        ),
+        'tutorials' => array(
+            'title' => __('Tutorials', 'retail-trade-scanner'),
+            'template' => 'page-tutorials'
+        ),
+        'help' => array(
+            'title' => __('Help Center', 'retail-trade-scanner'),
+            'template' => 'page-help'
+        )
+    );
+    
+    foreach ($pages as $slug => $page_data) {
+        if (!get_page_by_path($slug)) {
+            wp_insert_post(array(
+                'post_title' => $page_data['title'],
+                'post_name' => $slug,
+                'post_content' => '',
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'meta_input' => array(
+                    '_wp_page_template' => 'templates/pages/' . $page_data['template'] . '.php'
+                )
+            ));
+        }
+    }
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
+}
+
+// AJAX handlers for theme functionality
+add_action('wp_ajax_rts_subscribe', 'rts_handle_subscription');
+add_action('wp_ajax_nopriv_rts_subscribe', 'rts_handle_subscription');
+function rts_handle_subscription() {
+    // Security check
+    if (!wp_verify_nonce($_POST['rts_subscribe_nonce'] ?? '', 'rts_subscribe')) {
+        wp_die(__('Security check failed.', 'retail-trade-scanner'));
+    }
+    
+    $email = sanitize_email($_POST['email'] ?? '');
+    
+    if (!is_email($email)) {
+        wp_send_json_error(__('Please enter a valid email address.', 'retail-trade-scanner'));
+    }
+    
+    // Store subscription (this would typically integrate with an email service)
+    $subscriptions = get_option('rts_subscriptions', array());
+    
+    if (!in_array($email, $subscriptions)) {
+        $subscriptions[] = $email;
+        update_option('rts_subscriptions', $subscriptions);
+        
+        // Send notification email to admin
+        $admin_email = get_option('admin_email');
+        $subject = sprintf(__('[%s] New Newsletter Subscription', 'retail-trade-scanner'), get_bloginfo('name'));
+        $message = sprintf(__('New subscription: %s', 'retail-trade-scanner'), $email);
+        wp_mail($admin_email, $subject, $message);
+        
+        wp_send_json_success(__('Thank you for subscribing!', 'retail-trade-scanner'));
+    } else {
+        wp_send_json_error(__('You are already subscribed.', 'retail-trade-scanner'));
+    }
+}
+
+// Health status endpoint for monitoring
+add_action('wp_ajax_rts_health_status', 'rts_health_status_endpoint');
+add_action('wp_ajax_nopriv_rts_health_status', 'rts_health_status_endpoint');
+function rts_health_status_endpoint() {
+    // Simple health check
+    $health = array(
+        'status' => 'healthy',
+        'timestamp' => current_time('c'),
+        'version' => wp_get_theme()->get('Version'),
+        'php_version' => PHP_VERSION,
+        'wp_version' => get_bloginfo('version'),
+        'memory_usage' => memory_get_peak_usage(true),
+        'memory_limit' => wp_convert_hr_to_bytes(ini_get('memory_limit')),
+    );
+    
+    // Check database connection
+    global $wpdb;
+    $db_check = $wpdb->get_var('SELECT 1');
+    if ($db_check !== '1') {
+        $health['status'] = 'unhealthy';
+        $health['issues'][] = 'Database connection failed';
+    }
+    
+    wp_send_json($health);
+}
+
+// Custom body classes
+add_filter('body_class', 'rts_body_classes');
+function rts_body_classes($classes) {
+    // Add sidebar state class
+    if (is_page(array('dashboard', 'scanner', 'portfolio', 'watchlists', 'alerts', 'news'))) {
+        $classes[] = 'has-sidebar';
+    }
+    
+    // Add page-specific classes
+    if (is_front_page()) {
+        $classes[] = 'home-page';
+    }
+    
+    return $classes;
+}
+
+// Theme activation hook
+add_action('after_switch_theme', 'rts_theme_activation');
+function rts_theme_activation() {
+    // Set default customizer values
+    set_theme_mod('rts_primary_color', '#374a67');
+    set_theme_mod('rts_accent_color', '#e15554');
+    set_theme_mod('rts_font_size', 16);
+    set_theme_mod('rts_container_width', 1200);
+    set_theme_mod('rts_sidebar_position', 'right');
+    
+    // Log theme activation
+    if (function_exists('rts_log_system_event')) {
+        rts_log_system_event('theme_activated', array(
+            'theme' => 'Retail Trade Scanner',
+            'version' => wp_get_theme()->get('Version')
+        ));
+    }
+}
+
+// Theme deactivation cleanup
+add_action('switch_theme', 'rts_theme_deactivation');
+function rts_theme_deactivation() {
+    // Clear scheduled events
+    wp_clear_scheduled_hook('rts_daily_health_check');
+    wp_clear_scheduled_hook('rts_weekly_maintenance');
+    
+    // Log theme deactivation
+    if (function_exists('rts_log_system_event')) {
+        rts_log_system_event('theme_deactivated', array(
+            'theme' => 'Retail Trade Scanner',
+            'version' => wp_get_theme()->get('Version')
+        ));
+    }
+}
+
+// Add theme version to admin footer
+add_filter('admin_footer_text', 'rts_admin_footer_text');
+function rts_admin_footer_text($text) {
+    $theme = wp_get_theme();
+    return $text . ' | ' . $theme->get('Name') . ' v' . $theme->get('Version');
+}
+
+// Production-ready error handling
+if (!WP_DEBUG) {
+    // Hide errors from visitors in production
+    ini_set('display_errors', 0);
+    error_reporting(0);
+    
+    // Custom error page for fatal errors
+    register_shutdown_function('rts_fatal_error_handler');
+    function rts_fatal_error_handler() {
+        $error = error_get_last();
+        if ($error && in_array($error['type'], array(E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE))) {
+            if (!headers_sent()) {
+                header('HTTP/1.1 500 Internal Server Error');
+                header('Content-Type: text/html; charset=utf-8');
+            }
+            
+            include get_template_directory() . '/templates/error-500.php';
+            exit;
+        }
+    }
+}
+
+// Performance optimization hooks
+add_action('wp_head', 'rts_performance_hints', 1);
+function rts_performance_hints() {
+    // DNS prefetch for external resources
+    echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">' . "\n";
+    echo '<link rel="dns-prefetch" href="//fonts.gstatic.com">' . "\n";
+    
+    // Preload critical resources
+    echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">' . "\n";
+    echo '<link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">' . "\n";
+}
+
+// Security headers
+add_action('send_headers', 'rts_security_headers');
+function rts_security_headers() {
+    if (!is_admin()) {
+        header('X-Frame-Options: SAMEORIGIN');
+        header('X-Content-Type-Options: nosniff');
+        header('X-XSS-Protection: 1; mode=block');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+    }
+}
+
+// Log theme load time for monitoring
+if (WP_DEBUG) {
+    add_action('wp_footer', 'rts_log_load_time');
+    function rts_log_load_time() {
+        $load_time = timer_stop(0, 3);
+        if ($load_time > 2.0) {
+            error_log("RTS Theme: Slow load time detected - {$load_time}s on " . $_SERVER['REQUEST_URI']);
+        }
+    }
+}
 
 // Theme setup: supports, editor, menus
 add_action('after_setup_theme', function () {
