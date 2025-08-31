@@ -16,6 +16,8 @@ import AlertsPage from "./pages/App/Alerts";
 import Portfolio from "./pages/App/Portfolio";
 import Watchlists from "./pages/App/Watchlists";
 import Screeners from "./pages/App/Screeners";
+import Notifications from "./pages/App/Notifications";
+import DesignSystem from "./pages/DesignSystem";
 
 function App() {
   return (
@@ -56,7 +58,7 @@ function App() {
 
           {/* App Shell minimal */}
           <Route path="/app/dashboard" element={<GenericPage title="Dashboard" />} />
-          <Route path="/app/notifications" element={<GenericPage title="Notifications" />} />
+          <Route path="/app/notifications" element={<Notifications />} />
           <Route path="/app/search" element={<GenericPage title="Search" />} />
           <Route path="/app/command" element={<GenericPage title="Command Palette" />} />
 
@@ -64,6 +66,9 @@ function App() {
           <Route path="/app/screeners" element={<Screeners />} />
           <Route path="/app/watchlists" element={<Watchlists />} />
           <Route path="/app/portfolio" element={<Portfolio />} />
+
+          {/* Utilities */}
+          <Route path="/design-system" element={<DesignSystem />} />
 
           {/* Alerts & Signals */}
           <Route path="/app/alerts" element={<AlertsPage />} />

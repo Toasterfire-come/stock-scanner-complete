@@ -2,6 +2,8 @@ import React from "react";
 import Layout from "../components/Layout";
 import PageHeader from "../components/PageHeader";
 import Section from "../components/Section";
+import Badge from "../components/Badge";
+import { TableSkeleton } from "../components/Skeletons";
 
 export default function DesignSystem(){
   const tokens = [
@@ -44,6 +46,22 @@ export default function DesignSystem(){
               <input className="input" placeholder="Number" type="number" />
               <select className="input"><option>Option</option></select>
               <input className="input" placeholder="With ring focus" />
+            </div>
+          </div>
+        </div>
+        <div className="mt-12 grid md:grid-cols-2 gap-6">
+          <div className="card p-6">
+            <div className="font-semibold mb-3">Table skeleton</div>
+            <TableSkeleton />
+          </div>
+          <div className="card p-6 space-y-3">
+            <div className="font-semibold">Badges</div>
+            <div className="flex gap-2 items-center">
+              <Badge>accent</Badge>
+              <Badge color="blue">blue</Badge>
+              <Badge color="neutral">neutral</Badge>
+              <Badge color="green">green</Badge>
+              <Badge color="red">red</Badge>
             </div>
           </div>
         </div>
