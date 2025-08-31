@@ -1,0 +1,830 @@
+# Copyright (C) 2025 Retail Trade Scanner Team
+# This file is distributed under the same license as the Retail Trade Scanner theme.
+msgid ""
+msgstr ""
+"Project-Id-Version: Retail Trade Scanner 2.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/retail-trade-scanner/theme/issues\n"
+"POT-Creation-Date: 2025-08-31 08:49:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2025-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: WordPress\n"
+
+#: functions.php
+msgid "Primary Navigation"
+msgstr ""
+
+#: functions.php
+msgid "Footer Navigation"
+msgstr ""
+
+#: functions.php
+msgid "Social Media Menu"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Essential Trading Guide for Beginners"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Learn the fundamentals of stock trading with our comprehensive guide..."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Weekly Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Our expert analysis of this week's market trends and opportunities..."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "About Us"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "We are a team of experienced traders and developers..."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Professional Trading Platform"
+msgstr ""
+
+#: inc/security.php
+msgid "Not logged in"
+msgstr ""
+
+#: inc/security.php
+msgid "Invalid plan"
+msgstr ""
+
+#: inc/security.php
+msgid "Too many failed login attempts. Please try again in 1 hour."
+msgstr ""
+
+#: inc/security.php
+msgid "Security check failed."
+msgstr ""
+
+#: inc/security.php
+msgid "Forbidden"
+msgstr ""
+
+#: inc/security.php
+msgid "Rate limit exceeded. Please try again later."
+msgstr ""
+
+#: inc/security.php
+msgid "Too Many Requests"
+msgstr ""
+
+#: inc/error-handling.php
+msgid "Server Error"
+msgstr ""
+
+#: inc/error-handling.php
+msgid "Oops! Something went wrong"
+msgstr ""
+
+#: inc/error-handling.php
+msgid "We're experiencing a temporary technical issue. Our team has been notified and is working to resolve this quickly."
+msgstr ""
+
+#: inc/error-handling.php
+msgid "Please try again in a few minutes, or contact support if the problem persists."
+msgstr ""
+
+#: inc/error-handling.php
+msgid "Return to Homepage"
+msgstr ""
+
+#: inc/error-handling.php
+msgid "Error ID: %s"
+msgstr ""
+
+#: inc/error-handling.php
+msgid "Critical Error Detected:"
+msgstr ""
+
+#: inc/error-handling.php
+msgid "File: %s, Line: %d, Time: %s"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Database Connection"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Database connection is healthy"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Database connection failed"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Database size is large: %s MB"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Found %d orphaned meta entries"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "File System"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "File system is healthy"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Disk space critically low: %d%% used"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Disk space getting low: %d%% used"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Upload directory is not writable"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Memory Usage"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Memory usage is normal"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Memory usage critically high: %d%%"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Memory usage high: %d%%"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Updates Available"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "All updates are current"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "WordPress core update available"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "%d plugin updates available"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "%d theme updates available"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Security Status"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Security status is good"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Default \"admin\" user exists"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "wp-config.php is writable"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Debug mode enabled without logging"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "%d failed login attempts in last 24 hours"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "%d security recommendations"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Site Performance"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Performance is optimal"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Object caching not enabled"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "High database query count: %d"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "SSL Certificate"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "SSL certificate is valid"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "SSL not enabled"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "SSL certificate expires in %d days"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Site Health Status"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Performance Metrics"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Loading health status..."
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Average Load Time"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Database Size"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Object Cache"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "System Status"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Health Checks"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Loading..."
+msgstr ""
+
+#: inc/monitoring.php
+msgid "System Information"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "WordPress Version"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "PHP Version"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "MySQL Version"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Server Software"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Memory Limit"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Max Execution Time"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Maintenance Actions"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Run Weekly Maintenance"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Clear Theme Cache"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "This will run database optimization and cleanup tasks. Continue?"
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Maintenance completed successfully."
+msgstr ""
+
+#: inc/monitoring.php
+msgid "Cache cleared successfully."
+msgstr ""
+
+#: inc/browser-support.php
+msgid "You are using an outdated browser (%s %d). Please upgrade your browser for the best experience."
+msgstr ""
+
+#: inc/browser-support.php
+msgid "Upgrade Now"
+msgstr ""
+
+#: inc/seo-analytics.php
+msgid "Posts by %s - Professional stock trading insights and market analysis."
+msgstr ""
+
+#: inc/seo-analytics.php
+msgid "Professional stock trading platform with advanced market analysis tools, real-time scanning, and portfolio management for retail investors."
+msgstr ""
+
+#: inc/seo-analytics.php
+msgid "[%s] New Subscription"
+msgstr ""
+
+#: inc/seo-analytics.php
+msgid "New subscription: %s"
+msgstr ""
+
+#: inc/seo-analytics.php
+msgid "[%s] Contact Form Submission"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Skip to content"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Primary Sidebar"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add widgets here to appear in your primary sidebar."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Footer %d"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add widgets here to appear in the footer area %d."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Dashboard"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add trading-specific widgets for the dashboard page."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Alerts"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Alert"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add New Alert"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add New Trading Alert"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Edit Trading Alert"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "New Trading Alert"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "View Trading Alert"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Search Trading Alerts"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "No trading alerts found"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "No trading alerts found in trash"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add New Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add New Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Edit Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "New Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "View Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Search Market Analysis"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "No market analysis found"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "No market analysis found in trash"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Strategies"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Strategy"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Search Trading Strategies"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "All Trading Strategies"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Parent Trading Strategy"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Parent Trading Strategy:"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Edit Trading Strategy"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Update Trading Strategy"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add New Trading Strategy"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "New Trading Strategy Name"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Market Sectors"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Market Sector"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Search Market Sectors"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "All Market Sectors"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Edit Market Sector"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Update Market Sector"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Add New Market Sector"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "New Market Sector Name"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Theme Colors"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Typography"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Layout Options"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Social Media"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Primary Color"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Accent Color"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Base Font Size (px)"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Sidebar Position"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Left"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Right"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "No Sidebar"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Container Width (px)"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Facebook"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Twitter"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "LinkedIn"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "YouTube"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Instagram"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "URL"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Analytics & Tracking"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Google Analytics 4 ID"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Enter your GA4 measurement ID (e.g., G-XXXXXXXXXX)"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Facebook Pixel ID"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "RTS Theme Network Settings"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "RTS Network Settings"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Settings saved."
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Allowed Customizations"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Color Customization"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Typography Customization"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Layout Customization"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Default Primary Color"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Default Accent Color"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Missing required file: %s"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Text domain not used in: %s"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Patterns"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Trading Hero Section"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "A hero section designed for trading platforms"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Advanced market analysis and trading tools for retail investors"
+msgstr ""
+
+#: inc/wordpress-standards.php
+msgid "Get Started"
+msgstr ""
+
+#: index.php
+msgid "Welcome to Retail Trade Scanner"
+msgstr ""
+
+#: index.php
+msgid "Professional Trading Platform"
+msgstr ""
+
+#: index.php
+msgid "Experience the power of professional-grade trading tools designed for retail investors. Our platform combines advanced market analysis with intuitive design."
+msgstr ""
+
+#: index.php
+msgid "Start Trading"
+msgstr ""
+
+#: index.php
+msgid "View Dashboard"
+msgstr ""
+
+#: index.php
+msgid "Key Features"
+msgstr ""
+
+#: index.php
+msgid "Advanced Stock Scanner"
+msgstr ""
+
+#: index.php
+msgid "Scan thousands of stocks with customizable filters including price, volume, market cap, and technical indicators."
+msgstr ""
+
+#: index.php
+msgid "Real-time Portfolio Tracking"
+msgstr ""
+
+#: index.php
+msgid "Monitor your investments with live updates, performance analytics, and detailed profit/loss calculations."
+msgstr ""
+
+#: index.php
+msgid "Smart Price Alerts"
+msgstr ""
+
+#: index.php
+msgid "Never miss an opportunity with intelligent alerts based on price movements, technical patterns, and market events."
+msgstr ""
+
+#: index.php
+msgid "Market Analysis Hub"
+msgstr ""
+
+#: index.php
+msgid "Access comprehensive market research, expert insights, and technical analysis to make informed decisions."
+msgstr ""
+
+#: index.php
+msgid "Join Our Newsletter"
+msgstr ""
+
+#: index.php
+msgid "Get weekly market insights and trading tips delivered to your inbox."
+msgstr ""
+
+#: index.php
+msgid "Enter your email"
+msgstr ""
+
+#: index.php
+msgid "Subscribe"
+msgstr ""
+
+#: footer.php
+msgid "Quick Links"
+msgstr ""
+
+#: footer.php
+msgid "Trading Tools"
+msgstr ""
+
+#: footer.php
+msgid "Stock Scanner"
+msgstr ""
+
+#: footer.php
+msgid "Portfolio Tracker"
+msgstr ""
+
+#: footer.php
+msgid "Price Alerts"
+msgstr ""
+
+#: footer.php
+msgid "Market News"
+msgstr ""
+
+#: footer.php
+msgid "Resources"
+msgstr ""
+
+#: footer.php
+msgid "Help Center"
+msgstr ""
+
+#: footer.php
+msgid "Tutorials"
+msgstr ""
+
+#: footer.php
+msgid "API Documentation"
+msgstr ""
+
+#: footer.php
+msgid "Community Forum"
+msgstr ""
+
+#: footer.php
+msgid "Follow Us"
+msgstr ""
+
+#: footer.php
+msgid "© 2025 Retail Trade Scanner. All rights reserved."
+msgstr ""
+
+#: footer.php
+msgid "Privacy Policy"
+msgstr ""
+
+#: footer.php
+msgid "Terms of Service"
+msgstr ""
+
+#: footer.php
+msgid "Contact"
+msgstr ""
