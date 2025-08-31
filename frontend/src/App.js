@@ -60,6 +60,11 @@ function App() {
           <Route path="/app/search" element={<GenericPage title="Search" />} />
           <Route path="/app/command" element={<GenericPage title="Command Palette" />} />
 
+          {/* Core in-app pages themed */}
+          <Route path="/app/screeners" element={<Screeners />} />
+          <Route path="/app/watchlists" element={<Watchlists />} />
+          <Route path="/app/portfolio" element={<Portfolio />} />
+
           {/* Alerts & Signals */}
           <Route path="/app/alerts" element={<AlertsPage />} />
           <Route path="/app/alerts/new" element={<AlertsPage />} />
