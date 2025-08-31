@@ -10,8 +10,8 @@ class WordPressThemeTester {
     private $errors = [];
     private $warnings = [];
     
-    public function __construct($theme_root = '/app') {
-        $this->theme_root = $theme_root;
+    public function __construct($theme_root = null) {
+        $this->theme_root = $theme_root ?: __DIR__;
     }
     
     /**
@@ -345,7 +345,8 @@ class WordPressThemeTester {
 }
 
 // Run the tests
-$tester = new WordPressThemeTester();
+$rootArg = isset($argv[1]) ? $argv[1] : null;
+$tester = new WordPressThemeTester($rootArg);
 $success = $tester->runTests();
 
 exit($success ? 0 : 1);

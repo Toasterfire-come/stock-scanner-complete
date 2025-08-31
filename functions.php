@@ -224,6 +224,7 @@ function rts_performance_hints() {
 add_action('send_headers', 'rts_security_headers');
 function rts_security_headers() {
     if (!is_admin()) {
+        if (headers_sent()) { return; }
         header('X-Frame-Options: SAMEORIGIN');
         header('X-Content-Type-Options: nosniff');
         header('X-XSS-Protection: 1; mode=block');
