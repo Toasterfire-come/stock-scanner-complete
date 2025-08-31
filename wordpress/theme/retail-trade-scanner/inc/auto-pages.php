@@ -36,6 +36,10 @@ function rts_on_activate() {
     ['Privacy','legal/privacy','page-legal-privacy.php'],
     ['Cookies','legal/cookies','page-legal-cookies.php'],
     ['Security','legal/security','page-legal-security.php'],
+    ['Data Coverage','data','page-data.php'],
+    ['Glossary','glossary','page-glossary.php'],
+    ['Changelog','changelog','page-changelog.php'],
+    ['Sitemap','sitemap','page-sitemap.php'],
     ['Generic','generic','page-generic.php'],
   ];
 
