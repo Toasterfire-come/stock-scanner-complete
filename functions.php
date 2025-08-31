@@ -1,14 +1,21 @@
 <?php
 /**
  * Retail Trade Scanner Theme – Production Functions (Enhanced)
+ * Version: 2.0.0 - Production Ready
  */
 if (!defined('ABSPATH')) { exit; }
 
+// Production-ready includes
+require_once get_template_directory() . '/inc/security.php';
+require_once get_template_directory() . '/inc/performance.php';
+require_once get_template_directory() . '/inc/seo-analytics.php';
+require_once get_template_directory() . '/inc/error-handling.php';
+require_once get_template_directory() . '/inc/wordpress-standards.php';
+require_once get_template_directory() . '/inc/browser-support.php';
+require_once get_template_directory() . '/inc/plugin-integration.php';
+
 // i18n
 add_action('after_setup_theme', function(){ load_theme_textdomain('retail-trade-scanner', get_template_directory() . '/languages'); });
-
-// Include integration helpers
-require_once get_template_directory() . '/inc/plugin-integration.php';
 
 // Theme setup: supports, editor, menus
 add_action('after_setup_theme', function () {
