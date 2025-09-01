@@ -46,7 +46,6 @@ const PricingPro = () => {
         { name: "Basic stock screener", included: true },
         { name: "Email alerts & notifications", included: true },
         { name: "Portfolio tracking (5 positions)", included: true },
-        { name: "Mobile app access", included: true },
         { name: "Email support", included: true },
         { name: "Advanced screener filters", included: false },
         { name: "Custom watchlists", included: false },
