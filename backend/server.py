@@ -266,6 +266,170 @@ async def get_user_info(request: Request) -> Dict[str, str]:
 async def root():
     return {"message": "Trade Scan Pro API v1.0"}
 
+@api_router.get("/health")
+async def health_check():
+    """Health check with external API status"""
+    try:
+        external_health = external_api.get("/health/")
+        return {
+            "status": "healthy",
+            "local_db": "connected",
+            "external_api": external_health.get("status", "unknown"),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "degraded", 
+            "local_db": "connected",
+            "external_api": "error",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+@api_router.get("/stocks/")
+async def get_stocks(
+    request: Request,
+    limit: int = 50,
+    search: str = None,
+    category: str = "all",
+    min_price: float = None,
+    max_price: float = None
+):
+    """Get stock list from external API"""
+    params = {
+        "limit": min(limit, 1000),
+        "category": category
+    }
+    if search:
+        params["search"] = search
+    if min_price:
+        params["min_price"] = min_price
+    if max_price:
+        params["max_price"] = max_price
+    
+    # Log usage for this user
+    user_info = await get_user_info(request)
+    await log_api_usage(
+        user_info["user_id"],
+        "/stocks/",
+        user_info["ip_address"],
+        user_info["user_agent"],
+        user_info["plan"]
+    )
+    
+    return external_api.get("/api/stocks/", params)
+
+@api_router.get("/stock/{symbol}")
+async def get_stock_detail(symbol: str, request: Request):
+    """Get individual stock details"""
+    user_info = await get_user_info(request)
+    
+    # Check if user can make API call
+    if not await can_make_api_call(user_info["user_id"], user_info["plan"]):
+        raise HTTPException(status_code=429, detail="API limit reached for your plan")
+    
+    await log_api_usage(
+        user_info["user_id"],
+        f"/stock/{symbol}",
+        user_info["ip_address"],
+        user_info["user_agent"],
+        user_info["plan"]
+    )
+    
+    return external_api.get(f"/api/stock/{symbol}/")
+
+@api_router.get("/search/")
+async def search_stocks(q: str, request: Request):
+    """Search stocks via external API"""
+    if not q or len(q) < 2:
+        raise HTTPException(status_code=400, detail="Query must be at least 2 characters")
+    
+    user_info = await get_user_info(request)
+    await log_api_usage(
+        user_info["user_id"],
+        "/search/",
+        user_info["ip_address"],
+        user_info["user_agent"],
+        user_info["plan"]
+    )
+    
+    return external_api.get("/api/search/", {"q": q})
+
+@api_router.get("/trending/")
+async def get_trending(request: Request):
+    """Get trending stocks"""
+    user_info = await get_user_info(request)
+    await log_api_usage(
+        user_info["user_id"],
+        "/trending/",
+        user_info["ip_address"],
+        user_info["user_agent"],
+        user_info["plan"]
+    )
+    
+    return external_api.get("/api/trending/")
+
+@api_router.get("/market-stats/")
+async def get_market_stats(request: Request):
+    """Get market statistics"""
+    user_info = await get_user_info(request)
+    await log_api_usage(
+        user_info["user_id"],
+        "/market-stats/",
+        user_info["ip_address"],
+        user_info["user_agent"],
+        user_info["plan"]
+    )
+    
+    return external_api.get("/api/market-stats/")
+
+# Portfolio endpoints (these use external API's authenticated endpoints)
+@api_router.get("/portfolio/")
+async def get_portfolio(request: Request):
+    """Get user portfolio"""
+    # This would need authentication integration with external API
+    return external_api.get("/api/portfolio/")
+
+@api_router.post("/portfolio/add/")
+async def add_to_portfolio(portfolio_data: dict, request: Request):
+    """Add stock to portfolio"""
+    return external_api.post("/api/portfolio/add/", portfolio_data)
+
+# Watchlist endpoints
+@api_router.get("/watchlist/")
+async def get_watchlist(request: Request):
+    """Get user watchlist"""
+    return external_api.get("/api/watchlist/")
+
+@api_router.post("/watchlist/add/")
+async def add_to_watchlist(watchlist_data: dict, request: Request):
+    """Add stock to watchlist"""
+    return external_api.post("/api/watchlist/add/", watchlist_data)
+
+# Revenue/billing endpoints
+@api_router.post("/billing/create-paypal-order/")
+async def create_paypal_order(order_data: dict):
+    """Create PayPal order for subscription"""
+    # This would integrate with PayPal API
+    # For now, return a mock response
+    return {
+        "order_id": f"PAYPAL_{uuid.uuid4().hex[:8].upper()}",
+        "approval_url": "https://www.sandbox.paypal.com/checkoutnow?token=mock_token",
+        "status": "created"
+    }
+
+@api_router.post("/billing/capture-paypal-order/")
+async def capture_paypal_order(capture_data: dict):
+    """Capture PayPal payment"""
+    # This would capture the actual PayPal payment
+    # For now, return success
+    return {
+        "status": "completed",
+        "payment_id": capture_data.get("order_id"),
+        "amount": "24.99",
+        "currency": "USD"
+    }
+
 @api_router.get("/usage")
 async def get_user_usage(request: Request):
     """Get current usage statistics for the user"""
