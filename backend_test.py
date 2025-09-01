@@ -3,12 +3,13 @@ import sys
 from datetime import datetime
 
 class TradeScanProAPITester:
-    def __init__(self, base_url="https://api.retailtradescanner.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
+        self.external_api_available = False
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, allow_degraded=False):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         default_headers = {'Content-Type': 'application/json'}
@@ -33,11 +34,29 @@ class TradeScanProAPITester:
                     try:
                         json_response = response.json()
                         print(f"Response: {json_response}")
+                        
+                        # Check if external API is available
+                        if endpoint == "api/health" and "external_api" in json_response:
+                            self.external_api_available = json_response["external_api"] != "error"
+                            
                     except:
                         print(f"Response (text): {response.text[:200]}...")
             else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
-                print(f"Response: {response.text[:200]}...")
+                # For degraded health checks, still consider it a pass if allow_degraded is True
+                if allow_degraded and response.status_code == 200:
+                    try:
+                        json_response = response.json()
+                        if json_response.get("status") == "degraded":
+                            self.tests_passed += 1
+                            success = True
+                            print(f"✅ Passed (Degraded) - Status: {response.status_code}")
+                            print(f"Response: {json_response}")
+                    except:
+                        pass
+                
+                if not success:
+                    print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                    print(f"Response: {response.text[:200]}...")
 
             return success, response.json() if success and response.content else {}
 
@@ -50,6 +69,17 @@ class TradeScanProAPITester:
         except Exception as e:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
+
+    def test_health_check(self):
+        """Test health check endpoint"""
+        success, response = self.run_test(
+            "Health Check",
+            "GET",
+            "api/health",
+            200,
+            allow_degraded=True
+        )
+        return success
 
     def test_root_endpoint(self):
         """Test root API endpoint"""
@@ -111,6 +141,60 @@ class TradeScanProAPITester:
         )
         
         return success1 and success2 and success3
+
+    def test_external_api_endpoints(self):
+        """Test endpoints that depend on external API"""
+        if not self.external_api_available:
+            print("\n⚠️  External API not available - skipping external API tests")
+            return True
+        
+        # Test stocks endpoint
+        success1, response = self.run_test(
+            "Get Stocks List",
+            "GET",
+            "api/stocks/",
+            200
+        )
+        
+        # Test search endpoint
+        success2, response = self.run_test(
+            "Search Stocks",
+            "GET",
+            "api/search/?q=AAPL",
+            200
+        )
+        
+        # Test trending endpoint
+        success3, response = self.run_test(
+            "Get Trending Stocks",
+            "GET",
+            "api/trending/",
+            200
+        )
+        
+        return success1 and success2 and success3
+
+    def test_billing_endpoints(self):
+        """Test PayPal billing endpoints"""
+        # Test create PayPal order
+        success1, response = self.run_test(
+            "Create PayPal Order",
+            "POST",
+            "api/billing/create-paypal-order/",
+            200,
+            data={"plan": "bronze", "amount": "24.99"}
+        )
+        
+        # Test capture PayPal order
+        success2, response = self.run_test(
+            "Capture PayPal Order",
+            "POST",
+            "api/billing/capture-paypal-order/",
+            200,
+            data={"order_id": "PAYPAL_TEST123"}
+        )
+        
+        return success1 and success2
 
     def test_status_endpoints(self):
         """Test status check endpoints"""
