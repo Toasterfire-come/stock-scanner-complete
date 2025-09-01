@@ -1,261 +1,291 @@
-import React, { useEffect, useState } from 'react';
-import { endpoints } from '../../lib/api';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { User, Lock, Bell, CreditCard, Download } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Badge } from "../../components/ui/badge";
+import { Skeleton } from "../../components/ui/skeleton";
+import { toast } from "sonner";
+import { User, Mail, Phone, Building, Calendar, Crown, Save } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { getProfile, updateProfile } from "../../api/client";
 
 const profileSchema = z.object({
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email(),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email address"),
   phone: z.string().optional(),
   company: z.string().optional(),
 });
 
-const passwordSchema = z.object({
-  current_password: z.string().min(1),
-  new_password: z.string().min(8, 'Min 8 characters'),
-  confirm_password: z.string().min(8),
-}).refine((v) => v.new_password === v.confirm_password, { message: 'Passwords do not match', path: ['confirm_password'] });
+const Profile = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const { user, updateUser } = useAuth();
 
-export default function Profile() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [history, setHistory] = useState({ items: [], page: 1, total: 0 });
-  const [stats, setStats] = useState(null);
-
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(profileSchema) });
-  const pwdForm = useForm({ resolver: zodResolver(passwordSchema) });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm({
+    resolver: zodResolver(profileSchema),
+  });
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true); setError('');
-      const [p, bh, bs] = await Promise.all([
-        endpoints.user.profileGet(),
-        endpoints.user.billingHistory({ page: 1, limit: 10 }),
-        endpoints.billing.stats(),
-      ]);
-      if (!p.ok) setError(p.error || 'Failed to load profile');
-      if (p.ok) reset(p.data?.data || {});
-      setHistory({ items: (bh.ok && (bh.data?.data || [])) || [], page: 1, total: (bh.ok && bh.data?.pagination?.total) || 0 });
-      if (bs.ok) setStats(bs.data?.data || null);
-      setLoading(false);
+    const fetchProfile = async () => {
+      try {
+        const response = await getProfile();
+        if (response.success) {
+          setProfileData(response.data);
+          reset({
+            first_name: response.data.first_name || "",
+            last_name: response.data.last_name || "",
+            email: response.data.email || "",
+            phone: response.data.phone || "",
+            company: response.data.company || "",
+          });
+        } else {
+          toast.error("Failed to load profile data");
+        }
+      } catch (error) {
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
     };
-    load();
+
+    fetchProfile();
   }, [reset]);
 
-  const onSubmitProfile = async (values) => {
-    const res = await endpoints.user.profileUpdate(values);
-    if (!res.ok) return toast.error(res.error || 'Update failed');
-    toast.success('Profile updated');
+  const onSubmit = async (data) => {
+    setIsSaving(true);
+    try {
+      const response = await updateProfile(data);
+      if (response.success) {
+        toast.success("Profile updated successfully");
+        updateUser(response.data);
+        setProfileData(prev => ({ ...prev, ...response.data }));
+        reset(data); // Reset form dirty state
+      } else {
+        toast.error(response.message || "Failed to update profile");
+      }
+    } catch (error) {
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const onChangePassword = async (values) => {
-    const res = await endpoints.user.changePassword(values);
-    if (!res.ok) return toast.error(res.error || 'Password change failed');
-    toast.success('Password updated');
-    pwdForm.reset();
-  };
-
-  return (
-    <div className="max-w-5xl mx-auto p-4 space-y-8">
-      <h1 className="text-xl font-semibold">Account</h1>
-
-      {loading && <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-muted animate-pulse rounded" />)}</div>}
-      {error && <div className="p-4 border rounded bg-destructive/10 text-destructive">{error}</div>}
-
-      {!loading && !error && (
-        <>
-          {/* Profile */}
-          <section className="p-4 border rounded space-y-3">
-            <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="font-medium">Profile</h2></div>
-            <form onSubmit={handleSubmit(onSubmitProfile)} className="grid md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm">First name</label>
-                <input className="mt-1 w-full px-3 py-2 border rounded" {...register('first_name')} />
-                {errors.first_name && <p className="text-xs text-red-600">{errors.first_name.message}</p>}
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
               </div>
-              <div>
-                <label className="text-sm">Last name</label>
-                <input className="mt-1 w-full px-3 py-2 border rounded" {...register('last_name')} />
-                {errors.last_name && <p className="text-xs text-red-600">{errors.last_name.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm">Email</label>
-                <input className="mt-1 w-full px-3 py-2 border rounded" {...register('email')} />
-                {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm">Phone</label>
-                <input className="mt-1 w-full px-3 py-2 border rounded" {...register('phone')} />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-sm">Company</label>
-                <input className="mt-1 w-full px-3 py-2 border rounded" {...register('company')} />
-              </div>
-              <div className="md:col-span-2">
-                <button disabled={isSubmitting} className="px-3 py-2 rounded bg-primary text-primary-foreground">{isSubmitting ? 'Saving...' : 'Save changes'}</button>
-              </div>
-            </form>
-          </section>
-
-          {/* Password */}
-          <section className="p-4 border rounded space-y-3">
-            <div className="flex items-center gap-2"><Lock className="h-4 w-4" /><h2 className="font-medium">Change Password</h2></div>
-            <form onSubmit={pwdForm.handleSubmit(onChangePassword)} className="grid md:grid-cols-3 gap-3">
-              <div>
-                <label className="text-sm">Current password</label>
-                <input type="password" className="mt-1 w-full px-3 py-2 border rounded" {...pwdForm.register('current_password')} />
-                {pwdForm.formState.errors.current_password && <p className="text-xs text-red-600">{pwdForm.formState.errors.current_password.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm">New password</label>
-                <input type="password" className="mt-1 w-full px-3 py-2 border rounded" {...pwdForm.register('new_password')} />
-                {pwdForm.formState.errors.new_password && <p className="text-xs text-red-600">{pwdForm.formState.errors.new_password.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm">Confirm password</label>
-                <input type="password" className="mt-1 w-full px-3 py-2 border rounded" {...pwdForm.register('confirm_password')} />
-                {pwdForm.formState.errors.confirm_password && <p className="text-xs text-red-600">{pwdForm.formState.errors.confirm_password.message}</p>}
-              </div>
-              <div className="md:col-span-3">
-                <button disabled={pwdForm.formState.isSubmitting} className="px-3 py-2 rounded bg-primary text-primary-foreground">{pwdForm.formState.isSubmitting ? 'Updating...' : 'Update password'}</button>
-              </div>
-            </form>
-          </section>
-
-          {/* Notifications */}
-          <Notifications />
-
-          {/* Billing */}
-          <Billing history={history} stats={stats} />
-        </>
-      )}
-    </div>
-  );
-}
-
-function Notifications() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [settings, setSettings] = useState({ trading: {}, portfolio: {}, news: {}, security: {} });
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true); setError('');
-      const res = await endpoints.user.notificationGet();
-      if (!res.ok) setError(res.error || 'Failed to load notification settings');
-      else setSettings(res.data?.data || res.data || settings);
-      setLoading(false);
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const toggle = (group, key) => setSettings((s) => ({ ...s, [group]: { ...s[group], [key]: !s[group]?.[key] } }));
-
-  const save = async () => {
-    const res = await endpoints.user.notificationUpdate(settings);
-    if (!res.ok) return toast.error(res.error || 'Failed to save');
-    toast.success('Notification settings saved');
-  };
-
-  if (loading) return <div className="h-24 bg-muted animate-pulse rounded" />;
-  if (error) return <div className="p-4 border rounded bg-destructive/10 text-destructive">{error}</div>;
-
-  return (
-    <section className="p-4 border rounded space-y-3">
-      <div className="flex items-center gap-2"><Bell className="h-4 w-4" /><h2 className="font-medium">Notification Settings</h2></div>
-      <div className="grid md:grid-cols-2 gap-4">
-        {Object.entries(settings).map(([group, cfg]) => (
-          <div key={group} className="p-3 border rounded">
-            <div className="font-medium capitalize mb-2">{group}</div>
-            <div className="space-y-1">
-              {Object.keys(cfg || {}).length ? Object.entries(cfg).map(([k, v]) => (
-                <label key={k} className="flex items-center gap-2">
-                  <input type="checkbox" checked={!!v} onChange={() => toggle(group, k)} />
-                  <span className="text-sm capitalize">{k.replaceAll('_', ' ')}</span>
-                </label>
-              )) : <div className="text-sm text-muted-foreground">No settings found</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-      <button onClick={save} className="px-3 py-2 rounded bg-primary text-primary-foreground">Save settings</button>
-    </section>
-  );
-}
-
-function Billing({ history, stats }) {
-  return (
-    <section className="p-4 border rounded space-y-4">
-      <div className="flex items-center gap-2"><CreditCard className="h-4 w-4" /><h2 className="font-medium">Billing</h2></div>
-      {stats ? (
-        <div className="grid md:grid-cols-4 gap-3">
-          <BillMetric label="Total Spent" value={`$${(stats.total_spent ?? 0).toLocaleString()}`} />
-          <BillMetric label="Recent Payments" value={stats.recent_payments ?? '-'} />
-          <BillMetric label="Account Status" value={stats.account_status ?? '-'} />
-          <BillMetric label="Next Billing" value={formatDate(stats.next_billing_date)} />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
         </div>
-      ) : (
-        <div className="h-14 bg-muted animate-pulse rounded" />
-      )}
-
-      <div className="overflow-x-auto border rounded">
-        <table className="min-w-full text-sm">
-          <thead className="bg-muted text-muted-foreground">
-            <tr>
-              <th className="text-left p-2">Date</th>
-              <th className="text-left p-2">Description</th>
-              <th className="text-left p-2">Amount</th>
-              <th className="text-left p-2">Status</th>
-              <th className="text-left p-2">Method</th>
-              <th className="text-left p-2">Invoice</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.items.map((i) => (
-              <tr key={i.id} className="border-t">
-                <td className="p-2 whitespace-nowrap">{i.date}</td>
-                <td className="p-2">{i.description}</td>
-                <td className="p-2">${i.amount?.toLocaleString?.() ?? i.amount}</td>
-                <td className="p-2">{i.status}</td>
-                <td className="p-2">{i.method}</td>
-                <td className="p-2">
-                  {i.download_url ? (
-                    <a href={i.download_url} className="inline-flex items-center gap-1 text-primary hover:underline">
-                      <Download className="h-4 w-4" /> Download
-                    </a>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {!history.items.length && (
-              <tr>
-                <td className="p-4 text-center text-muted-foreground" colSpan={6}>No billing history</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
       </div>
-    </section>
-  );
-}
+    );
+  }
 
-function BillMetric({ label, value }) {
   return (
-    <div className="p-3 border rounded">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold">{value}</div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
+          <p className="text-gray-600 mt-2">
+            Manage your account information and preferences
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Profile Overview */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="h-10 w-10 text-blue-600" />
+                </div>
+                <h3 className="font-semibold text-lg">
+                  {profileData?.first_name} {profileData?.last_name}
+                </h3>
+                <p className="text-gray-600">{profileData?.username}</p>
+                <div className="mt-4">
+                  {profileData?.is_premium ? (
+                    <Badge className="bg-yellow-100 text-yellow-800">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Premium
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">Free Plan</Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3 text-sm">
+                <div className="flex items-center text-gray-600">
+                  <Mail className="h-4 w-4 mr-2" />
+                  {profileData?.email}
+                </div>
+                {profileData?.phone && (
+                  <div className="flex items-center text-gray-600">
+                    <Phone className="h-4 w-4 mr-2" />
+                    {profileData.phone}
+                  </div>
+                )}
+                {profileData?.company && (
+                  <div className="flex items-center text-gray-600">
+                    <Building className="h-4 w-4 mr-2" />
+                    {profileData.company}
+                  </div>
+                )}
+                <div className="flex items-center text-gray-600">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Member since {new Date(profileData?.date_joined).toLocaleDateString()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Profile Form */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Update your personal details and contact information
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input
+                        id="first_name"
+                        {...register("first_name")}
+                        placeholder="Enter your first name"
+                      />
+                      {errors.first_name && (
+                        <p className="text-sm text-red-600">{errors.first_name.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input
+                        id="last_name"
+                        {...register("last_name")}
+                        placeholder="Enter your last name"
+                      />
+                      {errors.last_name && (
+                        <p className="text-sm text-red-600">{errors.last_name.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      {...register("email")}
+                      placeholder="Enter your email address"
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-red-600">{errors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      {...register("phone")}
+                      placeholder="Enter your phone number"
+                    />
+                    {errors.phone && (
+                      <p className="text-sm text-red-600">{errors.phone.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company</Label>
+                    <Input
+                      id="company"
+                      {...register("company")}
+                      placeholder="Enter your company name"
+                    />
+                    {errors.company && (
+                      <p className="text-sm text-red-600">{errors.company.message}</p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-4">
+                    <Button 
+                      type="submit" 
+                      disabled={!isDirty || isSaving}
+                    >
+                      {isSaving ? (
+                        "Saving..."
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Account Stats */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Account Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {profileData?.last_login ? "Active" : "New"}
+                    </div>
+                    <div className="text-sm text-blue-600">Account Status</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {new Date(profileData?.date_joined).toLocaleDateString()}
+                    </div>
+                    <div className="text-sm text-green-600">Join Date</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
-function formatDate(str) {
-  if (!str) return '-';
-  try { return new Date(str).toLocaleString(); } catch { return str; }
-}
+export default Profile;
