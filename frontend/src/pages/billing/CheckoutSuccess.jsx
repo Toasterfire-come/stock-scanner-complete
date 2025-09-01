@@ -81,7 +81,7 @@ const CheckoutSuccess = () => {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600">Plan:</span>
-              <span className="font-semibold">Stock Scanner {planNames[planId]}</span>
+              <span className="font-semibold">Trade Scan Pro {planNames[planId]}</span>
             </div>
             
             {discount && (
