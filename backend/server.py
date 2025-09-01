@@ -671,6 +671,210 @@ async def news_sync_portfolio(authorization: Optional[str] = None):
 
 
 # --------
+# Additional Public/API Endpoints (Realtime, Filter, Statistics, Endpoint Status, WordPress, Billing PDF, Update Payment)
+# --------
+
+@api.get("/realtime/{ticker}/")
+async def realtime_quote(ticker: str):
+    t = normalize_ticker(ticker)
+    d = await db.stocks.find_one({"ticker": t})
+    if not d:
+        return {"ticker": t, "company_name": t, "current_price": None, "volume": 0, "market_cap": 0, "pe_ratio": None, "dividend_yield": None, "last_updated": now_iso(), "market_status": "unknown"}
+    return {
+        "ticker": d.get("ticker", t),
+        "company_name": d.get("company_name", t),
+        "current_price": d.get("current_price"),
+        "volume": d.get("volume", 0),
+        "market_cap": d.get("market_cap", 0),
+        "pe_ratio": d.get("pe_ratio"),
+        "dividend_yield": d.get("dividend_yield"),
+        "last_updated": now_iso(),
+        "market_status": "unknown",
+    }
+
+
+@api.get("/filter/")
+async def filter_stocks(
+    min_price: float | None = None,
+    max_price: float | None = None,
+    min_volume: int | None = None,
+    max_volume: int | None = None,
+    sector: str | None = None,
+    exchange: str | None = None,
+    order_by: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    q: Dict[str, Any] = {}
+    if min_price is not None:
+        q.setdefault("current_price", {})["$gte"] = float(min_price)
+    if max_price is not None:
+        q.setdefault("current_price", {})["$lte"] = float(max_price)
+    if min_volume is not None:
+        q.setdefault("volume", {})["$gte"] = int(min_volume)
+    if max_volume is not None:
+        q.setdefault("volume", {})["$lte"] = int(max_volume)
+    if exchange and exchange.lower() != "all":
+        q["exchange"] = exchange
+    # sector not stored in MVP
+
+    sort = [(order_by, -1 if order_by in ("price_change_percent", "current_price", "volume", "market_cap") else 1)] if order_by else None
+    cursor = db.stocks.find(q)
+    if sort:
+        cursor = cursor.sort(sort)
+    total = await db.stocks.count_documents(q)
+    docs = await cursor.skip(max(0, offset)).limit(min(200, limit)).to_list(length=min(200, limit))
+
+    def map_stock(d: Dict[str, Any]):
+        return {
+            "ticker": d.get("ticker"),
+            "name": d.get("company_name", d.get("ticker")),
+            "current_price": d.get("current_price"),
+            "price_change": d.get("price_change_today", 0.0),
+            "price_change_percent": d.get("change_percent", 0.0),
+            "volume": d.get("volume", 0),
+            "market_cap": d.get("market_cap", 0),
+            "exchange": d.get("exchange", ""),
+        }
+
+    return {"stocks": [map_stock(d) for d in docs], "total_count": total, "filters_applied": {k: v for k, v in {"min_price": min_price, "max_price": max_price, "min_volume": min_volume, "max_volume": max_volume, "exchange": exchange, "order_by": order_by, "limit": limit, "offset": offset}.items() if v is not None}}
+
+
+@api.get("/statistics/")
+async def statistics():
+    total = await db.stocks.count_documents({})
+    gainers = await db.stocks.count_documents({"change_percent": {"$gt": 0}})
+    losers = await db.stocks.count_documents({"change_percent": {"$lt": 0}})
+    unchanged = total - gainers - losers
+    top_gainer = await db.stocks.find({}).sort([("change_percent", -1)]).limit(1).to_list(1)
+    top_loser = await db.stocks.find({}).sort([("change_percent", 1)]).limit(1).to_list(1)
+    most_active = await db.stocks.find({}).sort([("volume", -1)]).limit(1).to_list(1)
+    return {
+        "success": True,
+        "market_overview": {"total_stocks": total, "gainers": gainers, "losers": losers, "unchanged": unchanged, "gainer_percentage": (gainers/total*100.0 if total else 0.0), "recent_updates": total},
+        "top_performers": {
+            "top_gainer": {"ticker": top_gainer[0]["ticker"], "company_name": top_gainer[0].get("company_name"), "price_change_percent": top_gainer[0].get("change_percent", 0.0), "wordpress_url": None} if top_gainer else None,
+            "top_loser": {"ticker": top_loser[0]["ticker"], "company_name": top_loser[0].get("company_name"), "price_change_percent": top_loser[0].get("change_percent", 0.0), "wordpress_url": None} if top_loser else None,
+            "most_active": {"ticker": most_active[0]["ticker"], "company_name": most_active[0].get("company_name"), "price_change_percent": most_active[0].get("change_percent", 0.0), "wordpress_url": None} if most_active else None,
+        },
+        "subscriptions": {"active_count": await db.subscriptions.count_documents({})},
+        "timestamp": now_iso(),
+    }
+
+
+@api.get("/endpoint-status/")
+async def endpoint_status():
+    endpoints = [
+        {"name": "root", "url": "/api/", "method": "GET"},
+        {"name": "health", "url": "/api/health/", "method": "GET"},
+        {"name": "stocks", "url": "/api/stocks/", "method": "GET"},
+        {"name": "search", "url": "/api/search/?q=AAPL", "method": "GET"},
+        {"name": "trending", "url": "/api/trending/", "method": "GET"},
+    ]
+    results = []
+    import httpx
+    base = "http://127.0.0.1:8001"
+    for ep in endpoints:
+        url = ep["url"]
+        try:
+            async with httpx.AsyncClient(base_url=base, timeout=5.0) as client:
+                r = await client.get(url)
+            results.append({"name": ep["name"], "url": ep["url"], "status": "success" if r.status_code < 400 else "error", "status_code": r.status_code, "response_time": None})
+        except Exception:
+            results.append({"name": ep["name"], "url": ep["url"], "status": "error", "status_code": 0, "response_time": None})
+    ok = all(r["status"] == "success" for r in results)
+    return {"success": ok, "data": {"endpoints": results, "total_tested": len(results), "successful": sum(1 for r in results if r["status"] == "success"), "failed": sum(1 for r in results if r["status"] != "success"), "timestamp": now_iso()}}
+
+
+@api.get("/wordpress/stocks/")
+async def wp_stocks(limit: int = 10, ticker: str | None = None, featured: str | None = None):
+    q: Dict[str, Any] = {}
+    if ticker:
+        tickers = [normalize_ticker(t) for t in ticker.split(",") if t.strip()]
+        q["ticker"] = {"$in": tickers}
+    cursor = db.stocks.find(q).limit(min(100, limit))
+    docs = await cursor.to_list(length=min(100, limit))
+    def fmt(d):
+        price = d.get("current_price")
+        cp = d.get("change_percent", 0.0)
+        return {
+            "ticker": d["ticker"],
+            "company_name": d.get("company_name", d["ticker"]),
+            "current_price": price,
+            "change_percent": cp,
+            "volume": d.get("volume", 0),
+            "market_cap": d.get("market_cap", 0),
+            "pe_ratio": d.get("pe_ratio", 0),
+            "trend": "up" if cp > 0 else ("down" if cp < 0 else "neutral"),
+            "formatted_price": f"${price}",
+            "formatted_change": f"{cp}%",
+            "last_updated": d.get("last_updated", now_iso())
+        }
+    return {"success": True, "data": [fmt(d) for d in docs], "pagination": {}, "meta": {}}
+
+
+@api.get("/wordpress/news/")
+async def wp_news(limit: int = 10, sentiment: str | None = None, ticker: str | None = None):
+    q: Dict[str, Any] = {}
+    if ticker:
+        q["mentioned_tickers"] = {"$regex": normalize_ticker(ticker)}
+    if sentiment:
+        q["sentiment"] = sentiment
+    docs = await db.news.find(q).sort([("published_at", -1)]).limit(min(50, limit)).to_list(min(50, limit))
+    return {"success": True, "data": docs, "meta": {}}
+
+
+@api.get("/wordpress/alerts/")
+async def wp_alerts(limit: int = 10, active: str | None = None, ticker: str | None = None):
+    q: Dict[str, Any] = {}
+    if ticker:
+        q["ticker"] = normalize_ticker(ticker)
+    if active in ("true", "false"):
+        q["is_active"] = (active == "true")
+    docs = await db.alerts.find(q).sort([("created_at", -1)]).limit(min(50, limit)).to_list(min(50, limit))
+    return {"success": True, "data": docs, "meta": {}}
+
+
+@api.post("/stocks/update/")
+async def stocks_update(body: Dict[str, Any], authorization: Optional[str] = None):
+    # Protected by API key, if provided in env WORDPRESS_API_KEY
+    key = os.environ.get("WORDPRESS_API_KEY")
+    if key and authorization != f"Bearer {key}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    symbols = body.get("symbols", [])
+    # MVP: no external fetch; mark last_updated now
+    for s in symbols:
+        await db.stocks.update_one({"ticker": normalize_ticker(s)}, {"$set": {"last_updated": now_iso()}}, upsert=False)
+    return {"success": True, "message": "Updated"}
+
+
+@api.post("/news/update/")
+async def news_update(authorization: Optional[str] = None):
+    key = os.environ.get("WORDPRESS_API_KEY")
+    if key and authorization != f"Bearer {key}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return {"success": True, "message": "No-op in MVP"}
+
+
+@api.get("/billing/download/{invoice_id}/")
+async def billing_download(invoice_id: str, authorization: Optional[str] = None):
+    _ = await get_user_from_token(authorization)
+    # Minimal PDF bytes (valid basic PDF)
+    pdf_bytes = (b"%PDF-1.4\n1 0 obj<<>>endobj\n2 0 obj<<>>endobj\n3 0 obj<</Type/Catalog/Pages 4 0 R>>endobj\n4 0 obj<</Type/Pages/Count 1/Kids[5 0 R]>>endobj\n5 0 obj<</Type/Page/Parent 4 0 R/MediaBox[0 0 300 200]/Contents 6 0 R/Resources<</Font<</F1 7 0 R>>>>>>endobj\n6 0 obj<</Length 62>>stream\nBT /F1 12 Tf 50 150 Td (Invoice ID: " + invoice_id.encode() + b") Tj ET\nendstream endobj\n7 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nxref\n0 8\n0000000000 65535 f \ntrailer<</Size 8/Root 3 0 R>>\nstartxref\n0\n%%EOF")
+    return JSONResponse(content=None, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=invoice-{invoice_id}.pdf"}, status_code=200, background=None)
+
+
+@api.post("/user/update-payment/")
+async def user_update_payment(body: Dict[str, Any], authorization: Optional[str] = None):
+    user = await get_user_from_token(authorization)
+    pm = body.get("payment_method", {})
+    card_last_four = pm.get("card_last_four")
+    card_type = pm.get("card_type")
+    await db.users.update_one({"id": user["id"]}, {"$set": {"payment_method": pm}})
+    return {"success": True, "message": "Payment method updated", "data": {"card_type": card_type, "card_last_four": card_last_four, "updated_at": now_iso()}}
+
+
+# --------
 # Revenue
 # --------
 @revenue.post("/initialize-codes/")
