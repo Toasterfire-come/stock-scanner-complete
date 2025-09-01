@@ -335,7 +335,7 @@ const Home = () => {
               Success Stories From Our Traders
             </h2>
             <p className="text-2xl text-gray-600">
-              Real results from real traders using Retail Trade Scanner
+              Real results from real traders using Trade Scan Pro
             </p>
           </div>
           
