@@ -1,479 +1,267 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Checkbox } from "../../../components/ui/checkbox";
-import { Badge } from "../../../components/ui/badge";
+import { Textarea } from "../../../components/ui/textarea";
 import { Separator } from "../../../components/ui/separator";
+import { Badge } from "../../../components/ui/badge";
+import { X, Plus, Save, Play } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  Save, 
-  Play, 
-  Plus, 
-  X, 
-  TrendingUp, 
-  DollarSign, 
-  BarChart3, 
-  Volume2,
-  Target,
-  Zap,
-  ArrowLeft
-} from "lucide-react";
-
-const screenerSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  description: z.string().max(500, "Description too long"),
-  category: z.string().min(1, "Category is required"),
-});
 
 const CreateScreener = () => {
-  const [isSaving, setIsSaving] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [criteria, setCriteria] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
   const navigate = useNavigate();
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(screenerSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      category: "",
-    }
+  const [screenerData, setScreenerData] = useState({
+    name: "",
+    description: "",
+    isPublic: false
   });
-
-  const watchCategory = watch("category");
+  const [criteria, setCriteria] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const availableCriteria = [
-    {
-      id: "market_cap",
-      name: "Market Cap",
-      icon: <BarChart3 className="h-4 w-4" />,
-      type: "range",
-      options: ["Any", "Micro (<$300M)", "Small ($300M-$2B)", "Mid ($2B-$10B)", "Large (>$10B)"]
-    },
-    {
-      id: "price",
-      name: "Stock Price",
-      icon: <DollarSign className="h-4 w-4" />,
-      type: "range",
-      min: 0,
-      max: 1000,
-      step: 0.01
-    },
-    {
-      id: "volume",
-      name: "Volume",
-      icon: <Volume2 className="h-4 w-4" />,
-      type: "range",
-      options: ["Any", ">100K", ">500K", ">1M", ">5M"]
-    },
-    {
-      id: "pe_ratio",
-      name: "P/E Ratio",
-      icon: <Target className="h-4 w-4" />,
-      type: "range",
-      min: 0,
-      max: 100,
-      step: 0.1
-    },
-    {
-      id: "price_change",
-      name: "Price Change %",
-      icon: <TrendingUp className="h-4 w-4" />,
-      type: "range",
-      min: -50,
-      max: 50,
-      step: 0.1
-    },
-    {
-      id: "dividend_yield",
-      name: "Dividend Yield",
-      icon: <Zap className="h-4 w-4" />,
-      type: "range",
-      min: 0,
-      max: 20,
-      step: 0.1
-    }
-  ];
-
-  const categories = [
-    { value: "growth", label: "Growth" },
-    { value: "value", label: "Value" },
-    { value: "momentum", label: "Momentum" },
-    { value: "quality", label: "Quality" },
-    { value: "dividend", label: "Dividend" },
-    { value: "custom", label: "Custom" }
-  ];
-
-  const predefinedTags = [
-    "tech", "healthcare", "finance", "energy", "consumer", "industrial",
-    "small-cap", "mid-cap", "large-cap", "growth", "value", "momentum",
-    "dividend", "high-volume", "breakout", "oversold", "undervalued"
+    { id: "market_cap", name: "Market Cap", type: "range" },
+    { id: "price", name: "Stock Price", type: "range" },
+    { id: "volume", name: "Volume", type: "range" },
+    { id: "pe_ratio", name: "P/E Ratio", type: "range" },
+    { id: "dividend_yield", name: "Dividend Yield", type: "range" },
+    { id: "change_percent", name: "Price Change %", type: "range" },
+    { id: "exchange", name: "Exchange", type: "select" }
   ];
 
   const addCriterion = (criterionId) => {
-    const criterion = availableCriteria.find(c => c.id === criterionId);
-    if (criterion && !criteria.find(c => c.id === criterionId)) {
-      setCriteria(prev => [...prev, {
-        id: criterion.id,
-        name: criterion.name,
-        type: criterion.type,
-        operator: ">=",
-        value: criterion.type === "range" ? { min: "", max: "" } : "",
-        selected_option: criterion.options ? criterion.options[0] : null
-      }]);
-    }
+    const criterionDef = availableCriteria.find(c => c.id === criterionId);
+    if (!criterionDef || criteria.some(c => c.id === criterionId)) return;
+
+    const newCriterion = {
+      id: criterionId,
+      name: criterionDef.name,
+      type: criterionDef.type,
+      min: "",
+      max: "",
+      value: ""
+    };
+
+    setCriteria([...criteria, newCriterion]);
   };
 
   const removeCriterion = (criterionId) => {
-    setCriteria(prev => prev.filter(c => c.id !== criterionId));
+    setCriteria(criteria.filter(c => c.id !== criterionId));
   };
 
   const updateCriterion = (criterionId, field, value) => {
-    setCriteria(prev => prev.map(c => 
+    setCriteria(criteria.map(c => 
       c.id === criterionId ? { ...c, [field]: value } : c
     ));
   };
 
-  const toggleTag = (tag) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
-  };
+  const handleSave = async () => {
+    if (!screenerData.name.trim()) {
+      toast.error("Please enter a screener name");
+      return;
+    }
 
-  const onSubmit = async (data) => {
     if (criteria.length === 0) {
-      toast.error("Please add at least one screening criterion");
+      toast.error("Please add at least one criterion");
       return;
     }
 
-    setIsSaving(true);
+    setIsLoading(true);
     try {
-      // Mock save screener
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const screenerId = "new_" + Date.now();
-      toast.success("Screener created successfully");
-      navigate(`/app/screeners/${screenerId}/results`);
+      // Simulate API call to save screener
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Screener saved successfully");
+      navigate("/app/screeners");
     } catch (error) {
-      toast.error("Failed to create screener");
+      toast.error("Failed to save screener");
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
-  const runScreener = async () => {
-    const form = document.querySelector('form');
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-    
-    if (!data.name || !data.category || criteria.length === 0) {
-      toast.error("Please fill in all required fields and add criteria");
+  const handleTest = async () => {
+    if (criteria.length === 0) {
+      toast.error("Please add at least one criterion");
       return;
     }
 
-    setIsRunning(true);
+    setIsLoading(true);
     try {
-      // Mock run screener
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success("Screener executed! Found 23 matching stocks");
-      navigate('/app/screeners/preview/results');
+      // Simulate API call to test screener
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Found 15 matching stocks");
     } catch (error) {
-      toast.error("Failed to run screener");
+      toast.error("Failed to test screener");
     } finally {
-      setIsRunning(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Create New Screener</h1>
-            <p className="text-gray-600 mt-2">
-              Define criteria to find stocks that match your investment strategy
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">Create Stock Screener</h1>
+            <p className="text-gray-600 mt-2">Set up criteria to find stocks that match your strategy</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleTest} disabled={isLoading}>
+              <Play className="h-4 w-4 mr-2" />
+              Test Run
+            </Button>
+            <Button onClick={handleSave} disabled={isLoading}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Screener
+            </Button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>
-                Give your screener a name and description
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Screener Name *</Label>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>Give your screener a name and description</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Screener Name</Label>
                   <Input
                     id="name"
-                    placeholder="e.g., High Growth Tech Stocks"
-                    {...register("name")}
+                    value={screenerData.name}
+                    onChange={(e) => setScreenerData({...screenerData, name: e.target.value})}
+                    placeholder="e.g., High Dividend Value Stocks"
                   />
-                  {errors.name && (
-                    <p className="text-sm text-red-600">{errors.name.message}</p>
-                  )}
                 </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={screenerData.description}
+                    onChange={(e) => setScreenerData({...screenerData, description: e.target.value})}
+                    placeholder="Describe what this screener looks for..."
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select 
-                    value={watchCategory} 
-                    onValueChange={(value) => setValue("category", value)}
-                  >
+            <Card>
+              <CardHeader>
+                <CardTitle>Screening Criteria</CardTitle>
+                <CardDescription>Add filters to narrow down your stock selection</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <Select onValueChange={addCriterion}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Add a criterion" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
+                      {availableCriteria
+                        .filter(c => !criteria.some(existing => existing.id === c.id))
+                        .map(criterion => (
+                          <SelectItem key={criterion.id} value={criterion.id}>
+                            {criterion.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
-                  {errors.category && (
-                    <p className="text-sm text-red-600">{errors.category.message}</p>
-                  )}
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe what this screener looks for..."
-                  rows={3}
-                  {...register("description")}
-                />
-                {errors.description && (
-                  <p className="text-sm text-red-600">{errors.description.message}</p>
-                )}
-              </div>
-
-              {/* Tags */}
-              <div className="space-y-2">
-                <Label>Tags (Optional)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {predefinedTags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1 text-sm border rounded-full transition-colors ${
-                        selectedTags.includes(tag)
-                          ? 'bg-blue-100 border-blue-300 text-blue-800'
-                          : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Screening Criteria */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Screening Criteria</CardTitle>
-              <CardDescription>
-                Add criteria to filter stocks based on your requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Add Criterion Buttons */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {availableCriteria.map((criterion) => (
-                  <Button
-                    key={criterion.id}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCriterion(criterion.id)}
-                    disabled={criteria.some(c => c.id === criterion.id)}
-                    className="justify-start"
-                  >
-                    {criterion.icon}
-                    <span className="ml-2">{criterion.name}</span>
-                    {criteria.some(c => c.id === criterion.id) && (
-                      <span className="ml-auto text-green-600">✓</span>
-                    )}
-                  </Button>
-                ))}
-              </div>
-
-              {criteria.length > 0 && <Separator />}
-
-              {/* Active Criteria */}
-              <div className="space-y-4">
-                {criteria.map((criterion) => {
-                  const template = availableCriteria.find(c => c.id === criterion.id);
-                  return (
+                <div className="space-y-4">
+                  {criteria.map((criterion) => (
                     <div key={criterion.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          {template.icon}
-                          <span className="font-medium">{criterion.name}</span>
-                        </div>
+                      <div className="flex justify-between items-center mb-3">
+                        <Badge variant="outline">{criterion.name}</Badge>
                         <Button
-                          type="button"
-                          variant="ghost"
                           size="sm"
+                          variant="ghost"
                           onClick={() => removeCriterion(criterion.id)}
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-
-                      {template.options ? (
-                        <Select
-                          value={criterion.selected_option}
-                          onValueChange={(value) => updateCriterion(criterion.id, 'selected_option', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {template.options.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                          <Select
-                            value={criterion.operator}
-                            onValueChange={(value) => updateCriterion(criterion.id, 'operator', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value=">=">&gt;=</SelectItem>
-                              <SelectItem value="<=">&lt;=</SelectItem>
-                              <SelectItem value="between">Between</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          {criterion.operator === "between" ? (
-                            <>
-                              <Input
-                                type="number"
-                                placeholder="Min"
-                                step={template.step}
-                                value={criterion.value.min}
-                                onChange={(e) => updateCriterion(criterion.id, 'value', {
-                                  ...criterion.value,
-                                  min: e.target.value
-                                })}
-                              />
-                              <Input
-                                type="number"
-                                placeholder="Max"
-                                step={template.step}
-                                value={criterion.value.max}
-                                onChange={(e) => updateCriterion(criterion.id, 'value', {
-                                  ...criterion.value,
-                                  max: e.target.value
-                                })}
-                              />
-                            </>
-                          ) : (
+                      
+                      {criterion.type === "range" && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Minimum</Label>
                             <Input
                               type="number"
-                              placeholder="Value"
-                              step={template.step}
-                              value={criterion.value}
-                              onChange={(e) => updateCriterion(criterion.id, 'value', e.target.value)}
-                              className="col-span-2"
+                              value={criterion.min}
+                              onChange={(e) => updateCriterion(criterion.id, "min", e.target.value)}
+                              placeholder="Min value"
                             />
-                          )}
+                          </div>
+                          <div>
+                            <Label>Maximum</Label>
+                            <Input
+                              type="number"
+                              value={criterion.max}
+                              onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
+                              placeholder="Max value"
+                            />
+                          </div>
                         </div>
                       )}
+
+                      {criterion.type === "select" && criterion.id === "exchange" && (
+                        <Select onValueChange={(value) => updateCriterion(criterion.id, "value", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select exchange" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="NYSE">NYSE</SelectItem>
+                            <SelectItem value="NASDAQ">NASDAQ</SelectItem>
+                            <SelectItem value="AMEX">AMEX</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-
-              {criteria.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Add screening criteria above to filter stocks</p>
+                  ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Actions */}
-          <div className="flex justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate('/app/screeners')}
-            >
-              Cancel
-            </Button>
-
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={runScreener}
-                disabled={isRunning}
-              >
-                {isRunning ? (
-                  "Running..."
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    Test Run
-                  </>
+                {criteria.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No criteria added yet. Select from the dropdown above to add filters.
+                  </div>
                 )}
-              </Button>
-
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? (
-                  "Saving..."
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Screener
-                  </>
-                )}
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        </form>
+
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Criteria Count</span>
+                    <span className="font-semibold">{criteria.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Expected Matches</span>
+                    <span className="font-semibold text-blue-600">~15-50</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Last Test Run</span>
+                    <span className="font-semibold">Never</span>
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="text-xs text-gray-500">
+                  Click "Test Run" to see how many stocks match your current criteria.
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
