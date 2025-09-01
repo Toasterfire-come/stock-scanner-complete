@@ -34,6 +34,29 @@ import Stocks from "./pages/app/Stocks";
 import Portfolio from "./pages/app/Portfolio";
 import Watchlists from "./pages/app/Watchlists";
 
+// Screener Suite
+import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
+import CreateScreener from "./pages/app/screeners/CreateScreener";
+import EditScreener from "./pages/app/screeners/EditScreener";
+import ScreenerResults from "./pages/app/screeners/ScreenerResults";
+import Templates from "./pages/app/Templates";
+
+// Market Overview
+import MarketHeatmap from "./pages/app/MarketHeatmap";
+import SectorsIndustries from "./pages/app/SectorsIndustries";
+import TopMovers from "./pages/app/TopMovers";
+import PreAfterMarket from "./pages/app/PreAfterMarket";
+import EconomicCalendar from "./pages/app/EconomicCalendar";
+
+// News
+import NewsFeed from "./pages/app/NewsFeed";
+import NewsPreferences from "./pages/app/NewsPreferences";
+import NewsSubscribe from "./pages/app/NewsSubscribe";
+
+// Alerts & Signals
+import Alerts from "./pages/app/Alerts";
+import AlertHistory from "./pages/app/AlertHistory";
+
 // Account Pages
 import Profile from "./pages/account/Profile";
 import ChangePassword from "./pages/account/ChangePassword";
