@@ -421,7 +421,7 @@ const PricingPro = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">Is there a refund policy?</h3>
                 <p className="text-gray-600">
-                  Yes! We offer a 30-day money-back guarantee on all plans. If you're not satisfied, contact support for a full refund.
+                  All sales are final. Please ensure you understand the features included in your selected plan before subscribing. Contact support for any questions.
                 </p>
               </CardContent>
             </Card>
