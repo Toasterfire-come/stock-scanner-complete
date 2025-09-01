@@ -267,27 +267,7 @@ const Features = () => {
         </div>
       </section>
 
-      {/* Broker Integrations */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Broker Integrations
-            </h2>
-            <p className="text-xl text-gray-600">
-              Connect with your existing brokerage accounts
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {integrations.map((broker, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-lg font-semibold text-gray-900">{broker}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Note: Brokerage integrations removed as requested */}
 
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
