@@ -31,25 +31,8 @@ import AppDashboard from "./pages/app/AppDashboard";
 import Markets from "./pages/app/Markets";
 import StockDetail from "./pages/app/StockDetail";
 import Stocks from "./pages/app/Stocks";
-
-// Screener Suite (P0)
-import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
-import CreateScreener from "./pages/app/screeners/CreateScreener";
-import EditScreener from "./pages/app/screeners/EditScreener";
-import ScreenerResults from "./pages/app/screeners/ScreenerResults";
-import Templates from "./pages/app/Templates";
-
-// Market Overview (P0)
-import MarketHeatmap from "./pages/app/MarketHeatmap";
-import SectorsIndustries from "./pages/app/SectorsIndustries";
-import TopMovers from "./pages/app/TopMovers";
-import PreAfterMarket from "./pages/app/PreAfterMarket";
-import EconomicCalendar from "./pages/app/EconomicCalendar";
-
-// News (P0)
-import NewsFeed from "./pages/app/NewsFeed";
-import NewsPreferences from "./pages/app/NewsPreferences";
-import NewsSubscribe from "./pages/app/NewsSubscribe";
+import Portfolio from "./pages/app/Portfolio";
+import Watchlists from "./pages/app/Watchlists";
 
 // Account Pages
 import Profile from "./pages/account/Profile";
@@ -61,37 +44,19 @@ import CurrentPlan from "./pages/account/CurrentPlan";
 // System Pages
 import EndpointStatus from "./pages/system/EndpointStatus";
 
-// Alerts & Signals (P1)
-import Alerts from "./pages/app/Alerts";
-import AlertHistory from "./pages/app/AlertHistory";
-import SignalFeed from "./pages/app/SignalFeed";
-
-// Watchlists (P1)
-import Watchlists from "./pages/app/Watchlists";
-import WatchlistDetail from "./pages/app/WatchlistDetail";
-
-// Portfolio
-import Portfolio from "./pages/app/Portfolio";
-
-// Docs & Content (P1)
-import Docs from "./pages/content/Docs";
-import Blog from "./pages/content/Blog";
-import Guides from "./pages/content/Guides";
-import Tutorials from "./pages/content/Tutorials";
-import Community from "./pages/content/Community";
-import Roadmap from "./pages/content/Roadmap";
-
-// Mobile Routes (P1)
-import MobileDashboard from "./pages/mobile/MobileDashboard";
-import MobileAlerts from "./pages/mobile/MobileAlerts";
-import MobileQuickScan from "./pages/mobile/MobileQuickScan";
-
 // Legal Pages
-import LegalTerms from "./pages/legal/LegalTerms";
-import LegalPrivacy from "./pages/legal/LegalPrivacy";
+import LegalTerms from "./pages/LegalTerms";
+import LegalPrivacy from "./pages/LegalPrivacy";
 
-// Marketing Pages
-import { Features, Product, DataCoverage, UseCases, Changelog, About, Contact, Careers, Help, FAQ } from "./pages/marketing/Marketing";
+// Placeholder component for missing pages
+const PlaceholderPage = ({ title }) => (
+  <div className="container mx-auto px-4 py-8">
+    <div className="text-center">
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
+      <p className="text-gray-600">This page is under development.</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
