@@ -195,6 +195,11 @@ const Home = () => {
               real-time alerts, and AI-powered market intelligence to maximize their returns.
             </p>
 
+            {/* Market Status */}
+            <div className="mb-8 flex justify-center">
+              <MarketStatus showNotice={true} />
+            </div>
+
             {/* Primary CTA */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
