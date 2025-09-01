@@ -43,8 +43,10 @@ class BackendTester:
         url = f"{API_BASE}{endpoint}"
         req_headers = headers or {}
         
+        # Add authorization as query parameter if needed
         if use_auth and self.auth_token:
-            req_headers["Authorization"] = f"Bearer {self.auth_token}"
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}authorization=Bearer {self.auth_token}"
         
         try:
             if method.upper() == "GET":
