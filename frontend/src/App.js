@@ -71,6 +71,10 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 
+import WatchlistDetail from "./pages/app/WatchlistDetail";
+import Docs from "./pages/docs/Docs";
+import MobileDashboard from "./pages/mobile/MobileDashboard";
+
 // Placeholder component for missing pages
 const PlaceholderPage = ({ title }) => (
   <div className="container mx-auto px-4 py-8">
