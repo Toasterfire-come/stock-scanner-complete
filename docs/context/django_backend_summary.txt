@@ -1,0 +1,147 @@
+Django Backend Summary - Stock Scanner Complete
+
+Repository: https://github.com/Toasterfire-come/stock-scanner-complete (main)
+Tech Stack: Django backend with MySQL, yfinance integration, news scraping with NLTK, WordPress integration (plugin + theme), APIs and HTML UIs. Includes scheduler scripts and revenue analytics.
+
+Base URL and Auth
+- All API endpoints are prefixed with /api/
+- Authentication: Bearer token required for protected endpoints (Authorization: Bearer &lt;token&gt;)
+- Dual response: Many endpoints return HTML for browser visits and JSON for API/AJAX/WordPress requests
+
+Core/Utility Endpoints (Allowed Methods)
+- GET /                           Homepage (HTML/JSON)
+- GET /health/                    Health check
+- GET /api/health/                WordPress-compatible health check
+- GET /docs/                      API docs (HTML/JSON)
+- GET /endpoint-status/           Real-time endpoint status page
+- GET /admin/                     Django admin
+
+Stock Data API (Allowed Methods)
+- GET /api/stocks/                List stocks with market data
+- GET /api/stock/{ticker}/        Stock details e.g. /api/stock/AAPL/
+- GET /api/search/?q=...          Search by symbol/name
+- GET /api/trending/              Trending stocks
+- GET /api/realtime/{ticker}/     Real-time stock data
+- GET /api/nasdaq/                NASDAQ stocks
+- GET /api/filter/                Filter stocks via query params
+- GET /api/market-stats/          Market statistics
+- GET /api/statistics/            Additional market stats
+
+Portfolio Management (Allowed Methods)
+- GET    /api/portfolio/list/                     List user portfolios
+- POST   /api/portfolio/create/                   Create portfolio
+- POST   /api/portfolio/add-holding/              Add holding
+- POST   /api/portfolio/sell-holding/             Sell holding (partial/full)
+- GET    /api/portfolio/{id}/performance/         Portfolio performance
+- POST   /api/portfolio/import-csv/               Import holdings from CSV
+- PUT    /api/portfolio/{id}/update/              Update portfolio
+- DELETE /api/portfolio/{id}/                     Delete portfolio
+- GET    /api/portfolio/alert-roi/                ROI metrics for alert-based trades
+
+Watchlist Management (Allowed Methods)
+- GET    /api/watchlist/list/                     List watchlists
+- POST   /api/watchlist/create/                   Create watchlist
+- POST   /api/watchlist/add-stock/                Add stock to watchlist
+- DELETE /api/watchlist/remove-stock/             Remove stock
+- GET    /api/watchlist/{id}/performance/         Watchlist performance
+- PUT    /api/watchlist/{id}/                     Update watchlist
+- DELETE /api/watchlist/{id}/delete/              Delete watchlist
+- GET    /api/watchlist/{id}/export/csv/          Export CSV
+- GET    /api/watchlist/{id}/export/json/         Export JSON
+- POST   /api/watchlist/import/csv/               Import from CSV
+- POST   /api/watchlist/import/json/              Import from JSON
+
+News & Personalization (Allowed Methods)
+- GET  /api/news/feed/                            Personalized news feed
+- POST /api/news/mark-read/                       Mark news as read
+- POST /api/news/mark-clicked/                    Mark news as clicked
+- POST /api/news/preferences/                     Update preferences
+- POST /api/news/sync-portfolio/                  Sync portfolio tickers to news
+- GET  /api/news/analytics/                       News consumption analytics
+
+Alerts & Notifications (Allowed Methods)
+- POST /api/alerts/create/                        Create price alerts (additional alert endpoints exist)
+
+Revenue, Promo Codes, Billing & Analytics (Allowed Methods)
+- GET  /revenue/revenue-analytics/                Revenue analytics dashboard (HTML/JSON)
+- GET  /revenue/revenue-analytics/{month-year}/   Monthly revenue analytics
+- POST /revenue/initialize-codes/                 Initialize/seed discount codes
+- POST /revenue/validate-discount/                Validate a discount/promo code
+- POST /revenue/apply-discount/                   Apply discount code to a purchase/session
+- POST /revenue/record-payment/                   Record a payment transaction
+- GET  /revenue/monthly-summary/{month-year}/     Monthly summary
+
+WordPress Integration
+- GET  /api/health/                               Health for WP
+- POST /api/subscription/                         Subscription management endpoint for WordPress integration
+- CORS and WordPress/AJAX request detection supported. JSON responses standardized.
+
+Payment Setup (PayPal) — Backend + WordPress Theme
+Backend/expected endpoints (as per theme + docs):
+- POST /paypal/create-order                       Create a PayPal order
+- POST /paypal/capture-order/{id}                 Capture PayPal payment
+- POST /paypal/webhook                            Handle PayPal webhooks (signature-verified)
+- GET  /billing/history                           Retrieve billing history
+- GET  /billing/summary                           Billing summary
+
+WordPress theme REST endpoints (client-facing, for integration):
+- POST /wp-json/retail-trade-scanner/v1/paypal/create-order
+- POST /wp-json/retail-trade-scanner/v1/paypal/capture-order/{id}
+- POST /wp-json/retail-trade-scanner/v1/paypal/webhook
+
+Webhook events to configure in PayPal (recommended):
+- PAYMENT.CAPTURE.COMPLETED, BILLING.SUBSCRIPTION.ACTIVATED, BILLING.SUBSCRIPTION.CANCELLED,
+  BILLING.SUBSCRIPTION.EXPIRED, BILLING.SUBSCRIPTION.SUSPENDED
+
+Security & Validation for Webhooks:
+- Verify signature headers: PAYPAL-TRANSMISSION-ID, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO,
+  PAYPAL-TRANSMISSION-SIG, PAYPAL-TRANSMISSION-TIME
+- Use HTTPS; log all webhook deliveries and results
+
+PayPal Credentials & Config (Theme/WordPress):
+- Configure PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET (Sandbox/Live as appropriate)
+- Webhook URL (theme example): https://yourdomain.com/wp-json/stock-scanner/v1/paypal-webhook
+
+Promo Codes (Discounts)
+Endpoints:
+- POST /revenue/initialize-codes/    (admin/ops) seeds or initializes discount code set
+- POST /revenue/validate-discount/   payload typically includes { code, plan, ... } — returns validity and discount details
+- POST /revenue/apply-discount/      applies a valid discount to a purchase/session and returns adjusted totals
+Notes:
+- Exact payloads depend on deployment; validation returns standardized JSON with success flag and data/error_code.
+
+Rate Limiting
+- Free:        100 requests/hour
+- Basic:       500 requests/hour
+- Pro:         2000 requests/hour
+- Enterprise:  Unlimited
+
+Subscription Information (from provided artifacts)
+WordPress Premium Plans page tiers:
+- Free ($0/mo): 15 stocks/mo, lookup & basic filtering; no portfolios; no email alerts
+- Bronze ($14.99/mo): 1,000 stocks/mo, scanner & lookup, email alerts, news sentiment, basic portfolio tracking
+- Silver ($29.99/mo): 5,000 stocks/mo, advanced filtering, 1-year history, 10 watchlists, priority support
+- Gold ($59.99/mo): 10,000 stocks/mo, all premium features, real-time alerts, full REST API access, priority phone support
+
+Homepage pricing references (context):
+- Free, Basic ($24.99/mo), Pro ($49.99/mo), Enterprise (Contact Sales)
+
+General API Conventions
+- Standardized JSON response format with success, data, message, error, error_code
+- Many endpoints support both HTML and JSON depending on headers/params
+- Input validation, CSRF protection, secure headers, CORS, and audit logging implemented per docs
+
+Testing (examples)
+- curl http://localhost:8000/
+- curl http://localhost:8000/api/health/
+- curl http://localhost:8000/api/stocks/
+- curl http://localhost:8000/api/stock/AAPL/
+- curl "http://localhost:8000/api/search/?q=apple"
+
+Source documents consulted (repo):
+- COMPREHENSIVE_API_DOCUMENTATION.md
+- COMPLETE_ENDPOINT_GUIDE.md
+- PAYPAL_WEBHOOK_SETUP.md
+- README and repo structure pages
+
+This TXT summarizes the Django backend endpoints, methods, promo/discount code handling, payment setup (PayPal), rate limits, and subscription context for future integration tasks.
