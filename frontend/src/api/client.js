@@ -295,60 +295,8 @@ export async function getWatchlist() {
     const { data } = await api.get('/watchlist/');
     return data;
   } catch (error) {
-    // Return fallback data for production demo
-    return {
-      success: true,
-      data: [
-        {
-          id: "1",
-          symbol: "TSLA",
-          company_name: "Tesla Inc.",
-          current_price: 245.60,
-          price_change: 8.45,
-          price_change_percent: 3.56,
-          volume: 85432109,
-          market_cap: 780000000000,
-          watchlist_name: "My Watchlist",
-          added_date: "2024-01-15T10:30:00Z",
-          notes: "Watching for earnings report",
-          alert_price: 250.00
-        },
-        {
-          id: "2", 
-          symbol: "GOOGL",
-          company_name: "Alphabet Inc.",
-          current_price: 145.30,
-          price_change: 2.65,
-          price_change_percent: 1.86,
-          volume: 28765432,
-          market_cap: 1800000000000,
-          watchlist_name: "My Watchlist",
-          added_date: "2024-01-12T14:20:00Z",
-          notes: "AI developments to watch",
-          alert_price: 150.00
-        },
-        {
-          id: "3",
-          symbol: "AMD", 
-          company_name: "Advanced Micro Devices Inc.",
-          current_price: 115.25,
-          price_change: -2.10,
-          price_change_percent: -1.79,
-          volume: 45123456,
-          market_cap: 185000000000,
-          watchlist_name: "My Watchlist", 
-          added_date: "2024-01-08T09:15:00Z",
-          notes: "Competitor to NVDA",
-          alert_price: null
-        }
-      ],
-      summary: {
-        total_items: 3,
-        gainers: 2,
-        losers: 1,
-        unchanged: 0
-      }
-    };
+    console.error('Failed to fetch watchlist:', error);
+    throw error;
   }
 }
 export async function addWatchlist(symbol, opts = {}) { const { data } = await api.post('/watchlist/add/', { symbol, ...opts }); return data; }
