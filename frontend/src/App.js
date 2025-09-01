@@ -25,7 +25,9 @@ import Home from "./pages/Home";
 import Features from "./pages/Features";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Pricing from "./pages/Pricing";
+import PricingPro from "./pages/PricingPro";
+import AdvancedAnalytics from "./components/AdvancedAnalytics";
+import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 
