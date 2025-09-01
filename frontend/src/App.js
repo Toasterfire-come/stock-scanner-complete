@@ -2,6 +2,7 @@ import React from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "./layouts/AppLayout";
+import { Features, Product, DataCoverage, UseCases, Changelog, Docs, Guides, Tutorials, Glossary, About, Contact, Careers, Blog, Help, FAQ, Community, Roadmap } from "./pages/Marketing";
 import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
 import LegalTerms from "./pages/LegalTerms";
