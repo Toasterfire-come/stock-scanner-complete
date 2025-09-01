@@ -128,7 +128,7 @@ const NotificationSettings = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Notification Settings</h1>
           <p className="text-gray-600 mt-2">
-            Customize how and when you receive notifications from Stock Scanner
+            Customize how and when you receive notifications from Trade Scan Pro
           </p>
         </div>
 
