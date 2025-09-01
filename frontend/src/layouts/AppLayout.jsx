@@ -15,6 +15,7 @@ const navItems = [
   { to: "/app/alerts", label: "Alerts", icon: BellRing },
   { to: "/app/notifications", label: "Notifications", icon: Bell },
   { to: "/pricing", label: "Pricing", icon: CreditCard },
+  { to: "/status", label: "Status", icon: ShieldCheck },
   { to: "/legal/terms", label: "Terms", icon: ShieldCheck },
   { to: "/legal/privacy", label: "Privacy", icon: Settings },
 ];
