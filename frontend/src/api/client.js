@@ -241,24 +241,8 @@ export async function listStocks(params = {}) {
     const { data } = await api.get('/stocks/', { params });
     return data;
   } catch (error) {
-    // Return fallback data for production demo
-    return {
-      success: true,
-      data: [
-        { ticker: "AAPL", symbol: "AAPL", company_name: "Apple Inc.", exchange: "NASDAQ", current_price: 178.25, price_change_today: 3.82, change_percent: 2.19, volume: 52341234, market_cap: 2800000000000, last_updated: new Date().toISOString() },
-        { ticker: "MSFT", symbol: "MSFT", company_name: "Microsoft Corporation", exchange: "NASDAQ", current_price: 412.80, price_change_today: 7.95, change_percent: 1.96, volume: 35876543, market_cap: 3100000000000, last_updated: new Date().toISOString() },
-        { ticker: "NVDA", symbol: "NVDA", company_name: "NVIDIA Corporation", exchange: "NASDAQ", current_price: 128.50, price_change_today: 5.85, change_percent: 4.77, volume: 125334455, market_cap: 3200000000000, last_updated: new Date().toISOString() },
-        { ticker: "GOOGL", symbol: "GOOGL", company_name: "Alphabet Inc.", exchange: "NASDAQ", current_price: 145.30, price_change_today: 2.60, change_percent: 1.82, volume: 28765432, market_cap: 1800000000000, last_updated: new Date().toISOString() },
-        { ticker: "TSLA", symbol: "TSLA", company_name: "Tesla Inc.", exchange: "NASDAQ", current_price: 245.60, price_change_today: 8.15, change_percent: 3.43, volume: 85432109, market_cap: 780000000000, last_updated: new Date().toISOString() },
-        { ticker: "META", symbol: "META", company_name: "Meta Platforms Inc.", exchange: "NASDAQ", current_price: 298.40, price_change_today: -8.75, change_percent: -2.85, volume: 45123456, market_cap: 750000000000, last_updated: new Date().toISOString() },
-        { ticker: "AMZN", symbol: "AMZN", company_name: "Amazon.com Inc.", exchange: "NASDAQ", current_price: 145.80, price_change_today: -1.85, change_percent: -1.25, volume: 65432198, market_cap: 1500000000000, last_updated: new Date().toISOString() },
-        { ticker: "NFLX", symbol: "NFLX", company_name: "Netflix Inc.", exchange: "NASDAQ", current_price: 425.30, price_change_today: -7.56, change_percent: -1.75, volume: 12345678, market_cap: 180000000000, last_updated: new Date().toISOString() }
-      ],
-      count: 8,
-      total_available: 8547,
-      filters_applied: params,
-      timestamp: new Date().toISOString()
-    };
+    console.error('Failed to fetch stocks:', error);
+    throw error;
   }
 }
 export async function getStock(ticker) { const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`); return data; }
