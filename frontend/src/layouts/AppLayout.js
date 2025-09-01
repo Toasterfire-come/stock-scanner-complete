@@ -126,6 +126,11 @@ const AppLayout = () => {
 
             {/* Right side - Auth buttons or user menu */}
             <div className="flex items-center space-x-4">
+              {/* Market Status - always show */}
+              <div className="hidden lg:block">
+                <MarketStatus />
+              </div>
+              
               {isAuthenticated && user ? (
                 <>
                   {/* User badge */}
