@@ -95,16 +95,7 @@ const Features = () => {
     }
   ];
 
-  const integrations = [
-    "TD Ameritrade",
-    "Interactive Brokers", 
-    "E*TRADE",
-    "Charles Schwab",
-    "Fidelity",
-    "Robinhood",
-    "Webull",
-    "Alpaca"
-  ];
+  // Brokerage integrations removed as requested
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
