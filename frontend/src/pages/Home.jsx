@@ -117,7 +117,7 @@ const Home = () => {
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of stock queries per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
     },
     {
       question: "Do you provide investment advice?",
@@ -135,12 +135,13 @@ const Home = () => {
   const pricingPlans = [
     {
       name: "Bronze",
-      price: "$14.99",
+      price: "$24.99",
       period: "/month",
       description: "Enhanced features for active traders",
       features: [
-        "1,000 stocks per month",
-        "Full stock scanner & lookup", 
+        "1,500 API calls per month",
+        "10 calls per hour limit", 
+        "Full stock scanner & lookup",
         "Email alerts & notifications",
         "News sentiment analysis",
         "Basic portfolio tracking"
@@ -150,11 +151,12 @@ const Home = () => {
     },
     {
       name: "Silver", 
-      price: "$29.99",
+      price: "$39.99",
       period: "/month",
       description: "Professional tools for serious traders",
       features: [
-        "5,000 stocks per month",
+        "5,000 API calls per month",
+        "25 calls per hour limit",
         "Advanced filtering & screening",
         "1-year historical data",
         "Custom watchlists (10)",
@@ -165,11 +167,12 @@ const Home = () => {
     },
     {
       name: "Gold",
-      price: "$59.99", 
+      price: "$89.99", 
       period: "/month",
       description: "Ultimate trading experience",
       features: [
-        "10,000 stocks per month",
+        "Unlimited API calls",
+        "No hourly limits",
         "All premium features",
         "Real-time alerts",
         "Full REST API access",
@@ -206,7 +209,7 @@ const Home = () => {
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-6 w-6 mr-3" />
-                  Start 7-Day Trial for $1
+                  Start 7-Day Free Trial
                   <ArrowRight className="h-6 w-6 ml-3" />
                 </Link>
               </Button>
@@ -379,7 +382,7 @@ const Home = () => {
             </p>
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              Limited Time: Use code "TRIAL" for 7 days at just $1
+              7-Day Free Trial on All Plans
             </div>
           </div>
           
@@ -473,7 +476,7 @@ const Home = () => {
             <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
               <Link to="/auth/sign-up">
                 <Play className="h-6 w-6 mr-3" />
-                Start 7-Day Trial for $1
+                Start 7-Day Free Trial
                 <ArrowRight className="h-6 w-6 ml-3" />
               </Link>
             </Button>
