@@ -193,10 +193,7 @@ function App() {
                 <Route path="/legal/privacy" element={<LegalPrivacy />} />
               </Route>
 
-              {/* Mobile Routes */}
-              <Route path="/m/dashboard" element={<MobileDashboard />} />
-              <Route path="/m/alerts" element={<Alerts />} />
-              <Route path="/m/quick-scan" element={<TopMovers />} />
+              {/* Mobile routes removed as requested */}
 
               {/* Default redirect */}
               <Route path="*" element={<Navigate to="/" replace />} />
