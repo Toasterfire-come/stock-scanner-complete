@@ -111,7 +111,7 @@ const CheckoutFailure = () => {
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-900 mb-2">Continue with Free Plan</h4>
               <p className="text-sm text-blue-700 mb-3">
-                Start using Stock Scanner with our free features while you resolve payment issues.
+                Start using Trade Scan Pro with our free features while you resolve payment issues.
               </p>
               <Button asChild variant="outline" size="sm">
                 <Link to="/app/dashboard">
