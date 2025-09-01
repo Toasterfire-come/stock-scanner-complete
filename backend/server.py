@@ -4,6 +4,8 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import requests
+import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
@@ -16,6 +18,10 @@ import time
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# External API configuration
+EXTERNAL_API_URL = os.environ.get('EXTERNAL_API_URL', 'https://api.retailtradescanner.com')
+EXTERNAL_API_PASSWORD = os.environ.get('EXTERNAL_API_PASSWORD', '')
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
@@ -26,6 +32,40 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# External API client
+class ExternalAPIClient:
+    def __init__(self, base_url: str, api_password: str):
+        self.base_url = base_url
+        self.api_password = api_password
+        self.session = requests.Session()
+        if api_password:
+            self.session.headers.update({'X-API-Key': api_password})
+    
+    def get(self, endpoint: str, params: dict = None):
+        """Make GET request to external API"""
+        url = f"{self.base_url}{endpoint}"
+        try:
+            response = self.session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logging.error(f"External API error: {e}")
+            raise HTTPException(status_code=503, detail="External API unavailable")
+    
+    def post(self, endpoint: str, data: dict = None):
+        """Make POST request to external API"""
+        url = f"{self.base_url}{endpoint}"
+        try:
+            response = self.session.post(url, json=data, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logging.error(f"External API error: {e}")
+            raise HTTPException(status_code=503, detail="External API unavailable")
+
+# Initialize external API client
+external_api = ExternalAPIClient(EXTERNAL_API_URL, EXTERNAL_API_PASSWORD)
 
 # Plan limits based on PHP configuration
 PLAN_LIMITS = {
