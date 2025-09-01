@@ -2,16 +2,18 @@ import requests
 import sys
 from datetime import datetime
 
-class StockScannerAPITester:
+class TradeScanProAPITester:
     def __init__(self, base_url="https://api.retailtradescanner.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
 
-    def run_test(self, name, method, endpoint, expected_status, data=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
-        headers = {'Content-Type': 'application/json'}
+        default_headers = {'Content-Type': 'application/json'}
+        if headers:
+            default_headers.update(headers)
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
@@ -19,9 +21,9 @@ class StockScannerAPITester:
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=default_headers, timeout=10)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = requests.post(url, json=data, headers=default_headers, timeout=10)
 
             success = response.status_code == expected_status
             if success:
@@ -59,6 +61,57 @@ class StockScannerAPITester:
         )
         return success
 
+    def test_usage_endpoint(self):
+        """Test usage statistics endpoint"""
+        # Test with default user (free plan)
+        success1, response = self.run_test(
+            "Usage Stats - Free Plan",
+            "GET",
+            "api/usage",
+            200
+        )
+        
+        # Test with Bronze plan user
+        success2, response = self.run_test(
+            "Usage Stats - Bronze Plan",
+            "GET",
+            "api/usage",
+            200,
+            headers={"X-User-ID": "test_bronze_user", "X-User-Plan": "bronze"}
+        )
+        
+        return success1 and success2
+
+    def test_stock_quote_endpoint(self):
+        """Test stock quote endpoint with plan limits"""
+        # Test with free plan (should work initially)
+        success1, response1 = self.run_test(
+            "Stock Quote - Free Plan (AAPL)",
+            "GET",
+            "api/stocks/AAPL/quote",
+            200
+        )
+        
+        # Test with Bronze plan
+        success2, response2 = self.run_test(
+            "Stock Quote - Bronze Plan (AAPL)",
+            "GET",
+            "api/stocks/AAPL/quote",
+            200,
+            headers={"X-User-ID": "test_bronze_user", "X-User-Plan": "bronze"}
+        )
+        
+        # Test with different symbol
+        success3, response3 = self.run_test(
+            "Stock Quote - Different Symbol (MSFT)",
+            "GET",
+            "api/stocks/MSFT/quote",
+            200,
+            headers={"X-User-ID": "test_user", "X-User-Plan": "silver"}
+        )
+        
+        return success1 and success2 and success3
+
     def test_status_endpoints(self):
         """Test status check endpoints"""
         # Test GET status checks
@@ -80,17 +133,51 @@ class StockScannerAPITester:
         
         return success1 and success2
 
+    def test_plan_limits(self):
+        """Test plan limit enforcement"""
+        print("\n🔒 Testing Plan Limit Enforcement...")
+        
+        # Make multiple requests to test rate limiting
+        user_id = f"limit_test_user_{datetime.now().strftime('%H%M%S')}"
+        
+        # Test with free plan (should hit limits quickly)
+        success_count = 0
+        for i in range(8):  # Free plan has hourly limit of 2
+            success, response = self.run_test(
+                f"Rate Limit Test {i+1}/8 - Free Plan",
+                "GET",
+                "api/stocks/TSLA/quote",
+                200 if i < 2 else 429,  # Expect 429 after 2 requests for free plan
+                headers={"X-User-ID": user_id, "X-User-Plan": "free"}
+            )
+            if success:
+                success_count += 1
+        
+        print(f"Free plan successful requests: {success_count}/8 (expected: 2)")
+        return success_count <= 2  # Should be limited after 2 requests
+
 def main():
-    print("🚀 Starting Stock Scanner API Tests...")
+    print("🚀 Starting Trade Scan Pro API Tests...")
     print("=" * 50)
     
     # Setup
-    tester = StockScannerAPITester()
+    tester = TradeScanProAPITester()
 
-    # Run basic API tests
+    # Run comprehensive API tests
     print("\n📡 Testing Basic API Endpoints...")
     tester.test_root_endpoint()
+    
+    print("\n📊 Testing Usage Tracking...")
+    tester.test_usage_endpoint()
+    
+    print("\n📈 Testing Stock Quote API...")
+    tester.test_stock_quote_endpoint()
+    
+    print("\n🔄 Testing Status Endpoints...")
     tester.test_status_endpoints()
+    
+    print("\n🔒 Testing Plan Limits...")
+    tester.test_plan_limits()
 
     # Print results
     print("\n" + "=" * 50)
