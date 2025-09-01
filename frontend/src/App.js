@@ -14,7 +14,9 @@ function App() {
           <Route element={<AppLayout />}> 
             <Route path="/" element={<Home />} />
             <Route path="/pricing" element={<Pricing />} />
-            {/* TODO: add the rest of pages progressively mapping to provided sitemap */}
+            <Route path="/app/dashboard" element={<Home />} />
+            <Route path="/legal/terms" element={<React.Suspense fallback={null}><div /></React.Suspense>} />
+            <Route path="/legal/privacy" element={<React.Suspense fallback={null}><div /></React.Suspense>} />
           </Route>
         </Routes>
       </BrowserRouter>
