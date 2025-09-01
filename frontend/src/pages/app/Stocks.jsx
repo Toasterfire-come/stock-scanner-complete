@@ -61,11 +61,11 @@ const Stocks = () => {
 
           response = await listStocks(params);
           
-          if (response.success) {
+          if (response?.success && response?.data?.length > 0) {
             setStocks(response.data || []);
             setTotalStocks(response.total_available || 0);
           } else {
-            // Mock data fallback
+            // Mock data fallback - always show demo data when API is unavailable
             setStocks([
               {
                 ticker: "AAPL",
@@ -101,6 +101,30 @@ const Stocks = () => {
                 change_percent: 3.07,
                 volume: 28765432,
                 market_cap: 1800000000000,
+                last_updated: "2024-03-15T15:30:00Z"
+              },
+              {
+                ticker: "TSLA",
+                symbol: "TSLA", 
+                company_name: "Tesla, Inc.",
+                exchange: "NASDAQ",
+                current_price: 248.50,
+                price_change_today: 8.75,
+                change_percent: 3.65,
+                volume: 95432100,
+                market_cap: 790000000000,
+                last_updated: "2024-03-15T15:30:00Z"
+              },
+              {
+                ticker: "AMZN",
+                symbol: "AMZN",
+                company_name: "Amazon.com, Inc.",
+                exchange: "NASDAQ", 
+                current_price: 155.89,
+                price_change_today: -2.45,
+                change_percent: -1.55,
+                volume: 45123789,
+                market_cap: 1600000000000,
                 last_updated: "2024-03-15T15:30:00Z"
               }
             ]);
