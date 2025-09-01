@@ -26,6 +26,10 @@ function App() {
             <Route path="/app/markets" element={<Markets />} />
             <Route path="/app/alerts" element={<Alerts />} />
             <Route path="/app/notifications" element={<Notifications />} />
+            <Route path="/app/stocks" element={<Stocks />} />
+            <Route path="/app/stocks/:symbol" element={<StockDetail />} />
+            <Route path="/app/watchlists" element={<Watchlists />} />
+            <Route path="/app/portfolio" element={<Portfolio />} />
             <Route path="/legal/terms" element={<LegalTerms />} />
             <Route path="/legal/privacy" element={<LegalPrivacy />} />
           </Route>
