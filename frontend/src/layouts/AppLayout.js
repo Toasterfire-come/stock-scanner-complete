@@ -40,6 +40,7 @@ import {
   LogOut,
   Crown
 } from 'lucide-react';
+import MarketStatus from '../components/MarketStatus';
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
