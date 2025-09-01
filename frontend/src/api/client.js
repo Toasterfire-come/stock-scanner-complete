@@ -433,14 +433,65 @@ export async function markNewsClicked(newsId) { const { data } = await api.post(
 export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
 
-// ====================
-// REVENUE & DISCOUNTS
-// ====================
-export async function revenueInitialize() { const { data } = await api.post('/revenue/initialize-codes/'); return data; }
-export async function revenueValidate(code) { const { data } = await api.post('/revenue/validate-discount/', { code }); return data; }
-export async function revenueApply(code, amount) { const { data } = await api.post('/revenue/apply-discount/', { code, amount }); return data; }
-export async function recordPayment(paymentData) { const { data } = await api.post('/revenue/record-payment/', paymentData); return data; }
-export async function getRevenueAnalytics(monthYear = null) { const url = monthYear ? `/revenue/revenue-analytics/${monthYear}/` : '/revenue/revenue-analytics/'; const { data } = await api.get(url); return data; }
+//====================
+// REVENUE & PAYMENTS (PAYPAL INTEGRATION)
+//====================
+export async function validateDiscountCode(code) { 
+  const { data } = await api.post(`${REVENUE_ROOT}/validate-discount/`, { code }); 
+  return data; 
+}
+
+export async function applyDiscountCode(code, amount) { 
+  const { data } = await api.post(`${REVENUE_ROOT}/apply-discount/`, { code, amount }); 
+  return data; 
+}
+
+export async function recordPayment(paymentData) { 
+  const { data } = await api.post(`${REVENUE_ROOT}/record-payment/`, paymentData); 
+  return data; 
+}
+
+export async function getRevenueAnalytics(monthYear = null) { 
+  const url = monthYear ? `${REVENUE_ROOT}/revenue-analytics/${monthYear}/` : `${REVENUE_ROOT}/revenue-analytics/`; 
+  const { data } = await api.get(url); 
+  return data; 
+}
+
+export async function initializeDiscountCodes() { 
+  const { data } = await api.post(`${REVENUE_ROOT}/initialize-codes/`); 
+  return data; 
+}
+
+// PayPal Integration Functions
+export async function createPayPalOrder(planType, billingCycle, discountCode = null) {
+  try {
+    const orderData = {
+      plan_type: planType,
+      billing_cycle: billingCycle,
+      discount_code: discountCode
+    };
+    
+    // This would integrate with your backend PayPal handling
+    const { data } = await api.post('/billing/create-paypal-order/', orderData);
+    return data;
+  } catch (error) {
+    console.error('PayPal order creation failed:', error);
+    throw error;
+  }
+}
+
+export async function capturePayPalOrder(orderId, paymentData) {
+  try {
+    const { data } = await api.post('/billing/capture-paypal-order/', {
+      order_id: orderId,
+      payment_data: paymentData
+    });
+    return data;
+  } catch (error) {
+    console.error('PayPal order capture failed:', error);
+    throw error;
+  }
+}
 
 // ====================
 // SUBSCRIPTIONS
