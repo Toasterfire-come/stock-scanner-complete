@@ -130,28 +130,28 @@ function App() {
               <Route path="/app/stocks/:symbol" element={<StockDetail />} />
               <Route path="/app/portfolio" element={<Portfolio />} />
 
-              {/* Screener Suite - Using placeholders */}
-              <Route path="/app/screeners" element={<PlaceholderPage title="Screener Library" />} />
-              <Route path="/app/screeners/new" element={<PlaceholderPage title="Create Screener" />} />
-              <Route path="/app/screeners/:id/edit" element={<PlaceholderPage title="Edit Screener" />} />
-              <Route path="/app/screeners/:id/results" element={<PlaceholderPage title="Screener Results" />} />
-              <Route path="/app/templates" element={<PlaceholderPage title="Templates" />} />
+              {/* Screener Suite */}
+              <Route path="/app/screeners" element={<ScreenerLibrary />} />
+              <Route path="/app/screeners/new" element={<CreateScreener />} />
+              <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
+              <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
+              <Route path="/app/templates" element={<Templates />} />
 
-              {/* Market Overview - Using placeholders */}
-              <Route path="/app/market-heatmap" element={<PlaceholderPage title="Market Heatmap" />} />
-              <Route path="/app/sectors" element={<PlaceholderPage title="Sectors & Industries" />} />
-              <Route path="/app/top-movers" element={<PlaceholderPage title="Top Movers" />} />
-              <Route path="/app/pre-after-market" element={<PlaceholderPage title="Pre/After Market" />} />
-              <Route path="/app/economic-calendar" element={<PlaceholderPage title="Economic Calendar" />} />
+              {/* Market Overview */}
+              <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
+              <Route path="/app/sectors" element={<SectorsIndustries />} />
+              <Route path="/app/top-movers" element={<TopMovers />} />
+              <Route path="/app/pre-after-market" element={<PreAfterMarket />} />
+              <Route path="/app/economic-calendar" element={<EconomicCalendar />} />
 
-              {/* News - Using placeholders */}
-              <Route path="/app/news" element={<PlaceholderPage title="News Feed" />} />
-              <Route path="/app/news/preferences" element={<PlaceholderPage title="News Preferences" />} />
-              <Route path="/app/news/subscribe" element={<PlaceholderPage title="News Subscribe" />} />
+              {/* News */}
+              <Route path="/app/news" element={<NewsFeed />} />
+              <Route path="/app/news/preferences" element={<NewsPreferences />} />
+              <Route path="/app/news/subscribe" element={<NewsSubscribe />} />
 
-              {/* Alerts & Signals - Using placeholders */}
-              <Route path="/app/alerts" element={<PlaceholderPage title="Alerts" />} />
-              <Route path="/app/alerts/history" element={<PlaceholderPage title="Alert History" />} />
+              {/* Alerts & Signals */}
+              <Route path="/app/alerts" element={<Alerts />} />
+              <Route path="/app/alerts/history" element={<AlertHistory />} />
               <Route path="/app/signals" element={<PlaceholderPage title="Signal Feed" />} />
 
               {/* Watchlists */}
