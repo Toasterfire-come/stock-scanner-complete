@@ -81,7 +81,7 @@ app.add_middleware(
 # ----------------------
 # Helpers & Dependencies
 # ----------------------
-async def get_user_from_token(authorization: Optional[str] = None) -> Dict[str, Any]:
+async def get_user_from_token(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
     if not authorization:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     parts = authorization.split()
