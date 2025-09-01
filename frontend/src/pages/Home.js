@@ -221,7 +221,7 @@ const Home = () => {
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                7-Day Money-Back Guarantee
+                Email Support Only
               </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-blue-500 mr-3" />
