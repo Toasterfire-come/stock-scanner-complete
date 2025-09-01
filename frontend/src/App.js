@@ -35,6 +35,7 @@ function App() {
             <Route path="/app/stocks/:symbol" element={<StockDetail />} />
             <Route path="/app/watchlists" element={<Watchlists />} />
             <Route path="/app/portfolio" element={<Portfolio />} />
+            <Route path="/status" element={<Status />} />
             <Route path="/legal/terms" element={<LegalTerms />} />
             <Route path="/legal/privacy" element={<LegalPrivacy />} />
           </Route>
