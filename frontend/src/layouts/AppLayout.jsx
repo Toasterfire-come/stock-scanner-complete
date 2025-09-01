@@ -240,7 +240,6 @@ const AppLayout = () => {
                 <li><Link to="/features" className="hover:text-white">Features</Link></li>
                 <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
                 <li><Link to="/docs" className="hover:text-white">Documentation</Link></li>
-                <li><Link to="/roadmap" className="hover:text-white">Roadmap</Link></li>
               </ul>
             </div>
             
@@ -248,7 +247,6 @@ const AppLayout = () => {
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link to="/about" className="hover:text-white">About</Link></li>
-                <li><Link to="/careers" className="hover:text-white">Careers</Link></li>
                 <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
                 <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
               </ul>

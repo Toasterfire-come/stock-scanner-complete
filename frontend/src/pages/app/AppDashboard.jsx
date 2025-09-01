@@ -1,481 +1,417 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Skeleton } from "../../components/ui/skeleton";
+import { Button } from "../../components/ui/button";
+import { Progress } from "../../components/ui/progress";
+import { Link } from "react-router-dom";
 import { 
   TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
   BarChart3, 
-  Bell,
-  Plus,
+  Bell, 
+  Search,
+  Filter,
+  PieChart,
+  Bookmark,
+  AlertTriangle,
+  Newspaper,
+  Activity,
+  Clock,
+  Zap,
+  Users,
   ArrowUpRight,
   ArrowDownRight,
-  Activity,
-  PieChart,
-  AlertTriangle,
-  Clock,
-  Star
+  Plus,
+  Eye,
+  Target
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import { getMarketStats, getTrending, getPortfolio, getWatchlist } from "../../api/client";
 
 const AppDashboard = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [marketStats, setMarketStats] = useState(null);
-  const [trending, setTrending] = useState(null);
-  const [portfolio, setPortfolio] = useState(null);
-  const [watchlist, setWatchlist] = useState(null);
-  const { user } = useAuth();
+  const [usageData, setUsageData] = useState({
+    plan: "Bronze",
+    apiCalls: {
+      used: 892,
+      limit: 1500,
+      hourlyUsed: 7,
+      hourlyLimit: 10,
+      dailyUsed: 34,
+      dailyLimit: 50
+    },
+    alerts: {
+      active: 12,
+      triggered: 3
+    },
+    portfolio: {
+      value: 125420.50,
+      change: 2840.20,
+      changePercent: 2.32
+    }
+  });
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [statsResponse, trendingResponse, portfolioResponse, watchlistResponse] = await Promise.all([
-          getMarketStats().catch(() => null),
-          getTrending().catch(() => null),
-          getPortfolio().catch(() => null),
-          getWatchlist().catch(() => null)
-        ]);
+  const [marketOverview, setMarketOverview] = useState({
+    gainers: 1247,
+    losers: 892,
+    unchanged: 341,
+    volume: "4.2B"
+  });
 
-        setMarketStats(statsResponse);
-        setTrending(trendingResponse);
-        setPortfolio(portfolioResponse);
-        setWatchlist(watchlistResponse);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const quickLinks = [
+    {
+      title: "Stock Screener",
+      description: "Find trading opportunities",
+      icon: <Filter className="h-6 w-6" />,
+      href: "/app/screeners",
+      color: "bg-blue-600"
+    },
+    {
+      title: "Portfolio",
+      description: "Track your positions",
+      icon: <PieChart className="h-6 w-6" />,
+      href: "/app/portfolio", 
+      color: "bg-green-600"
+    },
+    {
+      title: "Watchlists",
+      description: "Monitor favorites",
+      icon: <Bookmark className="h-6 w-6" />,
+      href: "/app/watchlists",
+      color: "bg-purple-600"
+    },
+    {
+      title: "Alerts",
+      description: "Manage notifications",
+      icon: <Bell className="h-6 w-6" />,
+      href: "/app/alerts",
+      color: "bg-orange-600"
+    },
+    {
+      title: "Market News",
+      description: "Stay informed",
+      icon: <Newspaper className="h-6 w-6" />,
+      href: "/app/news",
+      color: "bg-red-600"
+    },
+    {
+      title: "Stock Search",
+      description: "Look up any stock",
+      icon: <Search className="h-6 w-6" />,
+      href: "/app/stocks",
+      color: "bg-indigo-600"
+    }
+  ];
 
-    fetchDashboardData();
-  }, []);
+  const recentAlerts = [
+    {
+      symbol: "AAPL",
+      message: "Price crossed above $180.00",
+      time: "5 min ago",
+      type: "price"
+    },
+    {
+      symbol: "TSLA",
+      message: "Volume spike detected (+150%)",
+      time: "12 min ago", 
+      type: "volume"
+    },
+    {
+      symbol: "MSFT",
+      message: "Earnings announcement tomorrow",
+      time: "1 hour ago",
+      type: "news"
+    }
+  ];
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
+  const topMovers = [
+    { symbol: "NVDA", price: "$425.30", change: "+12.50", changePercent: "+3.02%" },
+    { symbol: "AMD", price: "$142.80", change: "+8.20", changePercent: "+6.10%" },
+    { symbol: "INTC", price: "$28.45", change: "-1.25", changePercent: "-4.20%" }
+  ];
+
+  const getUsageColor = (used, limit) => {
+    const percentage = (used / limit) * 100;
+    if (percentage >= 90) return "text-red-600";
+    if (percentage >= 75) return "text-yellow-600";
+    return "text-green-600";
   };
 
-  const formatPercentage = (value) => {
-    return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+  const getUsageProgress = (used, limit) => {
+    return Math.min((used / limit) * 100, 100);
   };
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-          
-          <div className="grid md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-4 w-24 mb-2" />
-                  <Skeleton className="h-4 w-16" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {user?.first_name || user?.username}
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Here's what's happening in the markets today
-            </p>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button asChild>
-              <Link to="/app/screeners/new">
-                <Plus className="h-4 w-4 mr-2" />
-                New Screen
-              </Link>
-            </Button>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-xl text-gray-600">Welcome back! Here's your trading overview.</p>
         </div>
 
-        {/* Market Overview */}
-        {marketStats && (
-          <div className="grid md:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Stocks</p>
-                    <p className="text-2xl font-bold">
-                      {marketStats.market_overview.total_stocks.toLocaleString()}
-                    </p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Gainers</p>
-                    <div className="flex items-center">
-                      <p className="text-2xl font-bold text-green-600">
-                        {marketStats.market_overview.gainers.toLocaleString()}
-                      </p>
-                      <TrendingUp className="h-5 w-5 text-green-500 ml-2" />
-                    </div>
-                  </div>
-                  <ArrowUpRight className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Losers</p>
-                    <div className="flex items-center">
-                      <p className="text-2xl font-bold text-red-600">
-                        {marketStats.market_overview.losers.toLocaleString()}
-                      </p>
-                      <TrendingDown className="h-5 w-5 text-red-500 ml-2" />
-                    </div>
-                  </div>
-                  <ArrowDownRight className="h-8 w-8 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Unchanged</p>
-                    <p className="text-2xl font-bold text-gray-600">
-                      {marketStats.market_overview.unchanged.toLocaleString()}
-                    </p>
-                  </div>
-                  <Activity className="h-8 w-8 text-gray-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Portfolio Summary */}
+        {/* Usage Overview */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center justify-between">
+                API Usage - Monthly
+                <Badge variant="secondary">{usageData.plan} Plan</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Used this month</span>
+                  <span className={getUsageColor(usageData.apiCalls.used, usageData.apiCalls.limit)}>
+                    {usageData.apiCalls.used.toLocaleString()} / {usageData.apiCalls.limit.toLocaleString()}
+                  </span>
+                </div>
+                <Progress 
+                  value={getUsageProgress(usageData.apiCalls.used, usageData.apiCalls.limit)} 
+                  className="h-2"
+                />
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Hourly:</span>
+                    <span className={`ml-2 ${getUsageColor(usageData.apiCalls.hourlyUsed, usageData.apiCalls.hourlyLimit)}`}>
+                      {usageData.apiCalls.hourlyUsed}/{usageData.apiCalls.hourlyLimit}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Daily:</span>
+                    <span className={`ml-2 ${getUsageColor(usageData.apiCalls.dailyUsed, usageData.apiCalls.dailyLimit)}`}>
+                      {usageData.apiCalls.dailyUsed}/{usageData.apiCalls.dailyLimit}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Bell className="h-5 w-5 mr-2" />
+                Alerts Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Active Alerts</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    {usageData.alerts.active}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Triggered Today</span>
+                  <span className="text-2xl font-bold text-green-600">
+                    {usageData.alerts.triggered}
+                  </span>
+                </div>
+                <Button asChild size="sm" className="w-full">
+                  <Link to="/app/alerts">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Alert
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
                 <PieChart className="h-5 w-5 mr-2" />
-                Portfolio Summary
+                Portfolio Overview
               </CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/app/portfolio">
-                  View All
-                  <ArrowUpRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
             </CardHeader>
             <CardContent>
-              {portfolio?.data?.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm text-blue-600">Total Value</p>
-                      <p className="text-2xl font-bold text-blue-900">
-                        {formatCurrency(portfolio.summary.total_value)}
-                      </p>
-                    </div>
-                    <div className={`p-4 rounded-lg ${
-                      portfolio.summary.total_gain_loss >= 0 ? 'bg-green-50' : 'bg-red-50'
-                    }`}>
-                      <p className={`text-sm ${
-                        portfolio.summary.total_gain_loss >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        Total P&L
-                      </p>
-                      <p className={`text-2xl font-bold ${
-                        portfolio.summary.total_gain_loss >= 0 ? 'text-green-900' : 'text-red-900'
-                      }`}>
-                        {formatCurrency(portfolio.summary.total_gain_loss)}
-                      </p>
-                    </div>
+              <div className="space-y-3">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gray-900">
+                    ${usageData.portfolio.value.toLocaleString()}
                   </div>
-                  
-                  <div className="space-y-2">
-                    {portfolio.data.slice(0, 3).map((holding) => (
-                      <div key={holding.id} className="flex items-center justify-between">
-                        <div>
-                          <span className="font-medium">{holding.symbol}</span>
-                          <span className="text-sm text-gray-500 ml-2">
-                            {holding.shares} shares
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">
-                            {formatCurrency(holding.total_value)}
-                          </div>
-                          <div className={`text-sm ${
-                            holding.gain_loss >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {formatPercentage(holding.gain_loss_percent)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className={`flex items-center justify-center ${
+                    usageData.portfolio.change >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {usageData.portfolio.change >= 0 ? (
+                      <ArrowUpRight className="h-4 w-4 mr-1" />
+                    ) : (
+                      <ArrowDownRight className="h-4 w-4 mr-1" />
+                    )}
+                    <span>
+                      ${Math.abs(usageData.portfolio.change).toLocaleString()} 
+                      ({usageData.portfolio.changePercent}%)
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <PieChart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Portfolio Yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    Start tracking your investments
-                  </p>
-                  <Button asChild>
-                    <Link to="/app/portfolio">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Holdings
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Top Gainers */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2" />
-                Top Gainers
-              </CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/app/top-movers">
-                  View All
-                  <ArrowUpRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {trending?.top_gainers?.length > 0 ? (
-                <div className="space-y-3">
-                  {trending.top_gainers.slice(0, 5).map((stock, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div>
-                        <Link 
-                          to={`/app/stocks/${stock.ticker}`}
-                          className="font-medium hover:text-blue-600"
-                        >
-                          {stock.ticker}
-                        </Link>
-                        <p className="text-sm text-gray-500">{stock.name}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">
-                          {formatCurrency(stock.current_price)}
-                        </div>
-                        <div className="text-sm text-green-600 flex items-center">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          {formatPercentage(stock.change_percent)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">No market data available</p>
-                </div>
-              )}
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link to="/app/portfolio">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Watchlist */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center">
-                <Star className="h-5 w-5 mr-2" />
-                Watchlist
-              </CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/app/watchlists">
-                  Manage
-                  <ArrowUpRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {watchlist?.data?.length > 0 ? (
-                <div className="space-y-3">
-                  {watchlist.data.slice(0, 5).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between">
-                      <div>
-                        <Link 
-                          to={`/app/stocks/${item.symbol}`}
-                          className="font-medium hover:text-blue-600"
-                        >
-                          {item.symbol}
-                        </Link>
-                        <p className="text-sm text-gray-500">{item.company_name}</p>
+        {/* Quick Links */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quickLinks.map((link, index) => (
+              <Link key={index} to={link.href}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-12 h-12 ${link.color} rounded-lg flex items-center justify-center text-white`}>
+                        {link.icon}
                       </div>
-                      <div className="text-right">
-                        <div className="font-medium">
-                          {formatCurrency(item.current_price)}
-                        </div>
-                        <div className={`text-sm flex items-center ${
-                          item.price_change_percent >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {item.price_change_percent >= 0 ? (
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3 mr-1" />
-                          )}
-                          {formatPercentage(item.price_change_percent)}
-                        </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{link.title}</h3>
+                        <p className="text-sm text-gray-600">{link.description}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Watchlist Yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    Start watching stocks you're interested in
-                  </p>
-                  <Button asChild>
-                    <Link to="/app/stocks">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Browse Stocks
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
 
-          {/* Quick Actions */}
+        {/* Market Overview & Recent Activity */}
+        <div className="grid lg:grid-cols-2 gap-8 mb-8">
+          {/* Market Overview */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Common tasks and shortcuts
-              </CardDescription>
+              <CardTitle className="flex items-center">
+                <Activity className="h-5 w-5 mr-2" />
+                Market Overview
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Button asChild className="w-full justify-start">
-                <Link to="/app/screeners/new">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Create New Screener
-                </Link>
-              </Button>
-              
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/alerts">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Set Price Alert
-                </Link>
-              </Button>
-              
-              <Button asChild variant="outline" className="w-full justify-start">
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <ArrowUpRight className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-green-600">{marketOverview.gainers}</div>
+                  <div className="text-sm text-gray-600">Gainers</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg">
+                  <ArrowDownRight className="h-6 w-6 text-red-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-red-600">{marketOverview.losers}</div>
+                  <div className="text-sm text-gray-600">Losers</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <Activity className="h-6 w-6 text-gray-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-600">{marketOverview.unchanged}</div>
+                  <div className="text-sm text-gray-600">Unchanged</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <BarChart3 className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-blue-600">{marketOverview.volume}</div>
+                  <div className="text-sm text-gray-600">Volume</div>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="w-full mt-4">
                 <Link to="/app/markets">
-                  <Activity className="h-4 w-4 mr-2" />
-                  Market Overview
+                  View Full Market Data
                 </Link>
               </Button>
-              
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/news">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Latest News
+            </CardContent>
+          </Card>
+
+          {/* Recent Alerts */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 mr-2" />
+                  Recent Alerts
+                </div>
+                <Badge variant="secondary">{recentAlerts.length} Active</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentAlerts.map((alert, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Badge variant="outline" className="text-xs">{alert.symbol}</Badge>
+                        <span className="text-xs text-gray-500">{alert.time}</span>
+                      </div>
+                      <p className="text-sm text-gray-900">{alert.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button asChild variant="outline" className="w-full mt-4">
+                <Link to="/app/alerts">
+                  View All Alerts
                 </Link>
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Alerts Summary */}
+        {/* Top Movers */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              Recent Alerts
+              <TrendingUp className="h-5 w-5 mr-2" />
+              Top Movers Today
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Recent Alerts</h3>
-              <p className="text-gray-600 mb-4">
-                Set up price alerts to stay informed about your favorite stocks
-              </p>
-              <Button asChild>
-                <Link to="/app/alerts">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Alert
-                </Link>
-              </Button>
+            <div className="grid md:grid-cols-3 gap-4">
+              {topMovers.map((stock, index) => (
+                <div key={index} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <Badge variant="outline">{stock.symbol}</Badge>
+                    <span className="text-lg font-semibold">{stock.price}</span>
+                  </div>
+                  <div className={`flex items-center ${
+                    stock.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {stock.change.startsWith('+') ? (
+                      <ArrowUpRight className="h-4 w-4 mr-1" />
+                    ) : (
+                      <ArrowDownRight className="h-4 w-4 mr-1" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {stock.change} ({stock.changePercent})
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
+            <Button asChild variant="outline" className="w-full mt-4">
+              <Link to="/app/stocks">
+                <Target className="h-4 w-4 mr-2" />
+                Explore More Stocks
+              </Link>
+            </Button>
           </CardContent>
         </Card>
+
+        {/* Upgrade CTA for Free/Low-tier users */}
+        {usageData.plan !== "Gold" && (
+          <Card className="mt-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <CardContent className="p-8 text-center">
+              <Zap className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold mb-2">Unlock More Features</h3>
+              <p className="text-blue-100 mb-6">
+                Upgrade to get unlimited API calls, advanced alerts, and priority support.
+              </p>
+              <Button asChild variant="secondary" size="lg">
+                <Link to="/pricing">
+                  Upgrade Plan
+                  <ArrowUpRight className="h-5 w-5 ml-2" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
