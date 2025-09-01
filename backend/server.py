@@ -727,7 +727,7 @@ async def record_payment(payload: RevenueRecordRequest):
 @revenue.get("/revenue-analytics/{month_year}/")
 async def revenue_analytics(month_year: Optional[str] = None, format: Optional[str] = "json"):
     q = {"month_year": month_year} if month_year else {}
-    docs = await db.revenue_records.find(q).to_list(1000)
+    docs = await db.revenue_records.find(q, {"_id": 0}).to_list(1000)
     total = sum([d.get("final_amount", 0.0) for d in docs])
     return {"success": True, "data": {"total_revenue": total, "records": docs}, "timestamp": now_iso(), "endpoint": "/api/revenue/revenue-analytics/", "method": "GET"}
 
