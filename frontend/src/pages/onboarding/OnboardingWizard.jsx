@@ -4,131 +4,60 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { Checkbox } from "../../components/ui/checkbox";
 import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import { toast } from "sonner";
+import { Checkbox } from "../../components/ui/checkbox";
 import { 
-  User, 
-  TrendingUp, 
-  Bell, 
-  CheckCircle, 
   ArrowRight, 
-  ArrowLeft,
+  ArrowLeft, 
+  CheckCircle, 
+  TrendingUp, 
+  BarChart3, 
+  Bell, 
+  Zap,
+  Users,
   Target,
   DollarSign,
-  BarChart3,
-  PieChart,
-  AlertTriangle
+  Clock
 } from "lucide-react";
-import { updateProfile, updateNotificationSettings } from "../../api/client";
+import { toast } from "sonner";
 
 const OnboardingWizard = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Step 1: Basic Info
+    // Step 1: Personal Information
     firstName: "",
     lastName: "",
     phone: "",
-    company: "",
     
-    // Step 2: Trading Profile
-    experience: "",
-    investmentGoals: [],
-    riskTolerance: "",
+    // Step 2: Trading Experience
+    experienceLevel: "",
+    tradingGoals: [],
     portfolioSize: "",
     
     // Step 3: Preferences
-    notifications: {
-      trading: {
-        price_alerts: true,
-        volume_alerts: false,
-        market_hours: true
-      },
-      portfolio: {
-        daily_summary: true,
-        weekly_report: true,
-        milestone_alerts: true
-      },
-      news: {
-        breaking_news: true,
-        earnings_alerts: true,
-        analyst_ratings: false
-      },
-      security: {
-        login_alerts: true,
-        billing_updates: true,
-        plan_updates: true
-      }
-    },
-    interests: []
+    interestedFeatures: [],
+    notificationPreferences: [],
+    
+    // Step 4: Account Setup
+    subscriptionPlan: "",
   });
 
   const totalSteps = 4;
-  const progressPercent = (currentStep / totalSteps) * 100;
-
-  const experienceLevels = [
-    { value: "beginner", label: "Beginner", description: "New to trading" },
-    { value: "intermediate", label: "Intermediate", description: "Some trading experience" },
-    { value: "advanced", label: "Advanced", description: "Experienced trader" },
-    { value: "professional", label: "Professional", description: "Professional trader/advisor" }
-  ];
-
-  const investmentGoals = [
-    { value: "growth", label: "Growth", icon: <TrendingUp className="h-4 w-4" /> },
-    { value: "income", label: "Income", icon: <DollarSign className="h-4 w-4" /> },
-    { value: "value", label: "Value Investing", icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "day-trading", label: "Day Trading", icon: <Target className="h-4 w-4" /> },
-    { value: "swing", label: "Swing Trading", icon: <PieChart className="h-4 w-4" /> },
-    { value: "long-term", label: "Long-term Hold", icon: <CheckCircle className="h-4 w-4" /> }
-  ];
-
-  const riskLevels = [
-    { value: "conservative", label: "Conservative", description: "Minimize risk, steady returns" },
-    { value: "moderate", label: "Moderate", description: "Balanced risk and return" },
-    { value: "aggressive", label: "Aggressive", description: "Higher risk for higher returns" }
-  ];
-
-  const portfolioSizes = [
-    { value: "under-10k", label: "Under $10K" },
-    { value: "10k-50k", label: "$10K - $50K" },
-    { value: "50k-100k", label: "$50K - $100K" },
-    { value: "100k-500k", label: "$100K - $500K" },
-    { value: "over-500k", label: "Over $500K" }
-  ];
-
-  const interests = [
-    "Technology", "Healthcare", "Finance", "Energy", "Consumer Goods",
-    "Real Estate", "Cryptocurrency", "Commodities", "International Markets", "ESG Investing"
-  ];
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleArrayToggle = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter(item => item !== value)
-        : [...prev[field], value]
+      [field]: value
     }));
   };
 
-  const handleNotificationChange = (category, setting, value) => {
+  const handleArrayChange = (field, value, checked) => {
     setFormData(prev => ({
       ...prev,
-      notifications: {
-        ...prev.notifications,
-        [category]: {
-          ...prev.notifications[category],
-          [setting]: value
-        }
-      }
+      [field]: checked 
+        ? [...prev[field], value]
+        : prev[field].filter(item => item !== value)
     }));
   };
 
@@ -144,318 +73,313 @@ const OnboardingWizard = () => {
     }
   };
 
-  const skipOnboarding = () => {
-    navigate("/app/dashboard");
-  };
-
   const completeOnboarding = async () => {
-    setIsLoading(true);
     try {
-      // Update profile information
-      await updateProfile({
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone: formData.phone,
-        company: formData.company
-      });
-
-      // Update notification settings
-      await updateNotificationSettings(formData.notifications);
-
-      toast.success("Welcome to Stock Scanner! Your account is set up.");
+      // Here you would typically send the data to your backend
+      console.log("Onboarding data:", formData);
+      
+      // Show success message
+      toast.success("Welcome to Trade Scan Pro! Your account is set up.");
+      
+      // Navigate to dashboard
       navigate("/app/dashboard");
     } catch (error) {
-      toast.error("Failed to complete setup. You can update these later in settings.");
-      navigate("/app/dashboard");
-    } finally {
-      setIsLoading(false);
+      toast.error("Something went wrong. Please try again.");
     }
   };
+
+  const experienceLevels = [
+    { id: "beginner", label: "Beginner", description: "New to trading" },
+    { id: "intermediate", label: "Intermediate", description: "Some trading experience" },
+    { id: "advanced", label: "Advanced", description: "Experienced trader" },
+    { id: "professional", label: "Professional", description: "Trading is my profession" }
+  ];
+
+  const tradingGoalOptions = [
+    "Day Trading",
+    "Swing Trading", 
+    "Long-term Investing",
+    "Options Trading",
+    "Dividend Investing",
+    "Growth Investing"
+  ];
+
+  const portfolioSizes = [
+    { id: "under-10k", label: "Under $10,000" },
+    { id: "10k-50k", label: "$10,000 - $50,000" },
+    { id: "50k-100k", label: "$50,000 - $100,000" },
+    { id: "100k-500k", label: "$100,000 - $500,000" },
+    { id: "over-500k", label: "Over $500,000" }
+  ];
+
+  const features = [
+    { id: "stock-screening", label: "Stock Screening", icon: <BarChart3 className="h-4 w-4" /> },
+    { id: "real-time-alerts", label: "Real-time Alerts", icon: <Bell className="h-4 w-4" /> },
+    { id: "portfolio-tracking", label: "Portfolio Tracking", icon: <TrendingUp className="h-4 w-4" /> },
+    { id: "news-analysis", label: "News Analysis", icon: <Users className="h-4 w-4" /> },
+    { id: "market-research", label: "Market Research", icon: <Target className="h-4 w-4" /> },
+    { id: "technical-analysis", label: "Technical Analysis", icon: <BarChart3 className="h-4 w-4" /> }
+  ];
+
+  const notificationOptions = [
+    { id: "email", label: "Email Notifications" },
+    { id: "push", label: "Push Notifications" },
+    { id: "sms", label: "SMS Alerts" },
+    { id: "in-app", label: "In-App Notifications" }
+  ];
+
+  const subscriptionPlans = [
+    {
+      id: "bronze",
+      name: "Bronze",
+      price: "$14.99/month",
+      features: ["1,000 stocks/month", "Basic screening", "Email alerts"]
+    },
+    {
+      id: "silver", 
+      name: "Silver",
+      price: "$29.99/month",
+      features: ["5,000 stocks/month", "Advanced screening", "Real-time alerts", "API access"]
+    },
+    {
+      id: "gold",
+      name: "Gold", 
+      price: "$59.99/month",
+      features: ["10,000 stocks/month", "All features", "Priority support", "Advanced analytics"]
+    }
+  ];
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <User className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Tell us about yourself
-              </h2>
-              <p className="text-gray-600">
-                Help us personalize your Stock Scanner experience
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Personal Information</CardTitle>
+              <CardDescription>
+                Help us personalize your Trade Scan Pro experience
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="phone">Phone Number (Optional)</Label>
                 <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
-                  placeholder="John"
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  placeholder="+1 (555) 123-4567"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
-                  placeholder="Doe"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="company">Company (Optional)</Label>
-              <Input
-                id="company"
-                value={formData.company}
-                onChange={(e) => handleInputChange("company", e.target.value)}
-                placeholder="Acme Corp"
-              />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         );
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <TrendingUp className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Your Trading Profile
-              </h2>
-              <p className="text-gray-600">
-                Help us understand your investment style and goals
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <Label>Experience Level</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {experienceLevels.map((level) => (
-                  <Card
-                    key={level.value}
-                    className={`cursor-pointer transition-colors ${
-                      formData.experience === level.value
-                        ? "ring-2 ring-blue-500 bg-blue-50"
-                        : "hover:bg-gray-50"
-                    }`}
-                    onClick={() => handleInputChange("experience", level.value)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="font-medium">{level.label}</div>
-                      <div className="text-sm text-gray-600">{level.description}</div>
-                    </CardContent>
-                  </Card>
-                ))}
+          <Card className="w-full max-w-2xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Trading Experience</CardTitle>
+              <CardDescription>
+                Tell us about your trading background
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">Experience Level</Label>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  {experienceLevels.map((level) => (
+                    <div key={level.id} className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("experienceLevel", level.id)}
+                        className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
+                          formData.experienceLevel === level.id
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="font-medium">{level.label}</div>
+                        <div className="text-sm text-gray-500">{level.description}</div>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <Label>Investment Goals (Select all that apply)</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {investmentGoals.map((goal) => (
-                  <Card
-                    key={goal.value}
-                    className={`cursor-pointer transition-colors ${
-                      formData.investmentGoals.includes(goal.value)
-                        ? "ring-2 ring-blue-500 bg-blue-50"
-                        : "hover:bg-gray-50"
-                    }`}
-                    onClick={() => handleArrayToggle("investmentGoals", goal.value)}
-                  >
-                    <CardContent className="p-4 flex items-center space-x-3">
-                      {goal.icon}
-                      <span className="font-medium">{goal.label}</span>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div>
+                <Label className="text-base font-medium">Trading Goals (Select all that apply)</Label>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  {tradingGoalOptions.map((goal) => (
+                    <div key={goal} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={goal}
+                        checked={formData.tradingGoals.includes(goal)}
+                        onCheckedChange={(checked) => handleArrayChange("tradingGoals", goal, checked)}
+                      />
+                      <Label htmlFor={goal} className="text-sm">{goal}</Label>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <Label>Risk Tolerance</Label>
-              <div className="space-y-2">
-                {riskLevels.map((risk) => (
-                  <Card
-                    key={risk.value}
-                    className={`cursor-pointer transition-colors ${
-                      formData.riskTolerance === risk.value
-                        ? "ring-2 ring-blue-500 bg-blue-50"
-                        : "hover:bg-gray-50"
-                    }`}
-                    onClick={() => handleInputChange("riskTolerance", risk.value)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="font-medium">{risk.label}</div>
-                      <div className="text-sm text-gray-600">{risk.description}</div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div>
+                <Label className="text-base font-medium">Portfolio Size</Label>
+                <div className="grid grid-cols-1 gap-2 mt-3">
+                  {portfolioSizes.map((size) => (
+                    <button
+                      key={size.id}
+                      type="button"
+                      onClick={() => handleInputChange("portfolioSize", size.id)}
+                      className={`w-full p-3 rounded-lg border text-left transition-colors ${
+                        formData.portfolioSize === size.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {size.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         );
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <Bell className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Notification Preferences
-              </h2>
-              <p className="text-gray-600">
-                Choose how you'd like to stay informed
-              </p>
-            </div>
+          <Card className="w-full max-w-2xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Preferences</CardTitle>
+              <CardDescription>
+                Customize your experience
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">Features You're Most Interested In</Label>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  {features.map((feature) => (
+                    <div key={feature.id} className="flex items-center space-x-3">
+                      <Checkbox
+                        id={feature.id}
+                        checked={formData.interestedFeatures.includes(feature.id)}
+                        onCheckedChange={(checked) => handleArrayChange("interestedFeatures", feature.id, checked)}
+                      />
+                      <Label htmlFor={feature.id} className="flex items-center space-x-2">
+                        {feature.icon}
+                        <span>{feature.label}</span>
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Trading Alerts</CardTitle>
-                  <CardDescription>Price movements and market events</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Price Alerts</Label>
-                      <p className="text-sm text-gray-600">Get notified when stocks hit your target prices</p>
+              <div>
+                <Label className="text-base font-medium">Notification Preferences</Label>
+                <div className="space-y-2 mt-3">
+                  {notificationOptions.map((option) => (
+                    <div key={option.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={option.id}
+                        checked={formData.notificationPreferences.includes(option.id)}
+                        onCheckedChange={(checked) => handleArrayChange("notificationPreferences", option.id, checked)}
+                      />
+                      <Label htmlFor={option.id}>{option.label}</Label>
                     </div>
-                    <Checkbox
-                      checked={formData.notifications.trading.price_alerts}
-                      onCheckedChange={(checked) => 
-                        handleNotificationChange("trading", "price_alerts", checked)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Volume Alerts</Label>
-                      <p className="text-sm text-gray-600">Unusual volume activity notifications</p>
-                    </div>
-                    <Checkbox
-                      checked={formData.notifications.trading.volume_alerts}
-                      onCheckedChange={(checked) => 
-                        handleNotificationChange("trading", "volume_alerts", checked)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Market Hours</Label>
-                      <p className="text-sm text-gray-600">Market open/close notifications</p>
-                    </div>
-                    <Checkbox
-                      checked={formData.notifications.trading.market_hours}
-                      onCheckedChange={(checked) => 
-                        handleNotificationChange("trading", "market_hours", checked)
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Portfolio Updates</CardTitle>
-                  <CardDescription>Performance and summary reports</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Daily Summary</Label>
-                      <p className="text-sm text-gray-600">Daily portfolio performance email</p>
-                    </div>
-                    <Checkbox
-                      checked={formData.notifications.portfolio.daily_summary}
-                      onCheckedChange={(checked) => 
-                        handleNotificationChange("portfolio", "daily_summary", checked)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Weekly Report</Label>
-                      <p className="text-sm text-gray-600">Comprehensive weekly performance report</p>
-                    </div>
-                    <Checkbox
-                      checked={formData.notifications.portfolio.weekly_report}
-                      onCheckedChange={(checked) => 
-                        handleNotificationChange("portfolio", "weekly_report", checked)
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
 
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                You're All Set!
-              </h2>
-              <p className="text-gray-600">
-                Your Stock Scanner account is ready to go
-              </p>
-            </div>
-
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-blue-900 mb-3">What's Next?</h3>
-                <ul className="space-y-2 text-blue-800">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    Explore live market data and stock analysis
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    Create your first stock screener
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    Set up your watchlists and price alerts
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    Track your portfolio performance
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <div className="text-center space-y-4">
-              <p className="text-sm text-gray-600">
-                You can always update these preferences later in your account settings.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={completeOnboarding} size="lg" disabled={isLoading}>
-                  {isLoading ? "Setting up..." : "Get Started"}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+          <Card className="w-full max-w-4xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl flex items-center justify-center space-x-2">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+                <span>Almost Done!</span>
+              </CardTitle>
+              <CardDescription>
+                Your Trade Scan Pro account is ready to go
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">Choose Your Plan</Label>
+                <div className="grid md:grid-cols-3 gap-4 mt-4">
+                  {subscriptionPlans.map((plan) => (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => handleInputChange("subscriptionPlan", plan.id)}
+                      className={`p-6 rounded-lg border-2 text-left transition-all ${
+                        formData.subscriptionPlan === plan.id
+                          ? "border-blue-500 bg-blue-50 scale-105"
+                          : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="font-bold text-lg">{plan.name}</div>
+                      <div className="text-blue-600 font-semibold mb-3">{plan.price}</div>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-center">
+                            <CheckCircle className="h-3 w-3 text-green-500 mr-2" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-2">Setup Summary:</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Name:</span> {formData.firstName} {formData.lastName}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Experience:</span> {
+                      experienceLevels.find(level => level.id === formData.experienceLevel)?.label || "Not selected"
+                    }
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Goals:</span> {formData.tradingGoals.length} selected
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Plan:</span> {
+                      subscriptionPlans.find(plan => plan.id === formData.subscriptionPlan)?.name || "Not selected"
+                    }
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
 
       default:
@@ -463,85 +387,80 @@ const OnboardingWizard = () => {
     }
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.firstName && formData.lastName;
-      case 2:
-        return formData.experience && formData.riskTolerance;
-      case 3:
-        return true;
-      case 4:
-        return true;
-      default:
-        return false;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 py-8">
-      <div className="container mx-auto px-4 max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
+      <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to Stock Scanner
-          </h1>
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+              <TrendingUp className="h-7 w-7 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome to Trade Scan Pro
+            </h1>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="flex items-center justify-center space-x-2 mb-6">
+            {[1, 2, 3, 4].map((step) => (
+              <div key={step} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  step === currentStep 
+                    ? "bg-blue-600 text-white" 
+                    : step < currentStep 
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-600"
+                }`}>
+                  {step < currentStep ? <CheckCircle className="h-4 w-4" /> : step}
+                </div>
+                {step < 4 && (
+                  <div className={`w-12 h-1 mx-2 ${
+                    step < currentStep ? "bg-green-500" : "bg-gray-200"
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          
           <p className="text-gray-600">
-            Let's set up your account in just a few steps
+            Step {currentStep} of {totalSteps}: Complete your profile setup
           </p>
         </div>
 
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">
-              Step {currentStep} of {totalSteps}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={skipOnboarding}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Skip for now
-            </Button>
-          </div>
-          <Progress value={progressPercent} className="w-full" />
+        {/* Step Content */}
+        <div className="flex justify-center">
+          {renderStep()}
         </div>
 
-        {/* Step Content */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            {renderStep()}
-          </CardContent>
-        </Card>
-
-        {/* Navigation */}
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
-
+        {/* Navigation Buttons */}
+        <div className="flex justify-center mt-8 space-x-4">
+          {currentStep > 1 && (
+            <Button
+              onClick={prevStep}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Previous</span>
+            </Button>
+          )}
+          
           {currentStep < totalSteps ? (
             <Button
               onClick={nextStep}
-              disabled={!canProceed()}
+              className="flex items-center space-x-2"
             >
-              Next
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <span>Next</span>
+              <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button
               onClick={completeOnboarding}
-              disabled={isLoading}
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
             >
-              {isLoading ? "Setting up..." : "Complete Setup"}
-              <CheckCircle className="h-4 w-4 ml-2" />
+              <CheckCircle className="h-4 w-4" />
+              <span>Complete Setup</span>
             </Button>
           )}
         </div>
