@@ -9,6 +9,7 @@ if (!BASE_URL) {
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
+export const REVENUE_ROOT = `${BASE_URL}/revenue`;
 
 // Simple network event bus for latency indicator
 (function initNetBus(){
