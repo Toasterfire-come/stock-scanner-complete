@@ -20,9 +20,11 @@ import {
   DollarSign,
   Target,
   Clock,
-  Award
+  Award,
+  Mail
 } from "lucide-react";
 import { getMarketStatsSafe } from "../api/client";
+import MarketStatus from "../components/MarketStatus";
 
 const Home = () => {
   const [marketStats, setMarketStats] = useState(null);
