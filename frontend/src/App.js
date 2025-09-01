@@ -158,6 +158,11 @@ function App() {
               <Route path="/app/watchlists" element={<Watchlists />} />
               <Route path="/app/watchlists/:id" element={<PlaceholderPage title="Watchlist Detail" />} />
 
+              <Route path="/app/watchlists/:id" element={<WatchlistDetail />} />
+
+              {/* Docs */}
+              <Route path="/docs" element={<Docs />} />
+
               {/* Account Routes */}
               <Route path="/account/profile" element={<Profile />} />
               <Route path="/account/password" element={<ChangePassword />} />
