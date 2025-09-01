@@ -1,52 +1,56 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Providers from './components/Providers';
+import Nav from './components/Nav';
+import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Lazy pages
+const EndpointStatus = lazy(() => import('./pages/system/EndpointStatus'));
+const MarketOverview = lazy(() => import('./pages/market/Overview'));
+const NewsFeed = lazy(() => import('./pages/news/Feed'));
+const Profile = lazy(() => import('./pages/account/Profile'));
+const Login = lazy(() => import('./pages/auth/Login'));
+const SignUp = lazy(() => import('./pages/auth/SignUp'));
+const Onboarding = lazy(() => import('./pages/onboarding/Onboarding'));
+const Pricing = lazy(() => import('./pages/billing/Pricing'));
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+function Shell({ children }) {
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen">
+      <Nav />
+      <main className="py-6">{children}</main>
     </div>
   );
-};
+}
 
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <Providers>
+        <BrowserRouter>
+          <Suspense fallback={<div className="max-w-5xl mx-auto p-4"><div className="h-10 w-64 bg-muted animate-pulse rounded mb-4"/><div className="h-32 w-full bg-muted animate-pulse rounded"/></div>}>
+            <Routes>
+              {/* Public marketing routes */}
+              <Route path="/" element={<Shell><MarketOverview /></Shell>} />
+              <Route path="/billing" element={<Shell><Pricing /></Shell>} />
+              <Route path="/endpoint-status" element={<Shell><EndpointStatus /></Shell>} />
+
+              {/* Auth routes */}
+              <Route path="/auth/login" element={<Shell><Login /></Shell>} />
+              <Route path="/auth/sign-up" element={<Shell><SignUp /></Shell>} />
+              <Route path="/onboarding" element={<Shell><Onboarding /></Shell>} />
+
+              {/* App core routes */}
+              <Route path="/app/market" element={<Shell><MarketOverview /></Shell>} />
+              <Route path="/news" element={<Shell><NewsFeed /></Shell>} />
+              <Route path="/account" element={<Shell><Profile /></Shell>} />
+
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </Providers>
     </div>
   );
 }
