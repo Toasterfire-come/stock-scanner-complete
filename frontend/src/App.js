@@ -182,6 +182,10 @@ function App() {
               <Route path="/roadmap" element={<PlaceholderPage title="Roadmap" />} />
 
               {/* Legal */}
+            <Route path="/m/dashboard" element={<MobileDashboard />} />
+            <Route path="/m/alerts" element={<Alerts />} />
+            <Route path="/m/quick-scan" element={<TopMovers />} />
+
               <Route path="/legal/terms" element={<LegalTerms />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />
             </Route>
