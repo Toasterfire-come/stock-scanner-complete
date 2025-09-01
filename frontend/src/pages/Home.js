@@ -210,9 +210,9 @@ const Home = () => {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-xl px-12 py-6 h-auto border-2">
-                <Link to="/app/stocks">
-                  <BarChart3 className="h-6 w-6 mr-3" />
-                  View Live Demo
+                <Link to="/contact">
+                  <Mail className="h-6 w-6 mr-3" />
+                  Contact Support
                 </Link>
               </Button>
             </div>
