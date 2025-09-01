@@ -861,7 +861,7 @@ async def billing_download(invoice_id: str, authorization: Optional[str] = None)
     _ = await get_user_from_token(authorization)
     # Minimal PDF bytes (valid basic PDF)
     pdf_bytes = (b"%PDF-1.4\n1 0 obj<<>>endobj\n2 0 obj<<>>endobj\n3 0 obj<</Type/Catalog/Pages 4 0 R>>endobj\n4 0 obj<</Type/Pages/Count 1/Kids[5 0 R]>>endobj\n5 0 obj<</Type/Page/Parent 4 0 R/MediaBox[0 0 300 200]/Contents 6 0 R/Resources<</Font<</F1 7 0 R>>>>>>endobj\n6 0 obj<</Length 62>>stream\nBT /F1 12 Tf 50 150 Td (Invoice ID: " + invoice_id.encode() + b") Tj ET\nendstream endobj\n7 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nxref\n0 8\n0000000000 65535 f \ntrailer<</Size 8/Root 3 0 R>>\nstartxref\n0\n%%EOF")
-    return JSONResponse(content=None, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=invoice-{invoice_id}.pdf"}, status_code=200, background=None)
+    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=invoice-{invoice_id}.pdf"}, status_code=200)
 
 
 @api.post("/user/update-payment/")
