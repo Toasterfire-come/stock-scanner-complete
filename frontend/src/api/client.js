@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
     const token = window.localStorage.getItem("rts_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      // Also add as query param for compatibility
+      // Also add as query param for compatibility with session_authenticated endpoints
       config.params = config.params || {};
       config.params.authorization = `Bearer ${token}`;
     }
@@ -97,6 +97,11 @@ export async function getStatistics() {
   return data;
 }
 
+export async function getMarketData() {
+  const { data } = await api.get("/market-data/");
+  return data;
+}
+
 // ====================
 // AUTHENTICATION
 // ====================
@@ -125,17 +130,18 @@ export async function logout() {
   }
 }
 
+// Note: Register endpoint not in JSON spec, using mock
 export async function registerUser(userData) {
   try {
-    // Since there's no register endpoint in the backend, simulate it
-    // In a real app, this would call `/auth/register/`
-    const { data } = await api.post("/auth/register/", userData);
-    return data;
-  } catch (error) {
-    // For demo purposes, return a mock success
+    // Mock registration since not in API spec
     return {
       success: true,
       message: "Registration successful"
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Registration failed"
     };
   }
 }
@@ -234,16 +240,21 @@ export async function downloadInvoice(invoiceId) {
   return response.data;
 }
 
+export async function updatePaymentMethod(paymentData) {
+  const { data } = await api.post("/user/update-payment/", paymentData);
+  return data;
+}
+
 // ====================
 // NOTIFICATIONS
 // ====================
 export async function getNotificationSettings() {
-  const { data } = await api.get("/notifications/settings/");
+  const { data } = await api.get("/user/notification-settings/");
   return data;
 }
 
 export async function updateNotificationSettings(settings) {
-  const { data } = await api.post("/notifications/settings/", settings);
+  const { data } = await api.post("/user/notification-settings/", settings);
   return data;
 }
 
@@ -322,6 +333,11 @@ export async function subscribe(email, category = null) {
   return data;
 }
 
+export async function wordpressSubscribe(email, category = null) {
+  const { data } = await api.post("/wordpress/subscribe/", { email, category });
+  return data;
+}
+
 // ====================
 // WORDPRESS INTEGRATION
 // ====================
@@ -337,5 +353,15 @@ export async function getWordPressNews(params = {}) {
 
 export async function getWordPressAlerts(params = {}) {
   const { data } = await api.get("/wordpress/alerts/", { params });
+  return data;
+}
+
+export async function updateStocks(symbols) {
+  const { data } = await api.post("/stocks/update/", { symbols });
+  return data;
+}
+
+export async function updateNews() {
+  const { data } = await api.post("/news/update/");
   return data;
 }
