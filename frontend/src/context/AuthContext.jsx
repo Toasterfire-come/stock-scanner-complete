@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
       window.localStorage.removeItem("rts_token");
       setUser(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // effect runs on token changes only; profile hydration handled above
   }, [token]);
 
   const login = async (username, password) => {
