@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional
 
 from pydantic import BaseModel, Field
 
-from .schemas import (
+from schemas import (
     APIMessage,
     HealthResponse,
     Stock,
