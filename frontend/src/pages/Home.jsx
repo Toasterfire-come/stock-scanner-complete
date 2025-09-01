@@ -80,7 +80,7 @@ const Home = () => {
       name: "Sarah Chen",
       role: "Professional Day Trader",
       company: "Peak Capital Trading",
-      content: "Retail Trade Scanner has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise.",
+      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise.",
       rating: 5,
       profit: "+342% ROI in 6 months"
     },
