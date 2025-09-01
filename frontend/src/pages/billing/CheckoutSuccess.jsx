@@ -61,7 +61,7 @@ const CheckoutSuccess = () => {
             Payment Successful!
           </h1>
           <p className="text-gray-600">
-            Thank you for upgrading to Stock Scanner {planNames[planId] || 'Premium'}
+            Thank you for upgrading to Trade Scan Pro {planNames[planId] || 'Premium'}
           </p>
         </div>
 
