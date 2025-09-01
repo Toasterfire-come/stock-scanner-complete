@@ -50,6 +50,80 @@ api.interceptors.response.use(
 );
 
 // ====================
+// Helpers: Normalizers for common endpoints
+// ====================
+function safeNumber(v, d = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : d;
+}
+
+export function normalizeTrending(raw) {
+  const d = raw || {};
+  const toStock = (s) => ({
+    ticker: s?.ticker || s?.symbol || '-',
+    name: s?.name || s?.company_name || '-',
+    current_price: safeNumber(s?.current_price),
+    price_change_today: safeNumber(s?.price_change_today ?? s?.price_change),
+    change_percent: safeNumber(s?.change_percent),
+    volume: safeNumber(s?.volume),
+    market_cap: safeNumber(s?.market_cap),
+  });
+  return {
+    high_volume: Array.isArray(d.high_volume) ? d.high_volume.map(toStock) : [],
+    top_gainers: Array.isArray(d.top_gainers) ? d.top_gainers.map(toStock) : [],
+    most_active: Array.isArray(d.most_active) ? d.most_active.map(toStock) : [],
+    last_updated: d.last_updated || null,
+  };
+}
+
+export function normalizeMarketStats(raw) {
+  const d = raw || {};
+  const mo = d.market_overview || {};
+  const o = {
+    market_overview: {
+      total_stocks: safeNumber(mo.total_stocks),
+      nyse_stocks: safeNumber(mo.nyse_stocks),
+      gainers: safeNumber(mo.gainers),
+      losers: safeNumber(mo.losers),
+      unchanged: safeNumber(mo.unchanged),
+    },
+    top_gainers: Array.isArray(d.top_gainers) ? d.top_gainers : [],
+    top_losers: Array.isArray(d.top_losers) ? d.top_losers : [],
+    most_active: Array.isArray(d.most_active) ? d.most_active : [],
+    last_updated: d.last_updated || null,
+  };
+  return o;
+}
+
+export async function getTrendingSafe() {
+  try {
+    const { data } = await api.get("/trending/");
+    return { success: true, data: normalizeTrending(data) };
+  } catch (error) {
+    return { success: false, error: error?.response?.data?.message || 'Failed to load trending', data: normalizeTrending({}) };
+  }
+}
+
+export async function getMarketStatsSafe() {
+  try {
+    const { data } = await api.get("/market-stats/");
+    return { success: true, data: normalizeMarketStats(data) };
+  } catch (error) {
+    return { success: false, error: error?.response?.data?.message || 'Failed to load market stats', data: normalizeMarketStats({}) };
+  }
+}
+
+export async function getStatisticsSafe() {
+  try {
+    const { data } = await api.get("/statistics/");
+    // Keep raw but ensure keys exist
+    return { success: true, data: data || { market_overview: {}, top_performers: {}, subscriptions: {} } };
+  } catch (error) {
+    return { success: false, error: error?.response?.data?.message || 'Failed to load statistics', data: { market_overview: {}, top_performers: {}, subscriptions: {} } };
+  }
+}
+
+// ====================
 // HEALTH & STATUS
 // ====================
 export async function pingHealth() {
