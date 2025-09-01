@@ -12,6 +12,11 @@ import Alerts from "./pages/Alerts";
 import Notifications from "./pages/Notifications";
 import SignIn from "./pages/SignIn";
 import { AuthProvider } from "./context/AuthContext";
+import Stocks from "./pages/Stocks";
+import StockDetail from "./pages/StockDetail";
+import Watchlists from "./pages/Watchlists";
+import Portfolio from "./pages/Portfolio";
+import Status from "./pages/Status";
 
 function App() {
   return (
