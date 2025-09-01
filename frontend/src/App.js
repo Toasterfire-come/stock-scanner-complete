@@ -79,8 +79,7 @@ import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/Documentation";
 
-// Mobile
-import MobileDashboard from "./pages/mobile/MobileDashboard";
+// Mobile routes removed as requested
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
