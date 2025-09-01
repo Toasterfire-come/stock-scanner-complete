@@ -22,6 +22,9 @@ import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
 
 // Public Pages
 import Home from "./pages/Home";
+import Features from "./pages/Features";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
@@ -71,7 +74,7 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 // Content & Docs
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
-import Docs from "./pages/docs/Docs";
+import Documentation from "./pages/docs/Documentation";
 
 // Mobile
 import MobileDashboard from "./pages/mobile/MobileDashboard";
@@ -120,17 +123,16 @@ function App() {
               <Route element={<AppLayout />}>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="/pricing" element={<Pricing />} />
 
                 {/* Marketing Pages - Using placeholders */}
-                <Route path="/features" element={<PlaceholderPage title="Features" />} />
                 <Route path="/product" element={<PlaceholderPage title="Product" />} />
                 <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />
                 <Route path="/use-cases" element={<PlaceholderPage title="Use Cases" />} />
                 <Route path="/changelog" element={<PlaceholderPage title="Changelog" />} />
-                <Route path="/about" element={<PlaceholderPage title="About" />} />
-                <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
-                <Route path="/careers" element={<PlaceholderPage title="Careers" />} />
                 <Route path="/help" element={<PlaceholderPage title="Help" />} />
                 <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
 
@@ -179,7 +181,7 @@ function App() {
                 <Route path="/endpoint-status" element={<EndpointStatus />} />
 
                 {/* Docs & Content */}
-                <Route path="/docs" element={<Docs />} />
+                <Route path="/docs" element={<Documentation />} />
 
                 {/* Legal */}
                 <Route path="/legal/terms" element={<LegalTerms />} />
