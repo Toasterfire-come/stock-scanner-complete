@@ -366,7 +366,7 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
                   Portfolio Tracking Setup
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Connect your brokerage account and start tracking your portfolio performance.
+                  Learn how to manually track your portfolio performance and set up your investment data.
                 </p>
                 <Button variant="outline" size="sm">
                   Read Guide
