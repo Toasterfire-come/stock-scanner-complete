@@ -4,8 +4,9 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Search, ExternalLink, Clock, TrendingUp, Filter, RefreshCw } from "lucide-react";
+import { Search, ExternalLink, Clock, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { getNewsFeed, markNewsRead, markNewsClicked } from "../../api/client";
 
 const NewsFeed = () => {
   const [news, setNews] = useState([]);
@@ -13,6 +14,7 @@ const NewsFeed = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const categories = [
     { value: "all", label: "All News" },
@@ -32,70 +34,15 @@ const NewsFeed = () => {
 
   const fetchNews = async () => {
     setIsLoading(true);
+    setError("");
     try {
-      // Since the API might not have news data, simulate news feed
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockNews = [
-        {
-          id: 1,
-          title: "Apple Reports Strong Q4 Earnings, Beats Revenue Expectations",
-          summary: "Apple Inc. reported quarterly revenue of $117.2 billion, surpassing analyst expectations of $115.8 billion. iPhone sales were particularly strong in international markets.",
-          source: "MarketWatch",
-          category: "earnings",
-          publishedAt: "2024-01-15T14:30:00Z",
-          url: "https://example.com/news/1",
-          tickers: ["AAPL"],
-          sentiment: "positive"
-        },
-        {
-          id: 2,
-          title: "Federal Reserve Hints at Potential Rate Cut in March",
-          summary: "Fed officials suggested they may consider reducing interest rates if inflation continues to moderate, providing potential relief for growth stocks.",
-          source: "Reuters",
-          category: "markets",
-          publishedAt: "2024-01-15T13:15:00Z",
-          url: "https://example.com/news/2",
-          tickers: [],
-          sentiment: "positive"
-        },
-        {
-          id: 3,
-          title: "Microsoft Announces Major AI Partnership with OpenAI",
-          summary: "Microsoft extends its partnership with OpenAI, integrating advanced AI capabilities across its enterprise software suite, potentially boosting cloud revenue.",
-          source: "TechCrunch",
-          category: "analysis",
-          publishedAt: "2024-01-15T11:45:00Z",
-          url: "https://example.com/news/3",
-          tickers: ["MSFT"],
-          sentiment: "positive"
-        },
-        {
-          id: 4,
-          title: "Tesla Recalls 200,000 Vehicles Over Safety Concerns",
-          summary: "Tesla is recalling Model S, X, and Y vehicles due to potential brake issues. The company says the fix will be delivered via over-the-air update.",
-          source: "CNN Business",
-          category: "breaking",
-          publishedAt: "2024-01-15T10:20:00Z",
-          url: "https://example.com/news/4",
-          tickers: ["TSLA"],
-          sentiment: "negative"
-        },
-        {
-          id: 5,
-          title: "NVIDIA Stock Surges on AI Chip Demand Outlook",
-          summary: "NVIDIA shares jumped 8% in after-hours trading following reports of increased demand for AI chips from major cloud providers.",
-          source: "Yahoo Finance",
-          category: "markets",
-          publishedAt: "2024-01-15T09:30:00Z",
-          url: "https://example.com/news/5",
-          tickers: ["NVDA"],
-          sentiment: "positive"
-        }
-      ];
-
-      setNews(mockNews);
-    } catch (error) {
+      const res = await getNewsFeed({ limit: 20 });
+      // Accept both {success, data:{news_items}} and direct arrays
+      const items = res?.data?.news_items || res?.data || res?.news || [];
+      setNews(Array.isArray(items) ? items : []);
+    } catch (err) {
+      setNews([]);
+      setError("Failed to fetch news");
       toast.error("Failed to fetch news");
     } finally {
       setIsLoading(false);
@@ -106,22 +53,26 @@ const NewsFeed = () => {
     let filtered = [...news];
 
     if (searchTerm) {
-      filtered = filtered.filter(article =>
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.tickers.some(ticker => ticker.toLowerCase().includes(searchTerm.toLowerCase()))
+      const q = searchTerm.toLowerCase();
+      filtered = filtered.filter((article) =>
+        (article.title || "").toLowerCase().includes(q) ||
+        (article.summary || "").toLowerCase().includes(q) ||
+        (article.mentioned_tickers || article.tickers || [])
+          .join(",")
+          .toLowerCase()
+          .includes(q)
       );
     }
 
     if (selectedCategory !== "all") {
-      filtered = filtered.filter(article => article.category === selectedCategory);
+      filtered = filtered.filter((article) => (article.category || "").toLowerCase() === selectedCategory);
     }
 
     setFilteredNews(filtered);
   };
 
   const getSentimentColor = (sentiment) => {
-    switch (sentiment) {
+    switch ((sentiment || "").toLowerCase()) {
       case "positive":
         return "bg-green-100 text-green-800";
       case "negative":
@@ -132,7 +83,7 @@ const NewsFeed = () => {
   };
 
   const getCategoryColor = (category) => {
-    switch (category) {
+    switch ((category || "").toLowerCase()) {
       case "earnings":
         return "bg-blue-100 text-blue-800";
       case "markets":
@@ -147,25 +98,36 @@ const NewsFeed = () => {
   };
 
   const formatTimeAgo = (dateString) => {
+    if (!dateString) return "";
     const now = new Date();
     const publishedTime = new Date(dateString);
     const diffInHours = Math.floor((now - publishedTime) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return "Just now";
     if (diffInHours === 1) return "1 hour ago";
     if (diffInHours < 24) return `${diffInHours} hours ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays === 1) return "1 day ago";
     return `${diffInDays} days ago`;
   };
 
-  const markAsRead = async (newsId) => {
+  const onMarkRead = async (newsId) => {
     try {
-      // In a real implementation, this would call the API
+      await markNewsRead(newsId);
       toast.success("Article marked as read");
-    } catch (error) {
+    } catch {
       toast.error("Failed to mark as read");
+    }
+  };
+
+  const onReadMore = async (newsId, url) => {
+    try {
+      await markNewsClicked(newsId);
+    } catch {
+      // non-blocking
+    } finally {
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -175,7 +137,7 @@ const NewsFeed = () => {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="h-16 bg-gray-200 rounded"></div>
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 bg-gray-200 rounded"></div>
           ))}
         </div>
@@ -190,7 +152,7 @@ const NewsFeed = () => {
           <h1 className="text-3xl font-bold text-gray-900">News Feed</h1>
           <p className="text-gray-600 mt-2">Stay updated with the latest market news and analysis</p>
         </div>
-        <Button onClick={fetchNews}>
+        <Button onClick={fetchNews} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
@@ -208,7 +170,7 @@ const NewsFeed = () => {
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-full lg:w-48">
-            <SelectValue />
+            <SelectValue placeholder="Filter category" />
           </SelectTrigger>
           <SelectContent>
             {categories.map((category) => (
@@ -220,6 +182,12 @@ const NewsFeed = () => {
         </Select>
       </div>
 
+      {error && (
+        <Card className="mb-4">
+          <CardContent className="text-sm text-red-600 py-3">{error}</CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6">
         {filteredNews.map((article) => (
           <Card key={article.id} className="hover:shadow-lg transition-shadow">
@@ -227,15 +195,19 @@ const NewsFeed = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className={getCategoryColor(article.category)}>
-                      {article.category}
-                    </Badge>
-                    <Badge className={getSentimentColor(article.sentiment)}>
-                      {article.sentiment}
-                    </Badge>
-                    {article.tickers.length > 0 && (
+                    {article.category && (
+                      <Badge className={getCategoryColor(article.category)}>
+                        {article.category}
+                      </Badge>
+                    )}
+                    {article.sentiment && (
+                      <Badge className={getSentimentColor(article.sentiment)}>
+                        {article.sentiment}
+                      </Badge>
+                    )}
+                    {(article.mentioned_tickers || article.tickers)?.length > 0 && (
                       <div className="flex items-center gap-1">
-                        {article.tickers.map((ticker) => (
+                        {(article.mentioned_tickers || article.tickers).map((ticker) => (
                           <Badge key={ticker} variant="outline" className="text-xs">
                             {ticker}
                           </Badge>
@@ -250,53 +222,49 @@ const NewsFeed = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4 leading-relaxed">
-                {article.summary}
-              </p>
-              
+              {article.summary && (
+                <p className="text-gray-600 mb-4 leading-relaxed">{article.summary}</p>
+              )}
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span className="font-medium">{article.source}</span>
+                  {article.source && <span className="font-medium">{article.source}</span>}
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatTimeAgo(article.publishedAt)}
+                    {formatTimeAgo(article.published_at || article.publishedAt)}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => markAsRead(article.id)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => onMarkRead(article.id)}>
                     Mark Read
                   </Button>
-                  <Button size="sm" asChild>
-                    <a 
-                      href={article.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      Read More
-                    </a>
-                  </Button>
+                  {article.url && (
+                    <Button size="sm" onClick={() => onReadMore(article.id, article.url)}>
+                      <span className="flex items-center gap-1">
+                        <ExternalLink className="h-3 w-3" /> Read More
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
 
-        {filteredNews.length === 0 && (
+        {!filteredNews.length && !isLoading && (
           <Card>
             <CardContent className="text-center py-12">
               <div className="text-gray-500 mb-4">No news found</div>
-              <Button onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("all");
-              }}>
-                Clear Filters
+              <Button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("all");
+                  fetchNews();
+                }}
+                variant="outline"
+              >
+                Clear Filters & Reload
               </Button>
             </CardContent>
           </Card>
@@ -304,8 +272,8 @@ const NewsFeed = () => {
       </div>
 
       <div className="mt-8 text-center">
-        <Button variant="outline" onClick={fetchNews}>
-          Load More Articles
+        <Button variant="outline" onClick={fetchNews} disabled={isLoading}>
+          Load Latest Articles
         </Button>
       </div>
     </div>
