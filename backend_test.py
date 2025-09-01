@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://retailscanner.preview.emergentagent.com"
+BASE_URL = "https://backend-6c4f9663ed8c90b7.emergent.sh"
 API_BASE = f"{BASE_URL}/api"
 
 class BackendTester:
