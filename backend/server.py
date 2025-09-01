@@ -578,7 +578,7 @@ async def delete_watchlist(item_id: str, authorization: Optional[str] = None):
 @api.get("/portfolio/")
 async def get_portfolio(authorization: Optional[str] = None):
     user = await get_user_from_token(authorization)
-    docs = await db.portfolio.find({"user_id": user["id"]}).to_list(1000)
+    docs = await db.portfolio.find({"user_id": user["id"]}, {"_id": 0}).to_list(1000)
     total_value = sum([d.get("total_value", 0.0) for d in docs])
     total_gain_loss = sum([d.get("gain_loss", 0.0) for d in docs])
     summary = {
