@@ -24,8 +24,9 @@ import {
   AlertTriangle,
   Newspaper,
   Filter,
-  Home,
-  Zap
+  Zap,
+  ChevronDown,
+  TrendingDown
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -40,8 +41,9 @@ const AppLayout = () => {
     navigate("/");
   };
 
-  const navigation = [
-    { name: "Home", href: "/", icon: <Home className="h-4 w-4" /> },
+  // Navigation items moved to dropdown (excluding Home and Pricing)
+  const navigationItems = [
+    { name: "Dashboard", href: "/app/dashboard", icon: <BarChart3 className="h-4 w-4" /> },
     { name: "Markets", href: "/app/markets", icon: <TrendingUp className="h-4 w-4" /> },
     { name: "Stocks", href: "/app/stocks", icon: <BarChart3 className="h-4 w-4" /> },
     { name: "Screeners", href: "/app/screeners", icon: <Filter className="h-4 w-4" /> },
@@ -63,37 +65,48 @@ const AppLayout = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-white" />
+            {/* Logo - Clickable to home, square format */}
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                <TrendingUp className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Stock Scanner</span>
+              <span className="text-xl font-bold text-gray-900">Trade Scan Pro</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              ))}
-            </nav>
+            {/* Desktop Navigation Dropdown */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <Menu className="h-4 w-4" />
+                    <span>Menu</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {navigationItems.map((item) => (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link 
+                        to={item.href}
+                        className={`flex items-center space-x-3 ${
+                          isActive(item.href) ? "bg-blue-50 text-blue-700" : ""
+                        }`}
+                      >
+                        {item.icon}
+                        <span>{item.name}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-            {/* Right side */}
+            {/* Right side - Search and Auth */}
             <div className="flex items-center space-x-4">
               {/* Search */}
               <Button variant="ghost" size="sm" className="hidden md:flex">
                 <Search className="h-4 w-4" />
+                <span className="ml-2 hidden lg:inline">Search</span>
               </Button>
 
               {/* Notifications */}
@@ -155,7 +168,7 @@ const AppLayout = () => {
                   <Button asChild variant="ghost" size="sm">
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
-                  <Button asChild size="sm">
+                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
                     <Link to="/auth/sign-up">Sign Up</Link>
                   </Button>
                 </div>
@@ -179,7 +192,7 @@ const AppLayout = () => {
           <div className="lg:hidden bg-white border-t">
             <div className="container mx-auto px-4 py-2">
               <nav className="flex flex-col space-y-1">
-                {navigation.map((item) => (
+                {navigationItems.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -210,11 +223,11 @@ const AppLayout = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                  <TrendingUp className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">Stock Scanner</span>
+                <span className="text-xl font-bold">Trade Scan Pro</span>
               </div>
               <p className="text-gray-400">
                 Professional stock analysis platform for modern traders.
@@ -252,7 +265,7 @@ const AppLayout = () => {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Stock Scanner. All rights reserved.</p>
+            <p>&copy; 2024 Trade Scan Pro. All rights reserved.</p>
           </div>
         </div>
       </footer>
