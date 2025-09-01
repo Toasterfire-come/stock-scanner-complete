@@ -36,6 +36,25 @@ function App() {
             <Route path="/app/stocks/:symbol" element={<StockDetail />} />
             <Route path="/app/watchlists" element={<Watchlists />} />
             <Route path="/app/portfolio" element={<Portfolio />} />
+            <Route path="/app/screeners" element={<Screeners />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/product" element={<Product />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/data" element={<DataCoverage />} />
+            <Route path="/use-cases" element={<UseCases />} />
+            <Route path="/changelog" element={<Changelog />} />
+            <Route path="/docs" element={<Docs />} />
+            <Route path="/guides" element={<Guides />} />
+            <Route path="/tutorials" element={<Tutorials />} />
+            <Route path="/glossary" element={<Glossary />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/help/faq" element={<FAQ />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/roadmap" element={<Roadmap />} />
             <Route path="/status" element={<Status />} />
             <Route path="/legal/terms" element={<LegalTerms />} />
             <Route path="/legal/privacy" element={<LegalPrivacy />} />
