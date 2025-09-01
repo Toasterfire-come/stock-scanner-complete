@@ -1,6 +1,8 @@
 import axios from "axios";
 
 const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
+const API_PASSWORD = process.env.REACT_APP_API_PASSWORD || "";
+
 if (!BASE_URL) {
   console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
 }
@@ -12,9 +14,15 @@ export const api = axios.create({
   withCredentials: false,
 });
 
-// Attach token if present
+// Attach token and API password if present
 api.interceptors.request.use((config) => {
   try {
+    // Add API password for backend authentication
+    if (API_PASSWORD) {
+      config.headers['X-API-Key'] = API_PASSWORD;
+    }
+    
+    // Add user token if present
     const token = window.localStorage.getItem("rts_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
