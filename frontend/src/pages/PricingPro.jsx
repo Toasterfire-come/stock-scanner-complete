@@ -108,7 +108,6 @@ const PricingPro = () => {
         { name: "Premium stock screener", included: true },
         { name: "Multi-channel alerts", included: true },
         { name: "Portfolio tracking (unlimited)", included: true },
-        { name: "Mobile app access", included: true },
         { name: "Priority phone support", included: true },
         { name: "All screener filters", included: true },
         { name: "Unlimited watchlists", included: true },
