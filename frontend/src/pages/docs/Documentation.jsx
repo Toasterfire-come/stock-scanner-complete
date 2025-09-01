@@ -407,9 +407,9 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-              <a href="mailto:support@tradescanpro.com">
+              <Link to="/contact">
                 Email Support
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
