@@ -128,7 +128,10 @@ function App() {
                 <Route path="/features" element={<Features />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/pricing" element={<PricingPro />} />
+                <Route path="/pricing-old" element={<Pricing />} />
+                <Route path="/app/analytics" element={<AdvancedAnalytics />} />
+                <Route path="/app/referrals" element={<ReferralSystem />} />
 
                 {/* Marketing Pages - Using placeholders */}
                 <Route path="/product" element={<PlaceholderPage title="Product" />} />
