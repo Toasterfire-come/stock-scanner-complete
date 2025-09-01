@@ -21,9 +21,13 @@ function App() {
           <Route element={<AppLayout />}> 
             <Route path="/" element={<Home />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/app/dashboard" element={<Home />} />
-            <Route path="/legal/terms" element={<React.Suspense fallback={null}><div /></React.Suspense>} />
-            <Route path="/legal/privacy" element={<React.Suspense fallback={null}><div /></React.Suspense>} />
+            <Route path="/auth/sign-in" element={<SignIn />} />
+            <Route path="/app/dashboard" element={<AppDashboard />} />
+            <Route path="/app/markets" element={<Markets />} />
+            <Route path="/app/alerts" element={<Alerts />} />
+            <Route path="/app/notifications" element={<Notifications />} />
+            <Route path="/legal/terms" element={<LegalTerms />} />
+            <Route path="/legal/privacy" element={<LegalPrivacy />} />
           </Route>
         </Routes>
       </BrowserRouter>
