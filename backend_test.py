@@ -341,7 +341,12 @@ class BackendTester:
         self.log_test("POST /api/news/mark-read/", success, f"Status: {status}", data if not success else None)
         
         # Update news preferences
-        prefs_data = {"categories": ["technology", "finance"], "frequency": "daily"}
+        prefs_data = {
+            "followed_stocks": ["AAPL", "MSFT"], 
+            "followed_sectors": ["technology", "finance"], 
+            "preferred_categories": ["earnings", "market"], 
+            "news_frequency": "daily"
+        }
         success, data, status = self.make_request("POST", "/news/preferences/", prefs_data, use_auth=True)
         self.log_test("POST /api/news/preferences/", success, f"Status: {status}", data if not success else None)
         
