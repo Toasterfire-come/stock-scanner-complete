@@ -25,6 +25,8 @@ import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
+import LegalTerms from "./pages/LegalTerms";
+import LegalPrivacy from "./pages/LegalPrivacy";
 
 // App Pages
 import AppDashboard from "./pages/app/AppDashboard";
