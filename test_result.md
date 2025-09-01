@@ -101,3 +101,141 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Build a production-ready website for Retail Trade Scanner with real backend (no mocks). Implement endpoints for stocks, auth, alerts, watchlist, portfolio, billing, notifications, and revenue under /api, integrate React frontend later."
+
+backend:
+  - task: "Core API: health, root, stocks list, stock detail, search, trending, market-stats"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Initial implementation complete; needs validation across query params and sorting."
+  - task: "Auth: login, logout, profile get/update, change password, JWT auth dependency"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Login with demo/password123 should return token. Dependent endpoints require Authorization header."
+  - task: "Alerts: create meta + create alert"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Sequence generator and insert logic implemented."
+  - task: "Subscriptions: subscribe + WP alias"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Simple insert path."
+  - task: "Watchlist: get/add/delete"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Requires auth header."
+  - task: "Portfolio: get/add/delete"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Upsert holding and summary calculations implemented."
+  - task: "Notifications: settings get/post, history, mark-read"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Pagination and unread summary provided."
+  - task: "Billing: history, current-plan, change-plan, stats"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Plan update toggles premium flag."
+  - task: "News: feed, mark-read, mark-clicked, preferences, sync-portfolio"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Simple stubs persisting state."
+  - task: "Revenue: initialize-codes, validate, apply, record, analytics, monthly-summary"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "All endpoints prefixed under /api/revenue with Mongo persistence."
+
+frontend: []
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Smoke test /api/ and /api/health/"
+    - "Stocks list/search/detail/trending"
+    - "Auth login -> token -> profile"
+    - "Watchlist add/get/delete"
+    - "Portfolio add/get/delete"
+    - "Revenue validate/apply/record/analytics"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Backend implemented and seeded. Demo credentials: username=demo, password=password123. Please authenticate then test protected routes with Bearer token in Authorization header. All routes are under /api and /api/revenue."
