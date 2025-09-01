@@ -87,21 +87,7 @@ const Features = () => {
       title: "Market Heatmaps",
       description: "Visual representation of market performance"
     },
-    {
-      icon: <Clock className="h-6 w-6" />,
-      title: "Historical Data",
-      description: "Access up to 10 years of market history"
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Community Insights",
-      description: "Learn from other successful traders"
-    },
-    {
-      icon: <Smartphone className="h-6 w-6" />,
-      title: "Mobile App",
-      description: "Trade on the go with our mobile platform"
-    },
+
     {
       icon: <Cloud className="h-6 w-6" />,
       title: "Cloud Sync",
