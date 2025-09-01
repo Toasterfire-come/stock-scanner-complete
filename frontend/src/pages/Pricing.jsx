@@ -5,16 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
 import { toast } from "sonner";
 import { 
   Check, 
   X, 
   Zap, 
   Crown, 
-  Rocket,
+  Award,
   Star,
   ArrowRight,
-  CreditCard
+  CreditCard,
+  ChevronDown,
+  Users,
+  BarChart3,
+  Bell,
+  Shield,
+  Smartphone,
+  Headphones
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { revenueValidate, revenueApply } from "../api/client";
@@ -22,8 +30,9 @@ import { revenueValidate, revenueApply } from "../api/client";
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [discountCode, setDiscountCode] = useState("");
+  const [discountCode, setDiscountCode] = useState("TRIAL");
   const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [openComparison, setOpenComparison] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
@@ -31,70 +40,82 @@ const Pricing = () => {
     {
       id: "free",
       name: "Free",
-      description: "Perfect for getting started",
+      icon: <Zap className="h-6 w-6" />,
+      description: "Basic stock lookup and filtering",
       price: { monthly: 0, annual: 0 },
       features: [
-        "5 stock screens per day",
-        "Basic market data",
-        "3 watchlists",
-        "Email alerts",
-        "Community support",
+        "15 stocks per month",
+        "Stock symbol lookup & search",
+        "Basic price filtering"
       ],
       limitations: [
-        "No real-time data",
-        "Limited screening criteria",
-        "Basic charts only",
+        "No portfolio management",
+        "No email alerts"
       ],
       popular: false,
-      icon: <Zap className="h-6 w-6" />,
       color: "gray",
+      cta: "Get Started Free"
     },
     {
-      id: "pro",
-      name: "Professional",
-      description: "For serious traders",
-      price: { monthly: 29, annual: 290 },
+      id: "bronze",
+      name: "Bronze",
+      icon: <Award className="h-6 w-6" />,
+      description: "Enhanced features for active traders",
+      price: { monthly: 14.99, annual: 149.90 },
       features: [
-        "Unlimited stock screens",
-        "Real-time market data",
-        "50+ screening criteria",
-        "Advanced charting",
-        "Portfolio analytics",
-        "Price alerts",
-        "Email & SMS notifications",
-        "Priority support",
+        "1,000 stocks per month",
+        "Full stock scanner & lookup",
+        "Email alerts & notifications",
+        "News sentiment analysis",
+        "Basic portfolio tracking"
       ],
       limitations: [],
       popular: true,
-      icon: <Crown className="h-6 w-6" />,
-      color: "blue",
+      color: "orange",
+      cta: "Start 7-Day Trial for $1"
     },
     {
-      id: "enterprise",
-      name: "Enterprise",
-      description: "For professional teams",
-      price: { monthly: 99, annual: 990 },
+      id: "silver",
+      name: "Silver",
+      icon: <Crown className="h-6 w-6" />,
+      description: "Professional tools for serious traders",
+      price: { monthly: 29.99, annual: 299.90 },
       features: [
-        "Everything in Professional",
-        "Advanced analytics",
-        "Custom screening",
-        "API access",
-        "Team collaboration",
-        "White-label options",
-        "Dedicated support",
-        "Custom integrations",
+        "5,000 stocks per month",
+        "Advanced filtering & screening",
+        "1-year historical data",
+        "Custom watchlists (10)",
+        "Priority support"
       ],
       limitations: [],
       popular: false,
-      icon: <Rocket className="h-6 w-6" />,
-      color: "purple",
+      color: "blue",
+      cta: "Start 7-Day Trial for $1"
+    },
+    {
+      id: "gold",
+      name: "Gold",
+      icon: <Star className="h-6 w-6" />,
+      description: "Ultimate trading experience",
+      price: { monthly: 59.99, annual: 599.90 },
+      features: [
+        "10,000 stocks per month",
+        "All premium features",
+        "Real-time alerts",
+        "Full REST API access",
+        "Priority phone support"
+      ],
+      limitations: [],
+      popular: false,
+      color: "yellow",
+      cta: "Start 7-Day Trial for $1"
     },
   ];
 
   const handlePlanSelect = async (planId) => {
     if (!isAuthenticated) {
       navigate("/auth/sign-up", { 
-        state: { selectedPlan: planId } 
+        state: { selectedPlan: planId, discountCode: discountCode } 
       });
       return;
     }
@@ -110,8 +131,8 @@ const Pricing = () => {
       const plan = plans.find(p => p.id === planId);
       const amount = isAnnual ? plan.price.annual : plan.price.monthly;
       
-      // Create PayPal checkout
-      await createPayPalOrder(planId, amount);
+      // Create PayPal checkout with TRIAL discount
+      await createPayPalOrder(planId, 1.00); // $1 for trial
     } catch (error) {
       toast.error("Failed to create checkout session");
     } finally {
@@ -120,11 +141,7 @@ const Pricing = () => {
   };
 
   const createPayPalOrder = async (planId, amount) => {
-    // In a real implementation, this would integrate with PayPal SDK
-    // For demo, simulate the process
-    const finalAmount = appliedDiscount 
-      ? appliedDiscount.final_amount 
-      : amount;
+    const finalAmount = amount;
       
     toast.success(`Redirecting to PayPal for $${finalAmount} payment...`);
     
@@ -134,8 +151,8 @@ const Pricing = () => {
         state: { 
           planId, 
           amount: finalAmount,
-          originalAmount: amount,
-          discount: appliedDiscount 
+          originalAmount: plans.find(p => p.id === planId).price.monthly,
+          discount: { code: "TRIAL", description: "7-Day Trial" }
         } 
       });
     }, 2000);
@@ -148,33 +165,81 @@ const Pricing = () => {
     }
 
     try {
-      const validation = await revenueValidate(discountCode);
-      
-      if (validation.valid) {
-        // Apply discount to the popular plan
-        const popularPlan = plans.find(p => p.popular);
-        const amount = isAnnual ? popularPlan.price.annual : popularPlan.price.monthly;
-        
-        const discount = await revenueApply(discountCode, amount);
-        setAppliedDiscount(discount);
-        toast.success(`Discount applied! Save ${discount.savings_percentage}%`);
+      // Simulate TRIAL code validation
+      if (discountCode.toUpperCase() === "TRIAL") {
+        setAppliedDiscount({
+          code: "TRIAL",
+          description: "7-Day Trial for $1",
+          savings_percentage: 95,
+          final_amount: 1.00
+        });
+        toast.success("TRIAL code applied! 7 days for just $1");
       } else {
-        toast.error(validation.message || "Invalid discount code");
+        toast.error("Invalid discount code");
       }
     } catch (error) {
       toast.error("Failed to apply discount code");
     }
   };
 
+  const features = [
+    {
+      category: "Stock Analysis",
+      icon: <BarChart3 className="h-5 w-5" />,
+      items: [
+        { name: "Monthly stock queries", free: "15", bronze: "1,000", silver: "5,000", gold: "10,000" },
+        { name: "Stock symbol lookup", free: true, bronze: true, silver: true, gold: true },
+        { name: "Basic price filtering", free: true, bronze: true, silver: true, gold: true },
+        { name: "Advanced screening", free: false, bronze: true, silver: true, gold: true },
+        { name: "Historical data", free: false, bronze: "30 days", silver: "1 year", gold: "5 years" }
+      ]
+    },
+    {
+      category: "Alerts & Notifications",
+      icon: <Bell className="h-5 w-5" />,
+      items: [
+        { name: "Email alerts", free: false, bronze: true, silver: true, gold: true },
+        { name: "SMS notifications", free: false, bronze: false, silver: true, gold: true },
+        { name: "Real-time alerts", free: false, bronze: false, silver: false, gold: true },
+        { name: "Custom alert conditions", free: false, bronze: "Basic", silver: "Advanced", gold: "Unlimited" }
+      ]
+    },
+    {
+      category: "Portfolio & Tracking",
+      icon: <Users className="h-5 w-5" />,
+      items: [
+        { name: "Portfolio management", free: false, bronze: "Basic", silver: "Advanced", gold: "Professional" },
+        { name: "Watchlists", free: false, bronze: "3", silver: "10", gold: "Unlimited" },
+        { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true },
+        { name: "Risk analysis", free: false, bronze: false, silver: false, gold: true }
+      ]
+    },
+    {
+      category: "Support & API",
+      icon: <Headphones className="h-5 w-5" />,
+      items: [
+        { name: "Email support", free: false, bronze: true, silver: true, gold: true },
+        { name: "Priority support", free: false, bronze: false, silver: true, gold: true },
+        { name: "Phone support", free: false, bronze: false, silver: false, gold: true },
+        { name: "API access", free: false, bronze: false, silver: "Limited", gold: "Full" }
+      ]
+    }
+  ];
+
   const getPrice = (plan) => {
-    if (appliedDiscount && plan.popular) {
-      return isAnnual ? appliedDiscount.final_amount : Math.round(appliedDiscount.final_amount / 10);
+    if (appliedDiscount && plan.id !== "free") {
+      return 1.00;
     }
     return isAnnual ? plan.price.annual : plan.price.monthly;
   };
 
-  const getOriginalPrice = (plan) => {
-    return isAnnual ? plan.price.annual : plan.price.monthly;
+  const getColorClasses = (color) => {
+    switch (color) {
+      case 'orange': return 'bg-orange-100 text-orange-600 border-orange-500';
+      case 'blue': return 'bg-blue-100 text-blue-600 border-blue-500';
+      case 'yellow': return 'bg-yellow-100 text-yellow-600 border-yellow-500';
+      default: return 'bg-gray-100 text-gray-600 border-gray-500';
+    }
   };
 
   return (
@@ -184,7 +249,7 @@ const Pricing = () => {
         <div className="text-center mb-16">
           <Badge variant="secondary" className="mb-4">
             <Star className="h-4 w-4 mr-1" />
-            Trusted by 50,000+ traders
+            Trusted by 50,000+ traders worldwide
           </Badge>
           
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
@@ -192,8 +257,18 @@ const Pricing = () => {
           </h1>
           
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Choose the perfect plan for your trading needs. Upgrade or downgrade at any time.
+            Start with our 7-day trial for just $1. Cancel anytime, no hidden fees.
           </p>
+
+          {/* Special Offer Banner */}
+          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 max-w-2xl mx-auto mb-8">
+            <div className="flex items-center justify-center mb-3">
+              <Zap className="h-6 w-6 mr-2" />
+              <span className="text-lg font-bold">Limited Time Offer</span>
+            </div>
+            <p className="text-xl mb-4">Use code "TRIAL" to get 7 days for just $1</p>
+            <p className="text-sm opacity-90">Then continue at regular price or cancel anytime</p>
+          </div>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center space-x-4 mb-8">
@@ -221,38 +296,36 @@ const Pricing = () => {
               className="px-3 py-2 border border-gray-300 rounded-md flex-1"
             />
             <Button onClick={applyDiscountCode} variant="outline">
-              Apply
+              Apply Code
             </Button>
           </div>
 
           {appliedDiscount && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto mb-8">
               <p className="text-green-800">
-                🎉 Discount applied! Save {appliedDiscount.savings_percentage}% with code "{appliedDiscount.code}"
+                🎉 {appliedDiscount.description} - Save {appliedDiscount.savings_percentage}%!
               </p>
             </div>
           )}
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="grid lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-16">
           {plans.map((plan) => (
             <Card 
               key={plan.id} 
-              className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
+              className={`relative hover:shadow-xl transition-all duration-300 ${
+                plan.popular ? 'ring-2 ring-orange-500 shadow-lg scale-105' : ''
+              }`}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600">
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-orange-600">
                   Most Popular
                 </Badge>
               )}
               
               <CardHeader className="text-center">
-                <div className={`w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center ${
-                  plan.color === 'blue' ? 'bg-blue-100 text-blue-600' :
-                  plan.color === 'purple' ? 'bg-purple-100 text-purple-600' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-xl flex items-center justify-center ${getColorClasses(plan.color)}`}>
                   {plan.icon}
                 </div>
                 
@@ -271,13 +344,13 @@ const Pricing = () => {
                     )}
                   </div>
                   
-                  {appliedDiscount && plan.popular && getOriginalPrice(plan) !== getPrice(plan) && (
-                    <div className="text-sm text-gray-500 line-through">
-                      Was ${getOriginalPrice(plan)}/{isAnnual ? 'year' : 'month'}
+                  {appliedDiscount && plan.id !== "free" && (
+                    <div className="text-sm text-gray-500 line-through mt-1">
+                      Was ${isAnnual ? plan.price.annual : plan.price.monthly}/{isAnnual ? 'year' : 'month'}
                     </div>
                   )}
                   
-                  {isAnnual && plan.price.monthly > 0 && (
+                  {isAnnual && plan.price.monthly > 0 && !appliedDiscount && (
                     <div className="text-sm text-green-600 mt-1">
                       Save ${(plan.price.monthly * 12) - plan.price.annual} per year
                     </div>
@@ -292,7 +365,7 @@ const Pricing = () => {
                   variant={plan.popular ? "default" : "outline"}
                   disabled={isLoading}
                 >
-                  {plan.id === "free" ? "Current Plan" : "Get Started"}
+                  {plan.cta}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
                 
@@ -326,13 +399,103 @@ const Pricing = () => {
           ))}
         </div>
 
+        {/* Feature Comparison Table */}
+        <Collapsible open={openComparison} onOpenChange={setOpenComparison} className="mb-16">
+          <div className="text-center mb-8">
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="lg">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Compare All Features
+                <ChevronDown className={`h-5 w-5 ml-2 transition-transform ${openComparison ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          
+          <CollapsibleContent>
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle>Complete Feature Comparison</CardTitle>
+                <CardDescription>See exactly what's included in each plan</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-4 font-medium">Features</th>
+                        <th className="text-center p-4 font-medium">Free</th>
+                        <th className="text-center p-4 font-medium">Bronze</th>
+                        <th className="text-center p-4 font-medium">Silver</th>
+                        <th className="text-center p-4 font-medium">Gold</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {features.map((category) => (
+                        <React.Fragment key={category.category}>
+                          <tr className="bg-gray-50">
+                            <td colSpan="5" className="p-4 font-semibold text-gray-900 flex items-center">
+                              {category.icon}
+                              <span className="ml-2">{category.category}</span>
+                            </td>
+                          </tr>
+                          {category.items.map((item, index) => (
+                            <tr key={index} className="border-b">
+                              <td className="p-4">{item.name}</td>
+                              <td className="p-4 text-center">
+                                {typeof item.free === 'boolean' ? 
+                                  (item.free ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.free
+                                }
+                              </td>
+                              <td className="p-4 text-center">
+                                {typeof item.bronze === 'boolean' ? 
+                                  (item.bronze ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.bronze
+                                }
+                              </td>
+                              <td className="p-4 text-center">
+                                {typeof item.silver === 'boolean' ? 
+                                  (item.silver ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.silver
+                                }
+                              </td>
+                              <td className="p-4 text-center">
+                                {typeof item.gold === 'boolean' ? 
+                                  (item.gold ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.gold
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
             Frequently Asked Questions
           </h2>
           
-          <div className="space-y-6">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">How does the 7-day trial work?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Pay just $1 to access any paid plan for 7 days. You can cancel anytime during the trial. 
+                  After 7 days, you'll be charged the regular monthly price unless you cancel.
+                </p>
+              </CardContent>
+            </Card>
+            
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Can I change plans at any time?</CardTitle>
@@ -347,24 +510,24 @@ const Pricing = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Is there a free trial?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Our Free plan gives you access to basic features forever. For premium features, 
-                  we offer a 14-day free trial on all paid plans.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
                 <CardTitle className="text-lg">What payment methods do you accept?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  We accept all major credit cards, PayPal, and bank transfers. All payments are 
-                  processed securely through our payment partners.
+                  We accept all major credit cards and PayPal. All payments are processed securely 
+                  through our payment partners with bank-level encryption.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Is there a free plan available?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Yes, we offer a free plan with basic features including 15 stock lookups per month 
+                  and basic filtering. Perfect for getting started with our platform.
                 </p>
               </CardContent>
             </Card>
