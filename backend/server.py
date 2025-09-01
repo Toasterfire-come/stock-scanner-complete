@@ -560,7 +560,9 @@ async def add_watchlist(payload: WatchlistAddRequest, authorization: Optional[st
         "added_date": now_iso(),
     }
     await db.watchlist.insert_one(doc)
-    return {"success": True, "message": "Added", "data": doc}
+    # Return a clean copy without MongoDB ObjectId
+    clean_doc = {k: v for k, v in doc.items() if k != "_id"}
+    return {"success": True, "message": "Added", "data": clean_doc}
 
 
 @api.delete("/watchlist/{item_id}/")
