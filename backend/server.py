@@ -535,7 +535,7 @@ async def mark_read(payload: MarkReadRequest, authorization: Optional[str] = Non
 @api.get("/watchlist/")
 async def get_watchlist(authorization: Optional[str] = None):
     user = await get_user_from_token(authorization)
-    docs = await db.watchlist.find({"user_id": user["id"]}).to_list(1000)
+    docs = await db.watchlist.find({"user_id": user["id"]}, {"_id": 0}).to_list(1000)
     return {"success": True, "data": docs, "summary": {"total_items": len(docs), "gainers": 0, "losers": 0, "unchanged": len(docs)}}
 
 
