@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = (import.meta?.env?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || "").trim();
+const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
 if (!BASE_URL) {
   console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
 }
