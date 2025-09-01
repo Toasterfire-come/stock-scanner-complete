@@ -612,7 +612,7 @@ async def add_portfolio(payload: PortfolioAddRequest, authorization: Optional[st
         "added_date": now_iso(),
     }
     await db.portfolio.update_one({"user_id": user["id"], "symbol": doc["symbol"], "portfolio_name": doc["portfolio_name"]}, {"$set": doc}, upsert=True)
-    return {"success": True, "message": "Holding upserted", "data": {k: doc[k] for k in ["id", "symbol", "shares", "avg_cost", "portfolio_name"], "action": "added"}}
+    return {"success": True, "message": "Holding upserted", "data": {**{k: doc[k] for k in ["id", "symbol", "shares", "avg_cost", "portfolio_name"]}, "action": "added"}}
 
 
 @api.delete("/portfolio/{holding_id}/")
