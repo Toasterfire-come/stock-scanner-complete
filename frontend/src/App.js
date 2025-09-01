@@ -77,7 +77,7 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 // Content & Docs
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
-import Documentation from "./pages/docs/Documentation";
+import Documentation from "./pages/docs/DocumentationSimple";
 
 // Mobile routes removed as requested
 
