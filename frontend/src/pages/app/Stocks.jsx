@@ -61,10 +61,11 @@ const Stocks = () => {
 
           response = await listStocks(params);
           
-          if (response?.success && response?.data?.length > 0) {
+          if (response?.success && response?.data && Array.isArray(response.data) && response.data.length > 0) {
             setStocks(response.data || []);
             setTotalStocks(response.total_available || 0);
           } else {
+            // Force fallback - API is not working properly
             // Mock data fallback - always show demo data when API is unavailable
             setStocks([
               {
