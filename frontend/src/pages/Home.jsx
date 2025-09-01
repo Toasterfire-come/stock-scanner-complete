@@ -206,6 +206,11 @@ const Home = () => {
               real-time alerts, and AI-powered market intelligence to maximize their returns.
             </p>
             
+            {/* Market Status */}
+            <div className="mb-8 flex justify-center">
+              <MarketStatus showNotice={true} />
+            </div>
+
             {/* Primary CTA */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
@@ -216,18 +221,18 @@ const Home = () => {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-xl px-12 py-6 h-auto border-2">
-                <Link to="/app/stocks">
-                  <BarChart3 className="h-6 w-6 mr-3" />
-                  View Live Demo
+                <Link to="/contact">
+                  <Mail className="h-6 w-6 mr-3" />
+                  Contact Support
                 </Link>
               </Button>
             </div>
-            
+
             {/* Trust Indicators */}
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                7-Day Money-Back Guarantee
+                Email Support Only
               </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-blue-500 mr-3" />
