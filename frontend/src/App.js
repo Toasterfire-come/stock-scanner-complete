@@ -88,17 +88,17 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/pricing" element={<Pricing />} />
               
-              {/* Marketing Pages */}
-              <Route path="/features" element={<Features />} />
-              <Route path="/product" element={<Product />} />
-              <Route path="/data" element={<DataCoverage />} />
-              <Route path="/use-cases" element={<UseCases />} />
-              <Route path="/changelog" element={<Changelog />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/help/faq" element={<FAQ />} />
+              {/* Marketing Pages - Using placeholders */}
+              <Route path="/features" element={<PlaceholderPage title="Features" />} />
+              <Route path="/product" element={<PlaceholderPage title="Product" />} />
+              <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />
+              <Route path="/use-cases" element={<PlaceholderPage title="Use Cases" />} />
+              <Route path="/changelog" element={<PlaceholderPage title="Changelog" />} />
+              <Route path="/about" element={<PlaceholderPage title="About" />} />
+              <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
+              <Route path="/careers" element={<PlaceholderPage title="Careers" />} />
+              <Route path="/help" element={<PlaceholderPage title="Help" />} />
+              <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
 
               {/* App Routes */}
               <Route path="/app/dashboard" element={<AppDashboard />} />
@@ -107,33 +107,33 @@ function App() {
               <Route path="/app/stocks/:symbol" element={<StockDetail />} />
               <Route path="/app/portfolio" element={<Portfolio />} />
 
-              {/* Screener Suite (P0) */}
-              <Route path="/app/screeners" element={<ScreenerLibrary />} />
-              <Route path="/app/screeners/new" element={<CreateScreener />} />
-              <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
-              <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
-              <Route path="/app/templates" element={<Templates />} />
+              {/* Screener Suite - Using placeholders */}
+              <Route path="/app/screeners" element={<PlaceholderPage title="Screener Library" />} />
+              <Route path="/app/screeners/new" element={<PlaceholderPage title="Create Screener" />} />
+              <Route path="/app/screeners/:id/edit" element={<PlaceholderPage title="Edit Screener" />} />
+              <Route path="/app/screeners/:id/results" element={<PlaceholderPage title="Screener Results" />} />
+              <Route path="/app/templates" element={<PlaceholderPage title="Templates" />} />
 
-              {/* Market Overview (P0) */}
-              <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
-              <Route path="/app/sectors" element={<SectorsIndustries />} />
-              <Route path="/app/top-movers" element={<TopMovers />} />
-              <Route path="/app/pre-after-market" element={<PreAfterMarket />} />
-              <Route path="/app/economic-calendar" element={<EconomicCalendar />} />
+              {/* Market Overview - Using placeholders */}
+              <Route path="/app/market-heatmap" element={<PlaceholderPage title="Market Heatmap" />} />
+              <Route path="/app/sectors" element={<PlaceholderPage title="Sectors & Industries" />} />
+              <Route path="/app/top-movers" element={<PlaceholderPage title="Top Movers" />} />
+              <Route path="/app/pre-after-market" element={<PlaceholderPage title="Pre/After Market" />} />
+              <Route path="/app/economic-calendar" element={<PlaceholderPage title="Economic Calendar" />} />
 
-              {/* News (P0) */}
-              <Route path="/app/news" element={<NewsFeed />} />
-              <Route path="/app/news/preferences" element={<NewsPreferences />} />
-              <Route path="/app/news/subscribe" element={<NewsSubscribe />} />
+              {/* News - Using placeholders */}
+              <Route path="/app/news" element={<PlaceholderPage title="News Feed" />} />
+              <Route path="/app/news/preferences" element={<PlaceholderPage title="News Preferences" />} />
+              <Route path="/app/news/subscribe" element={<PlaceholderPage title="News Subscribe" />} />
 
-              {/* Alerts & Signals (P1) */}
-              <Route path="/app/alerts" element={<Alerts />} />
-              <Route path="/app/alerts/history" element={<AlertHistory />} />
-              <Route path="/app/signals" element={<SignalFeed />} />
+              {/* Alerts & Signals - Using placeholders */}
+              <Route path="/app/alerts" element={<PlaceholderPage title="Alerts" />} />
+              <Route path="/app/alerts/history" element={<PlaceholderPage title="Alert History" />} />
+              <Route path="/app/signals" element={<PlaceholderPage title="Signal Feed" />} />
 
-              {/* Watchlists (P1) */}
+              {/* Watchlists */}
               <Route path="/app/watchlists" element={<Watchlists />} />
-              <Route path="/app/watchlists/:id" element={<WatchlistDetail />} />
+              <Route path="/app/watchlists/:id" element={<PlaceholderPage title="Watchlist Detail" />} />
 
               {/* Account Routes */}
               <Route path="/account/profile" element={<Profile />} />
@@ -145,23 +145,23 @@ function App() {
               {/* System Routes */}
               <Route path="/endpoint-status" element={<EndpointStatus />} />
 
-              {/* Content & Docs (P1) */}
-              <Route path="/docs" element={<Docs />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/guides" element={<Guides />} />
-              <Route path="/tutorials" element={<Tutorials />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/roadmap" element={<Roadmap />} />
+              {/* Content & Docs - Using placeholders */}
+              <Route path="/docs" element={<PlaceholderPage title="Documentation" />} />
+              <Route path="/blog" element={<PlaceholderPage title="Blog" />} />
+              <Route path="/guides" element={<PlaceholderPage title="Guides" />} />
+              <Route path="/tutorials" element={<PlaceholderPage title="Tutorials" />} />
+              <Route path="/community" element={<PlaceholderPage title="Community" />} />
+              <Route path="/roadmap" element={<PlaceholderPage title="Roadmap" />} />
 
               {/* Legal */}
               <Route path="/legal/terms" element={<LegalTerms />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />
             </Route>
 
-            {/* Mobile Routes (P1) */}
-            <Route path="/m/dashboard" element={<MobileDashboard />} />
-            <Route path="/m/alerts" element={<MobileAlerts />} />
-            <Route path="/m/quick-scan" element={<MobileQuickScan />} />
+            {/* Mobile Routes - Using placeholders */}
+            <Route path="/m/dashboard" element={<PlaceholderPage title="Mobile Dashboard" />} />
+            <Route path="/m/alerts" element={<PlaceholderPage title="Mobile Alerts" />} />
+            <Route path="/m/quick-scan" element={<PlaceholderPage title="Mobile Quick Scan" />} />
 
             {/* Default redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
