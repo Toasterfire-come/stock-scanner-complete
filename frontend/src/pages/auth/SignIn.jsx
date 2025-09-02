@@ -10,6 +10,7 @@ import { Separator } from "../../components/ui/separator";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, Github, Chrome } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useBackendStatus } from "../../context/BackendStatusContext";
 
 const signInSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
@@ -22,6 +23,7 @@ const SignIn = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { isBackendUp } = useBackendStatus();
 
   const from = location.state?.from?.pathname || "/app/dashboard";
 
@@ -34,6 +36,10 @@ const SignIn = () => {
   });
 
   const onSubmit = async (data) => {
+    if (!isBackendUp) {
+      toast.error("Service unavailable. Please try again shortly.");
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await login(data.username, data.password);
@@ -52,6 +58,10 @@ const SignIn = () => {
   };
 
   const handleOAuthLogin = (provider) => {
+    if (!isBackendUp) {
+      toast.error("Service unavailable. Please try again shortly.");
+      return;
+    }
     // Redirect to OAuth provider
     window.location.href = `/auth/oauth/${provider}`;
   };
@@ -61,6 +71,9 @@ const SignIn = () => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
         <p className="text-gray-600 mt-2">Sign in to your account</p>
+        {!isBackendUp && (
+          <p className="text-sm text-red-600 mt-2">Backend is temporarily unavailable. Sign-in is disabled.</p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -74,6 +87,7 @@ const SignIn = () => {
               placeholder="Enter your username or email"
               className="pl-10"
               {...register("username")}
+              disabled={!isBackendUp || isLoading}
             />
           </div>
           {errors.username && (
@@ -91,11 +105,13 @@ const SignIn = () => {
               placeholder="Enter your password"
               className="pl-10 pr-10"
               {...register("password")}
+              disabled={!isBackendUp || isLoading}
             />
             <button
               type="button"
               className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={!isBackendUp || isLoading}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -111,6 +127,7 @@ const SignIn = () => {
               id="remember"
               type="checkbox"
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              disabled={!isBackendUp || isLoading}
             />
             <Label htmlFor="remember" className="text-sm">
               Remember me
@@ -124,8 +141,8 @@ const SignIn = () => {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
+        <Button type="submit" className="w-full" disabled={!isBackendUp || isLoading}>
+          {!isBackendUp ? "Service unavailable" : isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
@@ -143,6 +160,7 @@ const SignIn = () => {
           variant="outline"
           onClick={() => handleOAuthLogin("google")}
           className="w-full"
+          disabled={!isBackendUp || isLoading}
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
@@ -151,6 +169,7 @@ const SignIn = () => {
           variant="outline"
           onClick={() => handleOAuthLogin("github")}
           className="w-full"
+          disabled={!isBackendUp || isLoading}
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub
