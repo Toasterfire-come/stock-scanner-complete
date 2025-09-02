@@ -180,12 +180,12 @@ const Home = () => {
               Trusted by Professional Traders
             </Badge>
             <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-              Turn Market Data Into
-              <span className="text-blue-600 block"> Profitable Trades</span>
+              Screen 3,200 NYSE Stocks
+              <span className="text-blue-600 block">With 14 Technical & Fundamental Criteria</span>
             </h1>
             <p className="text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Professional stock screening tools with real-time alerts and market intelligence 
-              to help you make better trading decisions.
+              Professional stock screening platform with real-time data analysis across 14 technical and fundamental indicators 
+              to help you identify profitable trading opportunities in the NYSE market.
             </p>
 
             {/* Market Status */}
