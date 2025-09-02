@@ -216,7 +216,7 @@ const SignUp = () => {
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Start Free Trial
+            Start $1 Trial
           </Button>
 
           <div className="text-center text-sm">
