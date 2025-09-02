@@ -42,7 +42,7 @@ class ExternalAPIClient:
         if api_password:
             self.session.headers.update({'X-API-Key': api_password})
     
-    def get(self, endpoint: str, params: dict = None):
+    def get(self, endpoint: str, params: dict = None, fallback_data=None):
         """Make GET request to external API"""
         url = f"{self.base_url}{endpoint}"
         try:
@@ -51,6 +51,9 @@ class ExternalAPIClient:
             return response.json()
         except requests.exceptions.RequestException as e:
             logging.error(f"External API error: {e}")
+            if fallback_data is not None:
+                logging.info(f"Using fallback data for {endpoint}")
+                return fallback_data
             raise HTTPException(status_code=503, detail="External API unavailable")
     
     def post(self, endpoint: str, data: dict = None):
