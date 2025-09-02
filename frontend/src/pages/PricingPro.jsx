@@ -70,7 +70,8 @@ const PricingPro = () => {
       price: { monthly: 39.99, annual: 399.99 },
       popular: true,
       features: [
-        { name: "5,000 API calls per month", included: true },
+        { name: "10,000 API calls per month", included: true },
+        { name: "500 API calls per day", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Advanced stock screener", included: true },
         { name: "Email alerts", included: true },
@@ -83,7 +84,7 @@ const PricingPro = () => {
         { name: "Enhanced analytics", included: true }
       ],
       limits: {
-        apiCalls: "5,000/month",
+        apiCalls: "10,000/month, 500/day",
         portfolios: "Unlimited",
         watchlists: "10 watchlists",
         alerts: "100 alerts"
