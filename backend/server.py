@@ -67,12 +67,12 @@ class ExternalAPIClient:
 # Initialize external API client
 external_api = ExternalAPIClient(EXTERNAL_API_URL, EXTERNAL_API_PASSWORD)
 
-# Plan limits based on PHP configuration
+# Updated plan limits - removed hourly limits, updated for NYSE focus
 PLAN_LIMITS = {
-    'free': {'monthly': 15, 'daily': 5, 'hourly': 2},
-    'bronze': {'monthly': 1500, 'daily': 50, 'hourly': 10},
-    'silver': {'monthly': 5000, 'daily': 200, 'hourly': 25},
-    'gold': {'monthly': -1, 'daily': -1, 'hourly': -1}  # -1 means unlimited
+    'free': {'monthly': 15, 'daily': 5},
+    'bronze': {'monthly': 1500, 'daily': 50},
+    'silver': {'monthly': 5000, 'daily': 200},
+    'gold': {'monthly': -1, 'daily': -1}  # -1 means unlimited
 }
 
 # Rate limiting thresholds (advisory)
@@ -81,6 +81,24 @@ RATE_LIMITS = {
     'requests_per_hour': 300,
     'requests_per_day': 1000
 }
+
+# NYSE stock count and available indicators (based on actual capabilities)
+NYSE_STOCK_COUNT = 3200  # Approximate NYSE listed companies
+AVAILABLE_INDICATORS = [
+    "RSI", "MACD", "Moving Average", "Bollinger Bands", "Stochastic", 
+    "Volume", "Price Change", "Market Cap", "P/E Ratio", "EPS Growth",
+    "Revenue Growth", "Dividend Yield", "Beta", "Price Range"
+]
+TOTAL_INDICATORS = len(AVAILABLE_INDICATORS)
+
+# Calculate scanner combinations (simplified calculation)
+def calculate_scanner_combinations():
+    # Each indicator can be used with multiple conditions (>, <, =, range)
+    # This is a simplified calculation for marketing purposes
+    base_combinations = TOTAL_INDICATORS * 4  # 4 condition types per indicator
+    return base_combinations * (base_combinations - 1) // 2  # Combination pairs
+
+SCANNER_COMBINATIONS = calculate_scanner_combinations()
 
 # In-memory storage for rate limiting (in production, use Redis)
 rate_limit_storage = defaultdict(list)
@@ -111,8 +129,6 @@ class UsageStats(BaseModel):
     monthly_limit: int
     daily_used: int
     daily_limit: int
-    hourly_used: int
-    hourly_limit: int
 
 class RateLimitInfo(BaseModel):
     requests_this_minute: int
@@ -120,6 +136,11 @@ class RateLimitInfo(BaseModel):
     requests_this_day: int
     rate_limited: bool
     advisory_only: bool = True
+
+class PlatformStats(BaseModel):
+    nyse_stocks: int
+    total_indicators: int
+    scanner_combinations: int
 
 
 async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent: str = None, plan: str = "free"):
@@ -138,16 +159,10 @@ async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
     now = datetime.utcnow()
     
     # Calculate time boundaries
-    hour_ago = now - timedelta(hours=1)
     day_ago = now - timedelta(days=1)
     month_ago = now - timedelta(days=30)
     
     # Count usage in different time periods
-    hourly_count = await db.api_usage.count_documents({
-        "user_id": user_id,
-        "timestamp": {"$gte": hour_ago}
-    })
-    
     daily_count = await db.api_usage.count_documents({
         "user_id": user_id,
         "timestamp": {"$gte": day_ago}
@@ -165,9 +180,7 @@ async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
         monthly_used=monthly_count,
         monthly_limit=limits['monthly'] if limits['monthly'] != -1 else 999999,
         daily_used=daily_count,
-        daily_limit=limits['daily'] if limits['daily'] != -1 else 999999,
-        hourly_used=hourly_count,
-        hourly_limit=limits['hourly'] if limits['hourly'] != -1 else 999999
+        daily_limit=limits['daily'] if limits['daily'] != -1 else 999999
     )
 
 async def can_make_api_call(user_id: str, plan: str = "free") -> bool:
@@ -184,10 +197,6 @@ async def can_make_api_call(user_id: str, plan: str = "free") -> bool:
     
     # Check daily limit
     if limits['daily'] != -1 and usage_stats.daily_used >= limits['daily']:
-        return False
-    
-    # Check hourly limit
-    if limits['hourly'] != -1 and usage_stats.hourly_used >= limits['hourly']:
         return False
     
     return True
@@ -266,6 +275,15 @@ async def get_user_info(request: Request) -> Dict[str, str]:
 async def root():
     return {"message": "Trade Scan Pro API v1.0"}
 
+@api_router.get("/platform-stats")
+async def get_platform_stats():
+    """Get platform statistics for marketing pages"""
+    return PlatformStats(
+        nyse_stocks=NYSE_STOCK_COUNT,
+        total_indicators=TOTAL_INDICATORS,
+        scanner_combinations=SCANNER_COMBINATIONS
+    )
+
 @api_router.get("/health")
 async def health_check():
     """Health check with external API status"""
@@ -291,11 +309,11 @@ async def get_stocks(
     request: Request,
     limit: int = 50,
     search: str = None,
-    category: str = "all",
+    category: str = "nyse",  # Default to NYSE only
     min_price: float = None,
     max_price: float = None
 ):
-    """Get stock list from external API"""
+    """Get stock list from external API - NYSE focused"""
     params = {
         "limit": min(limit, 1000),
         "category": category
@@ -406,7 +424,7 @@ async def add_to_watchlist(watchlist_data: dict, request: Request):
     """Add stock to watchlist"""
     return external_api.post("/api/watchlist/add/", watchlist_data)
 
-# Revenue/billing endpoints
+# Revenue/billing endpoints - Updated for $1 trial
 @api_router.post("/billing/create-paypal-order/")
 async def create_paypal_order(order_data: dict):
     """Create PayPal order for subscription"""
@@ -415,7 +433,8 @@ async def create_paypal_order(order_data: dict):
     return {
         "order_id": f"PAYPAL_{uuid.uuid4().hex[:8].upper()}",
         "approval_url": "https://www.sandbox.paypal.com/checkoutnow?token=mock_token",
-        "status": "created"
+        "status": "created",
+        "amount": "1.00"  # $1 trial
     }
 
 @api_router.post("/billing/capture-paypal-order/")
@@ -426,7 +445,7 @@ async def capture_paypal_order(capture_data: dict):
     return {
         "status": "completed",
         "payment_id": capture_data.get("order_id"),
-        "amount": "24.99",
+        "amount": "1.00",  # $1 trial
         "currency": "USD"
     }
 

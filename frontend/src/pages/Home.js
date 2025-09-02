@@ -23,11 +23,11 @@ import {
   Award,
   Mail
 } from "lucide-react";
-import { mockData } from "../data/mockData";
+import { api } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
 
 const Home = () => {
-  const [marketStats, setMarketStats] = useState(null);
+  const [platformStats, setPlatformStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -35,11 +35,10 @@ const Home = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Simulate API call with mock data
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setMarketStats(mockData.marketStats);
+        const { data } = await api.get('/platform-stats');
+        setPlatformStats(data);
       } catch (error) {
-        console.error("Failed to fetch market data:", error);
+        console.error("Failed to fetch platform data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -52,72 +51,69 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Filter through 10,000+ stocks with 50+ technical and fundamental criteria.",
-      details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
+      description: `Screen NYSE stocks with ${platformStats?.total_indicators || 14} technical and fundamental indicators.`,
+      details: "Our screening engine processes real NYSE data to help you find investment opportunities with multiple filter combinations."
     },
     {
       icon: <Bell className="h-6 w-6" />,
       title: "Real-Time Alerts",
       description: "Never miss a trading opportunity with instant price and volume alerts.",
-      details: "Set custom alerts for price movements, volume spikes, news events, and technical indicators. Get notified via email, SMS, or push notifications."
+      details: "Set custom alerts for price movements, volume spikes, and technical indicators. Get notified via email or push notifications."
     },
     {
       icon: <BarChart3 className="h-6 w-6" />,
       title: "Portfolio Analytics",
-      description: "Track performance with institutional-grade portfolio management tools.",
-      details: "Advanced risk metrics, performance attribution, sector allocation analysis, and detailed profit/loss tracking with tax reporting."
+      description: "Track performance with professional portfolio management tools.",
+      details: "Advanced performance tracking, sector allocation analysis, and detailed profit/loss reporting."
     },
     {
       icon: <TrendingUp className="h-6 w-6" />,
       title: "Market Intelligence",
-      description: "AI-powered insights and sentiment analysis from news and social media.",
-      details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements."
+      description: "Real-time insights and sentiment analysis from market data.",
+      details: "Access market trends and analysis to help inform your trading decisions with current market conditions."
     }
   ];
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Professional Day Trader",
-      company: "Peak Capital Trading",
-      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise.",
+      name: "Alex M.",
+      role: "Day Trader",
+      content: "Trade Scan Pro has significantly improved my screening process. The real-time alerts have helped me catch several profitable trades.",
       rating: 5,
-      profit: "+342% ROI in 6 months"
+      result: "Improved trading accuracy"
     },
     {
-      name: "Michael Rodriguez",
+      name: "Sarah K.",
+      role: "Swing Trader", 
+      content: "The platform is reliable and the data is accurate. Great value for the price, especially compared to other services.",
+      rating: 5,
+      result: "Better trade timing"
+    },
+    {
+      name: "Michael R.",
       role: "Portfolio Manager",
-      company: "Evergreen Investments",
-      content: "The real-time alerts have saved me from multiple significant losses. The platform's reliability and accuracy are unmatched in the industry.",
+      content: "Clean interface and solid functionality. The screening tools help me identify opportunities I might have missed otherwise.",
       rating: 5,
-      profit: "Prevented $50K+ in losses"
-    },
-    {
-      name: "Jennifer Park",
-      role: "Investment Advisor",
-      company: "Wealth Strategies LLC",
-      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process.",
-      rating: 5,
-      profit: "Managing $2.3M in assets"
+      result: "Enhanced analysis"
     }
   ];
 
   const faqs = [
     {
       question: "How accurate is your market data?",
-      answer: "Our data is sourced directly from major exchanges and updated in real-time. We maintain 99.9% uptime and ensure data accuracy through multiple validation layers."
+      answer: "Our data is sourced from reliable market data providers and updated regularly. We focus on NYSE listings for consistency and accuracy."
     },
     {
       question: "Can I cancel my subscription anytime?",
-      answer: "Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees. Your subscription will remain active until the end of your current billing period."
+      answer: "Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees."
     },
     {
-      question: "Do you offer API access?",
-      answer: "Yes! Our Silver and Gold plans include full REST API access, allowing you to integrate our data into your own applications and trading systems."
+      question: "What's included in the $1 trial?",
+      answer: "The $1 trial gives you 7 days of full access to your chosen plan's features. After 7 days, you'll be charged the regular monthly price unless you cancel."
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+      answer: "Plans differ mainly in the number of API calls per month and available features. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders."
     },
     {
       question: "Do you provide investment advice?",
@@ -133,46 +129,43 @@ const Home = () => {
       description: "Enhanced features for active traders",
       features: [
         "1,500 API calls per month",
-        "10 calls per hour limit",
         "Full stock scanner & lookup",
-        "Email alerts & notifications",
-        "News sentiment analysis",
+        "Email alerts & notifications", 
+        "Real-time alerts",
         "Basic portfolio tracking"
       ],
       popular: true,
-      cta: "Start Free Trial"
+      cta: "Get Started for $1"
     },
     {
-      name: "Silver",
+      name: "Silver", 
       price: "$39.99",
       period: "/month",
       description: "Professional tools for serious traders",
       features: [
         "5,000 API calls per month",
-        "25 calls per hour limit",
         "Advanced filtering & screening",
-        "1-year historical data",
         "Custom watchlists (10)",
-        "Priority support"
+        "Real-time alerts",
+        "Priority email support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Get Started for $1"
     },
     {
       name: "Gold",
-      price: "$89.99",
+      price: "$89.99", 
       period: "/month",
       description: "Ultimate trading experience",
       features: [
         "Unlimited API calls",
-        "No hourly limits",
         "All premium features",
-        "Real-time alerts",
+        "Real-time alerts", 
         "Full REST API access",
-        "Priority phone support"
+        "Priority email support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Get Started for $1"
     }
   ];
 
@@ -184,15 +177,15 @@ const Home = () => {
           <div className="text-center max-w-5xl mx-auto">
             <Badge variant="secondary" className="mb-6 text-lg px-4 py-2">
               <Award className="h-4 w-4 mr-2" />
-              Trusted by 50,000+ Professional Traders
+              Trusted by Professional Traders
             </Badge>
             <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-8 leading-tight">
               Turn Market Data Into
               <span className="text-blue-600 block"> Profitable Trades</span>
             </h1>
             <p className="text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Join thousands of successful traders using our advanced screening tools,
-              real-time alerts, and AI-powered market intelligence to maximize their returns.
+              Professional stock screening tools with real-time alerts and market intelligence 
+              to help you make better trading decisions.
             </p>
 
             {/* Market Status */}
@@ -205,7 +198,7 @@ const Home = () => {
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-6 w-6 mr-3" />
-                  Start 7-Day Free Trial
+                  Get Started for $1
                   <ArrowRight className="h-6 w-6 ml-3" />
                 </Link>
               </Button>
@@ -221,11 +214,11 @@ const Home = () => {
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                Email Support Only
+                7-Day Trial for $1
               </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-blue-500 mr-3" />
-                Bank-Level Security
+                Secure & Reliable
               </div>
               <div className="flex items-center">
                 <Clock className="h-5 w-5 text-purple-500 mr-3" />
@@ -236,38 +229,32 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Social Proof Stats */}
-      {marketStats && (
+      {/* Platform Stats */}
+      {platformStats && (
         <section className="py-16 bg-white border-y">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Live Market Performance</h2>
-              <p className="text-gray-600">Real-time data from our trading platform</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Platform Capabilities</h2>
+              <p className="text-gray-600">Real capabilities of our trading platform</p>
             </div>
-            <div className="grid md:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {marketStats.total_stocks.toLocaleString()}
+                  {platformStats.nyse_stocks.toLocaleString()}
                 </div>
-                <div className="text-gray-600">Stocks Analyzed Today</div>
+                <div className="text-gray-600">NYSE Stocks Covered</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">
-                  {marketStats.gainers.toLocaleString()}
+                  {platformStats.total_indicators}
                 </div>
-                <div className="text-gray-600">Winning Opportunities</div>
+                <div className="text-gray-600">Technical Indicators</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  1M+
+                  {platformStats.scanner_combinations.toLocaleString()}+
                 </div>
-                <div className="text-gray-600">Alerts Sent This Month</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">
-                  99.9%
-                </div>
-                <div className="text-gray-600">Data Accuracy Rate</div>
+                <div className="text-gray-600">Scanner Combinations</div>
               </div>
             </div>
           </div>
@@ -279,7 +266,7 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Everything You Need to Dominate the Markets
+              Everything You Need to Trade Smarter
             </h2>
             <p className="text-2xl text-gray-600 max-w-3xl mx-auto">
               Professional-grade tools that give you the competitive edge
@@ -326,10 +313,10 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Success Stories From Our Traders
+              What Our Users Say
             </h2>
             <p className="text-2xl text-gray-600">
-              Real results from real traders using Trade Scan Pro
+              Real feedback from traders using Trade Scan Pro
             </p>
           </div>
           <div className="grid lg:grid-cols-3 gap-8">
@@ -347,10 +334,9 @@ const Home = () => {
                   <div className="border-t pt-6">
                     <div className="font-bold text-xl text-gray-900">{testimonial.name}</div>
                     <div className="text-gray-600 mb-2">{testimonial.role}</div>
-                    <div className="text-sm text-gray-500 mb-3">{testimonial.company}</div>
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                       <TrendingUp className="h-3 w-3 mr-1" />
-                      {testimonial.profit}
+                      {testimonial.result}
                     </Badge>
                   </div>
                 </CardContent>
@@ -372,7 +358,7 @@ const Home = () => {
             </p>
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              7-Day Free Trial on All Plans
+              7-Day Trial for Just $1
             </div>
           </div>
           <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -435,7 +421,7 @@ const Home = () => {
                       <h3 className="text-xl font-semibold">{faq.question}</h3>
                       <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
                     </CardHeader>
-                  </CollapsibleTrigger>
+                  </CollipsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0">
                       <p className="text-gray-700 text-lg leading-relaxed">{faq.answer}</p>
@@ -455,13 +441,13 @@ const Home = () => {
             Ready to Transform Your Trading?
           </h2>
           <p className="text-2xl text-green-100 mb-12 max-w-3xl mx-auto">
-            Join 50,000+ successful traders who rely on our platform for profitable trading decisions.
+            Join thousands of traders who use our platform for better trading decisions.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
             <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
               <Link to="/auth/sign-up">
                 <Play className="h-6 w-6 mr-3" />
-                Start 7-Day Free Trial
+                Get Started for $1
                 <ArrowRight className="h-6 w-6 ml-3" />
               </Link>
             </Button>
@@ -483,7 +469,7 @@ const Home = () => {
             </div>
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
-              24/7 Support
+              Email Support
             </div>
           </div>
         </div>
