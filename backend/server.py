@@ -20,7 +20,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 # External API configuration
 EXTERNAL_API_URL = os.environ.get('EXTERNAL_API_URL', 'https://api.retailtradescanner.com')
-EXTERNAL_API_PASSWORD = os.environ.get('EXTERNAL_API_PASSWORD', '')
+EXTERNAL_API_PASSWORD = os.environ.get('EXTERNAL_API_PASSWORD', '((#cx+mb@f-(8x*p@9mfnanqe%ha1@6-b%w)q##v@)lanop')
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
