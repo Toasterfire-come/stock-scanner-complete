@@ -32,8 +32,49 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Security configuration
+security = HTTPBearer(auto_error=False)
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-super-secret-key-change-this-in-production')
+JWT_SECRET = os.environ.get('JWT_SECRET_KEY', 'your-jwt-secret-key-change-this-in-production')
+
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(
+    title="Trade Scan Pro API",
+    description="Professional Stock Market Analysis API",
+    version="1.0.0",
+    docs_url="/docs" if os.environ.get('DEBUG', 'False').lower() == 'true' else None,
+    redoc_url="/redoc" if os.environ.get('DEBUG', 'False').lower() == 'true' else None
+)
+
+# Security middleware (order matters!)
+if os.environ.get('ENVIRONMENT') == 'production':
+    app.add_middleware(HTTPSRedirectMiddleware)
+    app.add_middleware(
+        TrustedHostMiddleware, 
+        allowed_hosts=["api.retailtradescanner.com", "localhost", "127.0.0.1"]
+    )
+
+# CORS middleware with security headers
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+    expose_headers=["X-RateLimit-Remaining", "X-RateLimit-Reset"]
+)
+
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
