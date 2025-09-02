@@ -181,7 +181,7 @@ const Home = () => {
         "Priority phone support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Start $1 Trial"
     }
   ];
 
