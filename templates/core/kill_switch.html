@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Kill Switch | Stock Scanner API{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kill-card { background: var(--bg-white); padding: 1.5rem; border-radius: var(--border-radius-sm); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+    .warning { background: var(--warning-bg); border: 1px solid var(--error-border); color: var(--error-text); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1rem; }
+    .success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600; }
+    .input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-light); background: var(--bg-dark); color: var(--text-primary); }
+    .btn-danger { background: var(--error-accent); color: white; border: 0; padding: 0.75rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 700; }
+    .btn-danger:hover { filter: brightness(1.05); }
+    .hint { color: var(--text-light); font-size: 0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card kill-card">
+    <h1 style="margin-bottom: .5rem; color: var(--text-primary);">System Kill Switch</h1>
+    <p class="hint" style="margin-bottom: 1rem;">Schedules a system reboot after password verification.</p>
+
+    {% if error %}
+    <div class="warning">{{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+    <div class="success">{{ message }}</div>
+    {% endif %}
+
+    {% if not enabled %}
+    <p class="hint">This feature is currently disabled by configuration.</p>
+    {% else %}
+    <form method="post" action="/kill" style="margin-top: 1rem;">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="label" for="password">Application Password</label>
+            <input class="input" type="password" id="password" name="password" placeholder="Enter app password" required />
+        </div>
+        <div class="form-group">
+            <label class="label" for="delay">Delay (seconds)</label>
+            <input class="input" type="number" id="delay" name="delay" min="0" step="1" value="" placeholder="Leave blank to use default" />
+            <div class="hint">If specified, overrides the configured delay for this request.</div>
+        </div>
+        <button class="btn-danger" type="submit">Confirm Reboot</button>
+        <a class="btn btn-secondary" href="/" style="margin-left: .5rem;">Cancel</a>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.db import connection
+from django.conf import settings
 import json
 import datetime
 import pytz
@@ -254,3 +255,111 @@ def endpoint_status(request):
             'title': 'Endpoint Status Check'
         }
         return render(request, 'core/endpoint_status.html', context)
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def kill_switch(request):
+    """
+    Kill switch endpoint that reboots the host machine after a short delay.
+    Requires correct password and feature flag enabled.
+    """
+    # Validate feature flag
+    if not getattr(settings, 'KILL_SWITCH_ENABLED', False):
+        if request.method == 'GET' and not getattr(request, 'is_api_request', False):
+            return render(request, 'core/kill_switch.html', {
+                'enabled': False,
+                'error': 'Kill switch disabled'
+            })
+        return JsonResponse({'success': False, 'error': 'Kill switch disabled'}, status=403)
+
+    # Validate configuration
+    expected_password = str(getattr(settings, 'KILL_SWITCH_PASSWORD', '') or '')
+    if not expected_password:
+        if request.method == 'GET' and not getattr(request, 'is_api_request', False):
+            return render(request, 'core/kill_switch.html', {
+                'enabled': True,
+                'error': 'Kill switch not configured'
+            })
+        return JsonResponse({'success': False, 'error': 'Kill switch not configured'}, status=500)
+
+    # If GET from browser, render form
+    if request.method == 'GET' and not getattr(request, 'is_api_request', False):
+        return render(request, 'core/kill_switch.html', {'enabled': True})
+
+    # Extract provided password and possible delay override
+    provided_password = None
+    delay_override_value = None
+    content_type = request.META.get('CONTENT_TYPE', '')
+    json_payload = None
+    if 'application/json' in content_type:
+        try:
+            json_payload = json.loads((request.body or b'{}').decode('utf-8') or '{}')
+            provided_password = json_payload.get('password') or json_payload.get('pass') or json_payload.get('token')
+            delay_override_value = json_payload.get('delay')
+        except Exception:
+            provided_password = None
+    if not provided_password:
+        provided_password = (
+            request.POST.get('password')
+            or request.POST.get('pass')
+            or request.POST.get('token')
+            or request.headers.get('X-App-Password')
+        )
+    provided_password = '' if provided_password is None else str(provided_password)
+
+    # Constant-time compare
+    import hmac
+    if not hmac.compare_digest(provided_password, expected_password):
+        if not getattr(request, 'is_api_request', False):
+            return render(request, 'core/kill_switch.html', {
+                'enabled': True,
+                'error': 'Unauthorized - invalid password'
+            }, status=403)
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    # Determine delay (allow request override)
+    try:
+        default_delay_seconds = int(getattr(settings, 'KILL_SWITCH_DELAY_SECONDS', 5))
+    except Exception:
+        default_delay_seconds = 5
+    # try POST form override if not provided via JSON
+    if delay_override_value is None:
+        delay_override_value = request.POST.get('delay') if hasattr(request, 'POST') else None
+    try:
+        delay_seconds = int(delay_override_value) if delay_override_value not in (None, '') else default_delay_seconds
+    except Exception:
+        delay_seconds = default_delay_seconds
+    if delay_seconds < 0:
+        delay_seconds = 0
+
+    # Trigger reboot in background
+    def _perform_reboot():
+        import time
+        import subprocess
+        import platform
+        import os
+        time.sleep(delay_seconds)
+        try:
+            system_name = platform.system().lower()
+            if system_name.startswith('win'):
+                cmd = ['shutdown', '/r', '/t', '0', '/f']
+            else:
+                if (os.path.exists('/bin/systemctl') or os.path.exists('/usr/bin/systemctl')):
+                    cmd = ['systemctl', 'reboot', '--force']
+                else:
+                    cmd = ['shutdown', '-r', 'now']
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            # Swallow any errors; nothing else we can do at this point
+            pass
+
+    import threading
+    threading.Thread(target=_perform_reboot, daemon=True).start()
+
+    if not getattr(request, 'is_api_request', False):
+        return render(request, 'core/kill_switch.html', {
+            'enabled': True,
+            'success': True,
+            'message': f'Reboot scheduled in {delay_seconds} seconds'
+        })
+    return JsonResponse({'success': True, 'message': f'Reboot scheduled in {delay_seconds} seconds'})
