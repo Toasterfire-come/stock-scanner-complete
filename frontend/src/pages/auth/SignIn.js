@@ -136,7 +136,7 @@ const SignIn = () => {
           <div className="text-center text-sm">
             Don't have an account?{' '}
             <Link to="/auth/sign-up" className="text-blue-600 hover:text-blue-500 font-medium">
-              Start your free trial
+              Start your $1 trial
             </Link>
           </div>
         </CardFooter>
