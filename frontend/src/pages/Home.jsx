@@ -165,7 +165,7 @@ const Home = () => {
         "Priority support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Start $1 Trial"
     },
     {
       name: "Gold",
