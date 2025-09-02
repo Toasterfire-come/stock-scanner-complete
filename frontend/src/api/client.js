@@ -2,7 +2,6 @@ import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
 const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
-const API_PASSWORD = process.env.REACT_APP_API_PASSWORD || "";
 
 if (!BASE_URL) {
   console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
@@ -36,16 +35,12 @@ function getCsrfToken() {
   } catch { return null; }
 }
 
-// Attach token, API key, CSRF safety and timing
+// Attach token, CSRF safety and timing
 api.interceptors.request.use((config) => {
   try {
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
     const csrf = getCsrfToken();
     if (csrf) config.headers['X-CSRFToken'] = csrf;
-
-    if (API_PASSWORD) {
-      config.headers['X-API-Key'] = API_PASSWORD;
-    }
 
     const token = window.localStorage.getItem("rts_token");
     if (token) {

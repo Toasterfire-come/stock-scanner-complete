@@ -27,6 +27,8 @@ load_dotenv(ROOT_DIR / '.env')
 EXTERNAL_API_URL = os.environ.get('EXTERNAL_API_URL', 'https://api.retailtradescanner.com')
 # Remove hardcoded default secret; require env var or fallback to empty
 EXTERNAL_API_PASSWORD = os.environ.get('EXTERNAL_API_PASSWORD', '')
+# Optional: hashed API key support
+HASHED_API_KEY = os.environ.get('HASHED_API_KEY', '')
 
 # MongoDB connection with safe fallbacks for environments without DB
 MONGO_URL = os.environ.get('MONGO_URL')
