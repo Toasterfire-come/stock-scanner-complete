@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.db import connection
+from django.conf import settings
 import json
 import datetime
 import pytz
@@ -254,3 +255,76 @@ def endpoint_status(request):
             'title': 'Endpoint Status Check'
         }
         return render(request, 'core/endpoint_status.html', context)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def kill_switch(request):
+    """
+    Kill switch endpoint that reboots the host machine after a short delay.
+    Requires correct password and feature flag enabled.
+    """
+    # Validate feature flag
+    if not getattr(settings, 'KILL_SWITCH_ENABLED', False):
+        return JsonResponse({'success': False, 'error': 'Kill switch disabled'}, status=403)
+
+    # Validate configuration
+    expected_password = str(getattr(settings, 'KILL_SWITCH_PASSWORD', '') or '')
+    if not expected_password:
+        return JsonResponse({'success': False, 'error': 'Kill switch not configured'}, status=500)
+
+    # Extract provided password
+    provided_password = None
+    content_type = request.META.get('CONTENT_TYPE', '')
+    if 'application/json' in content_type:
+        try:
+            payload = json.loads((request.body or b'{}').decode('utf-8') or '{}')
+            provided_password = payload.get('password') or payload.get('pass') or payload.get('token')
+        except Exception:
+            provided_password = None
+    if not provided_password:
+        provided_password = (
+            request.POST.get('password')
+            or request.POST.get('pass')
+            or request.POST.get('token')
+            or request.headers.get('X-App-Password')
+        )
+    provided_password = '' if provided_password is None else str(provided_password)
+
+    # Constant-time compare
+    import hmac
+    if not hmac.compare_digest(provided_password, expected_password):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    # Determine delay
+    try:
+        delay_seconds = int(getattr(settings, 'KILL_SWITCH_DELAY_SECONDS', 5))
+    except Exception:
+        delay_seconds = 5
+    if delay_seconds < 0:
+        delay_seconds = 0
+
+    # Trigger reboot in background
+    def _perform_reboot():
+        import time
+        import subprocess
+        import platform
+        import os
+        time.sleep(delay_seconds)
+        try:
+            system_name = platform.system().lower()
+            if system_name.startswith('win'):
+                cmd = ['shutdown', '/r', '/t', '0', '/f']
+            else:
+                if (os.path.exists('/bin/systemctl') or os.path.exists('/usr/bin/systemctl')):
+                    cmd = ['systemctl', 'reboot', '--force']
+                else:
+                    cmd = ['shutdown', '-r', 'now']
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            # Swallow any errors; nothing else we can do at this point
+            pass
+
+    import threading
+    threading.Thread(target=_perform_reboot, daemon=True).start()
+
+    return JsonResponse({'success': True, 'message': f'Reboot scheduled in {delay_seconds} seconds'})

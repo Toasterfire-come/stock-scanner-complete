@@ -197,3 +197,6 @@ LOGGING = {
 }
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = ["https://api.retailtradescanner.com"]
+KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
+KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
+KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))
