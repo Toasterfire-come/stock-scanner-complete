@@ -1,5 +1,7 @@
 # SPA routing for Create React App within /react (HTTPS enforced globally)
 
+Options -MultiViews
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
@@ -9,10 +11,10 @@
   RewriteRule ^ - [L]
 
   # Default route to index.html within /react
-  RewriteRule ^$ /react/index.html [L]
+  RewriteRule ^$ index.html [L]
 
   # SPA fallback to index.html
-  RewriteRule . /index.html [L]
+  RewriteRule . index.html [L]
 </IfModule>
 
 <IfModule mod_headers.c>

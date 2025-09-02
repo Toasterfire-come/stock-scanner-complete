@@ -1,5 +1,7 @@
 # Root .htaccess: enforce HTTPS and route to /react
 
+Options -MultiViews
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
