@@ -257,7 +257,7 @@ def endpoint_status(request):
         return render(request, 'core/endpoint_status.html', context)
 
 @csrf_exempt
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 def kill_switch(request):
     """
     Kill switch endpoint that reboots the host machine after a short delay.
@@ -265,20 +265,37 @@ def kill_switch(request):
     """
     # Validate feature flag
     if not getattr(settings, 'KILL_SWITCH_ENABLED', False):
+        if request.method == 'GET' and not getattr(request, 'is_api_request', False):
+            return render(request, 'core/kill_switch.html', {
+                'enabled': False,
+                'error': 'Kill switch disabled'
+            })
         return JsonResponse({'success': False, 'error': 'Kill switch disabled'}, status=403)
 
     # Validate configuration
     expected_password = str(getattr(settings, 'KILL_SWITCH_PASSWORD', '') or '')
     if not expected_password:
+        if request.method == 'GET' and not getattr(request, 'is_api_request', False):
+            return render(request, 'core/kill_switch.html', {
+                'enabled': True,
+                'error': 'Kill switch not configured'
+            })
         return JsonResponse({'success': False, 'error': 'Kill switch not configured'}, status=500)
 
-    # Extract provided password
+    # If GET from browser, render form
+    if request.method == 'GET' and not getattr(request, 'is_api_request', False):
+        return render(request, 'core/kill_switch.html', {'enabled': True})
+
+    # Extract provided password and possible delay override
     provided_password = None
+    delay_override_value = None
     content_type = request.META.get('CONTENT_TYPE', '')
+    json_payload = None
     if 'application/json' in content_type:
         try:
-            payload = json.loads((request.body or b'{}').decode('utf-8') or '{}')
-            provided_password = payload.get('password') or payload.get('pass') or payload.get('token')
+            json_payload = json.loads((request.body or b'{}').decode('utf-8') or '{}')
+            provided_password = json_payload.get('password') or json_payload.get('pass') or json_payload.get('token')
+            delay_override_value = json_payload.get('delay')
         except Exception:
             provided_password = None
     if not provided_password:
@@ -293,13 +310,25 @@ def kill_switch(request):
     # Constant-time compare
     import hmac
     if not hmac.compare_digest(provided_password, expected_password):
+        if not getattr(request, 'is_api_request', False):
+            return render(request, 'core/kill_switch.html', {
+                'enabled': True,
+                'error': 'Unauthorized - invalid password'
+            }, status=403)
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
 
-    # Determine delay
+    # Determine delay (allow request override)
     try:
-        delay_seconds = int(getattr(settings, 'KILL_SWITCH_DELAY_SECONDS', 5))
+        default_delay_seconds = int(getattr(settings, 'KILL_SWITCH_DELAY_SECONDS', 5))
     except Exception:
-        delay_seconds = 5
+        default_delay_seconds = 5
+    # try POST form override if not provided via JSON
+    if delay_override_value is None:
+        delay_override_value = request.POST.get('delay') if hasattr(request, 'POST') else None
+    try:
+        delay_seconds = int(delay_override_value) if delay_override_value not in (None, '') else default_delay_seconds
+    except Exception:
+        delay_seconds = default_delay_seconds
     if delay_seconds < 0:
         delay_seconds = 0
 
@@ -327,4 +356,10 @@ def kill_switch(request):
     import threading
     threading.Thread(target=_perform_reboot, daemon=True).start()
 
+    if not getattr(request, 'is_api_request', False):
+        return render(request, 'core/kill_switch.html', {
+            'enabled': True,
+            'success': True,
+            'message': f'Reboot scheduled in {delay_seconds} seconds'
+        })
     return JsonResponse({'success': True, 'message': f'Reboot scheduled in {delay_seconds} seconds'})
