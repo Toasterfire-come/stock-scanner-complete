@@ -678,12 +678,23 @@ app.include_router(api_router)
 #     allow_headers=["*"],
 # )
 
-# Configure logging
+# Configure logging for production
+log_level = logging.INFO if os.environ.get('DEBUG', 'False').lower() != 'true' else logging.DEBUG
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/var/log/supervisor/backend.log') if os.path.exists('/var/log/supervisor/') else logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Log startup information
+logger.info(f"Starting Trade Scan Pro API v1.0")
+logger.info(f"External API: {EXTERNAL_API_URL}")
+logger.info(f"Database: {os.environ.get('DB_NAME', 'stock_scanner')}")
+logger.info(f"Environment: {'Production' if os.environ.get('ENVIRONMENT') == 'production' else 'Development'}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
