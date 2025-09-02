@@ -421,7 +421,7 @@ const Home = () => {
                       <h3 className="text-xl font-semibold">{faq.question}</h3>
                       <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
                     </CardHeader>
-                  </CollipsibleTrigger>
+                  </CollapsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0">
                       <p className="text-gray-700 text-lg leading-relaxed">{faq.answer}</p>
