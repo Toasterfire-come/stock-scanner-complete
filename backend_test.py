@@ -176,7 +176,8 @@ def main():
         tester.test_billing_endpoints,
         tester.test_stocks_endpoint,
         tester.test_search_endpoint,
-        tester.test_trending_endpoint
+        tester.test_trending_endpoint,
+        tester.test_stock_detail_endpoint
     ]
     
     for test_method in test_methods:
