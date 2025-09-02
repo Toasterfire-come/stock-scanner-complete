@@ -39,14 +39,14 @@ const Features = () => {
   const mainFeatures = [
     {
       icon: <Search className="h-8 w-8" />,
-      title: "Advanced Stock Screening",
-      description: `Screen ${platformStats?.nyse_stocks || 3200} NYSE stocks with ${platformStats?.total_indicators || 14} technical and fundamental criteria.`,
+      title: "NYSE Stock Screening",
+      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
       details: [
-        "Real-time screening across NYSE listings",
+        "Complete NYSE market coverage (3,200+ stocks)",
+        "7 Technical Indicators: RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change", 
+        "7 Fundamental Indicators: Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range",
         "Custom filter combinations with saved presets",
-        "Technical indicators: RSI, MACD, Moving Averages, Bollinger Bands",
-        "Fundamental metrics: P/E, EPS, Market Cap, Volume",
-        "Price and volume-based screening",
+        "Real-time data processing and updates",
         "Export results for further analysis"
       ]
     },
