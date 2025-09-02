@@ -128,7 +128,8 @@ const Home = () => {
       period: "/month",
       description: "Enhanced features for active traders",
       features: [
-        "1,500 API calls per month",
+        "2,000 API calls per month",
+        "100 API calls per day",
         "Full stock scanner & lookup",
         "Email alerts & notifications", 
         "Real-time alerts",
@@ -143,7 +144,8 @@ const Home = () => {
       period: "/month",
       description: "Professional tools for serious traders",
       features: [
-        "5,000 API calls per month",
+        "10,000 API calls per month",
+        "500 API calls per day",
         "Advanced filtering & screening",
         "Custom watchlists (10)",
         "Real-time alerts",
@@ -159,6 +161,7 @@ const Home = () => {
       description: "Ultimate trading experience",
       features: [
         "Unlimited API calls",
+        "Unlimited daily usage",
         "All premium features",
         "Real-time alerts", 
         "Full REST API access",
