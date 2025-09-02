@@ -155,6 +155,112 @@ class TradeScanProAPITester:
         """Test trending stocks"""
         return self.run_test("Trending Stocks", "GET", "/api/trending/", 200)
 
+    def test_market_stats_endpoint(self):
+        """Test market statistics"""
+        return self.run_test("Market Statistics", "GET", "/api/market-stats/", 200)
+
+    def test_security_headers(self):
+        """Test security headers are present"""
+        print(f"\n🔍 Testing Security Headers...")
+        url = f"{self.base_url}/api/health"
+        
+        try:
+            response = requests.get(url, timeout=10)
+            headers = response.headers
+            
+            security_headers = {
+                'X-Frame-Options': 'DENY',
+                'X-Content-Type-Options': 'nosniff', 
+                'X-XSS-Protection': '1; mode=block',
+                'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+            }
+            
+            missing_headers = []
+            for header, expected_value in security_headers.items():
+                if header not in headers:
+                    missing_headers.append(header)
+                    print(f"   ❌ Missing security header: {header}")
+                elif headers[header] != expected_value:
+                    print(f"   ⚠️  Security header {header}: expected '{expected_value}', got '{headers[header]}'")
+                else:
+                    print(f"   ✅ Security header {header}: {headers[header]}")
+            
+            if missing_headers:
+                self.failed_tests.append(f"Security Headers: Missing {', '.join(missing_headers)}")
+                return False
+            
+            self.tests_run += 1
+            self.tests_passed += 1
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to test security headers: {str(e)}")
+            self.failed_tests.append(f"Security Headers: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_cors_functionality(self):
+        """Test CORS headers"""
+        print(f"\n🔍 Testing CORS Functionality...")
+        url = f"{self.base_url}/api/health"
+        
+        try:
+            # Test preflight request
+            response = requests.options(url, headers={
+                'Origin': 'http://localhost:3000',
+                'Access-Control-Request-Method': 'GET'
+            }, timeout=10)
+            
+            cors_headers = response.headers
+            print(f"   CORS Headers: {dict(cors_headers)}")
+            
+            self.tests_run += 1
+            self.tests_passed += 1
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to test CORS: {str(e)}")
+            self.failed_tests.append(f"CORS: {str(e)}")
+            self.tests_run += 1
+            return False
+
+    def test_rate_limiting_headers(self):
+        """Test rate limiting headers are present"""
+        headers = {
+            'X-User-ID': 'test_rate_limit_user',
+            'X-User-Plan': 'free'
+        }
+        
+        print(f"\n🔍 Testing Rate Limiting Headers...")
+        url = f"{self.base_url}/api/stocks/AAPL/quote"
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            rate_headers = ['X-RateLimit-Used', 'X-RateLimit-Limit', 'X-RateLimit-Reset']
+            found_headers = []
+            
+            for header in rate_headers:
+                if header in response.headers:
+                    found_headers.append(header)
+                    print(f"   ✅ Rate limit header {header}: {response.headers[header]}")
+                else:
+                    print(f"   ❌ Missing rate limit header: {header}")
+            
+            self.tests_run += 1
+            if len(found_headers) >= 2:  # At least 2 rate limit headers should be present
+                self.tests_passed += 1
+                return True
+            else:
+                self.failed_tests.append(f"Rate Limiting Headers: Only found {len(found_headers)} headers")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed to test rate limiting headers: {str(e)}")
+            self.failed_tests.append(f"Rate Limiting Headers: {str(e)}")
+            self.tests_run += 1
+            return False
+
 def main():
     print("🚀 Starting Trade Scan Pro API Tests...")
     print("=" * 60)
