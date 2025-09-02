@@ -302,6 +302,33 @@ async def check_rate_limits(ip_address: str) -> RateLimitInfo:
         advisory_only=True
     )
 
+async def verify_api_access(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify API access for protected endpoints"""
+    # For demo purposes, allow public access
+    # In production, implement proper JWT validation
+    return True
+
+# API rate limiting decorator
+def rate_limited(calls_per_minute: int = 60):
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            request: Request = kwargs.get('request') or args[0]
+            client_ip = request.client.host
+            
+            # Check rate limits (advisory)
+            rate_info = await check_rate_limits(client_ip)
+            
+            # Add rate limit headers
+            response = await func(*args, **kwargs)
+            if hasattr(response, 'headers'):
+                response.headers["X-RateLimit-Used"] = str(rate_info.requests_this_minute)
+                response.headers["X-RateLimit-Limit"] = str(calls_per_minute)
+                response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
+            
+            return response
+        return wrapper
+    return decorator
+
 async def get_user_info(request: Request) -> Dict[str, str]:
     """Extract user info from request (simplified for demo)"""
     # In production, this would extract from JWT token or session
