@@ -281,8 +281,8 @@ ${user?.name || 'Your friend'}`;
                 <div className="flex items-start space-x-3">
                   <Zap className="h-5 w-5 text-blue-600 mt-1" />
                   <div>
-                    <h4 className="font-semibold">Highlight Free Trial</h4>
-                    <p className="text-sm text-gray-600">Emphasize the 7-day free trial with no credit card required.</p>
+                    <h4 className="font-semibold">Highlight $1 Trial</h4>
+                    <p className="text-sm text-gray-600">Emphasize the 7-day trial for $1 with no setup fees.</p>
                   </div>
                 </div>
               </div>
