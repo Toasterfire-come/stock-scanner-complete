@@ -1,6 +1,9 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -13,6 +16,8 @@ import uuid
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time
+import hashlib
+import secrets
 
 
 ROOT_DIR = Path(__file__).parent
