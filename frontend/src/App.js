@@ -195,8 +195,6 @@ function App() {
                 <Route path="/legal/privacy" element={<LegalPrivacy />} />
               </Route>
 
-              {/* Mobile routes removed as requested */}
-
               {/* Default redirect */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
