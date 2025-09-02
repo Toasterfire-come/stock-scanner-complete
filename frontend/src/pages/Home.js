@@ -50,9 +50,9 @@ const Home = () => {
   const features = [
     {
       icon: <Search className="h-6 w-6" />,
-      title: "Advanced Stock Screening",
-      description: `Screen NYSE stocks with ${platformStats?.total_indicators || 14} technical and fundamental indicators.`,
-      details: "Our screening engine processes real NYSE data to help you find investment opportunities with multiple filter combinations."
+      title: "NYSE Stock Screening",
+      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental indicators including RSI, MACD, P/E ratios, and market cap filters.`,
+      details: "Access comprehensive screening across all NYSE-listed companies with 7 technical indicators (RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change) and 7 fundamental indicators (Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range)."
     },
     {
       icon: <Bell className="h-6 w-6" />,
