@@ -1,19 +1,7 @@
-# Root .htaccess for /react document root
+# Root .htaccess – keep minimal; no redirects at all
 
 Options -MultiViews
 
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-
-  # Force HTTPS without loops; rely on server canonicalization
-  RewriteCond %{HTTPS} !=on
-  RewriteCond %{HTTP:X-Forwarded-Proto} !https
-  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-  # If someone hits the bare root and docroot is /react, index.html will serve
-</IfModule>
-
-<IfModule mod_headers.c>
-  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  RewriteEngine Off
 </IfModule>
