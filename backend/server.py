@@ -67,11 +67,11 @@ class ExternalAPIClient:
 # Initialize external API client
 external_api = ExternalAPIClient(EXTERNAL_API_URL, EXTERNAL_API_PASSWORD)
 
-# Updated plan limits - removed hourly limits, updated for NYSE focus
+# Updated plan limits - removed hourly limits, focused on daily/monthly only
 PLAN_LIMITS = {
-    'free': {'monthly': 15, 'daily': 5},
-    'bronze': {'monthly': 1500, 'daily': 50},
-    'silver': {'monthly': 5000, 'daily': 200},
+    'free': {'monthly': 50, 'daily': 10},
+    'bronze': {'monthly': 2000, 'daily': 100},
+    'silver': {'monthly': 10000, 'daily': 500},
     'gold': {'monthly': -1, 'daily': -1}  # -1 means unlimited
 }
 
