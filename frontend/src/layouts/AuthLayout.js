@@ -8,7 +8,7 @@ const AuthLayout = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center space-x-2 mb-8">
           <BarChart3 className="h-8 w-8 text-blue-600" />
-          <span className="text-2xl font-bold text-gray-900">TradeScan Pro</span>
+          <span className="text-2xl font-bold text-gray-900">Trade Scan Pro</span>
         </Link>
       </div>
 

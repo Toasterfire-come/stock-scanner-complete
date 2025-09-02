@@ -77,7 +77,7 @@ const AppLayout = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
               <BarChart3 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">TradeScan Pro</span>
+              <span className="text-2xl font-bold text-gray-900">Trade Scan Pro</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -175,7 +175,7 @@ const AppLayout = () => {
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
                   <Button asChild>
-                    <Link to="/auth/sign-up">Start Free Trial</Link>
+                    <Link to="/auth/sign-up">Get Started for $1</Link>
                   </Button>
                 </div>
               )}
@@ -227,7 +227,7 @@ const AppLayout = () => {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <BarChart3 className="h-6 w-6 text-blue-600" />
-                <span className="text-xl font-bold">TradeScan Pro</span>
+                <span className="text-xl font-bold">Trade Scan Pro</span>
               </div>
               <p className="text-gray-600">
                 Professional stock screening and market intelligence platform.
@@ -246,18 +246,19 @@ const AppLayout = () => {
               <ul className="space-y-2 text-sm text-gray-600">
                 <li><Link to="/about" className="hover:text-blue-600">About</Link></li>
                 <li><Link to="/contact" className="hover:text-blue-600">Contact</Link></li>
+                <li><Link to="/enterprise" className="hover:text-blue-600">Enterprise</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-blue-600">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-blue-600">Terms of Service</a></li>
+                <li><Link to="/legal/privacy" className="hover:text-blue-600">Privacy Policy</Link></li>
+                <li><Link to="/legal/terms" className="hover:text-blue-600">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
-            <p>&copy; 2025 TradeScan Pro. All rights reserved.</p>
+            <p>&copy; 2025 Trade Scan Pro. All rights reserved.</p>
           </div>
         </div>
       </footer>
