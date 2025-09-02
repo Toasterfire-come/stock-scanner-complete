@@ -97,7 +97,7 @@ Features I love:
 ✅ Professional screening tools
 ✅ API access for custom integrations
 
-Give it a try - there's a 7-day free trial!
+Give it a try - there's a 7-day trial for just $1!
 
 Best regards,
 ${user?.name || 'Your friend'}`;
