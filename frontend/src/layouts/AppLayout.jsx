@@ -286,32 +286,24 @@ const AppLayout = () => {
               </p>
             </div>
             
-            <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/features" className="hover:text-white">Features</Link></li>
-                <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link to="/docs" className="hover:text-white">Documentation</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/about" className="hover:text-white">About</Link></li>
-                <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
-                <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/legal/privacy" className="hover:text-white">Privacy Policy</Link></li>
-                <li><Link to="/legal/terms" className="hover:text-white">Terms of Service</Link></li>
-                <li><Link to="/endpoint-status" className="hover:text-white">Status</Link></li>
-              </ul>
-            </div>
+            {footerSections.map((section) => (
+              <div key={section.title}>
+                <h3 className="font-semibold mb-4">{section.title}</h3>
+                <ul className="space-y-2 text-gray-400">
+                  {organizeLinks(section.links).map((link) => (
+                    <li key={link.path}>
+                      <Link 
+                        to={link.path} 
+                        className="hover:text-white"
+                        onClick={() => handleLinkClick(link)}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
