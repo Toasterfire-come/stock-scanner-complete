@@ -1,9 +1,9 @@
-# SPA routing for Create React App within /react
+# SPA routing for Create React App within /react (HTTPS enforced globally)
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Do NOT force HTTPS here while certificate is pending
+  # HTTPS is enforced at the root .htaccess
 
   # Allow existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]

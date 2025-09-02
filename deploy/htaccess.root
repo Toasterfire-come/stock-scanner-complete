@@ -1,8 +1,13 @@
-# Root .htaccess: no HTTPS enforcement; route all to /react
+# Root .htaccess: enforce HTTPS and route to /react
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Force HTTPS (handles direct and proxied requests)
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
   # Serve existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -13,4 +18,6 @@
   RewriteRule . /react/index.html [L]
 </IfModule>
 
-# No HSTS until SSL is configured
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
