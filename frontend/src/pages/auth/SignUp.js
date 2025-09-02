@@ -82,7 +82,7 @@ const SignUp = () => {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold text-center">Start your free trial</CardTitle>
         <CardDescription className="text-center">
-          Create your TradeScan Pro account today
+          Create your Trade Scan Pro account today
         </CardDescription>
       </CardHeader>
 
