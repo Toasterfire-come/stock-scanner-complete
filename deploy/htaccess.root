@@ -4,8 +4,9 @@
   RewriteEngine On
   RewriteBase /
 
-  # Force HTTPS (handles direct and proxied requests)
-  RewriteCond %{HTTPS} !=on [OR]
+  # Force HTTPS without causing loops
+  # Redirect only when BOTH: (a) not already HTTPS, AND (b) not forwarded as HTTPS
+  RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
