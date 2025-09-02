@@ -32,9 +32,61 @@ import { useAuth } from "../context/AuthContext";
 
 const AppLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [clickedLinks, setClickedLinks] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+
+  const handleLinkClick = (linkData) => {
+    // Remove if already exists to avoid duplicates
+    const updatedLinks = clickedLinks.filter(link => link.path !== linkData.path);
+    // Add to the beginning (top) of the array
+    setClickedLinks([linkData, ...updatedLinks]);
+  };
+
+  // Footer link sections with click tracking
+  const footerSections = [
+    {
+      title: "Product",
+      links: [
+        { path: "/features", label: "Features" },
+        { path: "/pricing", label: "Pricing" },
+        { path: "/docs", label: "Documentation" }
+      ]
+    },
+    {
+      title: "Company", 
+      links: [
+        { path: "/about", label: "About" },
+        { path: "/contact", label: "Contact" },
+        { path: "/blog", label: "Blog" }
+      ]
+    },
+    {
+      title: "Legal",
+      links: [
+        { path: "/legal/privacy", label: "Privacy Policy" },
+        { path: "/legal/terms", label: "Terms of Service" },
+        { path: "/endpoint-status", label: "Status" }
+      ]
+    }
+  ];
+
+  // Organize links with clicked ones at the top
+  const organizeLinks = (links) => {
+    const clickedPaths = clickedLinks.map(link => link.path);
+    const clicked = links.filter(link => clickedPaths.includes(link.path));
+    const unclicked = links.filter(link => !clickedPaths.includes(link.path));
+    
+    // Sort clicked links by recency (most recent first)
+    const sortedClicked = clicked.sort((a, b) => {
+      const aIndex = clickedLinks.findIndex(link => link.path === a.path);
+      const bIndex = clickedLinks.findIndex(link => link.path === b.path);
+      return aIndex - bIndex;
+    });
+    
+    return [...sortedClicked, ...unclicked];
+  };
 
   const handleLogout = async () => {
     await logout();
