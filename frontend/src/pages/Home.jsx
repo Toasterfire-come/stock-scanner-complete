@@ -149,7 +149,7 @@ const Home = () => {
         "Basic portfolio tracking"
       ],
       popular: true,
-      cta: "Start Free Trial"
+      cta: "Start $1 Trial"
     },
     {
       name: "Silver", 
