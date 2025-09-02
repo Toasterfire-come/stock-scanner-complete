@@ -152,28 +152,7 @@ export async function getTrendingSafe() {
     const res = await cachedGet('/trending/', 'trending', 30000);
     return { success: true, data: normalizeTrending(res.data) };
   } catch (error) {
-    // Fallback to demo data for production-ready experience
-    const fallbackData = {
-      top_gainers: [
-        { ticker: "NVDA", name: "NVIDIA Corporation", current_price: 128.50, change_percent: 4.75, volume: 125334455, market_cap: 3200000000000 },
-        { ticker: "AAPL", name: "Apple Inc.", current_price: 178.25, change_percent: 2.15, volume: 52341234, market_cap: 2800000000000 },
-        { ticker: "MSFT", name: "Microsoft Corporation", current_price: 412.80, change_percent: 1.95, volume: 35876543, market_cap: 3100000000000 },
-        { ticker: "GOOGL", name: "Alphabet Inc.", current_price: 145.30, change_percent: 1.82, volume: 28765432, market_cap: 1800000000000 },
-        { ticker: "TSLA", name: "Tesla Inc.", current_price: 245.60, change_percent: 3.45, volume: 85432109, market_cap: 780000000000 }
-      ],
-      top_losers: [
-        { ticker: "META", name: "Meta Platforms Inc.", current_price: 298.40, change_percent: -2.85, volume: 45123456, market_cap: 750000000000 },
-        { ticker: "NFLX", name: "Netflix Inc.", current_price: 425.30, change_percent: -1.75, volume: 12345678, market_cap: 180000000000 },
-        { ticker: "AMZN", name: "Amazon.com Inc.", current_price: 145.80, change_percent: -1.25, volume: 65432198, market_cap: 1500000000000 }
-      ],
-      most_active: [
-        { ticker: "SPY", name: "SPDR S&P 500 ETF", current_price: 441.25, change_percent: 0.85, volume: 98765432, market_cap: 450000000000 },
-        { ticker: "QQQ", name: "Invesco QQQ Trust", current_price: 378.90, change_percent: 1.25, volume: 87654321, market_cap: 190000000000 },
-        { ticker: "TSLA", name: "Tesla Inc.", current_price: 245.60, change_percent: 3.45, volume: 85432109, market_cap: 780000000000 }
-      ],
-      last_updated: new Date().toISOString()
-    };
-    return { success: true, data: normalizeTrending(fallbackData), fallback: true };
+    return { success: false, error: 'Service unavailable' };
   }
 }
 
@@ -182,31 +161,7 @@ export async function getMarketStatsSafe() {
     const res = await cachedGet('/market-stats/', 'market-stats', 30000);
     return { success: true, data: normalizeMarketStats(res.data) };
   } catch (error) {
-    // Fallback to demo data for production-ready experience
-    const fallbackData = {
-      market_overview: {
-        total_stocks: 8547,
-        nyse_stocks: 3421,
-        gainers: 3841,
-        losers: 2156,
-        unchanged: 2550
-      },
-      top_gainers: [
-        { ticker: "NVDA", name: "NVIDIA Corporation", current_price: 128.50, change_percent: 4.75 },
-        { ticker: "AAPL", name: "Apple Inc.", current_price: 178.25, change_percent: 2.15 },
-        { ticker: "MSFT", name: "Microsoft Corporation", current_price: 412.80, change_percent: 1.95 }
-      ],
-      top_losers: [
-        { ticker: "META", name: "Meta Platforms Inc.", current_price: 298.40, change_percent: -2.85 },
-        { ticker: "NFLX", name: "Netflix Inc.", current_price: 425.30, change_percent: -1.75 }
-      ],
-      most_active: [
-        { ticker: "SPY", name: "SPDR S&P 500 ETF", current_price: 441.25, volume: 98765432 },
-        { ticker: "QQQ", name: "Invesco QQQ Trust", current_price: 378.90, volume: 87654321 }
-      ],
-      last_updated: new Date().toISOString()
-    };
-    return { success: true, data: normalizeMarketStats(fallbackData), fallback: true };
+    return { success: false, error: 'Service unavailable' };
   }
 }
 
