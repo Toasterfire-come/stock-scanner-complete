@@ -129,7 +129,7 @@ const AppLayout = () => {
             <div className="hidden lg:flex items-center space-x-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
+                  <Button variant="ghost" className="flex items-center space-x-2 h-9">
                     <Menu className="h-4 w-4" />
                     <span>Menu</span>
                     <ChevronDown className="h-4 w-4" />
@@ -154,16 +154,16 @@ const AppLayout = () => {
             </div>
 
             {/* Right side - Search and Auth */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               {/* Search */}
-              <Button variant="ghost" size="sm" className="hidden md:flex">
+              <Button variant="ghost" size="sm" className="hidden md:flex h-9">
                 <Search className="h-4 w-4" />
                 <span className="ml-2 hidden lg:inline">Search</span>
               </Button>
 
               {/* Notifications */}
               {isAuthenticated && (
-                <Button variant="ghost" size="sm" className="relative">
+                <Button variant="ghost" size="sm" className="relative h-9">
                   <Bell className="h-4 w-4" />
                   <Badge 
                     variant="destructive" 
@@ -178,9 +178,9 @@ const AppLayout = () => {
               {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-2 h-9 max-w-[160px]">
                       <User className="h-4 w-4" />
-                      <span className="hidden md:inline">{user?.first_name || user?.username}</span>
+                      <span className="hidden md:inline truncate">{user?.first_name || user?.username}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -216,11 +216,11 @@ const AppLayout = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <Button asChild variant="ghost" size="sm">
+                <div className="flex items-center gap-2">
+                  <Button asChild variant="ghost" size="sm" className="h-9">
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
-                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700 h-9">
                     <Link to="/auth/sign-up">Sign Up</Link>
                   </Button>
                 </div>
@@ -230,7 +230,7 @@ const AppLayout = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden"
+                className="lg:hidden h-9"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

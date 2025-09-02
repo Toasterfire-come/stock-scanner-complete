@@ -10,6 +10,7 @@ import { Separator } from "../../components/ui/separator";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, Github, Chrome } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useBackendStatus } from "../../context/BackendStatusContext";
 
 const signInSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
@@ -21,7 +22,8 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
+  const { isBackendUp, allowEmergencyAdmin, emergencyAdmin } = useBackendStatus();
 
   const from = location.state?.from?.pathname || "/app/dashboard";
 
@@ -34,6 +36,26 @@ const SignIn = () => {
   });
 
   const onSubmit = async (data) => {
+    if (!isBackendUp) {
+      // Only allow emergency admin during downtime
+      if (
+        allowEmergencyAdmin &&
+        data.username?.trim().toLowerCase() === emergencyAdmin.email &&
+        data.password === emergencyAdmin.password
+      ) {
+        try {
+          // Force sign out any existing user token
+          try { await logout(); } catch {}
+          localStorage.setItem("rts_token", "emergency-admin-session");
+          toast.success("Emergency admin access granted");
+          navigate("/app/dashboard", { replace: true });
+          return;
+        } catch {}
+      }
+      toast.error("Service unavailable. Only emergency admin can access.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const result = await login(data.username, data.password);
@@ -52,6 +74,10 @@ const SignIn = () => {
   };
 
   const handleOAuthLogin = (provider) => {
+    if (!isBackendUp) {
+      toast.error("Service unavailable. Only emergency admin can access.");
+      return;
+    }
     // Redirect to OAuth provider
     window.location.href = `/auth/oauth/${provider}`;
   };
@@ -61,19 +87,23 @@ const SignIn = () => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
         <p className="text-gray-600 mt-2">Sign in to your account</p>
+        {!isBackendUp && (
+          <p className="text-sm text-red-600 mt-2">Backend is down. Only emergency admin can sign in.</p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="username">Username or Email</Label>
+          <Label htmlFor="username">Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               id="username"
               type="text"
-              placeholder="Enter your username or email"
+              placeholder={isBackendUp ? "Enter your email" : "Emergency email"}
               className="pl-10"
               {...register("username")}
+              disabled={isLoading}
             />
           </div>
           {errors.username && (
@@ -88,14 +118,16 @@ const SignIn = () => {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
+              placeholder={isBackendUp ? "Enter your password" : "Emergency password"}
               className="pl-10 pr-10"
               {...register("password")}
+              disabled={isLoading}
             />
             <button
               type="button"
               className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -103,25 +135,6 @@ const SignIn = () => {
           {errors.password && (
             <p className="text-sm text-red-600">{errors.password.message}</p>
           )}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <input
-              id="remember"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <Label htmlFor="remember" className="text-sm">
-              Remember me
-            </Label>
-          </div>
-          <Link
-            to="/auth/forgot-password"
-            className="text-sm text-blue-600 hover:text-blue-500"
-          >
-            Forgot password?
-          </Link>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -143,6 +156,7 @@ const SignIn = () => {
           variant="outline"
           onClick={() => handleOAuthLogin("google")}
           className="w-full"
+          disabled={isLoading}
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
@@ -151,6 +165,7 @@ const SignIn = () => {
           variant="outline"
           onClick={() => handleOAuthLogin("github")}
           className="w-full"
+          disabled={isLoading}
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub

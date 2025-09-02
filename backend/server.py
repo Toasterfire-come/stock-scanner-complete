@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -25,12 +25,33 @@ load_dotenv(ROOT_DIR / '.env')
 
 # External API configuration
 EXTERNAL_API_URL = os.environ.get('EXTERNAL_API_URL', 'https://api.retailtradescanner.com')
-EXTERNAL_API_PASSWORD = os.environ.get('EXTERNAL_API_PASSWORD', '((#cx+mb@f-(8x*p@9mfnanqe%ha1@6-b%w)q##v@)lanop')
+# Remove hardcoded default secret; require env var or fallback to empty
+EXTERNAL_API_PASSWORD = os.environ.get('EXTERNAL_API_PASSWORD', '')
+# Optional: hashed API key support
+HASHED_API_KEY = os.environ.get('HASHED_API_KEY', '')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection with safe fallbacks for environments without DB
+MONGO_URL = os.environ.get('MONGO_URL')
+DB_NAME = os.environ.get('DB_NAME', 'stock_scanner')
+client = None
+db = None
+db_disabled = False  # Set to True after first failure to avoid repeated timeouts
+try:
+    if MONGO_URL:
+        client = AsyncIOMotorClient(
+            MONGO_URL,
+            serverSelectionTimeoutMS=int(os.environ.get('MONGO_SELECT_TIMEOUT_MS', '1000')),
+            connectTimeoutMS=int(os.environ.get('MONGO_CONNECT_TIMEOUT_MS', '1000')),
+            socketTimeoutMS=int(os.environ.get('MONGO_SOCKET_TIMEOUT_MS', '1000')),
+        )
+        db = client[DB_NAME]
+    else:
+        logging.warning("MONGO_URL not set. Using in-memory store for usage logging.")
+except Exception as e:
+    logging.warning(f"MongoDB not available, using in-memory store: {e}")
+    client = None
+    db = None
+    db_disabled = True
 
 # Security configuration
 security = HTTPBearer(auto_error=False)
@@ -59,9 +80,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["X-RateLimit-Remaining", "X-RateLimit-Reset"]
+    expose_headers=[
+        "X-RateLimit-Used",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Reset",
+        "X-RateLimit-Remaining",
+    ]
 )
 
 # Security headers middleware
@@ -85,16 +111,17 @@ class ExternalAPIClient:
         self.base_url = base_url
         self.api_password = api_password
         self.session = requests.Session()
+        self.default_timeout = float(os.environ.get('EXTERNAL_API_TIMEOUT_SECONDS', '2'))
         if api_password:
             self.session.headers.update({'X-API-Key': api_password})
         # Set timeout and retry strategy for production
-        self.session.timeout = 10
+        self.session.timeout = self.default_timeout
         
     def get(self, endpoint: str, params: dict = None):
         """Make GET request to external API with fallback"""
         url = f"{self.base_url}{endpoint}"
         try:
-            response = self.session.get(url, params=params, timeout=10)
+            response = self.session.get(url, params=params, timeout=self.default_timeout)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -106,7 +133,7 @@ class ExternalAPIClient:
         """Make POST request to external API with fallback"""
         url = f"{self.base_url}{endpoint}"
         try:
-            response = self.session.post(url, json=data, timeout=10)
+            response = self.session.post(url, json=data, timeout=self.default_timeout)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -231,6 +258,8 @@ SCANNER_COMBINATIONS = calculate_scanner_combinations()
 # In-memory storage for rate limiting (in production, use Redis)
 rate_limit_storage = defaultdict(list)
 usage_cache = defaultdict(lambda: defaultdict(int))
+# In-memory usage log for environments without MongoDB
+usage_memory = defaultdict(list)
 
 
 # Define Models
@@ -280,7 +309,17 @@ async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent
         user_agent=user_agent,
         plan=plan
     )
-    await db.api_usage.insert_one(usage.dict())
+    if db is not None and not db_disabled:
+        try:
+            await db.api_usage.insert_one(usage.dict())
+        except Exception as e:
+            logging.warning(f"DB insert failed, switching to in-memory logging: {e}")
+            global db_disabled
+            db_disabled = True
+            usage_memory[user_id].append(datetime.utcnow())
+    else:
+        # Fallback: track timestamps in memory
+        usage_memory[user_id].append(datetime.utcnow())
 
 async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
     """Get current usage counts for a user"""
@@ -290,16 +329,29 @@ async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
     day_ago = now - timedelta(days=1)
     month_ago = now - timedelta(days=30)
     
-    # Count usage in different time periods
-    daily_count = await db.api_usage.count_documents({
-        "user_id": user_id,
-        "timestamp": {"$gte": day_ago}
-    })
-    
-    monthly_count = await db.api_usage.count_documents({
-        "user_id": user_id,
-        "timestamp": {"$gte": month_ago}
-    })
+    if db is not None and not db_disabled:
+        try:
+            # Count usage in different time periods from DB
+            daily_count = await db.api_usage.count_documents({
+                "user_id": user_id,
+                "timestamp": {"$gte": day_ago}
+            })
+            monthly_count = await db.api_usage.count_documents({
+                "user_id": user_id,
+                "timestamp": {"$gte": month_ago}
+            })
+        except Exception as e:
+            logging.warning(f"DB count failed, using in-memory counts: {e}")
+            global db_disabled
+            db_disabled = True
+            timestamps = usage_memory[user_id]
+            daily_count = len([t for t in timestamps if t >= day_ago])
+            monthly_count = len([t for t in timestamps if t >= month_ago])
+    else:
+        # Fallback: count from in-memory timestamps
+        timestamps = usage_memory[user_id]
+        daily_count = len([t for t in timestamps if t >= day_ago])
+        monthly_count = len([t for t in timestamps if t >= month_ago])
     
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
     
@@ -471,19 +523,18 @@ async def get_stocks(
     min_price: float = None,
     max_price: float = None
 ):
-    """Get stock list from external API - NYSE focused"""
+    """Get stock list - use external API with robust fallback and timeout"""
     params = {
         "limit": min(limit, 1000),
         "category": category
     }
     if search:
         params["search"] = search
-    if min_price:
+    if min_price is not None:
         params["min_price"] = min_price
-    if max_price:
+    if max_price is not None:
         params["max_price"] = max_price
-    
-    # Log usage for this user
+
     user_info = await get_user_info(request)
     await log_api_usage(
         user_info["user_id"],
@@ -492,8 +543,13 @@ async def get_stocks(
         user_info["user_agent"],
         user_info["plan"]
     )
-    
-    return external_api.get("/api/stocks/", params)
+
+    try:
+        data = external_api.get("/api/stocks/", params)
+        return data
+    except Exception:
+        # Ensure quick fallback
+        return ExternalAPIClient._get_fallback_data(external_api, "/api/stocks/", params)
 
 @api_router.get("/stock/{symbol}")
 async def get_stock_detail(symbol: str, request: Request):
@@ -516,10 +572,10 @@ async def get_stock_detail(symbol: str, request: Request):
 
 @api_router.get("/search/")
 async def search_stocks(q: str, request: Request):
-    """Search stocks via external API"""
+    """Search stocks via external API with fast fallback"""
     if not q or len(q) < 2:
         raise HTTPException(status_code=400, detail="Query must be at least 2 characters")
-    
+
     user_info = await get_user_info(request)
     await log_api_usage(
         user_info["user_id"],
@@ -528,12 +584,15 @@ async def search_stocks(q: str, request: Request):
         user_info["user_agent"],
         user_info["plan"]
     )
-    
-    return external_api.get("/api/search/", {"q": q})
+
+    try:
+        return external_api.get("/api/search/", {"q": q})
+    except Exception:
+        return ExternalAPIClient._get_fallback_data(external_api, "/api/search/", {"q": q})
 
 @api_router.get("/trending/")
 async def get_trending(request: Request):
-    """Get trending stocks"""
+    """Get trending stocks with fast fallback"""
     user_info = await get_user_info(request)
     await log_api_usage(
         user_info["user_id"],
@@ -542,12 +601,15 @@ async def get_trending(request: Request):
         user_info["user_agent"],
         user_info["plan"]
     )
-    
-    return external_api.get("/api/trending/")
+
+    try:
+        return external_api.get("/api/trending/")
+    except Exception:
+        return ExternalAPIClient._get_fallback_data(external_api, "/api/trending/")
 
 @api_router.get("/market-stats/")
 async def get_market_stats(request: Request):
-    """Get market statistics"""
+    """Get market statistics with fast fallback"""
     user_info = await get_user_info(request)
     await log_api_usage(
         user_info["user_id"],
@@ -556,8 +618,11 @@ async def get_market_stats(request: Request):
         user_info["user_agent"],
         user_info["plan"]
     )
-    
-    return external_api.get("/api/market-stats/")
+
+    try:
+        return external_api.get("/api/market-stats/")
+    except Exception:
+        return ExternalAPIClient._get_fallback_data(external_api, "/api/market-stats/")
 
 # Portfolio endpoints (these use external API's authenticated endpoints)
 @api_router.get("/portfolio/")
@@ -621,7 +686,7 @@ async def get_user_usage(request: Request):
     }
 
 @api_router.get("/stocks/{symbol}/quote")
-async def get_stock_quote(symbol: str, request: Request):
+async def get_stock_quote(symbol: str, request: Request, response: Response):
     """Get stock quote - with usage tracking and limits"""
     user_info = await get_user_info(request)
     
@@ -631,6 +696,10 @@ async def get_stock_quote(symbol: str, request: Request):
     
     # Check rate limits (advisory)
     rate_info = await check_rate_limits(user_info["ip_address"])
+    # Add rate limit headers for client visibility
+    response.headers["X-RateLimit-Used"] = str(rate_info.requests_this_minute)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMITS['requests_per_minute'])
+    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
     
     # Log the API usage
     await log_api_usage(
@@ -642,7 +711,7 @@ async def get_stock_quote(symbol: str, request: Request):
     )
     
     # Mock stock data (in production, fetch from real API)
-    mock_data = {
+    return {
         "symbol": symbol.upper(),
         "price": 150.25,
         "change": 2.35,
@@ -651,20 +720,36 @@ async def get_stock_quote(symbol: str, request: Request):
         "timestamp": datetime.utcnow().isoformat(),
         "rate_limit_warning": rate_info.rate_limited
     }
-    
-    return mock_data
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.dict()
     status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
+    if db is not None and not db_disabled:
+        try:
+            _ = await db.status_checks.insert_one(status_obj.dict())
+        except Exception as e:
+            logging.warning(f"DB status insert failed, using in-memory: {e}")
+            global db_disabled
+            db_disabled = True
+            usage_memory["status_checks"].append(status_obj.dict())
+    else:
+        usage_memory["status_checks"].append(status_obj.dict())
     return status_obj
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
+    if db is not None and not db_disabled:
+        try:
+            status_checks = await db.status_checks.find().to_list(1000)
+            return [StatusCheck(**status_check) for status_check in status_checks]
+        except Exception as e:
+            logging.warning(f"DB status query failed, using in-memory: {e}")
+            global db_disabled
+            db_disabled = True
+            return [StatusCheck(**status_check) for status_check in usage_memory.get("status_checks", [])]
+    # Fallback from memory
+    return [StatusCheck(**status_check) for status_check in usage_memory.get("status_checks", [])]
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -698,4 +783,51 @@ logger.info(f"Environment: {'Production' if os.environ.get('ENVIRONMENT') == 'pr
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client is not None:
+        client.close()
+
+# =============================
+# Revenue endpoints (for frontend integration)
+# =============================
+revenue_router = APIRouter(prefix="/revenue")
+
+@revenue_router.post("/validate-discount/")
+async def validate_discount(payload: dict):
+    code = (payload or {}).get("code", "").upper()
+    valid_codes = {"REF50": 50, "WELCOME10": 10}
+    if code in valid_codes:
+        return {"valid": True, "applies_discount": True, "code": code, "discount_percentage": valid_codes[code]}
+    return {"valid": False, "applies_discount": False, "message": "Invalid discount code"}
+
+@revenue_router.post("/apply-discount/")
+async def apply_discount(payload: dict):
+    code = (payload or {}).get("code", "").upper()
+    amount = float((payload or {}).get("amount", 0))
+    valid_codes = {"REF50": 50, "WELCOME10": 10}
+    discount_pct = valid_codes.get(code, 0)
+    discount_amount = round(amount * (discount_pct / 100.0), 2)
+    final_amount = round(amount - discount_amount, 2)
+    return {"success": True, "code": code, "discount_percentage": discount_pct, "discount_amount": discount_amount, "final_amount": final_amount}
+
+@revenue_router.post("/record-payment/")
+async def record_payment(payload: dict):
+    # In production, persist this record
+    return {"success": True, "recorded": True, "payment": payload or {}}
+
+@revenue_router.get("/revenue-analytics/")
+@revenue_router.get("/revenue-analytics/{month_year}/")
+async def revenue_analytics(month_year: Optional[str] = None):
+    # Simple placeholder analytics
+    return {
+        "month": month_year or datetime.utcnow().strftime("%Y-%m"),
+        "total_payments": 42,
+        "total_revenue": 1234.56,
+        "avg_order_value": 29.39,
+    }
+
+@revenue_router.post("/initialize-codes/")
+async def initialize_codes():
+    return {"success": True, "initialized": True}
+
+# Include revenue router
+app.include_router(revenue_router)
