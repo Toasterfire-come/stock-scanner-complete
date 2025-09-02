@@ -21,7 +21,8 @@ import {
   Clock,
   Globe,
   ArrowRight,
-  Gift
+  Gift,
+  Mail
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,22 +42,19 @@ const PricingPro = () => {
       popular: false,
       features: [
         { name: "1,500 API calls per month", included: true },
-        { name: "10 calls per hour limit", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Basic stock screener", included: true },
         { name: "Email alerts & notifications", included: true },
+        { name: "Real-time alerts", included: true },
         { name: "Portfolio tracking (5 positions)", included: true },
         { name: "Email support", included: true },
         { name: "Advanced screener filters", included: false },
         { name: "Custom watchlists", included: false },
-        { name: "News sentiment analysis", included: false },
         { name: "API access", included: false },
-        { name: "Priority support", included: false },
-        { name: "Phone support", included: false }
+        { name: "Priority support", included: false }
       ],
       limits: {
         apiCalls: "1,500/month",
-        hourlyLimit: "10/hour",
         portfolios: "1 portfolio",
         watchlists: "3 watchlists",
         alerts: "25 alerts"
@@ -72,22 +70,19 @@ const PricingPro = () => {
       popular: true,
       features: [
         { name: "5,000 API calls per month", included: true },
-        { name: "25 calls per hour limit", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Advanced stock screener", included: true },
-        { name: "Email & SMS alerts", included: true },
+        { name: "Email alerts", included: true },
+        { name: "Real-time alerts", included: true },
         { name: "Portfolio tracking (unlimited)", included: true },
         { name: "Priority email support", included: true },
         { name: "Advanced screener filters", included: true },
         { name: "Custom watchlists (10)", included: true },
-        { name: "News sentiment analysis", included: true },
         { name: "Basic API access", included: true },
-        { name: "1-year historical data", included: true },
-        { name: "Phone support", included: false }
+        { name: "Enhanced analytics", included: true }
       ],
       limits: {
         apiCalls: "5,000/month",
-        hourlyLimit: "25/hour",
         portfolios: "Unlimited",
         watchlists: "10 watchlists",
         alerts: "100 alerts"
@@ -103,22 +98,20 @@ const PricingPro = () => {
       popular: false,
       features: [
         { name: "Unlimited API calls", included: true },
-        { name: "No hourly limits", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Premium stock screener", included: true },
         { name: "Multi-channel alerts", included: true },
+        { name: "Real-time alerts", included: true },
         { name: "Portfolio tracking (unlimited)", included: true },
-        { name: "Priority phone support", included: true },
+        { name: "Priority email support", included: true },
         { name: "All screener filters", included: true },
         { name: "Unlimited watchlists", included: true },
-        { name: "AI-powered insights", included: true },
+        { name: "Advanced insights", included: true },
         { name: "Full REST API access", included: true },
-        { name: "Real-time market data", included: true },
-        { name: "White-label solutions", included: true }
+        { name: "Real-time market data", included: true }
       ],
       limits: {
         apiCalls: "Unlimited",
-        hourlyLimit: "Unlimited",
         portfolios: "Unlimited",
         watchlists: "Unlimited",
         alerts: "Unlimited"
@@ -129,23 +122,23 @@ const PricingPro = () => {
   const additionalFeatures = [
     {
       icon: <Shield className="h-6 w-6" />,
-      title: "Bank-Level Security",
-      description: "256-bit SSL encryption and SOC 2 compliance"
+      title: "Secure Platform",
+      description: "Industry-standard security and data protection"
     },
     {
       icon: <Globe className="h-6 w-6" />,
-      title: "Global Market Data",
-      description: "NYSE, NASDAQ, and 15+ international exchanges"
+      title: "NYSE Focus",
+      description: "Comprehensive coverage of NYSE-listed stocks"
     },
     {
       icon: <Clock className="h-6 w-6" />,
-      title: "99.9% Uptime SLA",
-      description: "Guaranteed reliability with monitoring"
+      title: "Reliable Service",
+      description: "Consistent uptime and performance monitoring"
     },
     {
-      icon: <Headphones className="h-6 w-6" />,
-      title: "Expert Support",
-      description: "Dedicated support from trading professionals"
+      icon: <Mail className="h-6 w-6" />,
+      title: "Email Support",
+      description: "Responsive email support for all plans"
     }
   ];
 
@@ -182,7 +175,7 @@ const PricingPro = () => {
         <div className="text-center mb-16">
           <Badge className="mb-4 text-lg px-4 py-2 bg-blue-100 text-blue-800">
             <Gift className="h-4 w-4 mr-2" />
-            Limited Time: 7-Day Free Trial + 30% Off First Month
+            7-Day Trial for Just $1
           </Badge>
           
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
@@ -190,7 +183,7 @@ const PricingPro = () => {
           </h1>
           
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Join 50,000+ successful traders using our institutional-grade tools to maximize returns and minimize risk.
+            Join thousands of traders using our tools to make better trading decisions and improve their market analysis.
           </p>
 
           {/* Billing Toggle */}
@@ -315,7 +308,7 @@ const PricingPro = () => {
                           className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                           onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
                         >
-                          Start Free Trial
+                          Get Started for $1
                           <ArrowRight className="h-5 w-5 ml-2" />
                         </Button>
                       </DialogTrigger>
@@ -338,7 +331,7 @@ const PricingPro = () => {
                     </Dialog>
 
                     <p className="text-xs text-gray-500 text-center">
-                      7-day free trial • Cancel anytime • No setup fees
+                      7-day trial for $1 • Cancel anytime • No setup fees
                     </p>
                   </div>
                 </CardContent>
@@ -373,10 +366,10 @@ const PricingPro = () => {
           <CardContent className="p-12 text-center">
             <h2 className="text-3xl font-bold mb-4">Need a Custom Solution?</h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Enterprise plans with custom API limits, dedicated support, and white-label solutions available.
+              Enterprise plans with custom API limits, dedicated support, and tailored solutions available.
             </p>
             <Button variant="secondary" size="lg" className="text-lg px-8 py-4">
-              <Headphones className="h-5 w-5 mr-2" />
+              <Mail className="h-5 w-5 mr-2" />
               Contact Sales
             </Button>
           </CardContent>
@@ -391,10 +384,9 @@ const PricingPro = () => {
           <div className="space-y-6">
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">How does the 7-day free trial work?</h3>
+                <h3 className="font-semibold text-lg mb-2">How does the 7-day trial work?</h3>
                 <p className="text-gray-600">
-                  Start with full access to all features in your chosen plan. No credit card required until the trial ends. 
-                  Cancel anytime during the trial with no charges.
+                  Pay just $1 to access your chosen plan for 7 days. After the trial, you'll be charged the regular monthly price unless you cancel.
                 </p>
               </CardContent>
             </Card>
@@ -412,7 +404,7 @@ const PricingPro = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">What payment methods do you accept?</h3>
                 <p className="text-gray-600">
-                  We accept all major credit cards, PayPal, and bank transfers for annual plans. All payments are secured with 256-bit SSL encryption.
+                  We accept all major credit cards and PayPal. All payments are secured with industry-standard encryption.
                 </p>
               </CardContent>
             </Card>
@@ -421,7 +413,7 @@ const PricingPro = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">Is there a refund policy?</h3>
                 <p className="text-gray-600">
-                  All sales are final. Please ensure you understand the features included in your selected plan before subscribing. Contact support for any questions.
+                  You can cancel anytime during your trial period for just the $1 trial fee. Regular subscriptions can be cancelled anytime to prevent future charges.
                 </p>
               </CardContent>
             </Card>
