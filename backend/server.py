@@ -454,8 +454,9 @@ async def search_stocks(q: str, request: Request):
                 "company_name": f"{q.upper()} Corporation",
                 "exchange": "NASDAQ",
                 "current_price": 150.25,
+                "change_percent": 1.59,
                 "market_cap": 2800000000000,
-                "match_score": 1.0
+                "match_type": "ticker"
             }
         ],
         "query": q,
