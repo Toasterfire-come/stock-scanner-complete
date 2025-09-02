@@ -463,7 +463,7 @@ async def search_stocks(q: str, request: Request):
         "timestamp": datetime.utcnow().isoformat()
     }
     
-    return external_api.get("/api/search/", {"q": q}, fallback_data)
+    return external_api.get("/api/search/", params={"q": q}, fallback_data=fallback_data)
 
 @api_router.get("/trending/")
 async def get_trending(request: Request):
