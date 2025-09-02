@@ -216,7 +216,7 @@ const Home = () => {
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-6 w-6 mr-3" />
-                  Start 7-Day Free Trial
+                  Start $1 Trial for 7 Days
                   <ArrowRight className="h-6 w-6 ml-3" />
                 </Link>
               </Button>
