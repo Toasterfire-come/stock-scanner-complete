@@ -1,17 +1,14 @@
-# SPA routing for Create React App within /react (HTTPS enforced globally)
+# /react .htaccess for SPA fallback (document root is /react)
 
 Options -MultiViews
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Allow existing files and directories
+  # Serve existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
-
-  # Default route to index.html within /react
-  RewriteRule ^$ index.html [L]
 
   # SPA fallback to index.html
   RewriteRule . index.html [L]
@@ -22,4 +19,4 @@ Options -MultiViews
 </IfModule>
 
 DirectoryIndex index.html
-ErrorDocument 404 /react/index.html
+ErrorDocument 404 /index.html

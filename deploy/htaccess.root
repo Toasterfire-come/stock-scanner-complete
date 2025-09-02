@@ -1,4 +1,4 @@
-# Root .htaccess: enforce HTTPS and route to /react
+# Root .htaccess for /react document root
 
 Options -MultiViews
 
@@ -6,27 +6,14 @@ Options -MultiViews
   RewriteEngine On
   RewriteBase /
 
-  # Force HTTPS without causing loops
-  # Redirect only when BOTH: (a) not already HTTPS, AND (b) not forwarded as HTTPS
+  # Force HTTPS without loops; rely on server canonicalization
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # Serve existing files and directories
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-
-  # Explicit root path -> React index
-  RewriteRule ^$ /react/index.html [L]
-
-  # SPA fallback to /react/index.html
-  RewriteRule . /react/index.html [L]
+  # If someone hits the bare root and docroot is /react, index.html will serve
 </IfModule>
 
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
-
-DirectoryIndex index.html
-ErrorDocument 404 /react/index.html
