@@ -1,12 +1,9 @@
-# Enforce HTTPS and handle SPA routing for Create React App
+# SPA routing for Create React App within /react
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Force HTTPS (handle direct and proxied requests)
-  RewriteCond %{HTTPS} !=on [OR]
-  RewriteCond %{HTTP:X-Forwarded-Proto} !https
-  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # Do NOT force HTTPS here while certificate is pending
 
   # Allow existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]

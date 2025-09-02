@@ -1,0 +1,16 @@
+# Root .htaccess: no HTTPS enforcement; route all to /react
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve existing files and directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # SPA fallback to /react/index.html
+  RewriteRule . /react/index.html [L]
+</IfModule>
+
+# No HSTS until SSL is configured
