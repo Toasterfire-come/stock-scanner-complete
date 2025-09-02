@@ -389,7 +389,7 @@ const Home = () => {
             </p>
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              7-Day Free Trial on All Plans
+              7-Day Trial for $1 on All Plans
             </div>
           </div>
           
