@@ -385,7 +385,7 @@ async def get_stocks(
         "timestamp": datetime.utcnow().isoformat()
     }
     
-    return external_api.get("/api/stocks/", params, fallback_data)
+    return external_api.get("/api/stocks/", params=params, fallback_data=fallback_data)
 
 @api_router.get("/stock/{symbol}")
 async def get_stock_detail(symbol: str, request: Request):
