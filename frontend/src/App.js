@@ -188,6 +188,7 @@ function App() {
 
                 {/* Docs & Content */}
                 <Route path="/docs" element={<Documentation />} />
+                <Route path="/enterprise" element={<EnterpriseContact />} />
 
                 {/* Legal */}
                 <Route path="/legal/terms" element={<LegalTerms />} />
