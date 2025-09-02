@@ -154,6 +154,10 @@ class TradeScanProAPITester:
     def test_trending_endpoint(self):
         """Test trending stocks"""
         return self.run_test("Trending Stocks", "GET", "/api/trending/", 200)
+    
+    def test_stock_detail_endpoint(self):
+        """Test individual stock details"""
+        return self.run_test("Stock Detail (AAPL)", "GET", "/api/stock/AAPL", 200)
 
 def main():
     print("🚀 Starting Trade Scan Pro API Tests...")
