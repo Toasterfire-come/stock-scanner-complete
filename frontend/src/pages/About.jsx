@@ -17,31 +17,10 @@ import {
 
 const About = () => {
   const stats = [
-    { label: "Active Traders", value: "50,000+" },
-    { label: "API Calls Daily", value: "10M+" },
-    { label: "Years in Business", value: "5+" },
-    { label: "Customer Satisfaction", value: "98%" }
-  ];
-
-  const team = [
-    {
-      name: "Sarah Johnson",
-      role: "CEO & Co-Founder",
-      background: "Former Goldman Sachs quantitative analyst with 15+ years in fintech",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face"
-    },
-    {
-      name: "Michael Chen",
-      role: "CTO & Co-Founder", 
-      background: "Ex-Google engineer, built trading systems for hedge funds",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face"
-    },
-    {
-      name: "David Rodriguez",
-      role: "Head of Product",
-      background: "Former Bloomberg terminal product manager, 12+ years in financial data",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=face"
-    }
+    { label: "NYSE Stocks Covered", value: "3,200+" },
+    { label: "Technical Indicators", value: "14" },
+    { label: "Scanner Combinations", value: "350+" },
+    { label: "Active Users", value: "Growing" }
   ];
 
   const values = [
@@ -53,17 +32,17 @@ const About = () => {
     {
       icon: <Shield className="h-8 w-8" />,
       title: "Data Integrity",
-      description: "We maintain the highest standards for data accuracy and reliability, with multiple validation layers and real-time monitoring."
+      description: "We maintain high standards for data accuracy and reliability, with validation layers and real-time monitoring."
     },
     {
       icon: <Users className="h-8 w-8" />,
       title: "Community Driven",
-      description: "Our roadmap is shaped by feedback from our community of professional traders and institutional clients."
+      description: "Our roadmap is shaped by feedback from our community of traders and their real-world needs."
     },
     {
       icon: <Zap className="h-8 w-8" />,
       title: "Innovation",
-      description: "We constantly push the boundaries of what's possible in trading technology, leveraging AI and machine learning."
+      description: "We constantly improve our platform, leveraging modern technology to provide better trading tools."
     }
   ];
 
@@ -84,8 +63,8 @@ const About = () => {
             </h1>
             
             <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
-              We're on a mission to democratize professional-grade trading tools, 
-              making sophisticated market analysis accessible to retail traders worldwide.
+              We're focused on providing reliable stock screening and analysis tools 
+              to help traders make informed decisions in the market.
             </p>
           </div>
         </div>
@@ -112,7 +91,7 @@ const About = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Mission</h2>
               <p className="text-xl text-gray-600">
-                Bridging the gap between institutional and retail trading
+                Providing accessible and reliable trading tools
               </p>
             </div>
             
@@ -121,17 +100,16 @@ const About = () => {
                 <div className="text-center">
                   <TrendingUp className="h-16 w-16 text-blue-600 mx-auto mb-8" />
                   <h3 className="text-3xl font-bold text-gray-900 mb-6">
-                    Leveling the Playing Field
+                    Making Trading Tools Accessible
                   </h3>
                   <p className="text-xl text-gray-700 leading-relaxed mb-8">
-                    For too long, professional trading tools have been locked behind expensive institutional licenses, 
-                    creating an unfair advantage for large firms. We believe every serious trader deserves access to 
-                    the same high-quality data, analytics, and insights that drive success in the markets.
+                    Trade Scan Pro was built to provide traders with reliable stock screening and analysis tools 
+                    at an affordable price. We focus on delivering practical functionality that helps traders 
+                    make better-informed decisions.
                   </p>
                   <p className="text-xl text-gray-700 leading-relaxed">
-                    Trade Scan Pro was founded by a team of former Wall Street professionals who experienced firsthand 
-                    the power of institutional-grade tools. We're committed to bringing that same level of sophistication 
-                    to retail traders at a fraction of the cost.
+                    Our platform specializes in NYSE stock analysis with real-time alerts and comprehensive 
+                    screening capabilities. We believe in transparent pricing and reliable service delivery.
                   </p>
                 </div>
               </CardContent>
@@ -140,37 +118,8 @@ const About = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Meet Our Team</h2>
-            <p className="text-xl text-gray-600">
-              Led by industry veterans with decades of combined experience
-            </p>
-          </div>
-          
-          <div className="grid lg:grid-cols-3 gap-8">
-            {team.map((member, index) => (
-              <Card key={index} className="hover:shadow-xl transition-shadow duration-300">
-                <CardContent className="p-8 text-center">
-                  <img 
-                    src={member.image} 
-                    alt={member.name}
-                    className="w-32 h-32 rounded-full mx-auto mb-6 object-cover"
-                  />
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{member.name}</h3>
-                  <p className="text-blue-600 font-semibold mb-4">{member.role}</p>
-                  <p className="text-gray-600 leading-relaxed">{member.background}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Values Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Values</h2>
@@ -200,13 +149,13 @@ const About = () => {
       </section>
 
       {/* Story Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
               <p className="text-xl text-gray-600">
-                From Wall Street to Main Street
+                Building better trading tools
               </p>
             </div>
             
@@ -218,11 +167,11 @@ const About = () => {
                       1
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">The Problem</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">The Need</h3>
                       <p className="text-gray-700">
-                        Our founders worked at major investment banks and hedge funds, where they had access to 
-                        sophisticated trading platforms costing hundreds of thousands of dollars per year. When they 
-                        left to trade independently, they were shocked by the limited tools available to retail traders.
+                        We identified a need for reliable, affordable stock screening tools that focus on 
+                        practical functionality rather than overwhelming complexity. Many existing platforms 
+                        were either too expensive or lacked the specific features traders actually needed.
                       </p>
                     </div>
                   </div>
@@ -238,9 +187,9 @@ const About = () => {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">The Solution</h3>
                       <p className="text-gray-700">
-                        In 2019, we set out to build the platform we wished existed - combining the power of 
-                        institutional tools with the accessibility and affordability that retail traders need. 
-                        We started with a simple stock screener and have evolved into a comprehensive trading platform.
+                        We built Trade Scan Pro to focus on NYSE stocks with comprehensive screening capabilities, 
+                        real-time alerts, and portfolio tracking. Our goal was to create a platform that combines 
+                        reliability with affordability, starting with a simple $1 trial.
                       </p>
                     </div>
                   </div>
@@ -253,12 +202,12 @@ const About = () => {
                     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       3
                     </div>
-                    <div>
+                    <div>  
                       <h3 className="text-xl font-bold text-gray-900 mb-2">The Future</h3>
                       <p className="text-gray-700">
-                        Today, we serve over 50,000 traders worldwide and continue to innovate. Our roadmap includes 
-                        advanced AI-powered analytics, social trading features, and expanded international market coverage. 
-                        We're just getting started in our mission to democratize professional trading tools.
+                        We continue to improve our platform based on user feedback and market needs. 
+                        Our roadmap includes enhanced analytics, improved user experience, and expanded 
+                        screening capabilities while maintaining our focus on reliability and value.
                       </p>
                     </div>
                   </div>
@@ -276,13 +225,13 @@ const About = () => {
             Join Our Trading Community
           </h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Experience the difference that professional-grade tools can make in your trading success.
+            Experience the difference that reliable trading tools can make in your analysis and decision-making.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
             <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto">
               <Link to="/auth/sign-up">
-                Start Free Trial
+                Get Started for $1
                 <ArrowRight className="h-6 w-6 ml-3" />
               </Link>
             </Button>
@@ -296,11 +245,11 @@ const About = () => {
           <div className="flex flex-wrap items-center justify-center gap-8 text-lg">
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
-              7-Day Free Trial
+              7-Day Trial for $1
             </div>
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
-              No Credit Card Required
+              No Setup Fees
             </div>
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
