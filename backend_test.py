@@ -278,7 +278,11 @@ def main():
         tester.test_billing_endpoints,
         tester.test_stocks_endpoint,
         tester.test_search_endpoint,
-        tester.test_trending_endpoint
+        tester.test_trending_endpoint,
+        tester.test_market_stats_endpoint,
+        tester.test_security_headers,
+        tester.test_cors_functionality,
+        tester.test_rate_limiting_headers
     ]
     
     for test_method in test_methods:
