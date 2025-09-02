@@ -14,6 +14,9 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
+  # Explicit root path -> React index
+  RewriteRule ^$ /react/index.html [L]
+
   # SPA fallback to /react/index.html
   RewriteRule . /react/index.html [L]
 </IfModule>
@@ -21,3 +24,6 @@
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
+
+DirectoryIndex index.html
+ErrorDocument 404 /react/index.html

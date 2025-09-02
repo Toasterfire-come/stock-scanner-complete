@@ -3,12 +3,13 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # HTTPS is enforced at the root .htaccess
-
   # Allow existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
+
+  # Default route to index.html within /react
+  RewriteRule ^$ /react/index.html [L]
 
   # SPA fallback to index.html
   RewriteRule . /index.html [L]
@@ -17,3 +18,6 @@
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
+
+DirectoryIndex index.html
+ErrorDocument 404 /react/index.html
