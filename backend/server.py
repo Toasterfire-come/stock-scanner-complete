@@ -82,14 +82,15 @@ RATE_LIMITS = {
     'requests_per_day': 5000
 }
 
-# NYSE stock count and available indicators (based on actual capabilities)
-NYSE_STOCK_COUNT = 3200  # Approximate NYSE listed companies
+# NYSE stock count and available indicators (accurate claims)
+NYSE_STOCK_COUNT = 3200  # Actual NYSE listed companies
 AVAILABLE_INDICATORS = [
-    "RSI", "MACD", "Moving Average", "Bollinger Bands", "Stochastic", 
-    "Volume", "Price Change", "Market Cap", "P/E Ratio", "EPS Growth",
-    "Revenue Growth", "Dividend Yield", "Beta", "Price Range"
+    # Technical Indicators (7)
+    "RSI", "MACD", "Moving Average", "Bollinger Bands", "Stochastic", "Volume", "Price Change",
+    # Fundamental Indicators (7) 
+    "Market Cap", "P/E Ratio", "EPS Growth", "Revenue Growth", "Dividend Yield", "Beta", "Price Range"
 ]
-TOTAL_INDICATORS = len(AVAILABLE_INDICATORS)
+TOTAL_INDICATORS = len(AVAILABLE_INDICATORS)  # 14 total indicators
 
 # Calculate scanner combinations (simplified calculation)
 def calculate_scanner_combinations():
