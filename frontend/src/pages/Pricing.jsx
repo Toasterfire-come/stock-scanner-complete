@@ -21,11 +21,9 @@ import {
   BarChart3,
   Bell,
   Shield,
-  Smartphone,
-  Headphones
+  Mail
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { revenueValidate, revenueApply } from "../api/client";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -44,7 +42,7 @@ const Pricing = () => {
       description: "Basic stock lookup and filtering",
       price: { monthly: 0, annual: 0 },
       features: [
-        "15 stocks per month",
+        "15 stock queries per month",
         "Stock symbol lookup & search",
         "Basic price filtering"
       ],
@@ -61,54 +59,54 @@ const Pricing = () => {
       name: "Bronze",
       icon: <Award className="h-6 w-6" />,
       description: "Enhanced features for active traders",
-      price: { monthly: 14.99, annual: 149.90 },
+      price: { monthly: 24.99, annual: 249.90 },
       features: [
-        "1,000 stocks per month",
+        "1,500 API calls per month",
         "Full stock scanner & lookup",
         "Email alerts & notifications",
-        "News sentiment analysis",
+        "Real-time alerts",
         "Basic portfolio tracking"
       ],
       limitations: [],
       popular: true,
       color: "orange",
-      cta: "Start 7-Day Trial for $1"
+      cta: "Get Started for $1"
     },
     {
       id: "silver",
       name: "Silver",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 29.99, annual: 299.90 },
+      price: { monthly: 39.99, annual: 399.90 },
       features: [
-        "5,000 stocks per month",
+        "5,000 API calls per month",
         "Advanced filtering & screening",
-        "1-year historical data",
         "Custom watchlists (10)",
-        "Priority support"
+        "Real-time alerts",
+        "Priority email support"
       ],
       limitations: [],
       popular: false,
       color: "blue",
-      cta: "Start 7-Day Trial for $1"
+      cta: "Get Started for $1"
     },
     {
       id: "gold",
       name: "Gold",
       icon: <Star className="h-6 w-6" />,
       description: "Ultimate trading experience",
-      price: { monthly: 59.99, annual: 599.90 },
+      price: { monthly: 89.99, annual: 899.90 },
       features: [
-        "10,000 stocks per month",
+        "Unlimited API calls",
         "All premium features",
         "Real-time alerts",
         "Full REST API access",
-        "Priority phone support"
+        "Priority email support"
       ],
       limitations: [],
       popular: false,
       color: "yellow",
-      cta: "Start 7-Day Trial for $1"
+      cta: "Get Started for $1"
     },
   ];
 
@@ -187,11 +185,11 @@ const Pricing = () => {
       category: "Stock Analysis",
       icon: <BarChart3 className="h-5 w-5" />,
       items: [
-        { name: "Monthly stock queries", free: "15", bronze: "1,000", silver: "5,000", gold: "10,000" },
+        { name: "Monthly stock queries", free: "15", bronze: "1,500", silver: "5,000", gold: "Unlimited" },
         { name: "Stock symbol lookup", free: true, bronze: true, silver: true, gold: true },
         { name: "Basic price filtering", free: true, bronze: true, silver: true, gold: true },
         { name: "Advanced screening", free: false, bronze: true, silver: true, gold: true },
-        { name: "Historical data", free: false, bronze: "30 days", silver: "1 year", gold: "5 years" }
+        { name: "Real-time data", free: false, bronze: true, silver: true, gold: true }
       ]
     },
     {
@@ -199,8 +197,7 @@ const Pricing = () => {
       icon: <Bell className="h-5 w-5" />,
       items: [
         { name: "Email alerts", free: false, bronze: true, silver: true, gold: true },
-        { name: "SMS notifications", free: false, bronze: false, silver: true, gold: true },
-        { name: "Real-time alerts", free: false, bronze: false, silver: false, gold: true },
+        { name: "Real-time alerts", free: false, bronze: true, silver: true, gold: true },
         { name: "Custom alert conditions", free: false, bronze: "Basic", silver: "Advanced", gold: "Unlimited" }
       ]
     },
@@ -210,17 +207,15 @@ const Pricing = () => {
       items: [
         { name: "Portfolio management", free: false, bronze: "Basic", silver: "Advanced", gold: "Professional" },
         { name: "Watchlists", free: false, bronze: "3", silver: "10", gold: "Unlimited" },
-        { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true },
-        { name: "Risk analysis", free: false, bronze: false, silver: false, gold: true }
+        { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true }
       ]
     },
     {
       category: "Support & API",
-      icon: <Headphones className="h-5 w-5" />,
+      icon: <Mail className="h-5 w-5" />,
       items: [
         { name: "Email support", free: false, bronze: true, silver: true, gold: true },
         { name: "Priority support", free: false, bronze: false, silver: true, gold: true },
-        { name: "Phone support", free: false, bronze: false, silver: false, gold: true },
         { name: "API access", free: false, bronze: false, silver: "Limited", gold: "Full" }
       ]
     }
@@ -249,7 +244,7 @@ const Pricing = () => {
         <div className="text-center mb-16">
           <Badge variant="secondary" className="mb-4">
             <Star className="h-4 w-4 mr-1" />
-            Trusted by 50,000+ traders worldwide
+            Trusted by thousands of traders worldwide
           </Badge>
           
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
@@ -515,7 +510,7 @@ const Pricing = () => {
               <CardContent>
                 <p className="text-gray-600">
                   We accept all major credit cards and PayPal. All payments are processed securely 
-                  through our payment partners with bank-level encryption.
+                  with industry-standard encryption.
                 </p>
               </CardContent>
             </Card>
