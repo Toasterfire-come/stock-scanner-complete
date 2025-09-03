@@ -1,7 +1,9 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
+import { mockApi, mockData } from "./mockData";
 
 const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
+let USE_MOCK_DATA = false; // Will be set to true if backend is unavailable
 
 if (!BASE_URL) {
   console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
@@ -177,27 +179,59 @@ export async function getStatisticsSafe() {
 // ====================
 // HEALTH & STATUS
 // ====================
-export async function pingHealth() { const { data } = await api.get('/health/'); return data; }
-export async function getEndpointStatus() { const { data } = await api.get('/endpoint-status/'); return data; }
+export async function pingHealth() {
+  try {
+    const { data } = await api.get('/health/');
+    USE_MOCK_DATA = false; // Backend is available
+    return data;
+  } catch (error) {
+    console.warn('Backend unavailable, using demo mode');
+    USE_MOCK_DATA = true; // Switch to mock mode
+    return mockData.health;
+  }
+}
+export async function getEndpointStatus() {
+  if (USE_MOCK_DATA) return { status: 'demo_mode', endpoints: [] };
+  const { data } = await api.get('/endpoint-status/');
+  return data;
+}
 
 // ====================
 // STOCKS & MARKET DATA
 // ====================
-// ====================
-// STOCKS & MARKET DATA
-// ====================
 export async function listStocks(params = {}) { 
+  if (USE_MOCK_DATA) return mockData.stocks;
   try {
     const { data } = await api.get('/stocks/', { params });
     return data;
   } catch (error) {
-    console.error('Failed to fetch stocks:', error);
-    throw error;
+    console.error('Failed to fetch stocks, using mock data:', error);
+    return mockData.stocks;
   }
 }
-export async function getStock(ticker) { const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`); return data; }
-export async function searchStocks(q) { const { data } = await api.get('/search/', { params: { q } }); return data; }
-export async function getTrending() { const { data } = await api.get('/trending/'); return data; }
+export async function getStock(ticker) {
+  if (USE_MOCK_DATA) {
+    const stock = mockData.stocks.find(s => s.symbol === ticker);
+    return stock || mockData.stocks[0];
+  }
+  const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`);
+  return data;
+}
+export async function searchStocks(q) {
+  if (USE_MOCK_DATA) {
+    return mockData.stocks.filter(s => 
+      s.symbol.toLowerCase().includes(q.toLowerCase()) || 
+      s.name.toLowerCase().includes(q.toLowerCase())
+    );
+  }
+  const { data } = await api.get('/search/', { params: { q } });
+  return data;
+}
+export async function getTrending() {
+  if (USE_MOCK_DATA) return mockData.stocks.slice(0, 5);
+  const { data } = await api.get('/trending/');
+  return data;
+}
 export async function getMarketStats() { const { data } = await api.get('/market-stats/'); return data; }
 export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/realtime/${encodeURIComponent(ticker)}/`); return data; }
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
