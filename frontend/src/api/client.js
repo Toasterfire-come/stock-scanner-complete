@@ -183,9 +183,6 @@ export async function getEndpointStatus() { const { data } = await api.get('/end
 // ====================
 // STOCKS & MARKET DATA
 // ====================
-// ====================
-// STOCKS & MARKET DATA
-// ====================
 export async function listStocks(params = {}) { 
   try {
     const { data } = await api.get('/stocks/', { params });
