@@ -84,3 +84,28 @@ code {
     @apply bg-background text-foreground;
     }
 }
+
+/* Accessibility: visible focus styles without altering existing design tokens */
+@layer base {
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+/* Skip link - hidden until focused */
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: 0;
+    top: -40px;
+    background: hsl(var(--foreground));
+    color: hsl(var(--primary-foreground));
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+    z-index: 50;
+  }
+  .skip-link:focus {
+    top: 0;
+  }
+}

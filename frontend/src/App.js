@@ -1,85 +1,86 @@
-import React from "react";
+import React, { Suspense } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+import { Skeleton } from "./components/ui/skeleton";
 
 // Layouts
 import AppLayout from "./layouts/AppLayout.js";
 import AuthLayout from "./layouts/AuthLayout";
 
-// Auth Pages
-import SignIn from "./pages/auth/SignIn";
-import SignUp from "./pages/auth/SignUp";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import VerifyEmail from "./pages/auth/VerifyEmail";
-import OAuthCallback from "./pages/auth/OAuthCallback";
-import TwoFactorAuth from "./pages/auth/TwoFactorAuth";
+// Auth Pages (lazy)
+const SignIn = React.lazy(() => import("./pages/auth/SignIn"));
+const SignUp = React.lazy(() => import("./pages/auth/SignUp"));
+const ForgotPassword = React.lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = React.lazy(() => import("./pages/auth/ResetPassword"));
+const VerifyEmail = React.lazy(() => import("./pages/auth/VerifyEmail"));
+const OAuthCallback = React.lazy(() => import("./pages/auth/OAuthCallback"));
+const TwoFactorAuth = React.lazy(() => import("./pages/auth/TwoFactorAuth"));
 
-// Onboarding
-import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
+// Onboarding (lazy)
+const OnboardingWizard = React.lazy(() => import("./pages/onboarding/OnboardingWizard"));
 
-// Public Pages
-import Home from "./pages/Home";
-import Features from "./pages/Features";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import PricingPro from "./pages/PricingPro";
-import Pricing from "./pages/Pricing";
-import AdvancedAnalytics from "./components/AdvancedAnalytics";
-import ReferralSystem from "./components/ReferralSystem";
-import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
-import CheckoutFailure from "./pages/billing/CheckoutFailure";
+// Public Pages (lazy)
+const Home = React.lazy(() => import("./pages/Home"));
+const Features = React.lazy(() => import("./pages/Features"));
+const About = React.lazy(() => import("./pages/About"));
+const Contact = React.lazy(() => import("./pages/Contact"));
+const PricingPro = React.lazy(() => import("./pages/PricingPro"));
+const Pricing = React.lazy(() => import("./pages/Pricing"));
+const AdvancedAnalytics = React.lazy(() => import("./components/AdvancedAnalytics"));
+const ReferralSystem = React.lazy(() => import("./components/ReferralSystem"));
+const CheckoutSuccess = React.lazy(() => import("./pages/billing/CheckoutSuccess"));
+const CheckoutFailure = React.lazy(() => import("./pages/billing/CheckoutFailure"));
 
-// App Pages
-import AppDashboard from "./pages/app/AppDashboard";
-import Markets from "./pages/app/Markets";
-import StockDetail from "./pages/app/StockDetail";
-import Stocks from "./pages/app/Stocks";
-import Portfolio from "./pages/app/Portfolio";
-import Watchlists from "./pages/app/Watchlists";
-import WatchlistDetail from "./pages/app/WatchlistDetail";
+// App Pages (lazy)
+const AppDashboard = React.lazy(() => import("./pages/app/AppDashboard"));
+const Markets = React.lazy(() => import("./pages/app/Markets"));
+const StockDetail = React.lazy(() => import("./pages/app/StockDetail"));
+const Stocks = React.lazy(() => import("./pages/app/Stocks"));
+const Portfolio = React.lazy(() => import("./pages/app/Portfolio"));
+const Watchlists = React.lazy(() => import("./pages/app/Watchlists"));
+const WatchlistDetail = React.lazy(() => import("./pages/app/WatchlistDetail"));
 
-// Screener Suite
-import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
-import CreateScreener from "./pages/app/screeners/CreateScreener";
-import EditScreener from "./pages/app/screeners/EditScreener";
-import ScreenerResults from "./pages/app/screeners/ScreenerResults";
-import Templates from "./pages/app/Templates";
+// Screener Suite (lazy)
+const ScreenerLibrary = React.lazy(() => import("./pages/app/screeners/ScreenerLibrary"));
+const CreateScreener = React.lazy(() => import("./pages/app/screeners/CreateScreener"));
+const EditScreener = React.lazy(() => import("./pages/app/screeners/EditScreener"));
+const ScreenerResults = React.lazy(() => import("./pages/app/screeners/ScreenerResults"));
+const Templates = React.lazy(() => import("./pages/app/Templates"));
 
-// Market Overview
-import MarketHeatmap from "./pages/app/MarketHeatmap";
-import SectorsIndustries from "./pages/app/SectorsIndustries";
-import TopMovers from "./pages/app/TopMovers";
-import PreAfterMarket from "./pages/app/PreAfterMarket";
-import EconomicCalendar from "./pages/app/EconomicCalendar";
+// Market Overview (lazy)
+const MarketHeatmap = React.lazy(() => import("./pages/app/MarketHeatmap"));
+const SectorsIndustries = React.lazy(() => import("./pages/app/SectorsIndustries"));
+const TopMovers = React.lazy(() => import("./pages/app/TopMovers"));
+const PreAfterMarket = React.lazy(() => import("./pages/app/PreAfterMarket"));
+const EconomicCalendar = React.lazy(() => import("./pages/app/EconomicCalendar"));
 
-// News
-import NewsFeed from "./pages/app/NewsFeed";
-import NewsPreferences from "./pages/app/NewsPreferences";
-import NewsSubscribe from "./pages/app/NewsSubscribe";
+// News (lazy)
+const NewsFeed = React.lazy(() => import("./pages/app/NewsFeed"));
+const NewsPreferences = React.lazy(() => import("./pages/app/NewsPreferences"));
+const NewsSubscribe = React.lazy(() => import("./pages/app/NewsSubscribe"));
 
-// Alerts & Signals
-import Alerts from "./pages/app/Alerts";
-import AlertHistory from "./pages/app/AlertHistory";
+// Alerts & Signals (lazy)
+const Alerts = React.lazy(() => import("./pages/app/Alerts"));
+const AlertHistory = React.lazy(() => import("./pages/app/AlertHistory"));
 
-// Account Pages
-import Profile from "./pages/account/Profile";
-import ChangePassword from "./pages/account/ChangePassword";
-import NotificationSettings from "./pages/account/NotificationSettings";
-import BillingHistory from "./pages/account/BillingHistory";
-import CurrentPlan from "./pages/account/CurrentPlan";
+// Account Pages (lazy)
+const Profile = React.lazy(() => import("./pages/account/Profile"));
+const ChangePassword = React.lazy(() => import("./pages/account/ChangePassword"));
+const NotificationSettings = React.lazy(() => import("./pages/account/NotificationSettings"));
+const BillingHistory = React.lazy(() => import("./pages/account/BillingHistory"));
+const CurrentPlan = React.lazy(() => import("./pages/account/CurrentPlan"));
 
-// System Pages
-import EndpointStatus from "./pages/system/EndpointStatus";
+// System Pages (lazy)
+const EndpointStatus = React.lazy(() => import("./pages/system/EndpointStatus"));
 
-// Content & Docs
-import LegalTerms from "./pages/LegalTerms";
-import LegalPrivacy from "./pages/LegalPrivacy";
-import Documentation from "./pages/docs/DocumentationSimple";
-import EnterpriseContact from "./pages/EnterpriseContact";
+// Content & Docs (lazy)
+const LegalTerms = React.lazy(() => import("./pages/LegalTerms"));
+const LegalPrivacy = React.lazy(() => import("./pages/LegalPrivacy"));
+const Documentation = React.lazy(() => import("./pages/docs/DocumentationSimple"));
+const EnterpriseContact = React.lazy(() => import("./pages/EnterpriseContact"));
 
 // Mobile routes removed as requested
 
@@ -116,6 +117,7 @@ function App() {
           <SystemErrorBoundary>
             <div className="min-h-screen bg-background">
               <OfflineBanner />
+              <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="space-y-4"><Skeleton className="h-8 w-1/3" /><Skeleton className="h-64 w-full" /><Skeleton className="h-96 w-full" /></div></div>}>
               <Routes>
                 {/* Auth Routes */}
                 <Route element={<AuthLayout />}>
@@ -211,6 +213,7 @@ function App() {
                 {/* Default redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </Suspense>
               <Toaster position="top-right" />
             </div>
           </SystemErrorBoundary>

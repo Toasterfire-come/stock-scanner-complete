@@ -6,6 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import VirtualizedList from "../../../components/VirtualizedList";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -176,58 +177,64 @@ const ScreenerResults = () => {
             <CardTitle>Matching Stocks</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Change</TableHead>
-                    <TableHead>Volume</TableHead>
-                    <TableHead>Market Cap</TableHead>
-                    <TableHead>Exchange</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {results.map((stock) => (
-                    <TableRow key={stock.ticker}>
-                      <TableCell>
-                        <Link 
-                          to={`/app/stocks/${stock.ticker}`}
-                          className="font-semibold text-blue-600 hover:underline"
-                        >
-                          {stock.ticker}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="font-medium">{stock.company_name}</TableCell>
-                      <TableCell>${stock.current_price.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className={`flex items-center ${stock.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {stock.change_percent >= 0 ? (
-                            <TrendingUp className="h-4 w-4 mr-1" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4 mr-1" />
-                          )}
-                          {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
-                        </div>
-                      </TableCell>
-                      <TableCell>{stock.volume.toLocaleString()}</TableCell>
-                      <TableCell>${(stock.market_cap / 1e9).toFixed(1)}B</TableCell>
-                      <TableCell>{stock.exchange}</TableCell>
-                      <TableCell>
+            <div className="overflow-x-auto hidden lg:block">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left p-4 font-medium">Symbol</th>
+                    <th className="text-left p-4 font-medium">Company</th>
+                    <th className="text-right p-4 font-medium">Price</th>
+                    <th className="text-right p-4 font-medium">Change</th>
+                    <th className="text-right p-4 font-medium">Volume</th>
+                    <th className="text-right p-4 font-medium">Market Cap</th>
+                    <th className="text-left p-4 font-medium">Exchange</th>
+                    <th className="text-center p-4 font-medium">Actions</th>
+                  </tr>
+                </thead>
+              </table>
+              <div className="border rounded">
+                <VirtualizedList
+                  items={results}
+                  itemSize={56}
+                  height={Math.min(560, Math.max(280, results.length * 56))}
+                  row={({ index, style, item: stock }) => (
+                    <div style={{...style, display:'grid', gridTemplateColumns:'1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr', alignItems:'center'}} className="border-b hover:bg-gray-50">
+                      <div className="p-4">
+                        <Link to={`/app/stocks/${stock.ticker}`} className="font-semibold text-blue-600 hover:underline">{stock.ticker}</Link>
+                      </div>
+                      <div className="p-4 font-medium">{stock.company_name}</div>
+                      <div className="p-4 text-right">${stock.current_price.toFixed(2)}</div>
+                      <div className={`p-4 text-right ${stock.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {stock.change_percent >= 0 ? (<TrendingUp className="h-4 w-4 inline mr-1" />) : (<TrendingDown className="h-4 w-4 inline mr-1" />)}
+                        {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
+                      </div>
+                      <div className="p-4 text-right">{stock.volume.toLocaleString()}</div>
+                      <div className="p-4 text-right">${(stock.market_cap / 1e9).toFixed(1)}B</div>
+                      <div className="p-4">{stock.exchange}</div>
+                      <div className="p-4 text-center">
                         <Button size="sm" variant="outline" asChild>
-                          <Link to={`/app/stocks/${stock.ticker}`}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Link>
+                          <Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4 mr-1" />View</Link>
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+            {/* Mobile simple list */}
+            <div className="lg:hidden space-y-3">
+              {results.map((stock) => (
+                <div key={stock.ticker} className="flex items-center justify-between border rounded p-3">
+                  <div>
+                    <Link to={`/app/stocks/${stock.ticker}`} className="font-semibold text-blue-600 hover:underline">{stock.ticker}</Link>
+                    <div className="text-sm text-gray-600">{stock.company_name}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">${stock.current_price.toFixed(2)}</div>
+                    <div className={`text-sm ${stock.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%</div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {results.length === 0 && (

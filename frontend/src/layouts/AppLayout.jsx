@@ -29,6 +29,7 @@ import {
   TrendingDown
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import CommandPalette from "../components/CommandPalette";
 
 const AppLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -36,6 +37,7 @@ const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const [isCmdOpen, setIsCmdOpen] = useState(false);
 
   const handleLinkClick = (linkData) => {
     // Remove if already exists to avoid duplicates
@@ -113,6 +115,7 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
@@ -156,7 +159,7 @@ const AppLayout = () => {
             {/* Right side - Search and Auth */}
             <div className="flex items-center gap-3">
               {/* Search */}
-              <Button variant="ghost" size="sm" className="hidden md:flex h-9">
+              <Button variant="ghost" size="sm" className="hidden md:flex h-9" onClick={() => setIsCmdOpen(true)} aria-label="Open command palette">
                 <Search className="h-4 w-4" />
                 <span className="ml-2 hidden lg:inline">Search</span>
               </Button>
@@ -266,7 +269,7 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main id="main-content" className="flex-1" role="main">
         <Outlet />
       </main>
 
@@ -311,6 +314,7 @@ const AppLayout = () => {
           </div>
         </div>
       </footer>
+      <CommandPalette open={isCmdOpen} onOpenChange={setIsCmdOpen} />
     </div>
   );
 };
