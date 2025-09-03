@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
@@ -19,6 +19,7 @@ import {
   Search
 } from "lucide-react";
 import { getWatchlist, addWatchlist, deleteWatchlist } from "../../api/client";
+import VirtualizedList from "../../components/VirtualizedList";
 
 const Watchlists = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -169,10 +170,10 @@ const Watchlists = () => {
     return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
   };
 
-  const filteredWatchlist = watchlist?.data?.filter(item =>
+  const filteredWatchlist = useMemo(() => (watchlist?.data || []).filter(item =>
     item.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.company_name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  ), [watchlist, searchTerm]);
 
   if (isLoading) {
     return (
@@ -363,80 +364,51 @@ const Watchlists = () => {
                         <th className="text-center p-4 font-medium">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {filteredWatchlist.map((item) => (
-                        <tr key={item.id} className="border-b hover:bg-gray-50">
-                          <td className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <span className="font-bold text-blue-600 text-sm">{item.symbol.substring(0, 2)}</span>
-                              </div>
-                              <div>
-                                <Link to={`/app/stocks/${item.symbol}`} className="font-semibold text-blue-600 hover:underline">
-                                  {item.symbol}
-                                </Link>
-                              </div>
+                  </table>
+                  <div className="border rounded">
+                    <VirtualizedList
+                      items={filteredWatchlist}
+                      itemSize={56}
+                      height={Math.min(560, Math.max(280, filteredWatchlist.length * 56))}
+                      row={({ index, style, item }) => (
+                        <div style={{...style, display:'grid', gridTemplateColumns:'2fr 3fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr', alignItems:'center'}} className="border-b hover:bg-gray-50">
+                          <div className="p-4 flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <span className="font-bold text-blue-600 text-sm">{item.symbol.substring(0, 2)}</span>
                             </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="font-medium text-gray-900">{item.company_name}</div>
-                          </td>
-                          <td className="p-4 text-right font-medium">{formatCurrency(item.current_price)}</td>
-                          <td className={`p-4 text-right ${item.price_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {item.price_change >= 0 ? '+' : ''}{item.price_change?.toFixed(2)}
-                          </td>
-                          <td className={`p-4 text-right font-medium ${item.price_change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            <div className="flex items-center justify-end">
-                              {item.price_change_percent >= 0 ? 
-                                <TrendingUp className="h-3 w-3 mr-1" /> : 
-                                <TrendingDown className="h-3 w-3 mr-1" />
-                              }
-                              {formatPercentage(item.price_change_percent)}
+                            <div>
+                              <Link to={`/app/stocks/${item.symbol}`} className="font-semibold text-blue-600 hover:underline">
+                                {item.symbol}
+                              </Link>
                             </div>
-                          </td>
-                          <td className="p-4 text-right text-gray-600">{formatVolume(item.volume)}</td>
-                          <td className="p-4">
+                          </div>
+                          <div className="p-4 font-medium text-gray-900">{item.company_name}</div>
+                          <div className="p-4 text-right font-medium">{formatCurrency(item.current_price)}</div>
+                          <div className={`p-4 text-right ${item.price_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>{item.price_change >= 0 ? '+' : ''}{item.price_change?.toFixed(2)}</div>
+                          <div className={`p-4 text-right font-medium ${item.price_change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className="flex items-center justify-end">{item.price_change_percent >= 0 ? (<TrendingUp className="h-3 w-3 mr-1" />) : (<TrendingDown className="h-3 w-3 mr-1" />)}{formatPercentage(item.price_change_percent)}</div>
+                          </div>
+                          <div className="p-4 text-right text-gray-600">{formatVolume(item.volume)}</div>
+                          <div className="p-4">
                             <div className="text-sm text-gray-600 max-w-32 truncate" title={item.notes}>
                               {item.notes || '-'}
                             </div>
-                          </td>
-                          <td className="p-4 text-center">
+                          </div>
+                          <div className="p-4 text-center">
                             {item.alert_price ? (
-                              <Badge variant="secondary" className="text-xs">
-                                <Bell className="h-3 w-3 mr-1" />
-                                {formatCurrency(item.alert_price)}
-                              </Badge>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="p-4">
+                              <Badge variant="secondary" className="text-xs"><Bell className="h-3 w-3 mr-1" />{formatCurrency(item.alert_price)}</Badge>
+                            ) : (<span className="text-gray-400">-</span>)}
+                          </div>
+                          <div className="p-4">
                             <div className="flex items-center justify-center space-x-2">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                asChild
-                                title="View Details"
-                              >
-                                <Link to={`/app/stocks/${item.symbol}`}>
-                                  <Eye className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleRemoveFromWatchlist(item.id, item.symbol)}
-                                className="text-red-600 hover:text-red-700"
-                                title="Remove from Watchlist"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <Button size="sm" variant="ghost" asChild title="View Details"><Link to={`/app/stocks/${item.symbol}`}><Eye className="h-4 w-4" /></Link></Button>
+                              <Button size="sm" variant="ghost" onClick={() => handleRemoveFromWatchlist(item.id, item.symbol)} className="text-red-600 hover:text-red-700" title="Remove from Watchlist"><Trash2 className="h-4 w-4" /></Button>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Mobile Cards */}
