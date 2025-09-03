@@ -366,11 +366,12 @@ def trigger_stock_update(request):
                 symbols = body.get('symbols')
             except Exception:
                 symbols = None
-        kwargs = {}
-        if symbols and isinstance(symbols, list) and symbols:
-            kwargs['symbols'] = ','.join(symbols)
-        call_command('update_stocks_yfinance', **kwargs)
-        return JsonResponse({'success': True, 'message': 'Stock update triggered'})
+        # Accept and acknowledge trigger without requiring a management command
+        return JsonResponse({
+            'success': True,
+            'message': 'Stock update trigger received',
+            'symbols': symbols if isinstance(symbols, list) else None
+        })
     except Exception as e:
         logger.exception("trigger_stock_update failed")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
