@@ -302,6 +302,7 @@ class PlatformStats(BaseModel):
 
 async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent: str = None, plan: str = "free"):
     """Log API usage to database"""
+    global db_disabled
     usage = ApiUsage(
         user_id=user_id,
         endpoint=endpoint,
@@ -314,7 +315,6 @@ async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent
             await db.api_usage.insert_one(usage.dict())
         except Exception as e:
             logging.warning(f"DB insert failed, switching to in-memory logging: {e}")
-            global db_disabled
             db_disabled = True
             usage_memory[user_id].append(datetime.utcnow())
     else:
@@ -323,6 +323,7 @@ async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent
 
 async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
     """Get current usage counts for a user"""
+    global db_disabled
     now = datetime.utcnow()
     
     # Calculate time boundaries
@@ -342,7 +343,6 @@ async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
             })
         except Exception as e:
             logging.warning(f"DB count failed, using in-memory counts: {e}")
-            global db_disabled
             db_disabled = True
             timestamps = usage_memory[user_id]
             daily_count = len([t for t in timestamps if t >= day_ago])
@@ -723,6 +723,7 @@ async def get_stock_quote(symbol: str, request: Request, response: Response):
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
+    global db_disabled
     status_dict = input.dict()
     status_obj = StatusCheck(**status_dict)
     if db is not None and not db_disabled:
@@ -730,7 +731,6 @@ async def create_status_check(input: StatusCheckCreate):
             _ = await db.status_checks.insert_one(status_obj.dict())
         except Exception as e:
             logging.warning(f"DB status insert failed, using in-memory: {e}")
-            global db_disabled
             db_disabled = True
             usage_memory["status_checks"].append(status_obj.dict())
     else:
@@ -739,13 +739,13 @@ async def create_status_check(input: StatusCheckCreate):
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
+    global db_disabled
     if db is not None and not db_disabled:
         try:
             status_checks = await db.status_checks.find().to_list(1000)
             return [StatusCheck(**status_check) for status_check in status_checks]
         except Exception as e:
             logging.warning(f"DB status query failed, using in-memory: {e}")
-            global db_disabled
             db_disabled = True
             return [StatusCheck(**status_check) for status_check in usage_memory.get("status_checks", [])]
     # Fallback from memory
@@ -831,3 +831,8 @@ async def initialize_codes():
 
 # Include revenue router
 app.include_router(revenue_router)
+
+# Run the server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
