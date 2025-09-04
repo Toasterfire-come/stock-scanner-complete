@@ -1,10 +1,16 @@
 from django.urls import path, include
-from . import views, api_views
+from . import views, api_views, views_health
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 
 urlpatterns = [
+    # Health check endpoints (must be first for monitoring)
+    path('health/', views_health.health_check, name='health_check'),
+    path('health/detailed/', views_health.health_check_detailed, name='health_check_detailed'),
+    path('health/ready/', views_health.readiness_check, name='readiness_check'),
+    path('health/live/', views_health.liveness_check, name='liveness_check'),
+    
     # Basic API endpoint
     path('', views.index, name='index'),
     
