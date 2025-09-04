@@ -43,6 +43,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
+    'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
     'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress
     'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection
     'corsheaders.middleware.CorsMiddleware',
