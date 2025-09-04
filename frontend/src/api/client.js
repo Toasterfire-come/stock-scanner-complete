@@ -216,11 +216,82 @@ export async function login(username, password) {
     return { success: false, message: error.response?.data?.detail || 'Login failed' };
   }
 }
-export async function logout() { try { await api.post('/auth/logout/'); } catch {} finally { localStorage.removeItem('rts_token'); } }
-export async function registerUser() { return { success: false, message: 'Registration not available' }; }
-export async function getProfile() { const { data } = await api.get('/user/profile/'); return data; }
-export async function updateProfile(profileData) { const { data } = await api.post('/user/profile/', profileData); return data; }
-export async function changePassword(passwordData) { const { data } = await api.post('/user/change-password/', passwordData); return data; }
+export async function logout() { 
+  try { 
+    await api.post('/auth/logout/'); 
+  } catch {} finally { 
+    localStorage.removeItem('rts_token'); 
+  } 
+}
+
+export async function registerUser(userData) { 
+  try {
+    const { data } = await api.post('/auth/register/', userData);
+    if (data.token) {
+      localStorage.setItem('rts_token', data.token);
+    }
+    return data;
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || 'Registration failed' 
+    };
+  }
+}
+
+export async function getProfile() { 
+  const { data } = await api.get('/user/profile/'); 
+  return data; 
+}
+
+export async function updateProfile(profileData) { 
+  const { data } = await api.post('/user/profile/', profileData); 
+  return data; 
+}
+
+export async function changePassword(passwordData) { 
+  const { data } = await api.post('/user/change-password/', passwordData); 
+  return data; 
+}
+
+export async function getPricingPlans() {
+  try {
+    const { data } = await api.get('/auth/pricing-plans/');
+    return data;
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || 'Failed to fetch pricing plans' 
+    };
+  }
+}
+
+export async function createCheckoutSession(plan) {
+  try {
+    const { data } = await api.post('/auth/checkout/', { plan });
+    return data;
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || 'Failed to create checkout session' 
+    };
+  }
+}
+
+export async function confirmPayment(sessionId, plan) {
+  try {
+    const { data } = await api.post('/auth/confirm-payment/', { 
+      session_id: sessionId, 
+      plan 
+    });
+    return data;
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || 'Failed to confirm payment' 
+    };
+  }
+}
 
 // ====================
 // PORTFOLIO

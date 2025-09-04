@@ -62,9 +62,13 @@ const SignUp = () => {
       });
 
       if (result.success) {
-        toast.success("Account created successfully! Please verify your email.");
-        navigate("/auth/verify-email", { 
-          state: { email: data.email } 
+        toast.success("Account created successfully!");
+        // Navigate to pricing page after successful registration
+        navigate("/pricing", { 
+          state: { 
+            fromSignup: true,
+            email: data.email 
+          } 
         });
       } else {
         toast.error(result.message || "Registration failed");

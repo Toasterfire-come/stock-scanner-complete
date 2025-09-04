@@ -28,6 +28,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PricingPro from "./pages/PricingPro";
 import Pricing from "./pages/Pricing";
+import PricingPlans from "./pages/PricingPlans";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
@@ -142,8 +144,10 @@ function App() {
                   <Route path="/features" element={<Features />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
-                  <Route path="/pricing" element={<PricingPro />} />
+                  <Route path="/pricing" element={<PricingPlans />} />
+                  <Route path="/pricing-pro" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/app/analytics" element={<AdvancedAnalytics />} />
                   <Route path="/app/referrals" element={<ReferralSystem />} />
 
