@@ -1,4 +1,36 @@
+# Robots.txt for Stock Scanner
+# https://www.robotstxt.org/robotstxt.html
+
 User-agent: *
 Allow: /
 
-Sitemap: /sitemap.xml
+# Disallow admin and auth pages from indexing
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://yourdomai.com/sitemap.xml
+
+# Crawl delay (in seconds)
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+# Block bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

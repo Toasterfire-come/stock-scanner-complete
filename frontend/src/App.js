@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { checkHealth } from "./api/django-client";
 
 // Layouts
 import AppLayout from "./layouts/AppLayout.js";
@@ -28,6 +30,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PricingPro from "./pages/PricingPro";
 import Pricing from "./pages/Pricing";
+import PricingPlans from "./pages/PricingPlans";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
@@ -108,15 +112,37 @@ const OfflineBanner = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Check API health on app load
+    checkHealth().then(health => {
+      if (health.status === 'error') {
+        console.error('Django API is not available');
+      }
+    }).catch(err => {
+      console.error('Failed to check API health:', err);
+    });
+    
+    // Set up security for production
+    if (process.env.REACT_APP_ENV === 'production') {
+      // Disable right-click in production (optional)
+      document.addEventListener('contextmenu', (e) => {
+        if (!e.target.closest('input, textarea')) {
+          e.preventDefault();
+        }
+      });
+    }
+  }, []);
+
   return (
-    <BackendStatusProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <LatencyIndicator />
-          <SystemErrorBoundary>
-            <div className="min-h-screen bg-background">
-              <OfflineBanner />
-              <Routes>
+    <ErrorBoundary>
+      <BackendStatusProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <LatencyIndicator />
+            <SystemErrorBoundary>
+              <div className="min-h-screen bg-background">
+                <OfflineBanner />
+                <Routes>
                 {/* Auth Routes */}
                 <Route element={<AuthLayout />}>
                   <Route path="/auth/sign-in" element={<SignIn />} />
@@ -142,8 +168,10 @@ function App() {
                   <Route path="/features" element={<Features />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
-                  <Route path="/pricing" element={<PricingPro />} />
+                  <Route path="/pricing" element={<PricingPlans />} />
+                  <Route path="/pricing-pro" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/app/analytics" element={<AdvancedAnalytics />} />
                   <Route path="/app/referrals" element={<ReferralSystem />} />
 
@@ -217,6 +245,7 @@ function App() {
         </BrowserRouter>
       </AuthProvider>
     </BackendStatusProvider>
+    </ErrorBoundary>
   );
 }
 

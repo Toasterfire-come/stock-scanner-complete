@@ -10,7 +10,7 @@ import logging
 import requests
 import asyncio
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Dict, Optional
 import uuid
 from datetime import datetime, timedelta
@@ -18,6 +18,8 @@ from collections import defaultdict
 import time
 import hashlib
 import secrets
+import jwt
+import bcrypt
 
 
 ROOT_DIR = Path(__file__).parent
@@ -104,6 +106,43 @@ async def add_security_headers(request: Request, call_next):
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Authentication Models
+class UserRegistration(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    first_name: str
+    last_name: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class PlanSelection(BaseModel):
+    plan: str
+
+class CheckoutSession(BaseModel):
+    session_id: str
+    plan: str
+
+class UserProfile(BaseModel):
+    id: str
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    plan: str = "free"
+    plan_active: bool = True
+    plan_expires: Optional[datetime] = None
+
+# In-memory user storage (replace with database in production)
+users_db = {}
+memberships_db = {}
+
+# JWT Secret (use environment variable in production)
+JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-here')
+JWT_ALGORITHM = "HS256"
 
 # External API client
 class ExternalAPIClient:
@@ -481,6 +520,251 @@ async def get_user_info(request: Request) -> Dict[str, str]:
 @api_router.get("/")
 async def root():
     return {"message": "Trade Scan Pro API v1.0"}
+
+# Authentication Endpoints
+@api_router.post("/auth/register/")
+async def register(user: UserRegistration):
+    """Register a new user and assign them to the free plan"""
+    try:
+        # Check if username already exists
+        if user.username in users_db:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        
+        # Check if email already exists
+        for existing_user in users_db.values():
+            if existing_user['email'] == user.email:
+                raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Hash the password
+        hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
+        
+        # Create user ID
+        user_id = str(uuid.uuid4())
+        
+        # Store user
+        users_db[user.username] = {
+            'id': user_id,
+            'username': user.username,
+            'email': user.email,
+            'password': hashed_password,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+        
+        # Create membership with free plan
+        memberships_db[user_id] = {
+            'plan': 'free',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'expires_at': None
+        }
+        
+        # Generate JWT token
+        token_payload = {
+            'user_id': user_id,
+            'username': user.username,
+            'email': user.email,
+            'exp': datetime.utcnow() + timedelta(days=7)
+        }
+        token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        
+        return {
+            'success': True,
+            'message': 'Registration successful',
+            'token': token,
+            'user': {
+                'id': user_id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'plan': 'free'
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/auth/login/")
+async def login(credentials: UserLogin):
+    """Login user and return JWT token"""
+    try:
+        # Check if user exists
+        if credentials.username not in users_db:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        user = users_db[credentials.username]
+        
+        # Verify password
+        if not bcrypt.checkpw(credentials.password.encode('utf-8'), user['password']):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Get membership
+        membership = memberships_db.get(user['id'], {
+            'plan': 'free',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'expires_at': None
+        })
+        
+        # Generate JWT token
+        token_payload = {
+            'user_id': user['id'],
+            'username': user['username'],
+            'email': user['email'],
+            'exp': datetime.utcnow() + timedelta(days=7)
+        }
+        token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        
+        return {
+            'success': True,
+            'message': 'Login successful',
+            'token': token,
+            'user': {
+                'id': user['id'],
+                'username': user['username'],
+                'email': user['email'],
+                'first_name': user['first_name'],
+                'last_name': user['last_name'],
+                'plan': membership['plan']
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/auth/pricing-plans/")
+async def get_pricing_plans():
+    """Get available pricing plans with their features"""
+    plans = [
+        {
+            'id': 'free',
+            'name': 'Free',
+            'price': 0,
+            'features': [
+                'Basic stock search',
+                'View top 10 stocks',
+                'Daily market summary',
+                'Limited to 5 watchlist items'
+            ]
+        },
+        {
+            'id': 'basic',
+            'name': 'Basic',
+            'price': 15,
+            'features': [
+                'Everything in Free',
+                'Advanced stock search',
+                'Unlimited watchlist',
+                'Email alerts',
+                'Technical indicators',
+                'Export data to CSV'
+            ]
+        },
+        {
+            'id': 'pro',
+            'name': 'Pro',
+            'price': 30,
+            'features': [
+                'Everything in Basic',
+                'Real-time stock data',
+                'Advanced charting',
+                'Custom alerts',
+                'Portfolio tracking',
+                'API access',
+                'Priority support'
+            ]
+        },
+        {
+            'id': 'enterprise',
+            'name': 'Enterprise',
+            'price': 100,
+            'features': [
+                'Everything in Pro',
+                'Unlimited API calls',
+                'Custom integrations',
+                'Dedicated account manager',
+                'White-label options',
+                'Advanced analytics',
+                'Team collaboration tools',
+                '24/7 phone support'
+            ]
+        }
+    ]
+    
+    return {
+        'success': True,
+        'plans': plans
+    }
+
+@api_router.post("/auth/checkout/")
+async def create_checkout_session(plan: PlanSelection):
+    """Create a checkout session for upgrading to a paid plan"""
+    try:
+        # Define pricing for each plan
+        prices = {
+            'basic': {
+                'price': 1500,  # $15 in cents
+                'name': 'Basic Plan',
+                'description': 'Access to basic stock analysis features'
+            },
+            'pro': {
+                'price': 3000,  # $30 in cents
+                'name': 'Pro Plan',
+                'description': 'Advanced analysis and real-time alerts'
+            },
+            'enterprise': {
+                'price': 10000,  # $100 in cents
+                'name': 'Enterprise Plan',
+                'description': 'Full access with priority support'
+            }
+        }
+        
+        if plan.plan not in prices:
+            raise HTTPException(status_code=400, detail="Invalid plan selected")
+        
+        # In a real implementation, you would create a Stripe checkout session here
+        # For now, we'll return a mock checkout URL
+        session_id = str(uuid.uuid4())
+        checkout_url = f"https://checkout.stripe.com/pay/{session_id}?plan={plan.plan}"
+        
+        return {
+            'success': True,
+            'checkout_url': checkout_url,
+            'session_id': session_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/auth/confirm-payment/")
+async def confirm_payment(session: CheckoutSession):
+    """Confirm payment and update user's membership plan"""
+    try:
+        # In a real implementation, you would verify the payment with Stripe
+        # For now, we'll just update the membership
+        
+        # This is a mock implementation - in production, you'd get the user from the session
+        # For demo purposes, we'll update the first user's membership
+        if memberships_db:
+            user_id = list(memberships_db.keys())[0]
+            memberships_db[user_id] = {
+                'plan': session.plan,
+                'is_active': True,
+                'created_at': datetime.utcnow(),
+                'expires_at': datetime.utcnow() + timedelta(days=30)
+            }
+        
+        return {
+            'success': True,
+            'message': 'Payment confirmed and plan updated',
+            'plan': session.plan
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/platform-stats")
 async def get_platform_stats():

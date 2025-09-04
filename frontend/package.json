@@ -64,7 +64,11 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "build:prod": "GENERATE_SOURCEMAP=false craco build",
+    "test": "craco test",
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "lint": "eslint src --ext .js,.jsx",
+    "format": "prettier --write 'src/**/*.{js,jsx,json,css,md}'"
   },
   "browserslist": {
     "production": [

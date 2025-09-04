@@ -7,14 +7,15 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Separator } from "../../components/ui/separator";
+import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, Github, Chrome } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Github, Chrome, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { useBackendStatus } from "../../context/BackendStatusContext";
 
 const signInSchema = z.object({
-  username: z.string().min(1, "Username or email is required"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().optional(),
 });
 
 const SignIn = () => {
@@ -22,10 +23,9 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, logout } = useAuth();
-  const { isBackendUp, allowEmergencyAdmin, emergencyAdmin } = useBackendStatus();
+  const { login } = useAuth();
 
-  const from = location.state?.from?.pathname || "/app/dashboard";
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const {
     register,
@@ -33,77 +33,59 @@ const SignIn = () => {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(signInSchema),
+    defaultValues: {
+      rememberMe: true,
+    },
   });
 
   const onSubmit = async (data) => {
-    if (!isBackendUp) {
-      // Only allow emergency admin during downtime
-      if (
-        allowEmergencyAdmin &&
-        data.username?.trim().toLowerCase() === emergencyAdmin.email &&
-        data.password === emergencyAdmin.password
-      ) {
-        try {
-          // Force sign out any existing user token
-          try { await logout(); } catch {}
-          localStorage.setItem("rts_token", "emergency-admin-session");
-          toast.success("Emergency admin access granted");
-          navigate("/app/dashboard", { replace: true });
-          return;
-        } catch {}
-      }
-      toast.error("Service unavailable. Only emergency admin can access.");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await login(data.username, data.password);
-      
+
       if (result.success) {
         toast.success("Welcome back!");
         navigate(from, { replace: true });
       } else {
-        toast.error(result.message || "Login failed");
+        toast.error(result.error || "Invalid credentials");
       }
     } catch (error) {
-      toast.error("An error occurred during login");
+      toast.error("An error occurred during sign in");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOAuthLogin = (provider) => {
-    if (!isBackendUp) {
-      toast.error("Service unavailable. Only emergency admin can access.");
-      return;
-    }
-    // Redirect to OAuth provider
-    window.location.href = `/auth/oauth/${provider}`;
+  const handleOAuthSignIn = (provider) => {
+    // OAuth can be implemented with Django backend if needed
+    toast.info("OAuth authentication coming soon");
   };
 
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-gray-600 mt-2">Sign in to your account</p>
-        {!isBackendUp && (
-          <p className="text-sm text-red-600 mt-2">Backend is down. Only emergency admin can sign in.</p>
-        )}
+        <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
       </div>
+
+      {location.state?.message && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+          <p className="text-sm text-blue-800">{location.state.message}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="username">Email</Label>
+          <Label htmlFor="username">Username</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               id="username"
               type="text"
-              placeholder={isBackendUp ? "Enter your email" : "Emergency email"}
+              placeholder="Enter your username"
               className="pl-10"
               {...register("username")}
-              disabled={isLoading}
             />
           </div>
           {errors.username && (
@@ -112,22 +94,28 @@ const SignIn = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              to="/auth/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-500"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder={isBackendUp ? "Enter your password" : "Emergency password"}
+              placeholder="Enter your password"
               className="pl-10 pr-10"
               {...register("password")}
-              disabled={isLoading}
             />
             <button
               type="button"
               className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
-              disabled={isLoading}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -135,6 +123,13 @@ const SignIn = () => {
           {errors.password && (
             <p className="text-sm text-red-600">{errors.password.message}</p>
           )}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox id="rememberMe" {...register("rememberMe")} />
+          <Label htmlFor="rememberMe" className="text-sm">
+            Remember me for 30 days
+          </Label>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -154,18 +149,16 @@ const SignIn = () => {
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
-          onClick={() => handleOAuthLogin("google")}
+          onClick={() => handleOAuthSignIn("google")}
           className="w-full"
-          disabled={isLoading}
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
         </Button>
         <Button
           variant="outline"
-          onClick={() => handleOAuthLogin("github")}
+          onClick={() => handleOAuthSignIn("github")}
           className="w-full"
-          disabled={isLoading}
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub
@@ -179,7 +172,7 @@ const SignIn = () => {
             to="/auth/sign-up"
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
-            Sign up
+            Sign up for free
           </Link>
         </p>
       </div>

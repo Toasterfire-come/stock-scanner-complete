@@ -10,7 +10,7 @@ import { Separator } from "../../components/ui/separator";
 import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User, Github, Chrome } from "lucide-react";
-import { registerUser } from "../../api/client";
+import { useAuth } from "../../context/AuthContext";
 
 const signUpSchema = z.object({
   username: z
@@ -37,6 +37,7 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { register: registerUser } = useAuth();
 
   const {
     register,
@@ -62,12 +63,12 @@ const SignUp = () => {
       });
 
       if (result.success) {
-        toast.success("Account created successfully! Please verify your email.");
-        navigate("/auth/verify-email", { 
-          state: { email: data.email } 
-        });
+        toast.success("Account created successfully!");
+        // Navigate to dashboard after successful registration
+        // The Django backend handles plan assignment
+        navigate("/dashboard");
       } else {
-        toast.error(result.message || "Registration failed");
+        toast.error(result.error || "Registration failed");
       }
     } catch (error) {
       toast.error("An error occurred during registration");
@@ -77,7 +78,8 @@ const SignUp = () => {
   };
 
   const handleOAuthSignUp = (provider) => {
-    window.location.href = `/auth/oauth/${provider}?action=signup`;
+    // OAuth can be implemented with Django backend if needed
+    toast.info("OAuth authentication coming soon");
   };
 
   return (
