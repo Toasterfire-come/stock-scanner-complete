@@ -1,14 +1,17 @@
-import axios from "axios";
-import { getCache, setCache } from "../lib/cache";
+// Re-export everything from django-client for backward compatibility
+// This allows existing code to continue working while using the Django backend
+export * from './django-client';
+import * as djangoClient from './django-client';
 
-const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
+// For backward compatibility, export the Django client as default
+export default djangoClient;
 
-if (!BASE_URL) {
-  console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
-}
+// Legacy exports for compatibility
+export const API_ROOT = 'https://api.retailtradescanner.com/api';
+export const REVENUE_ROOT = 'https://api.retailtradescanner.com/revenue';
 
-export const API_ROOT = `${BASE_URL}/api`;
-export const REVENUE_ROOT = `${BASE_URL}/revenue`;
+// Re-export api client for compatibility
+export { apiClient as api, revenueClient } from './django-client';
 
 // Simple network event bus for latency indicator
 (function initNetBus(){

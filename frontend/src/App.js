@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { checkHealth } from "./api/django-client";
 
 // Layouts
 import AppLayout from "./layouts/AppLayout.js";
@@ -110,15 +112,37 @@ const OfflineBanner = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Check API health on app load
+    checkHealth().then(health => {
+      if (health.status === 'error') {
+        console.error('Django API is not available');
+      }
+    }).catch(err => {
+      console.error('Failed to check API health:', err);
+    });
+    
+    // Set up security for production
+    if (process.env.REACT_APP_ENV === 'production') {
+      // Disable right-click in production (optional)
+      document.addEventListener('contextmenu', (e) => {
+        if (!e.target.closest('input, textarea')) {
+          e.preventDefault();
+        }
+      });
+    }
+  }, []);
+
   return (
-    <BackendStatusProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <LatencyIndicator />
-          <SystemErrorBoundary>
-            <div className="min-h-screen bg-background">
-              <OfflineBanner />
-              <Routes>
+    <ErrorBoundary>
+      <BackendStatusProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <LatencyIndicator />
+            <SystemErrorBoundary>
+              <div className="min-h-screen bg-background">
+                <OfflineBanner />
+                <Routes>
                 {/* Auth Routes */}
                 <Route element={<AuthLayout />}>
                   <Route path="/auth/sign-in" element={<SignIn />} />
@@ -221,6 +245,7 @@ function App() {
         </BrowserRouter>
       </AuthProvider>
     </BackendStatusProvider>
+    </ErrorBoundary>
   );
 }
 
