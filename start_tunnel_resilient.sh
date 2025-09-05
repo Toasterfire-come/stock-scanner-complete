@@ -52,6 +52,7 @@ fix_dns() {
     log_message "INFO" "Fixing DNS configuration..."
 
     if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
+        # Windows DNS reset
         ipconfig /flushdns 2>/dev/null || true
 
         netsh interface ipv4 set dnsservers name="Wi-Fi" static 1.1.1.1 primary || true
@@ -59,18 +60,23 @@ fix_dns() {
 
         netsh interface ipv4 set dnsservers name="Ethernet" static 1.1.1.1 primary || true
         netsh interface ipv4 add dnsservers name="Ethernet" 8.8.8.8 index=2 || true
-    else
-        if [ -w /etc/resolv.conf ]; then
-            echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf > /dev/null
-            echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf > /dev/null
-        fi
 
-        if command -v systemd-resolve &>/dev/null; then
+    else
+        # Linux / macOS DNS reset
+        if command -v resolvectl &>/dev/null; then
+            sudo resolvectl flush-caches 2>/dev/null || true
+        elif command -v systemd-resolve &>/dev/null; then
             sudo systemd-resolve --flush-caches 2>/dev/null || true
+        elif [ -w /etc/resolv.conf ]; then
+            echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf >/dev/null
+            echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf >/dev/null
+        else
+            log_message "WARN" "No DNS tools found — skipping DNS fix"
         fi
     fi
 
     sleep 2
+    log_message "INFO" "DNS configuration refreshed"
 }
 
 # -------------------------------
