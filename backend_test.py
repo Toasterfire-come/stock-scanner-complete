@@ -109,6 +109,36 @@ class TradeScanProAPITester:
         
         return True
 
+    def test_auth_register_endpoint(self):
+        """Test user registration endpoint"""
+        user_data = {
+            "username": f"testuser_{datetime.now().strftime('%H%M%S')}",
+            "email": f"test_{datetime.now().strftime('%H%M%S')}@example.com",
+            "password": "TestPass123!",
+            "first_name": "Test",
+            "last_name": "User"
+        }
+        
+        return self.run_test("User Registration", "POST", "/api/auth/register/", 201, data=user_data)
+
+    def test_auth_login_endpoint(self):
+        """Test user login endpoint"""
+        login_data = {
+            "username": "testuser",
+            "password": "TestPass123!"
+        }
+        
+        return self.run_test("User Login", "POST", "/api/auth/login/", 200, data=login_data)
+
+    def test_plan_change_endpoint(self):
+        """Test plan change endpoint"""
+        plan_data = {
+            "plan_type": "bronze",
+            "billing_cycle": "monthly"
+        }
+        
+        return self.run_test("Plan Change", "POST", "/api/billing/change-plan/", 200, data=plan_data)
+
     def test_rate_limiting_gold_plan(self):
         """Test unlimited access for gold plan"""
         headers = {
