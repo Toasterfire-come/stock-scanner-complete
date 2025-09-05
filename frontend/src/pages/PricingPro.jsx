@@ -169,13 +169,35 @@ const PricingPro = () => {
     setShowCheckout(true);
   };
 
-  const handlePaymentSuccess = (paymentData) => {
-    toast.success("Payment successful! Welcome to Trade Scan Pro!", {
-      description: `Your ${selectedPlan.name} plan is now active. Check your email for details.`,
-    });
-    setShowCheckout(false);
-    // Here you would typically redirect to the dashboard or onboarding
-    // window.location.href = "/app/dashboard";
+  const handlePaymentSuccess = async (paymentData) => {
+    try {
+      // Update user's plan in the backend
+      if (isAuthenticated && selectedPlan) {
+        await changePlan({
+          plan_type: selectedPlan.name.toLowerCase(),
+          billing_cycle: selectedPlan.billingCycle
+        });
+      }
+
+      toast.success("Payment successful! Welcome to Trade Scan Pro!", {
+        description: `Your ${selectedPlan.name} plan is now active. Check your email for details.`,
+      });
+      
+      setShowCheckout(false);
+      
+      // Navigate to success page or dashboard
+      navigate("/checkout/success", {
+        state: {
+          planId: selectedPlan.name.toLowerCase(),
+          amount: paymentData.amount,
+          originalAmount: paymentData.originalAmount,
+          discount: paymentData.discount
+        }
+      });
+    } catch (error) {
+      console.error("Failed to update plan:", error);
+      toast.error("Payment processed but failed to update your plan. Please contact support.");
+    }
   };
 
   const handlePaymentError = (error) => {
