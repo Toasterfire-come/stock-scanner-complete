@@ -62,8 +62,8 @@ const SignUp = () => {
       });
 
       if (result.success) {
-        toast.success("Account created successfully! Please verify your email.");
-        navigate("/auth/verify-email", { 
+        toast.success("Account created successfully! Choose your plan to get started.");
+        navigate("/auth/plan-selection", { 
           state: { email: data.email } 
         });
       } else {
