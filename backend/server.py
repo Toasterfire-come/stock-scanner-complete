@@ -578,13 +578,17 @@ async def register_user(user_data: UserRegister):
     hashed_password = get_password_hash(user_data.password)
     api_token = str(uuid.uuid4())
     
+    # Get next user ID
+    counter_result = await db.counters.find_one_and_update(
+        {"_id": "user_id"},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=True
+    )
+    user_id = counter_result.get("seq", 1) if counter_result else 1
+    
     user_doc = {
-        "user_id": await db.counters.find_one_and_update(
-            {"_id": "user_id"},
-            {"$inc": {"seq": 1}},
-            upsert=True,
-            return_document=True
-        ).get("seq", 1),
+        "user_id": user_id,
         "username": user_data.username,
         "email": user_data.email,
         "first_name": user_data.first_name,
