@@ -33,6 +33,23 @@ const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  // Check if coming from signup flow
+  const fromSignup = location.state?.fromSignup;
+  const preSelectedPlan = location.state?.selectedPlan;
+
+  useEffect(() => {
+    if (preSelectedPlan) {
+      const plan = plans.find(p => p.name.toLowerCase() === preSelectedPlan);
+      if (plan) {
+        setSelectedPlan({ ...plan, billingCycle: 'monthly' });
+        setShowCheckout(true);
+      }
+    }
+  }, [preSelectedPlan]);
 
   const plans = [
     {
