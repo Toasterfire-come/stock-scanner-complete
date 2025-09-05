@@ -210,14 +210,51 @@ export async function getMarketData() { const { data } = await api.get('/market-
 export async function login(username, password) {
   try {
     const { data } = await api.post('/auth/login/', { username, password });
-    if (data.success && data.token) localStorage.setItem('rts_token', data.token);
-    return data;
+    if (data.success && data.data) {
+      // Store user data if login successful
+      return { success: true, data: data.data, message: data.message };
+    }
+    return { success: false, message: data.message || 'Login failed' };
   } catch (error) {
-    return { success: false, message: error.response?.data?.detail || 'Login failed' };
+    return { success: false, message: error.response?.data?.detail || error.response?.data?.message || 'Login failed' };
   }
 }
-export async function logout() { try { await api.post('/auth/logout/'); } catch {} finally { localStorage.removeItem('rts_token'); } }
-export async function registerUser() { return { success: false, message: 'Registration not available' }; }
+
+export async function logout() { 
+  try { 
+    await api.post('/auth/logout/'); 
+  } catch {} finally { 
+    localStorage.removeItem('rts_token'); 
+  } 
+}
+
+export async function registerUser(userData) {
+  try {
+    // Since there's no explicit registration endpoint in the provided list,
+    // I'll assume it follows Django's standard pattern at /auth/register/
+    const { data } = await api.post('/auth/register/', {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      first_name: userData.first_name,
+      last_name: userData.last_name
+    });
+    
+    if (data.success) {
+      return { 
+        success: true, 
+        data: data.data,
+        message: data.message || 'Registration successful! Please verify your email.'
+      };
+    }
+    return { success: false, message: data.message || 'Registration failed' };
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || error.response?.data?.detail || 'Registration failed' 
+    };
+  }
+}
 export async function getProfile() { const { data } = await api.get('/user/profile/'); return data; }
 export async function updateProfile(profileData) { const { data } = await api.post('/user/profile/', profileData); return data; }
 export async function changePassword(passwordData) { const { data } = await api.post('/user/change-password/', passwordData); return data; }
