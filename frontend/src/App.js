@@ -1,54 +1,113 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import StockDashboard from './components/StockDashboard';
+import Login from './components/Login';
+import Register from './components/Register';
+import Header from './components/Header';
+import { Loader2 } from 'lucide-react';
+import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+    
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                    <div className="text-gray-600">Loading...</div>
+                </div>
+            </div>
+        );
     }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
+    
+    return isAuthenticated ? children : <AuthPage />;
 };
 
-function App() {
-  return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
-  );
-}
+// Public Route component (redirects to dashboard if authenticated)
+const PublicRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+    
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                    <div className="text-gray-600">Loading...</div>
+                </div>
+            </div>
+        );
+    }
+    
+    return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+};
+
+// Auth page with login/register toggle
+const AuthPage = () => {
+    const [isLogin, setIsLogin] = useState(true);
+    
+    return isLogin ? 
+        <Login onToggleMode={() => setIsLogin(false)} /> : 
+        <Register onToggleMode={() => setIsLogin(true)} />;
+};
+
+// Main App Layout
+const AppLayout = ({ children }) => {
+    const { isAuthenticated } = useAuth();
+    
+    return (
+        <div className="min-h-screen bg-gray-50">
+            {isAuthenticated && <Header />}
+            {children}
+        </div>
+    );
+};
+
+// App component
+const App = () => {
+    return (
+        <AuthProvider>
+            <BrowserRouter>
+                <AppLayout>
+                    <Routes>
+                        {/* Public routes */}
+                        <Route 
+                            path="/auth" 
+                            element={
+                                <PublicRoute>
+                                    <AuthPage />
+                                </PublicRoute>
+                            } 
+                        />
+                        
+                        {/* Protected routes */}
+                        <Route 
+                            path="/dashboard" 
+                            element={
+                                <ProtectedRoute>
+                                    <StockDashboard />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        
+                        {/* Default redirect */}
+                        <Route 
+                            path="/" 
+                            element={<Navigate to="/dashboard" replace />} 
+                        />
+                        
+                        {/* Catch all - redirect to dashboard */}
+                        <Route 
+                            path="*" 
+                            element={<Navigate to="/dashboard" replace />} 
+                        />
+                    </Routes>
+                </AppLayout>
+            </BrowserRouter>
+        </AuthProvider>
+    );
+};
 
 export default App;
