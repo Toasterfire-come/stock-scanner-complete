@@ -886,7 +886,7 @@ def trending_stocks_api(request):
         # Get most active (high volume + significant price movement)
         most_active = Stock.objects.exclude(
             volume__isnull=True,
-            price_change_percent__isnull=True
+            change_percent__isnull=True
         ).filter(
             volume__gt=1000000  # High volume threshold
         ).order_by('-volume')[:10]
