@@ -639,6 +639,9 @@ async def login_user(credentials: UserLogin):
         {"$set": {"last_login": datetime.utcnow()}}
     )
     
+    # Create JWT token
+    access_token = create_access_token(data={"sub": user["username"]})
+    
     # Create response
     response_data = UserResponse(
         user_id=user["user_id"],
@@ -647,7 +650,7 @@ async def login_user(credentials: UserLogin):
         first_name=user["first_name"],
         last_name=user["last_name"],
         plan=user["plan"],
-        api_token=user["api_token"],
+        api_token=access_token,  # Return JWT token instead of stored api_token
         is_premium=user["is_premium"],
         limits=user["limits"],
         usage=user["usage"],
