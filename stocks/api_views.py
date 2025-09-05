@@ -706,15 +706,15 @@ def market_stats_api(request):
         
         # Get top performers
         top_gainers = Stock.objects.filter(
-            price_change__gt=0
-        ).order_by('-price_change_percent')[:5].values(
-            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+            price_change_today__gt=0
+        ).order_by('-change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change_today', 'change_percent'
         )
         
         top_losers = Stock.objects.filter(
-            price_change__lt=0
-        ).order_by('price_change_percent')[:5].values(
-            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+            price_change_today__lt=0
+        ).order_by('change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change_today', 'change_percent'
         )
         
         # Most active by volume
