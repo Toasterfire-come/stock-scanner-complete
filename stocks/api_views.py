@@ -700,9 +700,9 @@ def market_stats_api(request):
         nasdaq_stocks = Stock.objects.filter(exchange='NASDAQ').count()
         
         # Calculate market trends
-        gainers = Stock.objects.filter(price_change__gt=0).count()
-        losers = Stock.objects.filter(price_change__lt=0).count()
-        unchanged = Stock.objects.filter(price_change=0).count()
+        gainers = Stock.objects.filter(price_change_today__gt=0).count()
+        losers = Stock.objects.filter(price_change_today__lt=0).count()
+        unchanged = Stock.objects.filter(price_change_today=0).count()
         
         # Get top performers
         top_gainers = Stock.objects.filter(
