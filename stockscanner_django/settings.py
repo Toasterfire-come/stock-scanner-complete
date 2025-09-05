@@ -45,11 +45,11 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'stocks.middleware.APITokenAuthenticationMiddleware',
-    'stocks.middleware.UsageTrackingMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'stocks.middleware.APITokenAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'stocks.middleware.UsageTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'stockscanner_django.urls'
