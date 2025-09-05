@@ -896,8 +896,8 @@ def trending_stocks_api(request):
                 'ticker': stock.ticker,
                 'name': stock.name,
                 'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(stock.price_change),
-                'price_change_percent': format_decimal_safe(stock.price_change_percent),
+                'price_change': format_decimal_safe(stock.price_change_today),
+                'price_change_percent': format_decimal_safe(stock.change_percent),
                 'volume': stock.volume,
                 'market_cap': format_decimal_safe(stock.market_cap)
             } for stock in stocks]
