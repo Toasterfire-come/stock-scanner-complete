@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 
 # Configure PayPal
 paypalrestsdk.configure({
-    "mode": os.environ.get('PAYPAL_MODE', 'live'),
-    "client_id": os.environ.get('PAYPAL_CLIENT_ID'),
-    "client_secret": os.environ.get('PAYPAL_CLIENT_SECRET')
+    "mode": os.environ.get('PAYPAL_MODE', 'sandbox'),
+    "client_id": os.environ.get('PAYPAL_CLIENT_ID', 'test_client_id'),
+    "client_secret": os.environ.get('PAYPAL_CLIENT_SECRET', 'test_client_secret')
 })
 
 def get_plan_pricing():
