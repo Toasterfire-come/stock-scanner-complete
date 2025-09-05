@@ -32,7 +32,14 @@ class StockScannerAPITester:
         if success:
             self.tests_passed += 1
             print(f"✅ {name} - PASSED")
-            if response_data:
+            if response_data and isinstance(response_data, dict):
+                # Check if response indicates success
+                if response_data.get('success') == False:
+                    self.tests_passed -= 1
+                    self.failed_tests.append(name)
+                    print(f"❌ {name} - FAILED (API returned success=false)")
+                    print(f"   Error: {response_data.get('error', 'Unknown error')}")
+                    return
                 print(f"   Response: {json.dumps(response_data, indent=2)[:200]}...")
         else:
             self.failed_tests.append(name)
