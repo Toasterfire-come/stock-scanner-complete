@@ -1,0 +1,7 @@
+# Root .htaccess – keep minimal; no redirects at all
+
+Options -MultiViews
+
+<IfModule mod_rewrite.c>
+  RewriteEngine Off
+</IfModule>
