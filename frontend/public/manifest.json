@@ -1,0 +1,80 @@
+{
+  "short_name": "Stock Scanner",
+  "name": "Stock Scanner - Real-time Stock Market Data",
+  "description": "Professional stock market scanner with real-time data, portfolio management, and advanced analytics.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["finance", "business", "productivity"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Stock Scanner Dashboard on Desktop"
+    },
+    {
+      "src": "screenshot-mobile.png", 
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Stock Scanner Dashboard on Mobile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View stock market dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Portfolio",
+      "short_name": "Portfolio",
+      "description": "View your stock portfolio",
+      "url": "/portfolio",
+      "icons": [
+        {
+          "src": "logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
