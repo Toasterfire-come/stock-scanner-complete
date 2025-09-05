@@ -405,37 +405,6 @@ export async function initializeDiscountCodes() {
   return data; 
 }
 
-// PayPal Integration Functions - Updated for Django backend
-export async function createPayPalOrder(planType, billingCycle, discountCode = null) {
-  try {
-    const orderData = {
-      plan_type: planType,
-      billing_cycle: billingCycle,
-      discount_code: discountCode
-    };
-    
-    // This integrates with your Django backend PayPal handling
-    const { data } = await api.post('/billing/create-paypal-order/', orderData);
-    return data;
-  } catch (error) {
-    console.error('PayPal order creation failed:', error);
-    throw error;
-  }
-}
-
-export async function capturePayPalOrder(orderId, paymentData) {
-  try {
-    const { data } = await api.post('/billing/capture-paypal-order/', {
-      order_id: orderId,
-      payment_data: paymentData
-    });
-    return data;
-  } catch (error) {
-    console.error('PayPal order capture failed:', error);
-    throw error;
-  }
-}
-
 // ====================
 // SUBSCRIPTIONS
 // ====================
