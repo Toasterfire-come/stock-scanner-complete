@@ -880,8 +880,8 @@ def trending_stocks_api(request):
         
         # Get top gainers
         top_gainers = Stock.objects.filter(
-            price_change_percent__gt=0
-        ).order_by('-price_change_percent')[:10]
+            change_percent__gt=0
+        ).order_by('-change_percent')[:10]
         
         # Get most active (high volume + significant price movement)
         most_active = Stock.objects.exclude(
