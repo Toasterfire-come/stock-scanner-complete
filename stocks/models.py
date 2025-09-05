@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
+import uuid
+from django.utils import timezone
+from datetime import timedelta
 
 class Stock(models.Model):
     # Basic stock info
@@ -114,24 +117,150 @@ class StockPrice(models.Model):
         return f'{self.stock.ticker} - ${self.price} at {self.timestamp}'
 
 class StockAlert(models.Model):
-    ALERT_TYPES = [
-        ('price_above', 'Price Above'),
-        ('price_below', 'Price Below'),
-        ('volume_surge', 'Volume Surge'),
-        ('price_change', 'Price Change %'),
+    CONDITION_CHOICES = [
+        ('above', 'Price Above'),
+        ('below', 'Price Below'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    alert_type = models.CharField(max_length=20, choices=ALERT_TYPES)
-    target_value = models.DecimalField(max_digits=10, decimal_places=2)
+    target_price = models.DecimalField(max_digits=10, decimal_places=2)
+    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
+    email = models.EmailField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     triggered_at = models.DateTimeField(null=True, blank=True)
     
     def __str__(self):
-        return f'{self.user.username} - {self.stock.ticker} {self.alert_type} {self.target_value}'
+        return f'{self.email} - {self.stock.ticker} {self.condition} {self.target_price}'
 
+# New Authentication and Billing Models
+class UserProfile(models.Model):
+    PLAN_CHOICES = [
+        ('free', 'Free'),
+        ('bronze', 'Bronze'),
+        ('silver', 'Silver'),
+        ('gold', 'Gold'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default='free')
+    is_premium = models.BooleanField(default=False)
+    
+    # API Usage limits
+    monthly_api_calls = models.IntegerField(default=0)
+    daily_api_calls = models.IntegerField(default=0)
+    last_api_call = models.DateTimeField(null=True, blank=True)
+    last_daily_reset = models.DateField(null=True, blank=True)
+    last_monthly_reset = models.DateField(null=True, blank=True)
+    
+    # Subscription info
+    paypal_subscription_id = models.CharField(max_length=100, blank=True)
+    subscription_active = models.BooleanField(default=False)
+    subscription_end_date = models.DateTimeField(null=True, blank=True)
+    trial_used = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.plan}'
+    
+    def get_plan_limits(self):
+        """Get API limits for current plan"""
+        limits = {
+            'free': {'monthly': 15, 'daily': 15},
+            'bronze': {'monthly': 2000, 'daily': 100},
+            'silver': {'monthly': 10000, 'daily': 500},
+            'gold': {'monthly': -1, 'daily': -1},  # -1 means unlimited
+        }
+        return limits.get(self.plan, limits['free'])
+    
+    def can_make_api_call(self):
+        """Check if user can make an API call"""
+        limits = self.get_plan_limits()
+        
+        # Reset counters if needed
+        today = timezone.now().date()
+        if self.last_daily_reset != today:
+            self.daily_api_calls = 0
+            self.last_daily_reset = today
+            
+        if self.last_monthly_reset is None or self.last_monthly_reset.month != today.month:
+            self.monthly_api_calls = 0
+            self.last_monthly_reset = today
+            
+        # Check limits (-1 means unlimited)
+        if limits['daily'] != -1 and self.daily_api_calls >= limits['daily']:
+            return False
+        if limits['monthly'] != -1 and self.monthly_api_calls >= limits['monthly']:
+            return False
+            
+        return True
+    
+    def increment_api_usage(self):
+        """Increment API usage counters"""
+        if self.can_make_api_call():
+            self.daily_api_calls += 1
+            self.monthly_api_calls += 1
+            self.last_api_call = timezone.now()
+            self.save()
+            return True
+        return False
+
+class APIToken(models.Model):
+    """API Token for authentication"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255, unique=True, default=uuid.uuid4)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f'{self.user.username} - {str(self.token)[:8]}...'
+
+class BillingHistory(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    PLAN_CHOICES = [
+        ('bronze', 'Bronze'),
+        ('silver', 'Silver'),
+        ('gold', 'Gold'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES)
+    billing_cycle = models.CharField(max_length=20, choices=[('monthly', 'Monthly'), ('annual', 'Annual')])
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paypal_order_id = models.CharField(max_length=100, unique=True)
+    paypal_payment_id = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    discount_code = models.CharField(max_length=50, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.plan_type} - ${self.amount}'
+
+class UsageStats(models.Model):
+    """Track daily usage statistics"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField(default=timezone.now)
+    endpoint = models.CharField(max_length=100)
+    api_calls = models.IntegerField(default=0)
+    
+    class Meta:
+        unique_together = ['user', 'date', 'endpoint']
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.date} - {self.endpoint}: {self.api_calls}'
+
+# Keep existing Membership model for backward compatibility
 class Membership(models.Model):
     PLAN_CHOICES = [
         ('free', 'Free'),
