@@ -60,7 +60,9 @@ class StockScannerAPITester:
             data = {
                 "username": test_user,
                 "email": f"{test_user}@test.com",
-                "password": "testpass123"
+                "password": "testpass123",
+                "first_name": "Test",
+                "last_name": "User"
             }
             response = self.session.post(f"{self.api_base}/auth/register/", json=data)
             success = response.status_code in [200, 201]
