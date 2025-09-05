@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -25,6 +26,8 @@ import {
   Mail
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
+import { changePlan } from "../api/client";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
