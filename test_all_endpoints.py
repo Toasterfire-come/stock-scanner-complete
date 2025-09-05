@@ -13,7 +13,7 @@ import os
 BASE_URL = "http://localhost:8001"
 
 # Test token (from registration)
-TEST_TOKEN = "51db5598-8e5c-45ee-a370-5039649c4a52"
+TEST_TOKEN = "42ec1336-f258-4469-ae97-79a5e05dd115"
 
 def test_endpoint(method, endpoint, data=None, token=None, description=""):
     """Test a single endpoint"""
