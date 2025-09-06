@@ -281,12 +281,12 @@ class AuthService {
         }
     }
 
-    // Check if user is authenticated
+    // Check if user is authenticated (simplified for Django API tokens)
     isAuthenticated() {
         const token = this.getToken();
         const userData = localStorage.getItem(this.userDataKey);
         
-        return !!(token && userData && this.isTokenValid(token));
+        return !!(token && userData);
     }
 
     // Get current user data
