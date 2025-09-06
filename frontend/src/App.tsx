@@ -210,10 +210,12 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const location = window.location;
+  
+  // Get current location from the URL
+  const currentPath = window.location.pathname;
   
   // Don't show header on public pages (they have their own navigation)
-  const isPublicPage = ['/', '/stocks', '/trending', '/market-stats', '/about'].includes(location.pathname);
+  const isPublicPage = ['/', '/stocks', '/trending', '/market-stats', '/about'].includes(currentPath);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
