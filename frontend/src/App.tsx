@@ -8,7 +8,7 @@ import { queryClient, backgroundSync, prefetchUtils } from './lib/queryClient';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import NetworkStatus, { ConnectionSpeed } from './components/NetworkStatus';
-import { Loader2, Wifi, WifiOff } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import './App.css';
 
