@@ -1,3 +1,62 @@
+Scanner Trends Gauge
+====================
+
+Quickly gauge and compare Google search interest for scanner-related keywords like "stock scanner", "market scanner", and "trade scanner".
+
+Features
+--------
+
+- Compare multiple keywords across time
+- Filter by region and Google property (web, news, images, YouTube, shopping)
+- Export results to CSV
+- Optional related queries (top and rising)
+- Simple CLI and Streamlit UI
+
+Setup
+-----
+
+1) Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+CLI Usage
+---------
+
+Run the CLI to print the latest interest values and optionally save CSV:
+
+```bash
+python -m trends_tool.cli \
+  --timeframe "today 12-m" \
+  --geo "" \
+  --gprop "" \
+  --related \
+  --output trends.csv
+```
+
+Provide custom keywords by listing them (defaults shown):
+
+```bash
+python -m trends_tool.cli stock scanner market scanner trade scanner
+```
+
+Streamlit App
+-------------
+
+Launch the web UI:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Notes
+-----
+
+- Google Trends values are normalized (0-100) and relative across the provided keywords.
+- Network access is required to query Google Trends via `pytrends`.
+- If you see rate limit errors, retry after a short wait or reduce query frequency.
+
 # Stock Scanner - Git Bash Complete
 
 **One Command Setup: `./start_django_gitbash.sh`**
