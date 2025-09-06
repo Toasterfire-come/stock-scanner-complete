@@ -296,7 +296,7 @@ export const sanitizeError = (error) => {
 export const logClientError = async (payload) => {
   console.warn('Error logged:', payload);
 };
-export const validateEnvironment = () => {
+// Environment validation
   const requiredVars = [
     'REACT_APP_BACKEND_URL',
     'REACT_APP_API_PASSWORD'
