@@ -210,6 +210,10 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
+  const location = window.location;
+  
+  // Don't show header on public pages (they have their own navigation)
+  const isPublicPage = ['/', '/stocks', '/trending', '/market-stats', '/about'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
@@ -217,8 +221,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <NetworkStatus />
       <ConnectionSpeed />
       
-      {/* Header for authenticated users */}
-      {isAuthenticated && (
+      {/* Header for authenticated users on dashboard */}
+      {isAuthenticated && !isPublicPage && (
         <Suspense fallback={
           <div className="h-16 bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200" />
         }>
@@ -227,7 +231,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       )}
       
       {/* Main content area */}
-      <main className={`transition-all duration-300 ${isAuthenticated ? 'pt-0' : ''}`}>
+      <main className={`transition-all duration-300 ${isAuthenticated && !isPublicPage ? 'pt-0' : ''}`}>
         <div className="relative">
           {children}
         </div>
