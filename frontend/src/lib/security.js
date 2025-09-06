@@ -368,5 +368,7 @@ export default {
   generateCSPMeta,
   sanitizeError,
   initializeSecurity,
+  logClientError,
+  validateEnvironment,
   SECURITY_CONFIG
 };
