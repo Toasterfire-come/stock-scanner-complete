@@ -174,7 +174,6 @@ export const usePWA = (): [PWAInstallState, PWAActions] => {
     // Service worker update events
     const handleServiceWorkerUpdate = () => {
       console.log('PWA: Service worker updated');
-      setHasUpdate(true);
     };
 
     // Add event listeners
