@@ -150,13 +150,14 @@ interface PublicRouteProps {
 }
 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading } = useAuth();
   
   if (loading) {
     return <LoadingSpinner message="Loading application..." />;
   }
   
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  // Allow access to public routes regardless of auth status
+  return <>{children}</>;
 };
 
 // Enhanced auth page with better transitions
