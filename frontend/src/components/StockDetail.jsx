@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, TrendingUp, TrendingDown, Loader2, Plus, Heart } from 'lucide-react';
 import { stockAPI } from '../services/stockAPI';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/EnhancedAuthContext';
 
 const StockDetail = ({ stock, onBack }) => {
     const [quote, setQuote] = useState(null);
