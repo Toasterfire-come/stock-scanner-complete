@@ -17,7 +17,7 @@ import {
   ArrowRight,
   Play
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/SecureAuthContext";
 import { getTrendingSafe, getMarketStatsSafe } from "../../api/client";
 
 const AppDashboard = () => {
