@@ -297,6 +297,7 @@ export const logClientError = async (payload) => {
   console.warn('Error logged:', payload);
 };
 // Environment validation
+export const validateEnvironment = () => {
   const requiredVars = [
     'REACT_APP_BACKEND_URL',
     'REACT_APP_API_PASSWORD'
