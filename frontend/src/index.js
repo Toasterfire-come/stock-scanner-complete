@@ -4,9 +4,13 @@ import "./index.css";
 
 // Import the secure version instead of the regular App
 import SecureApp from "./SecureApp";
+import { initSentry } from './sentry';
 
 // Initialize performance monitoring
 const startTime = performance.now();
+
+// Init Sentry early
+initSentry();
 
 // Create root with security enhancements
 const root = ReactDOM.createRoot(document.getElementById("root"));

@@ -6,7 +6,8 @@ import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import PayPalCheckout from "../components/PayPalCheckout";
+import { Suspense, lazy } from 'react';
+const PayPalCheckout = lazy(() => import("../components/PayPalCheckout"));
 import {
   CheckCircle,
   X,
@@ -365,13 +366,15 @@ const PricingPro = () => {
                         </DialogHeader>
                         
                         {selectedPlan && (
-                          <PayPalCheckout
-                            planType={selectedPlan.name.toLowerCase()}
-                            billingCycle={selectedPlan.billingCycle}
-                            onSuccess={handlePaymentSuccess}
-                            onError={handlePaymentError}
-                            onCancel={() => setShowCheckout(false)}
-                          />
+                          <Suspense fallback={<div className="py-6 text-center">Loading checkout…</div>}>
+                            <PayPalCheckout
+                              planType={selectedPlan.name.toLowerCase()}
+                              billingCycle={selectedPlan.billingCycle}
+                              onSuccess={handlePaymentSuccess}
+                              onError={handlePaymentError}
+                              onCancel={() => setShowCheckout(false)}
+                            />
+                          </Suspense>
                         )}
                       </DialogContent>
                     </Dialog>
