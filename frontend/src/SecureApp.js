@@ -95,10 +95,13 @@ import { logClientError } from "./lib/security";
 
 // Placeholder component for missing pages
 const PlaceholderPage = ({ title }) => (
-  <div className="container mx-auto px-4 py-8">
-    <div className="text-center">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
-      <p className="text-gray-600">This page is under development.</p>
+  <div className="container mx-auto px-4 py-16">
+    <div className="max-w-2xl mx-auto text-center">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">{title}</h1>
+      <p className="text-gray-600 mb-6">We're putting the finishing touches on this section to make sure it meets our quality bar.</p>
+      <div className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-blue-600 text-white">
+        Back to Home
+      </div>
     </div>
   </div>
 );
