@@ -35,7 +35,7 @@ const PricingPro = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
 
   // Check if coming from signup flow
   const fromSignup = location.state?.fromSignup;
@@ -177,6 +177,8 @@ const PricingPro = () => {
           plan_type: selectedPlan.name.toLowerCase(),
           billing_cycle: selectedPlan.billingCycle
         });
+        // Update local auth state to reflect new plan
+        updateUser({ plan: selectedPlan.name.toLowerCase() });
       }
 
       toast.success("Payment successful! Welcome to Trade Scan Pro!", {
@@ -189,9 +191,9 @@ const PricingPro = () => {
       navigate("/checkout/success", {
         state: {
           planId: selectedPlan.name.toLowerCase(),
-          amount: paymentData.amount,
+          amount: paymentData.finalAmount || paymentData.amount,
           originalAmount: paymentData.originalAmount,
-          discount: paymentData.discount
+          discount: paymentData.discountApplied
         }
       });
     } catch (error) {

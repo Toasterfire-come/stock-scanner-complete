@@ -7,7 +7,21 @@ const AuthContext = createContext();
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Graceful fallback to prevent crashes if provider is missing in some routes
+    return {
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      authError: null,
+      login: async () => ({ success: false, error: 'Auth unavailable' }),
+      register: async () => ({ success: false, error: 'Auth unavailable' }),
+      logout: () => {},
+      updateUser: () => {},
+      clearError: () => {},
+      refreshSession: () => {},
+      isPremium: false,
+      hasVerifiedEmail: false,
+    };
   }
   return context;
 };
@@ -160,7 +174,8 @@ export const AuthProvider = ({ children }) => {
           username: response.data.username,
           email: response.data.email,
           name: `${response.data.first_name} ${response.data.last_name}`.trim(),
-          plan: response.data.plan || 'free',
+          // Force newly registered users into free plan by default
+          plan: 'free',
           isVerified: response.data.is_verified || false,
           joinDate: response.data.date_joined || new Date().toISOString(),
           lastLogin: new Date().toISOString()

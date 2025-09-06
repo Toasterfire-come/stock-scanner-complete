@@ -1,7 +1,11 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
+// Prefer external API by default in production if env not set
+const BASE_URL = (
+  process.env.REACT_APP_BACKEND_URL ||
+  (process.env.NODE_ENV === 'production' ? 'https://api.retailtradescanner.com' : '')
+).trim();
 
 if (!BASE_URL) {
   console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
