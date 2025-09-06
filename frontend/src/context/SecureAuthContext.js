@@ -212,11 +212,14 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     
     try {
-      // Call API logout (don't wait for response)
-      apiLogout().catch(error => {
-        console.warn('Logout API call failed:', error);
-        // Continue with local logout even if API call fails
-      });
+      // Call API logout only if a token exists (avoid 403 noise)
+      const token = secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
+      if (token) {
+        apiLogout().catch(error => {
+          console.warn('Logout API call failed:', error);
+          // Continue with local logout even if API call fails
+        });
+      }
     } catch (error) {
       console.warn('Logout error:', error);
     } finally {
