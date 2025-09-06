@@ -126,16 +126,20 @@ const StockDetail = () => {
   };
 
   const formatMarketCap = (value) => {
-    if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
-    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-    return `$${value.toLocaleString()}`;
+    const v = Number(value || 0);
+    if (!Number.isFinite(v)) return '$0';
+    if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+    if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+    if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+    return `$${v.toLocaleString()}`;
   };
 
   const formatVolume = (value) => {
-    if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-    if (value >= 1e3) return `${(value / 1e3).toFixed(0)}K`;
-    return value.toLocaleString();
+    const v = Number(value || 0);
+    if (!Number.isFinite(v)) return '0';
+    if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+    if (v >= 1e3) return `${(v / 1e3).toFixed(0)}K`;
+    return v.toLocaleString();
   };
 
   if (isLoading) {

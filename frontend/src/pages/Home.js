@@ -243,7 +243,7 @@ const Home = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {platformStats.nyse_stocks.toLocaleString()}
+                  {Number(platformStats?.nyse_stocks||0).toLocaleString()}
                 </div>
                 <div className="text-gray-600">NYSE Stocks Covered</div>
               </div>
@@ -255,7 +255,7 @@ const Home = () => {
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  {platformStats.scanner_combinations.toLocaleString()}+
+                  {Number(platformStats?.scanner_combinations||0).toLocaleString()}+
                 </div>
                 <div className="text-gray-600">Scanner Combinations</div>
               </div>

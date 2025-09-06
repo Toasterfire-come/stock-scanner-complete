@@ -100,8 +100,8 @@ const Stocks = () => {
   const isVirtualDesktop = dataForRender.length > 200;
 
   const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
-  const formatVolume = (v) => { const n = Number(v||0); if (n>=1e9) return `${(n/1e9).toFixed(1)}B`; if (n>=1e6) return `${(n/1e6).toFixed(1)}M`; if (n>=1e3) return `${(n/1e3).toFixed(0)}K`; return n.toLocaleString(); };
-  const formatMarketCap = (v) => { const n = Number(v||0); if (n>=1e12) return `$${(n/1e12).toFixed(1)}T`; if (n>=1e9) return `$${(n/1e9).toFixed(1)}B`; if (n>=1e6) return `$${(n/1e6).toFixed(1)}M`; return `$${n.toLocaleString()}`; };
+  const formatVolume = (v) => { const n = Number(v||0); if (!Number.isFinite(n)) return '0'; if (n>=1e9) return `${(n/1e9).toFixed(1)}B`; if (n>=1e6) return `${(n/1e6).toFixed(1)}M`; if (n>=1e3) return `${(n/1e3).toFixed(0)}K`; return n.toLocaleString(); };
+  const formatMarketCap = (v) => { const n = Number(v||0); if (!Number.isFinite(n)) return '$0'; if (n>=1e12) return `$${(n/1e12).toFixed(1)}T`; if (n>=1e9) return `$${(n/1e9).toFixed(1)}B`; if (n>=1e6) return `$${(n/1e6).toFixed(1)}M`; return `$${n.toLocaleString()}`; };
   const formatPercentage = (v) => `${(Number(v)||0) > 0 ? '+' : ''}${(Number(v)||0).toFixed(2)}%`;
 
   if (isLoading && dataForRender.length === 0) {
@@ -126,7 +126,7 @@ const Stocks = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">All Stocks</h1>
-            <p className="text-gray-600 mt-2">Browse and search through {totalStocks.toLocaleString()} stocks</p>
+            <p className="text-gray-600 mt-2">Browse and search through {Number(totalStocks||0).toLocaleString()} stocks</p>
           </div>
           <Button asChild><Link to="/app/screeners/new"><Filter className="h-4 w-4 mr-2" />Create Screener</Link></Button>
         </div>
@@ -178,7 +178,7 @@ const Stocks = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center"><BarChart3 className="h-5 w-5 mr-2" />Stock List {searchTerm && (<Badge variant="secondary" className="ml-2">Search: "{searchTerm}"</Badge>)}</CardTitle>
-            <CardDescription>{searchTerm ? `Showing ${dataForRender.length} of ${totalStocks} results` : `Showing ${dataForRender.length} of ${totalStocks.toLocaleString()} stocks`}</CardDescription>
+            <CardDescription>{searchTerm ? `Showing ${dataForRender.length} of ${Number(totalStocks||0)} results` : `Showing ${dataForRender.length} of ${Number(totalStocks||0).toLocaleString()} stocks`}</CardDescription>
           </CardHeader>
           <CardContent>
             {dataForRender.length === 0 ? (
@@ -296,7 +296,7 @@ const Stocks = () => {
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-6">
-                    <div className="text-sm text-gray-600">Showing {((currentPage - 1) * stocksPerPage) + 1} to {Math.min(currentPage * stocksPerPage, totalStocks)} of {totalStocks.toLocaleString()} stocks</div>
+                    <div className="text-sm text-gray-600">Showing {((currentPage - 1) * stocksPerPage) + 1} to {Math.min(currentPage * stocksPerPage, Number(totalStocks||0))} of {Number(totalStocks||0).toLocaleString()} stocks</div>
                     <div className="flex items-center space-x-2">
                       <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
                       <div className="flex space-x-1">

@@ -226,7 +226,10 @@ const AdvancedAnalytics = ({ userId }) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
-                  <Tooltip formatter={(value, name) => [`$${value.toLocaleString()}`, name]} />
+                  <Tooltip formatter={(value, name) => {
+                    const v = Number(value||0);
+                    return [`$${Number.isFinite(v)? v.toLocaleString() : '0'}`, name];
+                  }} />
                   <Legend />
                   <Area 
                     type="monotone" 
@@ -262,7 +265,7 @@ const AdvancedAnalytics = ({ userId }) => {
                       <Badge variant="outline">{holding.symbol}</Badge>
                       <div>
                         <p className="font-medium">{holding.weight}% allocation</p>
-                        <p className="text-sm text-gray-600">${holding.value.toLocaleString()}</p>
+                        <p className="text-sm text-gray-600">${Number(holding.value||0).toLocaleString()}</p>
                       </div>
                     </div>
                     <div className={`flex items-center ${holding.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>

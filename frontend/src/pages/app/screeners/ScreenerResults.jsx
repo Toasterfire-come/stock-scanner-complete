@@ -213,7 +213,7 @@ const ScreenerResults = () => {
                           {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
                         </div>
                       </TableCell>
-                      <TableCell>{stock.volume.toLocaleString()}</TableCell>
+                      <TableCell>{Number(stock.volume||0).toLocaleString()}</TableCell>
                       <TableCell>${(stock.market_cap / 1e9).toFixed(1)}B</TableCell>
                       <TableCell>{stock.exchange}</TableCell>
                       <TableCell>
