@@ -65,7 +65,12 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "build:production": "node build-scripts/build-production.js",
+    "deploy:check": "node build-scripts/deploy-check.js",
+    "test": "craco test",
+    "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
+    "security:audit": "npm audit --audit-level moderate",
+    "security:check": "node -e \"require('./src/lib/security').validateEnvironment() && console.log('✅ Security validation passed')\""
   },
   "browserslist": {
     "production": [
