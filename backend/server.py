@@ -323,6 +323,7 @@ async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent
 
 async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
     """Get current usage counts for a user"""
+    global db_disabled
     now = datetime.utcnow()
     
     # Calculate time boundaries
@@ -342,7 +343,6 @@ async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
             })
         except Exception as e:
             logging.warning(f"DB count failed, using in-memory counts: {e}")
-            global db_disabled
             db_disabled = True
             timestamps = usage_memory[user_id]
             daily_count = len([t for t in timestamps if t >= day_ago])
