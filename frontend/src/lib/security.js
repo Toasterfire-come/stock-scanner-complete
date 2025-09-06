@@ -292,7 +292,10 @@ export const sanitizeError = (error) => {
   return sanitizedError;
 };
 
-// Environment validation
+// Client-side error logging (placeholder - will be implemented in secureClient.js)
+export const logClientError = async (payload) => {
+  console.warn('Error logged:', payload);
+};
 export const validateEnvironment = () => {
   const requiredVars = [
     'REACT_APP_BACKEND_URL',
