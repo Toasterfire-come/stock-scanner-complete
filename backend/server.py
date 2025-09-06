@@ -739,13 +739,13 @@ async def create_status_check(input: StatusCheckCreate):
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
+    global db_disabled
     if db is not None and not db_disabled:
         try:
             status_checks = await db.status_checks.find().to_list(1000)
             return [StatusCheck(**status_check) for status_check in status_checks]
         except Exception as e:
             logging.warning(f"DB status query failed, using in-memory: {e}")
-            global db_disabled
             db_disabled = True
             return [StatusCheck(**status_check) for status_check in usage_memory.get("status_checks", [])]
     # Fallback from memory
