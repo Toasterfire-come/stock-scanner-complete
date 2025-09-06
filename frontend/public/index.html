@@ -8,7 +8,7 @@
         <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#1d4ed8" />
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://*.paypal.com https://o*.ingest.sentry.io https://plausible.io https://events.plausible.io; script-src 'self' https://www.paypal.com https://www.paypalobjects.com https://plausible.io; img-src 'self' data: https:; style-src 'self' https:; font-src 'self' https: data:; frame-src https://www.paypal.com https://*.paypal.com;" />
+        
         <meta http-equiv="X-Content-Type-Options" content="nosniff" />
         <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(self)" />
@@ -26,15 +26,15 @@
         <link rel="preconnect" href="https://www.paypal.com" crossorigin>
         <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
         <link rel="preconnect" href="https://o.sentry.io" crossorigin>
-        <link rel="preload" href="/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
-        <link rel="preload" href="/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
         <link rel="preload" href="/hero.avif" as="image" type="image/avif">
         <link rel="preload" href="/hero.webp" as="image" type="image/webp">
         <link rel="dns-prefetch" href="//api.retailtradescanner.com">
         <link rel="dns-prefetch" href="//www.paypal.com">
         <link rel="dns-prefetch" href="//www.paypalobjects.com">
         <link rel="dns-prefetch" href="//o.sentry.io">
-        <link rel="stylesheet" href="/fonts.css">
         <script defer data-domain="tradescanpro.com" src="https://plausible.io/js/script.js"></script>
         <!--
       manifest.json provides metadata used when your web app is installed on a
