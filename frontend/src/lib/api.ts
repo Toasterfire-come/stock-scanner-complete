@@ -87,7 +87,7 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log response time in development
     if (process.env.NODE_ENV === 'development') {
-      const config = response.config as ExtendedAxiosRequestConfig;
+      const config = response.config as any;
       if (config.metadata) {
         const duration = Date.now() - config.metadata.startTime;
         console.log(`🚀 ${config.method?.toUpperCase()} ${config.url} - ${duration}ms`);
