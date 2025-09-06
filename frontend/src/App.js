@@ -1,7 +1,7 @@
 import React from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 
