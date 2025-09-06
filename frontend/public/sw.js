@@ -1,5 +1,5 @@
 const CACHE_NAME = 'tsp-v1';
-const PRECACHE_URLS = ['/index.html', '/manifest.json'];
+const PRECACHE_URLS = ['/index.html', '/manifest.json', '/offline.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      }).catch(() => cached);
+      }).catch(() => cached || caches.match('/offline.html'));
       return cached || fetchPromise;
     })
   );

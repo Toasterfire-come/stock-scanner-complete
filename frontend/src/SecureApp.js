@@ -157,7 +157,10 @@ function SecureApp() {
             <SystemErrorBoundary>
               <div className="min-h-screen bg-background">
                 <StatusBanner />
-                <Suspense fallback={<div className="p-8 text-center">Loading…</div>}>
+                <Suspense fallback={<div className="p-8 text-center animate-pulse">
+                  <div className="mx-auto h-6 w-40 bg-gray-200 rounded mb-4" />
+                  <div className="mx-auto h-4 w-64 bg-gray-100 rounded" />
+                </div>}>
                 <Routes>
                   {/* Auth Routes */}
                   <Route element={<AuthLayout />}>
