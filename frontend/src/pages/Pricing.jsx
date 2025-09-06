@@ -23,7 +23,7 @@ import {
   Shield,
   Mail
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/SecureAuthContext";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
