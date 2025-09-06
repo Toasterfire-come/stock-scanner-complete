@@ -12,7 +12,6 @@ const NetworkStatus: React.FC = () => {
     if (!pwaState.isOnline && !wasOffline) {
       setShowStatus(true);
       setWasOffline(true);
-      return;
     }
     
     // Show "back online" message briefly when reconnecting
