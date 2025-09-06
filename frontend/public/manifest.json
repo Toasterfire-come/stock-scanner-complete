@@ -28,5 +28,6 @@
   "theme_color": "#2563eb",
   "background_color": "#ffffff",
   "scope": "/",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "prefer_related_applications": false
 }

@@ -9,81 +9,82 @@ import { AuthProvider } from "./context/SecureAuthContext";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 
 // Layouts
+import { Suspense, lazy } from 'react';
 import AppLayout from "./layouts/AppLayout.js";
 import AuthLayout from "./layouts/AuthLayout";
 
 // Auth Pages
-import SignIn from "./pages/auth/SignIn";
-import SignUp from "./pages/auth/SignUp";
-import PlanSelection from "./pages/auth/PlanSelection";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import VerifyEmail from "./pages/auth/VerifyEmail";
-import OAuthCallback from "./pages/auth/OAuthCallback";
-import TwoFactorAuth from "./pages/auth/TwoFactorAuth";
+const SignIn = lazy(() => import("./pages/auth/SignIn"));
+const SignUp = lazy(() => import("./pages/auth/SignUp"));
+const PlanSelection = lazy(() => import("./pages/auth/PlanSelection"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const VerifyEmail = lazy(() => import("./pages/auth/VerifyEmail"));
+const OAuthCallback = lazy(() => import("./pages/auth/OAuthCallback"));
+const TwoFactorAuth = lazy(() => import("./pages/auth/TwoFactorAuth"));
 
 // Onboarding
 import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
 
 // Public Pages
-import Home from "./pages/Home";
-import Features from "./pages/Features";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import PricingPro from "./pages/PricingPro";
-import Pricing from "./pages/Pricing";
-import AdvancedAnalytics from "./components/AdvancedAnalytics";
-import ReferralSystem from "./components/ReferralSystem";
-import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
-import CheckoutFailure from "./pages/billing/CheckoutFailure";
+const Home = lazy(() => import("./pages/Home"));
+const Features = lazy(() => import("./pages/Features"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const PricingPro = lazy(() => import("./pages/PricingPro"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const AdvancedAnalytics = lazy(() => import("./components/AdvancedAnalytics"));
+const ReferralSystem = lazy(() => import("./components/ReferralSystem"));
+const CheckoutSuccess = lazy(() => import("./pages/billing/CheckoutSuccess"));
+const CheckoutFailure = lazy(() => import("./pages/billing/CheckoutFailure"));
 
 // App Pages
-import AppDashboard from "./pages/app/AppDashboard";
-import Markets from "./pages/app/Markets";
-import StockDetail from "./pages/app/StockDetail";
-import Stocks from "./pages/app/Stocks";
-import Portfolio from "./pages/app/Portfolio";
-import Watchlists from "./pages/app/Watchlists";
-import WatchlistDetail from "./pages/app/WatchlistDetail";
+const AppDashboard = lazy(() => import("./pages/app/AppDashboard"));
+const Markets = lazy(() => import("./pages/app/Markets"));
+const StockDetail = lazy(() => import("./pages/app/StockDetail"));
+const Stocks = lazy(() => import("./pages/app/Stocks"));
+const Portfolio = lazy(() => import("./pages/app/Portfolio"));
+const Watchlists = lazy(() => import("./pages/app/Watchlists"));
+const WatchlistDetail = lazy(() => import("./pages/app/WatchlistDetail"));
 
 // Screener Suite
-import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
-import CreateScreener from "./pages/app/screeners/CreateScreener";
-import EditScreener from "./pages/app/screeners/EditScreener";
-import ScreenerResults from "./pages/app/screeners/ScreenerResults";
-import Templates from "./pages/app/Templates";
+const ScreenerLibrary = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/ScreenerLibrary"));
+const CreateScreener = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/CreateScreener"));
+const EditScreener = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/EditScreener"));
+const ScreenerResults = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/ScreenerResults"));
+const Templates = lazy(() => import("./pages/app/Templates"));
 
 // Market Overview
-import MarketHeatmap from "./pages/app/MarketHeatmap";
-import SectorsIndustries from "./pages/app/SectorsIndustries";
-import TopMovers from "./pages/app/TopMovers";
-import PreAfterMarket from "./pages/app/PreAfterMarket";
-import EconomicCalendar from "./pages/app/EconomicCalendar";
+const MarketHeatmap = lazy(() => import("./pages/app/MarketHeatmap"));
+const SectorsIndustries = lazy(() => import("./pages/app/SectorsIndustries"));
+const TopMovers = lazy(() => import("./pages/app/TopMovers"));
+const PreAfterMarket = lazy(() => import("./pages/app/PreAfterMarket"));
+const EconomicCalendar = lazy(() => import("./pages/app/EconomicCalendar"));
 
 // News
-import NewsFeed from "./pages/app/NewsFeed";
-import NewsPreferences from "./pages/app/NewsPreferences";
-import NewsSubscribe from "./pages/app/NewsSubscribe";
+const NewsFeed = lazy(() => import("./pages/app/NewsFeed"));
+const NewsPreferences = lazy(() => import("./pages/app/NewsPreferences"));
+const NewsSubscribe = lazy(() => import("./pages/app/NewsSubscribe"));
 
 // Alerts & Signals
-import Alerts from "./pages/app/Alerts";
-import AlertHistory from "./pages/app/AlertHistory";
+const Alerts = lazy(() => import("./pages/app/Alerts"));
+const AlertHistory = lazy(() => import("./pages/app/AlertHistory"));
 
 // Account Pages
-import Profile from "./pages/account/Profile";
-import ChangePassword from "./pages/account/ChangePassword";
-import NotificationSettings from "./pages/account/NotificationSettings";
-import BillingHistory from "./pages/account/BillingHistory";
-import CurrentPlan from "./pages/account/CurrentPlan";
+const Profile = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/Profile"));
+const ChangePassword = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/ChangePassword"));
+const NotificationSettings = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/NotificationSettings"));
+const BillingHistory = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/BillingHistory"));
+const CurrentPlan = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/CurrentPlan"));
 
 // System Pages
-import EndpointStatus from "./pages/system/EndpointStatus";
+const EndpointStatus = lazy(() => import("./pages/system/EndpointStatus"));
 
 // Content & Docs
-import LegalTerms from "./pages/LegalTerms";
-import LegalPrivacy from "./pages/LegalPrivacy";
-import Documentation from "./pages/docs/DocumentationSimple";
-import EnterpriseContact from "./pages/EnterpriseContact";
+const LegalTerms = lazy(() => import("./pages/LegalTerms"));
+const LegalPrivacy = lazy(() => import("./pages/LegalPrivacy"));
+const Documentation = lazy(() => import("./pages/docs/DocumentationSimple"));
+const EnterpriseContact = lazy(() => import("./pages/EnterpriseContact"));
 
 // Error Boundary & Components
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
@@ -94,10 +95,13 @@ import { logClientError } from "./lib/security";
 
 // Placeholder component for missing pages
 const PlaceholderPage = ({ title }) => (
-  <div className="container mx-auto px-4 py-8">
-    <div className="text-center">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
-      <p className="text-gray-600">This page is under development.</p>
+  <div className="container mx-auto px-4 py-16">
+    <div className="max-w-2xl mx-auto text-center">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">{title}</h1>
+      <p className="text-gray-600 mb-6">We're putting the finishing touches on this section to make sure it meets our quality bar.</p>
+      <div className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-blue-600 text-white">
+        Back to Home
+      </div>
     </div>
   </div>
 );
@@ -156,6 +160,10 @@ function SecureApp() {
             <SystemErrorBoundary>
               <div className="min-h-screen bg-background">
                 <StatusBanner />
+                <Suspense fallback={<div className="p-8 text-center animate-pulse">
+                  <div className="mx-auto h-6 w-40 bg-gray-200 rounded mb-4" />
+                  <div className="mx-auto h-4 w-64 bg-gray-100 rounded" />
+                </div>}>
                 <Routes>
                   {/* Auth Routes */}
                   <Route element={<AuthLayout />}>
@@ -252,6 +260,7 @@ function SecureApp() {
                   {/* Default redirect */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                </Suspense>
                 
                 {/* Toast Notifications */}
                 <Toaster 

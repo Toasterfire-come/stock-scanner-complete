@@ -46,7 +46,8 @@ export default function SignIn() {
     const result = await login(formData.username, formData.password);
 
     if (result.success) {
-      // Redirect to intended page or dashboard
+      // Prefetch dashboard chunk for a snappier first render
+      try { import(/* webpackPrefetch: true */ "../app/AppDashboard"); } catch {}
       const redirectTo = searchParams.get("redirect") || "/app/dashboard";
       navigate(redirectTo);
     } else {

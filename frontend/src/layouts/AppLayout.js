@@ -70,6 +70,13 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Accessibility: Skip to main content */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:text-black focus:px-3 focus:py-2 focus:rounded focus:shadow"
+      >
+        Skip to main content
+      </a>
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
@@ -87,7 +94,9 @@ const AppLayout = () => {
                 <NavigationMenu>
                   <NavigationMenuList>
                     {navigation.map((item) => (
-                      <NavigationMenuItem key={item.name}>
+                      <NavigationMenuItem key={item.name}
+                        onMouseEnter={() => { try { import(/* webpackPrefetch: true */ `../pages/${item.name === 'Pricing' ? 'PricingPro' : item.name}`); } catch {} }}
+                      >
                         <Link
                           to={item.href}
                           className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
@@ -216,7 +225,7 @@ const AppLayout = () => {
       </header>
 
       {/* Main content */}
-      <main>
+      <main id="main-content">
         <Outlet />
       </main>
 

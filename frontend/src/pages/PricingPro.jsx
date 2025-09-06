@@ -6,7 +6,8 @@ import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import PayPalCheckout from "../components/PayPalCheckout";
+import { Suspense, lazy } from 'react';
+const PayPalCheckout = lazy(() => import("../components/PayPalCheckout"));
 import {
   CheckCircle,
   X,
@@ -35,7 +36,7 @@ const PricingPro = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
 
   // Check if coming from signup flow
   const fromSignup = location.state?.fromSignup;
@@ -177,6 +178,8 @@ const PricingPro = () => {
           plan_type: selectedPlan.name.toLowerCase(),
           billing_cycle: selectedPlan.billingCycle
         });
+        // Update local auth state to reflect new plan
+        updateUser({ plan: selectedPlan.name.toLowerCase() });
       }
 
       toast.success("Payment successful! Welcome to Trade Scan Pro!", {
@@ -189,9 +192,9 @@ const PricingPro = () => {
       navigate("/checkout/success", {
         state: {
           planId: selectedPlan.name.toLowerCase(),
-          amount: paymentData.amount,
+          amount: paymentData.finalAmount || paymentData.amount,
           originalAmount: paymentData.originalAmount,
-          discount: paymentData.discount
+          discount: paymentData.discountApplied
         }
       });
     } catch (error) {
@@ -363,13 +366,15 @@ const PricingPro = () => {
                         </DialogHeader>
                         
                         {selectedPlan && (
-                          <PayPalCheckout
-                            planType={selectedPlan.name.toLowerCase()}
-                            billingCycle={selectedPlan.billingCycle}
-                            onSuccess={handlePaymentSuccess}
-                            onError={handlePaymentError}
-                            onCancel={() => setShowCheckout(false)}
-                          />
+                          <Suspense fallback={<div className="py-6 text-center">Loading checkout…</div>}>
+                            <PayPalCheckout
+                              planType={selectedPlan.name.toLowerCase()}
+                              billingCycle={selectedPlan.billingCycle}
+                              onSuccess={handlePaymentSuccess}
+                              onError={handlePaymentError}
+                              onCancel={() => setShowCheckout(false)}
+                            />
+                          </Suspense>
                         )}
                       </DialogContent>
                     </Dialog>
