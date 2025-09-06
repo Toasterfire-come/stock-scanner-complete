@@ -302,6 +302,7 @@ class PlatformStats(BaseModel):
 
 async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent: str = None, plan: str = "free"):
     """Log API usage to database"""
+    global db_disabled
     usage = ApiUsage(
         user_id=user_id,
         endpoint=endpoint,
@@ -314,7 +315,6 @@ async def log_api_usage(user_id: str, endpoint: str, ip_address: str, user_agent
             await db.api_usage.insert_one(usage.dict())
         except Exception as e:
             logging.warning(f"DB insert failed, switching to in-memory logging: {e}")
-            global db_disabled
             db_disabled = True
             usage_memory[user_id].append(datetime.utcnow())
     else:
