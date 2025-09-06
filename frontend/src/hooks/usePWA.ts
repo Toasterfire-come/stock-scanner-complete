@@ -9,351 +9,229 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-interface PWAInstallState {
+export interface PWAInstallState {
   isInstallable: boolean;
   isInstalled: boolean;
   isStandalone: boolean;
-  installPrompt: BeforeInstallPromptEvent | null;
   isOnline: boolean;
-  updateAvailable: boolean;
+  platform: string | null;
+  installPrompt: BeforeInstallPromptEvent | null;
 }
 
-export const usePWA = () => {
-  const [state, setState] = useState<PWAInstallState>({
-    isInstallable: false,
-    isInstalled: false,
-    isStandalone: false,
-    installPrompt: null,
-    isOnline: navigator.onLine,
-    updateAvailable: false,
-  });
+export interface PWAActions {
+  install: () => Promise<boolean>;
+  dismissInstall: () => void;
+  checkForUpdates: () => Promise<boolean>;
+  requestPersistentStorage: () => Promise<boolean>;
+}
 
-  // Check if app is running in standalone mode
-  useEffect(() => {
-    const checkStandaloneMode = () => {
-      const isStandalone = 
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true ||
-        document.referrer.includes('android-app://');
-      
-      setState(prev => ({ ...prev, isStandalone }));
-    };
+export const usePWA = (): [PWAInstallState, PWAActions] => {
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [hasUpdate, setHasUpdate] = useState(false);
 
-    checkStandaloneMode();
-    
-    // Listen for display mode changes
-    window.matchMedia('(display-mode: standalone)').addEventListener('change', checkStandaloneMode);
-    
-    return () => {
-      window.matchMedia('(display-mode: standalone)').removeEventListener('change', checkStandaloneMode);
-    };
+  // Detect platform
+  const getPlatform = useCallback((): string | null => {
+    if (window.navigator.userAgent.includes('iPhone') || window.navigator.userAgent.includes('iPad')) {
+      return 'ios';
+    }
+    if (window.navigator.userAgent.includes('Android')) {
+      return 'android';
+    }
+    if (window.navigator.userAgent.includes('Windows')) {
+      return 'windows';
+    }
+    if (window.navigator.userAgent.includes('Mac')) {
+      return 'macos';
+    }
+    return 'unknown';
   }, []);
 
-  // Handle beforeinstallprompt event
+  // Check if app is in standalone mode
+  const isStandalone = useCallback((): boolean => {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://')
+    );
+  }, []);
+
+  // Install PWA
+  const install = useCallback(async (): Promise<boolean> => {
+    if (!installPrompt) {
+      console.warn('PWA: Install prompt not available');
+      return false;
+    }
+
+    try {
+      // Show the install prompt
+      await installPrompt.prompt();
+      
+      // Wait for user choice
+      const choiceResult = await installPrompt.userChoice;
+      
+      if (choiceResult.outcome === 'accepted') {
+        console.log('PWA: User accepted install prompt');
+        setIsInstalled(true);
+        setIsInstallable(false);
+        setInstallPrompt(null);
+        
+        // Store install date
+        localStorage.setItem('pwa-installed-date', new Date().toISOString());
+        
+        return true;
+      } else {
+        console.log('PWA: User dismissed install prompt');
+        // Don't show install prompt again for a while
+        localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+        setIsInstallable(false);
+        setInstallPrompt(null);
+        return false;
+      }
+    } catch (error) {
+      console.error('PWA: Error during installation:', error);
+      return false;
+    }
+  }, [installPrompt]);
+
+  // Dismiss install prompt
+  const dismissInstall = useCallback(() => {
+    setIsInstallable(false);
+    setInstallPrompt(null);
+    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+  }, []);
+
+  // Check for service worker updates
+  const checkForUpdates = useCallback(async (): Promise<boolean> => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+          
+          // Check if there's a waiting service worker
+          if (registration.waiting) {
+            setHasUpdate(true);
+            return true;
+          }
+        }
+      } catch (error) {
+        console.error('PWA: Error checking for updates:', error);
+      }
+    }
+    return false;
+  }, []);
+
+  // Request persistent storage
+  const requestPersistentStorage = useCallback(async (): Promise<boolean> => {
+    if ('storage' in navigator && 'persist' in navigator.storage) {
+      try {
+        const persistent = await navigator.storage.persist();
+        console.log(`PWA: Persistent storage ${persistent ? 'granted' : 'denied'}`);
+        return persistent;
+      } catch (error) {
+        console.error('PWA: Error requesting persistent storage:', error);
+      }
+    }
+    return false;
+  }, []);
+
+  // Setup event listeners
   useEffect(() => {
+    // Before install prompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      const installEvent = e as BeforeInstallPromptEvent;
+      const promptEvent = e as BeforeInstallPromptEvent;
       
-      setState(prev => ({
-        ...prev,
-        isInstallable: true,
-        installPrompt: installEvent,
-      }));
+      // Check if install was recently dismissed
+      const dismissedTime = localStorage.getItem('pwa-install-dismissed');
+      if (dismissedTime) {
+        const timeSinceDismissed = Date.now() - parseInt(dismissedTime, 10);
+        // Don't show again for 7 days
+        if (timeSinceDismissed < 7 * 24 * 60 * 60 * 1000) {
+          return;
+        }
+      }
+      
+      setInstallPrompt(promptEvent);
+      setIsInstallable(true);
+      console.log('PWA: Install prompt available');
     };
 
+    // App installed event
     const handleAppInstalled = () => {
-      setState(prev => ({
-        ...prev,
-        isInstalled: true,
-        isInstallable: false,
-        installPrompt: null,
-      }));
+      console.log('PWA: App installed successfully');
+      setIsInstalled(true);
+      setIsInstallable(false);
+      setInstallPrompt(null);
+      localStorage.setItem('pwa-installed-date', new Date().toISOString());
     };
 
+    // Online/offline events
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    // Service worker update events
+    const handleServiceWorkerUpdate = () => {
+      console.log('PWA: Service worker updated');
+      setHasUpdate(true);
+    };
+
+    // Add event listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Service worker events
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', handleServiceWorkerUpdate);
+    }
+
+    // Check if already installed
+    setIsInstalled(isStandalone());
+
+    // Request persistent storage on first load
+    requestPersistentStorage();
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  // Handle online/offline status
-  useEffect(() => {
-    const handleOnline = () => setState(prev => ({ ...prev, isOnline: true }));
-    const handleOffline = () => setState(prev => ({ ...prev, isOnline: false }));
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Handle service worker updates
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      const handleControllerChange = () => {
-        setState(prev => ({ ...prev, updateAvailable: true }));
-      };
-
-      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
       
-      return () => {
-        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-      };
-    }
-  }, []);
-
-  // Install the PWA
-  const installPWA = useCallback(async () => {
-    if (!state.installPrompt) {
-      throw new Error('Install prompt not available');
-    }
-
-    try {
-      await state.installPrompt.prompt();
-      const choice = await state.installPrompt.userChoice;
-      
-      if (choice.outcome === 'accepted') {
-        setState(prev => ({
-          ...prev,
-          isInstalled: true,
-          isInstallable: false,
-          installPrompt: null,
-        }));
-        return true;
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleServiceWorkerUpdate);
       }
-      return false;
-    } catch (error) {
-      console.error('PWA install failed:', error);
-      throw error;
-    }
-  }, [state.installPrompt]);
-
-  // Update the app
-  const updateApp = useCallback(async () => {
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.getRegistration();
-      if (registration?.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      }
-    }
-  }, []);
-
-  // Share API
-  const shareContent = useCallback(async (data: {
-    title?: string;
-    text?: string;
-    url?: string;
-  }) => {
-    if (navigator.share) {
-      try {
-        await navigator.share(data);
-        return true;
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Share failed:', error);
-        }
-        return false;
-      }
-    }
-    
-    // Fallback to clipboard
-    if (navigator.clipboard && data.url) {
-      try {
-        await navigator.clipboard.writeText(data.url);
-        return true;
-      } catch (error) {
-        console.error('Clipboard write failed:', error);
-        return false;
-      }
-    }
-    
-    return false;
-  }, []);
-
-  // Check if device supports PWA features
-  const getPWACapabilities = useCallback(() => {
-    return {
-      canInstall: 'beforeinstallprompt' in window,
-      hasServiceWorker: 'serviceWorker' in navigator,
-      hasNotifications: 'Notification' in window,
-      hasShare: 'share' in navigator,
-      hasClipboard: 'clipboard' in navigator,
-      hasGeolocation: 'geolocation' in navigator,
-      hasCamera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
-      hasVibration: 'vibrate' in navigator,
-      hasBatteryAPI: 'getBattery' in navigator,
-      hasNetworkInformation: 'connection' in navigator,
     };
-  }, []);
+  }, [isStandalone, requestPersistentStorage]);
 
-  return {
-    ...state,
-    installPWA,
-    updateApp,
-    shareContent,
-    getPWACapabilities,
-    canInstall: state.isInstallable && !state.isInstalled && !state.isStandalone,
-  };
-};
-
-// Hook for PWA installation banner
-export const useInstallBanner = (options: {
-  minVisits?: number;
-  delayAfterVisit?: number;
-  daysToHide?: number;
-} = {}) => {
-  const { minVisits = 3, delayAfterVisit = 2000, daysToHide = 7 } = options;
-  const { canInstall, installPWA } = usePWA();
-  const [showBanner, setShowBanner] = useState(false);
-
+  // Periodic update checks
   useEffect(() => {
-    if (!canInstall) return;
+    const interval = setInterval(() => {
+      checkForUpdates();
+    }, 10 * 60 * 1000); // Check every 10 minutes
 
-    const visits = parseInt(localStorage.getItem('pwa_visits') || '0') + 1;
-    const lastHidden = localStorage.getItem('pwa_banner_hidden');
-    const hideUntil = lastHidden ? new Date(lastHidden) : null;
-    
-    localStorage.setItem('pwa_visits', visits.toString());
+    return () => clearInterval(interval);
+  }, [checkForUpdates]);
 
-    // Check if banner should be shown
-    const shouldShow = visits >= minVisits && 
-                      (!hideUntil || hideUntil < new Date());
-
-    if (shouldShow) {
-      const timer = setTimeout(() => {
-        setShowBanner(true);
-      }, delayAfterVisit);
-
-      return () => clearTimeout(timer);
-    }
-  }, [canInstall, minVisits, delayAfterVisit]);
-
-  const hideBanner = useCallback(() => {
-    setShowBanner(false);
-    const hideUntil = new Date();
-    hideUntil.setDate(hideUntil.getDate() + daysToHide);
-    localStorage.setItem('pwa_banner_hidden', hideUntil.toISOString());
-  }, [daysToHide]);
-
-  const handleInstall = useCallback(async () => {
-    try {
-      await installPWA();
-      setShowBanner(false);
-    } catch (error) {
-      console.error('Installation failed:', error);
-    }
-  }, [installPWA]);
-
-  return {
-    showBanner: showBanner && canInstall,
-    hideBanner,
-    handleInstall,
-  };
-};
-
-// Hook for network status
-export const useNetworkStatus = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [networkInfo, setNetworkInfo] = useState<{
-    effectiveType?: string;
-    downlink?: number;
-    rtt?: number;
-    saveData?: boolean;
-  }>({});
-
-  useEffect(() => {
-    const updateOnlineStatus = () => setIsOnline(navigator.onLine);
-    
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-
-    // Network Information API (experimental)
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection;
-
-    if (connection) {
-      const updateNetworkInfo = () => {
-        setNetworkInfo({
-          effectiveType: connection.effectiveType,
-          downlink: connection.downlink,
-          rtt: connection.rtt,
-          saveData: connection.saveData,
-        });
-      };
-
-      updateNetworkInfo();
-      connection.addEventListener('change', updateNetworkInfo);
-
-      return () => {
-        window.removeEventListener('online', updateOnlineStatus);
-        window.removeEventListener('offline', updateOnlineStatus);
-        connection.removeEventListener('change', updateNetworkInfo);
-      };
-    }
-
-    return () => {
-      window.removeEventListener('online', updateOnlineStatus);
-      window.removeEventListener('offline', updateOnlineStatus);
-    };
-  }, []);
-
-  return {
+  const state: PWAInstallState = {
+    isInstallable,
+    isInstalled,
+    isStandalone: isStandalone(),
     isOnline,
-    ...networkInfo,
-    isSlowConnection: networkInfo.effectiveType === '2g' || networkInfo.effectiveType === 'slow-2g',
-    isSaveDataEnabled: networkInfo.saveData,
+    platform: getPlatform(),
+    installPrompt,
   };
-};
 
-// Hook for app notifications
-export const useNotifications = () => {
-  const [permission, setPermission] = useState<NotificationPermission>(
-    'Notification' in window ? Notification.permission : 'denied'
-  );
-
-  const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
-      throw new Error('Notifications not supported');
-    }
-
-    const result = await Notification.requestPermission();
-    setPermission(result);
-    return result;
-  }, []);
-
-  const showNotification = useCallback(async (
-    title: string,
-    options?: NotificationOptions
-  ) => {
-    if (permission !== 'granted') {
-      const newPermission = await requestPermission();
-      if (newPermission !== 'granted') {
-        throw new Error('Notification permission denied');
-      }
-    }
-
-    const notification = new Notification(title, {
-      icon: '/logo192.png',
-      badge: '/logo192.png',
-      ...options,
-    });
-
-    return notification;
-  }, [permission, requestPermission]);
-
-  return {
-    permission,
-    requestPermission,
-    showNotification,
-    isSupported: 'Notification' in window,
+  const actions: PWAActions = {
+    install,
+    dismissInstall,
+    checkForUpdates,
+    requestPersistentStorage,
   };
+
+  return [state, actions];
 };
