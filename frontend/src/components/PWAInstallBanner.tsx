@@ -21,6 +21,8 @@ const PWAInstallBanner: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
+    
+    return;
   }, [pwaState.isInstallable, pwaState.isInstalled]);
 
   const handleInstall = async () => {
