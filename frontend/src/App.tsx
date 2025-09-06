@@ -18,6 +18,13 @@ const Login = React.lazy(() => import('./components/Login'));
 const Register = React.lazy(() => import('./components/Register'));
 const Header = React.lazy(() => import('./components/Header'));
 
+// Public page components
+const HomePage = React.lazy(() => import('./components/HomePage'));
+const PublicStockList = React.lazy(() => import('./components/PublicStockList'));
+const TrendingStocks = React.lazy(() => import('./components/TrendingStocks'));
+const MarketStats = React.lazy(() => import('./components/MarketStats'));
+const AboutPage = React.lazy(() => import('./components/AboutPage'));
+
 // Enhanced loading component with multiple states
 interface LoadingSpinnerProps {
   message?: string;
