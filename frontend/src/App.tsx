@@ -378,17 +378,61 @@ const App: React.FC = () => {
             <AppLayout>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                  {/* Public routes */}
+                  {/* Public routes - accessible without authentication */}
                   <Route 
-                    path="/auth" 
+                    path="/" 
                     element={
                       <PublicRoute>
-                        <AuthPage />
+                        <HomePage />
                       </PublicRoute>
                     } 
                   />
                   
-                  {/* Protected routes */}
+                  <Route 
+                    path="/stocks" 
+                    element={
+                      <PublicRoute>
+                        <PublicStockList />
+                      </PublicRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/trending" 
+                    element={
+                      <PublicRoute>
+                        <TrendingStocks />
+                      </PublicRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/market-stats" 
+                    element={
+                      <PublicRoute>
+                        <MarketStats />
+                      </PublicRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/about" 
+                    element={
+                      <PublicRoute>
+                        <AboutPage />
+                      </PublicRoute>
+                    } 
+                  />
+                  
+                  {/* Authentication route */}
+                  <Route 
+                    path="/auth" 
+                    element={
+                      <AuthPage />
+                    } 
+                  />
+                  
+                  {/* Protected routes - require authentication */}
                   <Route 
                     path="/dashboard" 
                     element={
@@ -400,16 +444,10 @@ const App: React.FC = () => {
                     } 
                   />
                   
-                  {/* Default redirects */}
-                  <Route 
-                    path="/" 
-                    element={<Navigate to="/dashboard" replace />} 
-                  />
-                  
-                  {/* Catch all - redirect to dashboard */}
+                  {/* Catch all - redirect to home instead of dashboard */}
                   <Route 
                     path="*" 
-                    element={<Navigate to="/dashboard" replace />} 
+                    element={<Navigate to="/" replace />} 
                   />
                 </Routes>
               </Suspense>
