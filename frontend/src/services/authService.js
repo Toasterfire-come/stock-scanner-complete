@@ -106,7 +106,7 @@ class AuthService {
         return token;
     }
 
-    // Enhanced authentication headers
+    // Enhanced authentication headers (simplified for Django)
     async getAuthHeaders() {
         try {
             const token = await this.getValidToken();
