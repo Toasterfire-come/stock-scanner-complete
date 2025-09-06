@@ -26,7 +26,7 @@ import {
   Mail
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/SecureAuthContext";
 import { changePlan } from "../api/client";
 
 const PricingPro = () => {
