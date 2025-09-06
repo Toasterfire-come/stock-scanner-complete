@@ -3,7 +3,11 @@ import { getCache, setCache } from "../lib/cache";
 import security, { apiRateLimiter, requestQueue, sessionManager, secureStorage, validateSecurityHeaders, sanitizeError } from "../lib/security";
 
 // Environment configuration
-const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
+// Prefer external API by default in production if env not set
+const BASE_URL = (
+  process.env.REACT_APP_BACKEND_URL ||
+  (process.env.NODE_ENV === 'production' ? 'https://api.retailtradescanner.com' : '')
+).trim();
 const isProd = process.env.NODE_ENV === 'production';
 
 if (!BASE_URL) {

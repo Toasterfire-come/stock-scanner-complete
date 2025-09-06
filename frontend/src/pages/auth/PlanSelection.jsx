@@ -85,15 +85,15 @@ export default function PlanSelection() {
     setIsLoading(true);
     
     try {
-      // Update user plan
-      updateUser({ plan: planId });
-      
-      // If bronze plan (trial), redirect to billing
-      if (planId === "bronze") {
-        navigate("/billing/trial-setup");
-      } else {
-        navigate("/app/dashboard");
+      if (planId === "free") {
+        // Keep user on free plan and go to app
+        updateUser({ plan: 'free' });
+        navigate('/app/dashboard', { replace: true });
+        return;
       }
+
+      // For paid plans, send to pricing page to choose cycle and checkout
+      navigate('/pricing', { state: { fromSignup: true, selectedPlan: planId } });
     } catch (error) {
       console.error("Plan selection error:", error);
     } finally {

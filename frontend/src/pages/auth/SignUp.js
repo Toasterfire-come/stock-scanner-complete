@@ -52,7 +52,8 @@ export default function SignUp() {
     });
     
     if (result.success) {
-      navigate('/app/dashboard');
+      // After signup, send users to plan selection to pick Free or Paid
+      navigate('/auth/plan-selection', { replace: true, state: { fromSignup: true, email: formData.email } });
     } else {
       setError(result.error || 'Registration failed');
     }
