@@ -723,6 +723,7 @@ async def get_stock_quote(symbol: str, request: Request, response: Response):
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
+    global db_disabled
     status_dict = input.dict()
     status_obj = StatusCheck(**status_dict)
     if db is not None and not db_disabled:
@@ -730,7 +731,6 @@ async def create_status_check(input: StatusCheckCreate):
             _ = await db.status_checks.insert_one(status_obj.dict())
         except Exception as e:
             logging.warning(f"DB status insert failed, using in-memory: {e}")
-            global db_disabled
             db_disabled = True
             usage_memory["status_checks"].append(status_obj.dict())
     else:
