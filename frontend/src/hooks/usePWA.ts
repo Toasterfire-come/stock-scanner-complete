@@ -112,7 +112,6 @@ export const usePWA = (): [PWAInstallState, PWAActions] => {
           
           // Check if there's a waiting service worker
           if (registration.waiting) {
-            setHasUpdate(true);
             return true;
           }
         }
