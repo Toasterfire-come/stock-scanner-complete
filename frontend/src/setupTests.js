@@ -1,34 +1,36 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
+// Jest setup file
+import '@testing-library/jest-dom';
+import { configure } from '@testing-library/react';
+import { server } from './mocks/server';
+
+// Extend Jest matchers with @testing-library/jest-dom
 import '@testing-library/jest-dom';
 
-// Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
-};
+// Configure testing library
+configure({ testIdAttribute: 'data-testid' });
 
-// Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
-};
+// Mock implementations
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
 
-// Mock matchMedia
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // Deprecated
-    removeListener: jest.fn(), // Deprecated
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
@@ -54,117 +56,28 @@ const sessionStorageMock = {
 global.sessionStorage = sessionStorageMock;
 
 // Mock fetch
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve({}),
-  })
-);
+global.fetch = jest.fn();
 
-// Mock navigator
-Object.defineProperty(navigator, 'onLine', {
-  writable: true,
-  value: true,
-});
-
-Object.defineProperty(navigator, 'share', {
-  writable: true,
-  value: jest.fn(() => Promise.resolve()),
-});
-
-Object.defineProperty(navigator, 'clipboard', {
-  writable: true,
-  value: {
-    writeText: jest.fn(() => Promise.resolve()),
-    readText: jest.fn(() => Promise.resolve('')),
-  },
-});
-
-// Mock Notification
-global.Notification = class Notification {
-  constructor(title, options) {
-    this.title = title;
-    this.options = options;
-  }
-  static permission = 'default';
-  static requestPermission = jest.fn(() => Promise.resolve('granted'));
+// Mock window.location
+delete window.location;
+window.location = {
+  href: '',
+  pathname: '/',
+  search: '',
+  hash: '',
+  assign: jest.fn(),
+  replace: jest.fn(),
+  reload: jest.fn(),
 };
 
-// Mock serviceWorker
-Object.defineProperty(navigator, 'serviceWorker', {
-  writable: true,
-  value: {
-    register: jest.fn(() => Promise.resolve({
-      installing: null,
-      waiting: null,
-      active: null,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    })),
-    getRegistration: jest.fn(() => Promise.resolve(null)),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-  },
-});
+// Start MSW server for API mocking
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
-// Suppress console warnings during tests
-const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args) => {
-    if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOM.render is no longer supported')
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
+// Clean up after each test
+afterEach(() => {
+  jest.clearAllMocks();
+  localStorageMock.clear.mockClear();
+  sessionStorageMock.clear.mockClear();
 });
-
-afterAll(() => {
-  console.error = originalError;
-});
-
-// Global test utilities
-global.testUtils = {
-  createMockUser: () => ({
-    user_id: 1,
-    username: 'testuser',
-    email: 'test@example.com',
-    first_name: 'Test',
-    last_name: 'User',
-    plan: 'free',
-    api_token: 'mock-token',
-    is_premium: false,
-    limits: { monthly: 15, daily: 15 },
-    usage: { monthly_calls: 0, daily_calls: 0 },
-    subscription: { active: false, end_date: null, trial_used: false },
-  }),
-  
-  createMockStock: () => ({
-    ticker: 'AAPL',
-    symbol: 'AAPL',
-    company_name: 'Apple Inc.',
-    name: 'Apple Inc.',
-    exchange: 'NASDAQ',
-    current_price: 150.00,
-    price_change_today: 2.50,
-    change_percent: 1.69,
-    volume: 1000000,
-    volume_today: 1000000,
-    formatted_price: '$150.00',
-    formatted_change: '+$2.50 (1.69%)',
-    formatted_volume: '1.0M',
-    last_updated: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    is_gaining: true,
-    is_losing: false,
-  }),
-  
-  mockApiResponse: (data, success = true) => ({
-    success,
-    data,
-    timestamp: new Date().toISOString(),
-  }),
-};
