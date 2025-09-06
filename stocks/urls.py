@@ -3,6 +3,8 @@ from . import views, api_views, views_health
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
+from . import logs_api
+from django.http import JsonResponse
 
 urlpatterns = [
     # Health check endpoints (must be first for monitoring)
@@ -26,8 +28,11 @@ urlpatterns = [
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
     path('trending/', api_views.trending_stocks_api, name='trending_stocks'),
     path('market-stats/', api_views.market_stats_api, name='market_stats'),
+    # Aliases for platform/frontend compatibility
+    path('platform-stats/', api_views.market_stats_api, name='platform_stats_alias'),
     # path('nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks'),  # Removed: only NYSE in DB
     path('stocks/', api_views.stock_list_api, name='stock_list'),
+    path('stocks/<str:symbol>/quote/', api_views.stock_detail_api, name='stock_quote'),
     path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
     path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
     
@@ -35,6 +40,8 @@ urlpatterns = [
     path('wordpress/stocks/', WordPressStockView.as_view(), name='wp_stocks'),
     path('wordpress/news/', WordPressNewsView.as_view(), name='wp_news'),
     path('wordpress/alerts/', WordPressAlertsView.as_view(), name='wp_alerts'),
+    # Simple API (no DB)
+    path('simple/stocks/', SimpleStockView.as_view(), name='simple_stocks'),
     
     # Hosted WP workflow triggers
     path('stocks/update/', trigger_stock_update, name='stocks_update_trigger'),
@@ -58,4 +65,9 @@ urlpatterns = [
     
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
+
+    # Logging & monitoring endpoints
+    path('logs/client/', logs_api.client_logs_api, name='client_logs'),
+    path('logs/metrics/', logs_api.metrics_logs_api, name='metrics_logs'),
+    path('logs/security/', logs_api.security_logs_api, name='security_logs'),
 ]

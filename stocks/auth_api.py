@@ -24,6 +24,86 @@ from .security_utils import secure_api_endpoint, validate_user_input
 
 logger = logging.getLogger(__name__)
 
+# Registration endpoint
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_api(request):
+    """
+    User registration endpoint
+    POST /api/auth/register
+    """
+    try:
+        data = json.loads(request.body) if request.body else {}
+
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip()
+        password = (data.get('password') or '').strip()
+        first_name = (data.get('first_name') or '').strip()
+        last_name = (data.get('last_name') or '').strip()
+
+        if not username or not email or not password:
+            return JsonResponse({
+                'success': False,
+                'error': 'Username, email, and password are required',
+                'error_code': 'MISSING_FIELDS'
+            }, status=400)
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid email format',
+                'error_code': 'INVALID_EMAIL'
+            }, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'Username already taken',
+                'error_code': 'USERNAME_TAKEN'
+            }, status=409)
+
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'An account with this email already exists',
+                'error_code': 'EMAIL_TAKEN'
+            }, status=409)
+
+        user = User.objects.create_user(username=username, email=email, password=password,
+                                        first_name=first_name, last_name=last_name)
+        # Create profile
+        profile = UserProfile.objects.create(user=user)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Registration successful',
+            'data': {
+                'user_id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_premium': getattr(profile, 'is_premium', False)
+            }
+        }, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON format',
+            'error_code': 'INVALID_JSON'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Register error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Registration failed',
+            'error_code': 'REGISTER_ERROR'
+        }, status=500)
+
 # Authentication endpoints
 @csrf_exempt
 @api_view(['POST'])

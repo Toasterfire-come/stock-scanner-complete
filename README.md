@@ -124,6 +124,26 @@ Key production features:
 - Automated backup strategy
 - Monitoring and logging
 
+Environment variables for production hardening:
+
+- `DJANGO_SETTINGS_MODULE=stockscanner_django.settings_production`
+- `SECRET_KEY=your-strong-secret`
+- `PRIMARY_DOMAIN=api.retailtradescanner.com`
+- `PRIMARY_ORIGIN=https://api.retailtradescanner.com`
+- `FRONTEND_URL=https://your-frontend.example`
+- `WORDPRESS_URL=https://your-wordpress.example`
+- `THROTTLE_RATE_ANON=200/hour`
+- `THROTTLE_RATE_USER=2000/hour`
+- `LOG_LEVEL=INFO`
+
+Run with Gunicorn:
+
+```bash
+pip install gunicorn
+DJANGO_SETTINGS_MODULE=stockscanner_django.settings_production \
+gunicorn stockscanner_django.wsgi:application --bind 0.0.0.0:8000 --workers 3
+```
+
 ## Documentation
 
 - **[API Endpoints & Commands](API_ENDPOINTS_AND_COMMANDS.md)** - Complete API reference

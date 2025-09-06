@@ -22,6 +22,93 @@ from .security_utils import secure_api_endpoint
 
 logger = logging.getLogger(__name__)
 
+# PayPal order creation (stubbed)
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_paypal_order_api(request):
+    """
+    Create a PayPal order (stub integration)
+    POST /api/billing/create-paypal-order
+    """
+    try:
+        data = json.loads(request.body) if request.body else {}
+        amount = float(data.get('amount', 0))
+        currency = (data.get('currency') or 'USD').upper()
+        if amount <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid amount',
+                'error_code': 'INVALID_AMOUNT'
+            }, status=400)
+
+        # Generate a fake order id
+        from uuid import uuid4
+        order_id = f"TEST-{uuid4().hex[:12].upper()}"
+
+        approval_url = f"https://www.paypal.com/checkoutnow?token={order_id}"
+        return JsonResponse({
+            'success': True,
+            'order_id': order_id,
+            'approval_url': approval_url,
+            'amount': amount,
+            'currency': currency
+        }, status=201)
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON format',
+            'error_code': 'INVALID_JSON'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Create PayPal order error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to create PayPal order',
+            'error_code': 'PAYPAL_CREATE_ERROR'
+        }, status=500)
+
+
+# PayPal capture (stubbed)
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def capture_paypal_order_api(request):
+    """
+    Capture a PayPal order (stub integration)
+    POST /api/billing/capture-paypal-order
+    """
+    try:
+        data = json.loads(request.body) if request.body else {}
+        order_id = (data.get('order_id') or '').strip()
+        if not order_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'order_id is required',
+                'error_code': 'MISSING_ORDER_ID'
+            }, status=400)
+
+        # Fake capture result
+        return JsonResponse({
+            'success': True,
+            'message': 'Payment captured successfully',
+            'order_id': order_id,
+            'status': 'COMPLETED'
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON format',
+            'error_code': 'INVALID_JSON'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Capture PayPal order error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to capture PayPal order',
+            'error_code': 'PAYPAL_CAPTURE_ERROR'
+        }, status=500)
+
 # Billing endpoints
 @csrf_exempt
 @api_view(['POST'])
@@ -487,4 +574,129 @@ def usage_stats_api(request):
             'success': False,
             'error': 'Failed to retrieve usage statistics',
             'error_code': 'USAGE_STATS_ERROR'
+        }, status=500)
+
+
+# Additional usage endpoints to satisfy frontend expectations
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def usage_summary_api(request):
+    """
+    Frontend-friendly usage summary
+    GET /api/usage/
+    """
+    try:
+        user = request.user
+        from django.utils import timezone
+        today = timezone.now().date()
+        month_start = timezone.now().replace(day=1).date()
+
+        daily = UsageStats.objects.filter(user=user, date=today).first()
+        monthly = UsageStats.objects.filter(user=user, date__gte=month_start)
+        total_api_calls = monthly.aggregate(total=Sum('api_calls'))['total'] or 0
+        total_requests = monthly.aggregate(total=Sum('requests'))['total'] or 0
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'daily': {
+                    'api_calls': getattr(daily, 'api_calls', 0),
+                    'requests': getattr(daily, 'requests', 0),
+                    'date': today.isoformat()
+                },
+                'monthly': {
+                    'api_calls': total_api_calls,
+                    'requests': total_requests,
+                    'limit': getattr(profile, 'api_calls_limit', 100),
+                    'remaining': max(0, getattr(profile, 'api_calls_limit', 100) - total_api_calls)
+                }
+            }
+        })
+    except Exception as e:
+        logger.error(f"Usage summary error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to retrieve usage summary',
+            'error_code': 'USAGE_SUMMARY_ERROR'
+        }, status=500)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def usage_history_api(request):
+    """
+    Usage history with simple pagination
+    GET /api/usage/history
+    """
+    try:
+        user = request.user
+        limit = int(request.GET.get('limit', 30))
+        items = UsageStats.objects.filter(user=user).order_by('-date')[:limit]
+        history = [
+            {
+                'date': item.date.isoformat(),
+                'api_calls': item.api_calls,
+                'requests': item.requests
+            } for item in items
+        ]
+        return JsonResponse({'success': True, 'data': history})
+    except Exception as e:
+        logger.error(f"Usage history error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to retrieve usage history',
+            'error_code': 'USAGE_HISTORY_ERROR'
+        }, status=500)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def usage_track_api(request):
+    """
+    Track a single API usage event
+    POST /api/usage/track/
+    """
+    try:
+        data = json.loads(request.body) if request.body else {}
+        endpoint = (data.get('endpoint') or '').strip()
+        method = (data.get('method') or 'GET').upper()
+
+        from django.utils import timezone
+        today = timezone.now().date()
+
+        stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
+        stats.api_calls = (stats.api_calls or 0) + 1
+        stats.requests = (stats.requests or 0) + 1
+        stats.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Usage recorded',
+            'data': {
+                'endpoint': endpoint,
+                'method': method,
+                'date': today.isoformat(),
+                'daily': {
+                    'api_calls': stats.api_calls,
+                    'requests': stats.requests
+                }
+            }
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON format',
+            'error_code': 'INVALID_JSON'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Usage track error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to track usage',
+            'error_code': 'USAGE_TRACK_ERROR'
         }, status=500)

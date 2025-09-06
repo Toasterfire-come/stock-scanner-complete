@@ -10,6 +10,7 @@ app_name = 'auth'
 urlpatterns = [
     # Authentication endpoints
     path('auth/login/', auth_api.login_api, name='login'),
+    path('auth/register/', auth_api.register_api, name='register'),
     path('auth/logout/', auth_api.logout_api, name='logout'),
     
     # User profile endpoints
@@ -25,6 +26,8 @@ urlpatterns = [
     path('billing/change-plan/', billing_api.change_plan_api, name='change_plan'),
     path('billing/stats/', billing_api.billing_stats_api, name='billing_stats'),
     path('billing/update-payment-method/', billing_api.update_payment_method_api, name='update_payment_method'),
+    path('billing/create-paypal-order/', billing_api.create_paypal_order_api, name='create_paypal_order'),
+    path('billing/capture-paypal-order/', billing_api.capture_paypal_order_api, name='capture_paypal_order'),
     
     # Notification endpoints
     path('user/notification-settings/', billing_api.notification_settings_api, name='user_notification_settings'),
@@ -34,6 +37,9 @@ urlpatterns = [
     
     # Usage statistics
     path('usage-stats/', billing_api.usage_stats_api, name='usage_stats'),
+    path('usage/', billing_api.usage_summary_api, name='usage_summary'),
+    path('usage/history/', billing_api.usage_history_api, name='usage_history'),
+    path('usage/track/', billing_api.usage_track_api, name='usage_track'),
     
     # Market data
     path('market-data/', auth_api.market_data_api, name='market_data'),
