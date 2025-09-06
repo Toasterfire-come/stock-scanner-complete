@@ -100,8 +100,6 @@ export const ConnectionSpeed: React.FC = () => {
         connection?.removeEventListener('change', checkConnectionSpeed);
       };
     }
-    
-    return;
   }, []);
 
   if (!showSpeed || connectionSpeed === 'unknown') {
