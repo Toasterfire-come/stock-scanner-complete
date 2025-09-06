@@ -262,8 +262,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
 // Main App component with enhanced features
 const App: React.FC = () => {
-  const [isAppReady, setIsAppReady] = useState(false);
+  // Skip loading state for now to get the app working
+  const [isAppReady, setIsAppReady] = useState(true);
   
+  // Commented out initialization to debug loading issue
+  /*
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -294,6 +297,7 @@ const App: React.FC = () => {
 
     initializeApp();
   }, []);
+  */
 
   // Show loading screen while app initializes
   if (!isAppReady) {
