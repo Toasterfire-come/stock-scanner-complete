@@ -110,6 +110,11 @@ export const backgroundSync = {
       // Prefetch trending data
       queryClient.prefetchQuery({
         queryKey: ['trending'],
+        queryFn: async () => {
+          const { api, endpoints } = await import('./api');
+          const { data } = await api.get(endpoints.stocks.trending);
+          return data;
+        },
         staleTime: 1000 * 30, // 30 seconds
       });
     }, 30000);
