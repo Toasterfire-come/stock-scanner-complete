@@ -32,34 +32,19 @@ class AuthService {
         localStorage.removeItem(this.userDataKey);
     }
 
-    // Token validation
+    // Token validation (Django backend uses simple API tokens, not JWTs)
     isTokenValid(token) {
         if (!token) return false;
         
-        try {
-            const decoded = jwtDecode(token);
-            const currentTime = Date.now() / 1000;
-            
-            // Check if token expires within next 5 minutes
-            return decoded.exp > (currentTime + 300);
-        } catch (error) {
-            console.error('Token validation error:', error);
-            return false;
-        }
+        // For Django API tokens, we just check if the token exists
+        // The backend will validate the token on each request
+        return typeof token === 'string' && token.length > 0;
     }
 
     isTokenExpiringSoon(token) {
-        if (!token) return true;
-        
-        try {
-            const decoded = jwtDecode(token);
-            const currentTime = Date.now() / 1000;
-            
-            // Check if token expires within next 10 minutes
-            return decoded.exp < (currentTime + 600);
-        } catch (error) {
-            return true;
-        }
+        // Django API tokens don't expire by default
+        // Return false to avoid unnecessary refresh attempts
+        return false;
     }
 
     // Refresh token logic
