@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
@@ -50,11 +49,11 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({ hasError: false });
   };
 
   handleGoHome = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({ hasError: false });
     window.location.href = '/';
   };
 
@@ -68,17 +67,17 @@ class ErrorBoundary extends Component<Props, State> {
       // Default error UI
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg">
-            <CardHeader className="text-center">
+          <div className="w-full max-w-lg bg-white rounded-lg shadow-lg">
+            <div className="text-center p-6 border-b">
               <div className="mx-auto mb-4 p-3 bg-red-100 rounded-full w-fit">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <CardTitle className="text-xl text-red-800">Something went wrong</CardTitle>
+              <h2 className="text-xl font-bold text-red-800">Something went wrong</h2>
               <p className="text-gray-600 mt-2">
                 We're sorry, but something unexpected happened. Please try again or return to the homepage.
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-6">
               {process.env.NODE_ENV === 'development' && (
                 <div className="mb-6 p-4 bg-gray-100 rounded-md">
                   <p className="font-medium text-sm text-gray-800 mb-2">Error Details (Development):</p>
@@ -118,8 +117,8 @@ class ErrorBoundary extends Component<Props, State> {
                   If this problem persists, please contact support.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       );
     }
@@ -146,12 +145,12 @@ export const withErrorBoundary = <P extends object>(
 
 // Hook for handling errors in functional components
 export const useErrorHandler = () => {
-  const handleError = React.useCallback((error: Error, errorInfo?: string) => {
+  const handleError = React.useCallback((error: Error) => {
     console.error('Error handled by useErrorHandler:', error);
     
     // Report to error tracking service
     if (process.env.NODE_ENV === 'production') {
-      // Example: Sentry.captureException(error, { extra: { errorInfo } });
+      // Example: Sentry.captureException(error);
     }
   }, []);
 

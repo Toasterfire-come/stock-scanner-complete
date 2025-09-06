@@ -3,6 +3,11 @@ import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+// Extend AxiosRequestConfig to include metadata
+interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
+  metadata?: { startTime: number };
+}
+
 // Create axios instance with enhanced configuration
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -60,9 +65,10 @@ class TokenManager {
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
+  (config: ExtendedAxiosRequestConfig) => {
     const token = TokenManager.getToken();
     if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     
@@ -80,15 +86,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log response time in development
-    if (process.env.NODE_ENV === 'development' && response.config.metadata) {
-      const duration = Date.now() - response.config.metadata.startTime;
-      console.log(`🚀 ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration}ms`);
+    if (process.env.NODE_ENV === 'development') {
+      const config = response.config as ExtendedAxiosRequestConfig;
+      if (config.metadata) {
+        const duration = Date.now() - config.metadata.startTime;
+        console.log(`🚀 ${config.method?.toUpperCase()} ${config.url} - ${duration}ms`);
+      }
     }
     
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as ExtendedAxiosRequestConfig & { _retry?: boolean };
     
     // Handle 401 errors with token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -124,9 +133,10 @@ api.interceptors.response.use(
     }
     
     // Handle other errors with user-friendly messages
-    if (error.response?.status >= 500) {
+    const status = error.response?.status;
+    if (status && status >= 500) {
       toast.error('Server error. Please try again later.');
-    } else if (error.response?.status === 429) {
+    } else if (status === 429) {
       toast.error('Too many requests. Please wait a moment.');
     } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
       toast.error('Network connection error. Please check your internet connection.');

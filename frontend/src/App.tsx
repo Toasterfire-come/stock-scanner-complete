@@ -316,7 +316,10 @@ const App: React.FC = () => {
                   console.log('📈 LCP:', Math.round(entry.startTime));
                 }
                 if (entry.entryType === 'first-input') {
-                  console.log('⚡ FID:', Math.round(entry.processingStart - entry.startTime));
+                  const fid = entry as PerformanceEventTiming;
+                  if (fid.processingStart) {
+                    console.log('⚡ FID:', Math.round(fid.processingStart - fid.startTime));
+                  }
                 }
               }
             });
