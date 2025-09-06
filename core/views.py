@@ -256,6 +256,13 @@ def endpoint_status(request):
         }
         return render(request, 'core/endpoint_status.html', context)
 
+# Alias for /api/endpoint-status/ expected by frontend
+@csrf_exempt
+@require_http_methods(["GET", "HEAD", "OPTIONS"])
+def endpoint_status_api(request):
+    request.is_api_request = True
+    return endpoint_status(request)
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def kill_switch(request):
