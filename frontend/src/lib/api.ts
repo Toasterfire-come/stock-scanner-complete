@@ -65,7 +65,7 @@ class TokenManager {
 
 // Request interceptor
 api.interceptors.request.use(
-  (config: ExtendedAxiosRequestConfig) => {
+  (config) => {
     const token = TokenManager.getToken();
     if (token) {
       config.headers = config.headers || {};
@@ -73,7 +73,7 @@ api.interceptors.request.use(
     }
     
     // Add request timestamp for performance monitoring
-    config.metadata = { startTime: Date.now() };
+    (config as any).metadata = { startTime: Date.now() };
     
     return config;
   },
