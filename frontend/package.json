@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "/",
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@paypal/react-paypal-js": "^8.5.0",
