@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/EnhancedAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Register = ({ onToggleMode }) => {
