@@ -94,7 +94,7 @@ class AuthService {
         this.failedQueue = [];
     }
 
-    // Get valid token with automatic refresh
+    // Get valid token (simplified for Django API tokens)
     async getValidToken() {
         const token = this.getToken();
         
@@ -102,30 +102,8 @@ class AuthService {
             throw new Error('No token available');
         }
 
-        if (this.isTokenValid(token)) {
-            return token;
-        }
-
-        // If token is invalid, try to refresh
-        if (this.isRefreshing) {
-            // If already refreshing, queue this request
-            return new Promise((resolve, reject) => {
-                this.failedQueue.push({ resolve, reject });
-            });
-        }
-
-        this.isRefreshing = true;
-
-        try {
-            const newToken = await this.refreshAccessToken();
-            this.processQueue(null, newToken);
-            return newToken;
-        } catch (error) {
-            this.processQueue(error, null);
-            throw error;
-        } finally {
-            this.isRefreshing = false;
-        }
+        // Django API tokens don't expire, so we just return the token
+        return token;
     }
 
     // Enhanced authentication headers
