@@ -408,15 +408,7 @@ const App: React.FC = () => {
         {/* React Query DevTools - only in development */}
         {process.env.NODE_ENV === 'development' && (
           <ReactQueryDevtools 
-            initialIsOpen={false} 
-            position="bottom-right"
-            toggleButtonProps={{
-              style: {
-                marginLeft: '5px',
-                transform: 'scale(0.8)',
-                transformOrigin: 'bottom right',
-              }
-            }}
+            initialIsOpen={false}
           />
         )}
       </QueryClientProvider>
