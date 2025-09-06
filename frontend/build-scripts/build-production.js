@@ -113,7 +113,7 @@ fs.writeFileSync('./build/robots.txt', robotsTxt);
 
 // Create service worker for caching
 const serviceWorker = `
-const CACHE_NAME = 'trade-scan-pro-v1.0.1';
+const CACHE_NAME = 'trade-scan-pro-v1.0.2';
 const urlsToCache = [
   '/',
   '/manifest.json'
