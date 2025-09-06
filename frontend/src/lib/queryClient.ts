@@ -134,6 +134,11 @@ export const prefetchUtils = {
       try {
         await queryClient.prefetchQuery({
           queryKey: ['user', 'profile'],
+          queryFn: async () => {
+            const { api, endpoints } = await import('./api');
+            const { data } = await api.get(endpoints.auth.profile);
+            return data;
+          },
           staleTime: 1000 * 60 * 10, // 10 minutes
         });
       } catch (error) {
@@ -147,6 +152,11 @@ export const prefetchUtils = {
     try {
       await queryClient.prefetchQuery({
         queryKey: ['trending'],
+        queryFn: async () => {
+          const { api, endpoints } = await import('./api');
+          const { data } = await api.get(endpoints.stocks.trending);
+          return data;
+        },
         staleTime: 1000 * 60 * 2, // 2 minutes
       });
     } catch (error) {
@@ -159,6 +169,11 @@ export const prefetchUtils = {
     try {
       await queryClient.prefetchQuery({
         queryKey: ['platform', 'stats'],
+        queryFn: async () => {
+          const { api, endpoints } = await import('./api');
+          const { data } = await api.get(endpoints.market.platformStats);
+          return data;
+        },
         staleTime: 1000 * 60 * 15, // 15 minutes
       });
     } catch (error) {
