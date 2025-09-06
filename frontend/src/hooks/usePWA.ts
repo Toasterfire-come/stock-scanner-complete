@@ -30,7 +30,6 @@ export const usePWA = (): [PWAInstallState, PWAActions] => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [hasUpdate, setHasUpdate] = useState(false);
 
   // Detect platform
   const getPlatform = useCallback((): string | null => {
