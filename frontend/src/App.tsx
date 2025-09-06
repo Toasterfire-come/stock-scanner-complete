@@ -405,8 +405,8 @@ const App: React.FC = () => {
           </BrowserRouter>
         </AuthProvider>
         
-        {/* React Query DevTools - only in development */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* React Query DevTools - disabled temporarily due to configuration issues */}
+        {false && process.env.NODE_ENV === 'development' && (
           <ReactQueryDevtools 
             initialIsOpen={false}
           />
