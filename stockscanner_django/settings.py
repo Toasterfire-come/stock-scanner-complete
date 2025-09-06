@@ -22,7 +22,11 @@ if IS_XAMPP_AVAILABLE:
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "api.retailtradescanner.com"]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
 
@@ -33,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'whitenoise.runserver_nostatic',
     'rest_framework',
     'corsheaders',
     'django_extensions',
@@ -43,12 +48,13 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
     'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
     'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress
     'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -135,6 +141,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -143,12 +150,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = list(filter(None, [
+    os.environ.get('FRONTEND_URL'),
+    os.environ.get('WORDPRESS_URL'),
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-]
+]))
 
 # REST Framework
 REST_FRAMEWORK = {
@@ -159,7 +168,15 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.environ.get('THROTTLE_RATE_ANON', '200/hour'),
+        'user': os.environ.get('THROTTLE_RATE_USER', '2000/hour')
+    }
 }
 
 # Cache
@@ -171,7 +188,7 @@ CACHES = {
 }
 
 # Email
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 
 # Stock API Configuration
 YFINANCE_RATE_LIMIT = float(os.environ.get('YFINANCE_RATE_LIMIT', '0.5'))  # 0.5 second delay
@@ -188,17 +205,27 @@ FINNHUB_KEYS = [
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        }
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'default',
         },
     },
     'root': {
         'handlers': ['console'],
+        'level': os.environ.get('LOG_LEVEL', 'INFO'),
     },
 }
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = ["https://api.retailtradescanner.com"]
+CSRF_TRUSTED_ORIGINS = list(filter(None, [
+    os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com')
+]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))
