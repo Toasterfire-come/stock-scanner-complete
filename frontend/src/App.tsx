@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './context/EnhancedAuthContext';
 import { useAuth } from './context/EnhancedAuthContext';
-import { queryClient, backgroundSync, prefetchUtils } from './lib/queryClient';
+import { queryClient, backgroundSync } from './lib/queryClient';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import NetworkStatus, { ConnectionSpeed } from './components/NetworkStatus';
