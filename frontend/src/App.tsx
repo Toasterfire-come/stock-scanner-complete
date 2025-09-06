@@ -265,82 +265,22 @@ const App: React.FC = () => {
   const [isAppReady, setIsAppReady] = useState(false);
   
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-
     const initializeApp = async () => {
       try {
-        // Start background sync for real-time data
-        cleanup = backgroundSync.start();
+        // Simplified initialization for now
+        // Start background sync for real-time data (commented out for now)
+        // cleanup = backgroundSync.start();
         
-        // Prefetch critical data (will be loaded on-demand by React Query)
-        // await Promise.allSettled([
-        //   prefetchUtils.prefetchUserProfile(),
-        //   prefetchUtils.prefetchTrending(),
-        //   prefetchUtils.prefetchPlatformStats(),
-        // ]);
-        
-        // Register service worker for PWA functionality
+        // Service worker registration only in production
         if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
           try {
             const registration = await navigator.serviceWorker.register('/sw.js', {
               scope: '/',
               updateViaCache: 'none'
             });
-            
             console.log('✅ Service Worker registered successfully:', registration);
-            
-            // Listen for service worker updates
-            registration.addEventListener('updatefound', () => {
-              console.log('🔄 Service Worker update found');
-            });
-            
-            // Check for updates immediately and then every 10 minutes
-            await registration.update();
-            setInterval(() => registration.update(), 10 * 60 * 1000);
-            
           } catch (error) {
             console.warn('⚠️ Service Worker registration failed:', error);
-          }
-        }
-        
-        // Performance monitoring and analytics
-        if (typeof window !== 'undefined' && 'performance' in window) {
-          // Log performance metrics in development
-          if (process.env.NODE_ENV === 'development') {
-            setTimeout(() => {
-              const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-              if (navigation) {
-                console.log('📊 Performance Metrics:', {
-                  domContentLoaded: Math.round(navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart),
-                  loadComplete: Math.round(navigation.loadEventEnd - navigation.loadEventStart),
-                  totalLoadTime: Math.round(navigation.loadEventEnd - navigation.fetchStart),
-                  timeToFirstByte: Math.round(navigation.responseStart - navigation.requestStart),
-                });
-              }
-            }, 0);
-          }
-        }
-        
-        // Initialize performance observer for Core Web Vitals
-        if ('PerformanceObserver' in window) {
-          try {
-            const observer = new PerformanceObserver((list) => {
-              for (const entry of list.getEntries()) {
-                if (entry.entryType === 'largest-contentful-paint') {
-                  console.log('📈 LCP:', Math.round(entry.startTime));
-                }
-                if (entry.entryType === 'first-input') {
-                  const fid = entry as PerformanceEventTiming;
-                  if (fid.processingStart) {
-                    console.log('⚡ FID:', Math.round(fid.processingStart - fid.startTime));
-                  }
-                }
-              }
-            });
-            
-            observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input'] });
-          } catch (error) {
-            console.warn('Performance Observer not supported:', error);
           }
         }
         
@@ -353,10 +293,6 @@ const App: React.FC = () => {
     };
 
     initializeApp();
-    
-    return () => {
-      cleanup?.();
-    };
   }, []);
 
   // Show loading screen while app initializes
