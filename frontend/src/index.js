@@ -5,6 +5,7 @@ import "./index.css";
 // Import the secure version instead of the regular App
 import SecureApp from "./SecureApp";
 import { initSentry } from './sentry';
+import { toast } from 'sonner';
 
 // Initialize performance monitoring
 const startTime = performance.now();
@@ -109,6 +110,24 @@ if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('SW registered: ', registration);
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+          const installing = registration.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              try {
+                toast.info('A new version is available', {
+                  description: 'Click to update',
+                  action: {
+                    label: 'Reload',
+                    onClick: () => window.location.reload(),
+                  },
+                });
+              } catch {}
+            }
+          });
+        });
       })
       .catch((registrationError) => {
         console.log('SW registration failed: ', registrationError);

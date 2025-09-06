@@ -48,10 +48,10 @@ const Watchlists = lazy(() => import("./pages/app/Watchlists"));
 const WatchlistDetail = lazy(() => import("./pages/app/WatchlistDetail"));
 
 // Screener Suite
-const ScreenerLibrary = lazy(() => import("./pages/app/screeners/ScreenerLibrary"));
-const CreateScreener = lazy(() => import("./pages/app/screeners/CreateScreener"));
-const EditScreener = lazy(() => import("./pages/app/screeners/EditScreener"));
-const ScreenerResults = lazy(() => import("./pages/app/screeners/ScreenerResults"));
+const ScreenerLibrary = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/ScreenerLibrary"));
+const CreateScreener = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/CreateScreener"));
+const EditScreener = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/EditScreener"));
+const ScreenerResults = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/ScreenerResults"));
 const Templates = lazy(() => import("./pages/app/Templates"));
 
 // Market Overview
@@ -71,11 +71,11 @@ const Alerts = lazy(() => import("./pages/app/Alerts"));
 const AlertHistory = lazy(() => import("./pages/app/AlertHistory"));
 
 // Account Pages
-const Profile = lazy(() => import("./pages/account/Profile"));
-const ChangePassword = lazy(() => import("./pages/account/ChangePassword"));
-const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
-const BillingHistory = lazy(() => import("./pages/account/BillingHistory"));
-const CurrentPlan = lazy(() => import("./pages/account/CurrentPlan"));
+const Profile = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/Profile"));
+const ChangePassword = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/ChangePassword"));
+const NotificationSettings = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/NotificationSettings"));
+const BillingHistory = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/BillingHistory"));
+const CurrentPlan = lazy(() => import(/* webpackChunkName: "account" */ "./pages/account/CurrentPlan"));
 
 // System Pages
 const EndpointStatus = lazy(() => import("./pages/system/EndpointStatus"));
