@@ -148,12 +148,9 @@ class AuthService {
             const data = await response.json();
 
             if (data.success) {
-                // Store tokens securely
-                this.setTokens(data.data.api_token, data.data.refresh_token);
+                // Store tokens securely (Django only returns api_token)
+                this.setTokens(data.data.api_token, null);
                 localStorage.setItem(this.userDataKey, JSON.stringify(data.data));
-                
-                // Set up automatic token refresh
-                this.scheduleTokenRefresh(data.data.api_token);
                 
                 return data.data;
             } else {
