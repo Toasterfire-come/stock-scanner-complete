@@ -11,28 +11,11 @@ const SecurityProvider = ({ children }) => {
         // Initialize security measures
         security.initializeSecurity();
         
-        // Add Content Security Policy meta tag
-        const cspMeta = document.createElement('meta');
-        cspMeta.httpEquiv = 'Content-Security-Policy';
-        cspMeta.content = security.generateCSPMeta();
-        document.head.appendChild(cspMeta);
-        
-        // Add additional security meta tags
-        const securityMetas = [
-          { httpEquiv: 'X-Frame-Options', content: 'DENY' },
-          { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-          { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
-          { httpEquiv: 'Referrer-Policy', content: 'strict-origin-when-cross-origin' },
-          { name: 'robots', content: process.env.NODE_ENV === 'production' ? 'index, follow' : 'noindex, nofollow' }
-        ];
-        
-        securityMetas.forEach(({ httpEquiv, name, content }) => {
-          const meta = document.createElement('meta');
-          if (httpEquiv) meta.httpEquiv = httpEquiv;
-          if (name) meta.name = name;
-          meta.content = content;
-          document.head.appendChild(meta);
-        });
+        // Avoid meta-delivered security headers which browsers ignore (use server headers instead)
+        const robotsMeta = document.createElement('meta');
+        robotsMeta.name = 'robots';
+        robotsMeta.content = process.env.NODE_ENV === 'production' ? 'index, follow' : 'noindex, nofollow';
+        document.head.appendChild(robotsMeta);
         
         // Disable right-click in production (optional security measure)
         if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_DISABLE_RIGHT_CLICK === 'true') {
@@ -60,7 +43,10 @@ const SecurityProvider = ({ children }) => {
           console.error('CSP Violation:', e);
           // Log to backend in production
           if (process.env.NODE_ENV === 'production') {
-            fetch('/api/logs/security/', {
+            const apiRoot = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
+            const url = apiRoot ? `${apiRoot}/api/logs/security/` : null;
+            if (!url) return;
+            fetch(url, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
