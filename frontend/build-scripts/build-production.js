@@ -113,31 +113,66 @@ fs.writeFileSync('./build/robots.txt', robotsTxt);
 
 // Create service worker for caching
 const serviceWorker = `
-const CACHE_NAME = 'stock-scanner-v1.0.0';
+const CACHE_NAME = 'trade-scan-pro-v1.0.0';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('Service Worker installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+      .then((cache) => {
+        console.log('Caching app shell');
+        return cache.addAll(urlsToCache.map(url => new Request(url, {credentials: 'same-origin'})));
+      })
+      .catch(error => {
+        console.error('Cache addAll failed:', error);
+      })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating...');
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
+  // Skip caching for API requests
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         if (response) {
           return response;
         }
-        return fetch(event.request);
-      }
-    )
+        return fetch(event.request).catch(() => {
+          // Return offline page or fallback
+          if (event.request.destination === 'document') {
+            return caches.match('/');
+          }
+        });
+      })
   );
 });
 `;
