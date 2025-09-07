@@ -1,7 +1,6 @@
 import React from "react";
 import { Outlet, Link } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
-import { Card } from "../components/ui/card";
 
 const AuthLayout = () => {
   return (
@@ -17,10 +16,10 @@ const AuthLayout = () => {
         </Link>
       </header>
       
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 py-8">
-        <Card className="w-full max-w-2xl p-8 sm:p-10 md:p-12 shadow-xl">
+      <main className="flex-1 flex items-center justify-center px-8 py-8">
+        <div className="bg-white rounded-xl shadow-xl p-12 w-full" style={{ maxWidth: '600px' }}>
           <Outlet />
-        </Card>
+        </div>
       </main>
       
       <footer className="p-4 sm:p-6 text-center text-xs sm:text-sm text-gray-600">

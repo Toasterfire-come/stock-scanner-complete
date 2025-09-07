@@ -57,10 +57,10 @@ export default function SignIn() {
   const displayError = error || authError;
 
   return (
-    <div className="space-y-8">
+    <div className="w-full space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-gray-600 mt-3 text-base sm:text-lg">
+        <h2 className="text-4xl font-bold text-gray-900">Welcome back</h2>
+        <p className="text-gray-600 mt-3 text-lg">
           Sign in to your Trade Scan Pro account
         </p>
       </div>

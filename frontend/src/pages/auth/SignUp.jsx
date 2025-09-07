@@ -84,10 +84,10 @@ const SignUp = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="w-full space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Create your account</h2>
-        <p className="text-gray-600 mt-3 text-base sm:text-lg">Join thousands of successful traders</p>
+        <h2 className="text-4xl font-bold text-gray-900">Create your account</h2>
+        <p className="text-gray-600 mt-3 text-lg">Join thousands of successful traders</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
