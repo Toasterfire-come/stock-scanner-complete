@@ -144,13 +144,12 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Contact Form & Info */}
+      {/* Contact Form - Centered */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16">
+          <div className="max-w-2xl mx-auto">
             {/* Contact Form */}
-            <div>
-              <Card className="shadow-xl">
+            <Card className="shadow-xl">
                 <CardHeader className="text-center">
                   <CardTitle className="text-3xl">Send us a Message</CardTitle>
                   <p className="text-gray-600">
@@ -248,11 +247,7 @@ const Contact = () => {
                     </Button>
                   </form>
                 </CardContent>
-              </Card>
-            </div>
-
-            {/* Contact Information removed per request */}
-            <div className="hidden"></div>
+            </Card>
           </div>
         </div>
       </section>

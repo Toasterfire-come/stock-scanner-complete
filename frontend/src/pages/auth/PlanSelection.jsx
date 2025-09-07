@@ -15,8 +15,8 @@ const plans = [
     trialPrice: "$1",
     description: "Great for individual traders",
     features: [
-      "100 API calls per day",
-      "~3,000 API calls per month",
+      "50 API calls per day",
+      "1,500 API calls per month",
       "Advanced screening tools",
       "Real-time alerts",
       "Email support",
@@ -241,21 +241,6 @@ export default function PlanSelection() {
                     </div>
                   )}
                   
-                  <Button
-                    className={`w-full mt-6 h-11 sm:h-12 text-base ${
-                      isSelected 
-                        ? "bg-blue-600 hover:bg-blue-700" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePlanSelect(plan.id);
-                    }}
-                    disabled={isLoading}
-                  >
-                    {plan.isFree ? "Get Started Free" : "Try Now for Free"}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
                   
                   {!plan.isFree && (
                     <p className="text-xs text-gray-500 text-center">
@@ -266,6 +251,19 @@ export default function PlanSelection() {
               </Card>
             );
           })}
+        </div>
+
+        {/* Continue Button */}
+        <div className="text-center mt-8">
+          <Button
+            size="lg"
+            className="px-12 py-6 text-lg font-semibold"
+            onClick={handleContinueToPayment}
+            disabled={isLoading}
+          >
+            Continue with {plans.find(p => p.id === selectedPlan)?.name || 'Selected'} Plan
+            <ArrowRight className="h-5 w-5 ml-3" />
+          </Button>
         </div>
 
         <div className="text-center mt-8 sm:mt-12 space-y-4">
