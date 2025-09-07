@@ -113,7 +113,7 @@ fs.writeFileSync('./build/robots.txt', robotsTxt);
 
 // Create service worker for caching
 const serviceWorker = `
-const CACHE_NAME = 'trade-scan-pro-v1.0.2';
+const CACHE_NAME = 'trade-scan-pro-v1.0.3';
 const urlsToCache = [
   '/',
   '/manifest.json'
@@ -155,6 +155,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Bypass service worker for cross-origin requests (e.g., Google Fonts, analytics)
+  try {
+    const requestUrl = new URL(event.request.url);
+    if (requestUrl.origin !== self.location.origin) {
+      return; // Let the browser handle it directly
+    }
+  } catch (_) {}
+  
   // Skip caching for API requests
   if (event.request.url.includes('/api/')) {
     return;
@@ -167,10 +175,11 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
         return fetch(event.request).catch(() => {
-          // Return offline page or fallback
+          // Return offline page or safe empty response on failure
           if (event.request.destination === 'document') {
             return caches.match('/');
           }
+          return new Response('', { status: 504, statusText: 'Gateway Timeout' });
         });
       })
   );
