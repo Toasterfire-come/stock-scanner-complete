@@ -72,7 +72,7 @@ const plans = [
     description: "Perfect for getting started",
     features: [
       "15 API calls per month",
-      "Unlimited daily calls",
+      "Infinite Scanner combinations",
       "Basic stock screening",
       "Community support",
       "Basic portfolio tracking"
