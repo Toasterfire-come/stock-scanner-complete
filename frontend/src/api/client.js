@@ -62,9 +62,36 @@ function getPlanLimits() {
   return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 }
 
-// REMOVED: Daily API quotas - server is source of truth
+// Frontend API quota tracking
 function ensureApiQuotaAndIncrement() {
-  // Always return true - let server handle rate limits
+  const plan = getStoredUserPlan();
+  const limits = getPlanLimits();
+  
+  // Gold plan has unlimited API calls
+  if (plan === 'gold') return true;
+  
+  // Get current month key
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  const storageKey = `rts_api_usage_${monthKey}`;
+  
+  // Get current usage
+  let currentUsage = 0;
+  try {
+    currentUsage = parseInt(localStorage.getItem(storageKey) || '0', 10);
+  } catch {}
+  
+  // Check if limit exceeded
+  if (currentUsage >= limits.monthlyApi) {
+    console.warn(`Monthly API limit reached (${limits.monthlyApi} calls for ${plan} plan)`);
+    return false;
+  }
+  
+  // Increment usage
+  try {
+    localStorage.setItem(storageKey, String(currentUsage + 1));
+  } catch {}
+  
   return true;
 }
 
@@ -90,7 +117,16 @@ api.interceptors.request.use((config) => {
       if (!config.params.authorization) config.params.authorization = `Bearer ${token}`;
     }
   } catch {}
-  // Skip client-side quota check - server handles all rate limiting
+  
+  // Check API quota before making request
+  if (!ensureApiQuotaAndIncrement()) {
+    const plan = getStoredUserPlan();
+    const limits = getPlanLimits();
+    const error = new Error(`Monthly API limit reached (${limits.monthlyApi} calls for ${plan} plan). Please upgrade your plan for more API calls.`);
+    error.code = 'QUOTA_EXCEEDED';
+    return Promise.reject(error);
+  }
+  
   config.metadata = { start: Date.now(), url: `${config.baseURL || ''}${config.url || ''}` };
   window.__NET?.emit('start', { url: config.metadata.url });
   return config;
@@ -131,6 +167,36 @@ export async function logClientMetric(payload) {
   try {
     await api.post('/logs/metrics/', { ...payload, ts: new Date().toISOString() });
   } catch {}
+}
+
+// Export helper to get API usage info
+export function getApiUsageInfo() {
+  const plan = getStoredUserPlan();
+  const limits = getPlanLimits();
+  
+  if (plan === 'gold') {
+    return { used: 0, limit: Infinity, remaining: Infinity, percentage: 0 };
+  }
+  
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  const storageKey = `rts_api_usage_${monthKey}`;
+  
+  let currentUsage = 0;
+  try {
+    currentUsage = parseInt(localStorage.getItem(storageKey) || '0', 10);
+  } catch {}
+  
+  const remaining = Math.max(0, limits.monthlyApi - currentUsage);
+  const percentage = (currentUsage / limits.monthlyApi) * 100;
+  
+  return {
+    used: currentUsage,
+    limit: limits.monthlyApi,
+    remaining,
+    percentage: Math.min(100, percentage),
+    plan
+  };
 }
 
 // Expose to window for ErrorBoundary

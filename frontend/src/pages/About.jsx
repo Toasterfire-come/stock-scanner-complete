@@ -19,7 +19,7 @@ const About = () => {
   const stats = [
     { label: "NYSE Stocks Covered", value: "3,200+" },
     { label: "Technical Indicators", value: "14" },
-    { label: "Scanner Combinations", value: "350+" },
+    { label: "Scanner Combinations", value: "Infinite" },
     { label: "Active Users", value: "Growing" }
   ];
 

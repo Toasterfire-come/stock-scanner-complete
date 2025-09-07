@@ -255,7 +255,7 @@ const Home = () => {
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  {Number(platformStats?.scanner_combinations||0).toLocaleString()}+
+                  Infinite
                 </div>
                 <div className="text-gray-600">Scanner Combinations</div>
               </div>
