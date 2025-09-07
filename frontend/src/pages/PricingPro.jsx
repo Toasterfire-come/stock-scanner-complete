@@ -89,7 +89,7 @@ const PricingPro = () => {
       color: "border-gray-300 bg-gray-50",
       headerColor: "bg-gradient-to-r from-gray-400 to-gray-500",
       price: { monthly: 39.99, annual: 399.99 },
-      popular: true,
+      popular: false,
       features: [
         { name: "5,000 API calls per month", included: true },
         { name: "250 API calls per day", included: true },
