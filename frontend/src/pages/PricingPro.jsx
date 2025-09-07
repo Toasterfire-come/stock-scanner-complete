@@ -286,7 +286,7 @@ const PricingPro = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid lg:grid-cols-4 gap-8 mb-16">
           {plans.map((plan, index) => {
             const currentPrice = isAnnual ? plan.price.annual : plan.price.monthly;
             const savings = calculateSavings(plan);
