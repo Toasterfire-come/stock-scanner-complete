@@ -124,9 +124,24 @@ export default function PlanSelection() {
     }
   };
 
+  const handleContinueToPayment = () => {
+    if (selectedPlan === "free") {
+      handlePlanSelect("free");
+    } else {
+      // Navigate to pricing/payment page with selected plan
+      navigate('/pricing', { 
+        state: { 
+          fromSignup: true, 
+          selectedPlan: selectedPlan,
+          userEmail: userEmail
+        } 
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full">
+      <div className="w-full">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (
             <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-2">
@@ -151,7 +166,7 @@ export default function PlanSelection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
