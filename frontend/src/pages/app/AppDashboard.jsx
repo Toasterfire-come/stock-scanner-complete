@@ -145,7 +145,7 @@ const AppDashboard = () => {
               <Button asChild size="lg" variant="secondary" className="text-blue-700">
                 <Link to="/auth/sign-up">
                   <Play className="h-5 w-5 mr-2" />
-                  Get Started for $1
+                  Try Now for Free
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Link>
               </Button>
