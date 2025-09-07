@@ -183,16 +183,14 @@ const Features = () => {
                   </Card>
                 </div>
                 <div className="lg:w-1/2">
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white">
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                          {React.cloneElement(feature.icon, { className: "h-12 w-12" })}
-                        </div>
-                        <p className="text-xl font-medium">Feature Available</p>
-                        <p className="text-blue-100 mt-2">Ready to use in your dashboard</p>
-                      </div>
-                    </div>
+                  <div className="rounded-2xl overflow-hidden border bg-white">
+                    <img
+                      src={`/react/screenshots/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.webp`}
+                      alt={`${feature.title} screenshot`}
+                      className="w-full h-64 object-cover"
+                      loading="lazy"
+                      onError={(e)=>{ e.currentTarget.src='/hero.webp'; e.currentTarget.classList.add('object-contain','bg-gray-50'); }}
+                    />
                   </div>
                 </div>
               </div>

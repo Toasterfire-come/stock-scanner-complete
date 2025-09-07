@@ -251,66 +251,14 @@ const Contact = () => {
               </Card>
             </div>
 
-            {/* Contact Information */}
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">Contact Information</h2>
-                <p className="text-xl text-gray-600 mb-8">
-                  Multiple ways to reach our team of trading experts
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                {contactInfo.map((item, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-                          {item.icon}
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
-                          <p className="text-lg text-blue-600 font-medium">{item.info}</p>
-                          <p className="text-gray-600">{item.description}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            {/* Contact Information removed per request */}
+            <div className="hidden"></div>
           </div>
         </div>
       </section>
 
-      {/* Support Options */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Multiple Ways to Get Support
-            </h2>
-            <p className="text-xl text-gray-600">
-              Choose the support method that works best for you
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {supportOptions.map((option, index) => (
-              <Card key={index} className="text-center hover:shadow-xl transition-shadow">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mx-auto mb-6">
-                    {option.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{option.title}</h3>
-                  <p className="text-gray-600 mb-4">{option.description}</p>
-                  <Badge variant="secondary">{option.availability}</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Support Options removed per request */}
+      <section className="hidden"></section>
 
       {/* FAQ Preview */}
       <section className="py-24 bg-white">
@@ -378,31 +326,8 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Office Hours */}
-      <section className="py-16 bg-blue-600 text-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4">Our Support Hours</h2>
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <div>
-                <Clock className="h-8 w-8 mx-auto mb-2" />
-                <h3 className="text-xl font-semibold mb-2">Live Chat</h3>
-                <p>24/7 Available</p>
-              </div>
-              <div>
-                <Phone className="h-8 w-8 mx-auto mb-2" />
-                <h3 className="text-xl font-semibold mb-2">Phone Support</h3>
-                <p>Mon-Fri 9AM-6PM EST</p>
-              </div>
-              <div>
-                <Mail className="h-8 w-8 mx-auto mb-2" />
-                <h3 className="text-xl font-semibold mb-2">Email Support</h3>
-                <p>Response within 24 hours</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Support hours removed per request */}
+      <section className="hidden"></section>
     </div>
   );
 };
