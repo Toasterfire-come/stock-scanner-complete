@@ -54,8 +54,8 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Filter through 10,000+ stocks with 50+ technical and fundamental criteria.",
-      details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
+      description: "Filter through 3,200+ NYSE stocks with 14 technical and fundamental criteria.",
+      details: "Our screening engine processes real-time market data to help you identify potential investment opportunities."
     },
     {
       icon: <Bell className="h-6 w-6" />,
@@ -72,8 +72,8 @@ const Home = () => {
     {
       icon: <TrendingUp className="h-6 w-6" />,
       title: "Market Intelligence",
-      description: "AI-powered insights and sentiment analysis from news and social media.",
-      details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements."
+      description: "Market insights and analysis from real-time data.",
+      details: "Our platform analyzes market trends and provides actionable insights to help inform your trading decisions."
     }
   ];
 
@@ -107,7 +107,7 @@ const Home = () => {
   const faqs = [
     {
       question: "How accurate is your market data?",
-      answer: "Our data is sourced directly from major exchanges and updated in real-time. We maintain 99.9% uptime and ensure data accuracy through multiple validation layers."
+      answer: "Our data is sourced from reliable market data providers and updated regularly. We strive for high availability and ensure data accuracy through validation processes."
     },
     {
       question: "Can I cancel my subscription anytime?",
@@ -129,7 +129,7 @@ const Home = () => {
 
   const stats = [
     { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "10,000+", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "NYSE Stocks Tracked", value: "3,200+", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
     { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
   ];
@@ -189,7 +189,7 @@ const Home = () => {
       period: "/forever",
       description: "Perfect for getting started",
       features: [
-        "50 API calls per month",
+        "15 API calls per month",
         "Unlimited daily calls",
         "Basic stock screening",
         "Email alerts",
@@ -220,7 +220,7 @@ const Home = () => {
             
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
               Join thousands of successful traders using our advanced screening tools, 
-              real-time alerts, and AI-powered market intelligence to maximize their returns.
+              real-time alerts, and market intelligence to help improve their trading decisions.
             </p>
             
             {/* Market Status */}

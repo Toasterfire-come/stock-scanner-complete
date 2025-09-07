@@ -1,0 +1,28 @@
+MANUAL DEPLOYMENT INSTRUCTIONS
+==============================
+
+Since automated deployment tools are not available, please follow these steps:
+
+1. Use an SFTP client (like FileZilla, Cyberduck, or WinSCP)
+
+2. Connection details:
+   - Host: access-5018544625.webspace-host.com
+   - Port: 22
+   - Protocol: SFTP
+   - Username: a2565254
+   - Password: C2rt3rK#2010
+
+3. Upload the contents of the 'build' folder:
+   - Local folder: /workspace/frontend/build/
+   - Remote folder: /html/ (or your webspace root)
+
+4. Make sure to upload ALL files and folders including:
+   - index.html
+   - static/ folder
+   - manifest.json
+   - robots.txt
+   - All other files in the build directory
+
+5. After upload, your site should be live!
+
+Build files are ready at: /workspace/frontend/build/

@@ -8,8 +8,7 @@ console.log('🚀 Starting production build...\n');
 
 // Environment validation
 const requiredEnvVars = [
-  'REACT_APP_BACKEND_URL',
-  'REACT_APP_API_PASSWORD'
+  'REACT_APP_BACKEND_URL'
 ];
 
 console.log('✅ Validating environment variables...');

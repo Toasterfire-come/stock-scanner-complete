@@ -33,9 +33,9 @@ export const api = axios.create({
 // Plan limits enforcement (client-side guard; server should enforce as source of truth)
 // ====================
 const PLAN_LIMITS = {
-  free: { monthlyApi: 100, alerts: 5, watchlists: 1, portfolios: 0 },
+  free: { monthlyApi: 15, alerts: 0, watchlists: 0, portfolios: 1 },
   bronze: { monthlyApi: 1500, alerts: 25, watchlists: 3, portfolios: 1 },
-  silver: { monthlyApi: 5000, alerts: 100, watchlists: 10, portfolios: Infinity },
+  silver: { monthlyApi: 5000, alerts: 50, watchlists: 10, portfolios: 5 },
   gold: { monthlyApi: Infinity, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
 };
 
