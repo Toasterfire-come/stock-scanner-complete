@@ -364,18 +364,20 @@ async def get_usage_counts(user_id: str, plan: str) -> UsageStats:
     )
 
 async def can_make_api_call(user_id: str, plan: str = "free") -> bool:
-    """Check if user can make an API call based on their plan limits (daily limits removed)"""
+    """Check if user can make an API call based on their plan limits (both daily and monthly)"""
     if plan == 'gold':
         return True  # Unlimited for gold plan
     
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
     usage_stats = await get_usage_counts(user_id, plan)
     
-    # Check monthly limit only (daily limits removed)
+    # Check monthly limit
     if limits['monthly'] != -1 and usage_stats.monthly_used >= limits['monthly']:
         return False
     
-    # Daily limit check removed - unlimited daily calls for all plans
+    # Check daily limit (now enforced for Bronze and Silver)
+    if limits['daily'] != -1 and usage_stats.daily_used >= limits['daily']:
+        return False
     
     return True
 
