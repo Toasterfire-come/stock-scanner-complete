@@ -383,7 +383,7 @@ const PricingPro = () => {
                     </Dialog>
 
                     <p className="text-xs text-gray-500 text-center">
-                      7-day trial for $1 • Cancel anytime • No setup fees
+                      TRIAL: 7-day trial for $1 • Cancel anytime • No setup fees
                     </p>
                   </div>
                 </CardContent>
