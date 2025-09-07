@@ -4,6 +4,7 @@ Options -MultiViews
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteBase /
 
   # Serve existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -16,6 +17,9 @@ Options -MultiViews
   # SPA fallback to index.html
   RewriteRule . index.html [L]
 </IfModule>
+
+# Fallback for SPA routes (Apache 2.4+)
+FallbackResource /index.html
 
 DirectoryIndex index.html
 
