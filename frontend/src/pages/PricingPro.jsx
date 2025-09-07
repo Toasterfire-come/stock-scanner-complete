@@ -319,14 +319,30 @@ const PricingPro = () => {
                   </p>
                   
                   <div className="text-center">
-                    <div className="flex items-baseline justify-center">
-                      <span className="text-4xl font-bold">
-                        ${isAnnual ? Math.round(currentPrice / 12) : currentPrice}
-                      </span>
-                      <span className="text-lg ml-1">
-                        /{isAnnual ? 'mo' : 'month'}
-                      </span>
-                    </div>
+                    {plan.isFree ? (
+                      <div className="flex items-baseline justify-center">
+                        <span className="text-4xl font-bold">
+                          $0
+                        </span>
+                        <span className="text-lg ml-1">
+                          /forever
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-lg font-bold text-blue-600 mb-2">
+                          TRIAL: $1 for 7 days
+                        </div>
+                        <div className="flex items-baseline justify-center">
+                          <span className="text-4xl font-bold">
+                            ${isAnnual ? Math.round(currentPrice / 12) : currentPrice}
+                          </span>
+                          <span className="text-lg ml-1">
+                            /{isAnnual ? 'mo' : 'month'}
+                          </span>
+                        </div>
+                      </>
+                    )}
                     
                     {isAnnual && (
                       <div className="mt-2">
