@@ -287,9 +287,15 @@ export async function registerUser(userData) {
     }
     return { success: false, message: data.message || 'Registration failed' };
   } catch (error) {
-    return { 
-      success: false, 
-      message: error.response?.data?.message || error.response?.data?.detail || 'Registration failed' 
+    if (error?.response?.status === 409) {
+      return {
+        success: false,
+        message: 'This email is already registered. Please sign in or reset your password.'
+      };
+    }
+    return {
+      success: false,
+      message: error.response?.data?.message || error.response?.data?.detail || 'Registration failed'
     };
   }
 }
