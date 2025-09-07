@@ -189,8 +189,8 @@ const Home = () => {
       period: "/forever",
       description: "Perfect for getting started",
       features: [
-        "50 API calls per month",
-        "Unlimited daily calls",
+        "15 API calls per month",
+        "Infinite Scanner combinations",
         "Basic stock screening",
         "Email alerts",
         "Community support",
