@@ -140,12 +140,13 @@ const MarketStatus = ({ showNotice = false }) => {
           <div className="flex items-start space-x-2">
             <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-yellow-800">
+              <p className="font-medium">Market Weekend (ET)</p>
               <p className="font-medium">Market is currently closed</p>
               <p className="mt-1">
                 Data updates are paused outside trading hours for more accurate information.
                 {marketStatus.nextOpen && (
                   <span className="block mt-1">
-                    Next market open: {formatDate(marketStatus.nextOpen)} at {formatTime(marketStatus.nextOpen)} {marketStatus.timezone}
+                    Next market open: {formatDate(marketStatus.nextOpen)} at 10:30 AM {marketStatus.timezone}
                   </span>
                 )}
               </p>
