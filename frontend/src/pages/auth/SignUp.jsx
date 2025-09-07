@@ -84,7 +84,7 @@ const SignUp = () => {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
-        <p className="text-gray-600 mt-2">Get started with professional stock analysis</p>
+        <p className="text-gray-600 mt-2">Get started for free • Upgrade anytime</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

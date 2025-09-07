@@ -128,8 +128,8 @@ const Home = () => {
       period: "/month",
       description: "Enhanced features for active traders",
       features: [
-        "2,000 API calls per month",
-        "100 API calls per day",
+        "1,500 API calls per month",
+        "50 API calls per day",
         "Full stock scanner & lookup",
         "Email alerts & notifications", 
         "Real-time alerts",
@@ -144,8 +144,8 @@ const Home = () => {
       period: "/month",
       description: "Professional tools for serious traders",
       features: [
-        "10,000 API calls per month",
-        "500 API calls per day",
+        "5,000 API calls per month",
+        "250 API calls per day",
         "Advanced filtering & screening",
         "Custom watchlists (10)",
         "Real-time alerts",
@@ -243,7 +243,7 @@ const Home = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {platformStats.nyse_stocks.toLocaleString()}
+                  {Number(platformStats?.nyse_stocks||0).toLocaleString()}
                 </div>
                 <div className="text-gray-600">NYSE Stocks Covered</div>
               </div>
@@ -255,7 +255,7 @@ const Home = () => {
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  {platformStats.scanner_combinations.toLocaleString()}+
+                  {Number(platformStats?.scanner_combinations||0).toLocaleString()}+
                 </div>
                 <div className="text-gray-600">Scanner Combinations</div>
               </div>

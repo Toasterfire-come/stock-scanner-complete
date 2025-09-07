@@ -248,7 +248,7 @@ const Home = () => {
       </section>
 
       {/* Social Proof Stats */}
-      {marketStats && (
+      {marketStats && marketStats.market_overview && (
         <section className="py-16 bg-white border-y">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -259,14 +259,14 @@ const Home = () => {
             <div className="grid md:grid-cols-4 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {marketStats.market_overview.total_stocks.toLocaleString()}
+                  {Number(marketStats?.market_overview?.total_stocks ?? 0).toLocaleString()}
                 </div>
                 <div className="text-gray-600">Stocks Analyzed Today</div>
               </div>
               
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">
-                  {marketStats.market_overview.gainers.toLocaleString()}
+                  {Number(marketStats?.market_overview?.gainers ?? 0).toLocaleString()}
                 </div>
                 <div className="text-gray-600">Winning Opportunities</div>
               </div>
