@@ -72,18 +72,21 @@ const AppLayout = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 sm:h-16 items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">
+            <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
+              <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <span className="text-lg sm:text-2xl font-bold text-gray-900 hidden sm:block">
                 Trade Scan Pro
+              </span>
+              <span className="text-lg font-bold text-gray-900 sm:hidden">
+                TSP
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               {!isAppRoute ? (
                 // Public navigation
                 <NavigationMenu>
@@ -92,7 +95,7 @@ const AppLayout = () => {
                       <NavigationMenuItem key={item.name}>
                         <Link
                           to={item.href}
-                          className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
+                          className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-3 xl:px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
                             location.pathname === item.href
                               ? "text-blue-600"
                               : "text-gray-600"
@@ -106,21 +109,21 @@ const AppLayout = () => {
                 </NavigationMenu>
               ) : (
                 // App navigation
-                <nav className="flex items-center space-x-6">
+                <nav className="flex items-center space-x-4 xl:space-x-6">
                   {appNavigation.map((item) => {
                     const Icon = item.icon;
                     return (
                       <Link
                         key={item.name}
                         to={item.href}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 ${
+                        className={`flex items-center space-x-2 px-2 xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 ${
                           location.pathname === item.href
                             ? "bg-blue-100 text-blue-600"
                             : "text-gray-600"
                         }`}
                       >
                         <Icon className="h-4 w-4" />
-                        <span>{item.name}</span>
+                        <span className="hidden xl:inline">{item.name}</span>
                       </Link>
                     );
                   })}
@@ -129,16 +132,16 @@ const AppLayout = () => {
             </div>
 
             {/* Right side - Auth buttons or user menu */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Market Status - always show */}
-              <div className="hidden lg:block">
+              <div className="hidden md:block">
                 <MarketStatus />
               </div>
 
               {isAuthenticated && user ? (
                 <>
                   {/* User badge */}
-                  <Badge variant="secondary" className="hidden sm:inline-flex">
+                  <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
                     {user.plan} Plan
                   </Badge>
 
@@ -174,12 +177,12 @@ const AppLayout = () => {
                   </DropdownMenu>
                 </>
               ) : (
-                <div className="flex items-center space-x-4">
-                  <Button variant="ghost" asChild>
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                  <Button variant="ghost" asChild className="hidden sm:inline-flex">
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
-                  <Button asChild>
-                    <Link to="/auth/sign-up">Get Started for $1</Link>
+                  <Button asChild size="sm" className="text-sm px-3 sm:px-4">
+                    <Link to="/auth/sign-up">Try Now for Free</Link>
                   </Button>
                 </div>
               )}
@@ -187,31 +190,58 @@ const AppLayout = () => {
               {/* Mobile menu trigger */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="lg:hidden">
-                    <Menu className="h-5 w-5" />
+                  <Button variant="ghost" className="lg:hidden h-8 w-8 p-0">
+                    <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <nav className="flex flex-col space-y-4">
-                    {(isAppRoute ? appNavigation : navigation).map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            location.pathname === item.href
-                              ? "bg-blue-100 text-blue-600"
-                              : "text-gray-600 hover:bg-gray-100"
-                          }`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </nav>
+                <SheetContent side="right" className="w-[280px] sm:w-[350px]">
+                  <div className="mt-6">
+                    {/* Market Status in mobile */}
+                    <div className="mb-6 md:hidden">
+                      <MarketStatus />
+                    </div>
+                    
+                    <nav className="flex flex-col space-y-3">
+                      {(isAppRoute ? appNavigation : navigation).map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
+                              location.pathname === item.href
+                                ? "bg-blue-100 text-blue-600"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span>{item.name}</span>
+                          </Link>
+                        );
+                      })}
+                      
+                      {/* Mobile Auth buttons */}
+                      {!isAuthenticated && (
+                        <div className="border-t pt-4 mt-4 space-y-3">
+                          <Link
+                            to="/auth/sign-in"
+                            className="flex items-center justify-center px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            to="/auth/sign-up"
+                            className="flex items-center justify-center px-3 py-3 rounded-lg text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Try Now for Free
+                          </Link>
+                        </div>
+                      )}
+                    </nav>
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
@@ -226,14 +256,14 @@ const AppLayout = () => {
 
       {/* Footer */}
       <footer className="border-t bg-gray-50">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="container mx-auto px-4 py-8 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <BarChart3 className="h-6 w-6 text-blue-600" />
-                <span className="text-xl font-bold">Trade Scan Pro</span>
+                <span className="text-lg sm:text-xl font-bold">Trade Scan Pro</span>
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Professional stock screening and market intelligence platform.
               </p>
             </div>
@@ -293,7 +323,7 @@ const AppLayout = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
+          <div className="border-t mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-gray-600">
             <p>&copy; 2025 Trade Scan Pro. All rights reserved.</p>
           </div>
         </div>
