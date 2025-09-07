@@ -85,49 +85,62 @@ const AppLayout = () => {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+            {/* Desktop Navigation - Now with dropdown for all screen sizes */}
+            <div className="flex items-center space-x-4">
               {!isAppRoute ? (
-                // Public navigation
-                <NavigationMenu>
-                  <NavigationMenuList>
+                // Public navigation dropdown
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-sm font-medium">
+                      Pages
+                      <Menu className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48" align="start">
                     {navigation.map((item) => (
-                      <NavigationMenuItem key={item.name}>
+                      <DropdownMenuItem key={item.name} asChild>
                         <Link
                           to={item.href}
-                          className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-3 xl:px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
+                          className={`flex items-center space-x-2 ${
                             location.pathname === item.href
                               ? "text-blue-600"
                               : "text-gray-600"
                           }`}
                         >
-                          {item.name}
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.name}</span>
                         </Link>
-                      </NavigationMenuItem>
+                      </DropdownMenuItem>
                     ))}
-                  </NavigationMenuList>
-                </NavigationMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
-                // App navigation
-                <nav className="flex items-center space-x-4 xl:space-x-6">
-                  {appNavigation.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={`flex items-center space-x-2 px-2 xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 ${
-                          location.pathname === item.href
-                            ? "bg-blue-100 text-blue-600"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="hidden xl:inline">{item.name}</span>
-                      </Link>
-                    );
-                  })}
-                </nav>
+                // App navigation dropdown
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="text-sm font-medium">
+                      App
+                      <Menu className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48" align="start">
+                    {appNavigation.map((item) => (
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          to={item.href}
+                          className={`flex items-center space-x-2 ${
+                            location.pathname === item.href
+                              ? "text-blue-600"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.name}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
 
