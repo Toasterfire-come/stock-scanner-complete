@@ -1,39 +1,26 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Check, Crown, Zap, Star } from "lucide-react";
+import { Check, Crown, Zap, Star, Gift, ArrowRight } from "lucide-react";
 
 const plans = [
   {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Perfect for getting started",
-    features: [
-      "50 API calls per month",
-      "10 API calls per day",
-      "Basic stock screening",
-      "Email support",
-    ],
-    icon: Star,
-    color: "gray",
-  },
-  {
     id: "bronze",
     name: "Bronze",
-    price: "$1",
-    period: "trial",
+    price: "$24.99",
+    period: "month",
+    trialPrice: "$1",
     description: "Great for individual traders",
     features: [
       "1,500 API calls per month",
-      "50 API calls per day",
+      "Unlimited daily calls",
       "Advanced screening tools",
       "Real-time alerts",
-      "Priority support",
+      "Email support",
+      "Basic portfolio tracking"
     ],
     icon: Zap,
     color: "orange",
@@ -42,16 +29,18 @@ const plans = [
   {
     id: "silver",
     name: "Silver",
-    price: "$29",
+    price: "$39.99",
     period: "month",
+    trialPrice: "$1",
     description: "Perfect for professional traders",
     features: [
       "5,000 API calls per month",
-      "250 API calls per day",
+      "Unlimited daily calls",
       "All screening tools",
-      "Custom alerts",
-      "Portfolio tracking",
-      "Premium support",
+      "Custom alerts & notifications",
+      "Portfolio tracking (unlimited)",
+      "Priority support",
+      "Advanced analytics"
     ],
     icon: Crown,
     color: "blue",
@@ -59,27 +48,52 @@ const plans = [
   {
     id: "gold",
     name: "Gold",
-    price: "$99",
+    price: "$89.99",
     period: "month",
+    trialPrice: "$1",
     description: "For trading teams and institutions",
     features: [
       "Unlimited API calls",
+      "Unlimited daily calls",
       "All premium features",
       "Custom integrations",
       "Dedicated support",
       "Team collaboration",
-      "Advanced analytics",
+      "Advanced analytics & reporting"
     ],
     icon: Crown,
     color: "yellow",
+  },
+  {
+    id: "free",
+    name: "Free",
+    price: "$0",
+    period: "forever",
+    description: "Perfect for getting started",
+    features: [
+      "50 API calls per month",
+      "Unlimited daily calls",
+      "Basic stock screening",
+      "Email alerts",
+      "Community support",
+      "Basic portfolio tracking"
+    ],
+    icon: Star,
+    color: "gray",
+    isFree: true,
   },
 ];
 
 export default function PlanSelection() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, updateUser } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("bronze");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Check if this is from the signup flow
+  const isNewUser = location.state?.newUser;
+  const userEmail = location.state?.email;
 
   const handlePlanSelect = async (planId) => {
     setIsLoading(true);
@@ -93,7 +107,13 @@ export default function PlanSelection() {
       }
 
       // For paid plans, send to pricing page to choose cycle and checkout
-      navigate('/pricing', { state: { fromSignup: true, selectedPlan: planId } });
+      navigate('/pricing', { 
+        state: { 
+          fromSignup: true, 
+          selectedPlan: planId,
+          userEmail: userEmail
+        } 
+      });
     } catch (error) {
       console.error("Plan selection error:", error);
     } finally {
@@ -102,18 +122,33 @@ export default function PlanSelection() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Choose Your Plan
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-8 sm:mb-12">
+          {isNewUser && (
+            <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-2">
+              <Gift className="h-4 w-4 mr-2" />
+              Welcome! Account created successfully
+            </Badge>
+          )}
+          
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+            Choose Your Trading Plan
           </h1>
-          <p className="text-lg text-gray-600">
-            Select the perfect plan for your trading needs
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+            Select the perfect plan for your trading needs. All paid plans include a 7-day trial for just $1.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* TRIAL Banner for paid plans */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-base">
+            <Zap className="h-5 w-5 mr-2" />
+            TRIAL: Start any paid plan for just $1 (7 days)
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
@@ -121,13 +156,13 @@ export default function PlanSelection() {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative cursor-pointer transition-all duration-200 ${
-                  isSelected ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-md"
-                } ${plan.popular ? "border-orange-200" : ""}`}
+                className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                  isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
+                } ${plan.popular ? "border-orange-200 scale-105" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
-                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-orange-500">
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-1">
                     Most Popular
                   </Badge>
                 )}
@@ -145,17 +180,26 @@ export default function PlanSelection() {
                     }`} />
                   </div>
                   
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {plan.price}
-                    <span className="text-sm font-normal text-gray-500">
-                      /{plan.period}
-                    </span>
+                  <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
+                  
+                  <div className="space-y-2">
+                    {!plan.isFree && (
+                      <div className="text-lg font-bold text-blue-600">
+                        TRIAL: {plan.trialPrice} for 7 days
+                      </div>
+                    )}
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+                      {plan.price}
+                      <span className="text-sm font-normal text-gray-500">
+                        /{plan.period}
+                      </span>
+                    </div>
                   </div>
-                  <CardDescription>{plan.description}</CardDescription>
+                  
+                  <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
                 </CardHeader>
                 
-                <CardContent>
+                <CardContent className="space-y-4">
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
@@ -166,7 +210,7 @@ export default function PlanSelection() {
                   </ul>
                   
                   <Button
-                    className={`w-full mt-6 ${
+                    className={`w-full mt-6 h-11 sm:h-12 text-base ${
                       isSelected 
                         ? "bg-blue-600 hover:bg-blue-700" 
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -177,18 +221,40 @@ export default function PlanSelection() {
                     }}
                     disabled={isLoading}
                   >
-                    {isSelected ? "Select This Plan" : "Choose Plan"}
+                    {plan.isFree ? "Get Started Free" : "Try Now for Free"}
+                    <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
+                  
+                  {!plan.isFree && (
+                    <p className="text-xs text-gray-500 text-center">
+                      TRIAL: 7-day trial for $1 then {plan.price}/{plan.period}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-8 sm:mt-12 space-y-4">
           <p className="text-sm text-gray-500">
             You can change your plan anytime from your account settings
           </p>
+          
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
+            <div className="flex items-center">
+              <Check className="h-4 w-4 text-green-500 mr-2" />
+              Cancel anytime
+            </div>
+            <div className="flex items-center">
+              <Check className="h-4 w-4 text-green-500 mr-2" />
+              No setup fees
+            </div>
+            <div className="flex items-center">
+              <Check className="h-4 w-4 text-green-500 mr-2" />
+              Email support
+            </div>
+          </div>
         </div>
       </div>
     </div>
