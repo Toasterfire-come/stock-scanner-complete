@@ -36,25 +36,6 @@ const Pricing = () => {
 
   const plans = [
     {
-      id: "free",
-      name: "Free",
-      icon: <Zap className="h-6 w-6" />,
-      description: "Basic stock lookup and filtering",
-      price: { monthly: 0, annual: 0 },
-      features: [
-        "15 stock queries per month",
-        "Stock symbol lookup & search",
-        "Basic price filtering"
-      ],
-      limitations: [
-        "No portfolio management",
-        "No email alerts"
-      ],
-      popular: false,
-      color: "gray",
-      cta: "Get Started Free"
-    },
-    {
       id: "bronze",
       name: "Bronze",
       icon: <Award className="h-6 w-6" />,
@@ -107,6 +88,25 @@ const Pricing = () => {
       popular: false,
       color: "yellow",
       cta: "Try Now for Free"
+    },
+    {
+      id: "free",
+      name: "Free",
+      icon: <Zap className="h-6 w-6" />,
+      description: "Basic stock lookup and filtering",
+      price: { monthly: 0, annual: 0 },
+      features: [
+        "15 stock queries per month",
+        "Stock symbol lookup & search",
+        "Basic price filtering"
+      ],
+      limitations: [
+        "No portfolio management",
+        "No email alerts"
+      ],
+      popular: false,
+      color: "gray",
+      cta: "Get Started Free"
     },
   ];
 
