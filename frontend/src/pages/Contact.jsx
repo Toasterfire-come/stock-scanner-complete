@@ -151,7 +151,7 @@ const Contact = () => {
             {/* Contact Form */}
             <div>
               <Card className="shadow-xl">
-                <CardHeader>
+                <CardHeader className="text-center">
                   <CardTitle className="text-3xl">Send us a Message</CardTitle>
                   <p className="text-gray-600">
                     Fill out the form below and we'll get back to you within 24 hours.
