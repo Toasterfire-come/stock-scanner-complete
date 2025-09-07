@@ -139,6 +139,34 @@ const PricingPro = () => {
         watchlists: "Unlimited",
         alerts: "Unlimited"
       }
+    },
+    {
+      name: "Free",
+      description: "Perfect for getting started with trading",
+      icon: <Star className="h-8 w-8" />,
+      color: "border-gray-200 bg-gray-50",
+      headerColor: "bg-gradient-to-r from-gray-500 to-gray-600",
+      price: { monthly: 0, annual: 0 },
+      popular: false,
+      isFree: true,
+      features: [
+        { name: "50 API calls per month", included: true },
+        { name: "Unlimited daily calls", included: true },
+        { name: "Basic stock screening", included: true },
+        { name: "Email alerts", included: true },
+        { name: "Community support", included: true },
+        { name: "Basic portfolio tracking", included: true },
+        { name: "Advanced screener filters", included: false },
+        { name: "Custom watchlists", included: false },
+        { name: "API access", included: false },
+        { name: "Priority support", included: false }
+      ],
+      limits: {
+        apiCalls: "50/month, unlimited daily",
+        portfolios: "1 portfolio",
+        watchlists: "3 watchlists",  
+        alerts: "5 alerts"
+      }
     }
   ];
 
