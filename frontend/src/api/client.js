@@ -1,18 +1,15 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-// Prefer external API by default in production if env not set
-const BASE_URL = (
-  process.env.REACT_APP_BACKEND_URL ||
-  (process.env.NODE_ENV === 'production' ? 'https://api.retailtradescanner.com' : '')
-).trim();
+// Use REACT_APP_BACKEND_URL exclusively from environment
+const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 if (!BASE_URL) {
-  console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+  console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
-export const REVENUE_ROOT = `${BASE_URL}/revenue`;
+export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
 // Simple network event bus for latency indicator
 (function initNetBus(){
@@ -36,10 +33,10 @@ export const api = axios.create({
 // Plan limits enforcement (client-side guard; server should enforce as source of truth)
 // ====================
 const PLAN_LIMITS = {
-  free: { monthlyApi: 100, dailyApi: 10, alerts: 5, watchlists: 1, portfolios: 0 },
-  bronze: { monthlyApi: 1500, dailyApi: 50, alerts: 25, watchlists: 3, portfolios: 1 },
-  silver: { monthlyApi: 5000, dailyApi: 250, alerts: 100, watchlists: 10, portfolios: Infinity },
-  gold: { monthlyApi: Infinity, dailyApi: Infinity, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
+  free: { monthlyApi: 100, alerts: 5, watchlists: 1, portfolios: 0 },
+  bronze: { monthlyApi: 1500, alerts: 25, watchlists: 3, portfolios: 1 },
+  silver: { monthlyApi: 5000, alerts: 100, watchlists: 10, portfolios: Infinity },
+  gold: { monthlyApi: Infinity, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
 };
 
 function getStoredUserPlan() {
@@ -65,21 +62,10 @@ function getPlanLimits() {
   return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 }
 
+// REMOVED: Daily API quotas - server is source of truth
 function ensureApiQuotaAndIncrement() {
-  const limits = getPlanLimits();
-  if (!Number.isFinite(limits.monthlyApi) && !Number.isFinite(limits.dailyApi)) return true;
-  try {
-    const now = new Date();
-    const dayKey = `api_usage_day_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-    const monthKey = `api_usage_month_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}`;
-    const dayCount = Number(window.localStorage.getItem(dayKey) || '0');
-    const monthCount = Number(window.localStorage.getItem(monthKey) || '0');
-    if (Number.isFinite(limits.dailyApi) && dayCount + 1 > limits.dailyApi) return false;
-    if (Number.isFinite(limits.monthlyApi) && monthCount + 1 > limits.monthlyApi) return false;
-    window.localStorage.setItem(dayKey, String(dayCount + 1));
-    window.localStorage.setItem(monthKey, String(monthCount + 1));
-    return true;
-  } catch { return true; }
+  // Always return true - let server handle rate limits
+  return true;
 }
 
 function getCsrfToken() {
@@ -104,15 +90,7 @@ api.interceptors.request.use((config) => {
       if (!config.params.authorization) config.params.authorization = `Bearer ${token}`;
     }
   } catch {}
-  // Enforce API quota for user-facing endpoints (skip logs/metrics)
-  try {
-    const path = String(config.url || '');
-    if (!/\/logs\//.test(path) && !/\/metrics\//.test(path)) {
-      if (!ensureApiQuotaAndIncrement()) {
-        return Promise.reject(new Error('API usage limit exceeded for your plan. Upgrade to increase limits.'));
-      }
-    }
-  } catch {}
+  // Skip client-side quota check - server handles all rate limiting
   config.metadata = { start: Date.now(), url: `${config.baseURL || ''}${config.url || ''}` };
   window.__NET?.emit('start', { url: config.metadata.url });
   return config;
@@ -243,9 +221,6 @@ export async function getStatisticsSafe() {
 export async function pingHealth() { const { data } = await api.get('/health/'); return data; }
 export async function getEndpointStatus() { const { data } = await api.get('/endpoint-status/'); return data; }
 
-// ====================
-// STOCKS & MARKET DATA
-// ====================
 // ====================
 // STOCKS & MARKET DATA
 // ====================
@@ -443,28 +418,28 @@ export async function syncPortfolioNews() { const { data } = await api.post('/ne
 // REVENUE & PAYMENTS (PAYPAL INTEGRATION)
 //====================
 export async function validateDiscountCode(code) { 
-  const { data } = await api.post(`${REVENUE_ROOT}/validate-discount/`, { code }); 
+  const { data } = await api.post('/revenue/validate-discount/', { code }); 
   return data; 
 }
 
 export async function applyDiscountCode(code, amount) { 
-  const { data } = await api.post(`${REVENUE_ROOT}/apply-discount/`, { code, amount }); 
+  const { data } = await api.post('/revenue/apply-discount/', { code, amount }); 
   return data; 
 }
 
 export async function recordPayment(paymentData) { 
-  const { data } = await api.post(`${REVENUE_ROOT}/record-payment/`, paymentData); 
+  const { data } = await api.post('/revenue/record-payment/', paymentData); 
   return data; 
 }
 
 export async function getRevenueAnalytics(monthYear = null) { 
-  const url = monthYear ? `${REVENUE_ROOT}/revenue-analytics/${monthYear}/` : `${REVENUE_ROOT}/revenue-analytics/`; 
+  const url = monthYear ? `/revenue/revenue-analytics/${monthYear}/` : `/revenue/revenue-analytics/`; 
   const { data } = await api.get(url); 
   return data; 
 }
 
 export async function initializeDiscountCodes() { 
-  const { data } = await api.post(`${REVENUE_ROOT}/initialize-codes/`); 
+  const { data } = await api.post('/revenue/initialize-codes/'); 
   return data; 
 }
 
