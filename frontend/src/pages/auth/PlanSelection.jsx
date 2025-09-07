@@ -16,7 +16,7 @@ const plans = [
     description: "Great for individual traders",
     features: [
       "100 API calls per day, 1500/month",
-      "Infinite Scanner combinations",
+      "Unlimited scanner combinations",
       "Advanced screening tools",
       "Real-time alerts",
       "Email support",
@@ -35,7 +35,7 @@ const plans = [
     description: "Perfect for professional traders",
     features: [
       "500 API calls per day, 5000/month",
-      "Infinite Scanner combinations",
+      "Unlimited scanner combinations",
       "All screening tools",
       "Custom alerts & notifications (50 alerts)",
       "Portfolio tracking (5 portfolios)",
@@ -72,7 +72,7 @@ const plans = [
     description: "Perfect for getting started",
     features: [
       "15 API calls per month",
-      "Infinite Scanner combinations",
+      "Unlimited scanner combinations",
       "Basic stock screening",
       "Community support",
       "Basic portfolio tracking"

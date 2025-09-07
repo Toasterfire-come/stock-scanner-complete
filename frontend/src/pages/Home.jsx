@@ -142,7 +142,7 @@ const Home = () => {
       description: "Enhanced features for active traders",
       features: [
         "100 API calls per day, 1500/month",
-        "Infinite Scanner combinations", 
+        "Unlimited scanner combinations", 
         "Full stock scanner & lookup",
         "Email alerts & notifications",
         "News sentiment analysis",
@@ -158,7 +158,7 @@ const Home = () => {
       description: "Professional tools for serious traders",
       features: [
         "500 API calls per day, 5000/month",
-        "Infinite Scanner combinations",
+        "Unlimited scanner combinations",
         "Advanced filtering & screening",
         "1-year historical data",
         "Custom watchlists (10)",
@@ -190,7 +190,7 @@ const Home = () => {
       description: "Perfect for getting started",
       features: [
         "15 API calls per month",
-        "Infinite Scanner combinations",
+        "Unlimited scanner combinations",
         "Basic stock screening",
         "Email alerts",
         "Community support",
