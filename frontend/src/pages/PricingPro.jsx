@@ -63,7 +63,6 @@ const PricingPro = () => {
       popular: true,
       features: [
         { name: "1,500 API calls per month", included: true },
-        { name: "50 API calls per day", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Basic stock screener", included: true },
         { name: "Email alerts & notifications", included: true },
@@ -76,7 +75,7 @@ const PricingPro = () => {
         { name: "Priority support", included: false }
       ],
       limits: {
-        apiCalls: "1,500/month, 50/day",
+        apiCalls: "1,500/month",
         portfolios: "1 portfolio",
         watchlists: "3 watchlists",
         alerts: "25 alerts"
@@ -92,7 +91,6 @@ const PricingPro = () => {
       popular: false,
       features: [
         { name: "5,000 API calls per month", included: true },
-        { name: "250 API calls per day", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Advanced stock screener", included: true },
         { name: "Email alerts", included: true },
@@ -105,7 +103,7 @@ const PricingPro = () => {
         { name: "Enhanced analytics", included: true }
       ],
       limits: {
-        apiCalls: "5,000/month, 250/day",
+        apiCalls: "5,000/month",
         portfolios: "Unlimited",
         watchlists: "10 watchlists",
         alerts: "100 alerts"
@@ -151,7 +149,6 @@ const PricingPro = () => {
       isFree: true,
       features: [
         { name: "50 API calls per month", included: true },
-        { name: "Unlimited daily calls", included: true },
         { name: "Basic stock screening", included: true },
         { name: "Email alerts", included: true },
         { name: "Community support", included: true },
@@ -162,7 +159,7 @@ const PricingPro = () => {
         { name: "Priority support", included: false }
       ],
       limits: {
-        apiCalls: "50/month, unlimited daily",
+        apiCalls: "50/month",
         portfolios: "1 portfolio",
         watchlists: "3 watchlists",  
         alerts: "5 alerts"
@@ -248,11 +245,11 @@ const PricingPro = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
-          {/* TRIAL Banner */}
+          {/* TRIAL Banner - Only show above plans */}
           <div className="mb-6">
-            <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
+            <div className="inline-flex items-center bg-yellow-100 text-yellow-800 px-6 py-3 rounded-full font-medium text-lg border border-yellow-200">
               <Gift className="h-5 w-5 mr-2" />
-              TRIAL: 7-Day Trial for Just $1
+              Use code TRIAL for a 7‑day free trial on paid plans
             </div>
           </div>
           
@@ -330,9 +327,6 @@ const PricingPro = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="text-lg font-bold text-blue-600 mb-2">
-                          TRIAL: $1 for 7 days
-                        </div>
                         <div className="flex items-baseline justify-center">
                           <span className="text-4xl font-bold">
                             ${isAnnual ? Math.round(currentPrice / 12) : currentPrice}
@@ -402,7 +396,7 @@ const PricingPro = () => {
                           className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                           onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
                         >
-                          {plan.isFree ? 'Get Started Free' : 'TRIAL: Get Started for $1'}
+                          Try Now for Free
                           <ArrowRight className="h-5 w-5 ml-2" />
                         </Button>
                       </DialogTrigger>
@@ -425,12 +419,6 @@ const PricingPro = () => {
                         )}
                       </DialogContent>
                     </Dialog>
-
-                    {!plan.isFree && (
-                      <p className="text-xs text-gray-500 text-center">
-                        TRIAL: 7-day trial for $1 • Cancel anytime • No setup fees
-                      </p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -484,7 +472,7 @@ const PricingPro = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">How does the 7-day trial work?</h3>
                 <p className="text-gray-600">
-                  Pay just $1 to access your chosen plan for 7 days. After the trial, you'll be charged the regular monthly price unless you cancel.
+                  Use code TRIAL during signup to access your chosen plan for 7 days. After the trial, you'll be charged the regular monthly price unless you cancel.
                 </p>
               </CardContent>
             </Card>
@@ -511,7 +499,7 @@ const PricingPro = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">Is there a refund policy?</h3>
                 <p className="text-gray-600">
-                  You can cancel anytime during your trial period for just the $1 trial fee. Regular subscriptions can be cancelled anytime to prevent future charges.
+                  You can cancel anytime during your trial period. Regular subscriptions can be cancelled anytime to prevent future charges.
                 </p>
               </CardContent>
             </Card>
