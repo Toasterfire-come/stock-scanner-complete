@@ -229,11 +229,11 @@ PLAN_LIMITS = {
     'gold': {'monthly': -1, 'daily': -1}  # -1 means unlimited
 }
 
-# Rate limiting thresholds (advisory only - no enforcement)
+# Rate limiting thresholds (advisory only - no enforcement, daily limits removed)
 RATE_LIMITS = {
     'requests_per_minute': 60,
     'requests_per_hour': 1000,
-    'requests_per_day': 5000
+    'requests_per_day': -1  # Unlimited daily requests
 }
 
 # NYSE stock count and available indicators (accurate claims)
