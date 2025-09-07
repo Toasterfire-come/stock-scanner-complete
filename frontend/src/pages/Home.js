@@ -450,7 +450,7 @@ const Home = () => {
             <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
               <Link to="/auth/sign-up">
                 <Play className="h-6 w-6 mr-3" />
-                Get Started for $1
+                Try Now for Free
                 <ArrowRight className="h-6 w-6 ml-3" />
               </Link>
             </Button>
