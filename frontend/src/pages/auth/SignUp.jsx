@@ -64,7 +64,10 @@ const SignUp = () => {
       if (result.success) {
         toast.success("Account created successfully! Choose your plan to get started.");
         navigate("/auth/plan-selection", { 
-          state: { email: data.email } 
+          state: { 
+            email: data.email,
+            newUser: true 
+          } 
         });
       } else {
         toast.error(result.message || "Registration failed");
@@ -83,18 +86,19 @@ const SignUp = () => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
-        <p className="text-gray-600 mt-2">Get started for free • Upgrade anytime</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
+            <Label htmlFor="firstName" className="text-sm sm:text-base">First Name</Label>
             <Input
               id="firstName"
               type="text"
               placeholder="John"
+              className="h-11 sm:h-12 text-base"
               {...register("firstName")}
             />
             {errors.firstName && (
@@ -103,11 +107,12 @@ const SignUp = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
+            <Label htmlFor="lastName" className="text-sm sm:text-base">Last Name</Label>
             <Input
               id="lastName"
               type="text"
               placeholder="Doe"
+              className="h-11 sm:h-12 text-base"
               {...register("lastName")}
             />
             {errors.lastName && (
@@ -117,14 +122,14 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="username" className="text-sm sm:text-base">Username</Label>
           <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="username"
               type="text"
               placeholder="Choose a username"
-              className="pl-10"
+              className="pl-10 h-11 sm:h-12 text-base"
               {...register("username")}
             />
           </div>
@@ -134,14 +139,14 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="email"
               type="email"
               placeholder="john@example.com"
-              className="pl-10"
+              className="pl-10 h-11 sm:h-12 text-base"
               {...register("email")}
             />
           </div>
@@ -151,19 +156,19 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Create a secure password"
-              className="pl-10 pr-10"
+              className="pl-10 pr-12 h-11 sm:h-12 text-base"
               {...register("password")}
             />
             <button
               type="button"
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -175,19 +180,19 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="text-sm sm:text-base">Confirm Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm your password"
-              className="pl-10 pr-10"
+              className="pl-10 pr-12 h-11 sm:h-12 text-base"
               {...register("confirmPassword")}
             />
             <button
               type="button"
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -198,13 +203,14 @@ const SignUp = () => {
           )}
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-start space-x-3">
           <Checkbox
             id="agreeToTerms"
             checked={agreeToTerms}
             onCheckedChange={(checked) => setValue("agreeToTerms", checked)}
+            className="mt-0.5"
           />
-          <Label htmlFor="agreeToTerms" className="text-sm">
+          <Label htmlFor="agreeToTerms" className="text-sm leading-relaxed">
             I agree to the{" "}
             <Link to="/legal/terms" className="text-blue-600 hover:text-blue-500">
               Terms of Service
@@ -219,7 +225,7 @@ const SignUp = () => {
           <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isLoading || !agreeToTerms}>
+        <Button type="submit" className="w-full h-11 sm:h-12 text-base" disabled={isLoading || !agreeToTerms}>
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>
@@ -233,11 +239,11 @@ const SignUp = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Button
           variant="outline"
           onClick={() => handleOAuthSignUp("google")}
-          className="w-full"
+          className="w-full h-11 sm:h-12"
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
@@ -245,7 +251,7 @@ const SignUp = () => {
         <Button
           variant="outline"
           onClick={() => handleOAuthSignUp("github")}
-          className="w-full"
+          className="w-full h-11 sm:h-12"
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub
@@ -259,7 +265,7 @@ const SignUp = () => {
             to="/auth/sign-in"
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
-            Sign in
+            Sign in here
           </Link>
         </p>
       </div>
