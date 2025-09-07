@@ -184,7 +184,7 @@ const AppLayout = () => {
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
                   <Button asChild>
-                    <Link to="/auth/sign-up">Get Started for $1</Link>
+                    <Link to="/auth/sign-up">Try Now for Free</Link>
                   </Button>
                 </div>
               )}
