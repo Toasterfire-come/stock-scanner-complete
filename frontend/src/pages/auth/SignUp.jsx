@@ -84,21 +84,21 @@ const SignUp = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Create your account</h2>
+        <p className="text-gray-600 mt-3 text-base sm:text-lg">Join thousands of successful traders</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="firstName" className="text-sm sm:text-base">First Name</Label>
+            <Label htmlFor="firstName" className="text-base font-medium">First Name</Label>
             <Input
               id="firstName"
               type="text"
               placeholder="John"
-              className="h-11 sm:h-12 text-base"
+              className="h-12 text-base"
               {...register("firstName")}
             />
             {errors.firstName && (
@@ -107,12 +107,12 @@ const SignUp = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lastName" className="text-sm sm:text-base">Last Name</Label>
+            <Label htmlFor="lastName" className="text-base font-medium">Last Name</Label>
             <Input
               id="lastName"
               type="text"
               placeholder="Doe"
-              className="h-11 sm:h-12 text-base"
+              className="h-12 text-base"
               {...register("lastName")}
             />
             {errors.lastName && (
@@ -122,14 +122,14 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="username" className="text-sm sm:text-base">Username</Label>
+          <Label htmlFor="username" className="text-base font-medium">Username</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="username"
               type="text"
               placeholder="Choose a username"
-              className="pl-10 h-11 sm:h-12 text-base"
+              className="pl-10 h-12 text-base"
               {...register("username")}
             />
           </div>
@@ -139,14 +139,14 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
+          <Label htmlFor="email" className="text-base font-medium">Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="email"
               type="email"
               placeholder="john@example.com"
-              className="pl-10 h-11 sm:h-12 text-base"
+              className="pl-10 h-12 text-base"
               {...register("email")}
             />
           </div>
@@ -156,14 +156,14 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
+          <Label htmlFor="password" className="text-base font-medium">Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Create a secure password"
-              className="pl-10 pr-12 h-11 sm:h-12 text-base"
+              className="pl-10 pr-12 h-12 text-base"
               {...register("password")}
             />
             <button
@@ -180,14 +180,14 @@ const SignUp = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-sm sm:text-base">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="text-base font-medium">Confirm Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm your password"
-              className="pl-10 pr-12 h-11 sm:h-12 text-base"
+              className="pl-10 pr-12 h-12 text-base"
               {...register("confirmPassword")}
             />
             <button
@@ -210,7 +210,7 @@ const SignUp = () => {
             onCheckedChange={(checked) => setValue("agreeToTerms", checked)}
             className="mt-0.5"
           />
-          <Label htmlFor="agreeToTerms" className="text-sm leading-relaxed">
+          <Label htmlFor="agreeToTerms" className="text-base leading-relaxed">
             I agree to the{" "}
             <Link to="/legal/terms" className="text-blue-600 hover:text-blue-500">
               Terms of Service
@@ -225,7 +225,7 @@ const SignUp = () => {
           <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
         )}
 
-        <Button type="submit" className="w-full h-11 sm:h-12 text-base" disabled={isLoading || !agreeToTerms}>
+        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading || !agreeToTerms}>
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>
@@ -243,7 +243,7 @@ const SignUp = () => {
         <Button
           variant="outline"
           onClick={() => handleOAuthSignUp("google")}
-          className="w-full h-11 sm:h-12"
+          className="w-full h-12"
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
@@ -251,7 +251,7 @@ const SignUp = () => {
         <Button
           variant="outline"
           onClick={() => handleOAuthSignUp("github")}
-          className="w-full h-11 sm:h-12"
+          className="w-full h-12"
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub
@@ -259,7 +259,7 @@ const SignUp = () => {
       </div>
 
       <div className="text-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-base text-gray-600">
           Already have an account?{" "}
           <Link
             to="/auth/sign-in"

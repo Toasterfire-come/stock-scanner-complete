@@ -214,7 +214,7 @@ export default function PlanSelection() {
                     </div>
                   </div>
                   
-                  <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
+                  <CardDescription className="text-base">{plan.description}</CardDescription>
                 </CardHeader>
                 
                 <CardContent className="space-y-4">

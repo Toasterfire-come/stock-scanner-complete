@@ -57,15 +57,15 @@ export default function SignIn() {
   const displayError = error || authError;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Welcome back</h2>
+        <p className="text-gray-600 mt-3 text-base sm:text-lg">
           Sign in to your Trade Scan Pro account
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {displayError && (
           <Alert variant="destructive">
             <AlertDescription>{displayError}</AlertDescription>
@@ -73,7 +73,7 @@ export default function SignIn() {
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="username" className="text-sm sm:text-base">Username or Email</Label>
+          <Label htmlFor="username" className="text-base font-medium">Username or Email</Label>
           <Input
             id="username"
             name="username"
@@ -82,12 +82,12 @@ export default function SignIn() {
             onChange={handleChange}
             placeholder="Enter your username or email"
             disabled={isLoading}
-            className="h-11 sm:h-12 text-base"
+            className="h-12 text-base"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
+          <Label htmlFor="password" className="text-base font-medium">Password</Label>
           <div className="relative">
             <Input
               id="password"
@@ -97,7 +97,7 @@ export default function SignIn() {
               onChange={handleChange}
               placeholder="Enter your password"
               disabled={isLoading}
-              className="h-11 sm:h-12 text-base pr-12"
+              className="h-12 text-base pr-12"
             />
             <Button
               type="button"
@@ -125,12 +125,12 @@ export default function SignIn() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full h-11 sm:h-12 text-base" disabled={isLoading}>
+        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>
 
-        <div className="text-center text-sm">
+        <div className="text-center text-base">
           Don't have an account?{" "}
           <Link
             to="/auth/sign-up"
