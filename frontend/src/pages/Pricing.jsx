@@ -70,7 +70,7 @@ const Pricing = () => {
       limitations: [],
       popular: true,
       color: "orange",
-      cta: "Get Started for $1"
+      cta: "Try Now for Free"
     },
     {
       id: "silver",
