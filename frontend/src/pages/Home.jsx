@@ -142,14 +142,14 @@ const Home = () => {
       description: "Enhanced features for active traders",
       features: [
         "1,500 API calls per month",
-        "10 calls per hour limit", 
+        "Unlimited daily calls", 
         "Full stock scanner & lookup",
         "Email alerts & notifications",
         "News sentiment analysis",
         "Basic portfolio tracking"
       ],
       popular: true,
-      cta: "Start Free Trial"
+      cta: "Try Now for Free"
     },
     {
       name: "Silver", 
@@ -158,14 +158,14 @@ const Home = () => {
       description: "Professional tools for serious traders",
       features: [
         "5,000 API calls per month",
-        "25 calls per hour limit",
+        "Unlimited daily calls",
         "Advanced filtering & screening",
         "1-year historical data",
         "Custom watchlists (10)",
         "Priority support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Try Now for Free"
     },
     {
       name: "Gold",
@@ -174,72 +174,89 @@ const Home = () => {
       description: "Ultimate trading experience",
       features: [
         "Unlimited API calls",
-        "No hourly limits",
+        "Unlimited daily calls",
         "All premium features",
         "Real-time alerts",
         "Full REST API access",
         "Priority phone support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Try Now for Free"
+    },
+    {
+      name: "Free",
+      price: "$0",
+      period: "/forever",
+      description: "Perfect for getting started",
+      features: [
+        "50 API calls per month",
+        "Unlimited daily calls",
+        "Basic stock screening",
+        "Email alerts",
+        "Community support",
+        "Basic portfolio tracking"
+      ],
+      popular: false,
+      cta: "Get Started Free",
+      isFree: true
     }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       {/* Hero Section - Conversion Focused */}
-      <section className="relative overflow-hidden py-20 sm:py-32">
+      <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-5xl mx-auto">
-            <Badge variant="secondary" className="mb-6 text-lg px-4 py-2">
+            <Badge variant="secondary" className="mb-6 text-base sm:text-lg px-4 py-2">
               <Award className="h-4 w-4 mr-2" />
               Trusted by 50,000+ Professional Traders
             </Badge>
             
-            <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-8 leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
               Turn Market Data Into 
               <span className="text-blue-600 block"> Profitable Trades</span>
             </h1>
             
-            <p className="text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
               Join thousands of successful traders using our advanced screening tools, 
               real-time alerts, and AI-powered market intelligence to maximize their returns.
             </p>
             
             {/* Market Status */}
-            <div className="mb-8 flex justify-center">
+            <div className="mb-6 sm:mb-8 flex justify-center">
               <MarketStatus showNotice={true} />
             </div>
 
             {/* Primary CTA */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-              <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
+              <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
-                  <Play className="h-6 w-6 mr-3" />
-                  Start 7-Day Free Trial
-                  <ArrowRight className="h-6 w-6 ml-3" />
+                  <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                  Try Now for Free
+                  <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-xl px-12 py-6 h-auto border-2">
+              <Button asChild variant="outline" size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto border-2">
                 <Link to="/contact">
-                  <Mail className="h-6 w-6 mr-3" />
+                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                   Contact Support
                 </Link>
               </Button>
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm sm:text-lg text-gray-600">
               <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3" />
                 Email Support Only
               </div>
               <div className="flex items-center">
-                <Shield className="h-5 w-5 text-blue-500 mr-3" />
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2 sm:mr-3" />
                 Bank-Level Security
               </div>
               <div className="flex items-center">
-                <Clock className="h-5 w-5 text-purple-500 mr-3" />
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 mr-2 sm:mr-3" />
                 Cancel Anytime
               </div>
             </div>
@@ -249,40 +266,40 @@ const Home = () => {
 
       {/* Social Proof Stats */}
       {marketStats && marketStats.market_overview && (
-        <section className="py-16 bg-white border-y">
+        <section className="py-12 sm:py-16 bg-white border-y">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Live Market Performance</h2>
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Live Market Performance</h2>
               <p className="text-gray-600">Real-time data from our trading platform</p>
             </div>
             
-            <div className="grid md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">
+                <div className="text-2xl sm:text-4xl font-bold text-blue-600 mb-2">
                   {Number(marketStats?.market_overview?.total_stocks ?? 0).toLocaleString()}
                 </div>
-                <div className="text-gray-600">Stocks Analyzed Today</div>
+                <div className="text-sm sm:text-base text-gray-600">Stocks Analyzed Today</div>
               </div>
               
               <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">
+                <div className="text-2xl sm:text-4xl font-bold text-green-600 mb-2">
                   {Number(marketStats?.market_overview?.gainers ?? 0).toLocaleString()}
                 </div>
-                <div className="text-gray-600">Winning Opportunities</div>
+                <div className="text-sm sm:text-base text-gray-600">Winning Opportunities</div>
               </div>
               
               <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600 mb-2">
+                <div className="text-2xl sm:text-4xl font-bold text-purple-600 mb-2">
                   1M+
                 </div>
-                <div className="text-gray-600">Alerts Sent This Month</div>
+                <div className="text-sm sm:text-base text-gray-600">Alerts Sent This Month</div>
               </div>
               
               <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">
+                <div className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">
                   99.9%
                 </div>
-                <div className="text-gray-600">Data Accuracy Rate</div>
+                <div className="text-sm sm:text-base text-gray-600">Data Accuracy Rate</div>
               </div>
             </div>
           </div>
@@ -290,18 +307,18 @@ const Home = () => {
       )}
 
       {/* Features Section with Expandable Details */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-16 sm:py-24 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
               Everything You Need to Dominate the Markets
             </h2>
-            <p className="text-2xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto">
               Professional-grade tools that give you the competitive edge
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12">
             {features.map((feature, index) => (
               <Collapsible key={index} className="group">
                 <Card className="hover:shadow-2xl transition-all duration-300 border-l-4 border-l-blue-500">
@@ -309,12 +326,12 @@ const Home = () => {
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
                             {feature.icon}
                           </div>
                           <div>
-                            <CardTitle className="text-2xl mb-2">{feature.title}</CardTitle>
-                            <CardDescription className="text-lg text-gray-600">
+                            <CardTitle className="text-lg sm:text-2xl mb-2">{feature.title}</CardTitle>
+                            <CardDescription className="text-base sm:text-lg text-gray-600">
                               {feature.description}
                             </CardDescription>
                           </div>
@@ -325,7 +342,7 @@ const Home = () => {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0">
-                      <p className="text-gray-700 text-lg leading-relaxed pl-20">
+                      <p className="text-gray-700 text-base sm:text-lg leading-relaxed pl-16 sm:pl-20">
                         {feature.details}
                       </p>
                     </CardContent>
@@ -338,31 +355,31 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-24 bg-white">
+      <section className="py-16 sm:py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
               Success Stories From Our Traders
             </h2>
-            <p className="text-2xl text-gray-600">
+            <p className="text-xl sm:text-2xl text-gray-600">
               Real results from real traders using Trade Scan Pro
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="hover:shadow-2xl transition-shadow duration-300 border-t-4 border-t-green-500">
-                <CardContent className="p-8">
-                  <div className="flex mb-6">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex mb-4 sm:mb-6">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
+                      <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed">
+                  <blockquote className="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6 leading-relaxed">
                     "{testimonial.content}"
                   </blockquote>
-                  <div className="border-t pt-6">
-                    <div className="font-bold text-xl text-gray-900">{testimonial.name}</div>
+                  <div className="border-t pt-4 sm:pt-6">
+                    <div className="font-bold text-lg sm:text-xl text-gray-900">{testimonial.name}</div>
                     <div className="text-gray-600 mb-2">{testimonial.role}</div>
                     <div className="text-sm text-gray-500 mb-3">{testimonial.company}</div>
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
@@ -378,52 +395,62 @@ const Home = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 bg-gradient-to-br from-blue-900 to-blue-800 text-white">
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold mb-6">
-              Start Your Trading Journey Today
-            </h2>
-            <p className="text-2xl text-blue-100 mb-8">
-              Choose the plan that fits your trading style
-            </p>
+          {/* TRIAL banner */}
+          <div className="text-center mb-8">
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              7-Day Free Trial on All Plans
+              TRIAL: 7-Day Free Trial on All Paid Plans
             </div>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">
+              Start Your Trading Journey Today
+            </h2>
+            <p className="text-xl sm:text-2xl text-blue-100 mb-6 sm:mb-8">
+              Choose the plan that fits your trading style
+            </p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`relative hover:scale-105 transition-transform duration-300 ${plan.popular ? 'ring-4 ring-yellow-400 scale-105' : ''}`}>
+              <Card key={index} className={`relative hover:scale-105 transition-transform duration-300 ${plan.popular ? 'ring-4 ring-yellow-400 scale-105' : ''} ${plan.isFree ? 'order-last lg:order-none' : ''}`}>
                 {plan.popular && (
                   <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-yellow-900 px-4 py-1">
                     Most Popular
                   </Badge>
                 )}
-                <CardContent className="p-8 text-center text-gray-900">
-                  <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
+                <CardContent className="p-6 sm:p-8 text-center text-gray-900">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4">{plan.name}</h3>
                   <div className="mb-4">
-                    <span className="text-5xl font-bold">{plan.price}</span>
+                    <span className="text-3xl sm:text-5xl font-bold">{plan.price}</span>
                     <span className="text-gray-600">{plan.period}</span>
                   </div>
-                  <p className="text-gray-600 mb-8">{plan.description}</p>
+                  <p className="text-gray-600 mb-6 sm:mb-8">{plan.description}</p>
                   
-                  <ul className="space-y-3 mb-8 text-left">
+                  <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8 text-left">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                        <span>{feature}</span>
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
+                        <span className="text-sm sm:text-base">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   
-                  <Button asChild className="w-full text-lg py-6 bg-blue-600 hover:bg-blue-700">
+                  <Button asChild className="w-full text-base sm:text-lg py-4 sm:py-6 bg-blue-600 hover:bg-blue-700">
                     <Link to="/auth/sign-up">
                       {plan.cta}
-                      <ArrowRight className="h-5 w-5 ml-2" />
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                     </Link>
                   </Button>
+                  
+                  {!plan.isFree && (
+                    <p className="text-xs text-gray-500 text-center mt-3">
+                      TRIAL: Start with 7-day free trial
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -432,13 +459,13 @@ const Home = () => {
       </section>
 
       {/* FAQ Section with Expandable Answers */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-16 sm:py-24 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
               Frequently Asked Questions
             </h2>
-            <p className="text-2xl text-gray-600">
+            <p className="text-xl sm:text-2xl text-gray-600">
               Everything you need to know about getting started
             </p>
           </div>
@@ -453,13 +480,13 @@ const Home = () => {
                 <Card className="hover:shadow-lg transition-shadow">
                   <CollapsibleTrigger className="w-full text-left">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                      <h3 className="text-xl font-semibold">{faq.question}</h3>
+                      <h3 className="text-lg sm:text-xl font-semibold">{faq.question}</h3>
                       <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
                     </CardHeader>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0">
-                      <p className="text-gray-700 text-lg leading-relaxed">{faq.answer}</p>
+                      <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{faq.answer}</p>
                     </CardContent>
                   </CollapsibleContent>
                 </Card>
@@ -470,42 +497,42 @@ const Home = () => {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-green-600 to-green-700 text-white">
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-green-600 to-green-700 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold mb-8">
+          <h2 className="text-3xl sm:text-5xl font-bold mb-6 sm:mb-8">
             Ready to Transform Your Trading?
           </h2>
-          <p className="text-2xl text-green-100 mb-12 max-w-3xl mx-auto">
+          <p className="text-xl sm:text-2xl text-green-100 mb-8 sm:mb-12 max-w-3xl mx-auto">
             Join 50,000+ successful traders who rely on our platform for profitable trading decisions.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-            <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
+            <Button asChild size="lg" variant="secondary" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
               <Link to="/auth/sign-up">
-                <Play className="h-6 w-6 mr-3" />
-                Start 7-Day Free Trial
-                <ArrowRight className="h-6 w-6 ml-3" />
+                <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                Try Now for Free
+                <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-xl px-12 py-6 h-auto border-white text-white hover:bg-white hover:text-green-700">
+            <Button asChild size="lg" variant="outline" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto border-white text-white hover:bg-white hover:text-green-700">
               <Link to="/pricing">
-                <DollarSign className="h-6 w-6 mr-3" />
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                 View All Plans
               </Link>
             </Button>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-8 text-lg">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-base sm:text-lg">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               No Setup Fees
             </div>
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Cancel Anytime
             </div>
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               24/7 Support
             </div>
           </div>
