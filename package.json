@@ -1,0 +1,26 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Toasterfire-come/stock-scanner-complete.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Toasterfire-come/stock-scanner-complete/issues"
+  },
+  "homepage": "https://github.com/Toasterfire-come/stock-scanner-complete#readme",
+  "dependencies": {
+    "ssh2-sftp-client": "^12.0.1"
+  }
+}
