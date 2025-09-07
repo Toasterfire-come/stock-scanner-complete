@@ -32,6 +32,56 @@ export const api = axios.create({
   withCredentials: false,
 });
 
+// ====================
+// Plan limits enforcement (client-side guard; server should enforce as source of truth)
+// ====================
+const PLAN_LIMITS = {
+  free: { monthlyApi: 100, dailyApi: 10, alerts: 5, watchlists: 1, portfolios: 0 },
+  bronze: { monthlyApi: 1500, dailyApi: 50, alerts: 25, watchlists: 3, portfolios: 1 },
+  silver: { monthlyApi: 5000, dailyApi: 250, alerts: 100, watchlists: 10, portfolios: Infinity },
+  gold: { monthlyApi: Infinity, dailyApi: Infinity, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
+};
+
+function getStoredUserPlan() {
+  try {
+    const raw = window.localStorage.getItem('rts_user');
+    if (!raw) return 'free';
+    try {
+      const parsed = JSON.parse(raw);
+      return (parsed?.plan || 'free').toLowerCase();
+    } catch {
+      try {
+        const parsed = JSON.parse(atob(raw));
+        return (parsed?.plan || 'free').toLowerCase();
+      } catch {
+        return 'free';
+      }
+    }
+  } catch { return 'free'; }
+}
+
+function getPlanLimits() {
+  const plan = getStoredUserPlan();
+  return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+}
+
+function ensureApiQuotaAndIncrement() {
+  const limits = getPlanLimits();
+  if (!Number.isFinite(limits.monthlyApi) && !Number.isFinite(limits.dailyApi)) return true;
+  try {
+    const now = new Date();
+    const dayKey = `api_usage_day_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const monthKey = `api_usage_month_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}`;
+    const dayCount = Number(window.localStorage.getItem(dayKey) || '0');
+    const monthCount = Number(window.localStorage.getItem(monthKey) || '0');
+    if (Number.isFinite(limits.dailyApi) && dayCount + 1 > limits.dailyApi) return false;
+    if (Number.isFinite(limits.monthlyApi) && monthCount + 1 > limits.monthlyApi) return false;
+    window.localStorage.setItem(dayKey, String(dayCount + 1));
+    window.localStorage.setItem(monthKey, String(monthCount + 1));
+    return true;
+  } catch { return true; }
+}
+
 function getCsrfToken() {
   try {
     const m = document.cookie.match(/csrftoken=([^;]+)/);
@@ -52,6 +102,15 @@ api.interceptors.request.use((config) => {
       // compatibility param for some session endpoints
       config.params = config.params || {};
       if (!config.params.authorization) config.params.authorization = `Bearer ${token}`;
+    }
+  } catch {}
+  // Enforce API quota for user-facing endpoints (skip logs/metrics)
+  try {
+    const path = String(config.url || '');
+    if (!/\/logs\//.test(path) && !/\/metrics\//.test(path)) {
+      if (!ensureApiQuotaAndIncrement()) {
+        return Promise.reject(new Error('API usage limit exceeded for your plan. Upgrade to increase limits.'));
+      }
     }
   } catch {}
   config.metadata = { start: Date.now(), url: `${config.baseURL || ''}${config.url || ''}` };
