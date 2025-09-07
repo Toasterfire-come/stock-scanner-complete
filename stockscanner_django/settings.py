@@ -52,6 +52,8 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
     'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
+    'stocks.rate_limit_middleware.RateLimitMiddleware',  # Rate limiting with free endpoint whitelist
+    'stocks.rate_limit_middleware.APIKeyAuthenticationMiddleware',  # API key auth for backend services
     'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress
     'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection
     'corsheaders.middleware.CorsMiddleware',
@@ -229,3 +231,9 @@ CSRF_TRUSTED_ORIGINS = list(filter(None, [
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))
+
+# Rate Limiting Configuration
+RATE_LIMIT_FREE_USERS = int(os.environ.get('RATE_LIMIT_FREE_USERS', '100'))  # requests per hour for free users
+RATE_LIMIT_AUTHENTICATED_USERS = int(os.environ.get('RATE_LIMIT_AUTHENTICATED_USERS', '1000'))  # requests per hour for authenticated users
+RATE_LIMIT_WINDOW = int(os.environ.get('RATE_LIMIT_WINDOW', '3600'))  # Window in seconds (default: 1 hour)
+PREMIUM_USER_GROUPS = ['premium', 'pro', 'enterprise']  # User groups that have no rate limiting
