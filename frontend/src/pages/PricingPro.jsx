@@ -142,7 +142,7 @@ const PricingPro = () => {
       name: "Free",
       description: "Perfect for getting started with trading",
       icon: <Star className="h-8 w-8" />,
-      color: "border-gray-200 bg-gray-50",
+      color: "border-gray-300 bg-gray-100",
       headerColor: "bg-gradient-to-r from-gray-500 to-gray-600",
       price: { monthly: 0, annual: 0 },
       popular: false,
