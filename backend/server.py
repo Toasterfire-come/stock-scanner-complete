@@ -415,11 +415,11 @@ async def check_rate_limits(ip_address: str) -> RateLimitInfo:
     
     rates = calculate_request_rates(ip_address)
     
-    # Check if any limits exceeded (advisory only)
+    # Check if any limits exceeded (advisory only, daily limit removed)
     rate_limited = (
         rates['minute'] > RATE_LIMITS['requests_per_minute'] or
-        rates['hour'] > RATE_LIMITS['requests_per_hour'] or
-        rates['day'] > RATE_LIMITS['requests_per_day']
+        rates['hour'] > RATE_LIMITS['requests_per_hour']
+        # Daily limit check removed - unlimited daily requests
     )
     
     if rate_limited:
