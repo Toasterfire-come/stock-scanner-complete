@@ -57,8 +57,8 @@ const PricingPro = () => {
       name: "Bronze",
       description: "Perfect for individual traders getting started",
       icon: <BarChart3 className="h-8 w-8" />,
-      color: "border-orange-200 bg-orange-50",
-      headerColor: "bg-gradient-to-r from-orange-500 to-orange-600",
+      color: "border-yellow-300 bg-yellow-50",
+      headerColor: "bg-gradient-to-r from-yellow-600 to-yellow-700",
       price: { monthly: 24.99, annual: 249.99 },
       popular: true,
       features: [
