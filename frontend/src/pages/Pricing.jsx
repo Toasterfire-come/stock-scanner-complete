@@ -60,7 +60,7 @@ const Pricing = () => {
       description: "Professional tools for serious traders",
       price: { monthly: 39.99, annual: 399.90 },
       features: [
-        "5,000 API calls per month",
+        "500 API calls per day, 5000/month",
         "Advanced filtering & screening",
         "Custom watchlists (10)",
         "Real-time alerts (50 alerts)",
