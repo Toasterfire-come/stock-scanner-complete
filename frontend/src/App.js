@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 
 // Layouts
-import AppLayout from "./layouts/AppLayout.js";
+import AppLayout from "./layouts/AppLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout";
 
 // Auth Pages
