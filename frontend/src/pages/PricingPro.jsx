@@ -62,8 +62,8 @@ const PricingPro = () => {
       price: { monthly: 24.99, annual: 249.99 },
       popular: false,
       features: [
-        { name: "2,000 API calls per month", included: true },
-        { name: "100 API calls per day", included: true },
+        { name: "1,500 API calls per month", included: true },
+        { name: "50 API calls per day", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Basic stock screener", included: true },
         { name: "Email alerts & notifications", included: true },
@@ -76,7 +76,7 @@ const PricingPro = () => {
         { name: "Priority support", included: false }
       ],
       limits: {
-        apiCalls: "2,000/month, 100/day",
+        apiCalls: "1,500/month, 50/day",
         portfolios: "1 portfolio",
         watchlists: "3 watchlists",
         alerts: "25 alerts"
@@ -91,8 +91,8 @@ const PricingPro = () => {
       price: { monthly: 39.99, annual: 399.99 },
       popular: true,
       features: [
-        { name: "10,000 API calls per month", included: true },
-        { name: "500 API calls per day", included: true },
+        { name: "5,000 API calls per month", included: true },
+        { name: "250 API calls per day", included: true },
         { name: "Real-time stock data", included: true },
         { name: "Advanced stock screener", included: true },
         { name: "Email alerts", included: true },
@@ -105,7 +105,7 @@ const PricingPro = () => {
         { name: "Enhanced analytics", included: true }
       ],
       limits: {
-        apiCalls: "10,000/month, 500/day",
+        apiCalls: "5,000/month, 250/day",
         portfolios: "Unlimited",
         watchlists: "10 watchlists",
         alerts: "100 alerts"
@@ -311,7 +311,7 @@ const PricingPro = () => {
                   {/* Key Limits */}
                   <div className="bg-white p-4 rounded-lg border">
                     <h4 className="font-semibold mb-3 text-gray-900">Usage Limits:</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                       <div>
                         <span className="text-gray-600">API Calls:</span>
                         <span className="ml-2 font-medium">{plan.limits.apiCalls}</span>

@@ -29,8 +29,8 @@ const plans = [
     period: "trial",
     description: "Great for individual traders",
     features: [
-      "2,000 API calls per month",
-      "100 API calls per day",
+      "1,500 API calls per month",
+      "50 API calls per day",
       "Advanced screening tools",
       "Real-time alerts",
       "Priority support",
@@ -46,8 +46,8 @@ const plans = [
     period: "month",
     description: "Perfect for professional traders",
     features: [
-      "10,000 API calls per month",
-      "500 API calls per day",
+      "5,000 API calls per month",
+      "250 API calls per day",
       "All screening tools",
       "Custom alerts",
       "Portfolio tracking",
