@@ -224,7 +224,7 @@ external_api = ExternalAPIClient(EXTERNAL_API_URL, EXTERNAL_API_PASSWORD)
 # Updated plan limits - Bronze and Silver now have daily limits
 PLAN_LIMITS = {
     'free': {'monthly': 15, 'daily': -1},  # 15 API calls per month, unlimited daily (will be limited by monthly)
-    'bronze': {'monthly': 1500, 'daily': 100},  # 100 per day, 1500 per month
+    'bronze': {'monthly': 1500, 'daily': 150},  # 150 per day, 1500 per month
     'silver': {'monthly': 5000, 'daily': 500, 'portfolios': 5, 'alerts': 50},  # 500 per day, 5000 per month, 5 portfolios, 50 alerts
     'gold': {'monthly': -1, 'daily': -1}  # -1 means unlimited
 }
