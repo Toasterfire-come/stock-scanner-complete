@@ -346,13 +346,16 @@ def check_rate_limit(request, limit_config):
     Returns:
         bool: True if request is within limits
     """
-    # Simple in-memory rate limiting (in production, use Redis or similar)
-    # This is a basic implementation for demonstration
+    # Rate limiting is now handled by RateLimitMiddleware
+    # This function is kept for backward compatibility
+    # The middleware handles rate limiting more efficiently at a global level
     
-    user_id = request.user.id if request.user.is_authenticated else request.META.get('REMOTE_ADDR')
-    current_time = timezone.now()
+    # Check if request was authenticated via API key (no rate limiting)
+    if hasattr(request, 'api_key_authenticated') and request.api_key_authenticated:
+        return True
     
-    # For now, always return True (implement proper rate limiting as needed)
+    # For endpoints that use this decorator, always return True
+    # as the middleware has already handled rate limiting
     return True
 
 def log_api_request(request, endpoint_name):
