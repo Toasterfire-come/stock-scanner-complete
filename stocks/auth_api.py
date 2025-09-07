@@ -138,18 +138,21 @@ def login_api(request):
         if data is None or data == {}:
             data = json.loads(request.body) if request.body else {}
         
-        # Accept either username or email, trim whitespace
-        username = (data.get('username') or '').strip()
-        email = (data.get('email') or '').strip()
+        # Support common variants: identifier, username, email
+        identifier = (data.get('identifier') or data.get('username') or data.get('email') or '').strip()
         password = (data.get('password') or '').strip()
+        username = ''
         
-        if not username and email:
+        # If identifier looks like an email, resolve to username
+        if identifier and ('@' in identifier):
             try:
-                user_lookup = User.objects.get(email__iexact=email)
+                user_lookup = User.objects.get(email__iexact=identifier)
                 username = user_lookup.username
             except User.DoesNotExist:
-                # Fall through to invalid credentials
                 username = ''
+        elif identifier:
+            # Treat as username directly
+            username = identifier
         
         if not username or not password:
             return JsonResponse({
