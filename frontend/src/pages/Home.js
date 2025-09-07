@@ -243,19 +243,19 @@ const Home = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {Number(platformStats?.nyse_stocks||0).toLocaleString()}
+                  {Number(platformStats?.nyse_stocks || 3200).toLocaleString()}
                 </div>
                 <div className="text-gray-600">NYSE Stocks Covered</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">
-                  {platformStats.total_indicators}
+                  {platformStats?.total_indicators || 14}
                 </div>
                 <div className="text-gray-600">Technical Indicators</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  {Number(platformStats?.scanner_combinations||0).toLocaleString()}+
+                  {Number(platformStats?.scanner_combinations || 1540).toLocaleString()}+
                 </div>
                 <div className="text-gray-600">Scanner Combinations</div>
               </div>
