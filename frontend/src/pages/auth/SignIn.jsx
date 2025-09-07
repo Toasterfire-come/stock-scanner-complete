@@ -82,7 +82,7 @@ export default function SignIn() {
             onChange={handleChange}
             placeholder="Enter your username or email"
             disabled={isLoading}
-            className="h-12 text-base"
+            className="h-12 text-lg px-4"
           />
         </div>
 
@@ -97,7 +97,7 @@ export default function SignIn() {
               onChange={handleChange}
               placeholder="Enter your password"
               disabled={isLoading}
-              className="h-12 text-base pr-12"
+              className="h-12 text-lg px-4 pr-12"
             />
             <Button
               type="button"
@@ -125,7 +125,7 @@ export default function SignIn() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
+        <Button type="submit" size="lg" className="w-full text-lg font-medium" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>

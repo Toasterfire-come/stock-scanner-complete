@@ -98,7 +98,7 @@ const SignUp = () => {
               id="firstName"
               type="text"
               placeholder="John"
-              className="h-12 text-base"
+              className="h-12 text-lg px-4"
               {...register("firstName")}
             />
             {errors.firstName && (
@@ -112,7 +112,7 @@ const SignUp = () => {
               id="lastName"
               type="text"
               placeholder="Doe"
-              className="h-12 text-base"
+              className="h-12 text-lg px-4"
               {...register("lastName")}
             />
             {errors.lastName && (
@@ -129,7 +129,7 @@ const SignUp = () => {
               id="username"
               type="text"
               placeholder="Choose a username"
-              className="pl-10 h-12 text-base"
+              className="pl-10 h-12 text-lg px-4"
               {...register("username")}
             />
           </div>
@@ -146,7 +146,7 @@ const SignUp = () => {
               id="email"
               type="email"
               placeholder="john@example.com"
-              className="pl-10 h-12 text-base"
+              className="pl-10 h-12 text-lg px-4"
               {...register("email")}
             />
           </div>
@@ -163,7 +163,7 @@ const SignUp = () => {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Create a secure password"
-              className="pl-10 pr-12 h-12 text-base"
+              className="pl-10 pr-12 h-12 text-lg px-4"
               {...register("password")}
             />
             <button
@@ -187,7 +187,7 @@ const SignUp = () => {
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm your password"
-              className="pl-10 pr-12 h-12 text-base"
+              className="pl-10 pr-12 h-12 text-lg px-4"
               {...register("confirmPassword")}
             />
             <button
@@ -225,7 +225,7 @@ const SignUp = () => {
           <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
         )}
 
-        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading || !agreeToTerms}>
+        <Button type="submit" size="lg" className="w-full text-lg font-medium" disabled={isLoading || !agreeToTerms}>
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>
@@ -243,7 +243,8 @@ const SignUp = () => {
         <Button
           variant="outline"
           onClick={() => handleOAuthSignUp("google")}
-          className="w-full h-12"
+          size="lg"
+          className="w-full"
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
@@ -251,7 +252,8 @@ const SignUp = () => {
         <Button
           variant="outline"
           onClick={() => handleOAuthSignUp("github")}
-          className="w-full h-12"
+          size="lg"
+          className="w-full"
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub
