@@ -157,8 +157,8 @@ const Home = () => {
       period: "/month",
       description: "Professional tools for serious traders",
       features: [
-        "5,000 API calls per month",
-        "Unlimited daily calls",
+        "500 API calls per day, 5000/month",
+        "Infinite Scanner combinations",
         "Advanced filtering & screening",
         "1-year historical data",
         "Custom watchlists (10)",
