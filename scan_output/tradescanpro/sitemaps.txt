@@ -1,0 +1,2 @@
+https://api.retailtradescanner.com/sitemap.xml
+https://tradescanpro.com/sitemap.xml

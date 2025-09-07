@@ -1,0 +1,12 @@
+type,parent_url,url,code,num_redirects,content_type,bytes,final_url
+page,,https://tradescanpro.com/,200,0,text/html,2457,https://tradescanpro.com/
+page,,https://tradescanpro.com/app/dashboard,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/app/dashboard
+page,,https://tradescanpro.com/app/market-heatmap,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/app/market-heatmap
+page,,https://tradescanpro.com/app/markets,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/app/markets
+page,,https://tradescanpro.com/app/news,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/app/news
+page,,https://tradescanpro.com/app/top-movers,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/app/top-movers
+page,,https://tradescanpro.com/docs,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/docs
+page,,https://tradescanpro.com/legal/privacy,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/legal/privacy
+page,,https://tradescanpro.com/legal/terms,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/legal/terms
+page,,https://tradescanpro.com/pricing,500,0,text/html; charset=iso-8859-1,514,https://tradescanpro.com/pricing
+page,,https://tradescanpro.com/sitemap.xml,200,0,application/xml,469,https://tradescanpro.com/sitemap.xml

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /app/
+Disallow: /account/
+Disallow: /api/
+
+Sitemap: https://api.retailtradescanner.com/sitemap.xml
