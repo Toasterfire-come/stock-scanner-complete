@@ -168,7 +168,7 @@ const Home = () => {
         "Priority email support"
       ],
       popular: false,
-      cta: "Get Started for $1"
+      cta: "Try Now for Free"
     }
   ];
 
