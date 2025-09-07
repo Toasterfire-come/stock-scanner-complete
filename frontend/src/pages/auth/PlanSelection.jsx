@@ -238,7 +238,7 @@ export default function PlanSelection() {
                     }}
                     disabled={isLoading}
                   >
-                    {plan.isFree ? "Get Started Free" : "Try Now for Free"}
+                    {plan.isFree ? "Get Started Free" : "Try for $1"}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                   
