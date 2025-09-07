@@ -223,9 +223,9 @@ external_api = ExternalAPIClient(EXTERNAL_API_URL, EXTERNAL_API_PASSWORD)
 
 # Updated plan limits - removed daily limits, only monthly limits remain
 PLAN_LIMITS = {
-    'free': {'monthly': 50, 'daily': -1},  # Unlimited daily, monthly limit only
+    'free': {'monthly': 15, 'daily': -1},  # Updated: reduced to 15 API calls
     'bronze': {'monthly': 2000, 'daily': -1},  # Unlimited daily, monthly limit only
-    'silver': {'monthly': 10000, 'daily': -1},  # Unlimited daily, monthly limit only
+    'silver': {'monthly': 10000, 'daily': -1, 'portfolios': 5, 'alerts': 50},  # Updated: 5 portfolios, 50 alerts
     'gold': {'monthly': -1, 'daily': -1}  # -1 means unlimited
 }
 
