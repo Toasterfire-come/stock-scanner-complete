@@ -426,9 +426,11 @@ const PricingPro = () => {
                       </DialogContent>
                     </Dialog>
 
-                    <p className="text-xs text-gray-500 text-center">
-                      TRIAL: 7-day trial for $1 • Cancel anytime • No setup fees
-                    </p>
+                    {!plan.isFree && (
+                      <p className="text-xs text-gray-500 text-center">
+                        TRIAL: 7-day trial for $1 • Cancel anytime • No setup fees
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
