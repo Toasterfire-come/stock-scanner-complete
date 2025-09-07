@@ -358,7 +358,7 @@ const PricingPro = () => {
                           className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                           onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
                         >
-                          {plan.name === 'Gold' ? 'Get Started for $1 (TRIAL)' : 'Get Started for $1'}
+                          TRIAL: Get Started for $1
                           <ArrowRight className="h-5 w-5 ml-2" />
                         </Button>
                       </DialogTrigger>
