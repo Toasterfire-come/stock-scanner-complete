@@ -121,6 +121,8 @@ const urlsToCache = [
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
+  // Activate updated SW immediately
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -145,7 +147,7 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
