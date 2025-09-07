@@ -10,8 +10,8 @@ import AppLayout from "./layouts/AppLayout.js";
 import AuthLayout from "./layouts/AuthLayout";
 
 // Auth Pages
-import SignIn from "./pages/auth/SignIn";
-import SignUp from "./pages/auth/SignUp";
+import SignIn from "./pages/auth/SignIn.jsx";
+import SignUp from "./pages/auth/SignUp.jsx";
 import PlanSelection from "./pages/auth/PlanSelection";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
