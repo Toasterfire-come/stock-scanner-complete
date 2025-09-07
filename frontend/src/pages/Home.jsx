@@ -229,18 +229,12 @@ const Home = () => {
             </div>
 
             {/* Primary CTA */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
+            <div className="flex justify-center mb-8 sm:mb-12">
               <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                   Try Now for Free
                   <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto border-2">
-                <Link to="/contact">
-                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-                  Contact Support
                 </Link>
               </Button>
             </div>
