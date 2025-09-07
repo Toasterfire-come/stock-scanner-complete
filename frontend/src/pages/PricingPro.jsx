@@ -220,10 +220,13 @@ const PricingPro = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
-          <Badge className="mb-4 text-lg px-4 py-2 bg-blue-100 text-blue-800">
-            <Gift className="h-4 w-4 mr-2" />
-            7-Day Trial for Just $1
-          </Badge>
+          {/* TRIAL Banner */}
+          <div className="mb-6">
+            <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
+              <Gift className="h-5 w-5 mr-2" />
+              TRIAL: 7-Day Trial for Just $1
+            </div>
+          </div>
           
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
             Choose Your Trading Edge
