@@ -29,6 +29,8 @@ Options:
   --max-pages N           Max number of HTML pages to crawl (default: 500)
   --respect-robots        If set, excludes Disallow paths from robots.txt
   --sleep-seconds S       Delay between requests (float, default: 0.25)
+  --seed-paths CSV       Comma-separated list of extra paths/URLs to seed (e.g., /auth,/auth/login)
+  --include-disallow     Also seed robots.txt Disallow paths (for auditing), regardless of --respect-robots
   --repo-dir PATH         Local repository directory for optional automatic replacements
   --apply                 Actually mutate files during 'fix' (default is dry-run)
 
@@ -211,6 +213,16 @@ extract_links_and_assets() {
   # Read stdin once into a temp file so we can parse multiple times
   cat - > "$tmp_html"
 
+  # Build a skip list for link rel preconnect/dns-prefetch
+  local tmp_skip
+  tmp_skip=$(mktemp)
+  # double-quoted
+  grep -Eoi '<link[^>]+rel="(preconnect|dns-prefetch)"[^>]*href="[^"]+"' "$tmp_html" \
+    | grep -Eoi 'href="[^"]+"' | sed -E 's/^href=//; s/^"|"$//g' >> "$tmp_skip" || true
+  # single-quoted
+  grep -Eoi "<link[^>]+rel='(preconnect|dns-prefetch)'[^>]*href='[^']+'" "$tmp_html" \
+    | grep -Eoi "href='[^']+'" | sed -E "s/^href=//; s/^'|'$//g" >> "$tmp_skip" || true
+
   # Temporarily disable pipefail so empty grep results don't abort the script
   set +o pipefail
   # shellcheck disable=SC2002
@@ -218,6 +230,7 @@ extract_links_and_assets() {
     | grep -Eoi -e 'href="[^\"]+"' -e 'src="[^\"]+"' -e "href='[^']+'" -e "src='[^']+'" \
     | sed -E -e 's/^(href|src)=//I' -e 's/^\"//; s/\"$//' -e "s/^'//; s/'$//" \
     | sed -E 's/^[[:space:]]+|[[:space:]]+$//g' \
+    | grep -Fvx -f "$tmp_skip" \
     > "$tmp_all"
 
   # CSS urls
@@ -251,7 +264,7 @@ extract_links_and_assets() {
     fi
   done < "$tmp_all"
 
-  rm -f "$tmp_all" "$tmp_html"
+  rm -f "$tmp_all" "$tmp_html" "$tmp_skip"
 }
 
 fetch_url() {
@@ -301,6 +314,7 @@ scan_site() {
   ensure_tools
 
   local base_url="" out_dir="" max_pages=500 respect=0 sleep_seconds=0.25
+  local seed_paths="" include_disallow=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -314,6 +328,10 @@ scan_site() {
         respect=1; shift 1;;
       --sleep-seconds)
         sleep_seconds="$2"; shift 2;;
+      --seed-paths)
+        seed_paths="$2"; shift 2;;
+      --include-disallow)
+        include_disallow=1; shift 1;;
       *)
         echo "Unknown option for scan: $1" >&2; usage; exit 2;;
     esac
@@ -366,6 +384,32 @@ scan_site() {
 
   # Seed queue with base URL
   echo "$base_url" >> "$queue_file"
+
+  # Seed extra paths
+  if [[ -n "$seed_paths" ]]; then
+    IFS=',' read -r -a extra_seeds <<< "$seed_paths"
+    for sp in "${extra_seeds[@]}"; do
+      [[ -z "$sp" ]] && continue
+      if [[ "$sp" =~ ^https?:// ]]; then
+        echo "$sp" >> "$queue_file"
+      else
+        # treat as path
+        local abs
+        abs="$(url_origin "$base_url")$sp"
+        echo "$abs" >> "$queue_file"
+      fi
+    done
+  fi
+
+  # Optionally seed Disallow paths from robots.txt for auditing
+  if [[ "$include_disallow" -eq 1 && -s "$robots_txt" ]]; then
+    awk 'BEGIN{IGNORECASE=1} /^Disallow:/ {gsub(/\r/,"",$0); p=$0; sub(/Disallow:/,"",p); gsub(/^\s+|\s+$/, "", p); if(p!="") print p}' "$robots_txt" \
+      | while IFS= read -r d; do
+          if [[ "$d" == /* ]]; then
+            echo "$(url_origin "$base_url")$d"
+          fi
+        done >> "$queue_file"
+  fi
 
   # Parse sitemap(s)
   if [[ -s "$sitemap_urls" ]]; then
@@ -492,6 +536,27 @@ scan_site() {
           fi
           if [[ "$acode" -ge 400 ]]; then
             echo "asset,${a},${acode}" >> "$errors_csv"
+          fi
+          # If JS and on same host or absolute, attempt to parse SPA route-like strings
+          if echo "$act" | grep -qi 'javascript' || echo "$a" | grep -Eqi '\\.js(\?|$)'; then
+            # Fetch small chunk to avoid huge downloads
+            local tmp_js
+            tmp_js=$(mktemp)
+            curl -sSL --max-time 20 -A "Mozilla/5.0 (compatible; $SCRIPT_NAME/1.0)" -r 0-500000 "$afinal" -o "$tmp_js" || true
+            # Heuristics: paths like "/auth", "/[a-z0-9-_/]+" possibly used by router
+            # Ignore external hosts; we'll only add same-host routes
+            grep -Eo '"/[a-zA-Z0-9_./-]+"' "$tmp_js" | tr -d '"' | sed -E 's/[?#].*$//' \
+              | grep -E '^/' | sed -E 's#//+#/#g' | sort -u \
+              | while IFS= read -r rp; do
+                  local candidate
+                  candidate="$(url_origin "$base_url")$rp"
+                  if is_same_host "$base_url" "$candidate"; then
+                    if ! grep -Fxq "$candidate" "$visited_file" 2>/dev/null && ! grep -Fxq "$candidate" "$queue_file" 2>/dev/null; then
+                      echo "$candidate" >> "$queue_file"
+                    fi
+                  fi
+                done
+            rm -f "$tmp_js"
           fi
           rm -f "$tmp_ai"
           sleep_brief "$sleep_seconds"
