@@ -141,8 +141,8 @@ const Home = () => {
       period: "/month",
       description: "Enhanced features for active traders",
       features: [
-        "1,500 API calls per month",
-        "Unlimited daily calls", 
+        "100 API calls per day",
+        "~3,000 API calls per month", 
         "Full stock scanner & lookup",
         "Email alerts & notifications",
         "News sentiment analysis",

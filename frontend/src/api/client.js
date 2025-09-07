@@ -33,10 +33,10 @@ export const api = axios.create({
 // Plan limits enforcement (client-side guard; server should enforce as source of truth)
 // ====================
 const PLAN_LIMITS = {
-  free: { monthlyApi: 15, alerts: 0, watchlists: 0, portfolios: 1 },
-  bronze: { monthlyApi: 1500, alerts: 25, watchlists: 3, portfolios: 1 },
-  silver: { monthlyApi: 5000, alerts: 50, watchlists: 10, portfolios: 5 },
-  gold: { monthlyApi: Infinity, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
+  free: { monthlyApi: 15, dailyApi: null, alerts: 0, watchlists: 0, portfolios: 1 },
+  bronze: { monthlyApi: 3000, dailyApi: 100, alerts: 25, watchlists: 3, portfolios: 1 },
+  silver: { monthlyApi: 5000, dailyApi: null, alerts: 50, watchlists: 10, portfolios: 5 },
+  gold: { monthlyApi: Infinity, dailyApi: null, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
 };
 
 function getStoredUserPlan() {
@@ -70,26 +70,40 @@ function ensureApiQuotaAndIncrement() {
   // Gold plan has unlimited API calls
   if (plan === 'gold') return true;
   
-  // Get current month key
   const now = new Date();
   const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-  const storageKey = `rts_api_usage_${monthKey}`;
+  const dayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const monthStorageKey = `rts_api_usage_${monthKey}`;
+  const dayStorageKey = `rts_api_usage_daily_${dayKey}`;
   
   // Get current usage
-  let currentUsage = 0;
+  let monthlyUsage = 0;
+  let dailyUsage = 0;
   try {
-    currentUsage = parseInt(localStorage.getItem(storageKey) || '0', 10);
+    monthlyUsage = parseInt(localStorage.getItem(monthStorageKey) || '0', 10);
+    dailyUsage = parseInt(localStorage.getItem(dayStorageKey) || '0', 10);
   } catch {}
   
-  // Check if limit exceeded
-  if (currentUsage >= limits.monthlyApi) {
+  // Check daily limit for bronze plan
+  if (plan === 'bronze' && limits.dailyApi) {
+    if (dailyUsage >= limits.dailyApi) {
+      console.warn(`Daily API limit reached (${limits.dailyApi} calls for ${plan} plan)`);
+      return false;
+    }
+  }
+  
+  // Check monthly limit
+  if (monthlyUsage >= limits.monthlyApi) {
     console.warn(`Monthly API limit reached (${limits.monthlyApi} calls for ${plan} plan)`);
     return false;
   }
   
   // Increment usage
   try {
-    localStorage.setItem(storageKey, String(currentUsage + 1));
+    localStorage.setItem(monthStorageKey, String(monthlyUsage + 1));
+    if (plan === 'bronze') {
+      localStorage.setItem(dayStorageKey, String(dailyUsage + 1));
+    }
   } catch {}
   
   return true;
@@ -122,7 +136,22 @@ api.interceptors.request.use((config) => {
   if (!ensureApiQuotaAndIncrement()) {
     const plan = getStoredUserPlan();
     const limits = getPlanLimits();
-    const error = new Error(`Monthly API limit reached (${limits.monthlyApi} calls for ${plan} plan). Please upgrade your plan for more API calls.`);
+    const now = new Date();
+    const dayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    const dayStorageKey = `rts_api_usage_daily_${dayKey}`;
+    let dailyUsage = 0;
+    try {
+      dailyUsage = parseInt(localStorage.getItem(dayStorageKey) || '0', 10);
+    } catch {}
+    
+    let errorMsg = '';
+    if (plan === 'bronze' && limits.dailyApi && dailyUsage >= limits.dailyApi) {
+      errorMsg = `Daily API limit reached (${limits.dailyApi} calls for ${plan} plan). Your limit will reset tomorrow.`;
+    } else {
+      errorMsg = `Monthly API limit reached (${limits.monthlyApi} calls for ${plan} plan). Please upgrade your plan for more API calls.`;
+    }
+    
+    const error = new Error(errorMsg);
     error.code = 'QUOTA_EXCEEDED';
     return Promise.reject(error);
   }
@@ -175,28 +204,46 @@ export function getApiUsageInfo() {
   const limits = getPlanLimits();
   
   if (plan === 'gold') {
-    return { used: 0, limit: Infinity, remaining: Infinity, percentage: 0 };
+    return { 
+      used: 0, 
+      limit: Infinity, 
+      remaining: Infinity, 
+      percentage: 0,
+      dailyUsed: 0,
+      dailyLimit: null,
+      dailyRemaining: null,
+      plan 
+    };
   }
   
   const now = new Date();
   const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-  const storageKey = `rts_api_usage_${monthKey}`;
+  const dayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const monthStorageKey = `rts_api_usage_${monthKey}`;
+  const dayStorageKey = `rts_api_usage_daily_${dayKey}`;
   
-  let currentUsage = 0;
+  let monthlyUsage = 0;
+  let dailyUsage = 0;
   try {
-    currentUsage = parseInt(localStorage.getItem(storageKey) || '0', 10);
+    monthlyUsage = parseInt(localStorage.getItem(monthStorageKey) || '0', 10);
+    dailyUsage = parseInt(localStorage.getItem(dayStorageKey) || '0', 10);
   } catch {}
   
-  const remaining = Math.max(0, limits.monthlyApi - currentUsage);
-  const percentage = (currentUsage / limits.monthlyApi) * 100;
+  const remaining = Math.max(0, limits.monthlyApi - monthlyUsage);
+  const percentage = (monthlyUsage / limits.monthlyApi) * 100;
   
-  return {
-    used: currentUsage,
+  const result = {
+    used: monthlyUsage,
     limit: limits.monthlyApi,
     remaining,
     percentage: Math.min(100, percentage),
+    dailyUsed: dailyUsage,
+    dailyLimit: limits.dailyApi,
+    dailyRemaining: limits.dailyApi ? Math.max(0, limits.dailyApi - dailyUsage) : null,
     plan
   };
+  
+  return result;
 }
 
 // Expose to window for ErrorBoundary
