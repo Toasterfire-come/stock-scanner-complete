@@ -114,10 +114,23 @@ def login_api(request):
     POST /api/auth/login
     """
     try:
-        data = json.loads(request.body) if request.body else {}
+        # Prefer DRF's parsed data, fallback to raw JSON body
+        data = getattr(request, 'data', None)
+        if data is None or data == {}:
+            data = json.loads(request.body) if request.body else {}
         
-        username = data.get('username')
-        password = data.get('password')
+        # Accept either username or email, trim whitespace
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip()
+        password = (data.get('password') or '').strip()
+        
+        if not username and email:
+            try:
+                user_lookup = User.objects.get(email__iexact=email)
+                username = user_lookup.username
+            except User.DoesNotExist:
+                # Fall through to invalid credentials
+                username = ''
         
         if not username or not password:
             return JsonResponse({
