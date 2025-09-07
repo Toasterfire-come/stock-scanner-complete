@@ -38,7 +38,7 @@ const ForgotPassword = () => {
 
   if (isSubmitted) {
     return (
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full mx-auto" style={{ maxWidth: 'min(90vw, clamp(24rem, 45vw, 64rem))' }}>
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
             <CheckCircle className="h-6 w-6 text-green-600" />
@@ -75,7 +75,7 @@ const ForgotPassword = () => {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full mx-auto" style={{ maxWidth: 'min(90vw, clamp(24rem, 45vw, 64rem))' }}>
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold text-center">Forgot your password?</CardTitle>
         <CardDescription className="text-center">

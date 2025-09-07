@@ -13,9 +13,9 @@ import { Suspense, lazy } from 'react';
 import AppLayout from "./layouts/AppLayout.js";
 import AuthLayout from "./layouts/AuthLayout";
 
-// Auth Pages
-const SignIn = lazy(() => import("./pages/auth/SignIn"));
-const SignUp = lazy(() => import("./pages/auth/SignUp"));
+// Auth Pages (force .jsx to prefer the newer components)
+const SignIn = lazy(() => import("./pages/auth/SignIn.jsx"));
+const SignUp = lazy(() => import("./pages/auth/SignUp.jsx"));
 const PlanSelection = lazy(() => import("./pages/auth/PlanSelection"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
