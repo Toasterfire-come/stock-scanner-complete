@@ -50,17 +50,17 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Third-party CORS as high as possible
     'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
     'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
-    'stocks.rate_limit_middleware.RateLimitMiddleware',  # Rate limiting with free endpoint whitelist
-    'stocks.rate_limit_middleware.APIKeyAuthenticationMiddleware',  # API key auth for backend services
-    'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress
-    'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection
-    'corsheaders.middleware.CorsMiddleware',
+    'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection (sets request.is_api_request)
+    'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress and API
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Ensure request.user exists before rate limiting
+    'stocks.rate_limit_middleware.APIKeyAuthenticationMiddleware',  # API key auth for backend services
+    'stocks.rate_limit_middleware.RateLimitMiddleware',  # Rate limiting with free endpoint whitelist
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -159,6 +159,8 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://tradescanpro.com',
+    'https://www.tradescanpro.com',
 ]))
 
 # REST Framework

@@ -82,6 +82,10 @@ class RateLimitMiddleware(MiddlewareMixin):
         self.premium_user_groups = getattr(settings, 'PREMIUM_USER_GROUPS', ['premium', 'pro', 'enterprise'])
     
     def __call__(self, request):
+        # Always skip CORS preflight and non-mutating methods that should not be rate limited
+        if request.method in ("OPTIONS", "HEAD"):
+            return self.get_response(request)
+
         # Check if rate limiting should be applied
         if not self.should_rate_limit(request):
             return self.get_response(request)
@@ -108,6 +112,11 @@ class RateLimitMiddleware(MiddlewareMixin):
         Determine if this request should be rate limited
         """
         path = request.path
+        method = request.method
+
+        # Never rate limit preflight or HEAD requests
+        if method in ("OPTIONS", "HEAD"):
+            return False
         
         # Check if endpoint is in free list (no rate limiting)
         for free_endpoint in self.FREE_ENDPOINTS:
@@ -134,34 +143,47 @@ class RateLimitMiddleware(MiddlewareMixin):
         """
         Get a unique identifier for the user
         """
-        if request.user.is_authenticated:
-            return f"user_{request.user.id}"
+        user = getattr(request, 'user', None)
+        is_authenticated = getattr(user, 'is_authenticated', False)
+
+        if is_authenticated:
+            user_id = getattr(user, 'id', None)
+            # Fallback to session key if user id is somehow missing
+            if user_id is not None:
+                return f"user_{user_id}"
+
+        # Use IP address (or a generic fallback) for anonymous/missing user
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
         else:
-            # Use IP address for anonymous users
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-            if x_forwarded_for:
-                ip = x_forwarded_for.split(',')[0]
-            else:
-                ip = request.META.get('REMOTE_ADDR')
-            return f"ip_{ip}"
+            ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
+        return f"ip_{ip}"
     
     def is_premium_user(self, request):
         """
         Check if user is a premium user (no rate limiting)
         """
-        if not request.user.is_authenticated:
+        user = getattr(request, 'user', None)
+        if not getattr(user, 'is_authenticated', False):
             return False
         
         # Check if user is in premium groups
-        user_groups = request.user.groups.values_list('name', flat=True)
+        user_groups = getattr(user, 'groups', None)
+        if user_groups is not None:
+            user_groups = user_groups.values_list('name', flat=True)
+        else:
+            user_groups = []
         for group in self.premium_user_groups:
             if group in user_groups:
-                logger.debug(f"User {request.user.username} is premium, no rate limiting")
+                username = getattr(user, 'username', 'unknown')
+                logger.debug(f"User {username} is premium, no rate limiting")
                 return True
         
         # Check if user is staff or superuser
-        if request.user.is_staff or request.user.is_superuser:
-            logger.debug(f"User {request.user.username} is staff/superuser, no rate limiting")
+        if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+            username = getattr(user, 'username', 'unknown')
+            logger.debug(f"User {username} is staff/superuser, no rate limiting")
             return True
         
         return False
@@ -170,7 +192,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         """
         Get the rate limit for this user
         """
-        if request.user.is_authenticated:
+        if getattr(getattr(request, 'user', None), 'is_authenticated', False):
             return self.authenticated_user_limit
         else:
             return self.free_user_limit
