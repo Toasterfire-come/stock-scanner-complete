@@ -353,22 +353,22 @@ const PricingPro = () => {
                   {/* Key Limits */}
                   <div className="bg-white p-4 rounded-lg border">
                     <h4 className="font-semibold mb-3 text-gray-900">Usage Limits:</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                      <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between">
                         <span className="text-gray-600">API Calls:</span>
-                        <span className="ml-2 font-medium">{plan.limits.apiCalls}</span>
+                        <span className="font-medium text-right">{plan.limits.apiCalls}</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Alerts:</span>
-                        <span className="ml-2 font-medium">{plan.limits.alerts}</span>
+                        <span className="font-medium text-right">{plan.limits.alerts}</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Portfolios:</span>
-                        <span className="ml-2 font-medium">{plan.limits.portfolios}</span>
+                        <span className="font-medium text-right">{plan.limits.portfolios}</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Watchlists:</span>
-                        <span className="ml-2 font-medium">{plan.limits.watchlists}</span>
+                        <span className="font-medium text-right">{plan.limits.watchlists}</span>
                       </div>
                     </div>
                   </div>
@@ -397,7 +397,7 @@ const PricingPro = () => {
                           className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                           onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
                         >
-                          Try Now for Free
+                          {plan.isFree ? 'Start Free Plan' : 'Try for $1 - Code TRIAL'}
                           <ArrowRight className="h-5 w-5 ml-2" />
                         </Button>
                       </DialogTrigger>
@@ -420,6 +420,12 @@ const PricingPro = () => {
                         )}
                       </DialogContent>
                     </Dialog>
+                    
+                    {!plan.isFree && (
+                      <p className="text-xs text-gray-600 text-center">
+                        7-day trial for $1, then {isAnnual ? `$${plan.price.annual}/year` : `$${plan.price.monthly}/month`}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
