@@ -163,6 +163,24 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'https://www.tradescanpro.com',
 ]))
 
+# Enterprise/Premium overrides
+# Comma-separated list via ENTERPRISE_EMAILS, plus hardcoded important recipients
+ENTERPRISE_EMAIL_WHITELIST = list(filter(None, [
+    *(email.strip() for email in os.environ.get('ENTERPRISE_EMAILS', '').split(',') if email.strip()),
+    'Carter.kiefer2010@outlook.com',
+]))
+
+# Define which endpoints constitute stock market data for counting/limits
+STOCK_DATA_ENDPOINT_PREFIXES = [
+    '/api/stocks/',
+    '/api/stock/',
+    '/api/search/',
+    '/api/trending/',
+    '/api/realtime/',
+    '/api/filter/',
+    '/api/market-stats/',
+]
+
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

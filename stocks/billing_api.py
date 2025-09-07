@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
+from django.conf import settings
 from .security_utils import secure_api_endpoint
 
 logger = logging.getLogger(__name__)
@@ -272,6 +273,18 @@ def current_plan_api(request):
     try:
         user = request.user
         profile, created = UserProfile.objects.get_or_create(user=user)
+
+        # Enterprise email whitelist override
+        enterprise_emails = set(email.lower() for email in getattr(settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
+        user_email = (getattr(user, 'email', '') or '').lower()
+        if user_email and user_email in enterprise_emails:
+            # Persist enterprise plan on the profile for consistency
+            profile.plan_type = 'enterprise'
+            profile.plan_name = 'Enterprise'
+            profile.is_premium = True
+            # Ensure very high limit for enterprise
+            profile.api_calls_limit = max(getattr(profile, 'api_calls_limit', 100000), 100000)
+            profile.save()
         
         return JsonResponse({
             'success': True,
@@ -314,6 +327,11 @@ def change_plan_api(request):
         profile, created = UserProfile.objects.get_or_create(user=user)
         
         new_plan = data.get('plan_type')
+        # Enterprise email whitelist stays on enterprise regardless of request
+        enterprise_emails = set(email.lower() for email in getattr(settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
+        user_email = (getattr(user, 'email', '') or '').lower()
+        if user_email and user_email in enterprise_emails:
+            new_plan = 'enterprise'
         billing_cycle = data.get('billing_cycle', 'monthly')
         
         if new_plan not in ['free', 'basic', 'pro', 'enterprise']:
@@ -669,9 +687,22 @@ def usage_track_api(request):
         from django.utils import timezone
         today = timezone.now().date()
 
+        # Only count stock market data endpoints toward usage numbers
+        stock_prefixes = getattr(settings, 'STOCK_DATA_ENDPOINT_PREFIXES', [
+            '/api/stocks/', '/api/stock/', '/api/search/', '/api/trending/', '/api/realtime/', '/api/filter/', '/api/market-stats/'
+        ])
+        free_prefixes = [
+            '/health/', '/api/health/', '/health/detailed/', '/health/ready/', '/health/live/',
+            '/docs/', '/api/docs/', '/endpoint-status/', '/api/endpoint-status/', '/api/auth/', '/static/', '/media/'
+        ]
+        should_count = endpoint and any(endpoint.startswith(p) for p in stock_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
+
         stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
-        stats.api_calls = (stats.api_calls or 0) + 1
-        stats.requests = (stats.requests or 0) + 1
+        if should_count:
+            stats.api_calls = (stats.api_calls or 0) + 1
+        # Always increment total requests only for stock data endpoints as per requirement
+        if should_count:
+            stats.requests = (stats.requests or 0) + 1
         stats.save()
 
         return JsonResponse({
@@ -681,6 +712,7 @@ def usage_track_api(request):
                 'endpoint': endpoint,
                 'method': method,
                 'date': today.isoformat(),
+                'counted': bool(should_count),
                 'daily': {
                     'api_calls': stats.api_calls,
                     'requests': stats.requests

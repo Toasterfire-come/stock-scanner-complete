@@ -40,6 +40,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         '/accounts/logout/',
         '/accounts/signup/',
         '/accounts/password_reset/',
+        '/api/auth/',
         
         # Admin (handled separately by Django auth)
         '/admin/',
@@ -56,7 +57,7 @@ class RateLimitMiddleware(MiddlewareMixin):
     ]
     
     # Endpoints that require rate limiting for free users
-    RATE_LIMITED_ENDPOINTS = [
+    RATE_LIMITED_ENDPOINTS = getattr(settings, 'STOCK_DATA_ENDPOINT_PREFIXES', [
         '/api/stocks/',
         '/api/stock/',
         '/api/search/',
@@ -64,11 +65,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         '/api/realtime/',
         '/api/filter/',
         '/api/market-stats/',
-        '/api/portfolio/',
-        '/api/watchlist/',
-        '/api/alerts/',
-        '/revenue/',
-    ]
+    ])
     
     def __init__(self, get_response):
         self.get_response = get_response
@@ -168,6 +165,26 @@ class RateLimitMiddleware(MiddlewareMixin):
         if not getattr(user, 'is_authenticated', False):
             return False
         
+        # Enterprise email whitelist override
+        try:
+            from django.conf import settings as django_settings
+            enterprise_emails = set(email.lower() for email in getattr(django_settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
+            user_email = (getattr(user, 'email', '') or '').lower()
+            if user_email and user_email in enterprise_emails:
+                return True
+        except Exception:
+            pass
+
+        # Profile-based premium/enterprise check
+        try:
+            profile = getattr(user, 'profile', None)
+            if profile and getattr(profile, 'plan_type', 'free') in ('pro', 'enterprise'):
+                return True
+            if profile and getattr(profile, 'is_premium', False):
+                return True
+        except Exception:
+            pass
+
         # Check if user is in premium groups
         user_groups = getattr(user, 'groups', None)
         if user_groups is not None:
