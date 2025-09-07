@@ -233,36 +233,34 @@ const Home = () => {
       </section>
 
       {/* Platform Stats */}
-      {platformStats && (
-        <section className="py-16 bg-white border-y">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Platform Capabilities</h2>
-              <p className="text-gray-600">Real capabilities of our trading platform</p>
+      <section className="py-16 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Platform Capabilities</h2>
+            <p className="text-gray-600">Real capabilities of our trading platform</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                3,200+
+              </div>
+              <div className="text-gray-600">NYSE Stocks Covered</div>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {Number(platformStats?.nyse_stocks||0).toLocaleString()}
-                </div>
-                <div className="text-gray-600">NYSE Stocks Covered</div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-green-600 mb-2">
+                14
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  {platformStats.total_indicators}
-                </div>
-                <div className="text-gray-600">Technical Indicators</div>
+              <div className="text-gray-600">Technical Indicators</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-purple-600 mb-2">
+                Infinite
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600 mb-2">
-                  Infinite
-                </div>
-                <div className="text-gray-600">Scanner Combinations</div>
-              </div>
+              <div className="text-gray-600">Scanner Combinations</div>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Features Section with Expandable Details */}
       <section className="py-24 bg-gray-50">

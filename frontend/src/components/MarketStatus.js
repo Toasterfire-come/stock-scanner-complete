@@ -136,19 +136,26 @@ const MarketStatus = ({ showNotice = false }) => {
       </Badge>
       
       {showNotice && !marketStatus.isOpen && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <div className="flex items-start space-x-2">
-            <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-yellow-800">
-              <p className="font-medium">Market is currently closed</p>
-              <p className="mt-1">
-                Data updates are paused outside trading hours for more accurate information.
-                {marketStatus.nextOpen && (
-                  <span className="block mt-1">
-                    Next market open: {formatDate(marketStatus.nextOpen)} at {formatTime(marketStatus.nextOpen)} {marketStatus.timezone}
-                  </span>
-                )}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-start space-x-3">
+            <div className="bg-blue-100 rounded-full p-2">
+              <AlertCircle className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 text-base">
+                Market {marketStatus.status} ({marketStatus.timezone})
               </p>
+              <p className="text-sm text-gray-700 mt-1">
+                Market is currently closed
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                Data updates are paused outside trading hours for more accurate information.
+              </p>
+              {marketStatus.nextOpen && (
+                <p className="text-sm font-medium text-blue-700 mt-2">
+                  Next market open: {formatDate(marketStatus.nextOpen)} at {formatTime(marketStatus.nextOpen)} {marketStatus.timezone}
+                </p>
+              )}
             </div>
           </div>
         </div>
