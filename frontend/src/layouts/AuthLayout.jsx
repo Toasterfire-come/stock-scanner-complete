@@ -18,7 +18,7 @@ const AuthLayout = () => {
       </header>
       
       <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl">
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl">
           <Card className="w-full p-6 sm:p-8 md:p-10 lg:p-12 shadow-xl">
             <Outlet />
           </Card>

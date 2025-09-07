@@ -122,13 +122,15 @@ function App() {
                 <Route element={<AuthLayout />}>
                   <Route path="/auth/sign-in" element={<SignIn />} />
                   <Route path="/auth/sign-up" element={<SignUp />} />
-                  <Route path="/auth/plan-selection" element={<PlanSelection />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/verify-email" element={<VerifyEmail />} />
                   <Route path="/auth/oauth-callback" element={<OAuthCallback />} />
                   <Route path="/auth/2fa" element={<TwoFactorAuth />} />
                 </Route>
+                
+                {/* Plan Selection - Outside AuthLayout for full width */}
+                <Route path="/auth/plan-selection" element={<PlanSelection />} />
 
                 {/* Onboarding */}
                 <Route path="/onboarding" element={<OnboardingWizard />} />

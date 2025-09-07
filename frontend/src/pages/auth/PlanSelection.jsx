@@ -140,8 +140,8 @@ export default function PlanSelection() {
   };
 
   return (
-    <div className="w-full">
-      <div className="w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 sm:py-12 px-4">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (
             <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-2">
