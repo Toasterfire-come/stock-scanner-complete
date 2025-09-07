@@ -18,6 +18,7 @@ from django.core.validators import validate_email
 import json
 import logging
 from datetime import datetime, timedelta
+from django.db import transaction, IntegrityError
 
 from .models import UserProfile, BillingHistory, NotificationSettings
 from .security_utils import secure_api_endpoint, validate_user_input
@@ -34,10 +35,13 @@ def register_api(request):
     POST /api/auth/register
     """
     try:
-        data = json.loads(request.body) if request.body else {}
+        # Prefer DRF parsed data, fallback to raw JSON
+        data = getattr(request, 'data', None)
+        if data is None or data == {}:
+            data = json.loads(request.body) if request.body else {}
 
         username = (data.get('username') or '').strip()
-        email = (data.get('email') or '').strip()
+        email = (data.get('email') or '').strip().lower()
         password = (data.get('password') or '').strip()
         first_name = (data.get('first_name') or '').strip()
         last_name = (data.get('last_name') or '').strip()
@@ -58,24 +62,39 @@ def register_api(request):
                 'error_code': 'INVALID_EMAIL'
             }, status=400)
 
-        if User.objects.filter(username=username).exists():
+        # Case-insensitive uniqueness checks to prevent duplicates that differ only by case
+        if User.objects.filter(username__iexact=username).exists():
             return JsonResponse({
                 'success': False,
                 'error': 'Username already taken',
                 'error_code': 'USERNAME_TAKEN'
             }, status=409)
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
             return JsonResponse({
                 'success': False,
                 'error': 'An account with this email already exists',
                 'error_code': 'EMAIL_TAKEN'
             }, status=409)
 
-        user = User.objects.create_user(username=username, email=email, password=password,
-                                        first_name=first_name, last_name=last_name)
-        # Create profile
-        profile = UserProfile.objects.create(user=user)
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                # Ensure a profile exists
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+        except IntegrityError:
+            # Handle rare race conditions where another request created the same user concurrently
+            return JsonResponse({
+                'success': False,
+                'error': 'Username or email already exists',
+                'error_code': 'USERNAME_OR_EMAIL_TAKEN'
+            }, status=409)
 
         return JsonResponse({
             'success': True,
