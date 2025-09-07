@@ -95,7 +95,7 @@ const PricingPro = () => {
         { name: "Advanced stock screener", included: true },
         { name: "Email alerts", included: true },
         { name: "Real-time alerts", included: true },
-        { name: "Portfolio tracking (unlimited)", included: true },
+        { name: "Portfolio tracking (5 portfolios)", included: true },
         { name: "Priority email support", included: true },
         { name: "Advanced screener filters", included: true },
         { name: "Custom watchlists (10)", included: true },
@@ -104,9 +104,9 @@ const PricingPro = () => {
       ],
       limits: {
         apiCalls: "5,000/month",
-        portfolios: "Unlimited",
+        portfolios: "5 portfolios",
         watchlists: "10 watchlists",
-        alerts: "100 alerts"
+        alerts: "50 alerts"
       }
     },
     {
@@ -148,21 +148,21 @@ const PricingPro = () => {
       popular: false,
       isFree: true,
       features: [
-        { name: "50 API calls per month", included: true },
+        { name: "15 API calls per month", included: true },
         { name: "Basic stock screening", included: true },
-        { name: "Email alerts", included: true },
         { name: "Community support", included: true },
         { name: "Basic portfolio tracking", included: true },
         { name: "Advanced screener filters", included: false },
         { name: "Custom watchlists", included: false },
         { name: "API access", included: false },
-        { name: "Priority support", included: false }
+        { name: "Priority support", included: false },
+        { name: "Email alerts", included: false }
       ],
       limits: {
-        apiCalls: "50/month",
+        apiCalls: "15/month",
         portfolios: "1 portfolio",
-        watchlists: "3 watchlists",  
-        alerts: "5 alerts"
+        watchlists: "0 watchlists",  
+        alerts: "0 alerts"
       }
     }
   ];
@@ -245,11 +245,11 @@ const PricingPro = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
-          {/* TRIAL Banner - Only show above plans */}
+          {/* TRIAL Banner - Updated messaging */}
           <div className="mb-6">
             <div className="inline-flex items-center bg-yellow-100 text-yellow-800 px-6 py-3 rounded-full font-medium text-lg border border-yellow-200">
               <Gift className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day free trial on paid plans
+              Use code TRIAL for a 7‑day 1$ trial on paid plans
             </div>
           </div>
           
@@ -472,7 +472,7 @@ const PricingPro = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">How does the 7-day trial work?</h3>
                 <p className="text-gray-600">
-                  Use code TRIAL during signup to access your chosen plan for 7 days. After the trial, you'll be charged the regular monthly price unless you cancel.
+                  Use code TRIAL during signup to access your chosen plan for 7 days for just $1. After the trial, you'll be charged the regular monthly price unless you cancel.
                 </p>
               </CardContent>
             </Card>

@@ -37,8 +37,8 @@ const plans = [
       "5,000 API calls per month",
       "Unlimited daily calls",
       "All screening tools",
-      "Custom alerts & notifications",
-      "Portfolio tracking (unlimited)",
+      "Custom alerts & notifications (50 alerts)",
+      "Portfolio tracking (5 portfolios)",
       "Priority support",
       "Advanced analytics"
     ],
@@ -71,12 +71,15 @@ const plans = [
     period: "forever",
     description: "Perfect for getting started",
     features: [
-      "50 API calls per month",
+      "15 API calls per month",
       "Unlimited daily calls",
       "Basic stock screening",
-      "Email alerts",
       "Community support",
       "Basic portfolio tracking"
+    ],
+    limitations: [
+      "No email alerts",
+      "No watchlists"
     ],
     icon: Star,
     color: "gray",
@@ -140,11 +143,11 @@ export default function PlanSelection() {
           </p>
         </div>
 
-        {/* TRIAL Banner for paid plans */}
+        {/* Updated TRIAL Banner */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-base">
             <Zap className="h-5 w-5 mr-2" />
-            TRIAL: Start any paid plan for just $1 (7 days)
+            Use code TRIAL for a 7‑day 1$ trial on paid plans
           </div>
         </div>
 
@@ -208,6 +211,20 @@ export default function PlanSelection() {
                       </li>
                     ))}
                   </ul>
+                  
+                  {plan.limitations && plan.limitations.length > 0 && (
+                    <div className="border-t pt-3">
+                      <p className="text-xs text-gray-500 mb-2">Limitations:</p>
+                      <ul className="space-y-1">
+                        {plan.limitations.map((limitation, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-xs text-gray-400 mr-2">•</span>
+                            <span className="text-xs text-gray-500">{limitation}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   
                   <Button
                     className={`w-full mt-6 h-11 sm:h-12 text-base ${

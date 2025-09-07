@@ -63,7 +63,8 @@ const Pricing = () => {
         "5,000 API calls per month",
         "Advanced filtering & screening",
         "Custom watchlists (10)",
-        "Real-time alerts",
+        "Real-time alerts (50 alerts)",
+        "Portfolio tracking (5 portfolios)",
         "Priority email support"
       ],
       limitations: [],
@@ -102,7 +103,8 @@ const Pricing = () => {
       ],
       limitations: [
         "No portfolio management",
-        "No email alerts"
+        "No email alerts",
+        "No watchlists"
       ],
       popular: false,
       color: "gray",
@@ -197,7 +199,7 @@ const Pricing = () => {
       icon: <Bell className="h-5 w-5" />,
       items: [
         { name: "Email alerts", free: false, bronze: true, silver: true, gold: true },
-        { name: "Real-time alerts", free: false, bronze: true, silver: true, gold: true },
+        { name: "Real-time alerts", free: false, bronze: true, silver: "50 alerts", gold: true },
         { name: "Custom alert conditions", free: false, bronze: "Basic", silver: "Advanced", gold: "Unlimited" }
       ]
     },
@@ -205,7 +207,7 @@ const Pricing = () => {
       category: "Portfolio & Tracking",
       icon: <Users className="h-5 w-5" />,
       items: [
-        { name: "Portfolio management", free: false, bronze: "Basic", silver: "Advanced", gold: "Professional" },
+        { name: "Portfolio management", free: false, bronze: "Basic", silver: "5 portfolios", gold: "Professional" },
         { name: "Watchlists", free: false, bronze: "3", silver: "10", gold: "Unlimited" },
         { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true }
       ]
@@ -255,13 +257,13 @@ const Pricing = () => {
             Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
 
-          {/* Special Offer Banner - TRIAL banner only */}
+          {/* Special Offer Banner - Updated messaging */}
           <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 max-w-2xl mx-auto mb-8">
             <div className="flex items-center justify-center mb-3">
               <Zap className="h-6 w-6 mr-2" />
               <span className="text-lg font-bold">TRIAL</span>
             </div>
-            <p className="text-xl mb-4">Use code TRIAL for a 7‑day free trial on paid plans</p>
+            <p className="text-xl mb-4">Use code TRIAL for a 7‑day 1$ trial on paid plans</p>
             <p className="text-sm opacity-90">Then continue at regular price or cancel anytime</p>
           </div>
 
@@ -485,7 +487,7 @@ const Pricing = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Pay just $1 to access any paid plan for 7 days. You can cancel anytime during the trial. 
+                  Use code TRIAL to access any paid plan for 7 days for just $1. You can cancel anytime during the trial. 
                   After 7 days, you'll be charged the regular monthly price unless you cancel.
                 </p>
               </CardContent>
