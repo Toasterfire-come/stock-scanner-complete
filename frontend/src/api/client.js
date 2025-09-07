@@ -132,8 +132,25 @@ api.interceptors.request.use((config) => {
     }
   } catch {}
   
-  // Check API quota before making request
-  if (!ensureApiQuotaAndIncrement()) {
+  // Exempt certain endpoints from quota checking
+  const exemptEndpoints = [
+    '/health',
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/logout',
+    '/api/health',
+    '/api/auth',
+    '/api/plans',
+    '/api/revenue'
+  ];
+  
+  const isExempt = exemptEndpoints.some(endpoint => 
+    config.url?.includes(endpoint) || config.url?.startsWith(endpoint)
+  );
+  
+  // Check API quota before making request (only for non-exempt endpoints)
+  if (!isExempt && !ensureApiQuotaAndIncrement()) {
     const plan = getStoredUserPlan();
     const limits = getPlanLimits();
     const now = new Date();
