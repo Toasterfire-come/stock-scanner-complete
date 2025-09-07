@@ -252,7 +252,7 @@ const Pricing = () => {
           </h1>
           
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Start with our 7-day trial for just $1. Cancel anytime, no hidden fees.
+            Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
 
           {/* Special Offer Banner - TRIAL banner only */}
