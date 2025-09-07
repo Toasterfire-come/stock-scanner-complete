@@ -51,7 +51,7 @@ const Pricing = () => {
       limitations: [],
       popular: true,
       color: "orange",
-      cta: "Try Now for Free"
+      cta: "Try for $1"
     },
     {
       id: "silver",
