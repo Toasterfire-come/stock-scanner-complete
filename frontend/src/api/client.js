@@ -34,7 +34,7 @@ export const api = axios.create({
 // ====================
 const PLAN_LIMITS = {
   free: { monthlyApi: 15, dailyApi: null, alerts: 0, watchlists: 0, portfolios: 1 },
-  bronze: { monthlyApi: 1500, dailyApi: 50, alerts: 25, watchlists: 3, portfolios: 1 },
+  bronze: { monthlyApi: 1500, dailyApi: 100, alerts: 25, watchlists: 3, portfolios: 1 },
   silver: { monthlyApi: 5000, dailyApi: null, alerts: 50, watchlists: 10, portfolios: 5 },
   gold: { monthlyApi: Infinity, dailyApi: null, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
 };

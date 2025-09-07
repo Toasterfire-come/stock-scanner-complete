@@ -15,7 +15,7 @@ const plans = [
     trialPrice: "$1",
     description: "Great for individual traders",
     features: [
-      "50 API calls per day",
+      "100 API calls per day",
       "1,500 API calls per month",
       "Advanced screening tools",
       "Real-time alerts",

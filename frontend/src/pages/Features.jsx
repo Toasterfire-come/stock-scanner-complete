@@ -39,54 +39,54 @@ const Features = () => {
   const mainFeatures = [
     {
       icon: <Search className="h-8 w-8" />,
-      title: "NYSE Stock Screening",
-      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
+      title: "Advanced Stock Screening",
+      description: `Screen 3,200+ NYSE stocks with powerful filtering capabilities and real-time data.`,
       details: [
         "Complete NYSE market coverage (3,200+ stocks)",
-        "7 Technical Indicators: RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change", 
-        "7 Fundamental Indicators: Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range",
+        "Multiple technical indicators for analysis", 
+        "Fundamental metrics including P/E, Market Cap, Volume",
         "Custom filter combinations with saved presets",
-        "Real-time data processing and updates",
-        "Export results for further analysis"
+        "Real-time data updates throughout the trading day",
+        "Export results to CSV for further analysis"
       ]
     },
     {
       icon: <Bell className="h-8 w-8" />,
-      title: "Real-Time Alerts",
-      description: "Never miss a trading opportunity with instant notifications.",
+      title: "Smart Alert System",
+      description: "Set custom alerts and never miss important market movements.",
       details: [
-        "Price movement alerts (% change or absolute)",
-        "Volume spike notifications",
-        "Technical indicator breakouts",
-        "Email and push notification delivery",
-        "Custom alert conditions",
-        "Alert history and management"
+        "Price movement alerts (percentage or dollar change)",
+        "Volume spike detection and notifications",
+        "52-week high/low breakout alerts",
+        "Email notifications for all alert types",
+        "Custom alert conditions and thresholds",
+        "Complete alert history and management"
       ]
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
-      title: "Portfolio Analytics",
-      description: "Track performance with professional analytics tools.",
+      title: "Portfolio Management",
+      description: "Track and analyze your investments with professional tools.",
       details: [
         "Real-time portfolio valuation",
-        "Performance tracking and analysis",
-        "Position management and monitoring",
-        "Profit/loss calculations",
-        "Portfolio diversification insights",
-        "Historical performance data"
+        "Comprehensive performance tracking",
+        "Individual position monitoring",
+        "Detailed profit/loss calculations",
+        "Sector allocation analysis",
+        "Historical performance charts"
       ]
     },
     {
       icon: <TrendingUp className="h-8 w-8" />,
       title: "Market Intelligence",
-      description: "Real-time insights and market trend analysis.",
+      description: "Stay informed with comprehensive market analysis and insights.",
       details: [
-        "Market trend identification",
-        "Stock performance analysis",
-        "Volume and price momentum tracking",
-        "Market sector performance",
-        "Top movers and active stocks",
-        "Market condition indicators"
+        "Daily market trend analysis",
+        "Top gainers and losers tracking",
+        "Volume and momentum indicators",
+        "Sector performance comparison",
+        "Most active stocks monitoring",
+        "Market breadth indicators"
       ]
     }
   ];
