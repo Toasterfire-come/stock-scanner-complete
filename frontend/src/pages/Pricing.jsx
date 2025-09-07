@@ -187,7 +187,7 @@ const Pricing = () => {
       category: "Stock Analysis",
       icon: <BarChart3 className="h-5 w-5" />,
       items: [
-        { name: "Monthly stock queries", free: "15", bronze: "1,500", silver: "5,000", gold: "Unlimited" },
+        { name: "Monthly stock queries", free: "15", bronze: "100/day, 1500/month", silver: "500/day, 5000/month", gold: "Unlimited" },
         { name: "Stock symbol lookup", free: true, bronze: true, silver: true, gold: true },
         { name: "Basic price filtering", free: true, bronze: true, silver: true, gold: true },
         { name: "Advanced screening", free: false, bronze: true, silver: true, gold: true },
