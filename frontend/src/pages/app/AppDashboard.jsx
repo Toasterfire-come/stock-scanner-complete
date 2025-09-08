@@ -18,45 +18,28 @@ import {
   Play
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
-import { getTrendingSafe, getMarketStatsSafe } from "../../api/client";
+import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats } from "../../api/client";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
   const [marketData, setMarketData] = useState(null);
   const [trendingStocks, setTrendingStocks] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [usage, setUsage] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        if (isAuthenticated) {
-          // Fetch real data for authenticated users
-          const [marketResponse, trendingResponse] = await Promise.all([
-            getMarketStatsSafe(),
-            getTrendingSafe()
-          ]);
-          
-          setMarketData(marketResponse.data);
-          setTrendingStocks(trendingResponse.data);
-        } else {
-          // Show limited/mock data for non-authenticated users
-          setMarketData({
-            market_overview: {
-              total_stocks: 3200,
-              gainers: 1240,
-              losers: 890,
-              unchanged: 1070
-            }
-          });
-          setTrendingStocks({
-            top_gainers: [
-              { ticker: "AAPL", name: "Apple Inc.", change_percent: 2.5 },
-              { ticker: "MSFT", name: "Microsoft Corp.", change_percent: 1.8 },
-              { ticker: "NVDA", name: "NVIDIA Corp.", change_percent: 3.2 }
-            ]
-          });
-        }
+        const [marketResponse, trendingResponse, stats] = await Promise.all([
+          getMarketStatsSafe(),
+          getTrendingSafe(),
+          getStatisticsSafe().catch(() => ({ success: false }))
+        ]);
+
+        setMarketData(marketResponse.data);
+        setTrendingStocks(trendingResponse.data);
+        setUsage(stats?.data || null);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -88,49 +71,36 @@ const AppDashboard = () => {
             <p className="text-gray-600">Sample dashboard - limited functionality in demo mode</p>
           </div>
 
-          {/* Sample Market Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Market Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Stocks</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">3,200</div>
+                <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
                 <p className="text-xs text-muted-foreground">NYSE listings</p>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Gainers</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">1,240</div>
+                <div className="text-2xl font-bold text-green-600">{marketData?.market_overview?.gainers?.toLocaleString() || '-'}</div>
                 <p className="text-xs text-muted-foreground">Stocks up today</p>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Losers</CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">890</div>
+                <div className="text-2xl font-bold text-red-600">{marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
                 <p className="text-xs text-muted-foreground">Stocks down today</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Unchanged</CardTitle>
-                <Activity className="h-4 w-4 text-gray-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-600">1,070</div>
-                <p className="text-xs text-muted-foreground">No change</p>
               </CardContent>
             </Card>
           </div>
