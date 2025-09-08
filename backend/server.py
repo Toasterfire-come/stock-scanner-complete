@@ -18,6 +18,7 @@ from collections import defaultdict
 import time
 import hashlib
 import secrets
+import json
 
 
 ROOT_DIR = Path(__file__).parent
@@ -216,6 +217,7 @@ rate_limit_storage = defaultdict(list)
 usage_cache = defaultdict(lambda: defaultdict(int))
 # In-memory usage log for environments without MongoDB
 usage_memory = defaultdict(list)
+alerts_memory = defaultdict(list)  # {user_id: [alert_dict, ...]}
 
 
 # Define Models
@@ -666,16 +668,159 @@ async def get_stock_quote(symbol: str, request: Request, response: Response):
         user_info["plan"]
     )
     
-    # Mock stock data (in production, fetch from real API)
+    # Fetch real quote data from external API if available
+    try:
+        data = external_api.get(f"/api/stock/{symbol}/") or {}
+        # Normalize response to a simple quote object
+        quote = {
+            "symbol": (data.get("ticker") or symbol or "").upper(),
+            "price": float(data.get("current_price") or data.get("price") or 0),
+            "change": float(data.get("price_change_today") or data.get("change") or 0),
+            "change_percent": float(data.get("change_percent") or 0),
+            "volume": int(data.get("volume") or 0),
+            "timestamp": data.get("last_updated") or datetime.utcnow().isoformat(),
+            "rate_limit_warning": rate_info.rate_limited
+        }
+        return quote
+    except Exception:
+        # Return minimal when external not available
+        return {
+            "symbol": symbol.upper(),
+            "price": 0.0,
+            "change": 0.0,
+            "change_percent": 0.0,
+            "volume": 0,
+            "timestamp": datetime.utcnow().isoformat(),
+            "rate_limit_warning": rate_info.rate_limited
+        }
+
+# =============================
+# Alerts Endpoints
+# =============================
+
+def _normalize_alert(a: dict) -> dict:
     return {
-        "symbol": symbol.upper(),
-        "price": 150.25,
-        "change": 2.35,
-        "change_percent": 1.59,
-        "volume": 1234567,
-        "timestamp": datetime.utcnow().isoformat(),
-        "rate_limit_warning": rate_info.rate_limited
+        "id": a.get("id"),
+        "ticker": a.get("ticker").upper(),
+        "currentPrice": float(a.get("currentPrice") or 0),
+        "targetPrice": float(a.get("targetPrice") or 0),
+        "condition": a.get("condition"),
+        "email": a.get("email"),
+        "isActive": bool(a.get("isActive", True)),
+        "isTriggered": bool(a.get("isTriggered", False)),
+        "createdAt": a.get("createdAt") or datetime.utcnow().isoformat(),
+        "triggeredAt": a.get("triggeredAt")
     }
+
+@api_router.get("/alerts/")
+async def list_alerts(request: Request):
+    user_info = await get_user_info(request)
+    user_id = user_info["user_id"]
+    alerts = alerts_memory.get(user_id, [])
+    return {"alerts": [_normalize_alert(a) for a in alerts]}
+
+@api_router.post("/alerts/create/")
+async def create_alert(request: Request):
+    payload = await request.json()
+    ticker = (payload.get("ticker") or "").upper()
+    target_price = payload.get("target_price")
+    condition = payload.get("condition")
+    email = payload.get("email")
+    if not ticker or not target_price or condition not in ("above", "below") or not email:
+        raise HTTPException(status_code=400, detail="Invalid alert payload")
+    user_info = await get_user_info(request)
+    user_id = user_info["user_id"]
+    # Basic duplicate prevention
+    for a in alerts_memory.get(user_id, []):
+        if a["ticker"].upper() == ticker and float(a["targetPrice"]) == float(target_price) and a["condition"] == condition:
+            raise HTTPException(status_code=409, detail="Duplicate alert")
+    # Fetch current price
+    try:
+        ext = external_api.get(f"/api/stock/{ticker}/") or {}
+        current_price = float(ext.get("current_price") or 0)
+    except Exception:
+        current_price = 0.0
+    alert = _normalize_alert({
+        "id": uuid.uuid4().hex,
+        "ticker": ticker,
+        "currentPrice": current_price,
+        "targetPrice": float(target_price),
+        "condition": condition,
+        "email": email,
+        "isActive": True,
+        "isTriggered": False,
+        "createdAt": datetime.utcnow().isoformat(),
+        "triggeredAt": None
+    })
+    alerts_memory[user_id].append(alert)
+    return {"success": True, "alert_id": alert["id"], "alert": alert}
+
+@api_router.post("/alerts/{alert_id}/toggle/")
+async def toggle_alert(alert_id: str, request: Request):
+    user_info = await get_user_info(request)
+    user_id = user_info["user_id"]
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    isActive = body.get("isActive")
+    alerts = alerts_memory.get(user_id, [])
+    for a in alerts:
+        if a["id"] == alert_id:
+            a["isActive"] = (not a["isActive"]) if isActive is None else bool(isActive)
+            return {"success": True, "alert": _normalize_alert(a)}
+    raise HTTPException(status_code=404, detail="Alert not found")
+
+@api_router.post("/alerts/{alert_id}/delete/")
+async def delete_alert(alert_id: str, request: Request):
+    user_info = await get_user_info(request)
+    user_id = user_info["user_id"]
+    alerts = alerts_memory.get(user_id, [])
+    new_alerts = [a for a in alerts if a["id"] != alert_id]
+    if len(new_alerts) == len(alerts):
+        raise HTTPException(status_code=404, detail="Alert not found")
+    alerts_memory[user_id] = new_alerts
+    return {"success": True}
+
+# =============================
+# News Endpoint (Yahoo Finance proxy)
+# =============================
+
+@api_router.get("/news/{symbol}/")
+async def get_news(symbol: str):
+    url = f"https://query1.finance.yahoo.com/v2/finance/news?symbols={symbol.upper()}"
+    try:
+        r = requests.get(url, timeout=2.0)
+        r.raise_for_status()
+        raw = r.json()
+        items = raw.get("content", []) or raw.get("items", []) or []
+        news = []
+        for it in items:
+            title = it.get("title") or (it.get("content", {}).get("title") if isinstance(it.get("content"), dict) else None)
+            link = it.get("link") or it.get("canonicalUrl") or it.get("url")
+            pub = it.get("pubDate") or it.get("published_at") or it.get("providerPublishTime")
+            publisher = it.get("publisher") or (it.get("publisher", {}).get("name") if isinstance(it.get("publisher"), dict) else None)
+            if title and link:
+                news.append({"title": title, "link": link, "publisher": publisher, "pubDate": pub})
+        return {"news": news}
+    except Exception:
+        return {"news": []}
+
+# =============================
+# Screener Filter Endpoint (proxy)
+# =============================
+
+@api_router.get("/filter/")
+async def filter_endpoint(request: Request, q: Optional[str] = None, min_price: Optional[float] = None, max_price: Optional[float] = None, limit: int = 100):
+    params = {"limit": min(limit, 1000)}
+    if q: params["q"] = q
+    if min_price is not None: params["min_price"] = min_price
+    if max_price is not None: params["max_price"] = max_price
+    try:
+        return external_api.get("/api/filter/", params)
+    except Exception:
+        return {"success": True, "data": []}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
