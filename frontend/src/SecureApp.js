@@ -56,10 +56,7 @@ const Templates = lazy(() => import("./pages/app/Templates"));
 
 // Market Overview
 const MarketHeatmap = lazy(() => import("./pages/app/MarketHeatmap"));
-const SectorsIndustries = lazy(() => import("./pages/app/SectorsIndustries"));
 const TopMovers = lazy(() => import("./pages/app/TopMovers"));
-const PreAfterMarket = lazy(() => import("./pages/app/PreAfterMarket"));
-const EconomicCalendar = lazy(() => import("./pages/app/EconomicCalendar"));
 
 // News
 const NewsFeed = lazy(() => import("./pages/app/NewsFeed"));
@@ -220,10 +217,7 @@ function SecureApp() {
 
                     {/* Market Overview */}
                     <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
-                    <Route path="/app/sectors" element={<SectorsIndustries />} />
                     <Route path="/app/top-movers" element={<TopMovers />} />
-                    <Route path="/app/pre-after-market" element={<PreAfterMarket />} />
-                    <Route path="/app/economic-calendar" element={<EconomicCalendar />} />
 
                     {/* News */}
                     <Route path="/app/news" element={<NewsFeed />} />
