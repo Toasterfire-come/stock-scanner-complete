@@ -260,11 +260,10 @@ const Markets = () => {
 
         {/* Market Data Tabs */}
         <Tabs defaultValue="gainers" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="gainers">Top Gainers</TabsTrigger>
             <TabsTrigger value="losers">Top Losers</TabsTrigger>
             <TabsTrigger value="active">Most Active</TabsTrigger>
-            <TabsTrigger value="sectors">Sectors</TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
@@ -407,80 +406,8 @@ const Markets = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="sectors">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Globe className="h-5 w-5 mr-2 text-purple-500" /> Sector Performance
-                  </CardTitle>
-                  <CardDescription>Performance by market sectors</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[{ name: "Technology", change: 2.45 }, { name: "Healthcare", change: 1.23 }, { name: "Finance", change: -0.87 }, { name: "Energy", change: -1.45 }, { name: "Consumer Discretionary", change: 0.95 }, { name: "Industrials", change: 0.34 }, { name: "Real Estate", change: -0.23 }, { name: "Utilities", change: 0.78 },].map((sector, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="font-medium">{sector.name}</div>
-                        <div className={`font-semibold ${sector.change >= 0 ? 'text-green-600' : 'text-red-600'} flex items-center`}>
-                          {sector.change >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
-                          {formatPercentage(sector.change)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </div>
         </Tabs>
-
-        {/* Quick Links */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Market Heatmap</h3>
-                  <p className="text-gray-600 text-sm">Visual market overview</p>
-                </div>
-                <Button asChild variant="ghost">
-                  <Link to="/app/market-heatmap">
-                    <BarChart3 className="h-6 w-6" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Economic Calendar</h3>
-                  <p className="text-gray-600 text-sm">Upcoming events</p>
-                </div>
-                <Button asChild variant="ghost">
-                  <Link to="/app/economic-calendar">
-                    <Clock className="h-6 w-6" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Stock Screener</h3>
-                  <p className="text-gray-600 text-sm">Find stocks by criteria</p>
-                </div>
-                <Button asChild variant="ghost">
-                  <Link to="/app/screeners">
-                    <Target className="h-6 w-6" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
