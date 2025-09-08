@@ -201,7 +201,7 @@ const Markets = () => {
 
         {/* Market Summary */}
         {marketStats && (
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -243,18 +243,7 @@ const Markets = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Unchanged</p>
-                    <p className="text-2xl font-bold text-gray-600">{Number(marketStats.market_overview.unchanged || 0).toLocaleString()}</p>
-                    <p className="text-xs text-gray-600">{safePct(marketStats.market_overview.unchanged, marketStats.market_overview.total_stocks).toFixed(1)}%</p>
-                  </div>
-                  <Activity className="h-8 w-8 text-gray-500" />
-                </div>
-              </CardContent>
-            </Card>
+            
           </div>
         )}
 
