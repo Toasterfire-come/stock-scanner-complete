@@ -28,47 +28,13 @@ const Alerts = () => {
   const fetchAlerts = async () => {
     setIsLoading(true);
     try {
-      // Simulate fetching existing alerts
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setAlerts([
-        {
-          id: 1,
-          ticker: "AAPL",
-          targetPrice: 220.00,
-          currentPrice: 210.50,
-          condition: "above",
-          email: "user@example.com",
-          isActive: true,
-          isTriggered: false,
-          createdAt: "2024-01-15T10:30:00Z"
-        },
-        {
-          id: 2,
-          ticker: "MSFT",
-          targetPrice: 400.00,
-          currentPrice: 440.30,
-          condition: "below",
-          email: "user@example.com",
-          isActive: true,
-          isTriggered: true,
-          createdAt: "2024-01-14T15:20:00Z",
-          triggeredAt: "2024-01-15T09:45:00Z"
-        },
-        {
-          id: 3,
-          ticker: "TSLA",
-          targetPrice: 250.00,
-          currentPrice: 245.80,
-          condition: "above",
-          email: "user@example.com",
-          isActive: false,
-          isTriggered: false,
-          createdAt: "2024-01-13T14:15:00Z"
-        }
-      ]);
+      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/`, { method: 'GET' });
+      const data = await resp.json().catch(() => ({}));
+      const rows = Array.isArray(data?.alerts) ? data.alerts : (Array.isArray(data) ? data : []);
+      setAlerts(rows);
     } catch (error) {
       toast.error("Failed to fetch alerts");
+      setAlerts([]);
     } finally {
       setIsLoading(false);
     }
@@ -115,9 +81,9 @@ const Alerts = () => {
     if (!confirm("Are you sure you want to delete this alert?")) return;
     
     try {
-      // Simulate API call to delete alert
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setAlerts(alerts.filter(alert => alert.id !== alertId));
+      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/delete/`, { method: 'POST' });
+      if (!resp.ok) throw new Error('delete failed');
+      setAlerts((prev) => prev.filter(alert => alert.id !== alertId));
       toast.success("Alert deleted successfully");
     } catch (error) {
       toast.error("Failed to delete alert");
@@ -126,9 +92,9 @@ const Alerts = () => {
 
   const toggleAlert = async (alertId) => {
     try {
-      // Simulate API call to toggle alert
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setAlerts(alerts.map(alert => 
+      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/toggle/`, { method: 'POST' });
+      if (!resp.ok) throw new Error('toggle failed');
+      setAlerts((prev) => prev.map(alert => 
         alert.id === alertId 
           ? { ...alert, isActive: !alert.isActive }
           : alert
