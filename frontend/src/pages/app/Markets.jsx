@@ -260,10 +260,11 @@ const Markets = () => {
 
         {/* Market Data Tabs */}
         <Tabs defaultValue="gainers" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="gainers">Top Gainers</TabsTrigger>
             <TabsTrigger value="losers">Top Losers</TabsTrigger>
             <TabsTrigger value="active">Most Active</TabsTrigger>
+            <TabsTrigger value="sectors">Sectors</TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
@@ -399,6 +400,38 @@ const Markets = () => {
                     <div className="text-center py-8 text-gray-500">
                       <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       <p>No volume data available</p>
+                      <Button variant="outline" size="sm" className="mt-3" onClick={handleRefresh}>Retry</Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sectors">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Globe className="h-5 w-5 mr-2 text-purple-500" /> Sector Performance
+                  </CardTitle>
+                  <CardDescription>Performance by market sectors</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {Array.isArray(marketStats?.sectors) && marketStats.sectors.length > 0 ? (
+                    <div className="space-y-4">
+                      {marketStats.sectors.map((sector, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="font-medium">{sector.name || sector.sector || 'Sector'}</div>
+                          <div className={`font-semibold ${(Number(sector.change_percent||sector.change||0) >= 0) ? 'text-green-600' : 'text-red-600'} flex items-center`}>
+                            {(Number(sector.change_percent||sector.change||0) >= 0) ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
+                            {formatPercentage(Number(sector.change_percent||sector.change||0))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Globe className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No sector data available</p>
                       <Button variant="outline" size="sm" className="mt-3" onClick={handleRefresh}>Retry</Button>
                     </div>
                   )}

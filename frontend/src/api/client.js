@@ -176,6 +176,10 @@ export function normalizeMarketStats(raw) {
     top_gainers: Array.isArray(d.top_gainers) ? d.top_gainers : [],
     top_losers: Array.isArray(d.top_losers) ? d.top_losers : [],
     most_active: Array.isArray(d.most_active) ? d.most_active : [],
+    // Pass through sector performance if provided by backend under common keys
+    sectors: Array.isArray(d.sectors)
+      ? d.sectors
+      : (Array.isArray(d.sector_performance) ? d.sector_performance : []),
     last_updated: d.last_updated || null,
   };
 }
