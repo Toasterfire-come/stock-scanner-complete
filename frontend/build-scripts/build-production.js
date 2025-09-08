@@ -6,17 +6,12 @@ const path = require('path');
 
 console.log('🚀 Starting production build...\n');
 
-// Environment validation
-const requiredEnvVars = [
-  'REACT_APP_BACKEND_URL',
-  'REACT_APP_API_PASSWORD'
-];
-
+// Environment validation (non-fatal; CRA will load .env.production for app build)
+const requiredEnvVars = [ 'REACT_APP_BACKEND_URL' ];
 console.log('✅ Validating environment variables...');
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingVars);
-  process.exit(1);
+  console.warn('⚠️  Missing optional environment variables:', missingVars, '- falling back to defaults where applicable.');
 }
 
 // Security checks
