@@ -22,11 +22,18 @@ if IS_XAMPP_AVAILABLE:
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
-]
+
+# Allow configuration of ALLOWED_HOSTS via environment variables
+# Prefer DJANGO_ALLOWED_HOSTS (comma-separated), fallback to ALLOWED_HOSTS, then defaults
+_allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('ALLOWED_HOSTS')
+if _allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(',') if host.strip()]
+else:
+    ALLOWED_HOSTS = [
+        "127.0.0.1",
+        "localhost",
+        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+    ]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
 
@@ -245,9 +252,15 @@ LOGGING = {
     },
 }
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = list(filter(None, [
-    os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com')
-]))
+
+# Allow configuration of CSRF_TRUSTED_ORIGINS via environment variable (comma-separated)
+_csrf_trusted = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if _csrf_trusted:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_trusted.split(',') if origin.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = list(filter(None, [
+        os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com')
+    ]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))

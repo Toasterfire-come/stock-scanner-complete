@@ -142,24 +142,29 @@ def login_api(request):
         identifier = (data.get('identifier') or data.get('username') or data.get('email') or '').strip()
         password = (data.get('password') or '').strip()
         username = ''
-        
-        # If identifier looks like an email, resolve to username
-        if identifier and ('@' in identifier):
-            try:
-                user_lookup = User.objects.get(email__iexact=identifier)
-                username = user_lookup.username
-            except User.DoesNotExist:
-                username = ''
-        elif identifier:
-            # Treat as username directly
-            username = identifier
-        
-        if not username or not password:
+
+        # Validate presence of credentials first
+        if not identifier or not password:
             return JsonResponse({
                 'success': False,
                 'error': 'Username and password are required',
                 'error_code': 'MISSING_CREDENTIALS'
             }, status=400)
+
+        # If identifier looks like an email, resolve to username; unknown email => 401 invalid credentials
+        if '@' in identifier:
+            try:
+                user_lookup = User.objects.get(email__iexact=identifier)
+                username = user_lookup.username
+            except User.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid username or password',
+                    'error_code': 'INVALID_CREDENTIALS'
+                }, status=401)
+        else:
+            # Treat as username directly
+            username = identifier
         
         # Authenticate user
         user = authenticate(request, username=username, password=password)
