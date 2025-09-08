@@ -85,9 +85,9 @@ const AppLayout = () => {
               </span>
             </Link>
 
-            {/* Desktop Navigation - Now with dropdown for all screen sizes */}
+            {/* Desktop Navigation - Show app pages only when authenticated */}
             <div className="flex items-center space-x-4">
-              {!isAppRoute ? (
+              {!isAuthenticated || !isAppRoute ? (
                 // Public navigation dropdown
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -215,7 +215,7 @@ const AppLayout = () => {
                     </div>
                     
                     <nav className="flex flex-col space-y-3">
-                      {(isAppRoute ? appNavigation : navigation).map((item) => {
+                      {((isAuthenticated && isAppRoute) ? appNavigation : navigation).map((item) => {
                         const Icon = item.icon;
                         return (
                           <Link
