@@ -40,14 +40,11 @@ const Stocks = () => {
         if (searchTerm.trim()) {
           setIsSearching(true);
           response = await searchStocks(searchTerm);
-          if (response.success) {
-            const results = response.results || [];
-            setStocks(results);
-            setTotalStocks(results.length);
-          } else {
-            setStocks([]);
-            setTotalStocks(0);
-          }
+          const results = Array.isArray(response)
+            ? response
+            : (response?.results || response?.data || []);
+          setStocks(Array.isArray(results) ? results : []);
+          setTotalStocks(Array.isArray(results) ? results.length : 0);
           setIsSearching(false);
         } else {
           const params = {
@@ -58,13 +55,13 @@ const Stocks = () => {
             offset: (currentPage - 1) * stocksPerPage,
           };
           response = await listStocks(params);
-          if (response?.success && Array.isArray(response.data)) {
-            setStocks(response.data || []);
-            setTotalStocks(response.total_available || response.count || response.data.length || 0);
-          } else {
-            setStocks([]);
-            setTotalStocks(0);
-          }
+          const items = Array.isArray(response)
+            ? response
+            : (response?.data || response?.results || []);
+          setStocks(Array.isArray(items) ? items : []);
+          setTotalStocks(
+            Number(response?.total_available || response?.count || (Array.isArray(items) ? items.length : 0))
+          );
         }
       } catch (error) {
         toast.error("Failed to load stocks");

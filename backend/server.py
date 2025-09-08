@@ -141,65 +141,21 @@ class ExternalAPIClient:
             return {"success": True, "message": "Request processed with fallback data"}
     
     def _get_fallback_data(self, endpoint: str, params: dict = None):
-        """Provide fallback data when external API is unavailable"""
+        """Provide fallback data when external API is unavailable.
+        To disable fake data in production, return minimal empty responses for user-facing endpoints.
+        """
         if "/health/" in endpoint:
             return {"status": "healthy", "database": "connected", "version": "1.0.0", "timestamp": datetime.utcnow().isoformat()}
         
         elif "/api/stocks/" in endpoint:
-            return {
-                "success": True,
-                "data": [
-                    {"ticker": "AAPL", "symbol": "AAPL", "company_name": "Apple Inc.", "exchange": "NASDAQ", "current_price": 175.50, "price_change_today": 2.25, "change_percent": 1.30, "volume": 45234567, "market_cap": 2750000000000, "last_updated": datetime.utcnow().isoformat()},
-                    {"ticker": "MSFT", "symbol": "MSFT", "company_name": "Microsoft Corporation", "exchange": "NASDAQ", "current_price": 410.80, "price_change_today": 8.45, "change_percent": 2.10, "volume": 32165432, "market_cap": 3050000000000, "last_updated": datetime.utcnow().isoformat()},
-                    {"ticker": "GOOGL", "symbol": "GOOGL", "company_name": "Alphabet Inc.", "exchange": "NASDAQ", "current_price": 145.30, "price_change_today": 3.20, "change_percent": 2.25, "volume": 28765432, "market_cap": 1800000000000, "last_updated": datetime.utcnow().isoformat()},
-                    {"ticker": "NVDA", "symbol": "NVDA", "company_name": "NVIDIA Corporation", "exchange": "NASDAQ", "current_price": 128.50, "price_change_today": 6.75, "change_percent": 5.55, "volume": 125334455, "market_cap": 3200000000000, "last_updated": datetime.utcnow().isoformat()},
-                    {"ticker": "TSLA", "symbol": "TSLA", "company_name": "Tesla Inc.", "exchange": "NASDAQ", "current_price": 245.60, "price_change_today": 12.45, "change_percent": 5.35, "volume": 85432109, "market_cap": 780000000000, "last_updated": datetime.utcnow().isoformat()}
-                ],
-                "count": 5,
-                "total_available": 3200,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+            # Return empty result to avoid fake data in production
+            return {"success": True, "data": [], "count": 0, "total_available": 0, "timestamp": datetime.utcnow().isoformat()}
         
         elif "/api/trending/" in endpoint:
-            return {
-                "high_volume": [
-                    {"ticker": "SPY", "name": "SPDR S&P 500 ETF", "current_price": 441.25, "price_change_today": 3.75, "change_percent": 0.85, "volume": 98765432, "market_cap": 450000000000},
-                    {"ticker": "QQQ", "name": "Invesco QQQ Trust", "current_price": 378.90, "price_change_today": 4.70, "change_percent": 1.25, "volume": 87654321, "market_cap": 190000000000}
-                ],
-                "top_gainers": [
-                    {"ticker": "NVDA", "name": "NVIDIA Corporation", "current_price": 128.50, "price_change_today": 6.75, "change_percent": 5.55, "volume": 125334455, "market_cap": 3200000000000},
-                    {"ticker": "TSLA", "name": "Tesla Inc.", "current_price": 245.60, "price_change_today": 12.45, "change_percent": 5.35, "volume": 85432109, "market_cap": 780000000000}
-                ],
-                "most_active": [
-                    {"ticker": "AAPL", "name": "Apple Inc.", "current_price": 175.50, "price_change_today": 2.25, "change_percent": 1.30, "volume": 95432109, "market_cap": 2750000000000},
-                    {"ticker": "MSFT", "name": "Microsoft Corporation", "current_price": 410.80, "price_change_today": 8.45, "change_percent": 2.10, "volume": 82165432, "market_cap": 3050000000000}
-                ],
-                "last_updated": datetime.utcnow().isoformat()
-            }
+            return {"high_volume": [], "top_gainers": [], "most_active": [], "last_updated": datetime.utcnow().isoformat()}
         
         elif "/api/market-stats/" in endpoint:
-            return {
-                "market_overview": {
-                    "total_stocks": 8547,
-                    "nyse_stocks": 3200,
-                    "gainers": 3841,
-                    "losers": 2156,
-                    "unchanged": 2550
-                },
-                "top_gainers": [
-                    {"ticker": "NVDA", "name": "NVIDIA Corporation", "current_price": 128.50, "price_change_today": 6.75, "change_percent": 5.55},
-                    {"ticker": "TSLA", "name": "Tesla Inc.", "current_price": 245.60, "price_change_today": 12.45, "change_percent": 5.35}
-                ],
-                "top_losers": [
-                    {"ticker": "META", "name": "Meta Platforms Inc.", "current_price": 298.40, "price_change_today": -8.85, "change_percent": -2.85},
-                    {"ticker": "NFLX", "name": "Netflix Inc.", "current_price": 425.30, "price_change_today": -7.55, "change_percent": -1.75}
-                ],
-                "most_active": [
-                    {"ticker": "SPY", "name": "SPDR S&P 500 ETF", "current_price": 441.25, "volume": 98765432},
-                    {"ticker": "QQQ", "name": "Invesco QQQ Trust", "current_price": 378.90, "volume": 87654321}
-                ],
-                "last_updated": datetime.utcnow().isoformat()
-            }
+            return {"market_overview": {"total_stocks": 0, "nyse_stocks": 0, "gainers": 0, "losers": 0, "unchanged": 0}, "top_gainers": [], "top_losers": [], "most_active": [], "last_updated": datetime.utcnow().isoformat()}
         
         elif "/api/search/" in endpoint:
             query = params.get('q', '') if params else ''

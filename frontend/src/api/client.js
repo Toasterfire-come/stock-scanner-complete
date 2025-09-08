@@ -237,7 +237,8 @@ export async function getStock(ticker) { const { data } = await api.get(`/stock/
 export async function searchStocks(q) { const { data } = await api.get('/search/', { params: { q } }); return data; }
 export async function getTrending() { const { data } = await api.get('/trending/'); return data; }
 export async function getMarketStats() { const { data } = await api.get('/market-stats/'); return data; }
-export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/realtime/${encodeURIComponent(ticker)}/`); return data; }
+// Align with backend quote endpoint: /stocks/{symbol}/quote
+export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/quote`); return data; }
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
 export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
