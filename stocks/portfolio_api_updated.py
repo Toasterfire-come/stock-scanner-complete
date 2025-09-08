@@ -4,7 +4,7 @@ Provides GET /api/portfolio, POST /api/portfolio/add, DELETE /api/portfolio/{id}
 """
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
@@ -24,13 +24,20 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def portfolio_api(request):
     """
     Get user's portfolio holdings
     GET /api/portfolio
     """
     try:
+        # Manual auth check to return 401 (not 403) when unauthenticated
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'error_code': 'AUTH_REQUIRED'
+            }, status=401)
         user = request.user
         
         # Get all portfolio holdings for the user
@@ -90,13 +97,20 @@ def portfolio_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def portfolio_add_api(request):
     """
     Add a stock to portfolio
     POST /api/portfolio/add
     """
     try:
+        # Manual auth check
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'error_code': 'AUTH_REQUIRED'
+            }, status=401)
         data = json.loads(request.body) if request.body else {}
         user = request.user
         
@@ -205,13 +219,19 @@ def portfolio_add_api(request):
 
 @csrf_exempt
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def portfolio_delete_api(request, holding_id):
     """
     Remove a holding from portfolio
     DELETE /api/portfolio/{id}
     """
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'error_code': 'AUTH_REQUIRED'
+            }, status=401)
         user = request.user
         
         # Find the holding

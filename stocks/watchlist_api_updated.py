@@ -4,7 +4,7 @@ Provides GET /api/watchlist, POST /api/watchlist/add, DELETE /api/watchlist/{id}
 """
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
@@ -21,13 +21,19 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def watchlist_api(request):
     """
     Get user's watchlist
     GET /api/watchlist
     """
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'error_code': 'AUTH_REQUIRED'
+            }, status=401)
         user = request.user
         
         # Get all watchlist items for the user
@@ -83,13 +89,19 @@ def watchlist_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def watchlist_add_api(request):
     """
     Add a stock to watchlist
     POST /api/watchlist/add
     """
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'error_code': 'AUTH_REQUIRED'
+            }, status=401)
         data = json.loads(request.body) if request.body else {}
         user = request.user
         
@@ -175,13 +187,19 @@ def watchlist_add_api(request):
 
 @csrf_exempt
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def watchlist_delete_api(request, item_id):
     """
     Remove a stock from watchlist
     DELETE /api/watchlist/{id}
     """
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'error_code': 'AUTH_REQUIRED'
+            }, status=401)
         user = request.user
         
         # Find the watchlist item
