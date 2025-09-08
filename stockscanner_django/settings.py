@@ -170,6 +170,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cross-site cookies for embedded clients
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = list(filter(None, [
@@ -182,6 +188,7 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
 ]))
+CORS_ALLOW_CREDENTIALS = True
 
 # Enterprise/Premium overrides
 # Comma-separated list via ENTERPRISE_EMAILS, plus hardcoded important recipients
@@ -205,6 +212,10 @@ STOCK_DATA_ENDPOINT_PREFIXES = [
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',

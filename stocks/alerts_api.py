@@ -9,7 +9,7 @@ Routes:
 """
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -130,10 +130,12 @@ def _validate_email_or_fallback(provided_email: str, fallback_email: str) -> str
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def alerts_list_api(request):
     """List alerts for the authenticated user."""
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return Response({'success': False, 'error_code': 'AUTH_REQUIRED', 'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
         alerts = StockAlert.objects.select_related('stock').filter(user=request.user).order_by('-created_at')
         items = [_serialize_alert(alert, request.user.email or '') for alert in alerts]
         resp = Response({'alerts': items}, status=status.HTTP_200_OK)
@@ -149,10 +151,12 @@ def alerts_list_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def alerts_create_api(request):
     """Create a new price alert for the authenticated user."""
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return Response({'success': False, 'error_code': 'AUTH_REQUIRED', 'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
         data = getattr(request, 'data', None)
         if data is None or data == {}:
             data = json.loads(request.body) if request.body else {}
@@ -207,10 +211,12 @@ def alerts_create_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def alerts_toggle_api(request, alert_id: int):
     """Toggle or set active state for a user's alert."""
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return Response({'success': False, 'error_code': 'AUTH_REQUIRED', 'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             alert = StockAlert.objects.select_related('stock').get(id=alert_id, user=request.user)
         except StockAlert.DoesNotExist:
@@ -243,11 +249,13 @@ def alerts_toggle_api(request, alert_id: int):
 
 
 @csrf_exempt
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@api_view(['POST', 'DELETE'])
+@permission_classes([AllowAny])
 def alerts_delete_api(request, alert_id: int):
     """Delete a user's alert."""
     try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return Response({'success': False, 'error_code': 'AUTH_REQUIRED', 'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             alert = StockAlert.objects.get(id=alert_id, user=request.user)
         except StockAlert.DoesNotExist:
