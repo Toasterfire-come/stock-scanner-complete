@@ -110,11 +110,9 @@ api.interceptors.response.use(
       window.__NET?.emit('end');
     } catch {}
     if (error.response?.status === 401) {
-      localStorage.removeItem("rts_token");
-      // Token rotation UX: prompt re-login
-      if (!window.location.pathname.startsWith('/auth')) {
-        window.location.href = "/auth/sign-in";
-      }
+      // Do not forcibly sign the user out on incidental 401s (e.g., news feed) – let pages handle it gracefully
+      // Keep token/state intact and surface the error to callers
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }
