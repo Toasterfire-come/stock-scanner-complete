@@ -26,7 +26,7 @@ export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
 export const api = axios.create({
   baseURL: API_ROOT,
-  withCredentials: false,
+  withCredentials: true,
 });
 
 // ====================
@@ -82,12 +82,9 @@ api.interceptors.request.use((config) => {
     const csrf = getCsrfToken();
     if (csrf) config.headers['X-CSRFToken'] = csrf;
 
-    const token = window.localStorage.getItem("rts_token");
-    if (token) {
+    const token = (window.localStorage.getItem("rts_token") || '').trim();
+    if (token && token !== 'undefined' && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
-      // compatibility param for some session endpoints
-      config.params = config.params || {};
-      if (!config.params.authorization) config.params.authorization = `Bearer ${token}`;
     }
   } catch {}
   // Skip client-side quota check - server handles all rate limiting
