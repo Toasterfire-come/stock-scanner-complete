@@ -207,7 +207,7 @@ const Stocks = () => {
                         itemSize={56}
                         height={560}
                         row={({ index, style, item: stock }) => (
-                          <div style={style} className="border-b hover:bg-gray-50 grid" style={{...style, display:'grid', gridTemplateColumns:'2fr 3fr 1fr 1fr 1fr 1fr 1fr 1fr', alignItems:'center'}}>
+                          <div className="border-b hover:bg-gray-50 grid" style={{...style, display:'grid', gridTemplateColumns:'2fr 3fr 1fr 1fr 1fr 1fr 1fr 1fr', alignItems:'center'}}>
                             <div className="p-4 flex items-center space-x-3">
                               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><span className="font-bold text-blue-600 text-sm">{stock.ticker?.substring(0,2)}</span></div>
                               <div>
