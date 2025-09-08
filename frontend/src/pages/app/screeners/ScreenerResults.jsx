@@ -6,6 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { filterStocks } from "../../../api/client";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -21,50 +22,32 @@ const ScreenerResults = () => {
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call to fetch screener results
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Pull last-used params from localStorage (ad-hoc) or use params derived from screener id in future
+      const stored = window.localStorage.getItem('screener:lastParams');
+      const params = stored ? JSON.parse(stored) : {};
+      const data = await filterStocks(params);
+      const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+
+      // Basic info
       setScreenerInfo({
-        name: "High Growth Tech",
-        description: "Technology stocks with >20% revenue growth",
+        name: id === 'adhoc' ? 'Ad-hoc Screener' : `Screener ${id}`,
+        description: 'Results from backend filter',
         lastRun: new Date().toISOString(),
-        criteria: [
-          "Market Cap > $1B",
-          "Price Change > 5%"
-        ]
+        criteria: Object.keys(params || {}).map(k => `${k}=${params[k]}`)
       });
 
-      setResults([
-        {
-          ticker: "AAPL",
-          company_name: "Apple Inc.",
-          current_price: 210.50,
-          change_percent: 1.01,
-          volume: 80234123,
-          market_cap: 3300000000000,
-          exchange: "NASDAQ"
-        },
-        {
-          ticker: "NVDA",
-          company_name: "NVIDIA Corporation",
-          current_price: 128.20,
-          change_percent: 4.57,
-          volume: 120334455,
-          market_cap: 3100000000000,
-          exchange: "NASDAQ"
-        },
-        {
-          ticker: "MSFT",
-          company_name: "Microsoft Corporation",
-          current_price: 440.30,
-          change_percent: -0.27,
-          volume: 42100123,
-          market_cap: 3300000000000,
-          exchange: "NASDAQ"
-        }
-      ]);
+      setResults(rows.map((s) => ({
+        ticker: s.ticker || s.symbol,
+        company_name: s.company_name || s.name || '-',
+        current_price: Number(s.current_price || s.price || 0),
+        change_percent: Number(s.change_percent || s.change || 0),
+        volume: Number(s.volume || 0),
+        market_cap: Number(s.market_cap || 0),
+        exchange: s.exchange || '-'
+      })));
     } catch (error) {
       toast.error("Failed to fetch results");
+      setResults([]);
     } finally {
       setIsLoading(false);
     }

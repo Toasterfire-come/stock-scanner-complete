@@ -9,8 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "../../context/SecureAuthContext";
 
 const Alerts = () => {
+  const { isAuthenticated } = useAuth();
   const [alerts, setAlerts] = useState([]);
   const [newAlert, setNewAlert] = useState({
     ticker: "",
@@ -22,8 +24,13 @@ const Alerts = () => {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setAlerts([]);
+      setIsLoading(false);
+      return;
+    }
     fetchAlerts();
-  }, []);
+  }, [isAuthenticated]);
 
   const fetchAlerts = async () => {
     setIsLoading(true);
@@ -41,6 +48,10 @@ const Alerts = () => {
   };
 
   const createAlert = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to create alerts");
+      return;
+    }
     if (!newAlert.ticker || !newAlert.targetPrice || !newAlert.email) {
       toast.error("Please fill in all required fields");
       return;
@@ -91,6 +102,10 @@ const Alerts = () => {
   };
 
   const toggleAlert = async (alertId) => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to update alerts");
+      return;
+    }
     try {
       const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/toggle/`, { method: 'POST' });
       if (!resp.ok) throw new Error('toggle failed');

@@ -10,6 +10,7 @@ import { Separator } from "../../../components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
 import { X, Plus, Save, Play } from "lucide-react";
 import { toast } from "sonner";
+import { filterStocks } from "../../../api/client";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
@@ -45,6 +46,20 @@ const CreateScreener = () => {
     };
 
     setCriteria([...criteria, newCriterion]);
+  };
+
+  const buildFilterParams = (criteriaList) => {
+    const params = {};
+    for (const c of criteriaList) {
+      if (c.id === "market_cap") { if (c.min) params.market_cap_min = Number(c.min); if (c.max) params.market_cap_max = Number(c.max); }
+      if (c.id === "price") { if (c.min) params.price_min = Number(c.min); if (c.max) params.price_max = Number(c.max); }
+      if (c.id === "volume") { if (c.min) params.volume_min = Number(c.min); if (c.max) params.volume_max = Number(c.max); }
+      if (c.id === "pe_ratio") { if (c.min) params.pe_ratio_min = Number(c.min); if (c.max) params.pe_ratio_max = Number(c.max); }
+      if (c.id === "dividend_yield") { if (c.min) params.dividend_yield_min = Number(c.min); if (c.max) params.dividend_yield_max = Number(c.max); }
+      if (c.id === "change_percent") { if (c.min) params.change_percent_min = Number(c.min); if (c.max) params.change_percent_max = Number(c.max); }
+      if (c.id === "exchange" && c.value) { params.exchange = c.value; }
+    }
+    return params;
   };
 
   const removeCriterion = (criterionId) => {
@@ -89,9 +104,13 @@ const CreateScreener = () => {
 
     setIsLoading(true);
     try {
-      // Simulate API call to test screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Found 15 matching stocks");
+      const params = buildFilterParams(criteria);
+      const data = await filterStocks(params);
+      const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+      const count = rows.length || 0;
+      window.localStorage.setItem('screener:lastParams', JSON.stringify(params));
+      toast.success(`Found ${count} matching stocks`);
+      navigate(`/app/screeners/adhoc/results`);
     } catch (error) {
       toast.error("Failed to test screener");
     } finally {
