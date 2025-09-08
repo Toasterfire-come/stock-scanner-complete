@@ -19,6 +19,7 @@ from .models import (
     Stock, UserInterests, PersonalizedNews, UserPortfolio, 
     UserWatchlist, StockAlert
 )
+from news.models import NewsArticle
 
 logger = logging.getLogger(__name__)
 
@@ -421,7 +422,36 @@ class NewsPersonalizationService:
             news_items = query.order_by('-relevance_score', '-published_at')[:limit]
             
             result = []
+            # Lazy import to avoid heavy initialization if not needed
+            try:
+                from news.scraper import YahooFinanceNewsScraper as _YFNS
+                _analyzer = _YFNS()
+            except Exception:
+                _analyzer = None
+
             for item in news_items:
+                # Derive sentiment from corresponding NewsArticle if available; otherwise compute ad-hoc
+                sentiment_score = None
+                sentiment_grade = None
+                try:
+                    linked = NewsArticle.objects.filter(url=item.url).first()
+                    if linked:
+                        if linked.sentiment_score is not None:
+                            try:
+                                sentiment_score = float(linked.sentiment_score)
+                            except Exception:
+                                sentiment_score = None
+                        sentiment_grade = linked.sentiment_grade or None
+                    elif _analyzer is not None:
+                        text = f"{item.title} {item.content or ''}"
+                        sentiment_score = _analyzer.analyze_sentiment(text)
+                        sentiment_grade = _analyzer.get_sentiment_grade(text)
+                except Exception:
+                    pass
+
+                # Provide tickers alias expected by some clients
+                tickers = item.related_stocks or []
+
                 result.append({
                     'id': item.id,
                     'title': item.title,
@@ -430,6 +460,9 @@ class NewsPersonalizationService:
                     'source': item.source,
                     'relevance_score': float(item.relevance_score),
                     'related_stocks': item.related_stocks,
+                    'tickers': tickers,
+                    'sentiment_score': sentiment_score,
+                    'sentiment_grade': sentiment_grade,
                     'category': item.category,
                     'published_at': item.published_at.isoformat(),
                     'read_at': item.read_at.isoformat() if item.read_at else None,
