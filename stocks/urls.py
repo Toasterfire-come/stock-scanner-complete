@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views, api_views, views_health
+from . import alerts_api
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
@@ -47,8 +48,11 @@ urlpatterns = [
     path('stocks/update/', trigger_stock_update, name='stocks_update_trigger'),
     path('news/update/', trigger_news_update, name='news_update_trigger'),
     
-    # Alert endpoints
-    path('alerts/create/', api_views.create_alert_api, name='create_alert'),
+    # Alerts endpoints (auth required)
+    path('alerts/', alerts_api.alerts_list_api, name='alerts_list'),
+    path('alerts/create/', alerts_api.alerts_create_api, name='create_alert'),
+    path('alerts/<int:alert_id>/toggle/', alerts_api.alerts_toggle_api, name='toggle_alert'),
+    path('alerts/<int:alert_id>/delete/', alerts_api.alerts_delete_api, name='delete_alert'),
     
     # Subscription endpoints
     path('subscription/', api_views.wordpress_subscription_api, name='wordpress_subscription'),
