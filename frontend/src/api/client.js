@@ -11,6 +11,12 @@ if (!BASE_URL) {
 export const API_ROOT = `${BASE_URL}/api`;
 export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
+// Secondary axios instance for non-API root endpoints (e.g., Django accounts login view for CSRF cookie)
+const site = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
+
 // Simple network event bus for latency indicator
 (function initNetBus(){
   if (typeof window === 'undefined') return;
@@ -84,10 +90,14 @@ async function ensureCsrfCookie() {
     // Fallback to a lightweight GET that may be decorated server-side
     const hasToken = !!getCsrfToken();
     if (hasToken) return;
+    // Try API routes first
     await api.get('/auth/csrf/').catch(() => {});
     if (!getCsrfToken()) await api.get('/health/').catch(() => {});
     if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
     if (!getCsrfToken()) await api.get('/').catch(() => {});
+    // Then try Django auth HTML endpoints which reliably set csrftoken
+    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
+    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
   } catch {}
 }
 
