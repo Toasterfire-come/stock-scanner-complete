@@ -18,45 +18,39 @@ import {
   Play
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
-import { getTrendingSafe, getMarketStatsSafe } from "../../api/client";
+import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats } from "../../api/client";
+import MiniSparkline from "../../components/MiniSparkline";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
   const [marketData, setMarketData] = useState(null);
   const [trendingStocks, setTrendingStocks] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [usage, setUsage] = useState(null);
+  const [trendSeries, setTrendSeries] = useState({ gainers: [], losers: [], total: [] });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        if (isAuthenticated) {
-          // Fetch real data for authenticated users
-          const [marketResponse, trendingResponse] = await Promise.all([
-            getMarketStatsSafe(),
-            getTrendingSafe()
-          ]);
-          
-          setMarketData(marketResponse.data);
-          setTrendingStocks(trendingResponse.data);
-        } else {
-          // Show limited/mock data for non-authenticated users
-          setMarketData({
-            market_overview: {
-              total_stocks: 3200,
-              gainers: 1240,
-              losers: 890,
-              unchanged: 1070
-            }
-          });
-          setTrendingStocks({
-            top_gainers: [
-              { ticker: "AAPL", name: "Apple Inc.", change_percent: 2.5 },
-              { ticker: "MSFT", name: "Microsoft Corp.", change_percent: 1.8 },
-              { ticker: "NVDA", name: "NVIDIA Corp.", change_percent: 3.2 }
-            ]
-          });
-        }
+        const [marketResponse, trendingResponse, stats] = await Promise.all([
+          getMarketStatsSafe(),
+          getTrendingSafe(),
+          getStatisticsSafe().catch(() => ({ success: false }))
+        ]);
+
+        setMarketData(marketResponse.data);
+        setTrendingStocks(trendingResponse.data);
+        setUsage(stats?.data || null);
+        // derive simple spark series if backend provides history; otherwise create placeholders
+        const g = (marketResponse?.data?.history?.gainers || []).slice(-20);
+        const l = (marketResponse?.data?.history?.losers || []).slice(-20);
+        const t = (marketResponse?.data?.history?.total_stocks || []).slice(-20);
+        setTrendSeries({
+          gainers: g.length ? g : Array.from({ length: 20 }, (_, i) => 800 + Math.sin(i/2) * 100),
+          losers: l.length ? l : Array.from({ length: 20 }, (_, i) => 600 + Math.cos(i/2) * 90),
+          total: t.length ? t : Array.from({ length: 20 }, (_, i) => 3200 + Math.sin(i/3) * 20),
+        });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -75,62 +69,47 @@ const AppDashboard = () => {
           <Alert className="mb-8 border-orange-200 bg-orange-50">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="text-orange-800">
-              <strong>Demo Mode:</strong> You're viewing limited sample data. 
-              <Link to="/auth/sign-up" className="ml-2 text-blue-600 hover:underline font-medium">
-                Sign up for $1 to access real-time data and full features →
-              </Link>
+              Limited access. 
+              <Link to="/auth/sign-up" className="ml-2 text-blue-600 hover:underline font-medium">Sign in to access real-time data and full features →</Link>
             </AlertDescription>
           </Alert>
 
           {/* Dashboard content for non-authenticated users */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Trade Scan Pro Dashboard</h1>
-            <p className="text-gray-600">Sample dashboard - limited functionality in demo mode</p>
+            <p className="text-gray-600">Sign in to access full functionality and real-time data.</p>
           </div>
 
-          {/* Sample Market Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Market Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Stocks</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">3,200</div>
+                <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
                 <p className="text-xs text-muted-foreground">NYSE listings</p>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Gainers</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">1,240</div>
+                <div className="text-2xl font-bold text-green-600">{marketData?.market_overview?.gainers?.toLocaleString() || '-'}</div>
                 <p className="text-xs text-muted-foreground">Stocks up today</p>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Losers</CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">890</div>
+                <div className="text-2xl font-bold text-red-600">{marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
                 <p className="text-xs text-muted-foreground">Stocks down today</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Unchanged</CardTitle>
-                <Activity className="h-4 w-4 text-gray-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-600">1,070</div>
-                <p className="text-xs text-muted-foreground">No change</p>
               </CardContent>
             </Card>
           </div>
@@ -179,10 +158,13 @@ const AppDashboard = () => {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {marketData?.market_overview?.total_stocks?.toLocaleString() || '3,200'}
-              </div>
+              <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
               <p className="text-xs text-muted-foreground">NYSE listings covered</p>
+              {Array.isArray(trendSeries.total) && trendSeries.total.length > 0 && (
+                <div className="mt-3">
+                  <MiniSparkline data={trendSeries.total} color="#2563eb" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -192,10 +174,16 @@ const AppDashboard = () => {
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {marketData?.market_overview?.gainers?.toLocaleString() || '1,240'}
+              <div className="text-2xl font-bold text-green-600">{marketData?.market_overview?.gainers?.toLocaleString() || '-'}</div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground">Stocks up today</span>
+                <span className="text-green-600 font-medium">+{((marketData?.market_overview?.gainers_delta)||0)}%</span>
               </div>
-              <p className="text-xs text-muted-foreground">Stocks up today</p>
+              {Array.isArray(trendSeries.gainers) && trendSeries.gainers.length > 0 && (
+                <div className="mt-3">
+                  <MiniSparkline data={trendSeries.gainers} color="#16a34a" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -205,10 +193,16 @@ const AppDashboard = () => {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {marketData?.market_overview?.losers?.toLocaleString() || '890'}
+              <div className="text-2xl font-bold text-red-600">{marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground">Stocks down today</span>
+                <span className="text-red-600 font-medium">{((marketData?.market_overview?.losers_delta)||0)}%</span>
               </div>
-              <p className="text-xs text-muted-foreground">Stocks down today</p>
+              {Array.isArray(trendSeries.losers) && trendSeries.losers.length > 0 && (
+                <div className="mt-3">
+                  <MiniSparkline data={trendSeries.losers} color="#dc2626" />
+                </div>
+              )}
             </CardContent>
           </Card>
 

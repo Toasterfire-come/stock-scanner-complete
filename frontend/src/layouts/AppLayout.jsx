@@ -41,6 +41,7 @@ import {
   Crown,
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
+import ThemeToggle from "../components/ThemeToggle";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -85,9 +86,9 @@ const AppLayout = () => {
               </span>
             </Link>
 
-            {/* Desktop Navigation - Now with dropdown for all screen sizes */}
+            {/* Desktop Navigation - Show app pages only when authenticated */}
             <div className="flex items-center space-x-4">
-              {!isAppRoute ? (
+              {!isAuthenticated || !isAppRoute ? (
                 // Public navigation dropdown
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -144,12 +145,15 @@ const AppLayout = () => {
               )}
             </div>
 
-            {/* Right side - Auth buttons or user menu */}
+            {/* Right side - Toggles, Auth buttons or user menu */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Market Status - always show */}
               <div className="hidden md:block">
                 <MarketStatus />
               </div>
+
+              {/* Theme toggle */}
+              <ThemeToggle />
 
               {isAuthenticated && user ? (
                 <>
@@ -215,7 +219,7 @@ const AppLayout = () => {
                     </div>
                     
                     <nav className="flex flex-col space-y-3">
-                      {(isAppRoute ? appNavigation : navigation).map((item) => {
+                      {((isAuthenticated && isAppRoute) ? appNavigation : navigation).map((item) => {
                         const Icon = item.icon;
                         return (
                           <Link

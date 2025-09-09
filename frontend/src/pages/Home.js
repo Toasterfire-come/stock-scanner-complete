@@ -51,7 +51,7 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "NYSE Stock Screening",
-      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental indicators including RSI, MACD, P/E ratios, and market cap filters.`,
+      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
       details: "Access comprehensive screening across all NYSE-listed companies with 7 technical indicators (RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change) and 7 fundamental indicators (Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range)."
     },
     {
@@ -129,7 +129,7 @@ const Home = () => {
       description: "Enhanced features for active traders",
       features: [
         "1,500 API calls per month",
-        "50 API calls per day",
+        "150 API calls per day",
         "Full stock scanner & lookup",
         "Email alerts & notifications", 
         "Real-time alerts",
@@ -145,7 +145,7 @@ const Home = () => {
       description: "Professional tools for serious traders",
       features: [
         "5,000 API calls per month",
-        "250 API calls per day",
+        "500 API calls per day",
         "Advanced filtering & screening",
         "Custom watchlists (10)",
         "Real-time alerts",
@@ -243,19 +243,19 @@ const Home = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {Number(platformStats?.nyse_stocks||0).toLocaleString()}
+                  {Number(platformStats?.nyse_stocks || 3200).toLocaleString()}
                 </div>
                 <div className="text-gray-600">NYSE Stocks Covered</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">
-                  {platformStats.total_indicators}
+                  {platformStats?.total_indicators || 14}
                 </div>
                 <div className="text-gray-600">Technical Indicators</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  {Number(platformStats?.scanner_combinations||0).toLocaleString()}+
+                  {Number(platformStats?.scanner_combinations || 1540).toLocaleString()}+
                 </div>
                 <div className="text-gray-600">Scanner Combinations</div>
               </div>

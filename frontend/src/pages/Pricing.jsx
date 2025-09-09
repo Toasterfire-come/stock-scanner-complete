@@ -42,7 +42,7 @@ const Pricing = () => {
       description: "Enhanced features for active traders",
       price: { monthly: 24.99, annual: 249.90 },
       features: [
-        "100 API calls per day, 1500/month",
+        "150 API calls per day, 1500/month",
         "Full stock scanner & lookup",
         "Email alerts & notifications",
         "Real-time alerts",

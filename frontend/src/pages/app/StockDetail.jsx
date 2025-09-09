@@ -4,6 +4,17 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Area,
+  AreaChart
+} from "recharts";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
@@ -33,6 +44,9 @@ const StockDetail = () => {
   const [stockData, setStockData] = useState(null);
   const [realtimeData, setRealtimeData] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [chartData, setChartData] = useState([]);
+  const [isChartLoading, setIsChartLoading] = useState(false);
+  const [newsItems, setNewsItems] = useState([]);
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -47,22 +61,7 @@ const StockDetail = () => {
         if (stockResponse?.success) {
           setStockData(stockResponse.data);
         } else {
-          // Mock data fallback
-          setStockData({
-            ticker: symbol,
-            symbol: symbol,
-            company_name: `${symbol} Company`,
-            exchange: "NASDAQ",
-            current_price: 150.25,
-            price_change_today: 2.34,
-            change_percent: 1.58,
-            volume: 12345678,
-            market_cap: 500000000000,
-            currency: "USD",
-            pe_ratio: 25.4,
-            dividend_yield: 1.2,
-            last_updated: new Date().toISOString()
-          });
+          setStockData(null);
         }
 
         if (realtimeResponse) {
@@ -76,6 +75,43 @@ const StockDetail = () => {
     };
 
     fetchStockData();
+
+    // Load chart data from Yahoo Finance chart API
+    const loadChart = async () => {
+      try {
+        setIsChartLoading(true);
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
+        const r = await fetch(url, { mode: 'cors' });
+        const json = await r.json();
+        const result = ((((json || {}).chart || {}).result || [])[0]) || {};
+        const ts = (result.timestamp || []);
+        const closes = (((result.indicators || {}).quote || [])[0] || {}).close || [];
+        const volumes = (((result.indicators || {}).quote || [])[0] || {}).volume || [];
+        const points = ts.map((t, i) => ({
+          date: new Date(t * 1000),
+          close: Number(closes[i] ?? 0),
+          volume: Number(volumes[i] ?? 0)
+        })).filter(p => Number.isFinite(p.close) && p.close > 0);
+        setChartData(points);
+      } catch (_) {
+        setChartData([]);
+      } finally {
+        setIsChartLoading(false);
+      }
+    };
+    loadChart();
+
+    // Load news from backend proxy
+    const loadNews = async () => {
+      try {
+        const r = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/news/${encodeURIComponent(symbol)}/`);
+        const data = await r.json().catch(() => ({ news: [] }));
+        setNewsItems(Array.isArray(data?.news) ? data.news : []);
+      } catch (_) {
+        setNewsItems([]);
+      }
+    };
+    loadNews();
 
     // Set up real-time updates every 30 seconds
     const interval = setInterval(async () => {
@@ -261,6 +297,38 @@ const StockDetail = () => {
             <div className="mt-4 text-sm text-gray-500">
               Last updated: {new Date(currentData.last_updated).toLocaleString()}
             </div>
+
+            {/* Striped details table */}
+            <div className="mt-6 overflow-hidden border rounded-lg">
+              <table className="min-w-full text-sm">
+                <tbody className="divide-y">
+                  <tr className="odd:bg-gray-50">
+                    <td className="p-3 text-gray-600">Exchange</td>
+                    <td className="p-3 font-medium">{stockData.exchange}</td>
+                  </tr>
+                  <tr className="odd:bg-gray-50">
+                    <td className="p-3 text-gray-600">Currency</td>
+                    <td className="p-3 font-medium">{stockData.currency || 'USD'}</td>
+                  </tr>
+                  <tr className="odd:bg-gray-50">
+                    <td className="p-3 text-gray-600">Market Cap</td>
+                    <td className="p-3 font-medium">{formatMarketCap(currentData.market_cap)}</td>
+                  </tr>
+                  <tr className="odd:bg-gray-50">
+                    <td className="p-3 text-gray-600">Volume</td>
+                    <td className="p-3 font-medium">{formatVolume(currentData.volume)}</td>
+                  </tr>
+                  <tr className="odd:bg-gray-50">
+                    <td className="p-3 text-gray-600">P/E Ratio</td>
+                    <td className="p-3 font-medium">{Number.isFinite(currentData.pe_ratio) ? currentData.pe_ratio.toFixed(2) : 'N/A'}</td>
+                  </tr>
+                  <tr className="odd:bg-gray-50">
+                    <td className="p-3 text-gray-600">Dividend Yield</td>
+                    <td className="p-3 font-medium">{Number.isFinite(currentData.dividend_yield) ? `${currentData.dividend_yield.toFixed(2)}%` : 'N/A'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
@@ -268,11 +336,9 @@ const StockDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="chart">Chart</TabsTrigger>
-                <TabsTrigger value="technicals">Technicals</TabsTrigger>
-                <TabsTrigger value="fundamentals">Fundamentals</TabsTrigger>
                 <TabsTrigger value="news">News</TabsTrigger>
               </TabsList>
 
@@ -335,83 +401,37 @@ const StockDetail = () => {
               <TabsContent value="chart">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Interactive Chart</CardTitle>
+                    <CardTitle>Price History (6M)</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-96 flex items-center justify-center text-gray-500">
-                      <div className="text-center">
-                        <BarChart3 className="h-16 w-16 mx-auto mb-4" />
-                        <p className="text-lg">Advanced Charting</p>
-                        <p>Real-time candlestick charts with technical indicators</p>
-                      </div>
+                    <div className="h-96">
+                      {isChartLoading ? (
+                        <div className="h-full flex items-center justify-center text-gray-500">Loading chart…</div>
+                      ) : chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorClose" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35}/>
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                            <XAxis dataKey="date" tickFormatter={(d) => new Date(d).toLocaleDateString()} minTickGap={32} stroke="#9ca3af" />
+                            <YAxis domain={["auto", "auto"]} tickFormatter={(v) => `$${v.toFixed(2)}`} stroke="#9ca3af" />
+                            <Tooltip labelFormatter={(l) => new Date(l).toLocaleString()} formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Close']} />
+                            <Area type="monotone" dataKey="close" stroke="#2563eb" fillOpacity={1} fill="url(#colorClose)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-gray-500">No chart data</div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="technicals">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Technical Analysis</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 border rounded-lg">
-                          <div className="text-sm text-gray-600">RSI (14)</div>
-                          <div className="text-xl font-bold">65.2</div>
-                          <div className="text-sm text-yellow-600">Neutral</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="text-sm text-gray-600">MACD</div>
-                          <div className="text-xl font-bold text-green-600">+1.25</div>
-                          <div className="text-sm text-green-600">Bullish</div>
-                        </div>
-                      </div>
-                      
-                      <Alert>
-                        <Activity className="h-4 w-4" />
-                        <AlertDescription>
-                          Technical analysis tools are available for premium subscribers.
-                        </AlertDescription>
-                      </Alert>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="fundamentals">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Fundamental Data</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-gray-600">Market Cap</div>
-                          <div className="text-lg font-semibold">
-                            {formatMarketCap(currentData.market_cap)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-600">P/E Ratio</div>
-                          <div className="text-lg font-semibold">
-                            {currentData.pe_ratio?.toFixed(2) || 'N/A'}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Alert>
-                        <Building className="h-4 w-4" />
-                        <AlertDescription>
-                          Comprehensive fundamental data is available for premium subscribers.
-                        </AlertDescription>
-                      </Alert>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              {/* technicals and fundamentals tabs removed per spec */}
 
               <TabsContent value="news">
                 <Card>
@@ -419,24 +439,22 @@ const StockDetail = () => {
                     <CardTitle>Related News</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium">Market Update</div>
-                          <div className="text-sm text-gray-500">2 hours ago</div>
-                        </div>
-                        <p className="text-gray-600">
-                          {stockData.company_name} shows strong performance in latest earnings report...
-                        </p>
+                    {newsItems.length === 0 ? (
+                      <div className="text-gray-500">No recent news.</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {newsItems.map((n, idx) => (
+                          <div key={idx} className="p-4 border rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <a href={n.link} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:underline">
+                                {n.title}
+                              </a>
+                              <div className="text-xs text-gray-500">{n.publisher || ''} {n.pubDate ? `· ${new Date(n.pubDate).toLocaleString()}` : ''}</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      
-                      <Alert>
-                        <Calendar className="h-4 w-4" />
-                        <AlertDescription>
-                          Real-time news feed and sentiment analysis available for premium subscribers.
-                        </AlertDescription>
-                      </Alert>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

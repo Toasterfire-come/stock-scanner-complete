@@ -11,6 +11,12 @@ if (!BASE_URL) {
 export const API_ROOT = `${BASE_URL}/api`;
 export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
+// Secondary axios instance for non-API root endpoints (e.g., Django accounts login view for CSRF cookie)
+const site = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
+
 // Simple network event bus for latency indicator
 (function initNetBus(){
   if (typeof window === 'undefined') return;
@@ -26,7 +32,10 @@ export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
 export const api = axios.create({
   baseURL: API_ROOT,
-  withCredentials: false,
+  withCredentials: true,
+  // Ensure axios picks up Django's CSRF cookie/header names when present
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
 });
 
 // ====================
@@ -75,19 +84,47 @@ function getCsrfToken() {
   } catch { return null; }
 }
 
+async function ensureCsrfCookie() {
+  try {
+    // Attempt to fetch CSRF cookie from a dedicated endpoint if available
+    // Fallback to a lightweight GET that may be decorated server-side
+    const hasToken = !!getCsrfToken();
+    if (hasToken) return;
+    // Prefer Django auth HTML endpoints which typically set csrftoken
+    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
+    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
+    // Then try API health/document endpoints which the backend can decorate with ensure_csrf_cookie
+    if (!getCsrfToken()) await api.get('/health/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/').catch(() => {});
+  } catch {}
+}
+
+let __csrfTokenCache = null;
+async function fetchApiCsrfToken() {
+  try {
+    const { data } = await api.get('/auth/csrf/');
+    const token = data?.csrfToken || data?.csrf_token || data?.token || null;
+    if (token) __csrfTokenCache = token;
+    return token;
+  } catch {
+    return null;
+  }
+}
+
 // Attach token, CSRF safety and timing
 api.interceptors.request.use((config) => {
   try {
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
-    const csrf = getCsrfToken();
-    if (csrf) config.headers['X-CSRFToken'] = csrf;
+    const method = (config.method || 'get').toLowerCase();
+    const csrf = __csrfTokenCache || getCsrfToken();
+    if (csrf && ['post','put','patch','delete'].includes(method)) {
+      config.headers['X-CSRFToken'] = csrf;
+    }
 
-    const token = window.localStorage.getItem("rts_token");
-    if (token) {
+    const token = (window.localStorage.getItem("rts_token") || '').trim();
+    if (token && token !== 'undefined' && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
-      // compatibility param for some session endpoints
-      config.params = config.params || {};
-      if (!config.params.authorization) config.params.authorization = `Bearer ${token}`;
     }
   } catch {}
   // Skip client-side quota check - server handles all rate limiting
@@ -110,11 +147,9 @@ api.interceptors.response.use(
       window.__NET?.emit('end');
     } catch {}
     if (error.response?.status === 401) {
-      localStorage.removeItem("rts_token");
-      // Token rotation UX: prompt re-login
-      if (!window.location.pathname.startsWith('/auth')) {
-        window.location.href = "/auth/sign-in";
-      }
+      // Do not forcibly sign the user out on incidental 401s (e.g., news feed) – let pages handle it gracefully
+      // Keep token/state intact and surface the error to callers
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }
@@ -176,6 +211,10 @@ export function normalizeMarketStats(raw) {
     top_gainers: Array.isArray(d.top_gainers) ? d.top_gainers : [],
     top_losers: Array.isArray(d.top_losers) ? d.top_losers : [],
     most_active: Array.isArray(d.most_active) ? d.most_active : [],
+    // Pass through sector performance if provided by backend under common keys
+    sectors: Array.isArray(d.sectors)
+      ? d.sectors
+      : (Array.isArray(d.sector_performance) ? d.sector_performance : []),
     last_updated: d.last_updated || null,
   };
 }
@@ -237,7 +276,8 @@ export async function getStock(ticker) { const { data } = await api.get(`/stock/
 export async function searchStocks(q) { const { data } = await api.get('/search/', { params: { q } }); return data; }
 export async function getTrending() { const { data } = await api.get('/trending/'); return data; }
 export async function getMarketStats() { const { data } = await api.get('/market-stats/'); return data; }
-export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/realtime/${encodeURIComponent(ticker)}/`); return data; }
+// Align with backend quote endpoint: /stocks/{symbol}/quote
+export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/quote`); return data; }
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
 export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
@@ -247,6 +287,11 @@ export async function getMarketData() { const { data } = await api.get('/market-
 // ====================
 export async function login(username, password) {
   try {
+    // Contract: fetch CSRF from API endpoint first, then ensure cookie
+    const token = await fetchApiCsrfToken();
+    if (!token) {
+      await ensureCsrfCookie();
+    }
     const { data } = await api.post('/auth/login/', { username, password });
     if (data.success && data.data) {
       // Store user data if login successful
@@ -287,9 +332,15 @@ export async function registerUser(userData) {
     }
     return { success: false, message: data.message || 'Registration failed' };
   } catch (error) {
-    return { 
-      success: false, 
-      message: error.response?.data?.message || error.response?.data?.detail || 'Registration failed' 
+    if (error?.response?.status === 409) {
+      return {
+        success: false,
+        message: 'This email is already registered. Please sign in or reset your password.'
+      };
+    }
+    return {
+      success: false,
+      message: error.response?.data?.message || error.response?.data?.detail || 'Registration failed'
     };
   }
 }

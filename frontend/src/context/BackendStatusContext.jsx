@@ -5,7 +5,7 @@ const BackendStatusContext = createContext({ isBackendUp: true, lastChecked: nul
 
 const EMERGENCY_ADMIN = { email: "authadmin@auth.to", password: "12auth34" };
 
-export const BackendStatusProvider = ({ children, intervalMs = 15000 }) => {
+export const BackendStatusProvider = ({ children, intervalMs = 60000 }) => {
   const [isBackendUp, setIsBackendUp] = useState(true);
   const [lastChecked, setLastChecked] = useState(null);
 
@@ -13,7 +13,25 @@ export const BackendStatusProvider = ({ children, intervalMs = 15000 }) => {
     let cancelled = false;
     let timer = null;
 
+    const HEALTH_KEY = 'tsp:lastHealthPingAt';
+
     const check = async () => {
+      // Cross-tab throttle: only one tab performs the ping per minute
+      try {
+        const now = Date.now();
+        const lastPing = Number(localStorage.getItem(HEALTH_KEY) || '0');
+        if (now - lastPing < intervalMs) {
+          // Too soon: schedule the next check based on remaining time
+          const remaining = Math.max(0, intervalMs - (now - lastPing));
+          if (!cancelled) timer = setTimeout(check, remaining + 50);
+          return;
+        }
+        // Attempt to claim the ping window
+        localStorage.setItem(HEALTH_KEY, String(now));
+      } catch (_) {
+        // If localStorage fails, proceed without throttle
+      }
+
       try {
         await pingHealth();
         if (!cancelled) setIsBackendUp(true);

@@ -9,7 +9,7 @@ import { Label } from "../../components/ui/label";
 import { Separator } from "../../components/ui/separator";
 import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User, Github, Chrome } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
 
 const signUpSchema = z.object({
@@ -77,10 +77,6 @@ const SignUp = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleOAuthSignUp = (provider) => {
-    window.location.href = `/auth/oauth/${provider}?action=signup`;
   };
 
   return (
@@ -230,45 +226,7 @@ const SignUp = () => {
         </Button>
       </form>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500">Or continue with</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Button
-          variant="outline"
-          onClick={() => handleOAuthSignUp("google")}
-          className="w-full h-11 sm:h-12"
-        >
-          <Chrome className="h-4 w-4 mr-2" />
-          Google
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => handleOAuthSignUp("github")}
-          className="w-full h-11 sm:h-12"
-        >
-          <Github className="h-4 w-4 mr-2" />
-          GitHub
-        </Button>
-      </div>
-
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link
-            to="/auth/sign-in"
-            className="text-blue-600 hover:text-blue-500 font-medium"
-          >
-            Sign in here
-          </Link>
-        </p>
-      </div>
+      {/* Social auth removed until enabled */}
     </div>
   );
 };

@@ -54,7 +54,7 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Filter through 3,200 NYSE stocks with 14 technical and fundamental criteria.",
+      description: "Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.",
       details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
     },
     {
@@ -141,8 +141,8 @@ const Home = () => {
       period: "/month",
       description: "Enhanced features for active traders",
       features: [
-        "100 API calls per day, 1500/month",
-        "Infinite Scanner combinations", 
+        "150 API calls per day, 1500/month",
+        "Unlimited scanner combinations", 
         "Full stock scanner & lookup",
         "Email alerts & notifications",
         "News sentiment analysis",
@@ -158,7 +158,7 @@ const Home = () => {
       description: "Professional tools for serious traders",
       features: [
         "500 API calls per day, 5000/month",
-        "Infinite Scanner combinations",
+        "Unlimited scanner combinations",
         "Advanced filtering & screening",
         "1-year historical data",
         "Custom watchlists (10)",
@@ -190,7 +190,7 @@ const Home = () => {
       description: "Perfect for getting started",
       features: [
         "15 API calls per month",
-        "Infinite Scanner combinations",
+        "Unlimited scanner combinations",
         "Basic stock screening",
         "Email alerts",
         "Community support",

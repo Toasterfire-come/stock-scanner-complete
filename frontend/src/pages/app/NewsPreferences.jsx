@@ -9,6 +9,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { Badge } from "../../components/ui/badge";
 import { X, Plus, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { updateNewsPreferences, syncPortfolioNews } from "../../api/client";
 
 const NewsPreferences = () => {
   const navigate = useNavigate();
@@ -60,15 +61,9 @@ const NewsPreferences = () => {
   const fetchPreferences = async () => {
     setIsLoading(true);
     try {
-      // Simulate loading existing preferences
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setPreferences({
-        followedStocks: ["AAPL", "MSFT", "GOOGL"],
-        followedSectors: ["Technology", "Healthcare"],
-        preferredCategories: ["earnings", "markets", "breaking"],
-        newsFrequency: "daily"
-      });
+      // Load existing preferences from backend if available
+      // If no endpoint yet, keep defaults; otherwise call a GET when provided
+      setPreferences((p) => p);
     } catch (error) {
       toast.error("Failed to load preferences");
     } finally {
@@ -119,9 +114,13 @@ const NewsPreferences = () => {
   const savePreferences = async () => {
     setIsSaving(true);
     try {
-      // Simulate API call to save preferences
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Preferences saved successfully");
+      await updateNewsPreferences({
+        followed_stocks: preferences.followedStocks,
+        followed_sectors: preferences.followedSectors,
+        preferred_categories: preferences.preferredCategories,
+        news_frequency: preferences.newsFrequency,
+      });
+      toast.success("Preferences saved");
       navigate("/app/news");
     } catch (error) {
       toast.error("Failed to save preferences");
@@ -132,23 +131,13 @@ const NewsPreferences = () => {
 
   const syncPortfolio = async () => {
     try {
-      // Simulate API call to sync portfolio stocks
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Add mock portfolio stocks
-      const portfolioStocks = ["TSLA", "NVDA", "AMZN"];
-      const newStocks = portfolioStocks.filter(stock => 
-        !preferences.followedStocks.includes(stock)
-      );
-      
-      if (newStocks.length > 0) {
-        setPreferences({
-          ...preferences,
-          followedStocks: [...preferences.followedStocks, ...newStocks]
-        });
-        toast.success(`Added ${newStocks.length} stocks from your portfolio`);
+      const res = await syncPortfolioNews();
+      const added = Array.isArray(res?.added) ? res.added : [];
+      if (added.length > 0) {
+        setPreferences({ ...preferences, followedStocks: [...preferences.followedStocks, ...added] });
+        toast.success(`Added ${added.length} stocks from your portfolio`);
       } else {
-        toast.info("All portfolio stocks are already being followed");
+        toast.info("No new portfolio tickers to add");
       }
     } catch (error) {
       toast.error("Failed to sync portfolio");

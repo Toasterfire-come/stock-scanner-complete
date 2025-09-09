@@ -6,17 +6,12 @@ const path = require('path');
 
 console.log('🚀 Starting production build...\n');
 
-// Environment validation
-const requiredEnvVars = [
-  'REACT_APP_BACKEND_URL',
-  'REACT_APP_API_PASSWORD'
-];
-
+// Environment validation (non-fatal; CRA will load .env.production for app build)
+const requiredEnvVars = [ 'REACT_APP_BACKEND_URL' ];
 console.log('✅ Validating environment variables...');
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingVars);
-  process.exit(1);
+  console.warn('⚠️  Missing optional environment variables:', missingVars, '- falling back to defaults where applicable.');
 }
 
 // Security checks
@@ -88,7 +83,7 @@ const securityHeaders = `
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.paypal.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://www.google-analytics.com; frame-src https://www.paypal.com; object-src 'none'; base-uri 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.paypal.com https://www.paypalobjects.com https://plausible.io https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://*.paypal.com https://o.sentry.io https://ingest.sentry.io https://plausible.io https://events.plausible.io https://fonts.googleapis.com https://fonts.gstatic.com https://query1.finance.yahoo.com https://query2.finance.yahoo.com; frame-src https://www.paypal.com; object-src 'none'; base-uri 'self'
 
 /api/*
   X-Frame-Options: DENY
@@ -113,7 +108,7 @@ fs.writeFileSync('./build/robots.txt', robotsTxt);
 
 // Create service worker for caching
 const serviceWorker = `
-const CACHE_NAME = 'trade-scan-pro-v1.0.2';
+const CACHE_NAME = 'trade-scan-pro-v1.0.3';
 const urlsToCache = [
   '/',
   '/manifest.json'
@@ -121,6 +116,8 @@ const urlsToCache = [
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
+  // Activate updated SW immediately
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -145,7 +142,7 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
@@ -154,6 +151,14 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
   }
+  
+  // Bypass service worker for cross-origin requests (e.g., Google Fonts, analytics)
+  try {
+    const requestUrl = new URL(event.request.url);
+    if (requestUrl.origin !== self.location.origin) {
+      return; // Let the browser handle it directly
+    }
+  } catch (_) {}
   
   // Skip caching for API requests
   if (event.request.url.includes('/api/')) {
@@ -167,10 +172,11 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
         return fetch(event.request).catch(() => {
-          // Return offline page or fallback
+          // Return offline page or safe empty response on failure
           if (event.request.destination === 'document') {
             return caches.match('/');
           }
+          return new Response('', { status: 504, statusText: 'Gateway Timeout' });
         });
       })
   );

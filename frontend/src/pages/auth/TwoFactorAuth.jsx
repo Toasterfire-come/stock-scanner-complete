@@ -8,6 +8,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
+import { api } from "../../api/client";
 import { Shield, RefreshCw } from "lucide-react";
 
 const twoFactorSchema = z.object({
@@ -34,15 +35,12 @@ const TwoFactorAuth = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Simulate 2FA verification API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate successful verification
-      if (data.code === "123456") {
+      const res = await api.post('/auth/verify-2fa/', { code: data.code, email });
+      if (res?.data?.success) {
         toast.success("Two-factor authentication successful!");
         navigate(from, { replace: true });
       } else {
-        toast.error("Invalid verification code. Please try again.");
+        toast.error(res?.data?.message || "Invalid verification code. Please try again.");
       }
     } catch (error) {
       toast.error("Verification failed. Please try again.");
@@ -54,9 +52,12 @@ const TwoFactorAuth = () => {
   const resendCode = async () => {
     setIsResending(true);
     try {
-      // Simulate resend 2FA code API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success("New verification code sent!");
+      const res = await api.post('/auth/resend-2fa/', { email });
+      if (res?.data?.success) {
+        toast.success("New verification code sent!");
+      } else {
+        toast.error(res?.data?.message || "Failed to send verification code.");
+      }
     } catch (error) {
       toast.error("Failed to send verification code. Please try again.");
     } finally {
@@ -76,11 +77,7 @@ const TwoFactorAuth = () => {
         </p>
       </div>
 
-      <Alert>
-        <AlertDescription>
-          For demo purposes, use code <strong>123456</strong> to proceed.
-        </AlertDescription>
-      </Alert>
+      
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">

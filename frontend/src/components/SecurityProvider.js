@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ThemeProvider } from 'next-themes';
 import security from '../lib/security';
 
 const SecurityProvider = ({ children }) => {
@@ -89,7 +90,16 @@ const SecurityProvider = ({ children }) => {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      {children}
+    </ThemeProvider>
+  );
 };
 
 export default SecurityProvider;

@@ -13,9 +13,9 @@ import { Suspense, lazy } from 'react';
 import AppLayout from "./layouts/AppLayout.js";
 import AuthLayout from "./layouts/AuthLayout";
 
-// Auth Pages
-const SignIn = lazy(() => import("./pages/auth/SignIn"));
-const SignUp = lazy(() => import("./pages/auth/SignUp"));
+// Auth Pages (force .jsx to prefer the newer components)
+const SignIn = lazy(() => import("./pages/auth/SignIn.jsx"));
+const SignUp = lazy(() => import("./pages/auth/SignUp.jsx"));
 const PlanSelection = lazy(() => import("./pages/auth/PlanSelection"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
@@ -56,10 +56,7 @@ const Templates = lazy(() => import("./pages/app/Templates"));
 
 // Market Overview
 const MarketHeatmap = lazy(() => import("./pages/app/MarketHeatmap"));
-const SectorsIndustries = lazy(() => import("./pages/app/SectorsIndustries"));
 const TopMovers = lazy(() => import("./pages/app/TopMovers"));
-const PreAfterMarket = lazy(() => import("./pages/app/PreAfterMarket"));
-const EconomicCalendar = lazy(() => import("./pages/app/EconomicCalendar"));
 
 // News
 const NewsFeed = lazy(() => import("./pages/app/NewsFeed"));
@@ -220,10 +217,7 @@ function SecureApp() {
 
                     {/* Market Overview */}
                     <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
-                    <Route path="/app/sectors" element={<SectorsIndustries />} />
                     <Route path="/app/top-movers" element={<TopMovers />} />
-                    <Route path="/app/pre-after-market" element={<PreAfterMarket />} />
-                    <Route path="/app/economic-calendar" element={<EconomicCalendar />} />
 
                     {/* News */}
                     <Route path="/app/news" element={<NewsFeed />} />

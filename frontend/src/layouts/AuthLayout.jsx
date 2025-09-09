@@ -18,8 +18,8 @@ const AuthLayout = () => {
       </header>
       
       <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl">
-          <Card className="w-full p-6 sm:p-8 lg:p-10 shadow-xl">
+        <div className="w-full" style={{ maxWidth: 'min(90vw, clamp(24rem, 45vw, 64rem))' }}>
+          <Card className="w-full p-6 sm:p-8 lg:p-10 xl:p-12 shadow-xl">
             <Outlet />
           </Card>
         </div>

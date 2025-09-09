@@ -114,7 +114,9 @@ export const AuthProvider = ({ children }) => {
 
         // Store user data and token securely
         secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, userData, true);
-        secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+        if (response.data.api_token) {
+          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+        }
         
         // Start session
         sessionManager.startSession();
@@ -183,7 +185,9 @@ export const AuthProvider = ({ children }) => {
 
         // Store user data and token securely
         secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, newUserData, true);
-        secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+        if (response.data.api_token) {
+          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+        }
         
         // Start session
         sessionManager.startSession();
