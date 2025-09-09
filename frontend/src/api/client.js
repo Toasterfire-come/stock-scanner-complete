@@ -90,14 +90,13 @@ async function ensureCsrfCookie() {
     // Fallback to a lightweight GET that may be decorated server-side
     const hasToken = !!getCsrfToken();
     if (hasToken) return;
-    // Try API routes first
-    await api.get('/auth/csrf/').catch(() => {});
+    // Prefer Django auth HTML endpoints which typically set csrftoken
+    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
+    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
+    // Then try API health/document endpoints which the backend can decorate with ensure_csrf_cookie
     if (!getCsrfToken()) await api.get('/health/').catch(() => {});
     if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
     if (!getCsrfToken()) await api.get('/').catch(() => {});
-    // Then try Django auth HTML endpoints which reliably set csrftoken
-    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
-    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
   } catch {}
 }
 
