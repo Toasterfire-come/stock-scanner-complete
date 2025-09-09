@@ -13,7 +13,7 @@ from django.middleware.csrf import get_token
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -26,6 +26,40 @@ from .models import UserProfile, BillingHistory, NotificationSettings
 from .security_utils import secure_api_endpoint, validate_user_input
 
 logger = logging.getLogger(__name__)
+
+# CSRF token endpoint
+@ensure_csrf_cookie
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def csrf_token_api(request):
+    """
+    Return a CSRF token and ensure the CSRF cookie is set.
+    GET /api/auth/csrf/
+    """
+    try:
+        token = get_token(request)
+        response = JsonResponse({
+            'success': True,
+            'csrf_token': token,
+            'csrf_cookie_name': getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken')
+        })
+        # Explicitly set cookie to enforce attributes for cross-site requests
+        response.set_cookie(
+            key=getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken'),
+            value=token,
+            secure=getattr(settings, 'CSRF_COOKIE_SECURE', True),
+            samesite=getattr(settings, 'CSRF_COOKIE_SAMESITE', 'None'),
+            httponly=False,
+        )
+        return response
+    except Exception as e:
+        logger.error(f"CSRF token error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to obtain CSRF token',
+            'error_code': 'CSRF_TOKEN_ERROR'
+        }, status=500)
 
 # Registration endpoint
 @csrf_exempt

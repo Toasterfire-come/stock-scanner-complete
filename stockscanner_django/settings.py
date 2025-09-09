@@ -1,4 +1,4 @@
-import os
+THIS SHOULD BE A LINTER ERRORimport os
 from pathlib import Path
 from corsheaders.defaults import default_headers
 
@@ -187,6 +187,8 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:8000',
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
+    'https://retailtradescanner.com',
+    'https://www.retailtradescanner.com',
 ]))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
@@ -298,6 +300,8 @@ else:
         os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com'),
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
+        'https://retailtradescanner.com',
+        'https://www.retailtradescanner.com',
     ]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
