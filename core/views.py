@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.middleware.csrf import get_token
 from django.views.decorators.http import require_http_methods
 from django.db import connection
 from django.conf import settings
@@ -370,3 +371,15 @@ def kill_switch(request):
             'message': f'Reboot scheduled in {delay_seconds} seconds'
         })
     return JsonResponse({'success': True, 'message': f'Reboot scheduled in {delay_seconds} seconds'})
+
+# CSRF token endpoint for cross-site SPA
+@ensure_csrf_cookie
+@require_http_methods(["GET", "HEAD", "OPTIONS"])  # Allow preflight
+def csrf(request):
+    """
+    Return a CSRF token in JSON and ensure the CSRF cookie is set.
+    Frontend can call this endpoint with credentials to receive the cookie,
+    and then send the token back in the X-CSRFToken header on subsequent requests.
+    """
+    token = get_token(request)
+    return JsonResponse({'csrfToken': token})
