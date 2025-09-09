@@ -61,15 +61,24 @@ async function run() {
   const results = {};
 
   for (const path of ROUTES) {
-    const routeErrors = { consoleErrors: [], pageErrors: [], requestFailures: [] };
+    const routeErrors = { consoleErrors: [], pageErrors: [], requestFailures: [], apiCalls: [] };
     const routeListener = {
       console: (msg) => { if (msg.type() === 'error') routeErrors.consoleErrors.push(msg.text()); },
       pageerror: (err) => routeErrors.pageErrors.push(String(err)),
       requestfailed: (req) => routeErrors.requestFailures.push({ url: req.url(), errorText: req.failure() && req.failure().errorText }),
+      response: async (res) => {
+        try {
+          const url = res.url();
+          if (url.includes('https://api.retailtradescanner.com/api/')) {
+            routeErrors.apiCalls.push({ url, status: res.status() });
+          }
+        } catch {}
+      },
     };
     page.on('console', routeListener.console);
     page.on('pageerror', routeListener.pageerror);
     page.on('requestfailed', routeListener.requestfailed);
+    page.on('response', routeListener.response);
 
     try {
       await page.goto(`${BASE_URL}${path}`, { waitUntil: 'networkidle2', timeout: 60000 });
@@ -84,6 +93,7 @@ async function run() {
     page.off('console', routeListener.console);
     page.off('pageerror', routeListener.pageerror);
     page.off('requestfailed', routeListener.requestfailed);
+    page.off('response', routeListener.response);
   }
 
   await browser.close();
