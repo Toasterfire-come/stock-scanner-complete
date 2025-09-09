@@ -69,10 +69,8 @@ const AppDashboard = () => {
           <Alert className="mb-8 border-orange-200 bg-orange-50">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="text-orange-800">
-              <strong>Demo Mode:</strong> You're viewing limited sample data. 
-              <Link to="/auth/sign-up" className="ml-2 text-blue-600 hover:underline font-medium">
-                Sign up for $1 to access real-time data and full features →
-              </Link>
+              Limited access. 
+              <Link to="/auth/sign-up" className="ml-2 text-blue-600 hover:underline font-medium">Sign in to access real-time data and full features →</Link>
             </AlertDescription>
           </Alert>
 
@@ -160,13 +158,13 @@ const AppDashboard = () => {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {marketData?.market_overview?.total_stocks?.toLocaleString() || '3,200'}
-              </div>
+              <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
               <p className="text-xs text-muted-foreground">NYSE listings covered</p>
-              <div className="mt-3">
-                <MiniSparkline data={trendSeries.total} color="#2563eb" />
-              </div>
+              {Array.isArray(trendSeries.total) && trendSeries.total.length > 0 && (
+                <div className="mt-3">
+                  <MiniSparkline data={trendSeries.total} color="#2563eb" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -176,16 +174,16 @@ const AppDashboard = () => {
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {marketData?.market_overview?.gainers?.toLocaleString() || '1,240'}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{marketData?.market_overview?.gainers?.toLocaleString() || '-'}</div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">Stocks up today</span>
                 <span className="text-green-600 font-medium">+{((marketData?.market_overview?.gainers_delta)||0)}%</span>
               </div>
-              <div className="mt-3">
-                <MiniSparkline data={trendSeries.gainers} color="#16a34a" />
-              </div>
+              {Array.isArray(trendSeries.gainers) && trendSeries.gainers.length > 0 && (
+                <div className="mt-3">
+                  <MiniSparkline data={trendSeries.gainers} color="#16a34a" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -195,16 +193,16 @@ const AppDashboard = () => {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {marketData?.market_overview?.losers?.toLocaleString() || '890'}
-              </div>
+              <div className="text-2xl font-bold text-red-600">{marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">Stocks down today</span>
                 <span className="text-red-600 font-medium">{((marketData?.market_overview?.losers_delta)||0)}%</span>
               </div>
-              <div className="mt-3">
-                <MiniSparkline data={trendSeries.losers} color="#dc2626" />
-              </div>
+              {Array.isArray(trendSeries.losers) && trendSeries.losers.length > 0 && (
+                <div className="mt-3">
+                  <MiniSparkline data={trendSeries.losers} color="#dc2626" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
