@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORimport os
+import os
 from pathlib import Path
 from corsheaders.defaults import default_headers
 
@@ -185,6 +185,7 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://api.retailtradescanner.com',
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
     'https://retailtradescanner.com',
@@ -298,6 +299,7 @@ if _csrf_trusted:
 else:
     CSRF_TRUSTED_ORIGINS = list(filter(None, [
         os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com'),
+        'https://api.retailtradescanner.com',
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
         'https://retailtradescanner.com',
