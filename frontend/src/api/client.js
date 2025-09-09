@@ -27,6 +27,9 @@ export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 export const api = axios.create({
   baseURL: API_ROOT,
   withCredentials: true,
+  // Ensure axios picks up Django's CSRF cookie/header names when present
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
 });
 
 // ====================
@@ -73,6 +76,16 @@ function getCsrfToken() {
     const m = document.cookie.match(/csrftoken=([^;]+)/);
     return m ? decodeURIComponent(m[1]) : null;
   } catch { return null; }
+}
+
+async function ensureCsrfCookie() {
+  try {
+    // Attempt to fetch CSRF cookie from a dedicated endpoint if available
+    // Fallback to a lightweight GET that may be decorated server-side
+    const hasToken = !!getCsrfToken();
+    if (hasToken) return;
+    await api.get('/auth/csrf/').catch(() => {});
+  } catch {}
 }
 
 // Attach token, CSRF safety and timing
@@ -247,6 +260,8 @@ export async function getMarketData() { const { data } = await api.get('/market-
 // ====================
 export async function login(username, password) {
   try {
+    // Bootstrap CSRF cookie for session-based auth backends
+    await ensureCsrfCookie();
     const { data } = await api.post('/auth/login/', { username, password });
     if (data.success && data.data) {
       // Store user data if login successful
