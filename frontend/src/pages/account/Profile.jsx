@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -13,6 +13,7 @@ import {
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { User, Mail, Calendar, Crown, Check, Loader2 } from "lucide-react";
+import { getProfile, updateProfile as updateProfileApi } from "../../api/client";
 
 export default function Profile() {
   const { user, updateUser, isLoading } = useAuth();
@@ -25,14 +26,42 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await getProfile();
+        const d = res?.data || res;
+        if (d) {
+          setFormData({
+            name: d.name || `${d.first_name || ''} ${d.last_name || ''}`.trim(),
+            email: d.email || user?.email || "",
+            username: d.username || user?.username || "",
+          });
+        }
+      } catch (_) {
+        // keep existing formData
+      }
+    };
+    loadProfile();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     setMessage("");
 
     try {
-      updateUser(formData);
-      setMessage("Profile updated successfully!");
+      const apiRes = await updateProfileApi({
+        name: formData.name,
+        email: formData.email,
+        username: formData.username,
+      });
+      if (apiRes?.success !== false) {
+        updateUser(formData);
+        setMessage("Profile updated successfully!");
+      } else {
+        setMessage(apiRes?.message || "Failed to update profile. Please try again.");
+      }
       setIsEditing(false);
     } catch (error) {
       setMessage("Failed to update profile. Please try again.");

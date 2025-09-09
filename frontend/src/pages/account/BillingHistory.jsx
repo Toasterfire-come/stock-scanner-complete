@@ -44,42 +44,8 @@ const BillingHistory = () => {
         }
       } catch (error) {
         console.error("Failed to load billing data:", error);
-        // Mock data for demo
-        setBillingHistory([
-          {
-            id: "inv_001",
-            date: "2024-03-15",
-            description: "Stock Scanner Professional - Monthly",
-            amount: 29.00,
-            status: "paid",
-            method: "Credit Card",
-            download_url: "/api/billing/download/inv_001/"
-          },
-          {
-            id: "inv_002", 
-            date: "2024-02-15",
-            description: "Stock Scanner Professional - Monthly",
-            amount: 29.00,
-            status: "paid",
-            method: "Credit Card",
-            download_url: "/api/billing/download/inv_002/"
-          },
-          {
-            id: "inv_003",
-            date: "2024-01-15",
-            description: "Stock Scanner Professional - Monthly",
-            amount: 29.00,
-            status: "failed",
-            method: "Credit Card",
-            download_url: null
-          }
-        ]);
-        setBillingStats({
-          total_spent: 87.00,
-          recent_payments: 2,
-          account_status: "active",
-          next_billing_date: "2024-04-15T00:00:00Z"
-        });
+        setBillingHistory([]);
+        setBillingStats(null);
       } finally {
         setIsLoading(false);
       }
@@ -339,7 +305,7 @@ const BillingHistory = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => toast.info("Retry payment functionality coming soon")}
+                          onClick={() => toast.info("Retry payment from billing portal")}
                         >
                           <ArrowUpRight className="h-4 w-4 mr-2" />
                           Retry
