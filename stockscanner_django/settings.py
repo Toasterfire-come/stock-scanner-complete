@@ -22,11 +22,18 @@ if IS_XAMPP_AVAILABLE:
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
-]
+
+# Allow configuration of ALLOWED_HOSTS via environment variables
+# Prefer DJANGO_ALLOWED_HOSTS (comma-separated), fallback to ALLOWED_HOSTS, then defaults
+_allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('ALLOWED_HOSTS')
+if _allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(',') if host.strip()]
+else:
+    ALLOWED_HOSTS = [
+        "127.0.0.1",
+        "localhost",
+        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+    ]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
 
@@ -111,22 +118,35 @@ if IS_XAMPP_AVAILABLE:
     }
     print("INFO: Using XAMPP MySQL configuration")
 else:
-    # Standard MySQL configuration
-    DATABASES = {
-        'default': {
-            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
-            'NAME': os.environ.get('DB_NAME', 'stockscanner'),
-            'USER': os.environ.get('DB_USER', 'stockscanner_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+    # Support SQLite for local/testing via DB_ENGINE env, otherwise default to MySQL
+    _db_engine = os.environ.get('DB_ENGINE', 'django.db.backends.mysql')
+    if _db_engine == 'django.db.backends.sqlite3':
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
+                'CONN_MAX_AGE': 0,
+                'ATOMIC_REQUESTS': True,
             }
         }
-    }
-    print("INFO: Using standard MySQL configuration")
+        print("INFO: Using SQLite configuration")
+    else:
+        # Standard MySQL configuration
+        DATABASES = {
+            'default': {
+                'ENGINE': _db_engine,
+                'NAME': os.environ.get('DB_NAME', 'stockscanner'),
+                'USER': os.environ.get('DB_USER', 'stockscanner_user'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '3306'),
+                'OPTIONS': {
+                    'charset': 'utf8mb4',
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                }
+            }
+        }
+        print("INFO: Using standard MySQL configuration")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -150,6 +170,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cross-site cookies for embedded clients
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = list(filter(None, [
@@ -162,6 +188,7 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
 ]))
+CORS_ALLOW_CREDENTIALS = True
 
 # Enterprise/Premium overrides
 # Comma-separated list via ENTERPRISE_EMAILS, plus hardcoded important recipients
@@ -185,6 +212,11 @@ STOCK_DATA_ENDPOINT_PREFIXES = [
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'stocks.authentication.BearerSessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -245,9 +277,15 @@ LOGGING = {
     },
 }
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = list(filter(None, [
-    os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com')
-]))
+
+# Allow configuration of CSRF_TRUSTED_ORIGINS via environment variable (comma-separated)
+_csrf_trusted = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if _csrf_trusted:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_trusted.split(',') if origin.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = list(filter(None, [
+        os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com')
+    ]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))

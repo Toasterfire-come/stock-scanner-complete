@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views, api_views, views_health
+from . import alerts_api
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
@@ -32,7 +33,7 @@ urlpatterns = [
     path('platform-stats/', api_views.market_stats_api, name='platform_stats_alias'),
     # path('nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks'),  # Removed: only NYSE in DB
     path('stocks/', api_views.stock_list_api, name='stock_list'),
-    path('stocks/<str:symbol>/quote/', api_views.stock_detail_api, name='stock_quote'),
+    path('stocks/<str:ticker>/quote/', api_views.stock_detail_api, name='stock_quote'),
     path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
     path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
     
@@ -47,8 +48,11 @@ urlpatterns = [
     path('stocks/update/', trigger_stock_update, name='stocks_update_trigger'),
     path('news/update/', trigger_news_update, name='news_update_trigger'),
     
-    # Alert endpoints
-    path('alerts/create/', api_views.create_alert_api, name='create_alert'),
+    # Alerts endpoints (auth required)
+    path('alerts/', alerts_api.alerts_list_api, name='alerts_list'),
+    path('alerts/create/', alerts_api.alerts_create_api, name='create_alert'),
+    path('alerts/<int:alert_id>/toggle/', alerts_api.alerts_toggle_api, name='toggle_alert'),
+    path('alerts/<int:alert_id>/delete/', alerts_api.alerts_delete_api, name='delete_alert'),
     
     # Subscription endpoints
     path('subscription/', api_views.wordpress_subscription_api, name='wordpress_subscription'),

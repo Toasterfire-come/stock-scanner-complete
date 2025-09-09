@@ -5,6 +5,7 @@ Dedicated URL patterns for news personalization endpoints.
 
 from django.urls import path
 from . import news_personalization_service
+from news.models import NewsArticle
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .security_utils import secure_api_endpoint, validate_user_input
@@ -15,32 +16,82 @@ app_name = 'news'
 @csrf_exempt
 @secure_api_endpoint(methods=['GET'])
 def get_personalized_feed(request):
-    """Get personalized news feed for the user."""
+    """Get news feed. If no personalized items, return all available news."""
     try:
-        limit = int(request.GET.get('limit', 20))
+        raw_limit = request.GET.get('limit')
         category = request.GET.get('category', None)
-        
+
+        # Interpret limit: 'all' or missing => no cap; else int
+        if raw_limit is None or raw_limit.lower() == 'all':
+            limit = None
+        else:
+            try:
+                limit = max(1, int(raw_limit))
+            except Exception:
+                limit = 20
+
+        # Try personalized feed first
+        pf_limit = limit if limit is not None else 1000
         feed = news_personalization_service.NewsPersonalizationService.get_personalized_feed(
             user=request.user,
-            limit=limit,
+            limit=pf_limit,
             category=category
         )
-        
+
+        if feed:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'news_items': feed if limit is None else feed[:limit],
+                    'count': len(feed) if limit is None else min(len(feed), limit)
+                },
+                'message': 'News feed retrieved successfully'
+            })
+
+        # Fallback: return all news articles available
+        qs = NewsArticle.objects.all().order_by('-published_date')
+        if category:
+            qs = qs.filter(sentiment_grade__iexact=category[:1])  # optional mapping
+        articles = list(qs if limit is None else qs[:limit])
+
+        def parse_tickers(s: str):
+            if not s:
+                return []
+            return [t.strip().upper() for t in s.split(',') if t.strip()]
+
+        items = [{
+            'id': a.id,
+            'title': a.title,
+            'content': a.summary,
+            'url': a.url,
+            'source': a.source or (a.news_source.name if a.news_source else 'Unknown'),
+            'sentiment_score': float(a.sentiment_score) if a.sentiment_score is not None else None,
+            'sentiment_grade': a.sentiment_grade,
+            'tickers': parse_tickers(a.mentioned_tickers),
+            'mentioned_tickers': a.mentioned_tickers,
+            'published_at': a.published_date.isoformat() if a.published_date else None,
+            'created_at': a.created_at.isoformat() if a.created_at else None,
+        } for a in articles]
+
         return JsonResponse({
             'success': True,
             'data': {
-                'news_items': feed,
-                'count': len(feed)
+                'news_items': items,
+                'count': len(items)
             },
-            'message': 'News feed retrieved successfully'
+            'message': 'All news retrieved successfully' if items else 'No news available'
         })
-        
-    except Exception as e:
+
+    except Exception:
+        # As a last resort, return empty set with 200
         return JsonResponse({
-            'success': False,
-            'error': 'Failed to retrieve news feed',
-            'error_code': 'NEWS_ERROR'
-        }, status=500)
+            'success': True,
+            'data': {
+                'news_items': [],
+                'count': 0
+            },
+            'message': 'No news available'
+        }, status=200)
 
 @csrf_exempt
 @secure_api_endpoint(methods=['POST'])

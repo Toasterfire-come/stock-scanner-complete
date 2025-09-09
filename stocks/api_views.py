@@ -810,6 +810,8 @@ def market_stats_api(request):
             'ticker', 'name', 'current_price', 'volume'
         )
         
+        # Optional sectors array for future use (currently empty placeholder)
+        sectors = []
         stats = {
             'market_overview': {
                 'total_stocks': total_stocks,
@@ -821,6 +823,7 @@ def market_stats_api(request):
             'top_gainers': list(top_gainers),
             'top_losers': list(top_losers),
             'most_active': list(most_active),
+            'sectors': sectors,
             'last_updated': timezone.now().isoformat()
         }
         
