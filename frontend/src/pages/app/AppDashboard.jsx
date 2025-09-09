@@ -77,7 +77,7 @@ const AppDashboard = () => {
           {/* Dashboard content for non-authenticated users */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Trade Scan Pro Dashboard</h1>
-            <p className="text-gray-600">Sample dashboard - limited functionality in demo mode</p>
+            <p className="text-gray-600">Sign in to access full functionality and real-time data.</p>
           </div>
 
           {/* Market Overview */}

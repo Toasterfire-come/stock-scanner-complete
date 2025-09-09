@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../../api/client';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -25,10 +26,13 @@ const ForgotPassword = () => {
 
     setIsLoading(true);
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setIsSubmitted(true);
-      toast.success('Password reset email sent!');
+      const res = await api.post('/auth/forgot-password/', { email });
+      if (res?.data?.success !== false) {
+        setIsSubmitted(true);
+        toast.success('Password reset email sent!');
+      } else {
+        setError(res?.data?.message || 'Failed to send reset email. Please try again.');
+      }
     } catch (err) {
       setError('Failed to send reset email. Please try again.');
     } finally {
