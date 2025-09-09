@@ -185,8 +185,11 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://api.retailtradescanner.com',
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
+    'https://retailtradescanner.com',
+    'https://www.retailtradescanner.com',
 ]))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
@@ -296,8 +299,11 @@ if _csrf_trusted:
 else:
     CSRF_TRUSTED_ORIGINS = list(filter(None, [
         os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com'),
+        'https://api.retailtradescanner.com',
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
+        'https://retailtradescanner.com',
+        'https://www.retailtradescanner.com',
     ]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')

@@ -9,6 +9,7 @@ app_name = 'auth'
 
 urlpatterns = [
     # Authentication endpoints
+    path('auth/csrf/', auth_api.csrf_token_api, name='csrf'),
     path('auth/login/', auth_api.login_api, name='login'),
     path('auth/register/', auth_api.register_api, name='register'),
     path('auth/logout/', auth_api.logout_api, name='logout'),
