@@ -100,12 +100,27 @@ async function ensureCsrfCookie() {
   } catch {}
 }
 
+let __csrfTokenCache = null;
+async function fetchApiCsrfToken() {
+  try {
+    const { data } = await api.get('/auth/csrf/');
+    const token = data?.csrfToken || data?.csrf_token || data?.token || null;
+    if (token) __csrfTokenCache = token;
+    return token;
+  } catch {
+    return null;
+  }
+}
+
 // Attach token, CSRF safety and timing
 api.interceptors.request.use((config) => {
   try {
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
-    const csrf = getCsrfToken();
-    if (csrf) config.headers['X-CSRFToken'] = csrf;
+    const method = (config.method || 'get').toLowerCase();
+    const csrf = __csrfTokenCache || getCsrfToken();
+    if (csrf && ['post','put','patch','delete'].includes(method)) {
+      config.headers['X-CSRFToken'] = csrf;
+    }
 
     const token = (window.localStorage.getItem("rts_token") || '').trim();
     if (token && token !== 'undefined' && token !== 'null') {
@@ -272,8 +287,11 @@ export async function getMarketData() { const { data } = await api.get('/market-
 // ====================
 export async function login(username, password) {
   try {
-    // Bootstrap CSRF cookie for session-based auth backends
-    await ensureCsrfCookie();
+    // Contract: fetch CSRF from API endpoint first, then ensure cookie
+    const token = await fetchApiCsrfToken();
+    if (!token) {
+      await ensureCsrfCookie();
+    }
     const { data } = await api.post('/auth/login/', { username, password });
     if (data.success && data.data) {
       // Store user data if login successful
