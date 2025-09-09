@@ -41,6 +41,7 @@ import {
   Crown,
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
+import ThemeToggle from "../components/ThemeToggle";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -144,12 +145,15 @@ const AppLayout = () => {
               )}
             </div>
 
-            {/* Right side - Auth buttons or user menu */}
+            {/* Right side - Toggles, Auth buttons or user menu */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Market Status - always show */}
               <div className="hidden md:block">
                 <MarketStatus />
               </div>
+
+              {/* Theme toggle */}
+              <ThemeToggle />
 
               {isAuthenticated && user ? (
                 <>
