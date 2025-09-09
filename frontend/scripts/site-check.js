@@ -74,7 +74,7 @@ async function run() {
     try {
       await page.goto(`${BASE_URL}${path}`, { waitUntil: 'networkidle2', timeout: 60000 });
       // small idle wait to allow late logs
-      await page.waitForTimeout(800);
+      await new Promise((r) => setTimeout(r, 800));
     } catch (e) {
       routeErrors.pageErrors.push(`Navigation error: ${e && e.message}`);
     }
