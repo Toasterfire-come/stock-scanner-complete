@@ -85,6 +85,9 @@ async function ensureCsrfCookie() {
     const hasToken = !!getCsrfToken();
     if (hasToken) return;
     await api.get('/auth/csrf/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/health/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/').catch(() => {});
   } catch {}
 }
 
