@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from corsheaders.defaults import default_headers
 
 try:
     from dotenv import load_dotenv
@@ -61,7 +62,6 @@ MIDDLEWARE = [
     'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
     'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
     'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection (sets request.is_api_request)
-    'stocks.middleware.CORSMiddleware',  # Custom CORS for WordPress and API
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -189,6 +189,16 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'https://www.tradescanpro.com',
 ]))
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = list({
+    'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'
+})
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-csrftoken',
+    'X-CSRFToken',
+    'X-Requested-With',
+    'authorization',
+    'Authorization',
+]
 
 # Enterprise/Premium overrides
 # Comma-separated list via ENTERPRISE_EMAILS, plus hardcoded important recipients
@@ -218,6 +228,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
+    'EXCEPTION_HANDLER': 'stockscanner_django.exceptions.custom_exception_handler',
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
@@ -284,7 +295,9 @@ if _csrf_trusted:
     CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_trusted.split(',') if origin.strip()]
 else:
     CSRF_TRUSTED_ORIGINS = list(filter(None, [
-        os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com')
+        os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com'),
+        'https://tradescanpro.com',
+        'https://www.tradescanpro.com',
     ]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
