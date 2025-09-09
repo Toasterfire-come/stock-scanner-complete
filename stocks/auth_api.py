@@ -8,6 +8,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
+from django.conf import settings
+from django.middleware.csrf import get_token
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
@@ -176,7 +178,7 @@ def login_api(request):
                 # Get or create user profile
                 profile, created = UserProfile.objects.get_or_create(user=user)
                 
-                return JsonResponse({
+                response = JsonResponse({
                     'success': True,
                     'data': {
                         'user_id': user.id,
@@ -189,6 +191,21 @@ def login_api(request):
                     },
                     'message': 'Login successful'
                 })
+
+                # Ensure CSRF cookie is set for subsequent authenticated requests
+                try:
+                    csrf_token = get_token(request)
+                    response.set_cookie(
+                        key=getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken'),
+                        value=csrf_token,
+                        secure=getattr(settings, 'CSRF_COOKIE_SECURE', True),
+                        samesite=getattr(settings, 'CSRF_COOKIE_SAMESITE', 'None'),
+                        httponly=False,
+                    )
+                except Exception:
+                    pass
+
+                return response
             else:
                 return JsonResponse({
                     'success': False,
