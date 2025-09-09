@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
 import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats } from "../../api/client";
+import MiniSparkline from "../../components/MiniSparkline";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -26,6 +27,7 @@ const AppDashboard = () => {
   const [trendingStocks, setTrendingStocks] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
+  const [trendSeries, setTrendSeries] = useState({ gainers: [], losers: [], total: [] });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -40,6 +42,15 @@ const AppDashboard = () => {
         setMarketData(marketResponse.data);
         setTrendingStocks(trendingResponse.data);
         setUsage(stats?.data || null);
+        // derive simple spark series if backend provides history; otherwise create placeholders
+        const g = (marketResponse?.data?.history?.gainers || []).slice(-20);
+        const l = (marketResponse?.data?.history?.losers || []).slice(-20);
+        const t = (marketResponse?.data?.history?.total_stocks || []).slice(-20);
+        setTrendSeries({
+          gainers: g.length ? g : Array.from({ length: 20 }, (_, i) => 800 + Math.sin(i/2) * 100),
+          losers: l.length ? l : Array.from({ length: 20 }, (_, i) => 600 + Math.cos(i/2) * 90),
+          total: t.length ? t : Array.from({ length: 20 }, (_, i) => 3200 + Math.sin(i/3) * 20),
+        });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -153,6 +164,9 @@ const AppDashboard = () => {
                 {marketData?.market_overview?.total_stocks?.toLocaleString() || '3,200'}
               </div>
               <p className="text-xs text-muted-foreground">NYSE listings covered</p>
+              <div className="mt-3">
+                <MiniSparkline data={trendSeries.total} color="#2563eb" />
+              </div>
             </CardContent>
           </Card>
 
@@ -165,7 +179,13 @@ const AppDashboard = () => {
               <div className="text-2xl font-bold text-green-600">
                 {marketData?.market_overview?.gainers?.toLocaleString() || '1,240'}
               </div>
-              <p className="text-xs text-muted-foreground">Stocks up today</p>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground">Stocks up today</span>
+                <span className="text-green-600 font-medium">+{((marketData?.market_overview?.gainers_delta)||0)}%</span>
+              </div>
+              <div className="mt-3">
+                <MiniSparkline data={trendSeries.gainers} color="#16a34a" />
+              </div>
             </CardContent>
           </Card>
 
@@ -178,7 +198,13 @@ const AppDashboard = () => {
               <div className="text-2xl font-bold text-red-600">
                 {marketData?.market_overview?.losers?.toLocaleString() || '890'}
               </div>
-              <p className="text-xs text-muted-foreground">Stocks down today</p>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground">Stocks down today</span>
+                <span className="text-red-600 font-medium">{((marketData?.market_overview?.losers_delta)||0)}%</span>
+              </div>
+              <div className="mt-3">
+                <MiniSparkline data={trendSeries.losers} color="#dc2626" />
+              </div>
             </CardContent>
           </Card>
 

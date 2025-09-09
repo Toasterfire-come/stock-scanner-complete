@@ -32,6 +32,26 @@ const Stocks = () => {
   const [totalStocks, setTotalStocks] = useState(0);
 
   const stocksPerPage = 50; // slightly larger for fewer page jumps
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+    setCurrentPage(1);
+  };
+
+  const SortHeader = ({ field, children, align = 'left' }) => (
+    <th className={`p-4 font-medium text-${align}`}> 
+      <button onClick={() => toggleSort(field)} className="inline-flex items-center gap-1 hover:text-blue-600">
+        <span>{children}</span>
+        {sortBy === field && (
+          <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+        )}
+      </button>
+    </th>
+  );
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -186,15 +206,15 @@ const Stocks = () => {
                 <div className="hidden lg:block">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead>
+                      <thead className="sticky top-0 z-10">
                         <tr className="border-b bg-gray-50">
-                          <th className="text-left p-4 font-medium">Symbol</th>
-                          <th className="text-left p-4 font-medium">Company</th>
-                          <th className="text-right p-4 font-medium">Price</th>
-                          <th className="text-right p-4 font-medium">Change</th>
-                          <th className="text-right p-4 font-medium">% Change</th>
-                          <th className="text-right p-4 font-medium">Volume</th>
-                          <th className="text-right p-4 font-medium">Market Cap</th>
+                          <SortHeader field="ticker">Symbol</SortHeader>
+                          <SortHeader field="company_name">Company</SortHeader>
+                          <SortHeader field="price" align="right">Price</SortHeader>
+                          <SortHeader field="price_change_today" align="right">Change</SortHeader>
+                          <SortHeader field="change_percent" align="right">% Change</SortHeader>
+                          <SortHeader field="volume" align="right">Volume</SortHeader>
+                          <SortHeader field="market_cap" align="right">Market Cap</SortHeader>
                           <th className="text-center p-4 font-medium">Actions</th>
                         </tr>
                       </thead>
