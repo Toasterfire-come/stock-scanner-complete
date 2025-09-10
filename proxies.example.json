@@ -1,0 +1,6 @@
+{
+  "proxies": [
+    {"id": "dc-proxy-1", "http": "http://user:pass@1.2.3.4:8080", "https": "http://user:pass@1.2.3.4:8080", "cooldown_seconds": 2.0},
+    {"id": "local-socks", "http": "socks5://127.0.0.1:1080", "https": "socks5://127.0.0.1:1080", "cooldown_seconds": 2.0}
+  ]
+}
