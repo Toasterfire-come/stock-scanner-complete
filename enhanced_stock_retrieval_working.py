@@ -78,10 +78,14 @@ logger.propagate = False
 # Global flag for graceful shutdown
 shutdown_flag = False
 
-# Market window configuration (US/Eastern) - configurable via environment variables
+# Market window configuration (US/Eastern) - ONLY REGULAR MARKET HOURS
 EASTERN_TZ = pytz.timezone('US/Eastern')
-PREMARKET_START = os.getenv('PREMARKET_START', "04:00")  # 4:00 AM ET
-POSTMARKET_END = os.getenv('POSTMARKET_END', "20:00")   # 8:00 PM ET
+# Only update during regular market hours
+MARKET_OPEN = os.getenv('MARKET_OPEN', "09:30")    # 9:30 AM ET
+MARKET_CLOSE = os.getenv('MARKET_CLOSE', "16:00")  # 4:00 PM ET
+# Pre-market and post-market disabled
+# PREMARKET_START = os.getenv('PREMARKET_START', "04:00")  # DISABLED
+# POSTMARKET_END = os.getenv('POSTMARKET_END', "20:00")   # DISABLED
 
 # Global proxy health tracking with thread safety
 proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "blocked": False})
@@ -696,11 +700,11 @@ def run_daily_update(args):
 
 def start_all_cycles_in_subprocess(args):
     """Spawn stock, news scraper, and email sender cycles as separate subprocesses."""
-    # Only run within market window (weekdays 04:00–20:00 ET)
+    # Only run during regular market hours (weekdays 09:30-16:00 ET)
     now_et = datetime.now(EASTERN_TZ)
     current_hhmm = now_et.strftime("%H:%M")
-    if now_et.weekday() >= 5 or not (PREMARKET_START <= current_hhmm < POSTMARKET_END):
-        logger.info(f"Skipping cycle spawn (outside market window) at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    if now_et.weekday() >= 5 or not (MARKET_OPEN <= current_hhmm < MARKET_CLOSE):
+        logger.info(f"Skipping cycle spawn (outside regular market hours) at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         return
     
     # Stocks
@@ -783,11 +787,11 @@ def main():
             while True:
                 schedule.run_pending()
                 
-                # Stop scheduler after postmarket end on weekdays
+                # Stop scheduler after market close on weekdays
                 now_et = datetime.now(EASTERN_TZ)
                 current_hhmm = now_et.strftime("%H:%M")
-                if now_et.weekday() < 5 and current_hhmm >= POSTMARKET_END:
-                    logger.info(f"Postmarket ended at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}. Stopping scheduler.")
+                if now_et.weekday() < 5 and current_hhmm >= MARKET_CLOSE:
+                    logger.info(f"Market closed at {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}. Stopping scheduler.")
                     break
                 
                 time.sleep(1)
