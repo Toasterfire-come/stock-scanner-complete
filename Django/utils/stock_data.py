@@ -174,6 +174,49 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
         'exchange': info.get('exchange', 'NYSE'),
     }
 
+def extract_stock_data_from_fast_info(fast_info, symbol, current_price=None):
+    """Extract best-effort stock data from yfinance fast_info object.
+    This fills basic fields when full info is unavailable.
+    """
+    if not fast_info:
+        return {}
+    
+    # Access attributes safely; fast_info provides attributes not dict keys
+    get = lambda attr_names: next((getattr(fast_info, a, None) for a in attr_names if getattr(fast_info, a, None) is not None), None)
+    
+    day_low = get(['day_low', 'low'])
+    day_high = get(['day_high', 'high'])
+    volume = get(['last_volume', 'volume'])
+    avg_vol_3m = get(['three_month_average_volume', 'ten_day_average_volume'])
+    market_cap = get(['market_cap'])
+    wk52_low = get(['fifty_two_week_low', 'year_low'])
+    wk52_high = get(['fifty_two_week_high', 'year_high'])
+    exch = get(['exchange']) or 'NYSE'
+    name = get(['short_name', 'long_name']) or symbol
+    
+    return {
+        'ticker': symbol,
+        'symbol': symbol,
+        'company_name': name,
+        'name': name,
+        'current_price': safe_decimal_conversion(current_price) if current_price else None,
+        'days_low': safe_decimal_conversion(day_low),
+        'days_high': safe_decimal_conversion(day_high),
+        'volume': safe_decimal_conversion(volume),
+        'volume_today': safe_decimal_conversion(volume),
+        'avg_volume_3mon': safe_decimal_conversion(avg_vol_3m),
+        'market_cap': safe_decimal_conversion(market_cap),
+        'pe_ratio': None,
+        'dividend_yield': None,
+        'one_year_target': None,
+        'week_52_low': safe_decimal_conversion(wk52_low),
+        'week_52_high': safe_decimal_conversion(wk52_high),
+        'earnings_per_share': None,
+        'book_value': None,
+        'price_to_book': None,
+        'exchange': exch,
+    }
+
 def calculate_volume_ratio(volume, avg_volume):
     """Calculate volume ratio (DVAV - Day Volume Over Average Volume)"""
     if not volume or not avg_volume or avg_volume == 0:

@@ -322,8 +322,19 @@ def process_symbol_attempt(symbol, proxy, timeout=10):
     # Try multiple approaches to get data
     ticker_obj = yf.Ticker(symbol)
     info = None
+    fast_info = None
     hist = None
     current_price = None
+    
+    # Approach 0: Try to get fast_info first
+    try:
+        fast_info = ticker_obj.fast_info
+        if fast_info and hasattr(fast_info, 'last_price') and fast_info.last_price:
+            current_price = fast_info.last_price
+    except Exception as e:
+        if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
+            raise
+        pass
     
     # Approach 1: Try to get basic info with timeout
     try:
@@ -361,6 +372,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10):
     # Determine if we have enough data to process
     has_data = hist is not None and not hist.empty
     has_info = info and isinstance(info, dict) and len(info) > 3
+    has_fast_info = fast_info is not None
     has_price = current_price is not None and not pd.isna(current_price)
     
     # Check for delisted or invalid stocks
@@ -368,7 +380,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10):
         logger.warning(f"{symbol}: possibly delisted; no price data found (period=1d)")
         return None
         
-    if not has_data and not has_info:
+    if not has_data and not has_info and not has_fast_info:
         logger.warning(f"{symbol}: No data available")
         return None
         
@@ -377,14 +389,48 @@ def process_symbol_attempt(symbol, proxy, timeout=10):
         logger.warning(f"{symbol}: No current trading activity")
         return None
     
-    # Return basic stock data
-    stock_data = {
-        'symbol': symbol,
-        'current_price': float(current_price) if current_price else None,
-        'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-        'volume': info.get('volume') if info else None,
-        'market_cap': info.get('marketCap') if info else None,
-    }
+    # Helper to map from fast_info when info is missing
+    def map_from_fast_info(fi, sym, cur_price):
+        if not fi:
+            return {}
+        get = lambda names: next((getattr(fi, n, None) for n in names if getattr(fi, n, None) is not None), None)
+        day_low = get(['day_low', 'low'])
+        day_high = get(['day_high', 'high'])
+        volume = get(['last_volume', 'volume'])
+        avg_vol_3m = get(['three_month_average_volume', 'ten_day_average_volume'])
+        market_cap = get(['market_cap'])
+        wk52_low = get(['fifty_two_week_low', 'year_low'])
+        wk52_high = get(['fifty_two_week_high', 'year_high'])
+        name = get(['short_name', 'long_name']) or sym
+        return {
+            'symbol': sym,
+            'current_price': float(cur_price) if cur_price else None,
+            'company_name': name,
+            'volume': volume,
+            'market_cap': market_cap,
+            'days_low': day_low,
+            'days_high': day_high,
+            'avg_volume_3mon': avg_vol_3m,
+            'week_52_low': wk52_low,
+            'week_52_high': wk52_high,
+        }
+    
+    # Return enriched stock data
+    if has_info:
+        stock_data = {
+            'symbol': symbol,
+            'current_price': float(current_price) if current_price else None,
+            'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+            'volume': info.get('volume') if info else None,
+            'market_cap': info.get('marketCap') if info else None,
+            'days_low': info.get('dayLow') if info else None,
+            'days_high': info.get('dayHigh') if info else None,
+            'avg_volume_3mon': info.get('averageVolume') if info else None,
+            'week_52_low': info.get('fiftyTwoWeekLow') if info else None,
+            'week_52_high': info.get('fiftyTwoWeekHigh') if info else None,
+        }
+    else:
+        stock_data = map_from_fast_info(fast_info, symbol, current_price)
     
     return stock_data
 
@@ -496,6 +542,18 @@ def run_test():
     if elapsed > 0:
         print(f"RATE: {len(symbols)/elapsed:.2f} symbols/sec")
     
+    # Compute null counts for key fields across results
+    if results:
+        fields = ['company_name', 'current_price', 'volume', 'market_cap', 'days_low', 'days_high', 'avg_volume_3mon', 'week_52_low', 'week_52_high']
+        null_counts = {f: 0 for f in fields}
+        for r in results:
+            for f in fields:
+                if r.get(f) in (None, 0, 0.0):
+                    null_counts[f] += 1
+        print("\nNULL FIELD COUNTS (out of {} results):".format(len(results)))
+        for f in fields:
+            print(f"  {f}: {null_counts[f]}")
+
     if proxies:
         print(f"PROXY STATS: Used {len(proxies)} proxies")
         
