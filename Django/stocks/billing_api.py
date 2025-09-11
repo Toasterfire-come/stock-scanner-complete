@@ -22,6 +22,95 @@ from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .services.discount_service import DiscountService
 from .models import DiscountCode
+@csrf_exempt
+@api_view(['POST'])
+def paypal_webhook_api(request):
+    """
+    Minimal PayPal webhook receiver for PAYMENT.CAPTURE.COMPLETED events.
+    Verifies event type and records payment; activates plan if metadata present.
+    """
+    try:
+        data = json.loads(request.body) if request.body else {}
+        event_type = (data.get('event_type') or data.get('eventType') or '').upper()
+        resource = data.get('resource') or {}
+        custom_id = resource.get('custom_id') or resource.get('customId') or ''
+        amount_info = (resource.get('amount') or {})
+        value = amount_info.get('value') or '0'
+        final_amount = Decimal(str(value))
+
+        # Parse custom_id if it matches our format: plan_billing_ts_userid_optional
+        plan_type = None
+        billing_cycle = None
+        user_id = None
+        try:
+            parts = custom_id.split('_') if custom_id else []
+            if len(parts) >= 3:
+                plan_type, billing_cycle, _ts = parts[:3]
+            if len(parts) >= 4:
+                user_id = int(parts[3])
+        except Exception:
+            pass
+
+        if event_type == 'PAYMENT.CAPTURE.COMPLETED':
+            # Record revenue without requiring auth context
+            discount_obj = None
+            try:
+                # We could store discount in custom fields if provided
+                discount_code = (resource.get('discount_code') or '').strip()
+                if discount_code:
+                    discount_obj = DiscountCode.objects.get(code=discount_code.upper(), is_active=True)
+            except DiscountCode.DoesNotExist:
+                discount_obj = None
+
+            # Resolve user
+            user = None
+            if user_id:
+                from django.contrib.auth.models import User
+                try:
+                    user = User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    user = None
+
+            if user is not None:
+                try:
+                    DiscountService.record_payment(
+                        user=user,
+                        original_amount=final_amount,
+                        discount_code=discount_obj,
+                        payment_date=timezone.now()
+                    )
+                except Exception as e:
+                    logger.error(f"Webhook record_payment failed: {e}")
+
+                # Activate plan if plan info available
+                try:
+                    profile, _ = UserProfile.objects.get_or_create(user=user)
+                    if plan_type:
+                        profile.plan_type = plan_type
+                        profile.is_premium = plan_type not in ['free','basic']
+                    if billing_cycle in ['monthly','annual']:
+                        profile.billing_cycle = billing_cycle
+                    days = 30 if profile.billing_cycle == 'monthly' else 365
+                    profile.next_billing_date = timezone.now() + timedelta(days=days)
+                    plan_limits = {
+                        'free': 100,
+                        'basic': 1000,
+                        'bronze': 1500,
+                        'silver': 5000,
+                        'gold': 100000,
+                        'enterprise': 100000
+                    }
+                    profile.api_calls_limit = plan_limits.get(profile.plan_type or 'basic', 1000)
+                    profile.save()
+                except Exception as e:
+                    logger.error(f"Webhook plan activation failed: {e}")
+
+        return JsonResponse({'success': True})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"PayPal webhook error: {e}")
+        return JsonResponse({'success': False, 'error': 'Webhook processing failed'}, status=500)
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +278,31 @@ def capture_paypal_order_api(request):
                 )
         except Exception as rec_err:
             logger.error(f"Failed to record payment for order {order_id}: {rec_err}")
+
+        # Activate user's plan upon successful capture
+        try:
+            user = request.user
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            if plan_type in ['free','basic','bronze','silver','gold','enterprise']:
+                profile.plan_type = plan_type
+                profile.is_premium = plan_type not in ['free', 'basic']
+                profile.billing_cycle = billing_cycle if billing_cycle in ['monthly','annual'] else 'monthly'
+                # Set next billing date: monthly +30d, annual +365d, trial handled elsewhere
+                days = 30 if profile.billing_cycle == 'monthly' else 365
+                profile.next_billing_date = timezone.now() + timedelta(days=days)
+                # Set sensible API limits
+                plan_limits = {
+                    'free': 100,
+                    'basic': 1000,
+                    'bronze': 1500,
+                    'silver': 5000,
+                    'gold': 100000,
+                    'enterprise': 100000
+                }
+                profile.api_calls_limit = plan_limits.get(plan_type, 1000)
+                profile.save()
+        except Exception as e:
+            logger.error(f"Failed to activate plan after capture: {e}")
 
         # Fake capture result
         return JsonResponse({
