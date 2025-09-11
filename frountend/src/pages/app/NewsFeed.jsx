@@ -57,7 +57,11 @@ const NewsFeed = () => {
       filtered = filtered.filter((article) =>
         (article.title || "").toLowerCase().includes(q) ||
         (article.summary || "").toLowerCase().includes(q) ||
-        (article.mentioned_tickers || article.tickers || [])
+        (
+          Array.isArray(article.mentioned_tickers)
+            ? article.mentioned_tickers
+            : (Array.isArray(article.tickers) ? article.tickers : String(article.mentioned_tickers || article.tickers || "").split(',').map(s => s.trim()))
+        )
           .join(",")
           .toLowerCase()
           .includes(q)
@@ -205,9 +209,15 @@ const NewsFeed = () => {
                         {article.sentiment}
                       </Badge>
                     )}
-                    {(article.mentioned_tickers || article.tickers)?.length > 0 && (
+                    {(
+                      Array.isArray(article.mentioned_tickers) ? article.mentioned_tickers :
+                      (Array.isArray(article.tickers) ? article.tickers : String(article.mentioned_tickers || article.tickers || "").split(',').map(s => s.trim()).filter(Boolean))
+                    )?.length > 0 && (
                       <div className="flex items-center gap-1">
-                        {(article.mentioned_tickers || article.tickers).map((ticker) => (
+                        {(
+                          Array.isArray(article.mentioned_tickers) ? article.mentioned_tickers :
+                          (Array.isArray(article.tickers) ? article.tickers : String(article.mentioned_tickers || article.tickers || "").split(',').map(s => s.trim()).filter(Boolean))
+                        ).map((ticker) => (
                           <Badge key={ticker} variant="outline" className="text-xs">
                             {ticker}
                           </Badge>

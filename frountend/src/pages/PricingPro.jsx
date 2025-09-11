@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/SecureAuthContext";
-import { changePlan, initializeDiscountCodes } from "../api/client";
+import { changePlan, initializeDiscountCodes, createPayPalOrder, validateDiscountCode } from "../api/client";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -197,6 +197,24 @@ const PricingPro = () => {
     setShowCheckout(true);
   };
 
+  const continueToCheckout = async (plan) => {
+    try {
+      // Ensure codes exist and default to TRIAL for $1
+      try { await initializeDiscountCodes(); } catch {}
+      const code = 'TRIAL';
+      try { await validateDiscountCode(code); } catch {}
+      const cycle = isAnnual ? 'annual' : 'monthly';
+      const res = await createPayPalOrder(plan.name.toLowerCase(), cycle, code);
+      if (res?.approval_url) {
+        window.location.href = res.approval_url;
+      } else {
+        toast.error('Failed to start checkout');
+      }
+    } catch (e) {
+      toast.error('Checkout unavailable right now');
+    }
+  };
+
   const handlePaymentSuccess = async (paymentData) => {
     try {
       // Update user's plan in the backend
@@ -251,7 +269,7 @@ const PricingPro = () => {
           <div className="mb-6">
             <div className="inline-flex items-center bg-yellow-100 text-yellow-800 px-6 py-3 rounded-full font-medium text-lg border border-yellow-200">
               <Gift className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day 1$ trial on paid plans
+              Use code TRIAL for a 7‑day $1 trial on paid plans · Use code REF50 for 50% off first month
             </div>
           </div>
           
@@ -421,6 +439,16 @@ const PricingPro = () => {
                         )}
                       </DialogContent>
                     </Dialog>
+
+                    {!plan.isFree && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => continueToCheckout(plan)}
+                      >
+                        Continue to Checkout (PayPal)
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

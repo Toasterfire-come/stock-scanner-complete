@@ -208,8 +208,8 @@ api.interceptors.response.use(
         path.startsWith('/market-stats/')
       );
       if (shouldTrack) {
-        // Use the secondary axios instance to avoid interceptor recursion
-        site.post('/api/usage/track/', { endpoint: `/api${path}`, method }).catch(() => {});
+        // Use authorized API client so usage increments for logged-in users
+        api.post('/usage/track/', { endpoint: `/api${path}`, method }).catch(() => {});
       }
     } catch {}
     return response;
