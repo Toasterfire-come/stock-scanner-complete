@@ -38,6 +38,57 @@ export const api = axios.create({
   xsrfHeaderName: 'X-CSRFToken',
 });
 
+// Sanitize params to avoid sending empty/null/"none" values that cause unintended backend filters
+function sanitizeParams(rawParams = {}) {
+  const cleaned = {};
+  Object.entries(rawParams || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (typeof value === 'string') {
+      const v = value.trim();
+      if (!v) return;
+      if (v.toLowerCase() === 'none' || v.toLowerCase() === 'null') return;
+      cleaned[key] = v;
+      return;
+    }
+    if (Array.isArray(value)) {
+      const v = value.filter((x) => x !== undefined && x !== null && String(x).trim() !== '' && String(x).toLowerCase() !== 'none' && String(x).toLowerCase() !== 'null');
+      if (v.length === 0) return;
+      cleaned[key] = v;
+      return;
+    }
+    cleaned[key] = value;
+  });
+  return cleaned;
+}
+
+// Fetch all stocks in batches to enable client-side sorting/pagination over the full set
+export async function fetchAllStocks(baseParams = {}) {
+  const PAGE_SIZE = Number(baseParams.limit) && Number(baseParams.limit) > 0 ? Number(baseParams.limit) : 500;
+  const params = sanitizeParams({ ...baseParams });
+  let offset = 0;
+  const all = [];
+  // Safety cap to prevent infinite loops
+  for (let page = 0; page < 100; page++) {
+    const pageParams = { ...params, limit: PAGE_SIZE, offset };
+    // Ensure we do not leak empty/invalid values
+    const safePageParams = sanitizeParams(pageParams);
+    let response;
+    try {
+      const { data } = await api.get('/stocks/', { params: safePageParams });
+      response = data;
+    } catch (error) {
+      // Surface partial results if any and stop
+      break;
+    }
+    const items = Array.isArray(response) ? response : (response?.data || response?.results || []);
+    if (!Array.isArray(items) || items.length === 0) break;
+    all.push(...items);
+    if (items.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return all;
+}
+
 // ====================
 // Plan limits enforcement (client-side guard; server should enforce as source of truth)
 // ====================
@@ -138,6 +189,26 @@ api.interceptors.response.use(
     const dur = Date.now() - (response.config.metadata?.start || Date.now());
     if (dur > 600) window.__NET?.emit('slow', { url: response.config.metadata?.url, duration: dur, status: response.status });
     window.__NET?.emit('end');
+    // Non-blocking usage tracking for stock-data endpoints only
+    try {
+      const cfg = response.config || {};
+      const method = (cfg.method || 'get').toUpperCase();
+      const path = String(cfg.url || '');
+      const isTrack = path.includes('/usage/track');
+      const shouldTrack = method === 'GET' && !isTrack && (
+        path.startsWith('/stocks/') ||
+        path.startsWith('/stock/') ||
+        path.startsWith('/search/') ||
+        path.startsWith('/trending/') ||
+        path.startsWith('/realtime/') ||
+        path.startsWith('/filter/') ||
+        path.startsWith('/market-stats/')
+      );
+      if (shouldTrack) {
+        // Use the secondary axios instance to avoid interceptor recursion
+        site.post('/api/usage/track/', { endpoint: `/api${path}`, method }).catch(() => {});
+      }
+    } catch {}
     return response;
   },
   (error) => {
@@ -265,7 +336,7 @@ export async function getEndpointStatus() { const { data } = await api.get('/end
 // ====================
 export async function listStocks(params = {}) { 
   try {
-    const { data } = await api.get('/stocks/', { params });
+    const { data } = await api.get('/stocks/', { params: sanitizeParams(params) });
     return data;
   } catch (error) {
     console.error('Failed to fetch stocks:', error);
@@ -278,7 +349,7 @@ export async function getTrending() { const { data } = await api.get('/trending/
 export async function getMarketStats() { const { data } = await api.get('/market-stats/'); return data; }
 // Align with backend quote endpoint: /stocks/{symbol}/quote
 export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/quote`); return data; }
-export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
+export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params: sanitizeParams(params) }); return data; }
 export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
 
@@ -448,6 +519,11 @@ export async function capturePayPalOrder(orderId, paymentData) {
   }
 }
 
+// Alerts helpers (axios with credentials/CSRF)
+export async function getAlerts() { const { data } = await api.get('/alerts/'); return data; }
+export async function deleteAlert(alertId) { const { data } = await api.post(`/alerts/${encodeURIComponent(alertId)}/delete/`); return data; }
+export async function toggleAlert(alertId) { const { data } = await api.post(`/alerts/${encodeURIComponent(alertId)}/toggle/`); return data; }
+
 // ====================
 // NOTIFICATIONS
 // ====================
@@ -464,6 +540,14 @@ export async function markNewsRead(newsId) { const { data } = await api.post('/n
 export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
 export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
+
+// ====================
+// USAGE (Dashboard)
+// ====================
+export async function getUsageSummary() {
+  const { data } = await api.get('/usage/');
+  return data;
+}
 
 //====================
 // REVENUE & PAYMENTS (PAYPAL INTEGRATION)

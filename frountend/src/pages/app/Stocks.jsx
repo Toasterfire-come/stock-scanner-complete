@@ -17,7 +17,7 @@ import {
   BarChart3,
   RefreshCw
 } from "lucide-react";
-import { listStocks, searchStocks, addWatchlist } from "../../api/client";
+import { listStocks, searchStocks, addWatchlist, fetchAllStocks } from "../../api/client";
 import VirtualizedList from "../../components/VirtualizedList";
 
 const Stocks = () => {
@@ -31,7 +31,7 @@ const Stocks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalStocks, setTotalStocks] = useState(0);
 
-  const stocksPerPage = 50; // slightly larger for fewer page jumps
+  const stocksPerPage = 50; // fixed page size, client-side pagination
   const toggleSort = (field) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -56,33 +56,49 @@ const Stocks = () => {
   useEffect(() => {
     const fetchStocks = async () => {
       try {
-        let response;
+        // Always fetch the full set needed locally, then sort/paginate client-side
+        setIsSearching(Boolean(searchTerm.trim()));
+        let universe;
         if (searchTerm.trim()) {
-          setIsSearching(true);
-          response = await searchStocks(searchTerm);
-          const results = Array.isArray(response)
-            ? response
-            : (response?.results || response?.data || []);
-          setStocks(Array.isArray(results) ? results : []);
-          setTotalStocks(Array.isArray(results) ? results.length : 0);
-          setIsSearching(false);
+          const resp = await searchStocks(searchTerm.trim());
+          universe = Array.isArray(resp) ? resp : (resp?.results || resp?.data || []);
         } else {
-          const params = {
-            limit: stocksPerPage,
-            category: category === "all" ? undefined : category,
-            sort_by: sortBy,
-            sort_order: sortOrder,
-            offset: (currentPage - 1) * stocksPerPage,
-          };
-          response = await listStocks(params);
-          const items = Array.isArray(response)
-            ? response
-            : (response?.data || response?.results || []);
-          setStocks(Array.isArray(items) ? items : []);
-          setTotalStocks(
-            Number(response?.total_available || response?.count || (Array.isArray(items) ? items.length : 0))
-          );
+          // Pull all stocks for the active category; backend can still filter by category, but no blank params
+          const baseParams = { category: category === 'all' ? undefined : category };
+          universe = await fetchAllStocks(baseParams);
         }
+        const items = Array.isArray(universe) ? universe : [];
+        // Normalize numeric fields for reliable sorting
+        const normalized = items.map((s) => ({
+          ...s,
+          current_price: Number(s.current_price ?? s.price ?? 0),
+          price_change_today: Number(s.price_change_today ?? 0),
+          change_percent: Number(s.change_percent ?? 0),
+          volume: Number(s.volume ?? 0),
+          market_cap: Number(s.market_cap ?? 0),
+        }));
+
+        // Sort client-side
+        const sortKey = {
+          last_updated: (a) => new Date(a.last_updated || a.updated_at || 0).getTime(),
+          price: (a) => a.current_price,
+          volume: (a) => a.volume,
+          market_cap: (a) => a.market_cap,
+          change_percent: (a) => a.change_percent,
+        }[sortBy] || ((a) => new Date(a.last_updated || a.updated_at || 0).getTime());
+
+        const sorted = normalized.sort((a, b) => {
+          const av = sortKey(a);
+          const bv = sortKey(b);
+          return sortOrder === 'asc' ? av - bv : bv - av;
+        });
+
+        setTotalStocks(sorted.length);
+        // Client-side pagination slice
+        const start = (currentPage - 1) * stocksPerPage;
+        const pageItems = sorted.slice(start, start + stocksPerPage);
+        setStocks(pageItems);
+        setIsSearching(false);
       } catch (error) {
         toast.error("Failed to load stocks");
       } finally {
@@ -113,8 +129,8 @@ const Stocks = () => {
     return stocks.slice(start, start + stocksPerPage);
   }, [stocks, searchTerm, currentPage]);
 
-  const dataForRender = searchTerm ? pagedSearchStocks : stocks;
-  const isVirtualDesktop = dataForRender.length > 200;
+  const dataForRender = stocks;
+  const isVirtualDesktop = totalStocks > 200;
 
   const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
   const formatVolume = (v) => { const n = Number(v||0); if (!Number.isFinite(n)) return '0'; if (n>=1e9) return `${(n/1e9).toFixed(1)}B`; if (n>=1e6) return `${(n/1e6).toFixed(1)}M`; if (n>=1e3) return `${(n/1e3).toFixed(0)}K`; return n.toLocaleString(); };

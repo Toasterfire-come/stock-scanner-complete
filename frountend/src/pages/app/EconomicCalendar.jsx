@@ -18,69 +18,8 @@ const EconomicCalendar = () => {
   const fetchCalendarData = async () => {
     setIsLoading(true);
     try {
-      // Simulate economic calendar data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const today = new Date();
-      const events = [
-        {
-          id: 1,
-          time: "08:30",
-          title: "Consumer Price Index (CPI)",
-          country: "US",
-          impact: "high",
-          forecast: "0.3%",
-          previous: "0.4%",
-          actual: null,
-          description: "Monthly change in consumer prices"
-        },
-        {
-          id: 2,
-          time: "10:00",
-          title: "University of Michigan Consumer Sentiment",
-          country: "US", 
-          impact: "medium",
-          forecast: "69.5",
-          previous: "69.7",
-          actual: "70.1",
-          description: "Consumer confidence survey"
-        },
-        {
-          id: 3,
-          time: "14:00",
-          title: "Federal Reserve Chair Speech",
-          country: "US",
-          impact: "high",
-          forecast: null,
-          previous: null,
-          actual: null,
-          description: "Monetary policy outlook discussion"
-        },
-        {
-          id: 4,
-          time: "09:00",
-          title: "Retail Sales",
-          country: "US",
-          impact: "medium",
-          forecast: "0.2%",
-          previous: "-0.1%",
-          actual: null,
-          description: "Monthly retail sales data"
-        },
-        {
-          id: 5,
-          time: "15:30",
-          title: "API Crude Oil Stock Change",
-          country: "US",
-          impact: "low",
-          forecast: "-2.1M",
-          previous: "-0.5M",
-          actual: "-1.8M",
-          description: "Weekly crude oil inventory change"
-        }
-      ];
-
-      setCalendarData(events);
+      // No mock data. If no backend endpoint yet, show empty state.
+      setCalendarData([]);
     } catch (error) {
       toast.error("Failed to fetch economic calendar data");
     } finally {

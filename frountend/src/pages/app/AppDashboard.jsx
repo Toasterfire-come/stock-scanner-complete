@@ -18,7 +18,7 @@ import {
   Play
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
-import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats } from "../../api/client";
+import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getUsageSummary } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
 
 const AppDashboard = () => {
@@ -33,15 +33,16 @@ const AppDashboard = () => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        const [marketResponse, trendingResponse, stats] = await Promise.all([
+        const [marketResponse, trendingResponse, stats, usageSummary] = await Promise.all([
           getMarketStatsSafe(),
           getTrendingSafe(),
-          getStatisticsSafe().catch(() => ({ success: false }))
+          getStatisticsSafe().catch(() => ({ success: false, data: null })),
+          getUsageSummary().catch(() => ({ success: false, data: null }))
         ]);
 
-        setMarketData(marketResponse.data);
-        setTrendingStocks(trendingResponse.data);
-        setUsage(stats?.data || null);
+        setMarketData(marketResponse?.data || null);
+        setTrendingStocks(trendingResponse?.data || null);
+        setUsage(usageSummary?.data || stats?.data || null);
         // derive simple spark series if backend provides history; otherwise create placeholders
         const g = (marketResponse?.data?.history?.gainers || []).slice(-20);
         const l = (marketResponse?.data?.history?.losers || []).slice(-20);
@@ -212,8 +213,8 @@ const AppDashboard = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
-              <p className="text-xs text-muted-foreground">Calls this month</p>
+              <div className="text-2xl font-bold">{usage?.monthly?.api_calls ?? '-'}</div>
+              <p className="text-xs text-muted-foreground">Calls this month (limit {usage?.monthly?.limit ?? '-'})</p>
             </CardContent>
           </Card>
         </div>

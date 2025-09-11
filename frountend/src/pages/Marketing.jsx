@@ -7,7 +7,7 @@ function Section({ title, children, hint }) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">{title}{hint && <span className="text-xs text-muted-foreground font-normal">{hint}</span>}</CardTitle>
       </CardHeader>
-      <CardContent className="prose prose-sm max-w-none dark:prose-invert">
+      <CardContent className="prose prose-sm max-w-none">
         {children}
       </CardContent>
     </Card>

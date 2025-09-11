@@ -32,15 +32,32 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
+  // Helper to safely retrieve stored user (handles encrypted and plain storage)
+  const getStoredUserSafe = () => {
+    try {
+      const decrypted = secureStorage.get(security.SECURITY_CONFIG.USER_STORAGE_KEY, true);
+      if (decrypted) return decrypted;
+    } catch (_) {}
+    const raw = secureStorage.get(security.SECURITY_CONFIG.USER_STORAGE_KEY);
+    if (!raw) return null;
+    if (typeof raw === 'string') {
+      try {
+        return JSON.parse(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+    return raw;
+  };
+
   // Initialize authentication state
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check for stored user data and token
-        const storedUser = secureStorage.get(security.SECURITY_CONFIG.USER_STORAGE_KEY);
-        const storedToken = secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
-        
-        if (storedUser && storedToken && sessionManager.isSessionValid()) {
+        // Check for stored user data (encrypted or plain) and a valid local session
+        const storedUser = getStoredUserSafe();
+
+        if (storedUser && sessionManager.isSessionValid()) {
           setUser(storedUser);
           setIsAuthenticated(true);
           sessionManager.updateActivity();

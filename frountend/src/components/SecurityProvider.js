@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ThemeProvider } from 'next-themes';
+// Removed dark mode: next-themes ThemeProvider unused
 import security from '../lib/security';
 
 const SecurityProvider = ({ children }) => {
@@ -90,16 +90,7 @@ const SecurityProvider = ({ children }) => {
     );
   }
 
-  return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {children}
-    </ThemeProvider>
-  );
+  return children;
 };
 
 export default SecurityProvider;

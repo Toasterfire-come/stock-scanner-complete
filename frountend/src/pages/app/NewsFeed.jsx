@@ -6,7 +6,7 @@ import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Search, ExternalLink, Clock, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { getNewsFeed, markNewsRead, markNewsClicked } from "../../api/client";
+import { getWordPressNews, markNewsRead, markNewsClicked } from "../../api/client";
 
 const NewsFeed = () => {
   const [news, setNews] = useState([]);
@@ -36,9 +36,9 @@ const NewsFeed = () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await getNewsFeed({ limit: 20 });
-      // Accept both {success, data:{news_items}} and direct arrays
-      const items = res?.data?.news_items || res?.data || res?.news || [];
+      // Use public WordPress news endpoint for production consistency
+      const res = await getWordPressNews({ limit: 20 });
+      const items = res?.data || res?.news || [];
       setNews(Array.isArray(items) ? items : []);
     } catch (err) {
       setNews([]);

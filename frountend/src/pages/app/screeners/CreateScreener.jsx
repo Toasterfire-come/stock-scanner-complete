@@ -49,15 +49,27 @@ const CreateScreener = () => {
   };
 
   const buildFilterParams = (criteriaList) => {
+    // Only include defined, non-empty values; never send placeholders like null/none/empty strings
     const params = {};
+    const addNum = (key, val) => {
+      if (val === undefined || val === null) return;
+      const v = String(val).trim();
+      if (!v || v.toLowerCase() === 'none' || v.toLowerCase() === 'null') return;
+      const n = Number(v);
+      if (!Number.isFinite(n)) return;
+      params[key] = n;
+    };
     for (const c of criteriaList) {
-      if (c.id === "market_cap") { if (c.min) params.market_cap_min = Number(c.min); if (c.max) params.market_cap_max = Number(c.max); }
-      if (c.id === "price") { if (c.min) params.price_min = Number(c.min); if (c.max) params.price_max = Number(c.max); }
-      if (c.id === "volume") { if (c.min) params.volume_min = Number(c.min); if (c.max) params.volume_max = Number(c.max); }
-      if (c.id === "pe_ratio") { if (c.min) params.pe_ratio_min = Number(c.min); if (c.max) params.pe_ratio_max = Number(c.max); }
-      if (c.id === "dividend_yield") { if (c.min) params.dividend_yield_min = Number(c.min); if (c.max) params.dividend_yield_max = Number(c.max); }
-      if (c.id === "change_percent") { if (c.min) params.change_percent_min = Number(c.min); if (c.max) params.change_percent_max = Number(c.max); }
-      if (c.id === "exchange" && c.value) { params.exchange = c.value; }
+      if (c.id === "market_cap") { addNum('market_cap_min', c.min); addNum('market_cap_max', c.max); }
+      if (c.id === "price") { addNum('price_min', c.min); addNum('price_max', c.max); }
+      if (c.id === "volume") { addNum('volume_min', c.min); addNum('volume_max', c.max); }
+      if (c.id === "pe_ratio") { addNum('pe_ratio_min', c.min); addNum('pe_ratio_max', c.max); }
+      if (c.id === "dividend_yield") { addNum('dividend_yield_min', c.min); addNum('dividend_yield_max', c.max); }
+      if (c.id === "change_percent") { addNum('change_percent_min', c.min); addNum('change_percent_max', c.max); }
+      if (c.id === "exchange") {
+        const v = (c.value || '').trim();
+        if (v && v.toLowerCase() !== 'none' && v.toLowerCase() !== 'null') params.exchange = v;
+      }
     }
     return params;
   };
@@ -83,17 +95,8 @@ const CreateScreener = () => {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Simulate API call to save screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener saved successfully");
-      navigate("/app/screeners");
-    } catch (error) {
-      toast.error("Failed to save screener");
-    } finally {
-      setIsLoading(false);
-    }
+    // No mock save — this app currently does not persist screeners server-side
+    toast.info("Screener configuration is not yet persisted. Use Test Run to execute criteria.");
   };
 
   const handleTest = async () => {

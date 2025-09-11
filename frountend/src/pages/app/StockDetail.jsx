@@ -101,12 +101,14 @@ const StockDetail = () => {
     };
     loadChart();
 
-    // Load news from backend proxy
+    // Load news from backend (use WordPress news endpoint with ticker filter)
     const loadNews = async () => {
       try {
-        const r = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/news/${encodeURIComponent(symbol)}/`);
-        const data = await r.json().catch(() => ({ news: [] }));
-        setNewsItems(Array.isArray(data?.news) ? data.news : []);
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/wordpress/news/?ticker=${encodeURIComponent(symbol)}&limit=20`;
+        const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await r.json().catch(() => ({ data: [] }));
+        const items = data?.data || data?.news || [];
+        setNewsItems(Array.isArray(items) ? items : []);
       } catch (_) {
         setNewsItems([]);
       }
@@ -384,15 +386,36 @@ const StockDetail = () => {
                   </CardContent>
                 </Card>
 
+                {/* Full JSON fields table replacing placeholder chart */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Price History</CardTitle>
-                    <CardDescription>Recent price movements</CardDescription>
+                    <CardTitle>All Fields</CardTitle>
+                    <CardDescription>Complete JSON returned for this ticker</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 flex items-center justify-center text-gray-500">
-                      <BarChart3 className="h-12 w-12 mb-4" />
-                      <p>Chart integration coming soon</p>
+                    <div className="overflow-auto border rounded-md">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="bg-gray-50 border-b">
+                            <th className="p-3 text-left font-medium text-gray-700">Field</th>
+                            <th className="p-3 text-left font-medium text-gray-700">Value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {Object.entries(stockData || {}).sort((a, b) => a[0].localeCompare(b[0])).map(([key, value]) => (
+                            <tr key={key} className="odd:bg-gray-50 align-top">
+                              <td className="p-3 text-gray-600 whitespace-nowrap">{key}</td>
+                              <td className="p-3 font-medium break-all">
+                                {typeof value === 'number' || typeof value === 'boolean' || value === null
+                                  ? String(value)
+                                  : typeof value === 'string'
+                                  ? value
+                                  : <pre className="whitespace-pre-wrap break-words">{JSON.stringify(value, null, 2)}</pre>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </CardContent>
                 </Card>

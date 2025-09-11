@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/SecureAuthContext";
+import { getAlerts as apiGetAlerts, toggleAlert as apiToggleAlert, deleteAlert as apiDeleteAlert, createAlert as apiCreateAlert } from "../../api/client";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
@@ -35,9 +36,8 @@ const Alerts = () => {
   const fetchAlerts = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/`, { method: 'GET' });
-      const data = await resp.json().catch(() => ({}));
-      const rows = Array.isArray(data?.alerts) ? data.alerts : (Array.isArray(data) ? data : []);
+      const data = await apiGetAlerts();
+      const rows = Array.isArray(data?.alerts) ? data.alerts : (Array.isArray(data) ? data : (data?.data || []));
       setAlerts(rows);
     } catch (error) {
       toast.error("Failed to fetch alerts");
@@ -59,20 +59,12 @@ const Alerts = () => {
 
     setIsCreating(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ticker: newAlert.ticker.toUpperCase(),
-          target_price: parseFloat(newAlert.targetPrice),
-          condition: newAlert.condition,
-          email: newAlert.email
-        })
+      const data = await apiCreateAlert({
+        ticker: newAlert.ticker.toUpperCase(),
+        target_price: parseFloat(newAlert.targetPrice),
+        condition: newAlert.condition,
+        email: newAlert.email
       });
-
-      const data = await response.json();
       
       if (data.alert_id) {
         toast.success("Alert created successfully");
@@ -92,8 +84,7 @@ const Alerts = () => {
     if (!confirm("Are you sure you want to delete this alert?")) return;
     
     try {
-      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/delete/`, { method: 'POST' });
-      if (!resp.ok) throw new Error('delete failed');
+      await apiDeleteAlert(alertId);
       setAlerts((prev) => prev.filter(alert => alert.id !== alertId));
       toast.success("Alert deleted successfully");
     } catch (error) {
@@ -107,8 +98,7 @@ const Alerts = () => {
       return;
     }
     try {
-      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/toggle/`, { method: 'POST' });
-      if (!resp.ok) throw new Error('toggle failed');
+      await apiToggleAlert(alertId);
       setAlerts((prev) => prev.map(alert => 
         alert.id === alertId 
           ? { ...alert, isActive: !alert.isActive }

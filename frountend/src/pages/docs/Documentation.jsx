@@ -70,12 +70,12 @@ const Documentation = () => {
 
   const quickStart = `// Quick Start Example
 const apiKey = 'your_api_key_here';
-const baseUrl = 'https://api.tradescanpro.com/v1';
+const baseUrl = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
 
 // Get stock quote
-fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
+fetch(baseUrl + '/stocks/AAPL/quote', {
   headers: {
-    'Authorization': \`Bearer \${apiKey}\`,
+    'Authorization': 'Bearer ' + apiKey,
     'Content-Type': 'application/json'
   }
 })
