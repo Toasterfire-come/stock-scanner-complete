@@ -111,15 +111,76 @@ fi
 
 print_success "Environment checks passed"
 
-print_step "Starting Market Hours Manager"
-print_warning "Press Ctrl+C to stop the manager gracefully"
-print_warning "Logs will be written to market_hours_manager.log"
+# Check if proxy scraper exists
+if [ -f "proxy_scraper_validator.py" ]; then
+    print_success "Proxy scraper found - daily updates will include proxy refresh"
+else
+    print_warning "proxy_scraper_validator.py not found"
+    print_warning "Proxy updates will not be available"
+fi
 
-echo -e "\n${YELLOW}Market Hours Schedule:${NC}"
-echo "  Premarket:    4:00 AM - 9:30 AM ET (retrieval, news, emails)"
-echo "  Market:       9:30 AM - 4:00 PM ET (all components + server)"
-echo "  Postmarket:   4:00 PM - 8:00 PM ET (retrieval, news, emails)"
-echo "  After Hours:  8:00 PM - 4:00 AM ET (all components stopped)"
+# Display menu options
+echo -e "\n${BLUE}Select Operation Mode:${NC}"
+echo "1) Start Market Hours Manager (default)"
+echo "2) Start with Daily 9 AM Updates"
+echo "3) Update Proxies Only"
+echo "4) Run Single Stock Update"
+echo "5) Exit"
+echo ""
+read -t 10 -p "Select option [1-5] (default: 1 in 10s): " -n 1 -r OPTION || OPTION="1"
+echo ""
 
-# Start the market hours manager
-exec $PYTHON_CMD market_hours_manager.py
+case "${OPTION:-1}" in
+    1)
+        print_step "Starting Market Hours Manager"
+        print_warning "Press Ctrl+C to stop the manager gracefully"
+        print_warning "Logs will be written to market_hours_manager.log"
+        
+        echo -e "\n${YELLOW}Market Hours Schedule:${NC}"
+        echo "  Premarket:    4:00 AM - 9:30 AM ET (retrieval, news, emails)"
+        echo "  Market:       9:30 AM - 4:00 PM ET (all components + server)"
+        echo "  Postmarket:   4:00 PM - 8:00 PM ET (retrieval, news, emails)"
+        echo "  After Hours:  8:00 PM - 4:00 AM ET (all components stopped)"
+        
+        # Start the market hours manager
+        exec $PYTHON_CMD market_hours_manager.py
+        ;;
+    
+    2)
+        print_step "Starting with Daily 9 AM Updates"
+        print_warning "This will update proxies and run full stock update at 9 AM ET daily"
+        print_warning "Press Ctrl+C to stop"
+        
+        echo -e "\n${YELLOW}Daily Update Schedule:${NC}"
+        echo "  9:00 AM ET - Proxy refresh + Full stock update"
+        echo "  Plus regular 3-minute stock cycles during market hours"
+        
+        # Start enhanced stock retrieval with daily update mode
+        exec $PYTHON_CMD enhanced_stock_retrieval_working.py -daily-update -schedule
+        ;;
+    
+    3)
+        print_step "Updating Proxies"
+        if [ -f "proxy_scraper_validator.py" ]; then
+            $PYTHON_CMD proxy_scraper_validator.py -threads 50 -timeout 5
+        else
+            print_error "Proxy scraper not found"
+            exit 1
+        fi
+        ;;
+    
+    4)
+        print_step "Running Single Stock Update"
+        $PYTHON_CMD enhanced_stock_retrieval_working.py
+        ;;
+    
+    5)
+        print_info "Exiting"
+        exit 0
+        ;;
+    
+    *)
+        print_error "Invalid option"
+        exit 1
+        ;;
+esac

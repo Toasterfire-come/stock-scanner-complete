@@ -133,13 +133,52 @@ def parse_arguments():
                        help='Proxy JSON file path (default from PROXY_FILE_PATH env var or working_proxies.json)')
     parser.add_argument('-schedule', action='store_true', help='Run in scheduler mode (every 3 minutes)')
     parser.add_argument('-save-to-db', action='store_true', default=True, help='Save results to database (default: True)')
+    parser.add_argument('-update-proxies', action='store_true', help='Force proxy update before starting')
+    parser.add_argument('-daily-update', action='store_true', help='Run daily 9 AM update with proxy refresh')
     return parser.parse_args()
 
 # Removed _safe_decimal - using shared safe_decimal_conversion from utils.stock_data
 
+def update_proxy_list(proxy_file):
+    """Update proxy list by running the proxy scraper"""
+    try:
+        logger.info("Updating proxy list from scraper...")
+        # Check if proxy scraper exists
+        scraper_path = os.path.join(os.path.dirname(__file__), 'proxy_scraper_validator.py')
+        if os.path.exists(scraper_path):
+            # Run proxy scraper with validation
+            cmd = [sys.executable, scraper_path, '-threads', '50', '-timeout', '5', '-output', proxy_file]
+            logger.info(f"Running proxy scraper: {' '.join(cmd)}")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                logger.info("Proxy scraper completed successfully")
+                # Check output for statistics
+                for line in result.stdout.split('\n'):
+                    if 'Working:' in line or 'Success Rate:' in line:
+                        logger.info(f"  {line.strip()}")
+            else:
+                logger.warning(f"Proxy scraper failed: {result.stderr}")
+        else:
+            logger.warning(f"Proxy scraper not found at {scraper_path}")
+    except subprocess.TimeoutExpired:
+        logger.error("Proxy scraper timed out after 5 minutes")
+    except Exception as e:
+        logger.error(f"Error updating proxy list: {e}")
+
 def load_proxies_direct(proxy_file):
     """Load proxies directly from JSON file without validation"""
     try:
+        # First check if we need to update proxies (older than 1 hour)
+        if os.path.exists(proxy_file):
+            file_age = time.time() - os.path.getmtime(proxy_file)
+            if file_age > 3600:  # Older than 1 hour
+                logger.info(f"Proxy file is {file_age/3600:.1f} hours old, updating...")
+                update_proxy_list(proxy_file)
+        else:
+            logger.info("No proxy file found, scraping new proxies...")
+            update_proxy_list(proxy_file)
+        
         with open(proxy_file, 'r') as f:
             proxy_data = json.load(f)
         
@@ -176,6 +215,16 @@ def load_proxies_direct(proxy_file):
         
     except FileNotFoundError:
         logger.warning(f"Proxy file not found: {proxy_file}")
+        logger.info("Attempting to scrape new proxies...")
+        update_proxy_list(proxy_file)
+        # Try loading again
+        try:
+            with open(proxy_file, 'r') as f:
+                proxies = json.load(f)
+                if isinstance(proxies, list):
+                    return [normalize_proxy_string(p) for p in proxies if normalize_proxy_string(p)]
+        except:
+            pass
         return []
     except Exception as e:
         logger.error(f"Error loading proxies: {e}")
@@ -622,6 +671,29 @@ def start_cycle_in_subprocess(args):
 
 # New: launch all three cycles (stocks, news, email)
 
+def run_daily_update(args):
+    """Run daily update at 9 AM with proxy refresh"""
+    logger.info("="*60)
+    logger.info(f"DAILY 9 AM UPDATE - {datetime.now(EASTERN_TZ).strftime('%Y-%m-%d %H:%M:%S ET')}")
+    logger.info("="*60)
+    
+    # Check if it's a market day
+    now_et = datetime.now(EASTERN_TZ)
+    if now_et.weekday() >= 5:
+        logger.info("Not a market day, skipping update")
+        return
+    
+    # Update proxies first
+    if not args.noproxy:
+        logger.info("Updating proxy list for daily update...")
+        update_proxy_list(args.proxy_file)
+    
+    # Run stock update
+    logger.info("Running stock update cycle...")
+    run_stock_update(args)
+    
+    logger.info("Daily update completed")
+
 def start_all_cycles_in_subprocess(args):
     """Spawn stock, news scraper, and email sender cycles as separate subprocesses."""
     # Only run within market window (weekdays 04:00–20:00 ET)
@@ -666,7 +738,36 @@ def main():
     logger.info(f"  Max Symbols: {args.max_symbols or 'All'}")
     logger.info(f"  Save to DB: {args.save_to_db}")
     logger.info(f"  Schedule Mode: {args.schedule}")
+    logger.info(f"  Daily Update: {args.daily_update}")
     logger.info("=" * 60)
+    
+    # Force proxy update if requested
+    if args.update_proxies and not args.noproxy:
+        update_proxy_list(args.proxy_file)
+    
+    # Daily update mode - run at 9 AM ET
+    if args.daily_update:
+        logger.info("DAILY UPDATE MODE: Running at 9:00 AM ET every market day")
+        logger.info("Press Ctrl+C to stop")
+        logger.info("=" * 60)
+        
+        # Schedule daily update at 9 AM ET
+        schedule.every().day.at("09:00").do(lambda: run_daily_update(args))
+        
+        # Check if we should run immediately (if after 9 AM)
+        now_et = datetime.now(EASTERN_TZ)
+        if now_et.hour >= 9 and now_et.weekday() < 5:
+            logger.info("Running immediate update (after 9 AM)")
+            run_daily_update(args)
+        
+        try:
+            while not shutdown_flag:
+                schedule.run_pending()
+                time.sleep(60)  # Check every minute
+        except KeyboardInterrupt:
+            logger.info("Daily updater stopped by user")
+            shutdown_flag = True
+        return
     
     if args.schedule:
         logger.info("SCHEDULER MODE: Spawning stock, news, and email cycles every 3 minutes (overlap allowed)")
