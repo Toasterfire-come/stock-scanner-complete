@@ -1,0 +1,17 @@
+polling_interval_seconds: 1.0
+country: US
+currency: 1  # 1 = USD
+user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+max_concurrent_float_lookups: 4
+listing_page_count: 20
+items:
+  - id: 1
+    url: "https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Case%20Hardened%20%28Field-Tested%29"
+    max_float: 0.07
+    max_price: 50.0
+    max_open: 1
+  - id: 2
+    url: "https://steamcommunity.com/market/listings/730/AWP%20%7C%20Fever%20Dream%20%28Minimal%20Wear%29"
+    max_float: 0.15
+    max_price: 100.0
+    max_open: 2

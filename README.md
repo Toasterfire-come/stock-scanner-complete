@@ -1,3 +1,91 @@
+## CS2 Float Monitor (Safe)
+
+This tool monitors Steam Community Market listings for CS2 skins, fetches float values via a public API, filters by your criteria, and opens matching listings in your signed-in browser for manual purchase.
+
+Important: It does not automate purchases or attempt to bypass Steam rate-limiting or bot detection. Use it responsibly and in accordance with Steam's Terms of Service and API providers' usage policies.
+
+### Features
+
+- Configurable items with `max_float`, `max_price`, and per-item `max_open` limits
+- Respectful polling with jitter and retries
+- Float lookup via the public CSGOFloat API
+- Optional proxy rotation with per-proxy cooldowns (privacy-oriented, not for evasion)
+- Opens matching item pages in your browser for quick manual checkout
+
+### Quickstart
+
+1) Install dependencies
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2) Copy and edit the example config files
+
+```bash
+cp config.example.yaml config.yaml
+cp proxies.example.json proxies.json  # optional
+```
+
+3) Run the monitor
+
+```bash
+python -m cs2_float_monitor --config config.yaml --proxies proxies.json
+```
+
+Or without proxies:
+
+```bash
+python -m cs2_float_monitor --config config.yaml
+```
+
+### Configuration
+
+See `config.example.yaml` for a complete example. Minimal fields:
+
+```yaml
+polling_interval_seconds: 1.5
+country: US
+currency: 1  # 1 = USD
+items:
+  - id: 1
+    url: "https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Case%20Hardened%20%28Field-Tested%29"
+    max_float: 0.07
+    max_price: 50.0
+    max_open: 1
+  - id: 2
+    url: "https://steamcommunity.com/market/listings/730/AWP%20%7C%20Fever%20Dream%20%28Minimal%20Wear%29"
+    max_float: 0.15
+    max_price: 100.0
+    max_open: 2
+```
+
+### Proxies (Optional)
+
+Provide a simple JSON file with one or more proxies. Each proxy enforces a cooldown (default 2s) to avoid hammering a single endpoint. This is intended for privacy, not circumvention.
+
+```json
+{
+  "proxies": [
+    {"id": "p1", "http": "http://user:pass@host:port", "https": "http://user:pass@host:port", "cooldown_seconds": 2.0},
+    {"id": "p2", "http": "socks5://127.0.0.1:1080", "https": "socks5://127.0.0.1:1080"}
+  ]
+}
+```
+
+Run with:
+
+```bash
+python -m cs2_float_monitor --config config.yaml --proxies proxies.json
+```
+
+### Notes
+
+- This project respects rate-limits and does not automate purchases. Matches are opened in your browser for manual action.
+- CSGOFloat API has its own rate limits. The tool uses retries with backoff and a small concurrency cap.
+- Currency is configured via `currency: 1` (USD). If you change it, also adjust your `max_price` numbers accordingly.
+
 # Stock Scanner - Git Bash Complete
 
 **One Command Setup: `./start_django_gitbash.sh`**
