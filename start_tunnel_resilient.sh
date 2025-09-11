@@ -26,6 +26,8 @@ ERROR_THRESHOLD=3
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/tunnel_resilient.log"
+ERROR_LOG_FILE="$LOG_DIR/tunnel_resilient_error.log"
+DJANGO_LOG_FILE="$LOG_DIR/django_server.log"
 
 mkdir -p "$LOG_DIR"
 
@@ -50,7 +52,11 @@ log_message() {
     local message="$*"
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "[$timestamp] [$level] $message" | tee -a "$LOG_FILE"
+    local line="[$timestamp] [$level] $message"
+    echo "$line" >> "$LOG_FILE"
+    if [ "$level" = "ERROR" ]; then
+        echo "$line" | tee -a "$ERROR_LOG_FILE" >/dev/tty
+    fi
 }
 
 # -------------------------------
@@ -201,6 +207,10 @@ cleanup() {
         kill -TERM $HEALTH_PID 2>/dev/null || true
     fi
 
+    if [ -n "${DJANGO_ERROR_MONITOR_PID:-}" ]; then
+        kill -TERM $DJANGO_ERROR_MONITOR_PID 2>/dev/null || true
+    fi
+
     restore_sleep
     log_message "INFO" "All services stopped. Total restarts: $TOTAL_RESTARTS"
     echo "✅ All services stopped"
@@ -276,9 +286,15 @@ start_django() {
         return 1
     fi
 
-    # Stream Django logs directly to console
-    python3 manage.py runserver 0.0.0.0:8000 2>&1 | tee /dev/tty &
+    # Start Django and write full output to log file
+    python3 manage.py runserver 0.0.0.0:8000 >> "$DJANGO_LOG_FILE" 2>&1 &
     SERVER_PID=$!
+
+    # Stream only errors (4xx/5xx and error traces) to console and error log
+    (
+        tail -n +1 -F "$DJANGO_LOG_FILE" 2>/dev/null | awk '/" (4|5)[0-9][0-9] / || /ERROR|Exception|Traceback|CRITICAL|WARNING|WARN/ { print; fflush(); }' | tee -a "$ERROR_LOG_FILE" >/dev/tty
+    ) &
+    DJANGO_ERROR_MONITOR_PID=$!
 
     sleep 3
     if ps -p $SERVER_PID >/dev/null 2>&1; then
