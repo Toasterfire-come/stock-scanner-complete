@@ -288,8 +288,18 @@ class Command(BaseCommand):
             return
             
         try:
-            # yfinance now manages its own curl_cffi session; do not override with requests.Session
-            self.stdout.write("Skipping manual session injection; letting yfinance manage transport")
+            import requests
+            session = requests.Session()
+            session.proxies = {
+                'http': proxy,
+                'https': proxy
+            }
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            })
+            import yfinance.shared
+            yfinance.shared._requests = session
+            self.stdout.write(f"[PROXY] Applied proxy session for yfinance")
         except Exception as e:
             self.stdout.write(f"Failed to patch yfinance proxy handling: {e}")
 
@@ -426,8 +436,17 @@ class Command(BaseCommand):
             # Try multiple approaches to get data
             ticker_obj = yf.Ticker(symbol)
             info = None
+            fast_info = None
             hist = None
             current_price = None
+            
+            # Approach 0: Try to get fast_info first for speed
+            try:
+                fast_info = ticker_obj.fast_info
+                if fast_info and hasattr(fast_info, 'last_price') and fast_info.last_price:
+                    current_price = fast_info.last_price
+            except Exception:
+                pass
             
             # Approach 1: Try to get basic info
             try:
@@ -473,18 +492,59 @@ class Command(BaseCommand):
             # Determine if we have enough data to process
             has_data = hist is not None and not hist.empty
             has_info = info and isinstance(info, dict) and len(info) > 3
+            has_fast_info = fast_info is not None
             has_price = current_price is not None and not pd.isna(current_price)
             
-            if not has_data and not has_info:
+            if not has_data and not has_info and not has_fast_info:
                 self.stdout.write(f"[NO DATA] {symbol}: No data available")
                 return None
             
+            # Helper to map from fast_info when info is missing
+            def _map_from_fast_info(fi):
+                if not fi:
+                    return {}
+                def _get(names):
+                    for n in names:
+                        try:
+                            v = getattr(fi, n)
+                            if v is not None:
+                                return v
+                        except Exception:
+                            continue
+                    return None
+                day_low = _get(['day_low', 'low'])
+                day_high = _get(['day_high', 'high'])
+                volume = _get(['last_volume', 'volume'])
+                avg_vol_3m = _get(['three_month_average_volume', 'ten_day_average_volume'])
+                market_cap = _get(['market_cap'])
+                wk52_low = _get(['fifty_two_week_low', 'year_low'])
+                wk52_high = _get(['fifty_two_week_high', 'year_high'])
+                exch = _get(['exchange'])
+                name = _get(['short_name', 'long_name']) or symbol
+                return {
+                    'company_name': name,
+                    'name': name,
+                    'days_low': self._safe_decimal(day_low),
+                    'days_high': self._safe_decimal(day_high),
+                    'volume': self._safe_decimal(volume),
+                    'volume_today': self._safe_decimal(volume),
+                    'avg_volume_3mon': self._safe_decimal(avg_vol_3m),
+                    'market_cap': self._safe_decimal(market_cap),
+                    'one_year_target': None,
+                    'week_52_low': self._safe_decimal(wk52_low),
+                    'week_52_high': self._safe_decimal(wk52_high),
+                    'earnings_per_share': None,
+                    'book_value': None,
+                    'price_to_book': None,
+                    'exchange': exch,
+                }
+
             # Extract comprehensive data with better PE ratio and dividend yield handling
             stock_data = {
                 'ticker': symbol,  # Use ticker as the primary key
                 'symbol': symbol,   # Keep symbol for compatibility
-                'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-                'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+                'company_name': info.get('longName', info.get('shortName', symbol)) if info else (_map_from_fast_info(fast_info).get('company_name') or symbol),
+                'name': info.get('longName', info.get('shortName', symbol)) if info else (_map_from_fast_info(fast_info).get('name') or symbol),
                 'current_price': self._safe_decimal(current_price) if current_price else None,
                 'price_change_today': None,
                 'price_change_week': None,
@@ -495,25 +555,25 @@ class Command(BaseCommand):
                 'ask_price': None,
                 'bid_ask_spread': '',  # Empty string instead of None for CharField
                 'days_range': '',  # Empty string instead of None for CharField
-                'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
-                'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
-                'volume': self._safe_decimal(info.get('volume')) if info else None,
-                'volume_today': self._safe_decimal(info.get('volume')) if info else None,
-                'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
+                'days_low': self._safe_decimal(info.get('dayLow')) if info else _map_from_fast_info(fast_info).get('days_low'),
+                'days_high': self._safe_decimal(info.get('dayHigh')) if info else _map_from_fast_info(fast_info).get('days_high'),
+                'volume': self._safe_decimal(info.get('volume')) if info else _map_from_fast_info(fast_info).get('volume'),
+                'volume_today': self._safe_decimal(info.get('volume')) if info else _map_from_fast_info(fast_info).get('volume_today'),
+                'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else _map_from_fast_info(fast_info).get('avg_volume_3mon'),
                 'dvav': None,
                 'shares_available': None,
-                'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
+                'market_cap': self._safe_decimal(info.get('marketCap')) if info else _map_from_fast_info(fast_info).get('market_cap'),
                 'market_cap_change_3mon': None,
                 'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
                 'pe_change_3mon': None,
                 'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
-                'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
-                'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
-                'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
-                'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
-                'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
-                'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
-                'exchange': info.get('exchange') if info else None,
+                'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else _map_from_fast_info(fast_info).get('one_year_target'),
+                'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else _map_from_fast_info(fast_info).get('week_52_low'),
+                'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else _map_from_fast_info(fast_info).get('week_52_high'),
+                'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else _map_from_fast_info(fast_info).get('earnings_per_share'),
+                'book_value': self._safe_decimal(info.get('bookValue')) if info else _map_from_fast_info(fast_info).get('book_value'),
+                'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else _map_from_fast_info(fast_info).get('price_to_book'),
+                'exchange': info.get('exchange') if info else _map_from_fast_info(fast_info).get('exchange'),
                 'last_updated': timezone.now(),
                 'created_at': timezone.now()
             }

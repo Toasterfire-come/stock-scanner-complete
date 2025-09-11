@@ -45,6 +45,7 @@ from utils.stock_data import (
     extract_dividend_yield,
     calculate_change_percent_from_history,
     extract_stock_data_from_info,
+    extract_stock_data_from_fast_info,
     calculate_volume_ratio
 )
 
@@ -329,6 +330,23 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 time.sleep(sleep_time)
         return None
 
+    # If proxy provided, patch yfinance to use it for this attempt
+    def patch_yfinance_proxy(px):
+        if not px:
+            return
+        try:
+            session = requests.Session()
+            session.proxies = {'http': px, 'https': px}
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            })
+            import yfinance.shared
+            yfinance.shared._requests = session
+        except Exception as e:
+            logger.debug(f"Failed to apply proxy to yfinance session: {e}")
+
+    patch_yfinance_proxy(proxy)
+
     # Try multiple approaches to get data letting yfinance manage its own session
     ticker_obj = yf.Ticker(symbol)
     info = None
@@ -371,6 +389,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Determine if we have enough data to process
     has_data = hist is not None and not hist.empty
     has_info = info and isinstance(info, dict) and len(info) > 3
+    has_fast_info = fast_info is not None
     has_price = current_price is not None and not pd.isna(current_price)
 
     # Check for delisted or invalid stocks
@@ -378,7 +397,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         logger.warning(f"{symbol}: possibly delisted; no price data found (period=1d)")
         return None
 
-    if not has_data and not has_info:
+    if not has_data and not has_info and not has_fast_info:
         logger.warning(f"{symbol}: No data available")
         return None
 
@@ -386,12 +405,12 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         logger.warning(f"{symbol}: No current trading activity")
         return None
 
-    # Extract and save data (unchanged)
+    # Extract and save data (with fast_info fallback)
     stock_data = {
         'ticker': symbol,
         'symbol': symbol,
-        'company_name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
-        'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
+        'company_name': info.get('longName', info.get('shortName', symbol)) if info else (getattr(fast_info, 'short_name', None) or symbol),
+        'name': info.get('longName', info.get('shortName', symbol)) if info else (getattr(fast_info, 'short_name', None) or symbol),
         'current_price': safe_decimal_conversion(current_price) if current_price else None,
         'price_change_today': None,
         'price_change_week': None,
@@ -402,13 +421,8 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'ask_price': None,
         'bid_ask_spread': '',
         'days_range': '',
-        # Use shared utility for extracting stock data from info
-        **(extract_stock_data_from_info(info, symbol, current_price) if info else {
-            'days_low': None, 'days_high': None, 'volume': None, 'volume_today': None,
-            'avg_volume_3mon': None, 'market_cap': None, 'pe_ratio': None, 'dividend_yield': None,
-            'one_year_target': None, 'week_52_low': None, 'week_52_high': None,
-            'earnings_per_share': None, 'book_value': None, 'price_to_book': None, 'exchange': 'NYSE'
-        }),
+        # Use shared utility for extracting stock data from info; fallback to fast_info mapping
+        **(extract_stock_data_from_info(info, symbol, current_price) if info else extract_stock_data_from_fast_info(fast_info, symbol, current_price)),
         'dvav': None,
         'shares_available': None,
         'market_cap_change_3mon': None,

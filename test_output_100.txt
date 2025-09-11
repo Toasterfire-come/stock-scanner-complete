@@ -1,0 +1,171 @@
+TEST ENHANCED STOCK RETRIEVAL SCRIPT
+============================================================
+Configuration:
+  CSV File: /workspace/Django/flat-ui__data-Fri Aug 01 2025.csv
+  Use Proxies: True
+  Proxy File: /workspace/Django/working_proxies.json
+  Threads: 10
+  Timeout: 10s
+  Max Symbols: 100
+============================================================
+
+Loading NYSE symbols from /workspace/Django/flat-ui__data-Fri Aug 01 2025.csv...
+Processing 100 symbols...
+Loading proxies from /workspace/Django/working_proxies.json...
+SUCCESS: Loaded 50 proxies
+Starting to process 100 symbols...
+============================================================
+Submitted 100 tasks. Processing...
+✓ AACB: $10.145899772644043 - Artius II Acquisition Inc.
+✓ AACI: $10.25 - Armada Acquisition Corp. II
+✓ AAOI: $26.670000076293945 - Applied Optoelectronics, Inc.
+✓ AAL: $12.96500015258789 - American Airlines Group Inc.
+✓ AACIW: $0.7297999858856201 - Armada Acquisition Corp. II
+[PROGRESS] 5/100 completed (5 successful, 0 failed)
+✓ AACBR: $0.2199999988079071 - Artius II Acquisition Inc.
+✓ AAON: $82.74009704589844 - AAON, Inc.
+✓ AAME: $3.213099956512451 - Atlantic American Corporation
+✓ AACIU: $10.550000190734863 - Armada Acquisition Corp. II
+✓ AACBU: $10.300000190734863 - Artius II Acquisition Inc.
+[PROGRESS] 10/100 completed (10 successful, 0 failed)
+✓ ABAT: $2.3949999809265137 - American Battery Technology Company
+✓ AAPG: $39.66999816894531 - Ascentage Pharma Group Internat
+✓ ABL: $6.474999904632568 - Abacus Global Management, Inc.
+✓ ABCL: $4.639999866485596 - AbCellera Biologics Inc.
+✓ ABEO: $6.788000106811523 - Abeona Therapeutics Inc.
+[PROGRESS] 15/100 completed (15 successful, 0 failed)
+✓ AARD: $7.829999923706055 - Aardvark Therapeutics, Inc.
+✓ AAPL: $229.89500427246094 - Apple Inc.
+✓ ABLLL: $25.049999237060547 - Abacus Life, Inc. 9.875% Fixed Rate Senior Notes due 2028
+✓ ABLV: $1.0 - Able View Global Inc.
+✓ ABLLW: $1.2913000583648682 - Abacus Global Management, Inc.
+[PROGRESS] 20/100 completed (20 successful, 0 failed)
+✓ ABLVW: $0.01720000058412552 - Able View Global Inc.
+✓ ABPWW: $0.03099999949336052 - Abpro Holdings Inc
+✓ ABSI: $2.755000114440918 - Absci Corporation
+✓ ABOS: $1.375 - Acumen Pharmaceuticals, Inc.
+✓ ABNB: $122.91500091552734 - Airbnb, Inc.
+[PROGRESS] 25/100 completed (25 successful, 0 failed)
+✓ ABUS: $5.034999847412109 - Arbutus Biopharma Corporation
+✓ ABVEW: $0.257999986410141 - Above Food Ingredients Inc.
+✓ ABTS: $4.0 - Abits Group Inc.
+✓ ABVE: $1.6800999641418457 - Above Food Ingredients Inc.
+✓ ABVC: $2.7799999713897705 - ABVC BioPharma, Inc.
+[PROGRESS] 30/100 completed (30 successful, 0 failed)
+✓ ACAD: $24.024999618530273 - ACADIA Pharmaceuticals Inc.
+✓ ABVX: $83.19000244140625 - ABIVAX Société Anonyme
+✓ ACB: $5.025000095367432 - Aurora Cannabis Inc.
+✓ ACDC: $3.9100000858306885 - ProFrac Holding Corp.
+✓ ACFN: $30.21769905090332 - Acorn Energy, Inc.
+[PROGRESS] 35/100 completed (35 successful, 0 failed)
+✓ ACHV: $3.1270999908447266 - Achieve Life Sciences, Inc.
+✓ ACGLN: $18.309999465942383 - Arch Capital Group Ltd.
+✓ ACGLO: $22.09000015258789 - Arch Capital Group Ltd.
+✓ ACGL: $91.43000030517578 - Arch Capital Group Ltd.
+✓ ACHC: $22.30500030517578 - Acadia Healthcare Company, Inc.
+[PROGRESS] 40/100 completed (40 successful, 0 failed)
+✓ ACIC: $10.960000038146973 - American Coastal Insurance Corporation
+✓ ACIW: $50.38679885864258 - ACI Worldwide, Inc.
+✓ ACIU: $2.3499999046325684 - AC Immune SA
+✓ ACLX: $75.93000030517578 - Arcellx, Inc.
+✓ ACLS: $86.81999969482422 - Axcelis Technologies, Inc.
+[PROGRESS] 45/100 completed (45 successful, 0 failed)
+✓ ACMR: $30.049999237060547 - ACM Research, Inc.
+✓ ACOG: $9.704999923706055 - Alpha Cognition Inc. Common Stock
+✓ ACNB: $45.099998474121094 - ACNB Corporation
+✓ ACNT: $12.295000076293945 - Ascent Industries Co.
+✓ ACRS: $2.0350000858306885 - Aclaris Therapeutics, Inc.
+[PROGRESS] 50/100 completed (50 successful, 0 failed)
+✓ ACON: $7.500199794769287 - Aclarion, Inc.
+✓ ACONW: $0.022099999710917473 - Aclarion, Inc.
+✓ ACRV: $1.524999976158142 - Acrivon Therapeutics, Inc.
+✓ ACTG: $3.2453999519348145 - Acacia Research Corporation
+✓ ACTU: $7.010000228881836 - Actuate Therapeutics, Inc. Common stock
+[PROGRESS] 55/100 completed (55 successful, 0 failed)
+✓ ACT: $39.2599983215332 - Enact Holdings, Inc.
+✓ ADAG: $2.3499999046325684 - Adagene Inc.
+✓ ADBE: $350.26239013671875 - Adobe Inc.
+✓ ADEA: $15.569999694824219 - Adeia Inc.
+✓ ADD: $1.9199999570846558 - Zeta Network Group
+[PROGRESS] 60/100 completed (60 successful, 0 failed)
+✓ ADMA: $16.270000457763672 - ADMA Biologics, Inc.
+✓ ADI: $249.46749877929688 - Analog Devices, Inc.
+✓ ADN: $3.2100000381469727 - Advent Technologies Holdings, Inc.
+✓ ADNWW: $0.009600000455975533 - Advent Technologies Holdings, Inc.
+✓ ADPT: $13.539999961853027 - Adaptive Biotechnologies Corporation
+[PROGRESS] 65/100 completed (65 successful, 0 failed)
+✓ ADSE: $9.585000038146973 - ADS-TEC Energy PLC
+✓ ADSEW: $0.8399999737739563 - ADS-TEC Energy PLC
+✓ ADUR: $13.17199993133545 - Aduro Clean Technologies Inc.
+✓ ADTX: $1.0850000381469727 - Aditxt, Inc.
+✓ ADP: $296.1401062011719 - Automatic Data Processing, Inc.
+[PROGRESS] 70/100 completed (70 successful, 0 failed)
+✓ ADV: $1.9149999618530273 - Advantage Solutions Inc.
+✓ ADTN: $10.291000366210938 - ADTRAN Holdings, Inc.
+✓ ADSK: $325.20001220703125 - Autodesk, Inc.
+✓ ADUS: $111.5 - Addus HomeCare Corporation
+✓ ADVM: $3.1600000858306885 - Adverum Biotechnologies, Inc.
+[PROGRESS] 75/100 completed (75 successful, 0 failed)
+✓ ADVWW: $0.009700000286102295 - Advantage Solutions Inc.
+✓ ADXN: $7.894999980926514 - Addex Therapeutics Ltd
+✓ AEMD: $0.7597000002861023 - Aethlon Medical, Inc.
+✓ AEHL: $4.010000228881836 - Antelope Enterprise Holdings Limited
+✓ AEHR: $27.204999923706055 - Aehr Test Systems, Inc.
+[PROGRESS] 80/100 completed (80 successful, 0 failed)
+✓ AEBI: $12.234999656677246 - Aebi Schmidt Holding AG
+✓ AEIS: $159.59500122070312 - Advanced Energy Industries, Inc.
+✓ AENT: $5.909999847412109 - Alliance Entertainment Holding Corporation
+✓ AEI: $3.319999933242798 - Alset Inc.
+✓ AENTW: $0.38999998569488525 - Alliance Entertainment Holding Corporation
+[PROGRESS] 85/100 completed (85 successful, 0 failed)
+✓ AERT: $0.6050000190734863 - Aeries Technology, Inc
+✓ AERTW: $0.04500000178813934 - Aeries Technology, Inc
+✓ AEVAW: $0.3666999936103821 - Aeva Technologies, Inc.
+✓ AEYE: $13.375 - AudioEye, Inc.
+✓ AEVA: $15.75 - Aeva Technologies, Inc.
+[PROGRESS] 90/100 completed (90 successful, 0 failed)
+✓ AFBI: $19.670000076293945 - Affinity Bancshares, Inc.
+✓ AEP: $108.36499786376953 - American Electric Power Company, Inc.
+✓ AFCG: $4.570000171661377 - Advanced Flower Capital Inc.
+✓ AFJKR: $0.38499999046325684 - Aimei Health Technology Co., Ltd
+✓ AFJK: $11.25 - Aimei Health Technology Co., Ltd
+[PROGRESS] 95/100 completed (95 successful, 0 failed)
+✓ AFJKU: $11.25 - Aimei Health Technology Co., Ltd
+✓ AFRI: $8.529999732971191 - Forafric Global PLC
+✓ AFRIW: $0.5600000023841858 - Forafric Global PLC
+✓ AFRM: $81.89219665527344 - Affirm Holdings, Inc.
+✓ AFYA: $15.579999923706055 - Afya Limited
+[PROGRESS] 100/100 completed (100 successful, 0 failed)
+
+============================================================
+TEST RESULTS
+============================================================
+SUCCESSFUL: 100
+FAILED: 0
+SUCCESS RATE: 100.0%
+TIME: 4.41s
+RATE: 22.66 symbols/sec
+
+NULL FIELD COUNTS (out of 100 results):
+  company_name: 0
+  current_price: 0
+  volume: 1
+  market_cap: 19
+  days_low: 0
+  days_high: 0
+  avg_volume_3mon: 16
+  week_52_low: 0
+  week_52_high: 0
+PROXY STATS: Used 50 proxies
+PROXY HEALTH: 50 healthy, 0 blocked
+PROXY SUCCESS RATE: 100.0% (100 successes, 0 failures)
+
+TOP PROXY PERFORMANCE:
+  http://90.162.35.34:80: 100 successes, 0 failures [HEALTHY]
+  http://138.68.235.51:80: 0 successes, 0 failures [HEALTHY]
+  http://39.102.210.222:1111: 0 successes, 0 failures [HEALTHY]
+  http://147.28.240.213:9443: 0 successes, 0 failures [HEALTHY]
+  http://47.121.183.107:80: 0 successes, 0 failures [HEALTHY]
+
+TEST COMPLETED: 2025-09-11 17:57:05
+============================================================
