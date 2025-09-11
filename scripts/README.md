@@ -1,3 +1,11 @@
+Endpoint smoke tests
+
+Run from your machine:
+
+BASE="https://api.retailtradescanner.com" EMAIL="your@email" PASSWORD="yourpass" bash scripts/smoke.sh
+
+Outputs HTTP codes and brief JSON for key endpoints.
+
 # Scripts Directory
 
 This directory contains essential setup and utility scripts for the Stock Scanner platform.
