@@ -59,30 +59,33 @@ class MarketHoursManager:
         # Market hours in Eastern Time
         self.eastern_tz = pytz.timezone('US/Eastern')
         
-        # Market hours configuration - configurable via environment variables
-        self.premarket_start = os.getenv('PREMARKET_START', "04:00")  # 4:00 AM ET
+        # Market hours configuration - ONLY REGULAR MARKET HOURS
+        # Updates will only run during regular trading hours
         self.market_open = os.getenv('MARKET_OPEN', "09:30")      # 9:30 AM ET
         self.market_close = os.getenv('MARKET_CLOSE', "16:00")     # 4:00 PM ET
-        self.postmarket_end = os.getenv('POSTMARKET_END', "20:00")   # 8:00 PM ET
         
-        # Component configurations
+        # Disabled pre-market and post-market
+        # self.premarket_start = os.getenv('PREMARKET_START', "04:00")  # DISABLED
+        # self.postmarket_end = os.getenv('POSTMARKET_END', "20:00")   # DISABLED
+        
+        # Component configurations - ONLY ACTIVE DURING REGULAR MARKET HOURS
         self.components = {
             'stock_retrieval': {
                 'script': 'enhanced_stock_retrieval_working.py',
                 'args': ['-schedule'],
-                'active_during': ['premarket', 'market', 'postmarket'],
+                'active_during': ['market'],  # Only during regular market hours
                 'process': None
             },
             'news_scraper': {
                 'script': 'news_scraper_with_restart.py',
                 'args': ['-schedule', '-interval', '5'],
-                'active_during': ['premarket', 'market', 'postmarket'],
+                'active_during': ['market'],  # Only during regular market hours
                 'process': None
             },
             'email_sender': {
                 'script': 'email_sender_with_restart.py',
                 'args': ['-schedule', '-interval', '10'],
-                'active_during': ['premarket', 'market', 'postmarket'],
+                'active_during': ['market'],  # Only during regular market hours
                 'process': None
             },
             'django_server': {
@@ -105,7 +108,8 @@ class MarketHoursManager:
         sys.exit(0)
         
     def get_current_market_phase(self):
-        """Determine current market phase based on Eastern Time"""
+        """Determine current market phase based on Eastern Time
+        ONLY recognizes regular market hours (9:30 AM - 4:00 PM ET)"""
         now_et = datetime.now(self.eastern_tz)
         current_time = now_et.strftime("%H:%M")
         
@@ -113,14 +117,11 @@ class MarketHoursManager:
         if now_et.weekday() >= 5:  # Saturday or Sunday
             return 'closed'
             
-        if self.premarket_start <= current_time < self.market_open:
-            return 'premarket'
-        elif self.market_open <= current_time < self.market_close:
-            return 'market'
-        elif self.market_close <= current_time < self.postmarket_end:
-            return 'postmarket'
+        # Only check for regular market hours
+        if self.market_open <= current_time < self.market_close:
+            return 'market'  # Regular trading hours
         else:
-            return 'closed'
+            return 'closed'  # Outside regular hours
             
     def is_component_active(self, component_name, market_phase):
         """Check if component should be active during current market phase"""
