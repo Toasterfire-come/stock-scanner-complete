@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily Market Update Timer (9 AM ET)
+Requires=daily-market-updater.service
+
+[Timer]
+# Run at 9:00 AM Eastern Time every weekday
+OnCalendar=Mon-Fri 09:00 America/New_York
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
