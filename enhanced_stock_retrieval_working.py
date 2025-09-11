@@ -132,7 +132,7 @@ def parse_arguments():
     parser.add_argument('-proxy-file', type=str, default=os.getenv('PROXY_FILE_PATH', 'working_proxies.json'),
                        help='Proxy JSON file path (default from PROXY_FILE_PATH env var or working_proxies.json)')
     parser.add_argument('-schedule', action='store_true', help='Run in scheduler mode (every 3 minutes)')
-    parser.add_argument('-save-to-db', action='store_true', default=True, help='Save results to database (default: True)')
+    parser.add_argument('-save-to-db', action='store_true', default=False, help='Save results to database (default: False)')
     parser.add_argument('-update-proxies', action='store_true', help='Force proxy update before starting')
     parser.add_argument('-daily-update', action='store_true', help='Run daily 9 AM update with proxy refresh')
     return parser.parse_args()
