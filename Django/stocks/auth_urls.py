@@ -29,6 +29,7 @@ urlpatterns = [
     path('billing/update-payment-method/', billing_api.update_payment_method_api, name='update_payment_method'),
     path('billing/create-paypal-order/', billing_api.create_paypal_order_api, name='create_paypal_order'),
     path('billing/capture-paypal-order/', billing_api.capture_paypal_order_api, name='capture_paypal_order'),
+    path('billing/paypal-webhook/', billing_api.paypal_webhook_api, name='paypal_webhook'),
     
     # Notification endpoints
     path('user/notification-settings/', billing_api.notification_settings_api, name='user_notification_settings'),

@@ -20,10 +20,101 @@ from decimal import Decimal
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
 from django.conf import settings
 from .security_utils import secure_api_endpoint
+from .services.discount_service import DiscountService
+from .models import DiscountCode
+@csrf_exempt
+@api_view(['POST'])
+def paypal_webhook_api(request):
+    """
+    Minimal PayPal webhook receiver for PAYMENT.CAPTURE.COMPLETED events.
+    Verifies event type and records payment; activates plan if metadata present.
+    """
+    try:
+        data = json.loads(request.body) if request.body else {}
+        event_type = (data.get('event_type') or data.get('eventType') or '').upper()
+        resource = data.get('resource') or {}
+        custom_id = resource.get('custom_id') or resource.get('customId') or ''
+        amount_info = (resource.get('amount') or {})
+        value = amount_info.get('value') or '0'
+        final_amount = Decimal(str(value))
+
+        # Parse custom_id if it matches our format: plan_billing_ts_userid_optional
+        plan_type = None
+        billing_cycle = None
+        user_id = None
+        try:
+            parts = custom_id.split('_') if custom_id else []
+            if len(parts) >= 3:
+                plan_type, billing_cycle, _ts = parts[:3]
+            if len(parts) >= 4:
+                user_id = int(parts[3])
+        except Exception:
+            pass
+
+        if event_type == 'PAYMENT.CAPTURE.COMPLETED':
+            # Record revenue without requiring auth context
+            discount_obj = None
+            try:
+                # We could store discount in custom fields if provided
+                discount_code = (resource.get('discount_code') or '').strip()
+                if discount_code:
+                    discount_obj = DiscountCode.objects.get(code=discount_code.upper(), is_active=True)
+            except DiscountCode.DoesNotExist:
+                discount_obj = None
+
+            # Resolve user
+            user = None
+            if user_id:
+                from django.contrib.auth.models import User
+                try:
+                    user = User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    user = None
+
+            if user is not None:
+                try:
+                    DiscountService.record_payment(
+                        user=user,
+                        original_amount=final_amount,
+                        discount_code=discount_obj,
+                        payment_date=timezone.now()
+                    )
+                except Exception as e:
+                    logger.error(f"Webhook record_payment failed: {e}")
+
+                # Activate plan if plan info available
+                try:
+                    profile, _ = UserProfile.objects.get_or_create(user=user)
+                    if plan_type:
+                        profile.plan_type = plan_type
+                        profile.is_premium = plan_type not in ['free','basic']
+                    if billing_cycle in ['monthly','annual']:
+                        profile.billing_cycle = billing_cycle
+                    days = 30 if profile.billing_cycle == 'monthly' else 365
+                    profile.next_billing_date = timezone.now() + timedelta(days=days)
+                    plan_limits = {
+                        'free': 100,
+                        'basic': 1000,
+                        'bronze': 1500,
+                        'silver': 5000,
+                        'gold': 100000,
+                        'enterprise': 100000
+                    }
+                    profile.api_calls_limit = plan_limits.get(profile.plan_type or 'basic', 1000)
+                    profile.save()
+                except Exception as e:
+                    logger.error(f"Webhook plan activation failed: {e}")
+
+        return JsonResponse({'success': True})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"PayPal webhook error: {e}")
+        return JsonResponse({'success': False, 'error': 'Webhook processing failed'}, status=500)
 
 logger = logging.getLogger(__name__)
 
-# PayPal order creation (stubbed)
+# PayPal order creation (discount-aware)
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -31,17 +122,80 @@ def create_paypal_order_api(request):
     """
     Create a PayPal order (stub integration)
     POST /api/billing/create-paypal-order
+    Body: { plan_type, billing_cycle, discount_code }
     """
     try:
         data = json.loads(request.body) if request.body else {}
-        amount = float(data.get('amount', 0))
-        currency = (data.get('currency') or 'USD').upper()
-        if amount <= 0:
+        plan_type = (data.get('plan_type') or 'bronze').strip().lower()
+        billing_cycle = (data.get('billing_cycle') or 'monthly').strip().lower()
+        discount_code_str = (data.get('discount_code') or '').strip()
+        currency = 'USD'
+
+        # Pricing table
+        PRICES = {
+            'bronze': { 'monthly': Decimal('24.99'), 'annual': Decimal('249.99') },
+            'silver': { 'monthly': Decimal('39.99'), 'annual': Decimal('399.99') },
+            'gold':   { 'monthly': Decimal('89.99'), 'annual': Decimal('899.99') },
+        }
+
+        if plan_type not in PRICES:
             return JsonResponse({
                 'success': False,
-                'error': 'Invalid amount',
-                'error_code': 'INVALID_AMOUNT'
+                'error': 'Invalid plan_type',
+                'error_code': 'INVALID_PLAN'
             }, status=400)
+        if billing_cycle not in ['monthly', 'annual']:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid billing_cycle',
+                'error_code': 'INVALID_BILLING_CYCLE'
+            }, status=400)
+
+        original_amount = PRICES[plan_type][billing_cycle]
+
+        # Ensure discount codes exist (idempotent)
+        try:
+            DiscountService.initialize_ref50_code()
+            DiscountService.initialize_trial_code()
+        except Exception:
+            pass
+
+        final_amount = original_amount
+        discount_applied = None
+        discount_obj = None
+        if discount_code_str:
+            validation = DiscountService.validate_discount_code(discount_code_str, request.user)
+            if validation.get('valid'):
+                # Resolve the DiscountCode object (if exists)
+                try:
+                    discount_obj = DiscountCode.objects.get(code=discount_code_str.upper(), is_active=True)
+                except DiscountCode.DoesNotExist:
+                    discount_obj = None
+
+                if validation.get('applies_discount'):
+                    if validation['discount'].code.upper() == 'TRIAL':
+                        final_amount = Decimal('1.00') if original_amount > Decimal('1.00') else original_amount
+                        discount_applied = {
+                            'code': 'TRIAL',
+                            'type': 'trial',
+                            'description': '7-day $1 trial',
+                            'original_amount': float(original_amount),
+                            'final_amount': float(final_amount)
+                        }
+                    else:
+                        calc = DiscountService.calculate_discounted_price(original_amount, validation['discount_amount'])
+                        final_amount = calc['final_amount']
+                        discount_applied = {
+                            'code': validation['discount'].code,
+                            'type': 'percentage',
+                            'percentage': float(validation['discount_amount']),
+                            'original_amount': float(original_amount),
+                            'final_amount': float(final_amount)
+                        }
+
+        # Safety: amounts must be >= 0.50 for PayPal sandbox, but allow $1 trial
+        if final_amount <= 0:
+            final_amount = Decimal('0.50')
 
         # Generate a fake order id
         from uuid import uuid4
@@ -52,8 +206,12 @@ def create_paypal_order_api(request):
             'success': True,
             'order_id': order_id,
             'approval_url': approval_url,
-            'amount': amount,
-            'currency': currency
+            'currency': currency,
+            'plan_type': plan_type,
+            'billing_cycle': billing_cycle,
+            'discount_applied': discount_applied,
+            'amount': float(original_amount),
+            'final_amount': float(final_amount)
         }, status=201)
     except json.JSONDecodeError:
         return JsonResponse({
@@ -70,7 +228,7 @@ def create_paypal_order_api(request):
         }, status=500)
 
 
-# PayPal capture (stubbed)
+# PayPal capture (record payment)
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -78,6 +236,7 @@ def capture_paypal_order_api(request):
     """
     Capture a PayPal order (stub integration)
     POST /api/billing/capture-paypal-order
+    Body: { order_id, plan_type, billing_cycle, discount_code, amount, final_amount }
     """
     try:
         data = json.loads(request.body) if request.body else {}
@@ -89,12 +248,70 @@ def capture_paypal_order_api(request):
                 'error_code': 'MISSING_ORDER_ID'
             }, status=400)
 
+        # Extract optional plan/discount data for revenue tracking
+        plan_type = (data.get('plan_type') or 'bronze').strip().lower()
+        billing_cycle = (data.get('billing_cycle') or 'monthly').strip().lower()
+        discount_code_str = (data.get('discount_code') or '').strip()
+        amount = data.get('amount')
+        final_amount = data.get('final_amount')
+
+        # Attempt to record payment
+        try:
+            discount_obj = None
+            if discount_code_str:
+                try:
+                    discount_obj = DiscountCode.objects.get(code=discount_code_str.upper(), is_active=True)
+                except DiscountCode.DoesNotExist:
+                    discount_obj = None
+
+            # Fallback if amounts missing
+            if final_amount is None:
+                final_amount = amount
+
+            # Record payment in revenue tracking
+            if final_amount is not None:
+                DiscountService.record_payment(
+                    user=request.user,
+                    original_amount=Decimal(str(amount or final_amount or 0)),
+                    discount_code=discount_obj,
+                    payment_date=timezone.now()
+                )
+        except Exception as rec_err:
+            logger.error(f"Failed to record payment for order {order_id}: {rec_err}")
+
+        # Activate user's plan upon successful capture
+        try:
+            user = request.user
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            if plan_type in ['free','basic','bronze','silver','gold','enterprise']:
+                profile.plan_type = plan_type
+                profile.is_premium = plan_type not in ['free', 'basic']
+                profile.billing_cycle = billing_cycle if billing_cycle in ['monthly','annual'] else 'monthly'
+                # Set next billing date: monthly +30d, annual +365d, trial handled elsewhere
+                days = 30 if profile.billing_cycle == 'monthly' else 365
+                profile.next_billing_date = timezone.now() + timedelta(days=days)
+                # Set sensible API limits
+                plan_limits = {
+                    'free': 100,
+                    'basic': 1000,
+                    'bronze': 1500,
+                    'silver': 5000,
+                    'gold': 100000,
+                    'enterprise': 100000
+                }
+                profile.api_calls_limit = plan_limits.get(plan_type, 1000)
+                profile.save()
+        except Exception as e:
+            logger.error(f"Failed to activate plan after capture: {e}")
+
         # Fake capture result
         return JsonResponse({
             'success': True,
             'message': 'Payment captured successfully',
             'order_id': order_id,
-            'status': 'COMPLETED'
+            'status': 'COMPLETED',
+            'plan_type': plan_type,
+            'billing_cycle': billing_cycle
         })
     except json.JSONDecodeError:
         return JsonResponse({

@@ -1,11 +1,14 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-// Use REACT_APP_BACKEND_URL exclusively from environment
-const BASE_URL = process.env.REACT_APP_BACKEND_URL;
+// Use REACT_APP_BACKEND_URL from environment, fallback to window.location.origin
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? `${window.location.origin}` : '');
 
-if (!BASE_URL) {
-  console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+if (!process.env.REACT_APP_BACKEND_URL && BASE_URL) {
+  // Informational log only
+  console.warn("REACT_APP_BACKEND_URL not set; using window.location.origin as backend base.");
+} else if (!BASE_URL) {
+  console.error("REACT_APP_BACKEND_URL is not set and window origin unavailable. API calls will fail.");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
@@ -138,6 +141,26 @@ api.interceptors.response.use(
     const dur = Date.now() - (response.config.metadata?.start || Date.now());
     if (dur > 600) window.__NET?.emit('slow', { url: response.config.metadata?.url, duration: dur, status: response.status });
     window.__NET?.emit('end');
+    // Non-blocking usage tracking for stock-data endpoints only
+    try {
+      const cfg = response.config || {};
+      const method = (cfg.method || 'get').toUpperCase();
+      const path = String(cfg.url || '');
+      const isTrack = path.includes('/usage/track');
+      const shouldTrack = method === 'GET' && !isTrack && (
+        path.startsWith('/stocks/') ||
+        path.startsWith('/stock/') ||
+        path.startsWith('/search/') ||
+        path.startsWith('/trending/') ||
+        path.startsWith('/realtime/') ||
+        path.startsWith('/filter/') ||
+        path.startsWith('/market-stats/')
+      );
+      if (shouldTrack) {
+        // Use the secondary axios instance to avoid interceptor recursion
+        site.post('/api/usage/track/', { endpoint: `/api${path}`, method }).catch(() => {});
+      }
+    } catch {}
     return response;
   },
   (error) => {

@@ -1,11 +1,14 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-// Use REACT_APP_BACKEND_URL exclusively from environment
-const BASE_URL = process.env.REACT_APP_BACKEND_URL;
+// Use REACT_APP_BACKEND_URL from environment, fallback to window.location.origin
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? `${window.location.origin}` : '');
 
-if (!BASE_URL) {
-  console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+if (!process.env.REACT_APP_BACKEND_URL && BASE_URL) {
+  // Informational log only
+  console.warn("REACT_APP_BACKEND_URL not set; using window.location.origin as backend base.");
+} else if (!BASE_URL) {
+  console.error("REACT_APP_BACKEND_URL is not set and window origin unavailable. API calls will fail.");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
