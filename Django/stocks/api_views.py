@@ -114,17 +114,14 @@ def stock_list_api(request):
             return Response(cached_result, status=status.HTTP_200_OK)
 
         # Base queryset with better filtering
+        # Be inclusive: do not drop stocks solely for missing current_price
         base_queryset = Stock.objects.exclude(
             ticker__isnull=True
         ).exclude(
             ticker__exact=''
-        ).exclude(
-            current_price__isnull=True
-        ).exclude(
-            current_price__lte=0
         ).filter(
-            # Only include stocks updated within the last 30 days
-            last_updated__gte=timezone.now() - timedelta(days=30)
+            # Prefer recently updated, but do not exclude older if needed
+            last_updated__gte=timezone.now() - timedelta(days=90)
         )
         
         # Apply exchange filter (case insensitive, flexible)
@@ -165,26 +162,21 @@ def stock_list_api(request):
             queryset = base_queryset
             
             # Only apply strict price filters for specific categories
-            if category == 'all':
-                # Show all stocks including those without complete data
-                queryset = base_queryset
+            # Try to get stocks with good data first, but ensure inclusivity
+            preferred_queryset = queryset.filter(
+                current_price__isnull=False
+            ).exclude(current_price=0)
+            
+            # If we get enough results, use the preferred set
+            if preferred_queryset.count() >= min(limit, 50):
+                queryset = preferred_queryset
             else:
-                # Try to get stocks with good data first
-                preferred_queryset = queryset.filter(
-                    current_price__isnull=False
-                ).exclude(current_price=0)
-                
-                # If we get enough results, use the preferred set
-                if preferred_queryset.count() >= limit // 2:
-                    queryset = preferred_queryset
-                # Otherwise, be more inclusive
-                else:
-                    # Include stocks with ANY useful data (even if price is zero)
-                    queryset = queryset.filter(
-                        Q(current_price__isnull=False) |
-                        Q(volume__isnull=False) |
-                        Q(market_cap__isnull=False)
-                    )
+                # Include stocks with ANY useful data (even if price is zero)
+                queryset = queryset.filter(
+                    Q(current_price__isnull=False) |
+                    Q(volume__isnull=False) |
+                    Q(market_cap__isnull=False)
+                )
         
         # Search filter already applied above to base_queryset
         # No need to reapply here
@@ -309,12 +301,12 @@ def stock_list_api(request):
             logger.warning(f"Invalid sort field '{sort_by}', using fallback: {e}")
             queryset = queryset.order_by('-last_updated', '-id')
 
-        # EMERGENCY FALLBACK: If still no results, return most recent stocks
+        # EMERGENCY FALLBACK: If still no results, return most recent stocks (fully inclusive)
         if not queryset.exists() and not search:
             logger.warning(f"API returned 0 results for category '{category}', using emergency fallback with recent stocks")
             # Try to get stocks updated in the last 7 days first
-            recent_cutoff = timezone.now() - timedelta(days=7)
-            queryset = base_queryset.filter(last_updated__gte=recent_cutoff).order_by('-last_updated')
+            recent_cutoff = timezone.now() - timedelta(days=30)
+            queryset = Stock.objects.exclude(ticker__isnull=True).exclude(ticker__exact='').order_by('-last_updated')
             if not queryset.exists():
                 # If no recent stocks, get any stocks with valid price data
                 queryset = base_queryset.exclude(current_price__isnull=True).order_by('-last_updated')

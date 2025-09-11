@@ -24,6 +24,7 @@ import {
   Mail
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
+import { createPayPalOrder, capturePayPalOrder, initializeDiscountCodes, validateDiscountCode } from "../api/client";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -129,10 +130,34 @@ const Pricing = () => {
     
     try {
       const plan = plans.find(p => p.id === planId);
-      const amount = isAnnual ? plan.price.annual : plan.price.monthly;
-      
-      // Create PayPal checkout with TRIAL discount
-      await createPayPalOrder(planId, 1.00); // $1 for trial
+      const cycle = isAnnual ? 'annual' : 'monthly';
+
+      // Ensure discount codes exist server-side (idempotent)
+      try { await initializeDiscountCodes(); } catch {}
+
+      // Attempt to validate code to show immediate feedback
+      if (discountCode) {
+        try {
+          const v = await validateDiscountCode(discountCode);
+          if (!v.valid) toast.error(v.message || 'Invalid discount code');
+        } catch {}
+      }
+
+      const order = await createPayPalOrder(planId, cycle, discountCode || 'TRIAL');
+      if (order?.approval_url) {
+        // Redirect to PayPal approval
+        window.location.href = order.approval_url;
+      } else {
+        // Fallback: simulate success navigation
+        navigate("/checkout/success", { 
+          state: { 
+            planId, 
+            amount: order?.final_amount ?? (isAnnual ? plan.price.annual : plan.price.monthly),
+            originalAmount: isAnnual ? plan.price.annual : plan.price.monthly,
+            discount: order?.discount_applied || (discountCode ? { code: discountCode } : null)
+          } 
+        });
+      }
     } catch (error) {
       toast.error("Failed to create checkout session");
     } finally {
@@ -140,23 +165,7 @@ const Pricing = () => {
     }
   };
 
-  const createPayPalOrder = async (planId, amount) => {
-    const finalAmount = amount;
-      
-    toast.success(`Redirecting to PayPal for $${finalAmount} payment...`);
-    
-    // Simulate redirect to PayPal
-    setTimeout(() => {
-      navigate("/checkout/success", { 
-        state: { 
-          planId, 
-          amount: finalAmount,
-          originalAmount: plans.find(p => p.id === planId).price.monthly,
-          discount: { code: "TRIAL", description: "7-Day Trial" }
-        } 
-      });
-    }, 2000);
-  };
+  // Deprecated local createPayPalOrder function removed in favor of backend API
 
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) {

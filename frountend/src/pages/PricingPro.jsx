@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/SecureAuthContext";
-import { changePlan } from "../api/client";
+import { changePlan, initializeDiscountCodes } from "../api/client";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -43,6 +43,8 @@ const PricingPro = () => {
   const preSelectedPlan = location.state?.selectedPlan;
 
   useEffect(() => {
+    // Ensure discount codes exist server-side (idempotent)
+    (async () => { try { await initializeDiscountCodes(); } catch {} })();
     if (preSelectedPlan) {
       const plan = plans.find(p => p.name.toLowerCase() === preSelectedPlan);
       if (plan) {
