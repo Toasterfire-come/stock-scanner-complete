@@ -4,10 +4,12 @@ Provides comprehensive billing history, payment management, and notification end
 """
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse, HttpResponse
+import base64
+import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -115,9 +117,26 @@ def paypal_webhook_api(request):
 logger = logging.getLogger(__name__)
 
 # PayPal order creation (discount-aware)
+def _paypal_base_url():
+    # Use live by default; set PAYPAL_ENV=sandbox to use sandbox
+    env = getattr(settings, 'PAYPAL_ENV', None) or str(os.environ.get('PAYPAL_ENV') or os.environ.get('PAYPAL_MODE') or '').lower()
+    return 'https://api-m.sandbox.paypal.com' if env == 'sandbox' else 'https://api-m.paypal.com'
+
+def _paypal_get_access_token():
+    client_id = getattr(settings, 'PAYPAL_CLIENT_ID', '')
+    secret = getattr(settings, 'PAYPAL_SECRET', '')
+    if not client_id or not secret:
+        raise ValueError('Missing PayPal credentials')
+    auth = base64.b64encode(f"{client_id}:{secret}".encode('utf-8')).decode('utf-8')
+    url = f"{_paypal_base_url()}/v1/oauth2/token"
+    headers = { 'Authorization': f"Basic {auth}", 'Content-Type': 'application/x-www-form-urlencoded' }
+    resp = requests.post(url, headers=headers, data={ 'grant_type': 'client_credentials' }, timeout=15)
+    resp.raise_for_status()
+    return resp.json().get('access_token')
+
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def create_paypal_order_api(request):
     """
     Create a PayPal order (stub integration)
@@ -197,14 +216,38 @@ def create_paypal_order_api(request):
         if final_amount <= 0:
             final_amount = Decimal('0.50')
 
-        # Generate a fake order id
-        from uuid import uuid4
-        order_id = f"TEST-{uuid4().hex[:12].upper()}"
+        # Create order via PayPal REST v2
+        token = _paypal_get_access_token()
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+        purchase_unit = {
+            'amount': { 'value': f"{final_amount:.2f}", 'currency_code': currency },
+            'description': f"Trade Scan Pro {plan_type.title()} Plan - {billing_cycle}",
+        }
+        # Attach metadata to custom_id if possible
+        custom_parts = [plan_type, billing_cycle, str(int(timezone.now().timestamp()))]
+        if request.user.is_authenticated:
+            custom_parts.append(str(request.user.id))
+        purchase_unit['custom_id'] = '_'.join(custom_parts)
 
-        approval_url = f"https://www.paypal.com/checkoutnow?token={order_id}"
+        payload = {
+            'intent': 'CAPTURE',
+            'purchase_units': [purchase_unit],
+            'application_context': {
+                'brand_name': 'Trade Scan Pro',
+                'user_action': 'PAY_NOW',
+                # Optional return/cancel if you want to use server redirects
+            }
+        }
+        resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders", headers=headers, json=payload, timeout=20)
+        resp.raise_for_status()
+        order = resp.json()
+        approval_url = next((l.get('href') for l in order.get('links', []) if l.get('rel') in ['approve','payer-action']), None)
         return JsonResponse({
             'success': True,
-            'order_id': order_id,
+            'order_id': order.get('id'),
             'approval_url': approval_url,
             'currency': currency,
             'plan_type': plan_type,
@@ -231,7 +274,7 @@ def create_paypal_order_api(request):
 # PayPal capture (record payment)
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def capture_paypal_order_api(request):
     """
     Capture a PayPal order (stub integration)
@@ -255,8 +298,36 @@ def capture_paypal_order_api(request):
         amount = data.get('amount')
         final_amount = data.get('final_amount')
 
-        # Attempt to record payment
+        # Capture via PayPal REST v2
+        token = _paypal_get_access_token()
+        headers = { 'Authorization': f'Bearer {token}', 'Content-Type': 'application/json' }
+        resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders/{order_id}/capture", headers=headers, json={}, timeout=20)
         try:
+            resp.raise_for_status()
+        except Exception:
+            # Return upstream error, if any
+            return JsonResponse({ 'success': False, 'error': 'PayPal capture failed', 'details': resp.text }, status=502)
+
+        capture_json = resp.json() or {}
+        # Attempt to record payment if authenticated or if custom_id had a user id
+        try:
+            resource = capture_json
+            if resource.get('purchase_units'):
+                resource = resource['purchase_units'][0]
+            custom_id = resource.get('custom_id') or ''
+            inferred_user = None
+            if request.user.is_authenticated:
+                inferred_user = request.user
+            else:
+                try:
+                    parts = custom_id.split('_') if custom_id else []
+                    if len(parts) >= 4:
+                        uid = int(parts[3])
+                        from django.contrib.auth.models import User
+                        inferred_user = User.objects.get(id=uid)
+                except Exception:
+                    inferred_user = None
+
             discount_obj = None
             if discount_code_str:
                 try:
@@ -264,24 +335,33 @@ def capture_paypal_order_api(request):
                 except DiscountCode.DoesNotExist:
                     discount_obj = None
 
-            # Fallback if amounts missing
-            if final_amount is None:
-                final_amount = amount
+            if inferred_user is not None:
+                # Determine final amount from PayPal capture if not provided
+                if final_amount is None:
+                    try:
+                        cap = resource.get('payments', {}).get('captures', [])[0]
+                        val = cap.get('amount', {}).get('value')
+                        final_amount = Decimal(str(val)) if val else None
+                    except Exception:
+                        pass
+                if final_amount is None and amount is not None:
+                    final_amount = Decimal(str(amount))
 
-            # Record payment in revenue tracking
-            if final_amount is not None:
-                DiscountService.record_payment(
-                    user=request.user,
-                    original_amount=Decimal(str(amount or final_amount or 0)),
-                    discount_code=discount_obj,
-                    payment_date=timezone.now()
-                )
+                if final_amount is not None:
+                    DiscountService.record_payment(
+                        user=inferred_user,
+                        original_amount=Decimal(str(final_amount)),
+                        discount_code=discount_obj,
+                        payment_date=timezone.now()
+                    )
         except Exception as rec_err:
             logger.error(f"Failed to record payment for order {order_id}: {rec_err}")
 
-        # Activate user's plan upon successful capture
+        # Activate user's plan upon successful capture (if we know the user)
         try:
-            user = request.user
+            user = request.user if request.user.is_authenticated else inferred_user
+            if not user:
+                raise ValueError('No user context for plan activation')
             profile, _ = UserProfile.objects.get_or_create(user=user)
             if plan_type in ['free','basic','bronze','silver','gold','enterprise']:
                 profile.plan_type = plan_type

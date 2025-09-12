@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/SecureAuthContext";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription } from "../../components/ui/alert";
@@ -11,6 +12,7 @@ const PayPalCheckout = React.lazy(() => import("../../components/PayPalCheckout"
 const CompleteSubscription = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   // Read selected plan and cycle from router state or query params
   const statePlan = location.state?.planType;
@@ -25,6 +27,11 @@ const CompleteSubscription = () => {
   useEffect(() => {
     // Ensure discount codes exist on backend (idempotent)
     (async () => { try { await initializeDiscountCodes(); } catch {} })();
+    // Require login before showing checkout
+    if (!isAuthenticated) {
+      const next = `/checkout/subscribe?plan=${encodeURIComponent(planType)}&cycle=${encodeURIComponent(billingCycle)}`;
+      navigate('/auth/sign-in', { state: { next } });
+    }
   }, []);
 
   const title = useMemo(() => {
