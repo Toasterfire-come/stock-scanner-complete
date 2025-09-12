@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "/",
+  "engines": {
+    "node": ">=18 <20",
+    "npm": ">=8"
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@paypal/react-paypal-js": "^8.5.0",

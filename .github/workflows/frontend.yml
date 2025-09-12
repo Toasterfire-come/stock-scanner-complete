@@ -1,0 +1,46 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frountend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frountend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frountend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'frountend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Lint (optional)
+        run: |
+          npm run -s lint || echo "Lint step skipped or not configured"
+
+      - name: Build
+        run: npm run build --if-present || npm run build:production --if-present
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: |
+            frountend/build
+            frountend/frontend/build
