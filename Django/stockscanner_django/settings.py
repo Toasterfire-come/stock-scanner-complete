@@ -180,6 +180,10 @@ CSRF_COOKIE_SAMESITE = 'None'
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', '')
 PAYPAL_WEBHOOK_URL = os.environ.get('PAYPAL_WEBHOOK_URL', '')
+PAYPAL_WEBHOOK_ID = os.environ.get('PAYPAL_WEBHOOK_ID', '')
+
+# Optional Google reCAPTCHA (enterprise-friendly: set per environment)
+RECAPTCHA_SECRET = os.environ.get('RECAPTCHA_SECRET', '')
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG

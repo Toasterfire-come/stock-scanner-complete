@@ -58,7 +58,7 @@ const PricingPro = () => {
       icon: <BarChart3 className="h-8 w-8" />,
       color: "border-yellow-300 bg-yellow-50",
       headerColor: "bg-gradient-to-r from-yellow-600 to-yellow-700",
-      price: { monthly: 24.99, annual: 249.99 },
+      price: { monthly: 24.99, annual: 299.99 },
       popular: true,
       features: [
         { name: "150 API calls per day, 1500/month", included: true },
@@ -86,7 +86,7 @@ const PricingPro = () => {
       icon: <Crown className="h-8 w-8" />,
       color: "border-gray-300 bg-gray-50",
       headerColor: "bg-gradient-to-r from-gray-400 to-gray-500",
-      price: { monthly: 39.99, annual: 399.99 },
+      price: { monthly: 49.99, annual: 599.99 },
       popular: false,
       features: [
         { name: "500 API calls per day, 5000/month", included: true },
@@ -114,7 +114,7 @@ const PricingPro = () => {
       icon: <Rocket className="h-8 w-8" />,
       color: "border-yellow-300 bg-yellow-50",
       headerColor: "bg-gradient-to-r from-yellow-500 to-yellow-600",
-      price: { monthly: 89.99, annual: 899.99 },
+      price: { monthly: 79.99, annual: 959.99 },
       popular: false,
       features: [
         { name: "Unlimited API calls", included: true },
@@ -357,6 +357,9 @@ const PricingPro = () => {
                           <span className="text-lg ml-1">
                             /{isAnnual ? 'mo' : 'month'}
                           </span>
+                        </div>
+                        <div className="mt-2 text-xs text-white/80">
+                          Auto‑renews {isAnnual ? 'annually' : 'monthly'}. Cancel anytime.
                         </div>
                       </>
                     )}

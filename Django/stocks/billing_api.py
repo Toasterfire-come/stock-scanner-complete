@@ -14,6 +14,7 @@ import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.core.cache import cache
 from django.db.models import Q, Sum
 import json
 import logging
@@ -25,6 +26,8 @@ from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .services.discount_service import DiscountService
 from .models import DiscountCode
+import hmac
+import hashlib
 @csrf_exempt
 @api_view(['POST'])
 def paypal_webhook_api(request):
@@ -53,6 +56,34 @@ def paypal_webhook_api(request):
                 user_id = int(parts[3])
         except Exception:
             pass
+
+        # Optional signature verification (if webhook ID/headers configured)
+        try:
+            webhook_id = getattr(settings, 'PAYPAL_WEBHOOK_ID', '')
+            tr_id = request.META.get('HTTP_PAYPAL_TRANSMISSION_ID')
+            tr_sig = request.META.get('HTTP_PAYPAL_TRANSMISSION_SIG')
+            tr_time = request.META.get('HTTP_PAYPAL_TRANSMISSION_TIME')
+            cert_url = request.META.get('HTTP_PAYPAL_CERT_URL')
+            algo = request.META.get('HTTP_PAYPAL_AUTH_ALGO')
+            # If configured, call PayPal verify endpoint
+            if webhook_id and tr_id and tr_sig and tr_time:
+                token = _paypal_get_access_token()
+                headers = { 'Authorization': f'Bearer {token}', 'Content-Type': 'application/json' }
+                verify_payload = {
+                    'transmission_id': tr_id,
+                    'transmission_time': tr_time,
+                    'cert_url': cert_url,
+                    'auth_algo': algo,
+                    'transmission_sig': tr_sig,
+                    'webhook_id': webhook_id,
+                    'webhook_event': data,
+                }
+                v = requests.post(f"{_paypal_base_url()}/v1/notifications/verify-webhook-signature", headers=headers, json=verify_payload, timeout=15)
+                v.raise_for_status()
+                if (v.json() or {}).get('verification_status') != 'SUCCESS':
+                    return JsonResponse({'success': False, 'error': 'Invalid webhook signature'}, status=400)
+        except Exception as _sig_err:
+            logger.warning(f"PayPal webhook signature verification skipped/failed: {_sig_err}")
 
         if event_type == 'PAYMENT.CAPTURE.COMPLETED':
             # Record revenue without requiring auth context
@@ -151,11 +182,43 @@ def create_paypal_order_api(request):
         discount_code_str = (data.get('discount_code') or '').strip()
         currency = 'USD'
 
+        # Rate-limit checkout attempts per user/IP (velocity limits)
+        def _client_ip(req):
+            xff = req.META.get('HTTP_X_FORWARDED_FOR')
+            if xff:
+                return xff.split(',')[0].strip()
+            return req.META.get('REMOTE_ADDR') or 'unknown'
+
+        rl_id = str(getattr(request.user, 'id', 'anon')) if request.user.is_authenticated else f"ip:{_client_ip(request)}"
+        rl_key = f"checkout_attempts:{rl_id}"
+        attempts = cache.get(rl_key, 0)
+        if attempts >= 10:
+            return JsonResponse({
+                'success': False,
+                'error': 'Too many checkout attempts. Please try again later.',
+                'error_code': 'RATE_LIMIT'
+            }, status=429)
+        cache.set(rl_key, attempts + 1, timeout=10 * 60)
+
+        # Optional reCAPTCHA validation when configured
+        recaptcha_token = (data.get('recaptcha_token') or '').strip()
+        if getattr(settings, 'RECAPTCHA_SECRET', '') and recaptcha_token:
+            try:
+                rr = requests.post('https://www.google.com/recaptcha/api/siteverify', data={
+                    'secret': settings.RECAPTCHA_SECRET,
+                    'response': recaptcha_token
+                }, timeout=8)
+                if not (rr.ok and (rr.json() or {}).get('success') is True):
+                    return JsonResponse({'success': False, 'error': 'reCAPTCHA validation failed', 'error_code': 'RECAPTCHA_FAILED'}, status=400)
+            except Exception:
+                # Fail open: do not block checkout if Google is unreachable
+                pass
+
         # Pricing table
         PRICES = {
-            'bronze': { 'monthly': Decimal('24.99'), 'annual': Decimal('249.99') },
-            'silver': { 'monthly': Decimal('39.99'), 'annual': Decimal('399.99') },
-            'gold':   { 'monthly': Decimal('89.99'), 'annual': Decimal('899.99') },
+            'bronze': { 'monthly': Decimal('24.99'), 'annual': Decimal('299.99') },
+            'silver': { 'monthly': Decimal('49.99'), 'annual': Decimal('599.99') },
+            'gold':   { 'monthly': Decimal('79.99'), 'annual': Decimal('959.99') },
         }
 
         if plan_type not in PRICES:
