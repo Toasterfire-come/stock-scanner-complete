@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 const path = require('path');
 const fs = require('fs');
-const Client = require('ssh2-sftp-client');
+const { execSync } = require('child_process');
+let Client;
+try {
+  Client = require('ssh2-sftp-client');
+} catch (_) {
+  Client = null;
+}
 
 async function ensureFileExists(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -36,6 +42,49 @@ async function main() {
     }
   }
 
+  if (!Client) {
+    // Fallback path: SSH cleanup using absolute path, then SFTP batch upload to login directory ('.')
+    if (PASS === 'REPLACE_ME') {
+      throw new Error('SFTP_PASS is not set. Please set environment variable SFTP_PASS with your password.');
+    }
+    const escapedPass = PASS.replace(/'/g, "'\\''");
+    const base = `sshpass -p '${escapedPass}'`;
+    console.log(`Cleaning remote directory (preserving logs): ${REMOTE_ROOT}`);
+    try {
+      execSync(`${base} ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "mkdir -p '${REMOTE_ROOT}' && cd '${REMOTE_ROOT}' && find . -mindepth 1 -maxdepth 1 -not -name logs -exec rm -rf {} +"`, { stdio: 'inherit' });
+    } catch (err) {
+      console.warn('Warning: remote cleanup reported an issue:', err && err.message ? err.message : err);
+    }
+
+    // Use SFTP batch to upload to the login directory ('.') to avoid absolute path canonicalization issues
+    const batchFile = path.resolve('/tmp/sftp_batch_upload.txt');
+    const batch = [
+      'cd .',
+      `lcd ${LOCAL_BUILD}`.replace(/\\/g, '/'),
+      'put -r *'
+    ].join('\n');
+    fs.writeFileSync(batchFile, batch);
+
+    console.log(`Uploading directory via SFTP batch: ${LOCAL_BUILD} -> (login dir)`);
+    execSync(`${base} sftp -oBatchMode=no -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -P ${PORT} -b '${batchFile}' ${USER}@${HOST}`, { stdio: 'inherit' });
+
+    // Upload extra files (if present) to login directory
+    for (const localFile of EXTRA_FILES) {
+      if (!fs.existsSync(localFile)) continue;
+      const fileBatch = path.resolve('/tmp/sftp_batch_file.txt');
+      fs.writeFileSync(fileBatch, [
+        'cd .',
+        `lcd ${path.dirname(localFile)}`.replace(/\\/g, '/'),
+        `put ${path.basename(localFile)}`
+      ].join('\n'));
+      console.log(`Uploading extra file via SFTP: ${localFile}`);
+      execSync(`${base} sftp -oBatchMode=no -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -P ${PORT} -b '${fileBatch}' ${USER}@${HOST}`, { stdio: 'inherit' });
+    }
+
+    console.log('✅ Upload completed successfully');
+    return;
+  }
+
   const sftp = new Client();
   try {
     await sftp.connect({ host: HOST, port: PORT, username: USER, password: PASS, readyTimeout: 15000 });
@@ -58,14 +107,23 @@ async function main() {
       }
     }
 
-    // Upload build directory contents to remote root
-    console.log(`Uploading directory: ${LOCAL_BUILD} -> ${REMOTE_ROOT}`);
-    await sftp.uploadDir(LOCAL_BUILD, REMOTE_ROOT);
+    // Verify remote path; if it fails, fall back to login directory '.'
+    let destination = REMOTE_ROOT;
+    try {
+      await sftp.list(REMOTE_ROOT);
+    } catch (_) {
+      console.warn(`Warning: Remote path not accessible via SFTP: ${REMOTE_ROOT}. Falling back to login directory '.'`);
+      destination = '.';
+    }
+
+    // Upload build directory contents
+    console.log(`Uploading directory: ${LOCAL_BUILD} -> ${destination}`);
+    await sftp.uploadDir(LOCAL_BUILD, destination);
 
     // Upload extra files to remote root
     for (const localFile of EXTRA_FILES) {
       if (!fs.existsSync(localFile)) continue;
-      const remoteFile = path.posix.join(REMOTE_ROOT, path.basename(localFile));
+      const remoteFile = path.posix.join(destination, path.basename(localFile));
       console.log(`Uploading file: ${localFile} -> ${remoteFile}`);
       await sftp.fastPut(localFile, remoteFile);
     }
