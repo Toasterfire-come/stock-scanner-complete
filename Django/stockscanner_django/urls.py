@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from core.views import homepage, health_check, api_documentation, endpoint_status, endpoint_status_api, kill_switch, csrf
+from stocks.billing_api import paypal_webhook_api
 
 urlpatterns = [
     path('', homepage, name='homepage'),
@@ -16,4 +17,5 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
     path('api/', include('stocks.urls')),
     path('revenue/', include('stocks.revenue_urls')),
+    path('paypal/webhook/', paypal_webhook_api, name='paypal_webhook_root'),
 ]
