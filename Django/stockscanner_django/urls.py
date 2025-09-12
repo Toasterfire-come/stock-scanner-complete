@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from core.views import homepage, health_check, api_documentation, endpoint_status, endpoint_status_api, kill_switch, csrf
+from core.views import homepage, health_check, api_documentation, endpoint_status, endpoint_status_api, kill_switch, csrf, robots_txt, sitemap_xml
 from stocks.billing_api import paypal_webhook_api
 
 urlpatterns = [
@@ -18,4 +18,6 @@ urlpatterns = [
     path('api/', include('stocks.urls')),
     path('revenue/', include('stocks.revenue_urls')),
     path('paypal/webhook/', paypal_webhook_api, name='paypal_webhook_root'),
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
 ]

@@ -204,6 +204,12 @@ const PricingPro = () => {
       navigate('/auth/sign-up', { state: { selectedPlan: 'free' } });
       return;
     }
+    // Require authentication before checkout
+    if (!isAuthenticated) {
+      const next = `/checkout/subscribe?plan=${encodeURIComponent(plan.name.toLowerCase())}&cycle=${encodeURIComponent(cycle)}`;
+      navigate('/auth/sign-in', { state: { next } });
+      return;
+    }
     // Paid plans navigate to dedicated checkout page with plan and cycle
     navigate(`/checkout/subscribe?plan=${encodeURIComponent(plan.name.toLowerCase())}&cycle=${encodeURIComponent(cycle)}`, {
       state: { planType: plan.name.toLowerCase(), billingCycle: cycle }
