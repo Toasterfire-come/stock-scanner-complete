@@ -37,6 +37,7 @@ const AdvancedAnalytics = lazy(() => import("./components/AdvancedAnalytics"));
 const ReferralSystem = lazy(() => import("./components/ReferralSystem"));
 const CheckoutSuccess = lazy(() => import("./pages/billing/CheckoutSuccess"));
 const CheckoutFailure = lazy(() => import("./pages/billing/CheckoutFailure"));
+const CompleteSubscription = lazy(() => import("./pages/billing/CompleteSubscription"));
 
 // App Pages
 const AppDashboard = lazy(() => import("./pages/app/AppDashboard"));
@@ -179,6 +180,7 @@ function SecureApp() {
 
                   {/* Billing Routes */}
                   <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                  <Route path="/checkout/subscribe" element={<CompleteSubscription />} />
                   <Route path="/checkout/failure" element={<CheckoutFailure />} />
 
                   {/* Main App Routes */}
