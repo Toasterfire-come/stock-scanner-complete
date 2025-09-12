@@ -4,10 +4,11 @@ Provides comprehensive billing history, payment management, and notification end
 """
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse, HttpResponse
+import os
 import base64
 import requests
 from django.views.decorators.csrf import csrf_exempt
@@ -136,7 +137,7 @@ def _paypal_get_access_token():
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def create_paypal_order_api(request):
     """
     Create a PayPal order (stub integration)
@@ -182,10 +183,9 @@ def create_paypal_order_api(request):
         final_amount = original_amount
         discount_applied = None
         discount_obj = None
-        if discount_code_str:
+        if discount_code_str and request.user.is_authenticated:
             validation = DiscountService.validate_discount_code(discount_code_str, request.user)
             if validation.get('valid'):
-                # Resolve the DiscountCode object (if exists)
                 try:
                     discount_obj = DiscountCode.objects.get(code=discount_code_str.upper(), is_active=True)
                 except DiscountCode.DoesNotExist:
@@ -406,6 +406,18 @@ def capture_paypal_order_api(request):
             'error': 'Failed to capture PayPal order',
             'error_code': 'PAYPAL_CAPTURE_ERROR'
         }, status=500)
+
+
+# Admin-only quick status check for PayPal connectivity
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def paypal_status_api(request):
+    try:
+        token = _paypal_get_access_token()
+        return JsonResponse({ 'success': True, 'env': (os.environ.get('PAYPAL_ENV') or os.environ.get('PAYPAL_MODE') or 'live'), 'base_url': _paypal_base_url(), 'token_present': bool(token) })
+    except Exception as e:
+        return JsonResponse({ 'success': False, 'error': str(e) }, status=500)
 
 # Billing endpoints
 @csrf_exempt
