@@ -198,8 +198,13 @@ const PricingPro = () => {
   };
 
   const continueToCheckout = async (plan) => {
-    // Navigate to dedicated checkout page with plan and cycle
     const cycle = isAnnual ? 'annual' : 'monthly';
+    // Free plan should not go through checkout; send to sign up
+    if (plan.isFree) {
+      navigate('/auth/sign-up', { state: { selectedPlan: 'free' } });
+      return;
+    }
+    // Paid plans navigate to dedicated checkout page with plan and cycle
     navigate(`/checkout/subscribe?plan=${encodeURIComponent(plan.name.toLowerCase())}&cycle=${encodeURIComponent(cycle)}`, {
       state: { planType: plan.name.toLowerCase(), billingCycle: cycle }
     });
