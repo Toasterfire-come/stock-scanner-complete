@@ -198,21 +198,11 @@ const PricingPro = () => {
   };
 
   const continueToCheckout = async (plan) => {
-    try {
-      // Ensure codes exist and default to TRIAL for $1
-      try { await initializeDiscountCodes(); } catch {}
-      const code = 'TRIAL';
-      try { await validateDiscountCode(code); } catch {}
-      const cycle = isAnnual ? 'annual' : 'monthly';
-      const res = await createPayPalOrder(plan.name.toLowerCase(), cycle, code);
-      if (res?.approval_url) {
-        window.location.href = res.approval_url;
-      } else {
-        toast.error('Failed to start checkout');
-      }
-    } catch (e) {
-      toast.error('Checkout unavailable right now');
-    }
+    // Navigate to dedicated checkout page with plan and cycle
+    const cycle = isAnnual ? 'annual' : 'monthly';
+    navigate(`/checkout/subscribe?plan=${encodeURIComponent(plan.name.toLowerCase())}&cycle=${encodeURIComponent(cycle)}`, {
+      state: { planType: plan.name.toLowerCase(), billingCycle: cycle }
+    });
   };
 
   const handlePaymentSuccess = async (paymentData) => {
@@ -410,35 +400,13 @@ const PricingPro = () => {
 
                   {/* CTA Buttons */}
                   <div className="space-y-3 pt-4">
-                    <Dialog open={showCheckout && selectedPlan?.name === plan.name} onOpenChange={setShowCheckout}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                          onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
-                        >
-                          {plan.isFree ? "Try Now for Free" : "Try for $1"}
-                          <ArrowRight className="h-5 w-5 ml-2" />
-                        </Button>
-                      </DialogTrigger>
-                      
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Complete Your Subscription</DialogTitle>
-                        </DialogHeader>
-                        
-                        {selectedPlan && (
-                          <Suspense fallback={<div className="py-6 text-center">Loading checkout…</div>}>
-                            <PayPalCheckout
-                              planType={selectedPlan.name.toLowerCase()}
-                              billingCycle={selectedPlan.billingCycle}
-                              onSuccess={handlePaymentSuccess}
-                              onError={handlePaymentError}
-                              onCancel={() => setShowCheckout(false)}
-                            />
-                          </Suspense>
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                      onClick={() => continueToCheckout(plan)}
+                    >
+                      {plan.isFree ? "Try Now for Free" : "Try for $1"}
+                      <ArrowRight className="h-5 w-5 ml-2" />
+                    </Button>
 
                     {!plan.isFree && (
                       <Button
