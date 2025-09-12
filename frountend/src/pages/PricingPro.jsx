@@ -4,10 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Suspense, lazy } from 'react';
-const PayPalCheckout = lazy(() => import("../components/PayPalCheckout"));
+ 
 import {
   CheckCircle,
   X,
@@ -194,26 +191,31 @@ const PricingPro = () => {
 
   const handlePlanSelect = (plan, billingCycle) => {
     setSelectedPlan({ ...plan, billingCycle });
-    setShowCheckout(true);
   };
 
   const continueToCheckout = async (plan) => {
     const cycle = isAnnual ? 'annual' : 'monthly';
-    // Free plan should not go through checkout; send to sign up
     if (plan.isFree) {
       navigate('/auth/sign-up', { state: { selectedPlan: 'free' } });
       return;
     }
-    // Require authentication before checkout
     if (!isAuthenticated) {
-      const next = `/checkout/subscribe?plan=${encodeURIComponent(plan.name.toLowerCase())}&cycle=${encodeURIComponent(cycle)}`;
+      const next = '/pricing';
       navigate('/auth/sign-in', { state: { next } });
       return;
     }
-    // Paid plans navigate to dedicated checkout page with plan and cycle
-    navigate(`/checkout/subscribe?plan=${encodeURIComponent(plan.name.toLowerCase())}&cycle=${encodeURIComponent(cycle)}`, {
-      state: { planType: plan.name.toLowerCase(), billingCycle: cycle }
-    });
+    try { await initializeDiscountCodes(); } catch {}
+    try { await validateDiscountCode('TRIAL'); } catch {}
+    try {
+      const res = await createPayPalOrder(plan.name.toLowerCase(), cycle, 'TRIAL');
+      if (res?.approval_url) {
+        window.location.href = res.approval_url;
+      } else {
+        toast.error('Unable to start checkout');
+      }
+    } catch (e) {
+      toast.error('Checkout unavailable right now');
+    }
   };
 
   const handlePaymentSuccess = async (paymentData) => {
@@ -409,25 +411,15 @@ const PricingPro = () => {
                     ))}
                   </div>
 
-                  {/* CTA Buttons */}
+                  {/* CTA Button */}
                   <div className="space-y-3 pt-4">
                     <Button 
                       className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                       onClick={() => continueToCheckout(plan)}
                     >
-                      {plan.isFree ? "Try Now for Free" : "Try for $1"}
+                      {plan.isFree ? "Try Now for Free" : "Try Today for $1"}
                       <ArrowRight className="h-5 w-5 ml-2" />
                     </Button>
-
-                    {!plan.isFree && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => continueToCheckout(plan)}
-                      >
-                        Continue to Checkout (PayPal)
-                      </Button>
-                    )}
                   </div>
                 </CardContent>
               </Card>
