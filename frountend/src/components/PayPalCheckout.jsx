@@ -86,9 +86,8 @@ const PayPalCheckout = ({
         discountData = await applyDiscountCode(discountCode, basePrice);
       }
       
-      // Record payment in your backend
+      // Record payment in your backend (user comes from session/token server-side)
       const paymentRecord = await recordPayment({
-        user_id: 1, // This should come from auth context
         amount: finalPrice,
         discount_code: discountCode || null,
         payment_date: new Date().toISOString(),
