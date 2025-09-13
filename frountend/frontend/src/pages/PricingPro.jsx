@@ -31,6 +31,7 @@ const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(null);
+  const [checkoutError, setCheckoutError] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, updateUser } = useAuth();
@@ -193,6 +194,7 @@ const PricingPro = () => {
 
   const continueToCheckout = async (plan) => {
     try {
+      setCheckoutError("");
       const billingCycle = plan.billingCycle || (isAnnual ? 'annual' : 'monthly');
       if (plan.isFree) {
         navigate('/auth/sign-up', { state: { selectedPlan: 'free' } });
@@ -210,8 +212,10 @@ const PricingPro = () => {
         window.location.href = res.approval_url;
         return;
       }
+      setCheckoutError('Unable to start checkout. Please try again.');
       toast.error('Unable to start checkout');
     } catch (e) {
+      setCheckoutError('Checkout unavailable right now');
       toast.error('Checkout unavailable right now');
     } finally {
       setLoadingPlan(null);
@@ -421,6 +425,16 @@ const PricingPro = () => {
                       {loadingPlan === plan.name ? 'Starting checkout…' : (plan.isFree ? 'Try Now for Free' : 'Try for $1')}
                       <ArrowRight className="h-5 w-5 ml-2" />
                     </Button>
+                    {checkoutError && selectedPlan?.name === plan.name && (
+                      <Alert>
+                        <AlertDescription className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">{checkoutError}</span>
+                          <Button variant="ghost" size="sm" onClick={() => continueToCheckout(selectedPlan)}>
+                            Retry
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                 </CardContent>
               </Card>

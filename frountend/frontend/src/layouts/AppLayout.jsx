@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/SecureAuthContext";
 import { Button } from "../components/ui/button";
@@ -41,7 +41,7 @@ import ThemeToggle from "../components/ThemeToggle";
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Mobile sheet removed; dropdowns used across all sizes
 
   const navigation = [
     { name: "Home", href: "/", icon: Home },

@@ -81,6 +81,7 @@ import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/DocumentationSimple";
 import EnterpriseContact from "./pages/EnterpriseContact";
+import NotFound from "./pages/NotFound";
 
 // Mobile routes removed as requested
 
@@ -210,8 +211,8 @@ function App() {
                   <Route path="/legal/privacy" element={<LegalPrivacy />} />
                 </Route>
 
-                {/* Default redirect */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster position="top-right" />
             </div>
