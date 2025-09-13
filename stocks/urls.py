@@ -41,6 +41,11 @@ urlpatterns = [
     path('wordpress/news/', WordPressNewsView.as_view(), name='wordpress_news'),
     path('wordpress/alerts/', WordPressAlertsView.as_view(), name='wordpress_alerts'),
 
+    # Admin dashboard endpoints used by template
+    path('admin/status/', admin_status_api, name='admin_status_api'),
+    path('admin/api-providers/', admin_api_providers_api, name='admin_api_providers_api'),
+    path('admin/execute/', admin_execute_api, name='admin_execute_api'),
+
     # Simple APIs (no database required)
     path('simple/stocks/', SimpleStockView.as_view(), name='simple_stocks'),
     path('simple/news/', SimpleNewsView.as_view(), name='simple_news'),
