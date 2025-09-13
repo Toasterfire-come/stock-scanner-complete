@@ -19,11 +19,6 @@ import {
   NavigationMenuTrigger,
 } from "../components/ui/navigation-menu";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "../components/ui/sheet";
-import {
   BarChart3,
   TrendingUp,
   Search,

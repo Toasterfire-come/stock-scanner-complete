@@ -176,6 +176,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', str(6 * 60 * 60)))
 
 # PayPal configuration (env-driven)
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')

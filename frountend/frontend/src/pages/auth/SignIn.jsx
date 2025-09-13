@@ -40,7 +40,7 @@ export default function SignIn() {
     if (result.success) {
       // Prefetch dashboard chunk for a snappier first render
       try { import(/* webpackPrefetch: true */ "../app/AppDashboard"); } catch {}
-      const redirectTo = searchParams.get("redirect") || "/app/dashboard";
+      const redirectTo = searchParams.get("next") || searchParams.get("redirect") || "/app/dashboard";
       navigate(redirectTo);
     } else {
       setError(result.error || "Login failed");
