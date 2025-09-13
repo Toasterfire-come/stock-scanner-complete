@@ -1,0 +1,18 @@
+HTTP/2 200 
+date: Sat, 13 Sep 2025 13:45:15 GMT
+content-type: application/json
+content-length: 145
+allow: OPTIONS, GET
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=CrUqvOEQfpeZjSM33YsdJ3lHG99x5%2FbJn3YQ8WunOelwZBJylXa%2Bx3JpBrSFHCMMpq%2BmIimBhqJfVhT6k3h0nS2HUxAS3fMhHYQp1FAN2XCOxQBQSsQE8A%3D%3D"}]}
+cf-ray: 97e8157e282eef5f-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": true, "data": {"environment": "live", "client_configured": true, "webhook_configured": true, "base_url": "https://api-m.paypal.com"}}

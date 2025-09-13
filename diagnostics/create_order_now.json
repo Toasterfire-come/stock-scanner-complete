@@ -1,0 +1,18 @@
+HTTP/2 403 
+date: Sat, 13 Sep 2025 13:45:22 GMT
+content-type: application/json
+content-length: 63
+allow: OPTIONS, POST
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LG1HT3%2BtR8fWqjgDz0XE1hZJ8txxfJNw4TqHM7hfBHH3ihj6fx8bDo6rr6nhHT5AgvElwTPNmz1Lk6qVFMh6S2qMfNZgn62mcwisVTWt8s%2BBW2FHg5CqcIxq"}]}
+cf-ray: 97e815a9ac92e8e9-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"detail":"CSRF Failed: Referer checking failed - no Referer."}
