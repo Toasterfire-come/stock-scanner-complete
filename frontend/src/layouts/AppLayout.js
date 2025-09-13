@@ -11,14 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '../components/ui/navigation-menu';
-import {
   Sheet,
   SheetContent,
   SheetTrigger,
@@ -47,7 +39,7 @@ const AppLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
+  const marketingPages = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Features', href: '/features', icon: Activity },
     { name: 'About', href: '/about', icon: User },
@@ -55,7 +47,7 @@ const AppLayout = () => {
     { name: 'Pricing', href: '/pricing', icon: Crown },
   ];
 
-  const appNavigation = [
+  const appPages = [
     { name: 'Dashboard', href: '/app/dashboard', icon: BarChart3 },
     { name: 'Markets', href: '/app/markets', icon: TrendingUp },
     { name: 'Stocks', href: '/app/stocks', icon: Activity },
@@ -80,73 +72,62 @@ const AppLayout = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between gap-3">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">Trade Scan Pro</span>
+            <Link to="/" className="flex flex-shrink-0 items-center space-x-2 min-w-0">
+              <BarChart3 className="h-7 w-7 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900 truncate">Trade Scan Pro</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {!isAppRoute ? (
-                // Public navigation
-                <NavigationMenu>
-                  <NavigationMenuList>
-                    {navigation.map((item) => (
-                      <NavigationMenuItem key={item.name}
-                        onMouseEnter={() => { try { import(/* webpackPrefetch: true */ `../pages/${item.name === 'Pricing' ? 'PricingPro' : item.name}`); } catch {} }}
-                      >
-                        <Link
-                          to={item.href}
-                          className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
-                            location.pathname === item.href ? 'text-blue-600' : 'text-gray-600'
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      </NavigationMenuItem>
-                    ))}
-                  </NavigationMenuList>
-                </NavigationMenu>
-              ) : (
-                // App navigation
-                <nav className="flex items-center space-x-6">
-                  {appNavigation.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 ${
-                          location.pathname === item.href
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'text-gray-600'
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{item.name}</span>
-                      </Link>
-                    );
-                  })}
-                </nav>
-              )}
+            {/* Always-on Pages dropdown (visible on all screen sizes) */}
+            <div className="flex items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="px-3">
+                    Pages
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {marketingPages.map((item) => (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link to={item.href}>{item.name}</Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/docs">Docs</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/enterprise">Enterprise</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            {/* Right side - Auth buttons or user menu */}
-            <div className="flex items-center space-x-4">
-              {/* Market Status - always show */}
-              <div className="hidden lg:block">
+            {/* Spacer that allows items to wrap if needed */}
+            <div className="flex-1" />
+
+            {/* Right side - Status + Auth + App access */}
+            <div className="flex items-center space-x-3 min-w-0">
+              {/* Market Status - always show on md+ */}
+              <div className="hidden md:block">
                 <MarketStatus />
               </div>
-              
+
+              {/* If signed in, always show quick Dashboard access, regardless of where we are */}
+              {isAuthenticated && (
+                <Button asChild variant="secondary" className="hidden sm:inline-flex whitespace-nowrap">
+                  <Link to="/app/dashboard">Dashboard</Link>
+                </Button>
+              )}
+
               {isAuthenticated && user ? (
                 <>
                   {/* User badge */}
-                  <Badge variant="secondary" className="hidden sm:inline-flex">
+                  <Badge variant="secondary" className="hidden lg:inline-flex truncate max-w-[140px]">
                     {user.plan} Plan
                   </Badge>
-                  
+
                   {/* User menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -157,7 +138,7 @@ const AppLayout = () => {
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{user.name}</p>
+                          <p className="font-medium truncate">{user.name}</p>
                           <p className="w-[200px] truncate text-sm text-muted-foreground">
                             {user.email}
                           </p>
@@ -179,7 +160,7 @@ const AppLayout = () => {
                   </DropdownMenu>
                 </>
               ) : (
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
                   <Button variant="ghost" asChild>
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
@@ -189,33 +170,54 @@ const AppLayout = () => {
                 </div>
               )}
 
-              {/* Mobile menu trigger */}
+              {/* Mobile menu trigger keeps complete nav including App pages */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="lg:hidden">
+                  <Button variant="ghost" className="md:hidden">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <nav className="flex flex-col space-y-4">
-                    {(isAppRoute ? appNavigation : navigation).map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            location.pathname === item.href
-                              ? 'bg-blue-100 text-blue-600'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          }`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
+                <SheetContent side="right" className="w-[300px] sm:w-[360px]">
+                  <nav className="flex flex-col space-y-4 mt-4">
+                    <div className="text-xs text-muted-foreground font-medium uppercase">Pages</div>
+                    {marketingPages.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          location.pathname === item.href
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.name}</span>
+                      </Link>
+                    ))}
+
+                    <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
+                    {appPages.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          location.pathname === item.href
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.name}</span>
+                      </Link>
+                    ))}
+
+                    {isAuthenticated && (
+                      <Button asChild className="mt-2">
+                        <Link to="/app/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Go to Dashboard</Link>
+                      </Button>
+                    )}
                   </nav>
                 </SheetContent>
               </Sheet>
