@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, registerUser as apiRegister, logout as apiLogout } from '../api/client';
+import { login as apiLogin, registerUser as apiRegister, logout as apiLogout, getProfile as apiGetProfile } from '../api/client';
 import security, { secureStorage, validateEmail, validatePassword, sessionManager } from '../lib/security';
 
 const AuthContext = createContext();
@@ -36,16 +36,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check for stored user data and token
+        // Check for stored user data and validate server session
         const storedUser = secureStorage.get(security.SECURITY_CONFIG.USER_STORAGE_KEY);
-        const storedToken = secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
-        
-        if (storedUser && storedToken && sessionManager.isSessionValid()) {
-          setUser(storedUser);
-          setIsAuthenticated(true);
-          sessionManager.updateActivity();
+        const hasValidSession = sessionManager.isSessionValid();
+        if (storedUser && hasValidSession) {
+          // Prefer server validation to avoid false positives
+          try {
+            const profile = await apiGetProfile();
+            if (profile?.success !== false) {
+              setUser(storedUser);
+              setIsAuthenticated(true);
+              sessionManager.updateActivity();
+            } else {
+              await logout();
+            }
+          } catch {
+            await logout();
+          }
         } else {
-          // Clear invalid session data
           await logout();
         }
       } catch (error) {
@@ -114,9 +122,9 @@ export const AuthProvider = ({ children }) => {
 
         // Store user data and token securely
         secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, userData, true);
-        if (response.data.api_token) {
-          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
-        }
+        // Persist a placeholder token for session-based auth flows when API token is not used
+        const apiToken = response.data.api_token || 'session';
+        secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, apiToken);
         
         // Start session
         sessionManager.startSession();
