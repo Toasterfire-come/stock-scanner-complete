@@ -121,7 +121,7 @@ class StockAlert(models.Model):
         ('price_change', 'Price Change %'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     alert_type = models.CharField(max_length=20, choices=ALERT_TYPES)
     target_value = models.DecimalField(max_digits=10, decimal_places=2)
