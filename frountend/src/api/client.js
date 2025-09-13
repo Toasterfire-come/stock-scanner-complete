@@ -1,24 +1,21 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-// Use REACT_APP_BACKEND_URL from environment, fallback to window.location.origin
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? `${window.location.origin}` : '');
+// Use REACT_APP_BACKEND_URL from environment only to avoid cross-origin confusion
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-if (!process.env.REACT_APP_BACKEND_URL && BASE_URL) {
-  // Informational log only
-  console.warn("REACT_APP_BACKEND_URL not set; using window.location.origin as backend base.");
-} else if (!BASE_URL) {
+if (!BASE_URL) {
   console.error("REACT_APP_BACKEND_URL is not set and window origin unavailable. API calls will fail.");
 }
 
-export const API_ROOT = `${BASE_URL}/api`;
+export const API_ROOT = `${BASE_URL.replace(/\/$/, '')}/api`;
 export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
-// Secondary axios instance for non-API root endpoints (e.g., Django accounts login view for CSRF cookie)
-const site = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-});
+// Secondary axios instance for non-API root endpoints and CSRF bootstrap
+const site = axios.create({ baseURL: BASE_URL.replace(/\/$/, ''), withCredentials: true });
+
+// Public client for no-credentials GETs (avoids wildcard-with-credentials CORS errors)
+export const publicApi = axios.create({ baseURL: API_ROOT, withCredentials: false });
 
 // Simple network event bus for latency indicator
 (function initNetBus(){
@@ -140,17 +137,13 @@ function getCsrfToken() {
 
 async function ensureCsrfCookie() {
   try {
-    // Attempt to fetch CSRF cookie from a dedicated endpoint if available
-    // Fallback to a lightweight GET that may be decorated server-side
-    const hasToken = !!getCsrfToken();
-    if (hasToken) return;
-    // Prefer Django auth HTML endpoints which typically set csrftoken
-    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
-    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
-    // Then try API health/document endpoints which the backend can decorate with ensure_csrf_cookie
-    if (!getCsrfToken()) await api.get('/health/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/').catch(() => {});
+    if (getCsrfToken()) return;
+    // Prefer API CSRF endpoint which should be CORS-enabled
+    try { await publicApi.get('/auth/csrf/'); } catch {}
+    if (getCsrfToken()) return;
+    // Fallback to site root pages which often set csrftoken
+    try { await site.get('/accounts/login/'); } catch {}
+    try { await site.get('/admin/login/'); } catch {}
   } catch {}
 }
 
@@ -331,8 +324,8 @@ export async function getStatisticsSafe() {
 // ====================
 // HEALTH & STATUS
 // ====================
-export async function pingHealth() { const { data } = await api.get('/health/'); return data; }
-export async function getEndpointStatus() { const { data } = await api.get('/endpoint-status/'); return data; }
+export async function pingHealth() { const { data } = await publicApi.get('/health/'); return data; }
+export async function getEndpointStatus() { const { data } = await publicApi.get('/endpoint-status/'); return data; }
 
 // ====================
 // STOCKS & MARKET DATA

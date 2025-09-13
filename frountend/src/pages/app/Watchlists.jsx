@@ -180,7 +180,9 @@ const Watchlists = () => {
                 Add Stock
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby="watchlist-dialog-desc">
+              <DialogTitle className="sr-only">Create Watchlist</DialogTitle>
+              <DialogDescription id="watchlist-dialog-desc" className="sr-only">Create or edit your watchlist</DialogDescription>
               <DialogHeader>
                 <DialogTitle>Add Stock to Watchlist</DialogTitle>
                 <DialogDescription>

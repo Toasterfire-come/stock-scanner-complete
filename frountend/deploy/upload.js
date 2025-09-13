@@ -21,14 +21,27 @@ async function main() {
   const USER = process.env.SFTP_USER || 'a1531117';
   const PASS = process.env.SFTP_PASS || 'REPLACE_ME';
 
-  // Determine local build directory (prefer root build, fallback to nested ./frontend/build)
-  const ROOT_BUILD = path.resolve('/workspace/frountend/build');
-  const NESTED_BUILD = path.resolve('/workspace/frountend/frontend/build');
-  const LOCAL_BUILD = fs.existsSync(ROOT_BUILD) ? ROOT_BUILD : (fs.existsSync(NESTED_BUILD) ? NESTED_BUILD : ROOT_BUILD);
+  // Determine local build directory relative to this repo
+  const BASE_DIR = path.resolve(__dirname, '..');
+  const ROOT_BUILD = path.resolve(BASE_DIR, 'build');
+  const NESTED_BUILD = path.resolve(BASE_DIR, 'frontend', 'build');
+  const ALT_ROOT_BUILD = path.resolve('/workspace/repo/frountend/build');
+  const ALT_NESTED_BUILD = path.resolve('/workspace/repo/frountend/frontend/build');
+  const LEGACY_ROOT_BUILD = path.resolve('/workspace/frountend/build');
+  const LEGACY_NESTED_BUILD = path.resolve('/workspace/frountend/frontend/build');
+  const candidates = [
+    ROOT_BUILD,
+    NESTED_BUILD,
+    ALT_ROOT_BUILD,
+    ALT_NESTED_BUILD,
+    LEGACY_ROOT_BUILD,
+    LEGACY_NESTED_BUILD,
+  ];
+  const LOCAL_BUILD = candidates.find(p => fs.existsSync(p)) || ROOT_BUILD;
   const REMOTE_ROOT = process.env.SFTP_REMOTE_ROOT || '/homepages/46/d4299295342/htdocs';
   const EXTRA_FILES = [
-    path.resolve('/workspace/frountend/public/.htaccess'),
-    path.resolve('/workspace/frountend/public/offline.html'),
+    path.resolve(BASE_DIR, 'public', '.htaccess'),
+    path.resolve(BASE_DIR, 'public', 'offline.html'),
   ];
 
   if (!fs.existsSync(LOCAL_BUILD)) {

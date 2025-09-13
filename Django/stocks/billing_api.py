@@ -166,7 +166,6 @@ def _paypal_get_access_token():
     resp.raise_for_status()
     return resp.json().get('access_token')
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_paypal_order_api(request):
@@ -1045,7 +1044,7 @@ def usage_history_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def usage_track_api(request):
     """
     Track a single API usage event
@@ -1069,7 +1068,8 @@ def usage_track_api(request):
         ]
         should_count = endpoint and any(endpoint.startswith(p) for p in stock_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
 
-        stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
+        user = request.user if request.user.is_authenticated else None
+        stats, _ = UsageStats.objects.get_or_create(user=user, date=today)
         if should_count:
             stats.api_calls = (stats.api_calls or 0) + 1
         # Always increment total requests only for stock data endpoints as per requirement

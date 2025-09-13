@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Link } from "react-router-dom";
-import { api } from "../api/client";
+import { api, publicApi } from "../api/client";
 
 const Features = () => {
   const [platformStats, setPlatformStats] = useState(null);
@@ -26,7 +26,7 @@ const Features = () => {
   useEffect(() => {
     const fetchPlatformStats = async () => {
       try {
-        const { data } = await api.get('/platform-stats');
+        const { data } = await publicApi.get('/platform-stats');
         setPlatformStats(data);
       } catch (error) {
         console.error("Failed to fetch platform stats:", error);
