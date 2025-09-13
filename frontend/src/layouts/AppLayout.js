@@ -124,8 +124,8 @@ const AppLayout = () => {
               {isAuthenticated && user ? (
                 <>
                   {/* User badge */}
-                  <Badge variant="secondary" className="hidden lg:inline-flex truncate max-w-[140px]">
-                    {user.plan} Plan
+                  <Badge variant="secondary" className="inline-flex truncate max-w-[160px]">
+                    {String(user.plan || '').charAt(0).toUpperCase() + String(user.plan || '').slice(1)} Plan
                   </Badge>
 
                   {/* User menu */}
