@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
+import { getProfile as apiGetProfile } from "../../api/client";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
@@ -40,6 +41,8 @@ export default function SignIn() {
     if (result.success) {
       // Prefetch dashboard chunk for a snappier first render
       try { import(/* webpackPrefetch: true */ "../app/AppDashboard"); } catch {}
+      // Validate session
+      try { await apiGetProfile(); } catch {}
       const redirectTo = searchParams.get("next") || searchParams.get("redirect") || "/app/dashboard";
       navigate(redirectTo);
     } else {
