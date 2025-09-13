@@ -4,10 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import { Suspense, lazy } from 'react';
-const PayPalCheckout = lazy(() => import("../components/PayPalCheckout"));
 import {
   CheckCircle,
   X,
@@ -28,12 +25,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/SecureAuthContext";
-import { changePlan } from "../api/client";
+import { changePlan, createPayPalOrder } from "../api/client";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, updateUser } = useAuth();
@@ -46,8 +43,7 @@ const PricingPro = () => {
     if (preSelectedPlan) {
       const plan = plans.find(p => p.name.toLowerCase() === preSelectedPlan);
       if (plan) {
-        setSelectedPlan({ ...plan, billingCycle: 'monthly' });
-        setShowCheckout(true);
+        continueToCheckout(plan);
       }
     }
   }, [preSelectedPlan]);
@@ -192,7 +188,34 @@ const PricingPro = () => {
 
   const handlePlanSelect = (plan, billingCycle) => {
     setSelectedPlan({ ...plan, billingCycle });
-    setShowCheckout(true);
+    continueToCheckout({ ...plan, billingCycle });
+  };
+
+  const continueToCheckout = async (plan) => {
+    try {
+      const billingCycle = plan.billingCycle || (isAnnual ? 'annual' : 'monthly');
+      if (plan.isFree) {
+        navigate('/auth/sign-up', { state: { selectedPlan: 'free' } });
+        return;
+      }
+      if (!isAuthenticated) {
+        const next = '/pricing';
+        navigate('/auth/sign-in', { state: { next } });
+        return;
+      }
+      setLoadingPlan(plan.name);
+      // Optional: pass TRIAL by default to honor banner; backend will validate
+      const res = await createPayPalOrder(plan.name.toLowerCase(), billingCycle, 'TRIAL');
+      if (res?.approval_url) {
+        window.location.href = res.approval_url;
+        return;
+      }
+      toast.error('Unable to start checkout');
+    } catch (e) {
+      toast.error('Checkout unavailable right now');
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   const handlePaymentSuccess = async (paymentData) => {
@@ -390,35 +413,14 @@ const PricingPro = () => {
 
                   {/* CTA Buttons */}
                   <div className="space-y-3 pt-4">
-                    <Dialog open={showCheckout && selectedPlan?.name === plan.name} onOpenChange={setShowCheckout}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                          onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
-                        >
-                          {plan.isFree ? "Try Now for Free" : "Try for $1"}
-                          <ArrowRight className="h-5 w-5 ml-2" />
-                        </Button>
-                      </DialogTrigger>
-                      
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Complete Your Subscription</DialogTitle>
-                        </DialogHeader>
-                        
-                        {selectedPlan && (
-                          <Suspense fallback={<div className="py-6 text-center">Loading checkout…</div>}>
-                            <PayPalCheckout
-                              planType={selectedPlan.name.toLowerCase()}
-                              billingCycle={selectedPlan.billingCycle}
-                              onSuccess={handlePaymentSuccess}
-                              onError={handlePaymentError}
-                              onCancel={() => setShowCheckout(false)}
-                            />
-                          </Suspense>
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-70"
+                      onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
+                      disabled={loadingPlan === plan.name}
+                    >
+                      {loadingPlan === plan.name ? 'Starting checkout…' : (plan.isFree ? 'Try Now for Free' : 'Try for $1')}
+                      <ArrowRight className="h-5 w-5 ml-2" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
