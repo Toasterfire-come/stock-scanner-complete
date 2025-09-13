@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Scanner - Home</title>
+    <link rel="stylesheet" href="{% static 'index_sub.css' %}">
+</head>
+<body>
+    <div class="navbar">
+        <h1>Stock Scanner</h1>
+        <div>
+            <a href="/">Home</a>
+            <a href="/news/">News</a>
+            <a href="/search/">Search</a>
+            <a href="/filter/">Filter</a>
+            <a href="/admin-dashboard/">Admin</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Welcome to Stock Scanner</h1>
+        <p>Explore the API endpoints:</p>
+        <ul>
+            <li><a href="/admin/">Django Admin</a></li>
+            <li><a href="/api/">API Index</a></li>
+            <li><a href="/api/stocks/">Stocks</a></li>
+            <li><a href="/schema/">Schema</a></li>
+            <li><a href="/redoc/">Redoc</a></li>
+            <li><a href="/docs/">Docs</a></li>
+        </ul>
+    </div>
+</body>
+</html>
