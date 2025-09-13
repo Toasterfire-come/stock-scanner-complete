@@ -31,11 +31,13 @@ def validate_discount_code(request):
     Validate if a discount code can be used by the current user
     """
     try:
-        # Parse JSON safely; tolerate empty or invalid JSON with 400
-        try:
-            data = json.loads(request.body) if request.body else {}
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        # Use validated_data if provided by secure_api_endpoint; avoid re-reading body
+        data = getattr(request, 'validated_data', None)
+        if data is None:
+            try:
+                data = json.loads(request.body) if request.body else {}
+            except json.JSONDecodeError:
+                return JsonResponse({'error': 'Invalid JSON data'}, status=400)
         code = data.get('code', '').strip()
         
         if not code:
@@ -82,7 +84,9 @@ def apply_discount_code(request):
     Apply a discount code and return the calculated pricing
     """
     try:
-        data = json.loads(request.body)
+        data = getattr(request, 'validated_data', None)
+        if data is None:
+            data = json.loads(request.body) if request.body else {}
         code = data.get('code', '').strip()
         original_amount = data.get('amount')
         
@@ -168,7 +172,9 @@ def record_payment(request):
     Record a payment transaction with optional discount code
     """
     try:
-        data = json.loads(request.body)
+        data = getattr(request, 'validated_data', None)
+        if data is None:
+            data = json.loads(request.body) if request.body else {}
         user_id = data.get('user_id')
         original_amount = data.get('amount')
         discount_code = data.get('discount_code', '').strip()

@@ -67,14 +67,19 @@ fix_dns() {
 
     if is_windows; then
         (
-            ipconfig /flushdns 2>/dev/null || true
+            # Only attempt privileged DNS operations if running as Administrator
+            if command -v net >/dev/null 2>&1 && net session >/dev/null 2>&1; then
+                ipconfig /flushdns >/dev/null 2>&1 || true
 
-            # Try both common adapter names; ignore failures
-            netsh interface ipv4 set dnsservers name="Wi-Fi"    static 1.1.1.1 primary 2>/dev/null || true
-            netsh interface ipv4 add dnsservers name="Wi-Fi"    8.8.8.8 index=2 2>/dev/null || true
+                # Try both common adapter names; ignore failures
+                netsh interface ipv4 set dnsservers name="Wi-Fi"    static 1.1.1.1 primary >/dev/null 2>&1 || true
+                netsh interface ipv4 add dnsservers name="Wi-Fi"    8.8.8.8 index=2 >/dev/null 2>&1 || true
 
-            netsh interface ipv4 set dnsservers name="Ethernet" static 1.1.1.1 primary 2>/dev/null || true
-            netsh interface ipv4 add dnsservers name="Ethernet" 8.8.8.8 index=2 2>/dev/null || true
+                netsh interface ipv4 set dnsservers name="Ethernet" static 1.1.1.1 primary >/dev/null 2>&1 || true
+                netsh interface ipv4 add dnsservers name="Ethernet" 8.8.8.8 index=2 >/dev/null 2>&1 || true
+            else
+                log_message "INFO" "Skipping Windows DNS changes (admin privileges required)."
+            fi
         )
     else
         (

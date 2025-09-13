@@ -168,9 +168,9 @@ def _paypal_get_access_token():
     resp.raise_for_status()
     return resp.json().get('access_token')
 
+@csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([AllowAny])
 def create_paypal_order_api(request):
     """
     Create a PayPal order (stub integration)
@@ -293,12 +293,7 @@ def create_paypal_order_api(request):
         if final_amount <= 0:
             final_amount = Decimal('0.50')
 
-        # Create order via PayPal REST v2
-        token = _paypal_get_access_token()
-        headers = {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json'
-        }
+        # Prepare order payload (token retrieval moved into try block below for graceful fallback)
         purchase_unit = {
             'amount': { 'value': f"{final_amount:.2f}", 'currency_code': currency },
             'description': f"Trade Scan Pro {plan_type.title()} Plan - {billing_cycle}",
