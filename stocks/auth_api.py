@@ -30,7 +30,13 @@ def login_api(request):
     if not username or not password:
         return JsonResponse({"success": False, "error": "username and password required"}, status=400)
 
-    user = authenticate(request, username=username, password=password)
+    try:
+        user = authenticate(request, username=username, password=password)
+    except Exception as e:
+        # If DB is unavailable or any auth backend error, return generic 401 instead of 500
+        logger.warning(f"Auth backend error: {e}")
+        return JsonResponse({"success": False, "error": "invalid_credentials"}, status=401)
+
     if not user:
         return JsonResponse({"success": False, "error": "invalid_credentials"}, status=401)
 
