@@ -1,0 +1,18 @@
+HTTP/2 200 
+date: Sat, 13 Sep 2025 01:19:59 GMT
+content-type: application/json
+content-length: 293
+allow: OPTIONS, GET
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=QwfGEY9olLyBeoI590WadIOLP%2BNHi3BND22zAXrrFFR1YmqgiIyTGwysa0Y0ftS%2BIiDEayNnhf%2BBe6JtE0Cdk3J6ZhgMTc%2Bs1rhQc1004KxfjDyr6wsd0HBa"}]}
+cf-ray: 97e3d1ce9e2ff820-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": true, "data": {"plan_name": "Enterprise", "plan_type": "enterprise", "is_premium": true, "billing_cycle": "monthly", "next_billing_date": null, "features": {"api_calls_limit": 100000, "real_time_data": true, "portfolio_tracking": true, "alerts": true, "advanced_analytics": true}}}
