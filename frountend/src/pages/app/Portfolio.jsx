@@ -164,7 +164,9 @@ const Portfolio = () => {
                 Add Holding
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby="portfolio-dialog-desc">
+              <DialogTitle className="sr-only">Add Holding</DialogTitle>
+              <DialogDescription id="portfolio-dialog-desc" className="sr-only">Add or edit a portfolio holding</DialogDescription>
               <DialogHeader>
                 <DialogTitle>Add New Holding</DialogTitle>
                 <DialogDescription>

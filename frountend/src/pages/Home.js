@@ -23,7 +23,7 @@ import {
   Award,
   Mail
 } from "lucide-react";
-import { api } from "../api/client";
+import { api, publicApi } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
 
 const Home = () => {
@@ -35,7 +35,7 @@ const Home = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const { data } = await api.get('/platform-stats');
+        const { data } = await publicApi.get('/platform-stats');
         setPlatformStats(data);
       } catch (error) {
         console.error("Failed to fetch platform data:", error);

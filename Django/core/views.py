@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from django.views.decorators.http import require_http_methods
@@ -73,7 +74,18 @@ def homepage(request):
             }
         })
     
-    return render(request, 'core/homepage.html', context)
+    try:
+        return render(request, 'core/homepage.html', context)
+    except Exception:
+        # Fallback JSON if template path or rendering fails
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'title': context['title'],
+                'version': context['version'],
+                'endpoints': context['endpoints']
+            }
+        })
 
 def api_documentation(request):
     """
@@ -136,7 +148,20 @@ def api_documentation(request):
             }
         })
     
-    return render(request, 'api/documentation.html')
+    try:
+        return render(request, 'api/documentation.html')
+    except Exception as e:
+        # Fallback to JSON docs if template rendering fails
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'title': 'Stock Scanner API Documentation',
+                'base_url': request.build_absolute_uri('/'),
+                'endpoints': endpoints_data,
+                'timestamp': datetime.datetime.now().isoformat(),
+                'warning': 'Template render failed; returning JSON documentation'
+            }
+        })
 
 @csrf_exempt
 @require_http_methods(["GET", "HEAD", "OPTIONS"])
@@ -383,3 +408,23 @@ def csrf(request):
     """
     token = get_token(request)
     return JsonResponse({'csrfToken': token})
+
+# Lightweight robots.txt and sitemap.xml to avoid 404s
+@require_http_methods(["GET"]) 
+def robots_txt(request):
+    content = """User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: {base}/sitemap.xml\n""".format(base=request.build_absolute_uri('/').rstrip('/'))
+    return HttpResponse(content, content_type="text/plain")
+
+@require_http_methods(["GET"]) 
+def sitemap_xml(request):
+    base = request.build_absolute_uri('/').rstrip('/')
+    content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{base}/</loc></url>
+  <url><loc>{base}/pricing</loc></url>
+  <url><loc>{base}/checkout/subscribe</loc></url>
+  <url><loc>{base}/features</loc></url>
+  <url><loc>{base}/contact</loc></url>
+</urlset>
+"""
+    return HttpResponse(content, content_type="application/xml")

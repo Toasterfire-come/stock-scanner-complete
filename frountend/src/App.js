@@ -32,6 +32,7 @@ import Pricing from "./pages/Pricing";
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
+import CompleteSubscription from "./pages/billing/CompleteSubscription";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 
 // App Pages
@@ -135,6 +136,7 @@ function App() {
 
                 {/* Billing Routes */}
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                <Route path="/checkout/subscribe" element={<CompleteSubscription />} />
                 <Route path="/checkout/failure" element={<CheckoutFailure />} />
 
                 {/* Main App Routes */}
