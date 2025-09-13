@@ -71,33 +71,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
-# Database configuration - Auto-detect XAMPP or use environment settings
-if IS_XAMPP_AVAILABLE:
-    # XAMPP Configuration (no password by default)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'stockscanner'),
-            'USER': os.environ.get('DB_USER', 'root'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # XAMPP default: no password
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'use_unicode': True,
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1",
-                'autocommit': True,
-                'connect_timeout': 60,
-                'read_timeout': 300,
-                'write_timeout': 300,
-            },
-            'CONN_MAX_AGE': 0,
-            'ATOMIC_REQUESTS': True,
-        }
-    }
-    print("INFO: Using XAMPP MySQL configuration")
-else:
-    # Standard MySQL configuration
+# Database configuration - Prefer MySQL if configured, otherwise fall back to SQLite for portability
+if os.environ.get('DB_ENGINE') or os.environ.get('DB_HOST'):
     DATABASES = {
         'default': {
             'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
@@ -112,7 +87,15 @@ else:
             }
         }
     }
-    print("INFO: Using standard MySQL configuration")
+    print("INFO: Using configured MySQL database")
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print("INFO: Using SQLite fallback database")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
