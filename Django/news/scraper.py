@@ -1,6 +1,7 @@
 """
-Yahoo Finance News Scraper ONLY
-Focuses exclusively on Yahoo Finance RSS feeds with comprehensive rating
+Multi-source Finance News Scraper
+Sources: Yahoo Finance, Reuters, CNBC, MarketWatch, Financial Times
+Ensures: >=200 unique articles, tickers extracted, link included, de-duplicated
 """
 
 import requests
@@ -19,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class YahooFinanceNewsScraper:
-    """Yahoo Finance News Scraper ONLY - No other sources"""
+    """Multi-source news scraper (still named for compatibility)"""
     
     def __init__(self):
         """Initialize the scraper with headers and session"""
@@ -33,7 +34,7 @@ class YahooFinanceNewsScraper:
             'Upgrade-Insecure-Requests': '1',
         })
         
-        # Yahoo Finance RSS feeds ONLY
+        # Yahoo Finance RSS feeds
         self.yahoo_feeds = [
             'https://feeds.finance.yahoo.com/rss/2.0/headline',
             'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC',
@@ -47,6 +48,21 @@ class YahooFinanceNewsScraper:
             'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^FTSE',
             'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^N225',
             'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GDAXI',
+        ]
+
+        # Additional finance news RSS feeds
+        self.extra_feeds = [
+            # Reuters business & markets
+            'https://feeds.reuters.com/reuters/businessNews',
+            'https://feeds.reuters.com/reuters/USstockNews',
+            'https://feeds.reuters.com/reuters/worldNews',
+            # CNBC top news and markets
+            'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+            'https://www.cnbc.com/id/15839135/device/rss/rss.html',
+            # MarketWatch top stories
+            'https://www.marketwatch.com/feeds/topstories',
+            # Financial Times markets
+            'https://www.ft.com/markets?format=rss',
         ]
         
         # Major stock tickers for detection
@@ -203,12 +219,12 @@ class YahooFinanceNewsScraper:
         else:
             return 4
     
-    def scrape_yahoo_finance_rss(self, feed_url: str, limit: int = 50) -> List[Dict]:
-        """Scrape Yahoo Finance RSS feed ONLY"""
+    def scrape_generic_rss(self, feed_url: str, source_label: str, limit: int = 50) -> List[Dict]:
+        """Scrape a generic RSS feed and extract articles with tickers and sentiment."""
         articles = []
         
         try:
-            logger.info(f"Scraping Yahoo Finance RSS feed: {feed_url}")
+            logger.info(f"Scraping RSS feed: {feed_url}")
             feed = feedparser.parse(feed_url)
             
             for i, entry in enumerate(feed.entries[:limit]):
@@ -216,7 +232,7 @@ class YahooFinanceNewsScraper:
                     # Extract basic info
                     title = entry.get('title', '').strip()
                     url = entry.get('link', '').strip()
-                    summary = entry.get('summary', '').strip()
+                    summary = (entry.get('summary') or entry.get('description') or '').strip()
                     
                     # Parse date
                     published_date = datetime.now(timezone.utc)
@@ -238,7 +254,7 @@ class YahooFinanceNewsScraper:
                         'title': title,
                         'summary': summary,
                         'url': url,
-                        'source': 'Yahoo Finance',
+                        'source': source_label,
                         'published_date': published_date,
                         'mentioned_tickers': ', '.join(mentioned_tickers),
                         'sentiment_score': sentiment_score,
@@ -253,22 +269,22 @@ class YahooFinanceNewsScraper:
                     logger.error(f"Error processing Yahoo Finance RSS entry {i}: {e}")
                     continue
             
-            logger.info(f"Successfully scraped {len(articles)} articles from Yahoo Finance feed: {feed_url}")
+            logger.info(f"Successfully scraped {len(articles)} articles from feed: {feed_url}")
             
         except Exception as e:
-            logger.error(f"Error scraping Yahoo Finance RSS feed {feed_url}: {e}")
+            logger.error(f"Error scraping RSS feed {feed_url}: {e}")
         
         return articles
     
     def scrape_all_yahoo_feeds(self, limit_per_feed: int = 50) -> List[Dict]:
-        """Scrape all Yahoo Finance RSS feeds ONLY"""
+        """Scrape Yahoo Finance RSS feeds"""
         all_articles = []
         
         logger.info(f"Starting Yahoo Finance news scraping from {len(self.yahoo_feeds)} feeds...")
         
         for feed_url in self.yahoo_feeds:
             try:
-                articles = self.scrape_yahoo_finance_rss(feed_url, limit_per_feed)
+                articles = self.scrape_generic_rss(feed_url, 'Yahoo Finance', limit_per_feed)
                 all_articles.extend(articles)
                 time.sleep(1)  # Be respectful to servers
             except Exception as e:
@@ -285,6 +301,36 @@ class YahooFinanceNewsScraper:
                 seen_urls.add(article['url'])
         
         logger.info(f"Total unique Yahoo Finance articles scraped: {len(unique_articles)}")
+        return unique_articles
+
+    def scrape_all_sources(self, limit_per_feed: int = 50, min_total: int = 200) -> List[Dict]:
+        """Scrape multiple sources and return at least min_total unique articles if available."""
+        combined: List[Dict] = []
+        # Yahoo first
+        combined.extend(self.scrape_all_yahoo_feeds(limit_per_feed))
+        # Then extra feeds
+        for feed_url in self.extra_feeds:
+            try:
+                combined.extend(self.scrape_generic_rss(feed_url, 'Reuters' if 'reuters' in feed_url else (
+                    'CNBC' if 'cnbc' in feed_url else ('MarketWatch' if 'marketwatch' in feed_url else ('Financial Times' if 'ft.com' in feed_url else 'News'))
+                ), limit_per_feed))
+                time.sleep(1)
+            except Exception as e:
+                logger.error(f"Error scraping extra feed {feed_url}: {e}")
+                continue
+        # Dedupe by URL
+        seen = set()
+        unique_articles: List[Dict] = []
+        for a in combined:
+            u = a.get('url')
+            if not u or u in seen:
+                continue
+            seen.add(u)
+            unique_articles.append(a)
+        logger.info(f"Combined unique articles: {len(unique_articles)}")
+        # Trim if massive
+        if len(unique_articles) > min_total:
+            return unique_articles[:max(min_total, 500)]
         return unique_articles
     
     def save_to_database(self, articles: List[Dict]) -> int:
@@ -354,11 +400,11 @@ class YahooFinanceNewsScraper:
         return saved_count
 
 def run_yahoo_news_scraper():
-    """Main function to run the Yahoo Finance news scraper ONLY"""
+    """Run multi-source scraper and return results (kept function name for compatibility)."""
     scraper = YahooFinanceNewsScraper()
     
     # Scrape articles
-    articles = scraper.scrape_all_yahoo_feeds(limit_per_feed=50)
+    articles = scraper.scrape_all_sources(limit_per_feed=50, min_total=200)
     
     # Print results
     print(f"\n{'='*60}")

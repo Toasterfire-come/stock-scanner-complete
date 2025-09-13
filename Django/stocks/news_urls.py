@@ -9,6 +9,7 @@ from news.models import NewsArticle
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .security_utils import secure_api_endpoint, validate_user_input
+from django.utils import timezone
 
 app_name = 'news'
 
@@ -237,4 +238,27 @@ urlpatterns = [
     
     # Analytics
     path('analytics/', get_analytics, name='analytics'),
+    
+    # Ticker-scoped news endpoint
+    path('ticker/<str:ticker>/', csrf_exempt(secure_api_endpoint(methods=['GET'])(
+        lambda request, ticker: (
+            (lambda items: JsonResponse({
+                'success': True,
+                'data': { 'news_items': items, 'count': len(items) },
+                'timestamp': timezone.now().isoformat()
+            }))([
+                {
+                    'id': a.id,
+                    'title': a.title,
+                    'content': a.summary,
+                    'url': a.url,
+                    'source': a.source or (a.news_source.name if a.news_source else 'Unknown'),
+                    'sentiment_score': float(a.sentiment_score) if a.sentiment_score is not None else None,
+                    'sentiment_grade': a.sentiment_grade,
+                    'tickers': [t.strip() for t in (a.mentioned_tickers or '').split(',') if t.strip()],
+                    'published_at': a.published_date.isoformat() if a.published_date else None,
+                } for a in NewsArticle.objects.filter(mentioned_tickers__icontains=ticker.upper()).order_by('-published_date')[:500]
+            ])
+        )
+    )), name='ticker_news'),
 ]
