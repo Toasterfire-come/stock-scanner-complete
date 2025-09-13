@@ -55,11 +55,11 @@ const Contact = () => {
     { value: "billing", label: "Billing Question" }
   ];
 
-  return (
   useEffect(() => {
     try { document.title = 'Contact | Trade Scan Pro'; } catch {}
   }, []);
 
+  return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       {/* Hero Section */}
       <section className="py-16 sm:py-24">
