@@ -11,14 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "../components/ui/navigation-menu";
-import {
   Sheet,
   SheetContent,
   SheetTrigger,
@@ -27,7 +19,6 @@ import {
   BarChart3,
   TrendingUp,
   Search,
-  Bell,
   User,
   Menu,
   Home,
@@ -39,6 +30,7 @@ import {
   Settings,
   LogOut,
   Crown,
+  LayoutGrid,
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
@@ -48,7 +40,7 @@ const AppLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
+  const marketingPages = [
     { name: "Home", href: "/", icon: Home },
     { name: "Features", href: "/features", icon: Activity },
     { name: "About", href: "/about", icon: User },
@@ -56,7 +48,7 @@ const AppLayout = () => {
     { name: "Pricing", href: "/pricing", icon: Crown },
   ];
 
-  const appNavigation = [
+  const appPages = [
     { name: "Dashboard", href: "/app/dashboard", icon: BarChart3 },
     { name: "Markets", href: "/app/markets", icon: TrendingUp },
     { name: "Stocks", href: "/app/stocks", icon: Activity },
@@ -67,8 +59,6 @@ const AppLayout = () => {
     { name: "News", href: "/app/news", icon: Newspaper },
   ];
 
-  const isAppRoute = location.pathname.startsWith("/app");
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -78,76 +68,16 @@ const AppLayout = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
               <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
-              <span className="text-lg sm:text-2xl font-bold text-gray-900 hidden sm:block">
-                Trade Scan Pro
-              </span>
-              <span className="text-lg font-bold text-gray-900 sm:hidden">
-                TSP
-              </span>
+              <span className="text-lg sm:text-2xl font-bold text-gray-900 hidden sm:block">Trade Scan Pro</span>
+              <span className="text-lg font-bold text-gray-900 sm:hidden">TSP</span>
             </Link>
 
-            {/* Desktop Navigation - Show app pages only when authenticated */}
-            <div className="flex items-center space-x-4">
-              {!isAuthenticated || !isAppRoute ? (
-                // Public navigation dropdown
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-sm font-medium">
-                      Pages
-                      <Menu className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48" align="start">
-                    {navigation.map((item) => (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          to={item.href}
-                          className={`flex items-center space-x-2 ${
-                            location.pathname === item.href
-                              ? "text-blue-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                // App navigation dropdown
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-sm font-medium">
-                      App
-                      <Menu className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48" align="start">
-                    {appNavigation.map((item) => (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          to={item.href}
-                          className={`flex items-center space-x-2 ${
-                            location.pathname === item.href
-                              ? "text-blue-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
+            {/* Spacer */}
+            <div className="flex-1" />
 
-            {/* Right side - Toggles, Auth buttons or user menu */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Market Status - always show */}
+            {/* Right side controls */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Market Status */}
               <div className="hidden md:block">
                 <MarketStatus />
               </div>
@@ -155,17 +85,41 @@ const AppLayout = () => {
               {/* Theme toggle */}
               <ThemeToggle />
 
+              {/* Waffle menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-9 w-9 p-0 rounded-full" aria-label="Open menu">
+                    <LayoutGrid className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {marketingPages.map((item) => (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link to={item.href}>{item.name}</Link>
+                    </DropdownMenuItem>
+                  ))}
+                  {isAuthenticated && (
+                    <>
+                      <DropdownMenuSeparator />
+                      {appPages.map((item) => (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <Link to={item.href}>{item.name}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Auth or user menu */}
               {isAuthenticated && user ? (
                 <>
-                  {/* User badge */}
                   <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
-                    {user.plan} Plan
+                    {String(user.plan || '').charAt(0).toUpperCase() + String(user.plan || '').slice(1)} Plan
                   </Badge>
-
-                  {/* User menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
                         <User className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -173,9 +127,7 @@ const AppLayout = () => {
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
                           <p className="font-medium">{user.name}</p>
-                          <p className="w-[200px] truncate text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
+                          <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                       <DropdownMenuSeparator />
@@ -194,7 +146,7 @@ const AppLayout = () => {
                   </DropdownMenu>
                 </>
               ) : (
-                <div className="flex items-center space-x-2 sm:space-x-4">
+                <div className="flex items-center space-x-2 sm:space-x-3">
                   <Button variant="ghost" asChild className="hidden sm:inline-flex">
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
@@ -204,31 +156,28 @@ const AppLayout = () => {
                 </div>
               )}
 
-              {/* Mobile menu trigger */}
+              {/* Mobile menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="sm:hidden h-8 w-8 p-0">
+                  <Button variant="ghost" className="sm:hidden h-8 w-8 p-0" aria-label="Open navigation">
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] sm:w-[350px]">
                   <div className="mt-6">
-                    {/* Market Status in mobile */}
                     <div className="mb-6 md:hidden">
                       <MarketStatus />
                     </div>
-                    
                     <nav className="flex flex-col space-y-3">
-                      {((isAuthenticated && isAppRoute) ? appNavigation : navigation).map((item) => {
+                      {/* Marketing always */}
+                      {marketingPages.map((item) => {
                         const Icon = item.icon;
                         return (
                           <Link
                             key={item.name}
                             to={item.href}
                             className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
-                              location.pathname === item.href
-                                ? "bg-blue-100 text-blue-600"
-                                : "text-gray-700 hover:bg-gray-100"
+                              location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
                             }`}
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
@@ -237,25 +186,28 @@ const AppLayout = () => {
                           </Link>
                         );
                       })}
-                      
-                      {/* Mobile Auth buttons */}
-                      {!isAuthenticated && (
-                        <div className="border-t pt-4 mt-4 space-y-3">
-                          <Link
-                            to="/auth/sign-in"
-                            className="flex items-center justify-center px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Sign In
-                          </Link>
-                          <Link
-                            to="/auth/sign-up"
-                            className="flex items-center justify-center px-3 py-3 rounded-lg text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Try Now for Free
-                          </Link>
-                        </div>
+
+                      {/* App pages only when authenticated */}
+                      {isAuthenticated && (
+                        <>
+                          <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
+                          {appPages.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <Link
+                                key={item.name}
+                                to={item.href}
+                                className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
+                                  location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <Icon className="h-5 w-5" />
+                                <span>{item.name}</span>
+                              </Link>
+                            );
+                          })}
+                        </>
                       )}
                     </nav>
                   </div>
@@ -287,56 +239,24 @@ const AppLayout = () => {
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>
-                  <Link to="/features" className="hover:text-blue-600">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/pricing" className="hover:text-blue-600">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/app/dashboard" className="hover:text-blue-600">
-                    Dashboard
-                  </Link>
-                </li>
+                <li><Link to="/features" className="hover:text-blue-600">Features</Link></li>
+                <li><Link to="/pricing" className="hover:text-blue-600">Pricing</Link></li>
+                <li><Link to="/app/dashboard" className="hover:text-blue-600">Dashboard</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>
-                  <Link to="/about" className="hover:text-blue-600">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/contact" className="hover:text-blue-600">
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/enterprise" className="hover:text-blue-600">
-                    Enterprise
-                  </Link>
-                </li>
+                <li><Link to="/about" className="hover:text-blue-600">About</Link></li>
+                <li><Link to="/contact" className="hover:text-blue-600">Contact</Link></li>
+                <li><Link to="/enterprise" className="hover:text-blue-600">Enterprise</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>
-                  <Link to="/legal/privacy" className="hover:text-blue-600">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/legal/terms" className="hover:text-blue-600">
-                    Terms of Service
-                  </Link>
-                </li>
+                <li><Link to="/legal/privacy" className="hover:text-blue-600">Privacy Policy</Link></li>
+                <li><Link to="/legal/terms" className="hover:text-blue-600">Terms of Service</Link></li>
               </ul>
             </div>
           </div>

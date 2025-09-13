@@ -19,7 +19,6 @@ import {
   BarChart3,
   TrendingUp,
   Search,
-  Bell,
   User,
   Menu,
   Home,
@@ -30,7 +29,8 @@ import {
   Newspaper,
   Settings,
   LogOut,
-  Crown
+  Crown,
+  LayoutGrid,
 } from 'lucide-react';
 import MarketStatus from '../components/MarketStatus';
 
@@ -58,17 +58,16 @@ const AppLayout = () => {
     { name: 'News', href: '/app/news', icon: Newspaper },
   ];
 
-  const isAppRoute = location.pathname.startsWith('/app');
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Accessibility: Skip to main content */}
+      {/* Skip link */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:text-black focus:px-3 focus:py-2 focus:rounded focus:shadow"
       >
         Skip to main content
       </a>
+
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
@@ -79,59 +78,53 @@ const AppLayout = () => {
               <span className="text-xl font-bold text-gray-900 truncate">Trade Scan Pro</span>
             </Link>
 
-            {/* Always-on Pages dropdown (visible on all screen sizes) */}
-            <div className="flex items-center">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="px-3">
-                    Pages
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {marketingPages.map((item) => (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link to={item.href}>{item.name}</Link>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/docs">Docs</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/enterprise">Enterprise</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            {/* Spacer that allows items to wrap if needed */}
+            {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Right side - Status + Auth + App access */}
-            <div className="flex items-center space-x-3 min-w-0">
-              {/* Market Status - always show on md+ */}
+            {/* Right cluster */}
+            <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
+              {/* Market status (md+) */}
               <div className="hidden md:block">
                 <MarketStatus />
               </div>
 
-              {/* If signed in, always show quick Dashboard access, regardless of where we are */}
-              {isAuthenticated && (
-                <Button asChild variant="secondary" className="hidden sm:inline-flex whitespace-nowrap">
-                  <Link to="/app/dashboard">Dashboard</Link>
-                </Button>
-              )}
+              {/* Waffle menu - always visible; shows marketing for guests, marketing+app for authed */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-9 w-9 p-0 rounded-full" aria-label="Open menu">
+                    <LayoutGrid className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {marketingPages.map((item) => (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link to={item.href}>
+                        {item.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  {isAuthenticated && (
+                    <>
+                      <DropdownMenuSeparator />
+                      {appPages.map((item) => (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <Link to={item.href}>{item.name}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
+              {/* Plan badge + user menu or auth buttons */}
               {isAuthenticated && user ? (
                 <>
-                  {/* User badge */}
                   <Badge variant="secondary" className="inline-flex truncate max-w-[160px]">
                     {String(user.plan || '').charAt(0).toUpperCase() + String(user.plan || '').slice(1)} Plan
                   </Badge>
-
-                  {/* User menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
                         <User className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -139,9 +132,7 @@ const AppLayout = () => {
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
                           <p className="font-medium truncate">{user.name}</p>
-                          <p className="w-[200px] truncate text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
+                          <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                       <DropdownMenuSeparator />
@@ -170,10 +161,10 @@ const AppLayout = () => {
                 </div>
               )}
 
-              {/* Mobile menu trigger keeps complete nav including App pages */}
+              {/* Mobile menu trigger */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="md:hidden">
+                  <Button variant="ghost" className="md:hidden" aria-label="Open navigation">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -185,26 +176,7 @@ const AppLayout = () => {
                         key={item.name}
                         to={item.href}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          location.pathname === item.href
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.name}</span>
-                      </Link>
-                    ))}
-
-                    <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
-                    {appPages.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          location.pathname === item.href
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'text-gray-600 hover:bg-gray-100'
+                          location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -214,9 +186,22 @@ const AppLayout = () => {
                     ))}
 
                     {isAuthenticated && (
-                      <Button asChild className="mt-2">
-                        <Link to="/app/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Go to Dashboard</Link>
-                      </Button>
+                      <>
+                        <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
+                        {appPages.map((item) => (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        ))}
+                      </>
                     )}
                   </nav>
                 </SheetContent>
