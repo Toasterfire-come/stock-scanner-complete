@@ -317,6 +317,12 @@ def create_paypal_order_api(request):
             }
         }
         try:
+            # Obtain token and create order with PayPal
+            token = _paypal_get_access_token()
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
             resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders", headers=headers, json=payload, timeout=20)
             resp.raise_for_status()
             order = resp.json()
