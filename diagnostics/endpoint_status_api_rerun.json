@@ -1,0 +1,17 @@
+HTTP/2 200 
+date: Sat, 13 Sep 2025 02:32:06 GMT
+content-type: application/json
+content-length: 1683
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=g9OWZ2vzDNet6ZsmrNvEQqI2NTZ6cWwCuSBV%2B5AcagrSIz671KUaaHGxIFS3Q5IWFoKJljv8AxwwGOASbqqstbkhJnvU1u9uZrphwGNal76tKXjuadedBg%3D%3D"}]}
+cf-ray: 97e43b639b86ff01-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": true, "data": {"endpoints": [{"name": "Homepage", "url": "https://api.retailtradescanner.com/", "status": "success", "status_code": 200, "response_time": 0.412474}, {"name": "Health Check", "url": "https://api.retailtradescanner.com/api/health/", "status": "success", "status_code": 200, "response_time": 0.155677}, {"name": "Stock List", "url": "https://api.retailtradescanner.com/api/stocks/", "status": "success", "status_code": 200, "response_time": 0.1632}, {"name": "Trending Stocks", "url": "https://api.retailtradescanner.com/api/trending/", "status": "success", "status_code": 200, "response_time": 0.185694}, {"name": "Search Stocks", "url": "https://api.retailtradescanner.com/api/search/?q=AAPL", "status": "success", "status_code": 200, "response_time": 0.161523}, {"name": "Revenue Analytics", "url": "https://api.retailtradescanner.com/revenue/revenue-analytics/?format=json", "status": "success", "status_code": 200, "response_time": 0.142536}, {"name": "Portfolio List", "url": "https://api.retailtradescanner.com/api/portfolio/list/", "status": "error", "status_code": 405, "response_time": 0.148474}, {"name": "Watchlist List", "url": "https://api.retailtradescanner.com/api/watchlist/list/", "status": "error", "status_code": 405, "response_time": 0.158965}, {"name": "News Feed", "url": "https://api.retailtradescanner.com/api/news/feed/", "status": "error", "status_code": 401, "response_time": 0.150148}, {"name": "API Documentation", "url": "https://api.retailtradescanner.com/docs/", "status": "success", "status_code": 200, "response_time": 0.15515}], "total_tested": 10, "successful": 7, "failed": 3, "timestamp": "2025-09-12T19:32:06.172573"}}

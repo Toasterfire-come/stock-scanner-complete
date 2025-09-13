@@ -1,0 +1,17 @@
+HTTP/2 200 
+date: Sat, 13 Sep 2025 02:32:02 GMT
+content-type: application/json
+content-length: 2774
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LRkLCA2stLi6wOKgzIRZjrhtY8zLl3wgABmX8LwvfrxO5E512j59av6vKUP6NBPhwFQN5UQfne3pz1m558m9o3tGFWEPN2v7cVIk9a%2BkRlCYlwnnGaFsiA%3D%3D"}]}
+cf-ray: 97e43b56f938816e-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": true, "data": {"title": "Stock Scanner API Documentation", "base_url": "https://api.retailtradescanner.com/", "endpoints": {"stock_endpoints": [{"method": "GET", "path": "/api/stocks/", "description": "List all stocks"}, {"method": "GET", "path": "/api/stock/{ticker}/", "description": "Get stock details"}, {"method": "GET", "path": "/api/search/", "description": "Search stocks"}, {"method": "GET", "path": "/api/trending/", "description": "Get trending stocks"}, {"method": "GET", "path": "/api/realtime/{ticker}/", "description": "Real-time stock data"}, {"method": "GET", "path": "/api/filter/", "description": "Filter stocks"}, {"method": "GET", "path": "/api/market-stats/", "description": "Market statistics"}], "portfolio_endpoints": [{"method": "GET", "path": "/api/portfolio/list/", "description": "List portfolios"}, {"method": "POST", "path": "/api/portfolio/create/", "description": "Create portfolio"}, {"method": "POST", "path": "/api/portfolio/add-holding/", "description": "Add holding"}, {"method": "POST", "path": "/api/portfolio/sell-holding/", "description": "Sell holding"}, {"method": "GET", "path": "/api/portfolio/{id}/performance/", "description": "Portfolio performance"}], "watchlist_endpoints": [{"method": "GET", "path": "/api/watchlist/list/", "description": "List watchlists"}, {"method": "POST", "path": "/api/watchlist/create/", "description": "Create watchlist"}, {"method": "POST", "path": "/api/watchlist/add-stock/", "description": "Add stock to watchlist"}, {"method": "POST", "path": "/api/watchlist/remove-stock/", "description": "Remove stock"}, {"method": "GET", "path": "/api/watchlist/{id}/performance/", "description": "Watchlist performance"}], "news_endpoints": [{"method": "GET", "path": "/api/news/feed/", "description": "Personalized news feed"}, {"method": "POST", "path": "/api/news/mark-read/", "description": "Mark news as read"}, {"method": "POST", "path": "/api/news/preferences/", "description": "Update news preferences"}, {"method": "GET", "path": "/api/news/analytics/", "description": "News analytics"}], "analytics_endpoints": [{"method": "GET", "path": "/revenue/revenue-analytics/", "description": "Revenue analytics"}, {"method": "GET", "path": "/api/health/", "description": "Health check"}, {"method": "GET", "path": "/api/statistics/", "description": "Market statistics"}], "management_endpoints": [{"method": "POST", "path": "/api/alerts/create/", "description": "Create price alert"}, {"method": "POST", "path": "/revenue/initialize-codes/", "description": "Initialize discount codes"}, {"method": "POST", "path": "/api/subscription/", "description": "WordPress subscription"}]}, "timestamp": "2025-09-12T19:32:02.241402", "warning": "Template render failed; returning JSON documentation"}}

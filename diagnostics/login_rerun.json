@@ -1,0 +1,20 @@
+HTTP/2 200 
+date: Sat, 13 Sep 2025 02:32:32 GMT
+content-type: application/json
+content-length: 261
+allow: OPTIONS, POST
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=uLekIU9Qx5QbIh3kPKnBTP9cnOSPypSk%2BjxSwRq2%2Fv4whKfE3abakIDi6GplgCXpkd8I4DI%2BxBsKJWLjqovFglhQP%2BspCShIYBqRpFXqDWFuJkAOeR2Rn25K"}]}
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+set-cookie: csrftoken=X4gqZxiK6Jwr7aGuEpYzNuxnvE6AnGDa; SameSite=None; Secure; Path=/; Max-Age=31449600; Expires=Sat, 12 Sep 2026 02:32:32 GMT
+set-cookie: sessionid=odxywmjaf41jov30leqzvotgh9q46mow; HttpOnly; SameSite=None; Secure; Path=/; Max-Age=1209600; Expires=Sat, 27 Sep 2025 02:32:32 GMT
+cf-ray: 97e43c0cd8ac70b9-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": true, "data": {"user_id": 5, "username": "OvenInaToaster", "email": "Carter.kiefer2010@outlook.com", "first_name": "Carter", "last_name": "Kiefer", "is_premium": true, "last_login": "2025-09-13T02:32:32.177156+00:00"}, "message": "Login successful"}
