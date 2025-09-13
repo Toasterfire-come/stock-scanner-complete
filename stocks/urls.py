@@ -5,6 +5,7 @@ from .simple_api import SimpleStockView, SimpleNewsView
 from .portfolio_api import portfolio_list_api
 from .watchlist_api import watchlist_list_api
 from .news_api import news_feed_api
+from .admin_api import admin_status_api, admin_api_providers_api, admin_execute_api
 
 urlpatterns = [
     # Main API endpoints
