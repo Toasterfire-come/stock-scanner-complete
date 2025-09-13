@@ -1,4 +1,4 @@
-import { useTheme } from "next-themes"
+// Dark mode removed: next-themes no longer used
 import { Toaster as Sonner } from "sonner"
 
 const Toaster = ({
