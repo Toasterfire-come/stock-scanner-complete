@@ -16,6 +16,7 @@ def homepage(request):
     }
     return render(request, 'core/homepage.html', context)
 
+
 @csrf_exempt
 def health_check(request):
     """Simple health check endpoint"""
