@@ -204,63 +204,7 @@ const AppLayout = () => {
                 </div>
               )}
 
-              {/* Mobile menu trigger */}
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" className="sm:hidden h-8 w-8 p-0">
-                    <Menu className="h-4 w-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[280px] sm:w-[350px]">
-                  <div className="mt-6">
-                    {/* Market Status in mobile */}
-                    <div className="mb-6 md:hidden">
-                      <MarketStatus />
-                    </div>
-                    
-                    <nav className="flex flex-col space-y-3">
-                      {((isAuthenticated && isAppRoute) ? appNavigation : navigation).map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <Link
-                            key={item.name}
-                            to={item.href}
-                            className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
-                              location.pathname === item.href
-                                ? "bg-blue-100 text-blue-600"
-                                : "text-gray-700 hover:bg-gray-100"
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <Icon className="h-5 w-5" />
-                            <span>{item.name}</span>
-                          </Link>
-                        );
-                      })}
-                      
-                      {/* Mobile Auth buttons */}
-                      {!isAuthenticated && (
-                        <div className="border-t pt-4 mt-4 space-y-3">
-                          <Link
-                            to="/auth/sign-in"
-                            className="flex items-center justify-center px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Sign In
-                          </Link>
-                          <Link
-                            to="/auth/sign-up"
-                            className="flex items-center justify-center px-3 py-3 rounded-lg text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Try Now for Free
-                          </Link>
-                        </div>
-                      )}
-                    </nav>
-                  </div>
-                </SheetContent>
-              </Sheet>
+              {/* Always use dropdown menus on all screen sizes; mobile sheet removed */}
             </div>
           </div>
         </div>

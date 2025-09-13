@@ -3,7 +3,7 @@ Billing and Notification Management API Views
 Provides comprehensive billing history, payment management, and notification endpoints
 """
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
@@ -167,6 +167,7 @@ def _paypal_get_access_token():
     resp.raise_for_status()
     return resp.json().get('access_token')
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_paypal_order_api(request):
@@ -1126,13 +1127,17 @@ def usage_history_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def usage_track_api(request):
     """
     Track a single API usage event
     POST /api/usage/track/
     """
     try:
-        data = json.loads(request.body) if request.body else {}
+        # Parse JSON safely; accept empty body
+        data = getattr(request, 'data', None)
+        if data is None or data == {}:
+            data = json.loads(request.body) if request.body else {}
         endpoint = (data.get('endpoint') or '').strip()
         method = (data.get('method') or 'GET').upper()
 
@@ -1149,13 +1154,17 @@ def usage_track_api(request):
         ]
         should_count = endpoint and any(endpoint.startswith(p) for p in stock_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
 
-        # Only track when user is authenticated, since UsageStats.user is required
+        # Track only for authenticated users; avoid undefined stats when unauthenticated
+        stats_api_calls = 0
+        stats_requests = 0
         if request.user.is_authenticated:
             stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
             if should_count:
                 stats.api_calls = (stats.api_calls or 0) + 1
                 stats.requests = (stats.requests or 0) + 1
             stats.save()
+            stats_api_calls = stats.api_calls or 0
+            stats_requests = stats.requests or 0
 
         return JsonResponse({
             'success': True,
@@ -1166,8 +1175,8 @@ def usage_track_api(request):
                 'date': today.isoformat(),
                 'counted': bool(should_count),
                 'daily': {
-                    'api_calls': stats.api_calls,
-                    'requests': stats.requests
+                    'api_calls': stats_api_calls,
+                    'requests': stats_requests
                 }
             }
         })

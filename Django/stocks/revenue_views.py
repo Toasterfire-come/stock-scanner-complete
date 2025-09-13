@@ -31,7 +31,11 @@ def validate_discount_code(request):
     Validate if a discount code can be used by the current user
     """
     try:
-        data = json.loads(request.body)
+        # Parse JSON safely; tolerate empty or invalid JSON with 400
+        try:
+            data = json.loads(request.body) if request.body else {}
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
         code = data.get('code', '').strip()
         
         if not code:
@@ -39,7 +43,12 @@ def validate_discount_code(request):
                 'error': 'Discount code is required'
             }, status=400)
         
-        validation = DiscountService.validate_discount_code(code, request.user)
+        # Guard service errors to avoid 500s for invalid codes
+        try:
+            validation = DiscountService.validate_discount_code(code, request.user)
+        except Exception as svc_err:
+            logger.error(f"DiscountService.validate_discount_code failed: {svc_err}")
+            return JsonResponse({'error': 'Invalid or unavailable discount code'}, status=400)
         
         response_data = {
             'valid': validation['valid'],
@@ -59,14 +68,9 @@ def validate_discount_code(request):
         
         return JsonResponse(response_data)
         
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'error': 'Invalid JSON data'
-        }, status=400)
     except Exception as e:
-        return JsonResponse({
-            'error': 'An error occurred while validating the discount code'
-        }, status=500)
+        logger.error(f"validate_discount_code unexpected error: {e}")
+        return JsonResponse({'error': 'Validation failed'}, status=500)
 
 
 @csrf_exempt
