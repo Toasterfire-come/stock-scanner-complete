@@ -12,6 +12,13 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
 
+    # Docs placeholders to avoid 500s/404s
+    path('docs/', docs_page, name='docs_page'),
+    path('schema/', schema_page, name='schema_page'),
+    path('redoc/', redoc_page, name='redoc_page'),
+    path('openapi.json', openapi_json, name='openapi_json'),
+    path('endpoint-status/', endpoint_status, name='endpoint_status'),
+
     # Core API group
     path('api/', include('stocks.urls')),
     path('api/auth/login/', login_api, name='login_api'),
