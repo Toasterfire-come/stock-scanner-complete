@@ -19,8 +19,10 @@ import {
   Search
 } from "lucide-react";
 import { getWatchlist, addWatchlist, deleteWatchlist } from "../../api/client";
+import { useAuth } from "../../context/SecureAuthContext";
 
 const Watchlists = () => {
+  const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [watchlist, setWatchlist] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -143,6 +145,24 @@ const Watchlists = () => {
       </div>
     );
   }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Watchlists</CardTitle>
+            <CardDescription>Sign in to create and manage your watchlists</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-gray-600">You need to be signed in to view your saved watchlist items.</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Graceful message if empty and not authenticated will be handled by add form disabled state in future
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">

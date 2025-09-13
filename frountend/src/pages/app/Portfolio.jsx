@@ -20,8 +20,10 @@ import {
   BarChart3
 } from "lucide-react";
 import { getPortfolio, addPortfolio, deletePortfolio } from "../../api/client";
+import { useAuth } from "../../context/SecureAuthContext";
 
 const Portfolio = () => {
+  const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [portfolio, setPortfolio] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -126,6 +128,22 @@ const Portfolio = () => {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Portfolio</CardTitle>
+            <CardDescription>Sign in to track your holdings and performance</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-gray-600">You need to be signed in to view and manage your portfolio.</div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
