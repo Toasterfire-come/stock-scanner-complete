@@ -10,7 +10,7 @@ export const SECURITY_CONFIG = {
   // Token settings
   TOKEN_STORAGE_KEY: 'rts_token',
   USER_STORAGE_KEY: 'rts_user',
-  SESSION_TIMEOUT: parseInt(process.env.REACT_APP_SESSION_TIMEOUT_MINUTES || '30') * 60 * 1000,
+  SESSION_TIMEOUT: parseInt(process.env.REACT_APP_SESSION_TIMEOUT_MINUTES || '360') * 60 * 1000,
   TOKEN_REFRESH_THRESHOLD: parseInt(process.env.REACT_APP_TOKEN_REFRESH_THRESHOLD_MINUTES || '5') * 60 * 1000,
   
   // Rate limiting
@@ -299,8 +299,7 @@ export const logClientError = async (payload) => {
 // Environment validation
 export const validateEnvironment = () => {
   const requiredVars = [
-    'REACT_APP_BACKEND_URL',
-    'REACT_APP_API_PASSWORD'
+    'REACT_APP_BACKEND_URL'
   ];
   
   const missing = requiredVars.filter(varName => !process.env[varName]);
