@@ -25,7 +25,7 @@ from decimal import Decimal
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
 from django.conf import settings
 from .security_utils import secure_api_endpoint
-from .authentication import CsrfExemptSessionAuthentication
+from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
 from .services.discount_service import DiscountService
 from .models import DiscountCode
 import hmac
@@ -171,6 +171,7 @@ def _paypal_get_access_token():
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def create_paypal_order_api(request):
     """
     Create a PayPal order (stub integration)
@@ -380,6 +381,7 @@ def create_paypal_order_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def capture_paypal_order_api(request):
     """
     Capture a PayPal order (stub integration)
