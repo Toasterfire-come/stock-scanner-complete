@@ -30,7 +30,6 @@ import {
   Settings,
   LogOut,
   Crown,
-  LayoutGrid,
 } from 'lucide-react';
 import MarketStatus from '../components/MarketStatus';
 
@@ -88,83 +87,10 @@ const AppLayout = () => {
                 <MarketStatus />
               </div>
 
-              {/* Waffle menu - always visible; shows marketing for guests, marketing+app for authed */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-9 w-9 p-0 rounded-full" aria-label="Open menu">
-                    <LayoutGrid className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {marketingPages.map((item) => (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link to={item.href}>
-                        {item.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                  {isAuthenticated && (
-                    <>
-                      <DropdownMenuSeparator />
-                      {appPages.map((item) => (
-                        <DropdownMenuItem key={item.name} asChild>
-                          <Link to={item.href}>{item.name}</Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Plan badge + user menu or auth buttons */}
-              {isAuthenticated && user ? (
-                <>
-                  <Badge variant="secondary" className="inline-flex truncate max-w-[160px]">
-                    {String(user.plan || '').charAt(0).toUpperCase() + String(user.plan || '').slice(1)} Plan
-                  </Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
-                        <User className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end" forceMount>
-                      <div className="flex items-center justify-start gap-2 p-2">
-                        <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium truncate">{user.name}</p>
-                          <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to="/account/profile">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={logout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" asChild>
-                    <Link to="/auth/sign-in">Sign In</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link to="/auth/sign-up">Try Now for Free</Link>
-                  </Button>
-                </div>
-              )}
-
-              {/* Mobile menu trigger */}
+              {/* Hamburger menu - visible on all screen sizes */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="md:hidden" aria-label="Open navigation">
+                  <Button variant="ghost" className="h-9 w-9 p-0 rounded-md" aria-label="Open navigation">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -203,9 +129,65 @@ const AppLayout = () => {
                         ))}
                       </>
                     )}
+
+                    {!isAuthenticated && (
+                      <div className="border-t pt-4 mt-2 flex items-center justify-between">
+                        <Button variant="ghost" asChild>
+                          <Link to="/auth/sign-in" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                        </Button>
+                        <Button asChild>
+                          <Link to="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>Try Free</Link>
+                        </Button>
+                      </div>
+                    )}
                   </nav>
                 </SheetContent>
               </Sheet>
+
+              {/* Plan badge + user menu or auth buttons (kept) */}
+              {isAuthenticated && user ? (
+                <>
+                  <Badge variant="secondary" className="hidden sm:inline-flex truncate max-w-[160px]">
+                    {String(user.plan || '').charAt(0).toUpperCase() + String(user.plan || '').slice(1)} Plan
+                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
+                        <User className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <div className="flex items-center justify-start gap-2 p-2">
+                        <div className="flex flex-col space-y-1 leading-none">
+                          <p className="font-medium truncate">{user.name}</p>
+                          <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/account/profile">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={logout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="hidden md:flex items-center space-x-2">
+                  <Button variant="ghost" asChild>
+                    <Link to="/auth/sign-in">Sign In</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/auth/sign-up">Try Now for Free</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
