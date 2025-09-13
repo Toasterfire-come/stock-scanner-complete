@@ -1,0 +1,18 @@
+HTTP/2 500 
+date: Sat, 13 Sep 2025 01:20:08 GMT
+content-type: application/json
+content-length: 97
+allow: OPTIONS, POST
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=fRiDdgXTx%2BUqcyW5rQ97YpeE3hHQYNibL6o%2FSyC179qkR6bKOwBS1K7TCpHeKR5eXbQ0O7ajkNdTgeaglaGUOwicBWWjuphR6ZuOdUxC5yhHtC%2FxEzOL%2B3rL"}]}
+cf-ray: 97e3d2059bfc1509-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": false, "error": "Failed to create PayPal order", "error_code": "PAYPAL_CREATE_ERROR"}

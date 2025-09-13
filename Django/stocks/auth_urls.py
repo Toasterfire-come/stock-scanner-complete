@@ -13,6 +13,8 @@ urlpatterns = [
     path('auth/login/', auth_api.login_api, name='login'),
     path('auth/register/', auth_api.register_api, name='register'),
     path('auth/logout/', auth_api.logout_api, name='logout'),
+    # Compatibility alias expected by some clients
+    path('auth/user/', auth_api.user_profile_api, name='auth_user_alias'),
     
     # User profile endpoints
     path('user/profile/', auth_api.user_profile_api, name='user_profile'),

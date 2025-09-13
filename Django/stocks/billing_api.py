@@ -19,6 +19,7 @@ from django.db.models import Q, Sum
 import json
 import logging
 from datetime import datetime, timedelta
+import os
 from decimal import Decimal
 
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
@@ -175,10 +176,15 @@ def create_paypal_order_api(request):
     Body: { plan_type, billing_cycle, discount_code }
     """
     try:
-        data = json.loads(request.body) if request.body else {}
-        plan_type = (data.get('plan_type') or 'bronze').strip().lower()
-        billing_cycle = (data.get('billing_cycle') or 'monthly').strip().lower()
-        discount_code_str = (data.get('discount_code') or '').strip()
+        # Prefer DRF parsed data, fallback to raw JSON only once
+        data = getattr(request, 'data', None)
+        if data is None or data == {}:
+            data = json.loads(request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else (request.body or '{}'))
+
+        # Support common aliases used by clients
+        requested_plan = (data.get('plan') or data.get('plan_type') or 'bronze').strip().lower()
+        billing_cycle = (data.get('billing_cycle') or data.get('interval') or 'monthly').strip().lower()
+        discount_code_str = (data.get('discount_code') or data.get('coupon') or '').strip()
         currency = 'USD'
 
         # Rate-limit checkout attempts per user/IP (velocity limits)
@@ -213,12 +219,19 @@ def create_paypal_order_api(request):
                 # Fail open: do not block checkout if Google is unreachable
                 pass
 
-        # Pricing table
+        # Pricing table (align with frontend)
         PRICES = {
             'bronze': { 'monthly': Decimal('24.99'), 'annual': Decimal('299.99') },
             'silver': { 'monthly': Decimal('49.99'), 'annual': Decimal('599.99') },
             'gold':   { 'monthly': Decimal('79.99'), 'annual': Decimal('959.99') },
+            # Accept common synonyms
+            'basic':  { 'monthly': Decimal('24.99'), 'annual': Decimal('299.99') },
+            'pro':    { 'monthly': Decimal('49.99'), 'annual': Decimal('599.99') },
+            'premium':{ 'monthly': Decimal('79.99'), 'annual': Decimal('959.99') },
         }
+
+        # Normalize requested plan to one we price
+        plan_type = requested_plan
 
         if plan_type not in PRICES:
             return JsonResponse({
@@ -326,6 +339,14 @@ def create_paypal_order_api(request):
         }, status=400)
     except Exception as e:
         logger.error(f"Create PayPal order error: {str(e)}")
+        # If this was due to request parsing, return 400
+        msg = str(e)
+        if 'data stream' in msg or 'read' in msg.lower():
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid request body',
+                'error_code': 'INVALID_REQUEST_BODY'
+            }, status=400)
         return JsonResponse({
             'success': False,
             'error': 'Failed to create PayPal order',
@@ -344,8 +365,13 @@ def capture_paypal_order_api(request):
     Body: { order_id, plan_type, billing_cycle, discount_code, amount, final_amount }
     """
     try:
-        data = json.loads(request.body) if request.body else {}
-        order_id = (data.get('order_id') or '').strip()
+        # Prefer DRF parsed data, fallback to raw JSON only once
+        data = getattr(request, 'data', None)
+        if data is None or data == {}:
+            data = json.loads(request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else (request.body or '{}'))
+
+        # Support common aliases from frontend
+        order_id = (data.get('order_id') or data.get('paypal_order_id') or data.get('token') or '').strip()
         if not order_id:
             return JsonResponse({
                 'success': False,
@@ -354,9 +380,9 @@ def capture_paypal_order_api(request):
             }, status=400)
 
         # Extract optional plan/discount data for revenue tracking
-        plan_type = (data.get('plan_type') or 'bronze').strip().lower()
-        billing_cycle = (data.get('billing_cycle') or 'monthly').strip().lower()
-        discount_code_str = (data.get('discount_code') or '').strip()
+        plan_type = (data.get('plan_type') or data.get('plan') or 'bronze').strip().lower()
+        billing_cycle = (data.get('billing_cycle') or data.get('interval') or 'monthly').strip().lower()
+        discount_code_str = (data.get('discount_code') or data.get('coupon') or '').strip()
         amount = data.get('amount')
         final_amount = data.get('final_amount')
 
@@ -463,6 +489,13 @@ def capture_paypal_order_api(request):
         }, status=400)
     except Exception as e:
         logger.error(f"Capture PayPal order error: {str(e)}")
+        msg = str(e)
+        if 'data stream' in msg or 'read' in msg.lower():
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid request body',
+                'error_code': 'INVALID_REQUEST_BODY'
+            }, status=400)
         return JsonResponse({
             'success': False,
             'error': 'Failed to capture PayPal order',
@@ -470,16 +503,26 @@ def capture_paypal_order_api(request):
         }, status=500)
 
 
-# Admin-only quick status check for PayPal connectivity
+# PayPal status/configuration endpoint (authenticated users)
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def paypal_status_api(request):
     try:
-        token = _paypal_get_access_token()
-        return JsonResponse({ 'success': True, 'env': (os.environ.get('PAYPAL_ENV') or os.environ.get('PAYPAL_MODE') or 'live'), 'base_url': _paypal_base_url(), 'token_present': bool(token) })
+        client_id = getattr(settings, 'PAYPAL_CLIENT_ID', '')
+        webhook_url = getattr(settings, 'PAYPAL_WEBHOOK_URL', '')
+        webhook_id = getattr(settings, 'PAYPAL_WEBHOOK_ID', '')
+        env = (os.environ.get('PAYPAL_ENV') or os.environ.get('PAYPAL_MODE') or 'live').lower()
+        data = {
+            'environment': 'sandbox' if env == 'sandbox' else 'live',
+            'client_configured': bool(client_id),
+            'webhook_configured': bool(webhook_url or webhook_id),
+            'base_url': _paypal_base_url(),
+        }
+        return JsonResponse({'success': True, 'data': data})
     except Exception as e:
-        return JsonResponse({ 'success': False, 'error': str(e) }, status=500)
+        logger.error(f"PayPal status error: {e}")
+        return JsonResponse({'success': False, 'error': 'Failed to fetch PayPal status'}, status=500)
 
 # Billing endpoints
 @csrf_exempt

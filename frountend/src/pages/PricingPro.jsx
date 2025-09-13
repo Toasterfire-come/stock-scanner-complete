@@ -194,24 +194,17 @@ const PricingPro = () => {
   };
 
   const continueToCheckout = async (plan) => {
-    const cycle = isAnnual ? 'annual' : 'monthly';
-    if (plan.isFree) {
-      navigate('/auth/sign-up', { state: { selectedPlan: 'free' } });
-      return;
-    }
-    if (!isAuthenticated) {
-      const next = '/pricing';
-      navigate('/auth/sign-in', { state: { next } });
-      return;
-    }
-    try { await initializeDiscountCodes(); } catch {}
-    try { await validateDiscountCode('TRIAL'); } catch {}
     try {
-      const res = await createPayPalOrder(plan.name.toLowerCase(), cycle, 'TRIAL');
+      // Ensure codes exist and default to TRIAL for $1
+      try { await initializeDiscountCodes(); } catch {}
+      const code = 'TRIAL';
+      try { await validateDiscountCode(code); } catch {}
+      const cycle = isAnnual ? 'annual' : 'monthly';
+      const res = await createPayPalOrder(plan.name.toLowerCase(), cycle, code);
       if (res?.approval_url) {
         window.location.href = res.approval_url;
       } else {
-        toast.error('Unable to start checkout');
+        toast.error('Failed to start checkout');
       }
     } catch (e) {
       toast.error('Checkout unavailable right now');
