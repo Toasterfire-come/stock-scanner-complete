@@ -14,7 +14,8 @@ Options -MultiViews
   # Do not rewrite API or backend routes (handled by backend service/domain)
   RewriteRule ^(api|revenue)(/.*)? - [R=404,L]
 
-  # SPA fallback to index.html
+  # SPA fallback to index.html, but do not intercept static asset chunk errors
+  RewriteCond %{REQUEST_URI} !^/static/.*\.js$
   RewriteRule . index.html [L]
 </IfModule>
 

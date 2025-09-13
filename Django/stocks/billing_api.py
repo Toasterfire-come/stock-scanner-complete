@@ -1068,14 +1068,13 @@ def usage_track_api(request):
         ]
         should_count = endpoint and any(endpoint.startswith(p) for p in stock_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
 
-        user = request.user if request.user.is_authenticated else None
-        stats, _ = UsageStats.objects.get_or_create(user=user, date=today)
-        if should_count:
-            stats.api_calls = (stats.api_calls or 0) + 1
-        # Always increment total requests only for stock data endpoints as per requirement
-        if should_count:
-            stats.requests = (stats.requests or 0) + 1
-        stats.save()
+        # Only track when user is authenticated, since UsageStats.user is required
+        if request.user.is_authenticated:
+            stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
+            if should_count:
+                stats.api_calls = (stats.api_calls or 0) + 1
+                stats.requests = (stats.requests or 0) + 1
+            stats.save()
 
         return JsonResponse({
             'success': True,

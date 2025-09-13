@@ -138,8 +138,8 @@ function getCsrfToken() {
 async function ensureCsrfCookie() {
   try {
     if (getCsrfToken()) return;
-    // Prefer API CSRF endpoint which should be CORS-enabled
-    try { await publicApi.get('/auth/csrf/'); } catch {}
+    // Prefer API CSRF endpoint which should be CORS-enabled. Use credentialed client so Set-Cookie is honored.
+    try { await api.get('/auth/csrf/'); } catch {}
     if (getCsrfToken()) return;
     // Fallback to site root pages which often set csrftoken
     try { await site.get('/accounts/login/'); } catch {}
