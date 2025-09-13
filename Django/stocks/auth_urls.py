@@ -13,6 +13,8 @@ urlpatterns = [
     path('auth/login/', auth_api.login_api, name='login'),
     path('auth/register/', auth_api.register_api, name='register'),
     path('auth/logout/', auth_api.logout_api, name='logout'),
+    # Compatibility alias expected by some clients
+    path('auth/user/', auth_api.user_profile_api, name='auth_user_alias'),
     
     # User profile endpoints
     path('user/profile/', auth_api.user_profile_api, name='user_profile'),
@@ -30,6 +32,7 @@ urlpatterns = [
     path('billing/create-paypal-order/', billing_api.create_paypal_order_api, name='create_paypal_order'),
     path('billing/capture-paypal-order/', billing_api.capture_paypal_order_api, name='capture_paypal_order'),
     path('billing/paypal-webhook/', billing_api.paypal_webhook_api, name='paypal_webhook'),
+    path('billing/paypal-status/', billing_api.paypal_status_api, name='paypal_status'),
     
     # Notification endpoints
     path('user/notification-settings/', billing_api.notification_settings_api, name='user_notification_settings'),

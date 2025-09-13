@@ -73,7 +73,18 @@ def homepage(request):
             }
         })
     
-    return render(request, 'core/homepage.html', context)
+    try:
+        return render(request, 'core/homepage.html', context)
+    except Exception:
+        # Fallback JSON if template path or rendering fails
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'title': context['title'],
+                'version': context['version'],
+                'endpoints': context['endpoints']
+            }
+        })
 
 def api_documentation(request):
     """
@@ -136,7 +147,20 @@ def api_documentation(request):
             }
         })
     
-    return render(request, 'api/documentation.html')
+    try:
+        return render(request, 'api/documentation.html')
+    except Exception as e:
+        # Fallback to JSON docs if template rendering fails
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'title': 'Stock Scanner API Documentation',
+                'base_url': request.build_absolute_uri('/'),
+                'endpoints': endpoints_data,
+                'timestamp': datetime.datetime.now().isoformat(),
+                'warning': 'Template render failed; returning JSON documentation'
+            }
+        })
 
 @csrf_exempt
 @require_http_methods(["GET", "HEAD", "OPTIONS"])
