@@ -5,6 +5,7 @@ from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlert
 from .simple_api import SimpleStockView, SimpleNewsView
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
+from .billing_api import cancel_subscription_api
 from django.http import JsonResponse
 
 urlpatterns = [
@@ -69,6 +70,9 @@ urlpatterns = [
     
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
+
+    # Billing management
+    path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
 
     # Logging & monitoring endpoints
     path('logs/client/', logs_api.client_logs_api, name='client_logs'),

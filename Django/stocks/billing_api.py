@@ -667,6 +667,25 @@ def billing_history_api(request):
         }, status=500)
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_subscription_api(request):
+    """
+    Cancel auto-renew for the current user. Keeps access until end of current period.
+    POST /api/billing/cancel
+    """
+    try:
+        user = request.user
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.auto_renew = False
+        profile.subscription_status = 'canceled'
+        profile.save()
+        return JsonResponse({'success': True, 'message': 'Subscription will not auto-renew', 'next_billing_date': getattr(profile, 'next_billing_date', None)})
+    except Exception as e:
+        logger.error(f"Cancel subscription error: {e}")
+        return JsonResponse({'success': False, 'error': 'Failed to cancel subscription'}, status=500)
+
+@csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_invoice_api(request, invoice_id):

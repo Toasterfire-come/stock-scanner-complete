@@ -179,6 +179,8 @@ class UserProfile(models.Model):
     plan_type = models.CharField(max_length=20, default='free', help_text="Current subscription plan")
     plan_name = models.CharField(max_length=50, default='Free', help_text="Display name of current plan")
     billing_cycle = models.CharField(max_length=20, default='monthly', help_text="Billing cycle (monthly/yearly)")
+    auto_renew = models.BooleanField(default=True, help_text="Whether subscription auto-renews at next_billing_date")
+    subscription_status = models.CharField(max_length=20, default='active', help_text="Subscription status: active, canceled, past_due")
     api_calls_limit = models.IntegerField(default=100, help_text="API calls limit per month")
     next_billing_date = models.DateTimeField(null=True, blank=True, help_text="Next billing date")
     
