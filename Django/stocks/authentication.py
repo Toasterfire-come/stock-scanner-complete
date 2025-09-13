@@ -10,7 +10,7 @@ from typing import Optional, Tuple
 
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.backends.db import SessionStore
-from rest_framework.authentication import BaseAuthentication
+from rest_framework.authentication import BaseAuthentication, SessionAuthentication
 from rest_framework.request import Request
 
 
@@ -49,4 +49,15 @@ class BearerSessionAuthentication(BaseAuthentication):
             return (user, None)
         except Exception:
             return None
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """SessionAuthentication that skips CSRF enforcement for API views.
+
+    Use only on endpoints where CSRF cannot be provided (e.g., cross-site XHR with
+    credentialed session already established) and the user is authenticated.
+    """
+
+    def enforce_csrf(self, request):
+        return  # Skip CSRF check
 
