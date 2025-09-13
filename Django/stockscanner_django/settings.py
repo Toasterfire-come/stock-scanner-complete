@@ -21,8 +21,9 @@ if IS_XAMPP_AVAILABLE:
     if XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
         os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+SECRET_KEY = os.environ.get('SECRET_KEY') or os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-development-key')
+_debug_raw = os.environ.get('DEBUG', os.environ.get('DJANGO_DEBUG', 'True'))
+DEBUG = str(_debug_raw).lower() == 'true'
 
 # Allow configuration of ALLOWED_HOSTS via environment variables
 # Prefer DJANGO_ALLOWED_HOSTS (comma-separated), fallback to ALLOWED_HOSTS, then defaults
