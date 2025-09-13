@@ -1,6 +1,7 @@
 import os
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 
 @require_http_methods(["GET"])  # simple status
 def admin_status_api(request):
@@ -22,6 +23,7 @@ def admin_api_providers_api(request):
     }
     return JsonResponse(providers)
 
+@csrf_exempt
 @require_http_methods(["POST"])  # echo
 def admin_execute_api(request):
     return JsonResponse({"success": True, "message": "Operation queued"})

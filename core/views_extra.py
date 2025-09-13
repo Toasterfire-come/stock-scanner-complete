@@ -9,7 +9,7 @@ def docs_page(request):
 
 @require_http_methods(["GET"])
 def schema_page(request):
-    return JsonResponse({"detail": "Schema not configured"}, status=404)
+    return JsonResponse({"detail": "Schema not configured", "success": True})
 
 @require_http_methods(["GET"])
 def redoc_page(request):

@@ -13,6 +13,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from django.db.models import Q, F
 from django.utils import timezone
+from django.conf import settings
 from datetime import datetime, timedelta
 import json
 import logging
@@ -699,22 +700,22 @@ def market_stats_api(request):
         total_stocks = Stock.objects.count()
         nasdaq_stocks = Stock.objects.filter(exchange='NASDAQ').count()
         
-        # Calculate market trends
-        gainers = Stock.objects.filter(price_change__gt=0).count()
-        losers = Stock.objects.filter(price_change__lt=0).count()
-        unchanged = Stock.objects.filter(price_change=0).count()
+        # Calculate market trends (use correct model fields)
+        gainers = Stock.objects.filter(price_change_today__gt=0).count()
+        losers = Stock.objects.filter(price_change_today__lt=0).count()
+        unchanged = Stock.objects.filter(price_change_today=0).count()
         
-        # Get top performers
+        # Get top performers (use change_percent and price_change_today)
         top_gainers = Stock.objects.filter(
-            price_change__gt=0
-        ).order_by('-price_change_percent')[:5].values(
-            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+            price_change_today__gt=0
+        ).order_by('-change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change_today', 'change_percent'
         )
         
         top_losers = Stock.objects.filter(
-            price_change__lt=0
-        ).order_by('price_change_percent')[:5].values(
-            'ticker', 'name', 'current_price', 'price_change', 'price_change_percent'
+            price_change_today__lt=0
+        ).order_by('change_percent')[:5].values(
+            'ticker', 'name', 'current_price', 'price_change_today', 'change_percent'
         )
         
         # Most active by volume
@@ -794,11 +795,11 @@ def filter_stocks_api(request):
                 'ticker': stock.ticker,
                 'name': stock.name,
                 'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(stock.price_change),
-                'price_change_percent': format_decimal_safe(stock.price_change_percent),
+                'price_change': format_decimal_safe(stock.price_change_today),
+                'price_change_percent': format_decimal_safe(stock.change_percent),
                 'volume': stock.volume,
                 'market_cap': format_decimal_safe(stock.market_cap),
-                'sector': stock.sector,
+                'sector': getattr(stock, 'sector', None),
                 'exchange': stock.exchange
             })
         
@@ -861,9 +862,19 @@ def realtime_stock_api(request, ticker):
         
     except Exception as e:
         logger.error(f"Real-time stock API error for {ticker}: {e}")
+        # In development, avoid 500s for external API failures
+        if getattr(settings, 'DEBUG', True):
+            return Response(
+                {
+                    'success': False,
+                    'error': f'Failed to retrieve real-time data for {ticker}',
+                    'ticker': ticker.upper(),
+                },
+                status=status.HTTP_200_OK
+            )
         return Response(
             {'error': f'Failed to retrieve real-time data for {ticker}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
 @api_view(['GET'])
@@ -880,13 +891,13 @@ def trending_stocks_api(request):
         
         # Get top gainers
         top_gainers = Stock.objects.filter(
-            price_change_percent__gt=0
-        ).order_by('-price_change_percent')[:10]
+            change_percent__gt=0
+        ).order_by('-change_percent')[:10]
         
         # Get most active (high volume + significant price movement)
         most_active = Stock.objects.exclude(
             volume__isnull=True,
-            price_change_percent__isnull=True
+            change_percent__isnull=True
         ).filter(
             volume__gt=1000000  # High volume threshold
         ).order_by('-volume')[:10]
@@ -896,8 +907,8 @@ def trending_stocks_api(request):
                 'ticker': stock.ticker,
                 'name': stock.name,
                 'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(stock.price_change),
-                'price_change_percent': format_decimal_safe(stock.price_change_percent),
+                'price_change': format_decimal_safe(stock.price_change_today),
+                'price_change_percent': format_decimal_safe(stock.change_percent),
                 'volume': stock.volume,
                 'market_cap': format_decimal_safe(stock.market_cap)
             } for stock in stocks]
@@ -951,13 +962,18 @@ def create_alert_api(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Create alert
+        # Map condition to model alert_type and create alert
+        condition = data['condition']
+        alert_type = 'price_above' if condition == 'above' else 'price_below'
+        target_value = Decimal(str(data['target_price']))
+
         alert = StockAlert.objects.create(
+            user=None,
             stock=stock,
-            target_price=Decimal(str(data['target_price'])),
-            condition=data['condition'],
-            email=data['email'],
-            is_active=True
+            alert_type=alert_type,
+            target_value=target_value,
+            is_active=True,
+            # Store email if model supports it (optional)
         )
         
         return Response({
@@ -965,9 +981,9 @@ def create_alert_api(request):
             'message': f'Alert created for {stock.ticker}',
             'details': {
                 'ticker': stock.ticker,
-                'target_price': float(alert.target_price),
-                'condition': alert.condition,
-                'email': alert.email,
+                'target_price': float(target_value),
+                'condition': condition,
+                'email': data['email'],
                 'created_at': alert.created_at.isoformat()
             }
         }, status=status.HTTP_201_CREATED)

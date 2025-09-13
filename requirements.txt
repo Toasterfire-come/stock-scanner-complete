@@ -10,7 +10,8 @@ djangorestframework>=3.14.0
 django-cors-headers>=4.3.1
 
 # ===== DATABASE & CACHING =====
-mysqlclient>=2.2.0
+# mysqlclient requires system libs; not needed for SQLite dev
+# mysqlclient>=2.2.0
 dj-database-url>=2.1.0
 
 # ===== STOCK DATA & API =====
