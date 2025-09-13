@@ -10,5 +10,15 @@ urlpatterns = [
     path('', homepage, name='homepage'),
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
+
+    # Core API group
     path('api/', include('stocks.urls')),
+    path('api/auth/login/', login_api, name='login_api'),
+    path('api/auth/user/', user_api, name='user_api'),
+    path('api/auth/logout/', logout_api, name='logout_api'),
+    path('api/usage/track/', usage_track_api, name='usage_track_api'),
+    path('api/billing/paypal-status/', paypal_status_api, name='paypal_status_api'),
+    path('api/billing/create-paypal-order/', create_paypal_order_api, name='create_paypal_order_api'),
+    path('api/billing/capture-paypal-order/', capture_paypal_order_api, name='capture_paypal_order_api'),
+    path('api/revenue/validate-discount/', validate_discount_api, name='validate_discount_api'),
 ]
