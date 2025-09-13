@@ -2,7 +2,7 @@ import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
 // Use REACT_APP_BACKEND_URL from environment, fallback to window.location.origin
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? `${window.location.origin}` : '');
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.com';
 
 if (!process.env.REACT_APP_BACKEND_URL && BASE_URL) {
   // Informational log only

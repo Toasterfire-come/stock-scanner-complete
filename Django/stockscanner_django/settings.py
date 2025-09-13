@@ -198,8 +198,8 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:8000',
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
-    'https://tradscanpro.com',
-    'https://www.tradscanpro.com',
+    'https://retailtradescanner.com',
+    'https://www.retailtradescanner.com',
 ]))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({

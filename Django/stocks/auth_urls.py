@@ -4,6 +4,7 @@ Authentication and User Management URL Configuration
 
 from django.urls import path
 from . import auth_api, billing_api, notifications_api
+from . import platform_views
 
 app_name = 'auth'
 
@@ -45,6 +46,7 @@ urlpatterns = [
     path('usage/', billing_api.usage_summary_api, name='usage_summary'),
     path('usage/history/', billing_api.usage_history_api, name='usage_history'),
     path('usage/track/', billing_api.usage_track_api, name='usage_track'),
+    path('platform-stats', platform_views.platform_stats_api, name='platform_stats'),
     
     # Market data
     path('market-data/', auth_api.market_data_api, name='market_data'),
