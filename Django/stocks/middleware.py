@@ -40,31 +40,19 @@ class APICompatibilityMiddleware(MiddlewareMixin):
 
 class CORSMiddleware(MiddlewareMixin):
     """
-    Middleware to handle CORS for WordPress integration
+    Middleware to handle CORS for WordPress integration.
+    Note: We now defer CORS headers to django-cors-headers to avoid wildcard
+    origins when credentials are used. This middleware only handles OPTIONS
+    fallbacks without setting wildcard origins.
     """
-    
+
     def process_response(self, request, response):
-        """
-        Add CORS headers for API requests
-        """
-        if hasattr(request, 'is_api_request') and request.is_api_request:
-            response["Access-Control-Allow-Origin"] = "*"
-            response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-            response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
-            response["Access-Control-Max-Age"] = "86400"
-        
+        # Do not set Access-Control-Allow-Origin here; let django-cors-headers manage it
+        # Keep max-age hint for non-complex responses if desired (optional)
         return response
-    
+
     def process_request(self, request):
-        """
-        Handle OPTIONS requests for CORS preflight
-        """
+        # Handle bare OPTIONS with minimal headers; allow django-cors-headers to add the rest
         if request.method == "OPTIONS":
-            response = JsonResponse({})
-            response["Access-Control-Allow-Origin"] = "*"
-            response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-            response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
-            response["Access-Control-Max-Age"] = "86400"
-            return response
-        
+            return JsonResponse({})
         return None

@@ -30,12 +30,12 @@ class SimpleMarketHoursManager:
         self.processes = {}
         self.running = True
         
-        # Simplified components - only Django server
+        # Simplified components - only Django server during market hours
         self.components = {
             'django_server': {
                 'script': 'python',
                 'args': ['manage.py', 'runserver', '0.0.0.0:8000'],
-                'phases': ['premarket', 'market', 'postmarket', 'after_hours']
+                'phases': ['market']  # Only during regular market hours
             }
         }
         
@@ -51,25 +51,25 @@ class SimpleMarketHoursManager:
         sys.exit(0)
 
     def get_current_market_phase(self):
-        """Determine current market phase in Eastern Time"""
+        """Determine current market phase in Eastern Time
+        ONLY recognizes regular market hours (9:30 AM - 4:00 PM ET)"""
         eastern = pytz.timezone('US/Eastern')
         now = datetime.now(eastern)
         current_time = now.time()
         
-        # Market hours in Eastern Time
-        premarket_start = datetime.strptime('04:00', '%H:%M').time()
+        # Only regular market hours
         market_open = datetime.strptime('09:30', '%H:%M').time()
         market_close = datetime.strptime('16:00', '%H:%M').time()
-        postmarket_end = datetime.strptime('20:00', '%H:%M').time()
         
-        if premarket_start <= current_time < market_open:
-            return 'premarket'
-        elif market_open <= current_time < market_close:
-            return 'market'
-        elif market_close <= current_time < postmarket_end:
-            return 'postmarket'
-        else:
+        # Check if it's a weekday
+        if now.weekday() >= 5:  # Saturday or Sunday
             return 'after_hours'
+        
+        # Only check for regular market hours
+        if market_open <= current_time < market_close:
+            return 'market'  # Regular trading hours
+        else:
+            return 'after_hours'  # Outside regular hours
 
     def start_component(self, component_name, config):
         """Start a component"""

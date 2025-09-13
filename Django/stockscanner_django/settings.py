@@ -176,8 +176,18 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SAMESITE = 'None'
 
+# PayPal configuration (env-driven)
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', '')
+PAYPAL_WEBHOOK_URL = os.environ.get('PAYPAL_WEBHOOK_URL', '')
+PAYPAL_WEBHOOK_ID = os.environ.get('PAYPAL_WEBHOOK_ID', '')
+
+# Optional Google reCAPTCHA (enterprise-friendly: set per environment)
+RECAPTCHA_SECRET = os.environ.get('RECAPTCHA_SECRET', '')
+
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Always use explicit allow-list to avoid wildcard (*) with credentials
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = list(filter(None, [
     os.environ.get('FRONTEND_URL'),
     os.environ.get('WORDPRESS_URL'),
@@ -185,11 +195,10 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:3000',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-    'https://api.retailtradescanner.com',
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
-    'https://retailtradescanner.com',
-    'https://www.retailtradescanner.com',
+    'https://tradscanpro.com',
+    'https://www.tradscanpro.com',
 ]))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
@@ -298,12 +307,11 @@ if _csrf_trusted:
     CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_trusted.split(',') if origin.strip()]
 else:
     CSRF_TRUSTED_ORIGINS = list(filter(None, [
-        os.environ.get('PRIMARY_ORIGIN', 'https://api.retailtradescanner.com'),
-        'https://api.retailtradescanner.com',
+        os.environ.get('PRIMARY_ORIGIN', 'https://tradescanpro.com'),
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
-        'https://retailtradescanner.com',
-        'https://www.retailtradescanner.com',
+        'https://tradscanpro.com',
+        'https://www.tradscanpro.com',
     ]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')

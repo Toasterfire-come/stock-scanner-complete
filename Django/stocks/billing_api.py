@@ -4,13 +4,17 @@ Provides comprehensive billing history, payment management, and notification end
 """
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse, HttpResponse
+import os
+import base64
+import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.core.cache import cache
 from django.db.models import Q, Sum
 import json
 import logging
@@ -23,6 +27,8 @@ from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .services.discount_service import DiscountService
 from .models import DiscountCode
+import hmac
+import hashlib
 @csrf_exempt
 @api_view(['POST'])
 def paypal_webhook_api(request):
@@ -51,6 +57,34 @@ def paypal_webhook_api(request):
                 user_id = int(parts[3])
         except Exception:
             pass
+
+        # Optional signature verification (if webhook ID/headers configured)
+        try:
+            webhook_id = getattr(settings, 'PAYPAL_WEBHOOK_ID', '')
+            tr_id = request.META.get('HTTP_PAYPAL_TRANSMISSION_ID')
+            tr_sig = request.META.get('HTTP_PAYPAL_TRANSMISSION_SIG')
+            tr_time = request.META.get('HTTP_PAYPAL_TRANSMISSION_TIME')
+            cert_url = request.META.get('HTTP_PAYPAL_CERT_URL')
+            algo = request.META.get('HTTP_PAYPAL_AUTH_ALGO')
+            # If configured, call PayPal verify endpoint
+            if webhook_id and tr_id and tr_sig and tr_time:
+                token = _paypal_get_access_token()
+                headers = { 'Authorization': f'Bearer {token}', 'Content-Type': 'application/json' }
+                verify_payload = {
+                    'transmission_id': tr_id,
+                    'transmission_time': tr_time,
+                    'cert_url': cert_url,
+                    'auth_algo': algo,
+                    'transmission_sig': tr_sig,
+                    'webhook_id': webhook_id,
+                    'webhook_event': data,
+                }
+                v = requests.post(f"{_paypal_base_url()}/v1/notifications/verify-webhook-signature", headers=headers, json=verify_payload, timeout=15)
+                v.raise_for_status()
+                if (v.json() or {}).get('verification_status') != 'SUCCESS':
+                    return JsonResponse({'success': False, 'error': 'Invalid webhook signature'}, status=400)
+        except Exception as _sig_err:
+            logger.warning(f"PayPal webhook signature verification skipped/failed: {_sig_err}")
 
         if event_type == 'PAYMENT.CAPTURE.COMPLETED':
             # Record revenue without requiring auth context
@@ -116,7 +150,23 @@ def paypal_webhook_api(request):
 logger = logging.getLogger(__name__)
 
 # PayPal order creation (discount-aware)
-@csrf_exempt
+def _paypal_base_url():
+    # Use live by default; set PAYPAL_ENV=sandbox to use sandbox
+    env = getattr(settings, 'PAYPAL_ENV', None) or str(os.environ.get('PAYPAL_ENV') or os.environ.get('PAYPAL_MODE') or '').lower()
+    return 'https://api-m.sandbox.paypal.com' if env == 'sandbox' else 'https://api-m.paypal.com'
+
+def _paypal_get_access_token():
+    client_id = getattr(settings, 'PAYPAL_CLIENT_ID', '')
+    secret = getattr(settings, 'PAYPAL_SECRET', '')
+    if not client_id or not secret:
+        raise ValueError('Missing PayPal credentials')
+    auth = base64.b64encode(f"{client_id}:{secret}".encode('utf-8')).decode('utf-8')
+    url = f"{_paypal_base_url()}/v1/oauth2/token"
+    headers = { 'Authorization': f"Basic {auth}", 'Content-Type': 'application/x-www-form-urlencoded' }
+    resp = requests.post(url, headers=headers, data={ 'grant_type': 'client_credentials' }, timeout=15)
+    resp.raise_for_status()
+    return resp.json().get('access_token')
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_paypal_order_api(request):
@@ -137,16 +187,47 @@ def create_paypal_order_api(request):
         discount_code_str = (data.get('discount_code') or data.get('coupon') or '').strip()
         currency = 'USD'
 
-        # Pricing table
+        # Rate-limit checkout attempts per user/IP (velocity limits)
+        def _client_ip(req):
+            xff = req.META.get('HTTP_X_FORWARDED_FOR')
+            if xff:
+                return xff.split(',')[0].strip()
+            return req.META.get('REMOTE_ADDR') or 'unknown'
+
+        rl_id = str(getattr(request.user, 'id', 'anon')) if request.user.is_authenticated else f"ip:{_client_ip(request)}"
+        rl_key = f"checkout_attempts:{rl_id}"
+        attempts = cache.get(rl_key, 0)
+        if attempts >= 10:
+            return JsonResponse({
+                'success': False,
+                'error': 'Too many checkout attempts. Please try again later.',
+                'error_code': 'RATE_LIMIT'
+            }, status=429)
+        cache.set(rl_key, attempts + 1, timeout=10 * 60)
+
+        # Optional reCAPTCHA validation when configured
+        recaptcha_token = (data.get('recaptcha_token') or '').strip()
+        if getattr(settings, 'RECAPTCHA_SECRET', '') and recaptcha_token:
+            try:
+                rr = requests.post('https://www.google.com/recaptcha/api/siteverify', data={
+                    'secret': settings.RECAPTCHA_SECRET,
+                    'response': recaptcha_token
+                }, timeout=8)
+                if not (rr.ok and (rr.json() or {}).get('success') is True):
+                    return JsonResponse({'success': False, 'error': 'reCAPTCHA validation failed', 'error_code': 'RECAPTCHA_FAILED'}, status=400)
+            except Exception:
+                # Fail open: do not block checkout if Google is unreachable
+                pass
+
+        # Pricing table (align with frontend)
         PRICES = {
-            'bronze':     { 'monthly': Decimal('24.99'),  'annual': Decimal('249.99') },
-            'silver':     { 'monthly': Decimal('39.99'),  'annual': Decimal('399.99') },
-            'gold':       { 'monthly': Decimal('89.99'),  'annual': Decimal('899.99') },
-            # Accept synonyms used by frontend/backends
-            'basic':      { 'monthly': Decimal('24.99'),  'annual': Decimal('249.99') },
-            'pro':        { 'monthly': Decimal('39.99'),  'annual': Decimal('399.99') },
-            'premium':    { 'monthly': Decimal('89.99'),  'annual': Decimal('899.99') },
-            'enterprise': { 'monthly': Decimal('199.99'), 'annual': Decimal('1999.99') },
+            'bronze': { 'monthly': Decimal('24.99'), 'annual': Decimal('299.99') },
+            'silver': { 'monthly': Decimal('49.99'), 'annual': Decimal('599.99') },
+            'gold':   { 'monthly': Decimal('79.99'), 'annual': Decimal('959.99') },
+            # Accept common synonyms
+            'basic':  { 'monthly': Decimal('24.99'), 'annual': Decimal('299.99') },
+            'pro':    { 'monthly': Decimal('49.99'), 'annual': Decimal('599.99') },
+            'premium':{ 'monthly': Decimal('79.99'), 'annual': Decimal('959.99') },
         }
 
         # Normalize requested plan to one we price
@@ -177,10 +258,9 @@ def create_paypal_order_api(request):
         final_amount = original_amount
         discount_applied = None
         discount_obj = None
-        if discount_code_str:
+        if discount_code_str and request.user.is_authenticated:
             validation = DiscountService.validate_discount_code(discount_code_str, request.user)
             if validation.get('valid'):
-                # Resolve the DiscountCode object (if exists)
                 try:
                     discount_obj = DiscountCode.objects.get(code=discount_code_str.upper(), is_active=True)
                 except DiscountCode.DoesNotExist:
@@ -211,14 +291,38 @@ def create_paypal_order_api(request):
         if final_amount <= 0:
             final_amount = Decimal('0.50')
 
-        # Generate a fake order id (stub integration)
-        from uuid import uuid4
-        order_id = f"TEST-{uuid4().hex[:12].upper()}"
+        # Create order via PayPal REST v2
+        token = _paypal_get_access_token()
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+        purchase_unit = {
+            'amount': { 'value': f"{final_amount:.2f}", 'currency_code': currency },
+            'description': f"Trade Scan Pro {plan_type.title()} Plan - {billing_cycle}",
+        }
+        # Attach metadata to custom_id if possible
+        custom_parts = [plan_type, billing_cycle, str(int(timezone.now().timestamp()))]
+        if request.user.is_authenticated:
+            custom_parts.append(str(request.user.id))
+        purchase_unit['custom_id'] = '_'.join(custom_parts)
 
-        approval_url = f"https://www.paypal.com/checkoutnow?token={order_id}"
+        payload = {
+            'intent': 'CAPTURE',
+            'purchase_units': [purchase_unit],
+            'application_context': {
+                'brand_name': 'Trade Scan Pro',
+                'user_action': 'PAY_NOW',
+                # Optional return/cancel if you want to use server redirects
+            }
+        }
+        resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders", headers=headers, json=payload, timeout=20)
+        resp.raise_for_status()
+        order = resp.json()
+        approval_url = next((l.get('href') for l in order.get('links', []) if l.get('rel') in ['approve','payer-action']), None)
         return JsonResponse({
             'success': True,
-            'order_id': order_id,
+            'order_id': order.get('id'),
             'approval_url': approval_url,
             'currency': currency,
             'plan_type': plan_type,
@@ -253,7 +357,7 @@ def create_paypal_order_api(request):
 # PayPal capture (record payment)
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def capture_paypal_order_api(request):
     """
     Capture a PayPal order (stub integration)
@@ -282,8 +386,36 @@ def capture_paypal_order_api(request):
         amount = data.get('amount')
         final_amount = data.get('final_amount')
 
-        # Attempt to record payment
+        # Capture via PayPal REST v2
+        token = _paypal_get_access_token()
+        headers = { 'Authorization': f'Bearer {token}', 'Content-Type': 'application/json' }
+        resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders/{order_id}/capture", headers=headers, json={}, timeout=20)
         try:
+            resp.raise_for_status()
+        except Exception:
+            # Return upstream error, if any
+            return JsonResponse({ 'success': False, 'error': 'PayPal capture failed', 'details': resp.text }, status=502)
+
+        capture_json = resp.json() or {}
+        # Attempt to record payment if authenticated or if custom_id had a user id
+        try:
+            resource = capture_json
+            if resource.get('purchase_units'):
+                resource = resource['purchase_units'][0]
+            custom_id = resource.get('custom_id') or ''
+            inferred_user = None
+            if request.user.is_authenticated:
+                inferred_user = request.user
+            else:
+                try:
+                    parts = custom_id.split('_') if custom_id else []
+                    if len(parts) >= 4:
+                        uid = int(parts[3])
+                        from django.contrib.auth.models import User
+                        inferred_user = User.objects.get(id=uid)
+                except Exception:
+                    inferred_user = None
+
             discount_obj = None
             if discount_code_str:
                 try:
@@ -291,24 +423,33 @@ def capture_paypal_order_api(request):
                 except DiscountCode.DoesNotExist:
                     discount_obj = None
 
-            # Fallback if amounts missing
-            if final_amount is None:
-                final_amount = amount
+            if inferred_user is not None:
+                # Determine final amount from PayPal capture if not provided
+                if final_amount is None:
+                    try:
+                        cap = resource.get('payments', {}).get('captures', [])[0]
+                        val = cap.get('amount', {}).get('value')
+                        final_amount = Decimal(str(val)) if val else None
+                    except Exception:
+                        pass
+                if final_amount is None and amount is not None:
+                    final_amount = Decimal(str(amount))
 
-            # Record payment in revenue tracking
-            if final_amount is not None:
-                DiscountService.record_payment(
-                    user=request.user,
-                    original_amount=Decimal(str(amount or final_amount or 0)),
-                    discount_code=discount_obj,
-                    payment_date=timezone.now()
-                )
+                if final_amount is not None:
+                    DiscountService.record_payment(
+                        user=inferred_user,
+                        original_amount=Decimal(str(final_amount)),
+                        discount_code=discount_obj,
+                        payment_date=timezone.now()
+                    )
         except Exception as rec_err:
             logger.error(f"Failed to record payment for order {order_id}: {rec_err}")
 
-        # Activate user's plan upon successful capture
+        # Activate user's plan upon successful capture (if we know the user)
         try:
-            user = request.user
+            user = request.user if request.user.is_authenticated else inferred_user
+            if not user:
+                raise ValueError('No user context for plan activation')
             profile, _ = UserProfile.objects.get_or_create(user=user)
             if plan_type in ['free','basic','bronze','silver','gold','enterprise']:
                 profile.plan_type = plan_type
@@ -362,26 +503,21 @@ def capture_paypal_order_api(request):
         }, status=500)
 
 
-# PayPal status/configuration endpoint
+# PayPal status/configuration endpoint (authenticated users)
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def paypal_status_api(request):
-    """
-    Return minimal PayPal integration status for diagnostics.
-    GET /api/billing/paypal-status
-    """
     try:
         client_id = getattr(settings, 'PAYPAL_CLIENT_ID', '')
         webhook_url = getattr(settings, 'PAYPAL_WEBHOOK_URL', '')
         webhook_id = getattr(settings, 'PAYPAL_WEBHOOK_ID', '')
-        env = os.environ.get('PAYPAL_ENV', os.environ.get('PAYPAL_ENVIRONMENT', 'sandbox')).lower()
-
-        # Only expose booleans/metadata to non-admins
+        env = (os.environ.get('PAYPAL_ENV') or os.environ.get('PAYPAL_MODE') or 'live').lower()
         data = {
-            'environment': 'live' if env == 'live' else 'sandbox',
+            'environment': 'sandbox' if env == 'sandbox' else 'live',
             'client_configured': bool(client_id),
             'webhook_configured': bool(webhook_url or webhook_id),
+            'base_url': _paypal_base_url(),
         }
         return JsonResponse({'success': True, 'data': data})
     except Exception as e:
@@ -951,7 +1087,7 @@ def usage_history_api(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def usage_track_api(request):
     """
     Track a single API usage event
@@ -975,13 +1111,13 @@ def usage_track_api(request):
         ]
         should_count = endpoint and any(endpoint.startswith(p) for p in stock_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
 
-        stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
-        if should_count:
-            stats.api_calls = (stats.api_calls or 0) + 1
-        # Always increment total requests only for stock data endpoints as per requirement
-        if should_count:
-            stats.requests = (stats.requests or 0) + 1
-        stats.save()
+        # Only track when user is authenticated, since UsageStats.user is required
+        if request.user.is_authenticated:
+            stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
+            if should_count:
+                stats.api_calls = (stats.api_calls or 0) + 1
+                stats.requests = (stats.requests or 0) + 1
+            stats.save()
 
         return JsonResponse({
             'success': True,

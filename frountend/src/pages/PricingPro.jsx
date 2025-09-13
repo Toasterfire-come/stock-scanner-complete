@@ -4,10 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Suspense, lazy } from 'react';
-const PayPalCheckout = lazy(() => import("../components/PayPalCheckout"));
+ 
 import {
   CheckCircle,
   X,
@@ -61,7 +58,7 @@ const PricingPro = () => {
       icon: <BarChart3 className="h-8 w-8" />,
       color: "border-yellow-300 bg-yellow-50",
       headerColor: "bg-gradient-to-r from-yellow-600 to-yellow-700",
-      price: { monthly: 24.99, annual: 249.99 },
+      price: { monthly: 24.99, annual: 299.99 },
       popular: true,
       features: [
         { name: "150 API calls per day, 1500/month", included: true },
@@ -89,7 +86,7 @@ const PricingPro = () => {
       icon: <Crown className="h-8 w-8" />,
       color: "border-gray-300 bg-gray-50",
       headerColor: "bg-gradient-to-r from-gray-400 to-gray-500",
-      price: { monthly: 39.99, annual: 399.99 },
+      price: { monthly: 49.99, annual: 599.99 },
       popular: false,
       features: [
         { name: "500 API calls per day, 5000/month", included: true },
@@ -117,7 +114,7 @@ const PricingPro = () => {
       icon: <Rocket className="h-8 w-8" />,
       color: "border-yellow-300 bg-yellow-50",
       headerColor: "bg-gradient-to-r from-yellow-500 to-yellow-600",
-      price: { monthly: 89.99, annual: 899.99 },
+      price: { monthly: 79.99, annual: 959.99 },
       popular: false,
       features: [
         { name: "Unlimited API calls", included: true },
@@ -194,7 +191,6 @@ const PricingPro = () => {
 
   const handlePlanSelect = (plan, billingCycle) => {
     setSelectedPlan({ ...plan, billingCycle });
-    setShowCheckout(true);
   };
 
   const continueToCheckout = async (plan) => {
@@ -355,6 +351,9 @@ const PricingPro = () => {
                             /{isAnnual ? 'mo' : 'month'}
                           </span>
                         </div>
+                        <div className="mt-2 text-xs text-white/80">
+                          Auto‑renews {isAnnual ? 'annually' : 'monthly'}. Cancel anytime.
+                        </div>
                       </>
                     )}
                     
@@ -408,47 +407,15 @@ const PricingPro = () => {
                     ))}
                   </div>
 
-                  {/* CTA Buttons */}
+                  {/* CTA Button */}
                   <div className="space-y-3 pt-4">
-                    <Dialog open={showCheckout && selectedPlan?.name === plan.name} onOpenChange={setShowCheckout}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                          onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
-                        >
-                          {plan.isFree ? "Try Now for Free" : "Try for $1"}
-                          <ArrowRight className="h-5 w-5 ml-2" />
-                        </Button>
-                      </DialogTrigger>
-                      
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Complete Your Subscription</DialogTitle>
-                        </DialogHeader>
-                        
-                        {selectedPlan && (
-                          <Suspense fallback={<div className="py-6 text-center">Loading checkout…</div>}>
-                            <PayPalCheckout
-                              planType={selectedPlan.name.toLowerCase()}
-                              billingCycle={selectedPlan.billingCycle}
-                              onSuccess={handlePaymentSuccess}
-                              onError={handlePaymentError}
-                              onCancel={() => setShowCheckout(false)}
-                            />
-                          </Suspense>
-                        )}
-                      </DialogContent>
-                    </Dialog>
-
-                    {!plan.isFree && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => continueToCheckout(plan)}
-                      >
-                        Continue to Checkout (PayPal)
-                      </Button>
-                    )}
+                    <Button 
+                      className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                      onClick={() => continueToCheckout(plan)}
+                    >
+                      {plan.isFree ? "Try Now for Free" : "Try Today for $1"}
+                      <ArrowRight className="h-5 w-5 ml-2" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
