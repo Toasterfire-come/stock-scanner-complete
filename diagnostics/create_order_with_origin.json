@@ -1,0 +1,18 @@
+HTTP/2 201 
+date: Sat, 13 Sep 2025 13:51:26 GMT
+content-type: application/json
+content-length: 369
+allow: OPTIONS, POST
+cross-origin-opener-policy: same-origin
+referrer-policy: same-origin
+server: cloudflare
+vary: Cookie, origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=IcU%2FBNcPYepe%2BdY6LZdYEdVwL9uRKCKqt2UbrHHuNXAVCN0NEaYeM07T7hM2xTD0aPlk8SQFVWT%2B6aX0YK5F%2F5NChVAiTYOhnKrZqtG2EYZ8wZ8FRs6A4Q%3D%3D"}]}
+cf-ray: 97e81e8a4c025ec8-PDX
+alt-svc: h3=":443"; ma=86400
+
+{"success": true, "order_id": "3N223790YK1747530", "approval_url": "https://www.paypal.com/checkoutnow?token=3N223790YK1747530", "currency": "USD", "plan_type": "pro", "billing_cycle": "monthly", "discount_applied": {"code": "TRIAL", "type": "trial", "description": "7-day $1 trial", "original_amount": 49.99, "final_amount": 1.0}, "amount": 49.99, "final_amount": 1.0}
