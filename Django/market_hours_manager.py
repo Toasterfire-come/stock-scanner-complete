@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """
 Market Hours Manager - Automated Start/Stop Script
-Manages all stock scanner components based on market hours:
-- Premarket: 4:00 AM - 9:30 AM ET (starts retrieval, news, emails)
-- Regular Market: 9:30 AM - 4:00 PM ET (full operation + server)
-- Postmarket: 4:00 PM - 8:00 PM ET (continues operation)
-- After Hours: 8:00 PM - 4:00 AM ET (stops all components)
+Operates ONLY during regular market hours:
+- Regular Market: 9:30 AM - 4:00 PM ET (stocks + news + emails + server)
+- Outside these hours: all components stopped (can be started off-market safely)
 """
 
 import os
@@ -69,22 +67,13 @@ class MarketHoursManager:
         # self.postmarket_end = os.getenv('POSTMARKET_END', "20:00")   # DISABLED
         
         # Component configurations - ONLY ACTIVE DURING REGULAR MARKET HOURS
+        # Note: The stock orchestrator spawns stock, news, and email single-run cycles
+        # every 3 minutes during market hours. We do NOT run separate news/email schedulers here
+        # to avoid duplication.
         self.components = {
-            'stock_retrieval': {
+            'stock_orchestrator': {
                 'script': 'enhanced_stock_retrieval_working.py',
-                'args': ['-schedule'],
-                'active_during': ['market'],  # Only during regular market hours
-                'process': None
-            },
-            'news_scraper': {
-                'script': 'news_scraper_with_restart.py',
-                'args': ['-schedule', '-interval', '5'],
-                'active_during': ['market'],  # Only during regular market hours
-                'process': None
-            },
-            'email_sender': {
-                'script': 'email_sender_with_restart.py',
-                'args': ['-schedule', '-interval', '10'],
+                'args': ['-schedule', '-save-to-db'],
                 'active_during': ['market'],  # Only during regular market hours
                 'process': None
             },
