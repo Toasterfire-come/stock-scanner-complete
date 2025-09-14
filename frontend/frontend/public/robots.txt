@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /auth/
-Disallow: /account/
-Disallow: /app/
-
-Sitemap: https://tradescanpro.com/sitemap.xml
