@@ -273,36 +273,16 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': os.environ.get('THROTTLE_RATE_ANON', '200/hour'),
         'user': os.environ.get('THROTTLE_RATE_USER', '2000/hour')
-    }
+    },
+    'DEFAULT_THROTTLE_CACHE': 'default',
 }
 
-# Cache backend selection (no Redis). Options via CACHE_BACKEND: locmem (default), db, file
-_cache_backend = (os.environ.get('CACHE_BACKEND') or 'locmem').lower()
-if _cache_backend == 'db':
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-            'LOCATION': os.environ.get('CACHE_TABLE', 'django_cache'),
-        }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'stock-scanner-cache',
     }
-elif _cache_backend == 'file':
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-            'LOCATION': os.environ.get('CACHE_DIR', str(BASE_DIR / 'cache_data')),
-        }
-    }
-else:
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'stock-scanner-cache',
-        }
-    }
-
-# Provide a graceful alias so code using caches['redis'] gets the default backend
-if 'redis' not in CACHES:
-    CACHES['redis'] = {**CACHES['default']}
+}
 
 # Sessions in DB (avoid Redis)
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

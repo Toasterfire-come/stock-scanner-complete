@@ -2,6 +2,7 @@
 Production settings for external API access
 """
 
+import os
 from .settings import *
 
 # Security settings for external access
@@ -43,25 +44,48 @@ REST_FRAMEWORK = {
     # Disable DRF throttling in production since RateLimitMiddleware handles it
     'DEFAULT_THROTTLE_CLASSES': [],
     'DEFAULT_THROTTLE_RATES': {},
+    'DEFAULT_THROTTLE_CACHE': 'default',
 }
 
-# Honor base env-driven cache selection from settings.py (CACHE_BACKEND=locmem|db|file)
-# and add a graceful alias so caches['redis'] maps to the default backend.
-try:
-    CACHES  # type: ignore[name-defined]
-except NameError:
-    CACHES = {}
+# Select production cache backend via env: CACHE_BACKEND=locmem|db|file
+cache_backend = os.environ.get("CACHE_BACKEND", "locmem").lower()
 
-if 'default' not in CACHES:
-    # Fallback to a safe in-memory cache if base settings didn't define one
-    CACHES['default'] = {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'stock-scanner-cache-prod',
+if cache_backend == "locmem":
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": os.environ.get("CACHE_LOCATION", "stock-scanner-cache"),
+            "TIMEOUT": int(os.environ.get("CACHE_TIMEOUT", "300")),
+        }
+    }
+elif cache_backend == "db":
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": os.environ.get("CACHE_TABLE", "django_cache"),
+            "TIMEOUT": int(os.environ.get("CACHE_TIMEOUT", "300")),
+        }
+    }
+elif cache_backend == "file":
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+            "LOCATION": os.environ.get("CACHE_DIR", "/tmp/django_cache"),
+            "TIMEOUT": int(os.environ.get("CACHE_TIMEOUT", "300")),
+        }
+    }
+else:
+    # Default fallback to LocMem
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": os.environ.get("CACHE_LOCATION", "stock-scanner-cache"),
+            "TIMEOUT": int(os.environ.get("CACHE_TIMEOUT", "300")),
+        }
     }
 
-# Graceful compatibility: if code requests caches['redis'], serve the default backend
-if 'redis' not in CACHES:
-    CACHES['redis'] = {**CACHES['default']}
+# Optional: detect unexpected overrides at startup
+print("Effective cache backend:", CACHES['default']['BACKEND'])
 
 # Logging for debugging
 LOGGING = {
