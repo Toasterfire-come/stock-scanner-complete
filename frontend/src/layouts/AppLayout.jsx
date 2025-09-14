@@ -97,24 +97,6 @@ const AppLayout = () => {
                       <MarketStatus />
                     </div>
                     <nav className="flex flex-col space-y-3">
-                      {/* Marketing always */}
-                      {marketingPages.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <Link
-                            key={item.name}
-                            to={item.href}
-                            className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
-                              location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <Icon className="h-5 w-5" />
-                            <span>{item.name}</span>
-                          </Link>
-                        );
-                      })}
-
                       {/* App pages only when authenticated */}
                       {isAuthenticated && (
                         <>
@@ -137,6 +119,25 @@ const AppLayout = () => {
                           })}
                         </>
                       )}
+
+                      {/* Marketing pages below app pages */}
+                      <div className="text-xs text-muted-foreground font-medium uppercase pt-4">Marketing</div>
+                      {marketingPages.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
+                              location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span>{item.name}</span>
+                          </Link>
+                        );
+                      })}
 
                       {/* Mobile auth buttons for guests */}
                       {!isAuthenticated && (
