@@ -300,6 +300,10 @@ else:
         }
     }
 
+# Provide a graceful alias so code using caches['redis'] gets the default backend
+if 'redis' not in CACHES:
+    CACHES['redis'] = {**CACHES['default']}
+
 # Sessions in DB (avoid Redis)
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
