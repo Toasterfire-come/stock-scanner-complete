@@ -93,6 +93,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
 
+# Optional Sentry error reporting (enabled when SENTRY_DSN is set)
+try:
+    _sentry_dsn = os.environ.get('SENTRY_DSN') or os.environ.get('DJANGO_SENTRY_DSN')
+    if _sentry_dsn:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[DjangoIntegration()],
+            traces_sample_rate=float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0')),
+            send_default_pii=False,
+            environment=os.environ.get('ENVIRONMENT', 'production' if not DEBUG else 'development'),
+            release=os.environ.get('RELEASE')
+        )
+except Exception:
+    # Sentry is optional; never block startup
+    pass
+
 # Database configuration - Auto-detect XAMPP or use environment settings
 if IS_XAMPP_AVAILABLE:
     # XAMPP Configuration (no password by default)
@@ -266,6 +284,27 @@ CACHES = {
     }
 }
 
+# Prefer Redis cache if REDIS_URL is provided
+_redis_url = os.environ.get('REDIS_URL') or os.environ.get('CACHE_URL')
+if _redis_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': _redis_url,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': int(os.environ.get('REDIS_CONNECT_TIMEOUT', '5')),
+                'SOCKET_TIMEOUT': int(os.environ.get('REDIS_SOCKET_TIMEOUT', '5')),
+            },
+            'KEY_PREFIX': os.environ.get('REDIS_KEY_PREFIX', 'stockscanner')
+        }
+    }
+
+# Optionally store sessions in cache (Redis recommended)
+if (os.environ.get('USE_REDIS_SESSIONS') or 'false').lower() == 'true':
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+
 # Email
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 
@@ -288,12 +327,16 @@ LOGGING = {
         'default': {
             'format': '[{asctime}] {levelname} {name}: {message}',
             'style': '{',
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'fmt': '%(asctime)s %(levelname)s %(name)s %(message)s',
         }
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'default',
+            'formatter': 'json' if (os.environ.get('LOG_FORMAT', '').lower() == 'json' or os.environ.get('JSON_LOGS', 'false').lower() == 'true') else 'default',
         },
     },
     'root': {

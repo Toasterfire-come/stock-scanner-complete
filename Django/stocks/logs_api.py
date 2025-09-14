@@ -3,8 +3,9 @@ Logging & Monitoring API Views
 Accepts client-side logs, performance metrics, and security events
 """
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -24,6 +25,7 @@ def _safe_json(body_bytes):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([UserRateThrottle, AnonRateThrottle])
 def client_logs_api(request):
     """
     POST /api/logs/client/
@@ -57,6 +59,7 @@ def client_logs_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([UserRateThrottle, AnonRateThrottle])
 def metrics_logs_api(request):
     """
     POST /api/logs/metrics/
@@ -74,6 +77,7 @@ def metrics_logs_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([UserRateThrottle, AnonRateThrottle])
 def security_logs_api(request):
     """
     POST /api/logs/security/

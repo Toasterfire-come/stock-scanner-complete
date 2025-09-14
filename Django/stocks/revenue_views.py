@@ -39,6 +39,7 @@ def validate_discount_code(request):
             except json.JSONDecodeError:
                 return JsonResponse({'error': 'Invalid JSON data'}, status=400)
         code = data.get('code', '').strip()
+        billing_cycle = (data.get('billing_cycle') or '').strip().lower() or None
         
         if not code:
             return JsonResponse({
@@ -47,7 +48,7 @@ def validate_discount_code(request):
         
         # Guard service errors to avoid 500s for invalid codes
         try:
-            validation = DiscountService.validate_discount_code(code, request.user)
+            validation = DiscountService.validate_discount_code(code, request.user, billing_cycle=billing_cycle)
         except Exception as svc_err:
             logger.error(f"DiscountService.validate_discount_code failed: {svc_err}")
             return JsonResponse({'error': 'Invalid or unavailable discount code'}, status=400)
@@ -88,6 +89,7 @@ def apply_discount_code(request):
         if data is None:
             data = json.loads(request.body) if request.body else {}
         code = data.get('code', '').strip()
+        billing_cycle = (data.get('billing_cycle') or '').strip().lower() or None
         original_amount = data.get('amount')
         
         if not code:
@@ -107,7 +109,7 @@ def apply_discount_code(request):
                 'error': 'Invalid amount format'
             }, status=400)
         
-        validation = DiscountService.validate_discount_code(code, request.user)
+        validation = DiscountService.validate_discount_code(code, request.user, billing_cycle=billing_cycle)
         
         if not validation['valid']:
             return JsonResponse({
@@ -230,7 +232,8 @@ def record_payment(request):
             user=user,
             original_amount=original_amount,
             discount_code=discount_obj,
-            payment_date=payment_date
+            payment_date=payment_date,
+            billing_cycle=data.get('billing_cycle')
         )
         
         return JsonResponse({

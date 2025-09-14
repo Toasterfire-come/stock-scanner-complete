@@ -251,6 +251,10 @@ def create_paypal_order_api(request):
 
         original_amount = PRICES[plan_type][billing_cycle]
 
+        # Apply standard 15% annual discount before any code-based discounts
+        if billing_cycle == 'annual':
+            original_amount = (original_amount * Decimal('0.85')).quantize(Decimal('0.01'))
+
         # Ensure discount codes exist (idempotent)
         try:
             DiscountService.initialize_ref50_code()
@@ -262,7 +266,7 @@ def create_paypal_order_api(request):
         discount_applied = None
         discount_obj = None
         if discount_code_str and request.user.is_authenticated:
-            validation = DiscountService.validate_discount_code(discount_code_str, request.user)
+            validation = DiscountService.validate_discount_code(discount_code_str, request.user, billing_cycle=billing_cycle)
             if validation.get('valid'):
                 try:
                     discount_obj = DiscountCode.objects.get(code=discount_code_str.upper(), is_active=True)
@@ -477,7 +481,8 @@ def capture_paypal_order_api(request):
                         user=inferred_user,
                         original_amount=Decimal(str(final_amount)),
                         discount_code=discount_obj,
-                        payment_date=timezone.now()
+                        payment_date=timezone.now(),
+                        billing_cycle=billing_cycle
                     )
         except Exception as rec_err:
             logger.error(f"Failed to record payment for order {order_id}: {rec_err}")

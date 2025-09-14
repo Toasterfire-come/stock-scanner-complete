@@ -19,7 +19,7 @@ class DiscountService:
     """
     
     @staticmethod
-    def validate_discount_code(code, user):
+    def validate_discount_code(code, user, billing_cycle: str = None):
         """
         Validate if a discount code can be used by a user
         
@@ -79,6 +79,10 @@ class DiscountService:
         else:
             # For recurring discounts, always apply
             applies_discount = True
+
+        # Business rule: TRIAL is valid only for annual billing
+        if discount.code.upper() == 'TRIAL' and billing_cycle and billing_cycle.lower() != 'annual':
+            applies_discount = False
         
         return {
             'valid': True,
@@ -114,7 +118,7 @@ class DiscountService:
     
     @staticmethod
     @transaction.atomic
-    def record_payment(user, original_amount, discount_code=None, payment_date=None):
+    def record_payment(user, original_amount, discount_code=None, payment_date=None, billing_cycle: str = None):
         """
         Record a payment and handle discount tracking
         
@@ -134,7 +138,7 @@ class DiscountService:
         
         # Calculate pricing
         if discount_code:
-            validation = DiscountService.validate_discount_code(discount_code.code, user)
+            validation = DiscountService.validate_discount_code(discount_code.code, user, billing_cycle=billing_cycle)
             if validation['valid'] and validation['applies_discount']:
                 if discount_code.code.upper() == 'TRIAL':
                     # Special trial pricing: $1 for the first 7 days
