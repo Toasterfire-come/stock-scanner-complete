@@ -9,6 +9,9 @@ from django.http import JsonResponse
 from django.core.cache import cache
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
+from django.utils import timezone
+from django.db.models import Sum
+from .models import UsageStats, UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +95,13 @@ class RateLimitMiddleware(MiddlewareMixin):
         
         # Check if user is premium (no rate limiting)
         if self.is_premium_user(request):
-            return self.get_response(request)
+            # Track usage for enterprise/premium for display purposes only
+            response = self.get_response(request)
+            try:
+                self._increment_monthly_usage(request)
+            except Exception:
+                pass
+            return response
         
         # Get rate limit for this user
         rate_limit = self.get_rate_limit(request)
@@ -100,9 +109,39 @@ class RateLimitMiddleware(MiddlewareMixin):
         # Check rate limit
         if not self.check_rate_limit(user_id, rate_limit):
             return self.rate_limit_exceeded_response(user_id, rate_limit)
+
+        # Strict monthly enforcement for authenticated users based on plan tier
+        if getattr(getattr(request, 'user', None), 'is_authenticated', False):
+            try:
+                profile = getattr(request.user, 'profile', None)
+                api_monthly_limit = int(getattr(profile, 'api_calls_limit', 100)) if profile else 100
+                plan_type = (getattr(profile, 'plan_type', 'free') if profile else 'free') or 'free'
+
+                # Enterprise has unlimited monthly, but we still track usage
+                is_enterprise = str(plan_type).lower() == 'enterprise'
+                if not is_enterprise and api_monthly_limit >= 0:
+                    month_start = timezone.now().replace(day=1).date()
+                    used = UsageStats.objects.filter(user=request.user, date__gte=month_start).aggregate(total=Sum('api_calls')).get('total') or 0
+                    if used >= api_monthly_limit:
+                        # Monthly quota exceeded
+                        return self.monthly_limit_exceeded_response(api_monthly_limit, used)
+                # Mark for post-response increment
+                request._count_usage_after_response = True
+            except Exception:
+                # Fail-open on usage calculation errors
+                request._count_usage_after_response = True
+        else:
+            request._count_usage_after_response = False
         
         # Process request
-        return self.get_response(request)
+        response = self.get_response(request)
+        # Increment usage after successful response
+        try:
+            if getattr(request, '_count_usage_after_response', False) and (200 <= getattr(response, 'status_code', 200) < 500):
+                self._increment_monthly_usage(request)
+        except Exception:
+            pass
+        return response
     
     def should_rate_limit(self, request):
         """
@@ -284,6 +323,41 @@ class RateLimitMiddleware(MiddlewareMixin):
         response['X-RateLimit-Reset'] = str(int(time.time() + retry_after))
         
         return response
+
+    def monthly_limit_exceeded_response(self, limit, used):
+        """
+        Return response when monthly quota is exceeded
+        """
+        remaining = max(0, int(limit) - int(used))
+        response = JsonResponse({
+            'error': 'Monthly quota exceeded',
+            'message': f'You have reached your monthly limit of {limit} API calls.',
+            'period': 'month',
+            'limit': int(limit),
+            'used': int(used),
+            'remaining': remaining,
+            'upgrade_message': 'Upgrade your plan for a higher monthly quota or unlimited access.'
+        }, status=429)
+        # Provide generic headers for clients
+        response['X-RateLimit-Period'] = 'month'
+        response['X-RateLimit-Limit'] = str(limit)
+        response['X-RateLimit-Remaining'] = str(remaining)
+        return response
+
+    def _increment_monthly_usage(self, request):
+        """
+        Increment daily and monthly usage counters for authenticated user.
+        Only counts requests to rate-limited endpoints.
+        """
+        if not getattr(getattr(request, 'user', None), 'is_authenticated', False):
+            return
+        if not self.should_rate_limit(request):
+            return
+        today = timezone.now().date()
+        stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
+        stats.api_calls = (stats.api_calls or 0) + 1
+        stats.requests = (stats.requests or 0) + 1
+        stats.save()
 
 
 class APIKeyAuthenticationMiddleware(MiddlewareMixin):

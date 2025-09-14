@@ -37,10 +37,35 @@ import {
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
+import { api } from "../api/client";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
+  const [usage, setUsage] = React.useState(null);
+  const [plan, setPlan] = React.useState(null);
+
+  React.useEffect(() => {
+    let alive = true;
+    async function loadUsage() {
+      try {
+        if (!isAuthenticated) return;
+        const { data } = await api.get('/usage/');
+        if (!alive) return;
+        const monthly = data?.data?.monthly || {};
+        setUsage({
+          used: Number(monthly.api_calls || 0),
+          limit: Number(monthly.limit || 0),
+          remaining: Number(monthly.remaining || 0),
+        });
+        const accountPlan = data?.data?.account?.plan_type || (user?.plan || 'free');
+        setPlan(String(accountPlan).toLowerCase());
+      } catch {}
+    }
+    loadUsage();
+    const id = setInterval(loadUsage, 60 * 1000);
+    return () => { alive = false; clearInterval(id); };
+  }, [isAuthenticated, user]);
   // Mobile sheet removed; dropdowns used across all sizes
 
   const navigation = [
@@ -154,8 +179,17 @@ const AppLayout = () => {
                 <>
                   {/* User badge */}
                   <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
-                    {user.plan} Plan
+                    {(user.plan || plan || 'free')} Plan
                   </Badge>
+
+                  {/* Monthly usage (enterprise shows used only) */}
+                  {usage && (
+                    <Badge variant="outline" className="hidden md:inline-flex text-xs">
+                      {String(plan || user.plan).toLowerCase() === 'enterprise'
+                        ? `Usage: ${usage.used.toLocaleString()} this month`
+                        : `API: ${usage.used.toLocaleString()}/${usage.limit.toLocaleString()} (${Math.max(0, usage.remaining).toLocaleString()} left)`}
+                    </Badge>
+                  )}
 
                   {/* User menu */}
                   <DropdownMenu>
