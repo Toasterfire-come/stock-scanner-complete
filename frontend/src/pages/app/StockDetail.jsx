@@ -34,7 +34,8 @@ import {
   Building,
   Users,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Newspaper
 } from "lucide-react";
 import { getStock, getRealTimeQuote, addWatchlist, createAlert } from "../../api/client";
 
@@ -76,7 +77,7 @@ const StockDetail = () => {
 
     fetchStockData();
 
-    // Enhanced chart data loading with multiple free APIs as fallback
+    // Enhanced chart data loading using Yahoo Finance only (with proxy fallback)
     const loadChart = async () => {
       try {
         setIsChartLoading(true);
@@ -118,36 +119,33 @@ const StockDetail = () => {
             return;
           }
         } catch (yahooError) {
-          console.warn('Yahoo Finance failed, trying fallback:', yahooError.message);
+          console.warn('Yahoo Finance failed, trying proxy fallback:', yahooError.message);
         }
         
-        // Fallback: Alpha Vantage Demo API (free tier, limited)
+        // Fallback: Yahoo via public CORS proxy
         try {
-          const alphaUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&apikey=demo&outputsize=compact`;
-          const alphaResponse = await fetch(alphaUrl);
-          const alphaJson = await alphaResponse.json();
-          
-          const timeSeries = alphaJson['Time Series (Daily)'] || {};
-          const alphaPoints = Object.entries(timeSeries)
-            .slice(0, 180) // Last 6 months approximation
-            .map(([date, data]) => ({
-              date: new Date(date).toLocaleDateString(),
-              timestamp: new Date(date).getTime(),
-              close: Number(data['4. close'] || 0),
-              open: Number(data['1. open'] || 0),
-              high: Number(data['2. high'] || 0),
-              low: Number(data['3. low'] || 0),
-              volume: Number(data['5. volume'] || 0)
-            }))
-            .filter(p => Number.isFinite(p.close) && p.close > 0)
-            .reverse(); // Chronological order
-          
-          if (alphaPoints.length > 0) {
-            setChartData(alphaPoints);
+          const proxied = `https://cors.isomorphic-git.org/https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
+          const r2 = await fetch(proxied, { mode: 'cors' });
+          if (!r2.ok) throw new Error('Yahoo proxy fetch failed');
+          const json2 = await r2.json();
+          const res2 = ((((json2 || {}).chart || {}).result || [])[0]) || {};
+          const ts2 = (res2.timestamp || []);
+          const q2 = (((res2.indicators || {}).quote || [])[0]) || {};
+          const pts2 = ts2.map((t, i) => ({
+            date: new Date(t * 1000).toLocaleDateString(),
+            timestamp: t * 1000,
+            close: Number((q2.close || [])[i] ?? 0),
+            open: Number((q2.open || [])[i] ?? 0),
+            high: Number((q2.high || [])[i] ?? 0),
+            low: Number((q2.low || [])[i] ?? 0),
+            volume: Number((q2.volume || [])[i] ?? 0)
+          })).filter(p => Number.isFinite(p.close) && p.close > 0);
+          if (pts2.length > 0) {
+            setChartData(pts2);
             return;
           }
-        } catch (alphaError) {
-          console.warn('Alpha Vantage fallback failed:', alphaError.message);
+        } catch (proxyErr) {
+          console.warn('Yahoo proxy fallback failed:', proxyErr.message);
         }
         
         // If all APIs fail, create mock data based on current price
