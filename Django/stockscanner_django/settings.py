@@ -293,6 +293,8 @@ if _redis_url:
             'LOCATION': _redis_url,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                # Do not raise exceptions if Redis is unavailable; behave like an empty cache
+                'IGNORE_EXCEPTIONS': True,
                 'SOCKET_CONNECT_TIMEOUT': int(os.environ.get('REDIS_CONNECT_TIMEOUT', '5')),
                 'SOCKET_TIMEOUT': int(os.environ.get('REDIS_SOCKET_TIMEOUT', '5')),
             },
