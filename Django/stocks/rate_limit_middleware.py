@@ -305,7 +305,11 @@ class RateLimitMiddleware(MiddlewareMixin):
         Return response when rate limit is exceeded
         """
         cache_key = f"rate_limit_{user_id}"
-        request_data = cache.get(cache_key, {})
+        try:
+            request_data = cache.get(cache_key, {})
+        except Exception:
+            # Fail-open if cache backend is unavailable
+            request_data = {}
         
         # Calculate when the oldest request will expire
         if request_data and request_data.get('requests'):

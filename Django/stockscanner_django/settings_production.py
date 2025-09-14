@@ -45,15 +45,23 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {},
 }
 
-# Ensure a non-Redis cache backend regardless of env
-CACHES = {
-    'default': {
+# Honor base env-driven cache selection from settings.py (CACHE_BACKEND=locmem|db|file)
+# and add a graceful alias so caches['redis'] maps to the default backend.
+try:
+    CACHES  # type: ignore[name-defined]
+except NameError:
+    CACHES = {}
+
+if 'default' not in CACHES:
+    # Fallback to a safe in-memory cache if base settings didn't define one
+    CACHES['default'] = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'stock-scanner-cache-prod',
     }
-}
 
-# Use base settings cache selector (env-driven: CACHE_BACKEND=locmem|db|file)
+# Graceful compatibility: if code requests caches['redis'], serve the default backend
+if 'redis' not in CACHES:
+    CACHES['redis'] = {**CACHES['default']}
 
 # Logging for debugging
 LOGGING = {
