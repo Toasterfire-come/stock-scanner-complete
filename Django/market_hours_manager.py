@@ -66,22 +66,31 @@ class MarketHoursManager:
         # self.premarket_start = os.getenv('PREMARKET_START', "04:00")  # DISABLED
         # self.postmarket_end = os.getenv('POSTMARKET_END', "20:00")   # DISABLED
         
-        # Component configurations - ONLY ACTIVE DURING REGULAR MARKET HOURS
-        # Note: The stock orchestrator spawns stock, news, and email single-run cycles
-        # every 3 minutes during market hours. We do NOT run separate news/email schedulers here
-        # to avoid duplication.
+        # Component configurations - Individual services with specific restart intervals
         self.components = {
-            'stock_orchestrator': {
+            'enhanced_stock_retrieval': {
                 'script': 'enhanced_stock_retrieval_working.py',
-                'args': ['-schedule', '-save-to-db'],
-                'active_during': ['market'],  # Only during regular market hours
-                'process': None
+                'args': ['-save-to-db'],  # Single run, no schedule
+                'active_during': ['market'],
+                'restart_interval': 180,  # 3 minutes
+                'process': None,
+                'last_restart': 0
             },
-            'django_server': {
-                'command': ['python', 'manage.py', 'runserver', '0.0.0.0:8000'],
+            'news_scraper': {
+                'script': 'news_scraper_with_restart.py',
                 'args': [],
-                'active_during': ['market'],  # Only during regular market hours
-                'process': None
+                'active_during': ['market'],
+                'restart_interval': 300,  # 5 minutes
+                'process': None,
+                'last_restart': 0
+            },
+            'email_sender': {
+                'script': 'email_sender_with_restart.py',
+                'args': [],
+                'active_during': ['market'],
+                'restart_interval': 300,  # 5 minutes
+                'process': None,
+                'last_restart': 0
             }
         }
 
@@ -247,9 +256,10 @@ class MarketHoursManager:
         pass
             
     def manage_components(self):
-        """Main component management logic"""
+        """Main component management logic with restart intervals"""
         current_phase = self.get_current_market_phase()
         now_et = datetime.now(self.eastern_tz)
+        current_time = time.time()
         
         logger.info(f"Current market phase: {current_phase} ({now_et.strftime('%Y-%m-%d %H:%M:%S %Z')})")
         
@@ -265,10 +275,34 @@ class MarketHoursManager:
         for component_name, component in self.components.items():
             should_be_active = self.is_component_active(component_name, current_phase)
             is_currently_running = self.check_component_health(component_name)
-                
-            if should_be_active and not is_currently_running:
-                logger.info(f"Starting {component_name} for {current_phase} phase")
-                self.start_component(component_name)
+            
+            # Skip Celery components as they don't have restart intervals
+            if 'restart_interval' not in component:
+                if should_be_active and not is_currently_running:
+                    logger.info(f"Starting {component_name} for {current_phase} phase")
+                    self.start_component(component_name)
+                elif not should_be_active and is_currently_running:
+                    logger.info(f"Stopping {component_name} (not active during {current_phase})")
+                    self.stop_component(component_name)
+                continue
+            
+            restart_interval = component.get('restart_interval', 300)
+            last_restart = component.get('last_restart', 0)
+            time_since_restart = current_time - last_restart
+            
+            if should_be_active:
+                # Check if we need to restart based on interval
+                if not is_currently_running or time_since_restart >= restart_interval:
+                    if is_currently_running:
+                        logger.info(f"Restarting {component_name} (interval: {restart_interval}s)")
+                        self.stop_component(component_name)
+                        time.sleep(2)  # Brief pause between stop and start
+                    else:
+                        logger.info(f"Starting {component_name} for {current_phase} phase")
+                    
+                    if self.start_component(component_name):
+                        component['last_restart'] = current_time
+                        
             elif not should_be_active and is_currently_running:
                 logger.info(f"Stopping {component_name} (not active during {current_phase})")
                 self.stop_component(component_name)
