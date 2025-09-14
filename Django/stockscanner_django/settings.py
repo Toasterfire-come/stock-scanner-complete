@@ -276,7 +276,7 @@ REST_FRAMEWORK = {
     }
 }
 
-# Cache
+# Cache: force in-memory cache; ignore any REDIS_URL
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -284,28 +284,8 @@ CACHES = {
     }
 }
 
-# Prefer Redis cache if REDIS_URL is provided
-_redis_url = os.environ.get('REDIS_URL') or os.environ.get('CACHE_URL')
-if _redis_url:
-    CACHES = {
-        'default': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': _redis_url,
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                # Do not raise exceptions if Redis is unavailable; behave like an empty cache
-                'IGNORE_EXCEPTIONS': True,
-                'SOCKET_CONNECT_TIMEOUT': int(os.environ.get('REDIS_CONNECT_TIMEOUT', '5')),
-                'SOCKET_TIMEOUT': int(os.environ.get('REDIS_SOCKET_TIMEOUT', '5')),
-            },
-            'KEY_PREFIX': os.environ.get('REDIS_KEY_PREFIX', 'stockscanner')
-        }
-    }
-
-# Optionally store sessions in cache (Redis recommended)
-if (os.environ.get('USE_REDIS_SESSIONS') or 'false').lower() == 'true':
-    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-    SESSION_CACHE_ALIAS = 'default'
+# Sessions in DB (avoid Redis)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Email
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')

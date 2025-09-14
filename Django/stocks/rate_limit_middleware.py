@@ -261,7 +261,11 @@ class RateLimitMiddleware(MiddlewareMixin):
         current_time = time.time()
         
         # Get current request data from cache
-        request_data = cache.get(cache_key)
+        try:
+            request_data = cache.get(cache_key)
+        except Exception:
+            # Fail-open if cache backend is unavailable
+            request_data = None
         
         if request_data is None:
             # First request, initialize
@@ -289,7 +293,10 @@ class RateLimitMiddleware(MiddlewareMixin):
         request_data['count'] = len(request_data['requests'])
         
         # Update cache
-        cache.set(cache_key, request_data, self.free_user_window)
+        try:
+            cache.set(cache_key, request_data, self.free_user_window)
+        except Exception:
+            pass
         
         return True
     

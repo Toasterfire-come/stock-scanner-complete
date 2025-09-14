@@ -5,7 +5,10 @@ Accepts client-side logs, performance metrics, and security events
 
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+try:
+    from .throttling import SafeUserRateThrottle as UserRateThrottle, SafeAnonRateThrottle as AnonRateThrottle
+except Exception:
+    from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
