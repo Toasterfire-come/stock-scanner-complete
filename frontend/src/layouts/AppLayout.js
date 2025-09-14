@@ -96,24 +96,9 @@ const AppLayout = () => {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[360px]">
                   <nav className="flex flex-col space-y-4 mt-4">
-                    <div className="text-xs text-muted-foreground font-medium uppercase">Pages</div>
-                    {marketingPages.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.name}</span>
-                      </Link>
-                    ))}
-
                     {isAuthenticated && (
                       <>
-                        <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
+                        <div className="text-xs text-muted-foreground font-medium uppercase">App</div>
                         {appPages.map((item) => (
                           <Link
                             key={item.name}
@@ -129,6 +114,21 @@ const AppLayout = () => {
                         ))}
                       </>
                     )}
+
+                    <div className="text-xs text-muted-foreground font-medium uppercase pt-2">Marketing</div>
+                    {marketingPages.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.name}</span>
+                      </Link>
+                    ))}
 
                     {!isAuthenticated && (
                       <div className="border-t pt-4 mt-2 flex items-center justify-between">
@@ -156,7 +156,7 @@ const AppLayout = () => {
                         <User className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuContent className="w-56 max-h-80 overflow-y-auto" align="end" forceMount>
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
                           <p className="font-medium truncate">{user.name}</p>

@@ -47,7 +47,13 @@ const NewsFeed = () => {
     try {
       // Use public WordPress news endpoint for production consistency
       const res = await getWordPressNews({ limit: 20 });
-      const items = res?.data || res?.news || [];
+      const items = Array.isArray(res?.data?.news_items)
+        ? res.data.news_items
+        : Array.isArray(res?.news_items)
+        ? res.news_items
+        : Array.isArray(res?.data)
+        ? res.data
+        : (res?.news || []);
       setNews(Array.isArray(items) ? items : []);
     } catch (err) {
       setNews([]);

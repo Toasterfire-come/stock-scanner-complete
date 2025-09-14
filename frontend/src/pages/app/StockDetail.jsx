@@ -147,6 +147,45 @@ const StockDetail = () => {
         } catch (proxyErr) {
           console.warn('Yahoo proxy fallback failed:', proxyErr.message);
         }
+
+        // Fallback 2: Stooq CSV (free, no key)
+        try {
+          const sym = String(symbol || '').toLowerCase();
+          const stooqUrl = `https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=d`;
+          // Use proxy for CORS safety
+          const stooqProxied = `https://cors.isomorphic-git.org/${stooqUrl}`;
+          const r3 = await fetch(stooqProxied, { mode: 'cors' });
+          if (!r3.ok) throw new Error('Stooq fetch failed');
+          const csv = await r3.text();
+          const lines = csv.trim().split(/\r?\n/);
+          const header = (lines.shift() || '').split(',');
+          const idxDate = header.indexOf('Date');
+          const idxOpen = header.indexOf('Open');
+          const idxHigh = header.indexOf('High');
+          const idxLow = header.indexOf('Low');
+          const idxClose = header.indexOf('Close');
+          const idxVolume = header.indexOf('Volume');
+          const pts = lines.map((line) => {
+            const cols = line.split(',');
+            const d = cols[idxDate];
+            const t = new Date(d).getTime();
+            return {
+              date: new Date(t).toLocaleDateString(),
+              timestamp: t,
+              open: Number(cols[idxOpen] || 0),
+              high: Number(cols[idxHigh] || 0),
+              low: Number(cols[idxLow] || 0),
+              close: Number(cols[idxClose] || 0),
+              volume: Number(cols[idxVolume] || 0),
+            };
+          }).filter(p => Number.isFinite(p.close) && p.close > 0);
+          if (pts.length > 0) {
+            setChartData(pts);
+            return;
+          }
+        } catch (stooqErr) {
+          console.warn('Stooq fallback failed:', stooqErr.message);
+        }
         
         // If all APIs fail, create mock data based on current price
         if (stockData && stockData.current_price) {
@@ -183,13 +222,19 @@ const StockDetail = () => {
     };
     loadChart();
 
-    // Load news from backend (use WordPress news endpoint with ticker filter)
+    // Load news from backend (use WordPress/news endpoint with ticker filter)
     const loadNews = async () => {
       try {
         const url = `${process.env.REACT_APP_BACKEND_URL}/api/wordpress/news/?ticker=${encodeURIComponent(symbol)}&limit=20`;
         const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const data = await r.json().catch(() => ({ data: [] }));
-        const items = data?.data || data?.news || [];
+        const items = Array.isArray(data?.data?.news_items)
+          ? data.data.news_items
+          : Array.isArray(data?.news_items)
+          ? data.news_items
+          : Array.isArray(data?.data)
+          ? data.data
+          : (data?.news || []);
         setNewsItems(Array.isArray(items) ? items : []);
       } catch (_) {
         setNewsItems([]);
