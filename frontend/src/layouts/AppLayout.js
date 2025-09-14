@@ -11,14 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '../components/ui/navigation-menu';
-import {
   Sheet,
   SheetContent,
   SheetTrigger,
@@ -27,7 +19,6 @@ import {
   BarChart3,
   TrendingUp,
   Search,
-  Bell,
   User,
   Menu,
   Home,
@@ -38,7 +29,7 @@ import {
   Newspaper,
   Settings,
   LogOut,
-  Crown
+  Crown,
 } from 'lucide-react';
 import MarketStatus from '../components/MarketStatus';
 
@@ -47,7 +38,7 @@ const AppLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
+  const marketingPages = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Features', href: '/features', icon: Activity },
     { name: 'About', href: '/about', icon: User },
@@ -55,7 +46,7 @@ const AppLayout = () => {
     { name: 'Pricing', href: '/pricing', icon: Crown },
   ];
 
-  const appNavigation = [
+  const appPages = [
     { name: 'Dashboard', href: '/app/dashboard', icon: BarChart3 },
     { name: 'Markets', href: '/app/markets', icon: TrendingUp },
     { name: 'Stocks', href: '/app/stocks', icon: Activity },
@@ -66,101 +57,110 @@ const AppLayout = () => {
     { name: 'News', href: '/app/news', icon: Newspaper },
   ];
 
-  const isAppRoute = location.pathname.startsWith('/app');
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Accessibility: Skip to main content */}
+      {/* Skip link */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:text-black focus:px-3 focus:py-2 focus:rounded focus:shadow"
       >
         Skip to main content
       </a>
+
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between gap-3">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">Trade Scan Pro</span>
+            <Link to="/" className="flex flex-shrink-0 items-center space-x-2 min-w-0">
+              <BarChart3 className="h-7 w-7 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900 truncate">Trade Scan Pro</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {!isAppRoute ? (
-                // Public navigation
-                <NavigationMenu>
-                  <NavigationMenuList>
-                    {navigation.map((item) => (
-                      <NavigationMenuItem key={item.name}
-                        onMouseEnter={() => { try { import(/* webpackPrefetch: true */ `../pages/${item.name === 'Pricing' ? 'PricingPro' : item.name}`); } catch {} }}
-                      >
-                        <Link
-                          to={item.href}
-                          className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
-                            location.pathname === item.href ? 'text-blue-600' : 'text-gray-600'
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      </NavigationMenuItem>
-                    ))}
-                  </NavigationMenuList>
-                </NavigationMenu>
-              ) : (
-                // App navigation
-                <nav className="flex items-center space-x-6">
-                  {appNavigation.map((item) => {
-                    const Icon = item.icon;
-                    return (
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Right cluster */}
+            <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
+              {/* Market status (md+) */}
+              <div className="hidden md:block">
+                <MarketStatus />
+              </div>
+
+              {/* Hamburger menu - visible on all screen sizes */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" className="h-9 w-9 p-0 rounded-md" aria-label="Open navigation">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[360px]">
+                  <nav className="flex flex-col space-y-4 mt-4">
+                    <div className="text-xs text-muted-foreground font-medium uppercase">Pages</div>
+                    {marketingPages.map((item) => (
                       <Link
                         key={item.name}
                         to={item.href}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 ${
-                          location.pathname === item.href
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'text-gray-600'
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
                         }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <Icon className="h-4 w-4" />
+                        <item.icon className="h-4 w-4" />
                         <span>{item.name}</span>
                       </Link>
-                    );
-                  })}
-                </nav>
-              )}
-            </div>
+                    ))}
 
-            {/* Right side - Auth buttons or user menu */}
-            <div className="flex items-center space-x-4">
-              {/* Market Status - always show */}
-              <div className="hidden lg:block">
-                <MarketStatus />
-              </div>
-              
+                    {isAuthenticated && (
+                      <>
+                        <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
+                        {appPages.map((item) => (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        ))}
+                      </>
+                    )}
+
+                    {!isAuthenticated && (
+                      <div className="border-t pt-4 mt-2 flex items-center justify-between">
+                        <Button variant="ghost" asChild>
+                          <Link to="/auth/sign-in" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                        </Button>
+                        <Button asChild>
+                          <Link to="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>Try Free</Link>
+                        </Button>
+                      </div>
+                    )}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+
+              {/* Plan badge + user menu or auth buttons (kept) */}
               {isAuthenticated && user ? (
                 <>
-                  {/* User badge */}
-                  <Badge variant="secondary" className="hidden sm:inline-flex">
-                    {user.plan} Plan
+                  <Badge variant="secondary" className="hidden sm:inline-flex truncate max-w-[160px]">
+                    {String(user.plan || '').charAt(0).toUpperCase() + String(user.plan || '').slice(1)} Plan
                   </Badge>
-                  
-                  {/* User menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
                         <User className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{user.name}</p>
-                          <p className="w-[200px] truncate text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
+                          <p className="font-medium truncate">{user.name}</p>
+                          <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                       <DropdownMenuSeparator />
@@ -179,7 +179,7 @@ const AppLayout = () => {
                   </DropdownMenu>
                 </>
               ) : (
-                <div className="flex items-center space-x-4">
+                <div className="hidden md:flex items-center space-x-2">
                   <Button variant="ghost" asChild>
                     <Link to="/auth/sign-in">Sign In</Link>
                   </Button>
@@ -188,37 +188,6 @@ const AppLayout = () => {
                   </Button>
                 </div>
               )}
-
-              {/* Mobile menu trigger */}
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" className="lg:hidden">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <nav className="flex flex-col space-y-4">
-                    {(isAppRoute ? appNavigation : navigation).map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            location.pathname === item.href
-                              ? 'bg-blue-100 text-blue-600'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          }`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </nav>
-                </SheetContent>
-              </Sheet>
             </div>
           </div>
         </div>
