@@ -84,6 +84,29 @@ class MarketHoursManager:
                 'process': None
             }
         }
+
+        # Optionally manage Celery worker/beat when enabled
+        celery_enabled = (os.environ.get('CELERY_ENABLED', 'false').lower() == 'true')
+        if celery_enabled:
+            celery_loglevel = os.environ.get('CELERY_LOGLEVEL', 'INFO')
+            celery_concurrency = os.environ.get('CELERY_WORKER_CONCURRENCY', '2')
+
+            # Celery worker
+            self.components['celery_worker'] = {
+                'command': [self.python_exe, '-m', 'celery', '-A', 'stockscanner_django', 'worker', '-l', celery_loglevel, '-c', str(celery_concurrency)],
+                'args': [],
+                'active_during': ['market'],
+                'process': None
+            }
+
+            # Optional: Celery beat (scheduler) if explicitly enabled via env
+            if (os.environ.get('CELERY_BEAT_ENABLED', 'false').lower() == 'true'):
+                self.components['celery_beat'] = {
+                    'command': [self.python_exe, '-m', 'celery', '-A', 'stockscanner_django', 'beat', '-l', celery_loglevel],
+                    'args': [],
+                    'active_during': ['market'],
+                    'process': None
+                }
         
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self.signal_handler)
