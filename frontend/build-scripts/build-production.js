@@ -83,7 +83,7 @@ const securityHeaders = `
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.paypal.com https://www.paypalobjects.com https://plausible.io https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://*.paypal.com https://o.sentry.io https://ingest.sentry.io https://plausible.io https://events.plausible.io https://fonts.googleapis.com https://fonts.gstatic.com https://query1.finance.yahoo.com https://query2.finance.yahoo.com; frame-src https://www.paypal.com; object-src 'none'; base-uri 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.paypal.com https://www.paypalobjects.com https://plausible.io https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://*.paypal.com https://o.sentry.io https://ingest.sentry.io https://plausible.io https://events.plausible.io https://fonts.googleapis.com https://fonts.gstatic.com https://query1.finance.yahoo.com https://query2.finance.yahoo.com https://cors.isomorphic-git.org https://stooq.com https://stooq.pl; frame-src https://www.paypal.com; object-src 'none'; base-uri 'self'
 
 /api/*
   X-Frame-Options: DENY
@@ -105,6 +105,18 @@ Sitemap: ${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.
 `;
 
 fs.writeFileSync('./build/robots.txt', robotsTxt);
+
+// Generate sitemap.xml for marketing routes
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://tradescanpro.com/</loc></url>
+  <url><loc>https://tradescanpro.com/features</loc></url>
+  <url><loc>https://tradescanpro.com/pricing</loc></url>
+  <url><loc>https://tradescanpro.com/about</loc></url>
+  <url><loc>https://tradescanpro.com/contact</loc></url>
+  <url><loc>https://tradescanpro.com/docs</loc></url>
+</urlset>`;
+fs.writeFileSync('./build/sitemap.xml', sitemap);
 
 // Create service worker for caching
 const serviceWorker = `
@@ -165,20 +177,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Stale-while-revalidate for static assets
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).catch(() => {
-          // Return offline page or safe empty response on failure
-          if (event.request.destination === 'document') {
-            return caches.match('/');
-          }
-          return new Response('', { status: 504, statusText: 'Gateway Timeout' });
-        });
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          })
+          .catch(() => cached || new Response('', { status: 504, statusText: 'Gateway Timeout' }));
+        return cached || fetchPromise;
+      });
+    })
   );
 });
 `;

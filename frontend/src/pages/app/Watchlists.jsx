@@ -47,7 +47,8 @@ const Watchlists = () => {
         setWatchlist({ success: true, data: [], summary: { total_items: 0, gainers: 0, losers: 0, unchanged: 0 } });
       }
     } catch (error) {
-      toast.error("Failed to load watchlist");
+      // Suppress toast for expected unauthenticated access
+      setWatchlist({ success: true, data: [], summary: { total_items: 0, gainers: 0, losers: 0, unchanged: 0 } });
     } finally {
       setIsLoading(false);
     }

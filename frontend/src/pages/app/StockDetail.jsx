@@ -34,7 +34,8 @@ import {
   Building,
   Users,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Newspaper
 } from "lucide-react";
 import { getStock, getRealTimeQuote, addWatchlist, createAlert } from "../../api/client";
 
@@ -47,6 +48,36 @@ const StockDetail = () => {
   const [chartData, setChartData] = useState([]);
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [newsItems, setNewsItems] = useState([]);
+  const [timeframe, setTimeframe] = useState({ range: '6mo', interval: '1d' });
+  const [showSMA, setShowSMA] = useState(false);
+
+  const TIMEFRAMES = [
+    { key: '1D', range: '1d', interval: '5m' },
+    { key: '5D', range: '5d', interval: '15m' },
+    { key: '1M', range: '1mo', interval: '1d' },
+    { key: '6M', range: '6mo', interval: '1d' },
+    { key: '1Y', range: '1y', interval: '1d' },
+    { key: 'Max', range: 'max', interval: '1d' },
+  ];
+
+  function withSMA(points, period = 20) {
+    const out = points.map((p) => ({ ...p }));
+    let sum = 0;
+    for (let i = 0; i < out.length; i++) {
+      const c = Number(out[i].close || 0);
+      if (Number.isFinite(c)) {
+        sum += c;
+      }
+      if (i >= period) {
+        const prev = Number(out[i - period].close || 0);
+        if (Number.isFinite(prev)) sum -= prev;
+      }
+      if (i >= period - 1) {
+        out[i].sma = Number((sum / period).toFixed(2));
+      }
+    }
+    return out;
+  }
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -76,14 +107,14 @@ const StockDetail = () => {
 
     fetchStockData();
 
-    // Enhanced chart data loading with multiple free APIs as fallback
+    // Enhanced chart data loading using Yahoo Finance only (with proxy fallback)
     const loadChart = async () => {
       try {
         setIsChartLoading(true);
         
         // Primary: Yahoo Finance API (most accurate, free, no API key)
         try {
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${encodeURIComponent(timeframe.range)}&interval=${encodeURIComponent(timeframe.interval)}`;
           const response = await fetch(url, { 
             mode: 'cors',
             headers: {
@@ -114,40 +145,76 @@ const StockDetail = () => {
           })).filter(p => Number.isFinite(p.close) && p.close > 0);
           
           if (points.length > 0) {
-            setChartData(points);
+            setChartData(withSMA(points));
             return;
           }
         } catch (yahooError) {
-          console.warn('Yahoo Finance failed, trying fallback:', yahooError.message);
+          console.warn('Yahoo Finance failed, trying proxy fallback:', yahooError.message);
         }
         
-        // Fallback: Alpha Vantage Demo API (free tier, limited)
+        // Fallback: Yahoo via public CORS proxy
         try {
-          const alphaUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&apikey=demo&outputsize=compact`;
-          const alphaResponse = await fetch(alphaUrl);
-          const alphaJson = await alphaResponse.json();
-          
-          const timeSeries = alphaJson['Time Series (Daily)'] || {};
-          const alphaPoints = Object.entries(timeSeries)
-            .slice(0, 180) // Last 6 months approximation
-            .map(([date, data]) => ({
-              date: new Date(date).toLocaleDateString(),
-              timestamp: new Date(date).getTime(),
-              close: Number(data['4. close'] || 0),
-              open: Number(data['1. open'] || 0),
-              high: Number(data['2. high'] || 0),
-              low: Number(data['3. low'] || 0),
-              volume: Number(data['5. volume'] || 0)
-            }))
-            .filter(p => Number.isFinite(p.close) && p.close > 0)
-            .reverse(); // Chronological order
-          
-          if (alphaPoints.length > 0) {
-            setChartData(alphaPoints);
+          const proxied = `https://cors.isomorphic-git.org/https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${encodeURIComponent(timeframe.range)}&interval=${encodeURIComponent(timeframe.interval)}`;
+          const r2 = await fetch(proxied, { mode: 'cors' });
+          if (!r2.ok) throw new Error('Yahoo proxy fetch failed');
+          const json2 = await r2.json();
+          const res2 = ((((json2 || {}).chart || {}).result || [])[0]) || {};
+          const ts2 = (res2.timestamp || []);
+          const q2 = (((res2.indicators || {}).quote || [])[0]) || {};
+          const pts2 = ts2.map((t, i) => ({
+            date: new Date(t * 1000).toLocaleDateString(),
+            timestamp: t * 1000,
+            close: Number((q2.close || [])[i] ?? 0),
+            open: Number((q2.open || [])[i] ?? 0),
+            high: Number((q2.high || [])[i] ?? 0),
+            low: Number((q2.low || [])[i] ?? 0),
+            volume: Number((q2.volume || [])[i] ?? 0)
+          })).filter(p => Number.isFinite(p.close) && p.close > 0);
+          if (pts2.length > 0) {
+            setChartData(withSMA(pts2));
             return;
           }
-        } catch (alphaError) {
-          console.warn('Alpha Vantage fallback failed:', alphaError.message);
+        } catch (proxyErr) {
+          console.warn('Yahoo proxy fallback failed:', proxyErr.message);
+        }
+
+        // Fallback 2: Stooq CSV (free, no key)
+        try {
+          const sym = String(symbol || '').toLowerCase();
+          const stooqUrl = `https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=d`;
+          // Use proxy for CORS safety
+          const stooqProxied = `https://cors.isomorphic-git.org/${stooqUrl}`;
+          const r3 = await fetch(stooqProxied, { mode: 'cors' });
+          if (!r3.ok) throw new Error('Stooq fetch failed');
+          const csv = await r3.text();
+          const lines = csv.trim().split(/\r?\n/);
+          const header = (lines.shift() || '').split(',');
+          const idxDate = header.indexOf('Date');
+          const idxOpen = header.indexOf('Open');
+          const idxHigh = header.indexOf('High');
+          const idxLow = header.indexOf('Low');
+          const idxClose = header.indexOf('Close');
+          const idxVolume = header.indexOf('Volume');
+          const pts = lines.map((line) => {
+            const cols = line.split(',');
+            const d = cols[idxDate];
+            const t = new Date(d).getTime();
+            return {
+              date: new Date(t).toLocaleDateString(),
+              timestamp: t,
+              open: Number(cols[idxOpen] || 0),
+              high: Number(cols[idxHigh] || 0),
+              low: Number(cols[idxLow] || 0),
+              close: Number(cols[idxClose] || 0),
+              volume: Number(cols[idxVolume] || 0),
+            };
+          }).filter(p => Number.isFinite(p.close) && p.close > 0);
+          if (pts.length > 0) {
+            setChartData(withSMA(pts));
+            return;
+          }
+        } catch (stooqErr) {
+          console.warn('Stooq fallback failed:', stooqErr.message);
         }
         
         // If all APIs fail, create mock data based on current price
@@ -171,7 +238,7 @@ const StockDetail = () => {
               volume: Math.floor(Math.random() * 1000000)
             });
           }
-          setChartData(mockPoints);
+          setChartData(withSMA(mockPoints));
         } else {
           setChartData([]);
         }
@@ -185,13 +252,19 @@ const StockDetail = () => {
     };
     loadChart();
 
-    // Load news from backend (use WordPress news endpoint with ticker filter)
+    // Load news from backend (use WordPress/news endpoint with ticker filter)
     const loadNews = async () => {
       try {
         const url = `${process.env.REACT_APP_BACKEND_URL}/api/wordpress/news/?ticker=${encodeURIComponent(symbol)}&limit=20`;
         const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const data = await r.json().catch(() => ({ data: [] }));
-        const items = data?.data || data?.news || [];
+        const items = Array.isArray(data?.data?.news_items)
+          ? data.data.news_items
+          : Array.isArray(data?.news_items)
+          ? data.news_items
+          : Array.isArray(data?.data)
+          ? data.data
+          : (data?.news || []);
         setNewsItems(Array.isArray(items) ? items : []);
       } catch (_) {
         setNewsItems([]);
@@ -212,7 +285,7 @@ const StockDetail = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, [symbol, timeframe.range, timeframe.interval]);
 
   const handleAddToWatchlist = async () => {
     try {
@@ -629,6 +702,15 @@ const StockDetail = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle>Price History (6M) - {stockData.ticker}</CardTitle>
                       <div className="flex items-center gap-2">
+                        {/* Timeframe controls */}
+                        <div className="hidden sm:flex items-center gap-1 mr-2">
+                          {TIMEFRAMES.map(tf => (
+                            <Button key={tf.key} size="sm" variant={timeframe.range===tf.range&&timeframe.interval===tf.interval? 'default':'outline'} onClick={() => setTimeframe({ range: tf.range, interval: tf.interval })}>
+                              {tf.key}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button size="sm" variant={showSMA ? 'default' : 'outline'} onClick={() => setShowSMA(v=>!v)}>SMA</Button>
                         <Badge variant="outline" className="text-xs">
                           {chartData.length} data points
                         </Badge>
@@ -713,6 +795,9 @@ const StockDetail = () => {
                                 fill="url(#colorClose)"
                                 name="Close Price"
                               />
+                              {showSMA && (
+                                <Line yAxisId="price" type="monotone" dataKey="sma" stroke="#f59e0b" strokeWidth={2} dot={false} name="SMA(20)" />
+                              )}
                               <Area 
                                 yAxisId="volume"
                                 type="monotone" 

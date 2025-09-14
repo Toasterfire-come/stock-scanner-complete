@@ -29,5 +29,25 @@
   "background_color": "#ffffff",
   "scope": "/",
   "orientation": "portrait",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/app/dashboard",
+      "icons": [{ "src": "favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "Stocks",
+      "short_name": "Stocks",
+      "url": "/app/stocks",
+      "icons": [{ "src": "favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "News",
+      "short_name": "News",
+      "url": "/app/news",
+      "icons": [{ "src": "favicon-32x32.png", "sizes": "32x32" }]
+    }
+  ]
 }

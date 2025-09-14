@@ -7,18 +7,12 @@
 const puppeteer = require('puppeteer');
 
 const BASE_URL = process.env.TSP_BASE_URL || 'https://tradescanpro.com';
-const USERNAME = process.env.TSP_USERNAME || 'carter.kiefer2010@outlook.com';
-const PASSWORD = process.env.TSP_PASSWORD || 'C2rt3rK#2010';
+const USERNAME = process.env.TSP_USERNAME || '';
+const PASSWORD = process.env.TSP_PASSWORD || '';
 
 const ROUTES = [
-  '/',
-  '/app/dashboard',
-  '/app/stocks',
-  '/app/top-movers',
-  '/app/watchlists',
-  '/app/portfolio',
-  '/app/alerts',
-  '/app/news',
+  '/', '/features', '/pricing', '/about', '/contact', '/docs',
+  '/app/dashboard', '/app/stocks', '/app/markets', '/app/screeners', '/app/portfolio', '/app/watchlists', '/app/alerts', '/app/news'
 ];
 
 async function run() {
@@ -42,20 +36,18 @@ async function run() {
     globalErrors.requestFailures.push({ url, errorText: failure && failure.errorText });
   });
 
-  // Navigate to sign-in
-  await page.goto(`${BASE_URL}/auth/sign-in`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForSelector('#username', { timeout: 30000 });
-  await page.type('#username', USERNAME, { delay: 10 });
-  await page.type('#password', PASSWORD, { delay: 10 });
-  await Promise.all([
-    page.click('button[type="submit"]'),
-    page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
-  ]);
-
-  // If not redirected, try manual navigation to dashboard
-  const currentPath = new URL(page.url()).pathname;
-  if (!currentPath.startsWith('/app')) {
-    await page.goto(`${BASE_URL}/app/dashboard`, { waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {});
+  // Optional login (only if creds provided)
+  if (USERNAME && PASSWORD) {
+    await page.goto(`${BASE_URL}/auth/sign-in`, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
+    try {
+      await page.waitForSelector('#username', { timeout: 10000 });
+      await page.type('#username', USERNAME, { delay: 10 });
+      await page.type('#password', PASSWORD, { delay: 10 });
+      await Promise.all([
+        page.click('button[type="submit"]'),
+        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
+      ]);
+    } catch {}
   }
 
   const results = {};
@@ -69,8 +61,9 @@ async function run() {
       response: async (res) => {
         try {
           const url = res.url();
-          if (url.includes('https://api.retailtradescanner.com/api/')) {
-            routeErrors.apiCalls.push({ url, status: res.status() });
+          const status = res.status();
+          if (status >= 400) {
+            routeErrors.apiCalls.push({ url, status });
           }
         } catch {}
       },

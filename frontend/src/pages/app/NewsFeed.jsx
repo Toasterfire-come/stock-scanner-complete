@@ -16,6 +16,8 @@ const NewsFeed = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   const categories = [
     { value: "all", label: "All News" },
@@ -26,8 +28,17 @@ const NewsFeed = () => {
   ];
 
   useEffect(() => {
-    fetchNews();
-  }, []);
+    fetchNews(1, true);
+    // infinite scroll handler
+    const onScroll = () => {
+      const nearBottom = window.innerHeight + window.scrollY >= (document.body.offsetHeight - 800);
+      if (nearBottom && !isLoading && hasMore) {
+        fetchNews(page + 1, false);
+      }
+    };
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [page, isLoading, hasMore]);
 
   useEffect(() => {
     filterNews();
@@ -41,16 +52,29 @@ const NewsFeed = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const fetchNews = async () => {
+  const fetchNews = async (nextPage = 1, reset = false) => {
     setIsLoading(true);
     setError("");
     try {
-      // Use public WordPress news endpoint for production consistency
-      const res = await getWordPressNews({ limit: 20 });
-      const items = res?.data || res?.news || [];
-      setNews(Array.isArray(items) ? items : []);
+      const res = await getWordPressNews({ limit: 20, page: nextPage });
+      const items = Array.isArray(res?.data?.news_items)
+        ? res.data.news_items
+        : Array.isArray(res?.news_items)
+        ? res.news_items
+        : Array.isArray(res?.data)
+        ? res.data
+        : (res?.news || []);
+      const normalized = Array.isArray(items) ? items : [];
+      // dedupe by id/url+title
+      const key = (a) => String(a.id || `${a.url || ''}::${a.title || ''}`).toLowerCase();
+      const merged = reset ? normalized : [...news, ...normalized];
+      const seen = new Set();
+      const deduped = merged.filter(a => { const k = key(a); if (seen.has(k)) return false; seen.add(k); return true; });
+      setNews(deduped);
+      setPage(nextPage);
+      setHasMore(normalized.length >= 20);
     } catch (err) {
-      setNews([]);
+      if (reset) setNews([]);
       setError("Failed to fetch news");
       toast.error("Failed to fetch news");
     } finally {
@@ -181,7 +205,7 @@ const NewsFeed = () => {
           <h1 className="text-3xl font-bold text-gray-900">News Feed</h1>
           <p className="text-gray-600 mt-2">Stay updated with the latest market news and analysis</p>
         </div>
-        <Button onClick={fetchNews} variant="outline">
+        <Button onClick={() => fetchNews(1, true)} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
@@ -218,7 +242,7 @@ const NewsFeed = () => {
       )}
 
       {/* Scrollable news container */}
-      <div className="max-h-screen overflow-y-auto space-y-6 pr-2">
+      <div className="space-y-6 pr-2">
         {filteredNews.map((article) => (
           <Card key={article.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -347,7 +371,7 @@ const NewsFeed = () => {
       </div>
 
       <div className="mt-8 text-center">
-        <Button variant="outline" onClick={fetchNews} disabled={isLoading}>
+        <Button variant="outline" onClick={() => fetchNews(page + 1, false)} disabled={isLoading || !hasMore}>
           {isLoading ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
@@ -356,7 +380,7 @@ const NewsFeed = () => {
           ) : (
             <>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Load Latest Articles
+              {hasMore ? 'Load More' : 'No More Articles'}
             </>
           )}
         </Button>
