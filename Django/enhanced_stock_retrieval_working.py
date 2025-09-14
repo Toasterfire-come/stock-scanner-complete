@@ -509,6 +509,16 @@ def run_stock_update(args):
     logger.info(f"{'='*60}")
     logger.info(f"STOCK UPDATE CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info(f"{'='*60}")
+
+    # Hard guard: run ONLY during regular market hours (weekdays 09:30–16:00 ET)
+    now_et = datetime.now(EASTERN_TZ)
+    current_hhmm = now_et.strftime("%H:%M")
+    if now_et.weekday() >= 5 or not (MARKET_OPEN <= current_hhmm < MARKET_CLOSE):
+        logger.info(
+            f"Skipping stock update cycle outside regular hours at "
+            f"{now_et.strftime('%Y-%m-%d %H:%M:%S %Z')} (allowed {MARKET_OPEN}-{MARKET_CLOSE} ET)"
+        )
+        return
     
     # Load NYSE symbols
     logger.info(f"Loading NYSE symbols from {args.csv}...")

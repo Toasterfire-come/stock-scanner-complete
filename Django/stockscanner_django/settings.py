@@ -321,6 +321,10 @@ FINNHUB_KEYS = [
     if key.strip()
 ]
 
+# Scanner run-window feature flags (pre/post disabled by default)
+SCAN_PREMARKET = os.environ.get('SCAN_PREMARKET', 'false').lower() == 'true'
+SCAN_POSTMARKET = os.environ.get('SCAN_POSTMARKET', 'false').lower() == 'true'
+
 # Logging
 LOGGING = {
     'version': 1,
