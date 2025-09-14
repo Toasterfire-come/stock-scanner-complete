@@ -87,6 +87,14 @@ else:
 # Optional: detect unexpected overrides at startup
 print("Effective cache backend:", CACHES['default']['BACKEND'])
 
+# Celery Configuration (using database broker instead of Redis)
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'db+sqlite:///celery.db')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'db+sqlite:///celery_results.db')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
 # Logging for debugging
 LOGGING = {
     'version': 1,
