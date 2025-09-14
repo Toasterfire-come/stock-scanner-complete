@@ -423,6 +423,10 @@ export async function getPortfolio() {
     const { data } = await api.get('/portfolio/');
     return data;
   } catch (error) {
+    // Suppress console error for expected unauthenticated access
+    if (error?.response?.status === 401) {
+      return { success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } };
+    }
     console.error('Failed to fetch portfolio:', error);
     throw error;
   }
@@ -438,6 +442,9 @@ export async function getWatchlist() {
     const { data } = await api.get('/watchlist/');
     return data;
   } catch (error) {
+    if (error?.response?.status === 401) {
+      return { success: true, data: [] };
+    }
     console.error('Failed to fetch watchlist:', error);
     throw error;
   }
