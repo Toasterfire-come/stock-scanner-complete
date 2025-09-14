@@ -50,13 +50,7 @@ REST_FRAMEWORK = {
     }
 }
 
-# Force in-memory cache in production too (avoid Redis)
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'stock-scanner-cache',
-    }
-}
+# Use base settings cache selector (env-driven: CACHE_BACKEND=locmem|db|file)
 
 # Logging for debugging
 LOGGING = {

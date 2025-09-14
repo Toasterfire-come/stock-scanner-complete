@@ -276,13 +276,29 @@ REST_FRAMEWORK = {
     }
 }
 
-# Cache: force in-memory cache; ignore any REDIS_URL
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'stock-scanner-cache',
+# Cache backend selection (no Redis). Options via CACHE_BACKEND: locmem (default), db, file
+_cache_backend = (os.environ.get('CACHE_BACKEND') or 'locmem').lower()
+if _cache_backend == 'db':
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': os.environ.get('CACHE_TABLE', 'django_cache'),
+        }
     }
-}
+elif _cache_backend == 'file':
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': os.environ.get('CACHE_DIR', str(BASE_DIR / 'cache_data')),
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'stock-scanner-cache',
+        }
+    }
 
 # Sessions in DB (avoid Redis)
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
