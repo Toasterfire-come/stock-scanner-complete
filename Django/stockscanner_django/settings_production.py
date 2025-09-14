@@ -30,7 +30,7 @@ CORS_ALLOWED_ORIGINS = [
 # For development, you can allow all origins (less secure)
 # CORS_ALLOW_ALL_ORIGINS = True
 
-# Rate limiting
+# Rate limiting - use safe throttles that tolerate cache outages
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -41,12 +41,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+        'stocks.throttling.SafeAnonRateThrottle',
+        'stocks.throttling.SafeUserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour'
+    }
+}
+
+# Force in-memory cache in production too (avoid Redis)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'stock-scanner-cache',
     }
 }
 
