@@ -91,12 +91,12 @@ const AppLayout = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[280px] sm:w-[350px]">
+                <SheetContent side="right" className="w-[280px] sm:w-[350px] overflow-y-auto">
                   <div className="mt-6">
                     <div className="mb-6 md:hidden">
                       <MarketStatus />
                     </div>
-                    <nav className="flex flex-col space-y-3">
+                    <nav className="flex flex-col space-y-3 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
                       {/* App pages only when authenticated */}
                       {isAuthenticated && (
                         <>
