@@ -48,6 +48,36 @@ const StockDetail = () => {
   const [chartData, setChartData] = useState([]);
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [newsItems, setNewsItems] = useState([]);
+  const [timeframe, setTimeframe] = useState({ range: '6mo', interval: '1d' });
+  const [showSMA, setShowSMA] = useState(false);
+
+  const TIMEFRAMES = [
+    { key: '1D', range: '1d', interval: '5m' },
+    { key: '5D', range: '5d', interval: '15m' },
+    { key: '1M', range: '1mo', interval: '1d' },
+    { key: '6M', range: '6mo', interval: '1d' },
+    { key: '1Y', range: '1y', interval: '1d' },
+    { key: 'Max', range: 'max', interval: '1d' },
+  ];
+
+  function withSMA(points, period = 20) {
+    const out = points.map((p) => ({ ...p }));
+    let sum = 0;
+    for (let i = 0; i < out.length; i++) {
+      const c = Number(out[i].close || 0);
+      if (Number.isFinite(c)) {
+        sum += c;
+      }
+      if (i >= period) {
+        const prev = Number(out[i - period].close || 0);
+        if (Number.isFinite(prev)) sum -= prev;
+      }
+      if (i >= period - 1) {
+        out[i].sma = Number((sum / period).toFixed(2));
+      }
+    }
+    return out;
+  }
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -84,7 +114,7 @@ const StockDetail = () => {
         
         // Primary: Yahoo Finance API (most accurate, free, no API key)
         try {
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${encodeURIComponent(timeframe.range)}&interval=${encodeURIComponent(timeframe.interval)}`;
           const response = await fetch(url, { 
             mode: 'cors',
             headers: {
@@ -115,7 +145,7 @@ const StockDetail = () => {
           })).filter(p => Number.isFinite(p.close) && p.close > 0);
           
           if (points.length > 0) {
-            setChartData(points);
+            setChartData(withSMA(points));
             return;
           }
         } catch (yahooError) {
@@ -124,7 +154,7 @@ const StockDetail = () => {
         
         // Fallback: Yahoo via public CORS proxy
         try {
-          const proxied = `https://cors.isomorphic-git.org/https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
+          const proxied = `https://cors.isomorphic-git.org/https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${encodeURIComponent(timeframe.range)}&interval=${encodeURIComponent(timeframe.interval)}`;
           const r2 = await fetch(proxied, { mode: 'cors' });
           if (!r2.ok) throw new Error('Yahoo proxy fetch failed');
           const json2 = await r2.json();
@@ -141,7 +171,7 @@ const StockDetail = () => {
             volume: Number((q2.volume || [])[i] ?? 0)
           })).filter(p => Number.isFinite(p.close) && p.close > 0);
           if (pts2.length > 0) {
-            setChartData(pts2);
+            setChartData(withSMA(pts2));
             return;
           }
         } catch (proxyErr) {
@@ -180,7 +210,7 @@ const StockDetail = () => {
             };
           }).filter(p => Number.isFinite(p.close) && p.close > 0);
           if (pts.length > 0) {
-            setChartData(pts);
+            setChartData(withSMA(pts));
             return;
           }
         } catch (stooqErr) {
@@ -208,7 +238,7 @@ const StockDetail = () => {
               volume: Math.floor(Math.random() * 1000000)
             });
           }
-          setChartData(mockPoints);
+          setChartData(withSMA(mockPoints));
         } else {
           setChartData([]);
         }
@@ -255,7 +285,7 @@ const StockDetail = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, [symbol, timeframe.range, timeframe.interval]);
 
   const handleAddToWatchlist = async () => {
     try {
@@ -672,6 +702,15 @@ const StockDetail = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle>Price History (6M) - {stockData.ticker}</CardTitle>
                       <div className="flex items-center gap-2">
+                        {/* Timeframe controls */}
+                        <div className="hidden sm:flex items-center gap-1 mr-2">
+                          {TIMEFRAMES.map(tf => (
+                            <Button key={tf.key} size="sm" variant={timeframe.range===tf.range&&timeframe.interval===tf.interval? 'default':'outline'} onClick={() => setTimeframe({ range: tf.range, interval: tf.interval })}>
+                              {tf.key}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button size="sm" variant={showSMA ? 'default' : 'outline'} onClick={() => setShowSMA(v=>!v)}>SMA</Button>
                         <Badge variant="outline" className="text-xs">
                           {chartData.length} data points
                         </Badge>
@@ -756,6 +795,9 @@ const StockDetail = () => {
                                 fill="url(#colorClose)"
                                 name="Close Price"
                               />
+                              {showSMA && (
+                                <Line yAxisId="price" type="monotone" dataKey="sma" stroke="#f59e0b" strokeWidth={2} dot={false} name="SMA(20)" />
+                              )}
                               <Area 
                                 yAxisId="volume"
                                 type="monotone" 

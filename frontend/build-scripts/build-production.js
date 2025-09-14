@@ -106,6 +106,18 @@ Sitemap: ${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.
 
 fs.writeFileSync('./build/robots.txt', robotsTxt);
 
+// Generate sitemap.xml for marketing routes
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://tradescanpro.com/</loc></url>
+  <url><loc>https://tradescanpro.com/features</loc></url>
+  <url><loc>https://tradescanpro.com/pricing</loc></url>
+  <url><loc>https://tradescanpro.com/about</loc></url>
+  <url><loc>https://tradescanpro.com/contact</loc></url>
+  <url><loc>https://tradescanpro.com/docs</loc></url>
+</urlset>`;
+fs.writeFileSync('./build/sitemap.xml', sitemap);
+
 // Create service worker for caching
 const serviceWorker = `
 const CACHE_NAME = 'trade-scan-pro-v1.0.3';
@@ -165,20 +177,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Stale-while-revalidate for static assets
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).catch(() => {
-          // Return offline page or safe empty response on failure
-          if (event.request.destination === 'document') {
-            return caches.match('/');
-          }
-          return new Response('', { status: 504, statusText: 'Gateway Timeout' });
-        });
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          })
+          .catch(() => cached || new Response('', { status: 504, statusText: 'Gateway Timeout' }));
+        return cached || fetchPromise;
+      });
+    })
   );
 });
 `;
