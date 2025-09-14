@@ -421,7 +421,8 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
             info = None
 
     # Approach 2: Try to get historical data with multiple periods using retry
-    for period in ["1d", "5d", "1mo"]:
+    # Start with longer periods for better price change calculations
+    for period in ["1y", "6mo", "3mo", "1mo", "5d", "1d"]:
         hist = yfinance_retry_wrapper(lambda: ticker_obj.history(period=period, timeout=timeout))
         if hist is not None and not hist.empty and len(hist) > 0:
             try:
@@ -458,28 +459,71 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         logger.warning(f"{symbol}: No current trading activity")
         return None
 
-    # Extract and save data (with fast_info fallback)
+    # Extract comprehensive stock data using utility functions
+    base_data = extract_stock_data_from_info(info, symbol, current_price) if info else extract_stock_data_from_fast_info(fast_info, symbol, current_price)
+    
+    # Calculate price changes from historical data
+    price_change_today, change_percent = calculate_change_percent_from_history(hist, symbol) if hist is not None and not hist.empty else (None, None)
+    
+    # Calculate additional metrics
+    dvav = calculate_volume_ratio(base_data.get('volume'), base_data.get('avg_volume_3mon'))
+    
+    # Extract bid/ask data
+    bid_price = safe_decimal_conversion(info.get('bid')) if info else None
+    ask_price = safe_decimal_conversion(info.get('ask')) if info else None
+    bid_ask_spread = safe_decimal_conversion(float(ask_price) - float(bid_price)) if bid_price and ask_price else None
+    
+    # Calculate days range
+    days_low = base_data.get('days_low')
+    days_high = base_data.get('days_high')
+    days_range = f"{days_low} - {days_high}" if days_low and days_high else ""
+    
+    # Extract shares outstanding
+    shares_available = safe_decimal_conversion(info.get('sharesOutstanding')) if info else None
+    
+    # Try to get year-over-year price change from 1-year historical data
+    price_change_year = None
+    try:
+        if hist is not None and not hist.empty and len(hist) >= 252:  # Approx 1 year of trading days
+            year_ago_price = hist['Close'].iloc[0] if len(hist) > 252 else hist['Close'].iloc[0]
+            if current_price and year_ago_price:
+                price_change_year = safe_decimal_conversion(current_price - year_ago_price)
+    except (IndexError, KeyError, TypeError):
+        pass
+    
+    # Calculate week and month changes from historical data
+    price_change_week = None
+    price_change_month = None
+    try:
+        if hist is not None and not hist.empty:
+            if len(hist) >= 5:  # At least 5 days for weekly
+                week_ago_price = hist['Close'].iloc[-5] if len(hist) >= 5 else hist['Close'].iloc[0]
+                if current_price and week_ago_price:
+                    price_change_week = safe_decimal_conversion(current_price - week_ago_price)
+            
+            if len(hist) >= 22:  # At least 22 days for monthly
+                month_ago_price = hist['Close'].iloc[-22] if len(hist) >= 22 else hist['Close'].iloc[0]
+                if current_price and month_ago_price:
+                    price_change_month = safe_decimal_conversion(current_price - month_ago_price)
+    except (IndexError, KeyError, TypeError):
+        pass
+
+    # Build comprehensive stock data
     stock_data = {
-        'ticker': symbol,
-        'symbol': symbol,
-        'company_name': info.get('longName', info.get('shortName', symbol)) if info else (getattr(fast_info, 'short_name', None) or symbol),
-        'name': info.get('longName', info.get('shortName', symbol)) if info else (getattr(fast_info, 'short_name', None) or symbol),
-        'current_price': safe_decimal_conversion(current_price) if current_price else None,
-        'price_change_today': None,
-        'price_change_week': None,
-        'price_change_month': None,
-        'price_change_year': None,
-        'change_percent': None,
-        'bid_price': None,
-        'ask_price': None,
-        'bid_ask_spread': '',
-        'days_range': '',
-        # Use shared utility for extracting stock data from info; fallback to fast_info mapping
-        **(extract_stock_data_from_info(info, symbol, current_price) if info else extract_stock_data_from_fast_info(fast_info, symbol, current_price)),
-        'dvav': None,
-        'shares_available': None,
-        'market_cap_change_3mon': None,
-        'pe_change_3mon': None,
+        **base_data,  # Start with extracted data from utility functions
+        'price_change_today': price_change_today,
+        'price_change_week': price_change_week,
+        'price_change_month': price_change_month,
+        'price_change_year': price_change_year,
+        'change_percent': change_percent,
+        'bid_price': bid_price,
+        'ask_price': ask_price,
+        'bid_ask_spread': str(bid_ask_spread) if bid_ask_spread else '',
+        'days_range': days_range,
+        'dvav': dvav,
+        'shares_available': shares_available,
+        'market_cap_change_3mon': None,  # Would need 3-month historical market cap data
+        'pe_change_3mon': None,  # Would need 3-month historical PE data
         'last_updated': timezone.now(),
         'created_at': timezone.now()
     }

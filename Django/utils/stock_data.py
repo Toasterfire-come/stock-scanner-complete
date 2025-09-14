@@ -82,8 +82,8 @@ def extract_pe_ratio(info):
     if not info:
         return None
     
-    # Try multiple PE ratio fields
-    pe_fields = ['trailingPE', 'forwardPE', 'priceToBook', 'priceToSalesTrailing12Months']
+    # Try multiple PE ratio fields, prioritizing trailing PE
+    pe_fields = ['trailingPE', 'forwardPE', 'pegRatio']
     
     for field in pe_fields:
         value = info.get(field)
@@ -102,15 +102,18 @@ def extract_dividend_yield(info):
     if not info:
         return None
     
-    dividend_fields = ['dividendYield', 'yield', 'trailingAnnualDividendYield']
+    dividend_fields = ['dividendYield', 'trailingAnnualDividendYield', 'yield', 'dividendRate']
     
     for field in dividend_fields:
         value = info.get(field)
         if value is not None and value != 0 and not pd.isna(value):
             try:
                 div_value = float(value)
-                if 0 <= div_value <= 1:  # Reasonable dividend yield range (0-100%)
+                # Handle both percentage (0-1) and actual yield values
+                if 0 <= div_value <= 1:  # Percentage format (0-100%)
                     return safe_decimal_conversion(div_value)
+                elif div_value > 1 and div_value <= 100:  # Could be percentage as whole number
+                    return safe_decimal_conversion(div_value / 100)
             except (ValueError, TypeError):
                 continue
     
@@ -144,16 +147,16 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
         'symbol': symbol,
         'company_name': info.get('longName', info.get('shortName', symbol)),
         'name': info.get('longName', info.get('shortName', symbol)),
-        'current_price': safe_decimal_conversion(current_price) if current_price else None,
+        'current_price': safe_decimal_conversion(current_price) if current_price else safe_decimal_conversion(info.get('currentPrice')),
         
         # Price range data
         'days_low': safe_decimal_conversion(info.get('dayLow')),
         'days_high': safe_decimal_conversion(info.get('dayHigh')),
         
-        # Volume data
-        'volume': safe_decimal_conversion(info.get('volume')),
-        'volume_today': safe_decimal_conversion(info.get('volume')),
-        'avg_volume_3mon': safe_decimal_conversion(info.get('averageVolume')),
+        # Volume data - try multiple fields
+        'volume': safe_decimal_conversion(info.get('volume') or info.get('regularMarketVolume')),
+        'volume_today': safe_decimal_conversion(info.get('volume') or info.get('regularMarketVolume')),
+        'avg_volume_3mon': safe_decimal_conversion(info.get('averageVolume') or info.get('averageVolume10days')),
         
         # Market data
         'market_cap': safe_decimal_conversion(info.get('marketCap')),
@@ -168,10 +171,10 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
         'week_52_high': safe_decimal_conversion(info.get('fiftyTwoWeekHigh')),
         
         # Additional metrics
-        'earnings_per_share': safe_decimal_conversion(info.get('trailingEps')),
+        'earnings_per_share': safe_decimal_conversion(info.get('trailingEps') or info.get('forwardEps')),
         'book_value': safe_decimal_conversion(info.get('bookValue')),
         'price_to_book': safe_decimal_conversion(info.get('priceToBook')),
-        'exchange': info.get('exchange', 'NYSE'),
+        'exchange': info.get('exchange', info.get('market', 'NYSE')),
     }
 
 def extract_stock_data_from_fast_info(fast_info, symbol, current_price=None):
