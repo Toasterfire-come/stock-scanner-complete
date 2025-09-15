@@ -17,7 +17,7 @@ import {
 
 const About = () => {
   const stats = [
-    { label: "NYSE Stocks Covered", value: "3,200+" },
+    { label: "NYSE + NASDAQ Stocks Covered", value: "10,500+" },
     { label: "Technical Indicators", value: "14" },
     { label: "Scanner Combinations", value: "1540+" },
     { label: "Active Users", value: "Growing" }
@@ -108,7 +108,7 @@ const About = () => {
                     make better-informed decisions.
                   </p>
                   <p className="text-xl text-gray-700 leading-relaxed">
-                    Our platform specializes in NYSE stock analysis with real-time alerts and comprehensive 
+                    Our platform specializes in NYSE and NASDAQ stock analysis (10,500+ listings) with real-time alerts and comprehensive 
                     screening capabilities. We believe in transparent pricing and reliable service delivery.
                   </p>
                 </div>
@@ -187,7 +187,7 @@ const About = () => {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">The Solution</h3>
                       <p className="text-gray-700">
-                        We built Trade Scan Pro to focus on NYSE stocks with comprehensive screening capabilities, 
+                        We built Trade Scan Pro to focus on comprehensive screening across NYSE and NASDAQ, 
                         real-time alerts, and portfolio tracking. Our goal was to create a platform that combines 
                         reliability with affordability, starting with code TRIAL for a 7‑day 1$ trial.
                       </p>

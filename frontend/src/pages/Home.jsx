@@ -54,7 +54,7 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.",
+      description: "Screen 10,500+ NYSE and NASDAQ stocks with 14 technical and fundamental criteria including real-time data analysis.",
       details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
     },
     {
@@ -129,7 +129,7 @@ const Home = () => {
 
   const stats = [
     { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "3,200", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "Stocks Tracked", value: "10,500+", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
     { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
   ];
@@ -243,7 +243,7 @@ const Home = () => {
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm sm:text-lg text-gray-600">
               <div className="flex items-center">
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3" />
-                Email Support Only
+                NYSE + NASDAQ Coverage (10,500+ stocks)
               </div>
               <div className="flex items-center">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2 sm:mr-3" />
