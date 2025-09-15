@@ -291,7 +291,7 @@ def exercise_mutations(session: requests.Session, base_url: str, email: str, cac
     except Exception as e:
         results.append({"op": "notif_settings_get", "status": 0, "ok": False, "error": str(e)[:120]})
     try:
-        r = session.post(f"{base_url}/api/notifications/settings/", json={"security": {"login_alerts": true}}, headers=headers, timeout=15)
+        r = session.post(f"{base_url}/api/notifications/settings/", json={"security": {"login_alerts": True}}, headers=headers, timeout=15)
         results.append({"op": "notif_settings_post", "status": r.status_code, "ok": r.status_code < 400})
     except Exception as e:
         results.append({"op": "notif_settings_post", "status": 0, "ok": False, "error": str(e)[:120]})

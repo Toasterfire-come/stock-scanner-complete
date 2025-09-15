@@ -17,6 +17,8 @@ import logging
 from .models import UserWatchlist, WatchlistItem, Stock
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
+from decimal import Decimal
+from .watchlist_service import WatchlistService
 
 logger = logging.getLogger(__name__)
 
@@ -150,15 +152,24 @@ def watchlist_add_api(request):
             }, status=400)
         
         # Create new watchlist item
-        new_item = WatchlistItem.objects.create(
-            watchlist=watchlist,
-            stock=stock,
-            notes=notes,
-            target_price=alert_price if alert_price is not None else None,
-            added_price=float(getattr(stock, 'current_price', 0) or 0),
-            current_price=float(getattr(stock, 'current_price', 0) or 0),
-            added_at=timezone.now()
-        )
+        # Create item via service to ensure consistency
+        try:
+            new_item = WatchlistService.add_stock_to_watchlist(
+                watchlist=watchlist,
+                stock_ticker=symbol,
+                added_price=None,  # service will fetch current if None
+                notes=notes,
+                target_price=Decimal(str(alert_price)) if alert_price is not None else None,
+                stop_loss=None,
+                price_alert_enabled=False,
+                news_alert_enabled=False
+            )
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to add to watchlist',
+                'error_code': 'WATCHLIST_ADD_ERROR'
+            }, status=400)
         
         return JsonResponse({
             'success': True,
