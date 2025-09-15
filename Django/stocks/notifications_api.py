@@ -3,7 +3,7 @@ Notification History and Management API Views
 Provides notification history and mark as read functionality
 """
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,12 +18,14 @@ from datetime import datetime, timedelta
 
 from .models import NotificationHistory, NotificationSettings
 from .security_utils import secure_api_endpoint
+from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
 
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def notification_history_api(request):
     """
     Get user notification history
@@ -91,6 +93,7 @@ def notification_history_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def mark_notifications_read_api(request):
     """
     Mark notifications as read
