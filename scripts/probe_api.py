@@ -5,6 +5,7 @@ import json
 import time
 import argparse
 import requests
+from urllib.parse import urlparse
 
 
 def get_csrf(session: requests.Session, base_url: str) -> str | None:
@@ -392,14 +393,51 @@ def main():
     parser.add_argument("--base-url", default="https://api.retailtradescanner.com", help="Base URL, e.g., https://api.retailtradescanner.com")
     parser.add_argument("--username", required=True)
     parser.add_argument("--password", required=True)
+    parser.add_argument("--cookie", help="Raw Cookie header value (e.g., 'sessionid=...; csrftoken=...')", default=None)
+    parser.add_argument("--csrf-token", help="Explicit CSRF token to use", default=None)
     args = parser.parse_args()
 
     session = requests.Session()
     session.headers.update({"User-Agent": "api-probe/1.0"})
     session.verify = True
 
+    # Seed cookies if provided
+    cookie_csrf = None
+    cookie_sessionid = None
+    if args.cookie:
+        try:
+            parsed = urlparse(args.base_url)
+            domain = parsed.hostname or "api.retailtradescanner.com"
+            for part in args.cookie.split(";"):
+                if "=" in part:
+                    name, value = part.strip().split("=", 1)
+                    name = name.strip()
+                    value = value.strip()
+                    session.cookies.set(name, value, domain=domain)
+                    if name.lower() == 'csrftoken':
+                        cookie_csrf = value
+                    if name.lower() in ('sessionid', 'session'):
+                        cookie_sessionid = value
+        except Exception:
+            pass
+
     authed, csrf_token, session_key = login(session, args.base_url, args.username, args.password)
+    if not authed and cookie_sessionid:
+        # Try with provided cookie session
+        try:
+            r = session.get(f"{args.base_url}/api/user/profile/", timeout=10)
+            if r.status_code == 200:
+                authed = True
+                session_key = cookie_sessionid
+        except Exception:
+            pass
     print(json.dumps({"login": authed}, indent=2))
+
+    # Override csrf token if explicitly provided or from cookie
+    if args.csrf_token:
+        csrf_token = args.csrf_token
+    elif cookie_csrf and not csrf_token:
+        csrf_token = cookie_csrf
 
     results = probe(session, args.base_url, bearer=session_key)
     print(json.dumps({"base_url": args.base_url, "results": results}, indent=2))
