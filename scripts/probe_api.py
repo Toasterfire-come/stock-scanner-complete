@@ -18,9 +18,11 @@ def get_csrf(session: requests.Session, base_url: str) -> str | None:
                 return token
             except Exception:
                 pass
-        # Fallback to accounts login page to set cookie only
+        # Fallback to accounts login page to set cookie only and read cookie value
         session.get(f"{base_url}/accounts/login/", timeout=10)
-        return None
+        # Try to read csrftoken cookie
+        token = session.cookies.get('csrftoken') or session.cookies.get('CSRFToken')
+        return token
     except Exception:
         return None
 
