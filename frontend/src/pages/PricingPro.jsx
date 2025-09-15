@@ -209,22 +209,22 @@ const PricingPro = () => {
                   {/* Usage Limits - improved styling */}
                   <div className="bg-white p-4 rounded-lg border">
                     <h4 className="font-semibold mb-3 text-gray-900">Usage Limits</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                      <div className="flex flex-col">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                      <div className="flex flex-col min-w-0">
                         <span className="text-gray-500">API Calls</span>
-                        <span className="font-medium text-gray-900">{plan.limits.apiCalls}</span>
+                        <span className="font-medium text-gray-900 break-words whitespace-normal">{plan.limits.apiCalls}</span>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col min-w-0">
                         <span className="text-gray-500">Alerts</span>
-                        <span className="font-medium text-gray-900">{plan.limits.alerts}</span>
+                        <span className="font-medium text-gray-900 break-words whitespace-normal">{plan.limits.alerts}</span>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col min-w-0">
                         <span className="text-gray-500">Portfolios</span>
-                        <span className="font-medium text-gray-900">{plan.limits.portfolios}</span>
+                        <span className="font-medium text-gray-900 break-words whitespace-normal">{plan.limits.portfolios}</span>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col min-w-0">
                         <span className="text-gray-500">Watchlists</span>
-                        <span className="font-medium text-gray-900">{plan.limits.watchlists}</span>
+                        <span className="font-medium text-gray-900 break-words whitespace-normal">{plan.limits.watchlists}</span>
                       </div>
                     </div>
                   </div>
