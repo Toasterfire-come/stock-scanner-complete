@@ -959,3 +959,108 @@ Not Found: /api/realtime/AAPL/
 [15/Sep/2025 14:42:35] "GET /api/usage/ HTTP/1.1" 200 173
 [2025-09-15 14:42:35,953] INFO stocks.middleware_error: Request 1757947355953-139901982454512: GET /api/usage/history/
 [15/Sep/2025 14:42:35] "GET /api/usage/history/ HTTP/1.1" 200 29
+/workspace/Django/stocks/auth_api.py changed, reloading.
+[2025-09-15 14:46:29,310] INFO django.utils.autoreload: /workspace/Django/stocks/auth_api.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 14:42:15
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 14:46:30,335] INFO django.utils.autoreload: Watching for file changes with StatReloader
+[2025-09-15 14:46:37,736] INFO stocks.middleware_error: Request 1757947597736-140437768068400: GET /api/auth/csrf/
+[15/Sep/2025 14:46:37] "GET /api/auth/csrf/ HTTP/1.1" 200 81
+[2025-09-15 14:46:37,747] INFO stocks.middleware_error: Request 1757947597747-140437768543184: POST /api/auth/login/
+[2025-09-15 14:46:38,143] WARNING stocks.middleware_error: Request 1757947597747-140437768543184 returned 401
+Unauthorized: /api/auth/login/
+[2025-09-15 14:46:38,144] WARNING django.request: Unauthorized: /api/auth/login/
+[15/Sep/2025 14:46:38] "POST /api/auth/login/ HTTP/1.1" 401 96
+[2025-09-15 14:46:38,189] INFO stocks.middleware_error: Request 1757947598189-140437768546064: GET /api/health/
+[15/Sep/2025 14:46:38] "GET /api/health/ HTTP/1.1" 200 396
+[2025-09-15 14:46:38,237] INFO stocks.middleware_error: Request 1757947598237-140437768167824: GET /api/endpoint-status/
+[2025-09-15 14:46:38,244] INFO stocks.middleware_error: Request 1757947598243-140437768170256: GET /
+[15/Sep/2025 14:46:38] "GET / HTTP/1.1" 200 350
+[2025-09-15 14:46:38,269] INFO stocks.middleware_error: Request 1757947598269-140437768593936: GET /api/health/
+[15/Sep/2025 14:46:38] "GET /api/health/ HTTP/1.1" 200 396
+[2025-09-15 14:46:38,277] INFO stocks.middleware_error: Request 1757947598277-140437768596528: GET /api/stocks/
+[2025-09-15 14:46:38,284] WARNING stocks.api_views: API returned 0 results for category '', using emergency fallback with recent stocks
+[15/Sep/2025 14:46:38] "GET /api/stocks/ HTTP/1.1" 200 185
+[2025-09-15 14:46:38,292] INFO stocks.middleware_error: Request 1757947598292-140437768587312: GET /api/trending/
+[15/Sep/2025 14:46:38] "GET /api/trending/ HTTP/1.1" 200 102
+[2025-09-15 14:46:38,312] INFO stocks.middleware_error: Request 1757947598312-140437768594512: GET /api/search/
+[15/Sep/2025 14:46:38] "GET /api/search/?q=AAPL HTTP/1.1" 200 101
+[2025-09-15 14:46:38,321] INFO stocks.middleware_error: Request 1757947598321-140437768593360: GET /revenue/revenue-analytics/
+[15/Sep/2025 14:46:38] "GET /revenue/revenue-analytics/?format=json HTTP/1.1" 200 533
+[2025-09-15 14:46:38,339] INFO stocks.middleware_error: Request 1757947598339-140437768595664: GET /api/portfolio/list/
+[2025-09-15 14:46:38,344] WARNING stocks.middleware_error: Request 1757947598339-140437768595664 returned 405
+Method Not Allowed: /api/portfolio/list/
+[2025-09-15 14:46:38,344] WARNING django.request: Method Not Allowed: /api/portfolio/list/
+[15/Sep/2025 14:46:38] "GET /api/portfolio/list/ HTTP/1.1" 405 40
+[2025-09-15 14:46:38,348] INFO stocks.middleware_error: Request 1757947598347-140437768587888: GET /api/watchlist/list/
+[2025-09-15 14:46:38,351] WARNING stocks.middleware_error: Request 1757947598347-140437768587888 returned 405
+Method Not Allowed: /api/watchlist/list/
+[2025-09-15 14:46:38,352] WARNING django.request: Method Not Allowed: /api/watchlist/list/
+[15/Sep/2025 14:46:38] "GET /api/watchlist/list/ HTTP/1.1" 405 40
+[2025-09-15 14:46:38,355] INFO stocks.middleware_error: Request 1757947598355-140437768596240: GET /api/news/feed/
+[2025-09-15 14:46:38,358] INFO stocks.security_utils: API Request: get_personalized_feed from 127.0.0.1 by test_user
+[2025-09-15 14:46:38,362] INFO stocks.security_utils: API Response: get_personalized_feed - SUCCESS
+[15/Sep/2025 14:46:38] "GET /api/news/feed/ HTTP/1.1" 200 89
+[2025-09-15 14:46:38,366] INFO stocks.middleware_error: Request 1757947598366-140437748008144: GET /docs/
+[15/Sep/2025 14:46:38] "GET /docs/ HTTP/1.1" 200 2761
+[15/Sep/2025 14:46:38] "GET /api/endpoint-status/ HTTP/1.1" 200 1557
+[2025-09-15 14:46:38,417] INFO stocks.middleware_error: Request 1757947598417-140437768588176: GET /api/stocks/
+[2025-09-15 14:46:38,420] INFO stocks.api_views: Returning cached result for key: stocks_api__last_updated_desc_50_None_None_None_None_None_None__all
+[15/Sep/2025 14:46:38] "GET /api/stocks/ HTTP/1.1" 200 185
+[2025-09-15 14:46:38,465] INFO stocks.middleware_error: Request 1757947598465-140437768595376: GET /api/trending/
+[2025-09-15 14:46:38,468] INFO stocks.api_views: Returning cached trending stocks result
+[15/Sep/2025 14:46:38] "GET /api/trending/ HTTP/1.1" 200 102
+[2025-09-15 14:46:38,513] INFO stocks.middleware_error: Request 1757947598513-140438110720880: GET /api/search/
+[15/Sep/2025 14:46:38] "GET /api/search/?q=AAPL HTTP/1.1" 200 101
+[2025-09-15 14:46:38,565] INFO stocks.middleware_error: Request 1757947598565-140438110720880: GET /api/market-stats/
+[15/Sep/2025 14:46:38] "GET /api/market-stats/ HTTP/1.1" 200 204
+[2025-09-15 14:46:38,621] INFO stocks.middleware_error: Request 1757947598620-140438110720880: GET /api/stock/AAPL/
+[2025-09-15 14:46:38,792] WARNING stocks.middleware_error: Request 1757947598620-140438110720880 returned 404
+Not Found: /api/stock/AAPL/
+[2025-09-15 14:46:38,792] WARNING django.request: Not Found: /api/stock/AAPL/
+[15/Sep/2025 14:46:38] "GET /api/stock/AAPL/ HTTP/1.1" 404 109
+[2025-09-15 14:46:38,837] INFO stocks.middleware_error: Request 1757947598837-140437768593936: GET /api/realtime/AAPL/
+[2025-09-15 14:46:38,843] WARNING stocks.middleware_error: Request 1757947598837-140437768593936 returned 404
+Not Found: /api/realtime/AAPL/
+[2025-09-15 14:46:38,843] WARNING django.request: Not Found: /api/realtime/AAPL/
+[15/Sep/2025 14:46:38] "GET /api/realtime/AAPL/ HTTP/1.1" 404 44
+[2025-09-15 14:46:38,889] INFO stocks.middleware_error: Request 1757947598889-140437768597968: GET /api/statistics/
+[15/Sep/2025 14:46:38] "GET /api/statistics/ HTTP/1.1" 200 286
+[2025-09-15 14:46:38,945] INFO stocks.middleware_error: Request 1757947598944-140437768595088: GET /api/portfolio/
+[15/Sep/2025 14:46:39] "GET /api/portfolio/ HTTP/1.1" 200 133
+[2025-09-15 14:46:39,105] INFO stocks.middleware_error: Request 1757947599105-140438110720880: GET /api/watchlist/
+[15/Sep/2025 14:46:39] "GET /api/watchlist/ HTTP/1.1" 200 103
+[2025-09-15 14:46:39,157] INFO stocks.middleware_error: Request 1757947599157-140437768597968: GET /api/news/feed/
+[2025-09-15 14:46:39,160] INFO stocks.security_utils: API Request: get_personalized_feed from 127.0.0.1 by test_user
+[2025-09-15 14:46:39,163] INFO stocks.security_utils: API Response: get_personalized_feed - SUCCESS
+[15/Sep/2025 14:46:39] "GET /api/news/feed/ HTTP/1.1" 200 89
+[2025-09-15 14:46:39,209] INFO stocks.middleware_error: Request 1757947599209-140437768595952: GET /api/news/analytics/
+[2025-09-15 14:46:39,212] INFO stocks.security_utils: API Request: get_analytics from 127.0.0.1 by test_user
+[2025-09-15 14:46:39,218] INFO stocks.security_utils: API Response: get_analytics - SUCCESS
+[15/Sep/2025 14:46:39] "GET /api/news/analytics/ HTTP/1.1" 200 257
+[2025-09-15 14:46:39,265] INFO stocks.middleware_error: Request 1757947599265-140437768593360: GET /api/alerts/
+[15/Sep/2025 14:46:39] "GET /api/alerts/ HTTP/1.1" 200 13
+[2025-09-15 14:46:39,317] INFO stocks.middleware_error: Request 1757947599317-140437768595664: GET /api/billing/history/
+[15/Sep/2025 14:46:39] "GET /api/billing/history/ HTTP/1.1" 200 144
+[2025-09-15 14:46:39,369] INFO stocks.middleware_error: Request 1757947599369-140437768587312: GET /api/billing/current-plan/
+[15/Sep/2025 14:46:39] "GET /api/billing/current-plan/ HTTP/1.1" 200 293
+[2025-09-15 14:46:39,425] INFO stocks.middleware_error: Request 1757947599425-140437768590480: GET /api/billing/stats/
+[15/Sep/2025 14:46:39] "GET /api/billing/stats/ HTTP/1.1" 200 154
+[2025-09-15 14:46:39,477] INFO stocks.middleware_error: Request 1757947599477-140437768589328: GET /api/usage-stats/
+[15/Sep/2025 14:46:39] "GET /api/usage-stats/ HTTP/1.1" 200 285
+[2025-09-15 14:46:39,529] INFO stocks.middleware_error: Request 1757947599529-140437748010736: GET /api/usage/
+[15/Sep/2025 14:46:39] "GET /api/usage/ HTTP/1.1" 200 173
+[2025-09-15 14:46:39,581] INFO stocks.middleware_error: Request 1757947599581-140437748011600: GET /api/usage/history/
+[15/Sep/2025 14:46:39] "GET /api/usage/history/ HTTP/1.1" 200 29

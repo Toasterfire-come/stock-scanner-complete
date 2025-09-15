@@ -206,23 +206,31 @@ def login_api(request):
                 'error_code': 'MISSING_CREDENTIALS'
             }, status=400)
 
-        # If identifier looks like an email, resolve to username; unknown email => 401 invalid credentials
+        # Resolve identifier to a username, handling duplicate emails gracefully
+        user = None
         if '@' in identifier:
-            try:
-                user_lookup = User.objects.get(email__iexact=identifier)
-                username = user_lookup.username
-            except User.DoesNotExist:
+            # Multiple accounts may exist with the same email; try each with the provided password
+            candidates = list(User.objects.filter(email__iexact=identifier).order_by('-is_active', '-last_login', '-date_joined'))
+            if not candidates:
                 return JsonResponse({
                     'success': False,
                     'error': 'Invalid username or password',
                     'error_code': 'INVALID_CREDENTIALS'
                 }, status=401)
+            for candidate in candidates:
+                # Quick password check before calling authenticate to avoid side effects
+                try:
+                    if not candidate.check_password(password):
+                        continue
+                except Exception:
+                    continue
+                authed = authenticate(request, username=candidate.username, password=password)
+                if authed is not None:
+                    user = authed
+                    break
         else:
             # Treat as username directly
-            username = identifier
-        
-        # Authenticate user
-        user = authenticate(request, username=username, password=password)
+            user = authenticate(request, username=identifier, password=password)
         
         if user is not None:
             if user.is_active:
