@@ -293,7 +293,12 @@ class WordPressNewsView(View):
         """Handle GET requests for news data"""
         try:
             # Get parameters
-            limit = min(int(request.GET.get('limit', 10)), 50)
+            raw_limit = request.GET.get('limit', '10')
+            if isinstance(raw_limit, str) and raw_limit.lower() == 'all':
+                # Allow large cap for bulk loads
+                limit = 200
+            else:
+                limit = min(int(raw_limit or 10), 200)
             sentiment_filter = request.GET.get('sentiment', '')  # positive, negative, neutral
             ticker = request.GET.get('ticker', '')
             
