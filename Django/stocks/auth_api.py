@@ -4,6 +4,7 @@ Provides comprehensive user authentication, profile management, and billing endp
 """
 
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -172,9 +173,25 @@ def login_api(request):
     """
     try:
         # Prefer DRF's parsed data, fallback to raw JSON body
-        data = getattr(request, 'data', None)
+        try:
+            data = getattr(request, 'data', None)
+        except ParseError as pe:
+            logger.warning(f"Login ParseError: {str(pe)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid JSON format',
+                'error_code': 'INVALID_JSON'
+            }, status=400)
+
         if data is None or data == {}:
-            data = json.loads(request.body) if request.body else {}
+            try:
+                data = json.loads(request.body) if request.body else {}
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid JSON format',
+                    'error_code': 'INVALID_JSON'
+                }, status=400)
         
         # Support common variants: identifier, username, email
         identifier = (data.get('identifier') or data.get('username') or data.get('email') or '').strip()

@@ -8,7 +8,7 @@ Routes:
 - POST   /api/alerts/{alertId}/delete/
 """
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -27,6 +27,7 @@ import re
 import time
 
 from .models import Stock, StockAlert
+from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
 
 
 logger = logging.getLogger(__name__)
@@ -131,6 +132,7 @@ def _validate_email_or_fallback(provided_email: str, fallback_email: str) -> str
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_list_api(request):
     """List alerts for the authenticated user."""
     try:
@@ -152,6 +154,7 @@ def alerts_list_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_create_api(request):
     """Create a new price alert for the authenticated user."""
     try:
@@ -212,6 +215,7 @@ def alerts_create_api(request):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_toggle_api(request, alert_id: int):
     """Toggle or set active state for a user's alert."""
     try:
@@ -251,6 +255,7 @@ def alerts_toggle_api(request, alert_id: int):
 @csrf_exempt
 @api_view(['POST', 'DELETE'])
 @permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
 def alerts_delete_api(request, alert_id: int):
     """Delete a user's alert."""
     try:
