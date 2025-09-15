@@ -39,10 +39,10 @@ const Features = () => {
   const mainFeatures = [
     {
       icon: <Search className="h-8 w-8" />,
-      title: "NYSE Stock Screening",
-      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
+      title: "US Stock Screening",
+      description: `Screen 10,500+ NYSE and Nasdaq stocks with 14 technical and fundamental criteria including real-time data analysis.`,
       details: [
-        "Complete NYSE market coverage (3,200+ stocks)",
+        "Complete US market coverage (10,500+ stocks)",
         "7 Technical Indicators: RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change", 
         "7 Fundamental Indicators: Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range",
         "Custom filter combinations with saved presets",
@@ -284,7 +284,7 @@ const Features = () => {
             Ready to Experience These Features?
           </h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Start your 7-day trial for just $1 and see how Trade Scan Pro can transform your trading strategy.
+            Start your 7‑day trial for just $1 and see how Trade Scan Pro can transform your trading strategy.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center">

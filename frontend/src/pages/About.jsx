@@ -17,7 +17,7 @@ import {
 
 const About = () => {
   const stats = [
-    { label: "NYSE Stocks Covered", value: "3,200+" },
+    { label: "US Stocks Covered (NYSE + Nasdaq)", value: "10,500+" },
     { label: "Technical Indicators", value: "14" },
     { label: "Scanner Combinations", value: "1540+" },
     { label: "Active Users", value: "Growing" }
@@ -108,7 +108,7 @@ const About = () => {
                     make better-informed decisions.
                   </p>
                   <p className="text-xl text-gray-700 leading-relaxed">
-                    Our platform specializes in NYSE stock analysis with real-time alerts and comprehensive 
+                    Our platform covers US listings (NYSE + Nasdaq) with real-time alerts and comprehensive 
                     screening capabilities. We believe in transparent pricing and reliable service delivery.
                   </p>
                 </div>
@@ -187,9 +187,9 @@ const About = () => {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">The Solution</h3>
                       <p className="text-gray-700">
-                        We built Trade Scan Pro to focus on NYSE stocks with comprehensive screening capabilities, 
+                        We built Trade Scan Pro to cover US stocks (NYSE + Nasdaq) with comprehensive screening capabilities, 
                         real-time alerts, and portfolio tracking. Our goal was to create a platform that combines 
-                        reliability with affordability, starting with code TRIAL for a 7‑day 1$ trial.
+                        reliability with affordability, starting with code TRIAL for a 7‑day $1 trial.
                       </p>
                     </div>
                   </div>
@@ -245,7 +245,7 @@ const About = () => {
           <div className="flex flex-wrap items-center justify-center gap-8 text-lg">
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day 1$ trial
+              Use code TRIAL for a 7‑day $1 trial
             </div>
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />

@@ -50,7 +50,7 @@ const AppDashboard = () => {
         setTrendSeries({
           gainers: g.length ? g : Array.from({ length: 20 }, (_, i) => 800 + Math.sin(i/2) * 100),
           losers: l.length ? l : Array.from({ length: 20 }, (_, i) => 600 + Math.cos(i/2) * 90),
-          total: t.length ? t : Array.from({ length: 20 }, (_, i) => 3200 + Math.sin(i/3) * 20),
+          total: t.length ? t : Array.from({ length: 20 }, (_, i) => 10500 + Math.sin(i/3) * 50),
         });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -89,8 +89,13 @@ const AppDashboard = () => {
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
-                <p className="text-xs text-muted-foreground">NYSE listings</p>
+                <div className="text-2xl font-bold">{(
+                  marketData?.market_overview?.us_stocks ||
+                  ((marketData?.market_overview?.nyse_stocks || 0) + (marketData?.market_overview?.nasdaq_stocks || 0)) ||
+                  marketData?.market_overview?.total_stocks ||
+                  '-'
+                )?.toLocaleString?.() || '-'}</div>
+                <p className="text-xs text-muted-foreground">US listings (NYSE + Nasdaq)</p>
               </CardContent>
             </Card>
             <Card>
@@ -159,8 +164,13 @@ const AppDashboard = () => {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
-              <p className="text-xs text-muted-foreground">NYSE listings covered</p>
+              <div className="text-2xl font-bold">{(
+                marketData?.market_overview?.us_stocks ||
+                ((marketData?.market_overview?.nyse_stocks || 0) + (marketData?.market_overview?.nasdaq_stocks || 0)) ||
+                marketData?.market_overview?.total_stocks ||
+                '-'
+              )?.toLocaleString?.() || '-'}</div>
+              <p className="text-xs text-muted-foreground">US listings covered (NYSE + Nasdaq)</p>
               {Array.isArray(trendSeries.total) && trendSeries.total.length > 0 && (
                 <div className="mt-3">
                   <MiniSparkline data={trendSeries.total} color="#2563eb" />

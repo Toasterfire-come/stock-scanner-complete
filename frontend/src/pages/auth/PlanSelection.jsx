@@ -147,7 +147,7 @@ export default function PlanSelection() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-base">
             <Zap className="h-5 w-5 mr-2" />
-            Use code TRIAL for a 7‑day 1$ trial on paid plans
+            Use code TRIAL for a 7‑day $1 trial on paid plans
           </div>
         </div>
 

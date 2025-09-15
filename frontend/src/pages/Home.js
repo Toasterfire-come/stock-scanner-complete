@@ -50,9 +50,9 @@ const Home = () => {
   const features = [
     {
       icon: <Search className="h-6 w-6" />,
-      title: "NYSE Stock Screening",
-      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
-      details: "Access comprehensive screening across all NYSE-listed companies with 7 technical indicators (RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change) and 7 fundamental indicators (Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range)."
+      title: "US Stock Screening",
+      description: `Screen 10,500+ NYSE and Nasdaq stocks with 14 technical and fundamental criteria including real-time data analysis.`,
+      details: "Access comprehensive screening across US-listed (NYSE + Nasdaq) companies with 7 technical indicators (RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change) and 7 fundamental indicators (Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range)."
     },
     {
       icon: <Bell className="h-6 w-6" />,
@@ -101,7 +101,7 @@ const Home = () => {
   const faqs = [
     {
       question: "How accurate is your market data?",
-      answer: "Our data is sourced from reliable market data providers and updated regularly. We focus on NYSE listings for consistency and accuracy."
+      answer: "Our data is sourced from reliable market data providers and updated regularly. We cover US listings (NYSE + Nasdaq) for consistency and accuracy."
     },
     {
       question: "Can I cancel my subscription anytime?",
@@ -217,7 +217,7 @@ const Home = () => {
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                Use code TRIAL for a 7‑day 1$ trial
+                Use code TRIAL for a 7‑day $1 trial
               </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-blue-500 mr-3" />
@@ -243,9 +243,9 @@ const Home = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {Number(platformStats?.nyse_stocks || 3200).toLocaleString()}
+                  {Number((platformStats?.us_stocks) || ((platformStats?.nyse_stocks || 0) + (platformStats?.nasdaq_stocks || 0)) || 10500).toLocaleString()}
                 </div>
-                <div className="text-gray-600">NYSE Stocks Covered</div>
+                <div className="text-gray-600">US Stocks Covered (NYSE + Nasdaq)</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">
@@ -361,7 +361,7 @@ const Home = () => {
             </p>
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day 1$ trial
+              Use code TRIAL for a 7‑day $1 trial
             </div>
           </div>
           <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
