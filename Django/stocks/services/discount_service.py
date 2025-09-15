@@ -80,8 +80,11 @@ class DiscountService:
             # For recurring discounts, always apply
             applies_discount = True
 
-        # Business rule: TRIAL is valid only for annual billing
-        if discount.code.upper() == 'TRIAL' and billing_cycle and billing_cycle.lower() != 'annual':
+        # Business rule adjustments:
+        # - TRIAL: valid for either monthly or annual (first payment), billed at $1 for 7 days
+        # - REF50: 50% off first monthly payment only
+        code_upper = discount.code.upper()
+        if code_upper == 'REF50' and billing_cycle and billing_cycle.lower() != 'monthly':
             applies_discount = False
         
         return {
