@@ -773,17 +773,33 @@ def current_plan_api(request):
         user = _effective_user(request)
         profile, created = UserProfile.objects.get_or_create(user=user)
 
-        # Enterprise email whitelist override
-        enterprise_emails = set(email.lower() for email in getattr(settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
+        # Forced plan override by email (highest precedence)
         user_email = (getattr(user, 'email', '') or '').lower()
-        if user_email and user_email in enterprise_emails:
-            # Persist enterprise plan on the profile for consistency
-            profile.plan_type = 'enterprise'
-            profile.plan_name = 'Enterprise'
-            profile.is_premium = True
-            # Ensure very high limit for enterprise
-            profile.api_calls_limit = max(getattr(profile, 'api_calls_limit', 100000), 100000)
+        forced_map = getattr(settings, 'FORCED_PLAN_BY_EMAIL', {})
+        forced_plan = forced_map.get(user_email)
+        if forced_plan in ['free','basic','pro','bronze','silver','gold','enterprise']:
+            profile.plan_type = forced_plan
+            profile.plan_name = forced_plan.title()
+            profile.is_premium = forced_plan not in ['free', 'basic']
+            plan_limits = {
+                'free': 100,
+                'basic': 1000,
+                'bronze': 1500,
+                'silver': 5000,
+                'gold': 100000,
+                'enterprise': 100000
+            }
+            profile.api_calls_limit = plan_limits.get(forced_plan, 1000)
             profile.save()
+        else:
+            # Enterprise email whitelist override
+            enterprise_emails = set(email.lower() for email in getattr(settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
+            if user_email and user_email in enterprise_emails:
+                profile.plan_type = 'enterprise'
+                profile.plan_name = 'Enterprise'
+                profile.is_premium = True
+                profile.api_calls_limit = max(getattr(profile, 'api_calls_limit', 100000), 100000)
+                profile.save()
         
         return JsonResponse({
             'success': True,
@@ -826,11 +842,17 @@ def change_plan_api(request):
         profile, created = UserProfile.objects.get_or_create(user=user)
         
         new_plan = data.get('plan_type')
-        # Enterprise email whitelist stays on enterprise regardless of request
-        enterprise_emails = set(email.lower() for email in getattr(settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
         user_email = (getattr(user, 'email', '') or '').lower()
-        if user_email and user_email in enterprise_emails:
-            new_plan = 'enterprise'
+        # Forced plan by email takes precedence over everything
+        forced_map = getattr(settings, 'FORCED_PLAN_BY_EMAIL', {})
+        forced_plan = forced_map.get(user_email)
+        if forced_plan:
+            new_plan = forced_plan
+        else:
+            # Enterprise email whitelist stays on enterprise regardless of request
+            enterprise_emails = set(email.lower() for email in getattr(settings, 'ENTERPRISE_EMAIL_WHITELIST', []))
+            if user_email and user_email in enterprise_emails:
+                new_plan = 'enterprise'
         billing_cycle = data.get('billing_cycle', 'monthly')
         
         if new_plan not in ['free', 'basic', 'pro', 'enterprise']:

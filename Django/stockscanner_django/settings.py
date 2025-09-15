@@ -240,6 +240,17 @@ ENTERPRISE_EMAIL_WHITELIST = list(filter(None, [
     'carter.kiefer2010@outlook.com',  # ensure case-insensitive match
 ]))
 
+# Forced plan mapping by email (takes precedence over enterprise whitelist)
+# Format: { 'email@example.com': 'gold' }
+FORCED_PLAN_BY_EMAIL = {
+    **{k.strip().lower(): v.strip().lower() for k, v in (
+        # Load from env FORCED_PLAN_EMAILS as pairs email:plan separated by commas
+        # Example: FORCED_PLAN_EMAILS="carter.kiefer2010@outlook.com:gold, vip@example.com:enterprise"
+        [tuple(item.split(':', 1)) for item in os.environ.get('FORCED_PLAN_EMAILS', '').split(',') if ':' in item]
+    )},
+    'carter.kiefer2010@outlook.com': 'gold',
+}
+
 # Define which endpoints constitute stock market data for counting/limits
 STOCK_DATA_ENDPOINT_PREFIXES = [
     '/api/stocks/',

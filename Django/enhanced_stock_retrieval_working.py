@@ -28,6 +28,8 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 import subprocess
 import pytz
+from pathlib import Path
+import importlib.util
 
 # Django imports for database integration
 import django
@@ -140,6 +142,8 @@ def parse_arguments():
     parser.add_argument('-save-to-db', action='store_true', default=False, help='Save results to database (default: False)')
     parser.add_argument('-update-proxies', action='store_true', help='Force proxy update before starting')
     parser.add_argument('-daily-update', action='store_true', help='Run daily 9 AM update with proxy refresh')
+    parser.add_argument('-combined', action='store_true', help='Use combined tickers from data/combined instead of CSV')
+    parser.add_argument('-combined-file', type=str, default=None, help='Path to specific combined_tickers_*.py file')
     return parser.parse_args()
 
 # Removed _safe_decimal - using shared safe_decimal_conversion from utils.stock_data
@@ -301,6 +305,55 @@ def mark_proxy_failure(proxy, reason=""):
 def load_nyse_symbols(csv_file, test_mode=False, max_symbols=None):
     """Load NYSE symbols from CSV file, filtering delisted stocks - wrapper for shared utility"""
     return load_nyse_symbols_from_csv(csv_file, test_mode, max_symbols)
+
+def load_combined_symbols(combined_file: str | None = None, test_mode: bool = False, max_symbols: int | None = None) -> list[str]:
+    """Load combined tickers list from Django/data/combined/combined_tickers_*.py.
+
+    If combined_file is None, auto-select the most recent combined file.
+    """
+    try:
+        combined_dir = Path(__file__).resolve().parent / 'data' / 'combined'
+        target_path: Path | None = None
+        if combined_file:
+            p = Path(combined_file)
+            target_path = p if p.exists() else None
+        if target_path is None:
+            if not combined_dir.exists():
+                logger.error(f"Combined tickers directory not found: {combined_dir}")
+                return []
+            candidates = sorted(combined_dir.glob('combined_tickers_*.py'), key=lambda fp: fp.stat().st_mtime, reverse=True)
+            if not candidates:
+                logger.error(f"No combined_tickers_*.py files found in {combined_dir}")
+                return []
+            target_path = candidates[0]
+
+        spec = importlib.util.spec_from_file_location('combined_tickers_module', str(target_path))
+        if not spec or not spec.loader:
+            logger.error(f"Failed to prepare import for {target_path}")
+            return []
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        symbols = list(getattr(module, 'COMBINED_TICKERS', []))
+        if not symbols:
+            logger.error(f"COMBINED_TICKERS not found in {target_path}")
+            return []
+        # Normalize, de-dupe, and optionally trim
+        seen = set()
+        out: list[str] = []
+        for s in symbols:
+            us = str(s).strip().upper()
+            if us and us not in seen:
+                seen.add(us)
+                out.append(us)
+        if test_mode and len(out) > 100:
+            out = out[:100]
+        if max_symbols and len(out) > max_symbols:
+            out = out[:max_symbols]
+        logger.info(f"Loaded {len(out)} combined tickers from {target_path.name}")
+        return out
+    except Exception as e:
+        logger.error(f"Failed to load combined symbols: {e}")
+        return []
 
 def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True, max_retries=3):
     """Process a single symbol with retry logic and proxy rotation"""
@@ -564,9 +617,14 @@ def run_stock_update(args):
         )
         return
     
-    # Load NYSE symbols
-    logger.info(f"Loading NYSE symbols from {args.csv}...")
-    symbols = load_nyse_symbols(args.csv, args.test, args.max_symbols)
+    # Load symbols (combined preferred when requested)
+    use_combined = bool(getattr(args, 'combined', False) or os.environ.get('USE_COMBINED_TICKERS', '').lower() == 'true')
+    if use_combined:
+        logger.info("Loading combined tickers list (NASDAQ + NYSE/AMEX)...")
+        symbols = load_combined_symbols(getattr(args, 'combined_file', None), args.test, args.max_symbols)
+    else:
+        logger.info(f"Loading NYSE symbols from {args.csv}...")
+        symbols = load_nyse_symbols(args.csv, args.test, args.max_symbols)
     
     if not symbols:
         logger.error("No symbols loaded. Skipping cycle.")
