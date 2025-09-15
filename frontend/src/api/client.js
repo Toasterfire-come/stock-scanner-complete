@@ -135,6 +135,13 @@ function getCsrfToken() {
   } catch { return null; }
 }
 
+function getSessionIdCookie() {
+  try {
+    const m = document.cookie.match(/sessionid=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch { return null; }
+}
+
 async function ensureCsrfCookie() {
   try {
     if (getCsrfToken()) return;
@@ -169,10 +176,12 @@ api.interceptors.request.use((config) => {
       config.headers['X-CSRFToken'] = csrf;
     }
 
-    const token = (window.localStorage.getItem("rts_token") || '').trim();
-    if (token && token !== 'undefined' && token !== 'null') {
-      config.headers.Authorization = `Bearer ${token}`;
+    let token = (window.localStorage.getItem("rts_token") || '').trim();
+    if (!token || token === 'undefined' || token === 'null') {
+      // Fallback to Django session cookie for BearerSessionAuthentication
+      token = getSessionIdCookie() || '';
     }
+    if (token) { config.headers.Authorization = `Bearer ${token}`; }
   } catch {}
   // Skip client-side quota check - server handles all rate limiting
   config.metadata = { start: Date.now(), url: `${config.baseURL || ''}${config.url || ''}` };
@@ -214,8 +223,16 @@ api.interceptors.response.use(
       window.__NET?.emit('end');
     } catch {}
     if (error.response?.status === 401) {
-      // Do not forcibly sign the user out on incidental 401s (e.g., news feed) – let pages handle it gracefully
-      // Keep token/state intact and surface the error to callers
+      try {
+        const path = String(error.config?.url || '');
+        const protectedPaths = ['/portfolio/', '/user/profile/', '/usage/', '/alerts/', '/news/mark-read/'];
+        const isProtected = protectedPaths.some(p => path.startsWith(p));
+        if (isProtected && typeof window !== 'undefined') {
+          // Redirect to sign-in preserving next
+          const next = encodeURIComponent(window.location.pathname + window.location.search);
+          setTimeout(() => { window.location.href = `/auth/sign-in?session_expired=true&next=${next}`; }, 50);
+        }
+      } catch {}
       return Promise.reject(error);
     }
     return Promise.reject(error);

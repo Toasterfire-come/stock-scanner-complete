@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { validateDiscountCode, applyDiscountCode, recordPayment } from "../api/client";
+import { validateDiscountCode, applyDiscountCode, recordPayment, createPayPalOrder, capturePayPalOrder } from "../api/client";
 
 const PayPalCheckout = ({ 
   planType = "bronze", 
@@ -58,48 +58,53 @@ const PayPalCheckout = ({
     }
   };
 
-  const createOrder = (data, actions) => {
-    return actions.order.create({
-      purchase_units: [{
-        amount: {
-          value: finalPrice.toFixed(2),
-          currency_code: "USD"
-        },
-        description: `Trade Scan Pro ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan - ${billingCycle}`,
-        custom_id: `${planType}_${billingCycle}_${Date.now()}`
-      }],
-      application_context: {
-        brand_name: "Trade Scan Pro",
-        user_action: "PAY_NOW"
+  const createOrder = async () => {
+    try {
+      // Create order via backend to ensure discounts and metadata are applied server-side
+      const order = await createPayPalOrder(planType, billingCycle, discountCode || null);
+      if (order?.order_id) {
+        return order.order_id;
       }
-    });
+      throw new Error("Failed to create PayPal order");
+    } catch (err) {
+      setError("Failed to create PayPal order");
+      throw err;
+    }
   };
 
-  const onApprove = async (data, actions) => {
+  const onApprove = async (data) => {
     setIsLoading(true);
     try {
-      const details = await actions.order.capture();
-      
-      // Apply discount if present
-      let discountData = null;
-      if (discount) {
-        discountData = await applyDiscountCode(discountCode, basePrice);
-      }
-      
-      // Record payment in your backend (user comes from session/token server-side)
-      const paymentRecord = await recordPayment({
-        amount: finalPrice,
-        discount_code: discountCode || null,
-        payment_date: new Date().toISOString(),
-        paypal_transaction_id: details.id,
+      // Capture via backend to finalize and activate plan
+      const capture = await capturePayPalOrder(data.orderID, {
         plan_type: planType,
-        billing_cycle: billingCycle
+        billing_cycle: billingCycle,
+        discount_code: discountCode || null,
+        amount: basePrice,
+        final_amount: finalPrice
       });
 
+      // Apply discount if present (idempotent server-side as well)
+      let discountData = null;
+      if (discount && discountCode) {
+        try { discountData = await applyDiscountCode(discountCode, basePrice); } catch {}
+      }
+
+      // Record payment (redundant if webhook present; kept for completeness)
+      try {
+        await recordPayment({
+          amount: finalPrice,
+          discount_code: discountCode || null,
+          payment_date: new Date().toISOString(),
+          paypal_transaction_id: capture?.order_id || data.orderID,
+          plan_type: planType,
+          billing_cycle: billingCycle
+        });
+      } catch {}
+
       onSuccess?.({
-        paymentDetails: details,
+        paymentDetails: capture,
         discountApplied: discountData,
-        paymentRecord: paymentRecord,
         planType,
         billingCycle,
         finalAmount: finalPrice
