@@ -112,3 +112,202 @@ Forbidden: /api/usage/
 Forbidden: /api/usage/history/
 [2025-09-15 14:24:02,166] WARNING django.request: Forbidden: /api/usage/history/
 [15/Sep/2025 14:24:02] "GET /api/usage/history/ HTTP/1.1" 403 63
+/workspace/Django/stocks/security_utils.py changed, reloading.
+[2025-09-15 14:27:09,314] INFO django.utils.autoreload: /workspace/Django/stocks/security_utils.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 14:23:42
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 14:27:10,197] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/notifications_api.py changed, reloading.
+[2025-09-15 14:28:33,017] INFO django.utils.autoreload: /workspace/Django/stocks/notifications_api.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 14:27:10
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 14:28:33,744] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/portfolio_api_updated.py changed, reloading.
+[2025-09-15 14:29:14,596] INFO django.utils.autoreload: /workspace/Django/stocks/portfolio_api_updated.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 14:28:34
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 14:29:15,668] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/watchlist_api_updated.py changed, reloading.
+[2025-09-15 14:29:34,095] INFO django.utils.autoreload: /workspace/Django/stocks/watchlist_api_updated.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 14:29:16
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 14:29:35,030] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/auth_api.py changed, reloading.
+[2025-09-15 14:29:49,337] INFO django.utils.autoreload: /workspace/Django/stocks/auth_api.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 14:29:35
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 14:29:50,246] INFO django.utils.autoreload: Watching for file changes with StatReloader
+[2025-09-15 14:30:19,259] INFO stocks.middleware_error: Request 1757946619259-140507301391264: GET /api/auth/csrf/
+[15/Sep/2025 14:30:19] "GET /api/auth/csrf/ HTTP/1.1" 200 81
+[2025-09-15 14:30:19,270] INFO stocks.middleware_error: Request 1757946619270-140507300208208: POST /api/auth/login/
+[2025-09-15 14:30:19,670] WARNING stocks.middleware_error: Request 1757946619270-140507300208208 returned 401
+Unauthorized: /api/auth/login/
+[2025-09-15 14:30:19,671] WARNING django.request: Unauthorized: /api/auth/login/
+[15/Sep/2025 14:30:19] "POST /api/auth/login/ HTTP/1.1" 401 96
+[2025-09-15 14:30:19,717] INFO stocks.middleware_error: Request 1757946619717-140507300211408: GET /api/health/
+[15/Sep/2025 14:30:19] "GET /api/health/ HTTP/1.1" 200 396
+[2025-09-15 14:30:19,765] INFO stocks.middleware_error: Request 1757946619764-140507299864672: GET /api/endpoint-status/
+[2025-09-15 14:30:19,772] INFO stocks.middleware_error: Request 1757946619772-140507299867104: GET /
+[15/Sep/2025 14:30:19] "GET / HTTP/1.1" 200 350
+[2025-09-15 14:30:19,801] INFO stocks.middleware_error: Request 1757946619801-140507300274704: GET /api/health/
+[15/Sep/2025 14:30:19] "GET /api/health/ HTTP/1.1" 200 396
+[2025-09-15 14:30:19,809] INFO stocks.middleware_error: Request 1757946619809-140507300277296: GET /api/stocks/
+[2025-09-15 14:30:19,817] WARNING stocks.api_views: API returned 0 results for category '', using emergency fallback with recent stocks
+[15/Sep/2025 14:30:19] "GET /api/stocks/ HTTP/1.1" 200 185
+[2025-09-15 14:30:19,825] INFO stocks.middleware_error: Request 1757946619825-140507300274128: GET /api/trending/
+[15/Sep/2025 14:30:19] "GET /api/trending/ HTTP/1.1" 200 102
+[2025-09-15 14:30:19,843] INFO stocks.middleware_error: Request 1757946619843-140507300268944: GET /api/search/
+[15/Sep/2025 14:30:19] "GET /api/search/?q=AAPL HTTP/1.1" 200 101
+[2025-09-15 14:30:19,858] INFO stocks.middleware_error: Request 1757946619857-140507300270672: GET /revenue/revenue-analytics/
+[15/Sep/2025 14:30:19] "GET /revenue/revenue-analytics/?format=json HTTP/1.1" 200 533
+[2025-09-15 14:30:19,880] INFO stocks.middleware_error: Request 1757946619880-140507300276432: GET /api/portfolio/list/
+[2025-09-15 14:30:19,886] WARNING stocks.middleware_error: Request 1757946619880-140507300276432 returned 405
+Method Not Allowed: /api/portfolio/list/
+[2025-09-15 14:30:19,887] WARNING django.request: Method Not Allowed: /api/portfolio/list/
+[15/Sep/2025 14:30:19] "GET /api/portfolio/list/ HTTP/1.1" 405 40
+[2025-09-15 14:30:19,892] INFO stocks.middleware_error: Request 1757946619892-140507300276144: GET /api/watchlist/list/
+[2025-09-15 14:30:19,896] WARNING stocks.middleware_error: Request 1757946619892-140507300276144 returned 405
+Method Not Allowed: /api/watchlist/list/
+[2025-09-15 14:30:19,897] WARNING django.request: Method Not Allowed: /api/watchlist/list/
+[15/Sep/2025 14:30:19] "GET /api/watchlist/list/ HTTP/1.1" 405 40
+[2025-09-15 14:30:19,903] INFO stocks.middleware_error: Request 1757946619903-140507300277008: GET /api/news/feed/
+[2025-09-15 14:30:19,908] INFO stocks.security_utils: API Request: get_personalized_feed from 127.0.0.1 by test_user
+[2025-09-15 14:30:19,921] INFO stocks.security_utils: API Response: get_personalized_feed - SUCCESS
+[15/Sep/2025 14:30:19] "GET /api/news/feed/ HTTP/1.1" 200 89
+[2025-09-15 14:30:19,925] INFO stocks.middleware_error: Request 1757946619925-140507300275568: GET /docs/
+[15/Sep/2025 14:30:19] "GET /docs/ HTTP/1.1" 200 2761
+[15/Sep/2025 14:30:19] "GET /api/endpoint-status/ HTTP/1.1" 200 1557
+[2025-09-15 14:30:19,980] INFO stocks.middleware_error: Request 1757946619980-140507642549968: GET /api/stocks/
+[2025-09-15 14:30:19,985] INFO stocks.api_views: Returning cached result for key: stocks_api__last_updated_desc_50_None_None_None_None_None_None__all
+[15/Sep/2025 14:30:19] "GET /api/stocks/ HTTP/1.1" 200 185
+[2025-09-15 14:30:20,028] INFO stocks.middleware_error: Request 1757946620028-140507300271536: GET /api/trending/
+[2025-09-15 14:30:20,032] INFO stocks.api_views: Returning cached trending stocks result
+[15/Sep/2025 14:30:20] "GET /api/trending/ HTTP/1.1" 200 102
+[2025-09-15 14:30:20,076] INFO stocks.middleware_error: Request 1757946620076-140507300270672: GET /api/search/
+[15/Sep/2025 14:30:20] "GET /api/search/?q=AAPL HTTP/1.1" 200 101
+[2025-09-15 14:30:20,132] INFO stocks.middleware_error: Request 1757946620132-140507300274128: GET /api/market-stats/
+[15/Sep/2025 14:30:20] "GET /api/market-stats/ HTTP/1.1" 200 204
+[2025-09-15 14:30:20,188] INFO stocks.middleware_error: Request 1757946620188-140507300276720: GET /api/stock/AAPL/
+[2025-09-15 14:30:20,371] WARNING stocks.middleware_error: Request 1757946620188-140507300276720 returned 404
+Not Found: /api/stock/AAPL/
+[2025-09-15 14:30:20,372] WARNING django.request: Not Found: /api/stock/AAPL/
+[15/Sep/2025 14:30:20] "GET /api/stock/AAPL/ HTTP/1.1" 404 109
+[2025-09-15 14:30:20,416] INFO stocks.middleware_error: Request 1757946620416-140507299709296: GET /api/realtime/AAPL/
+[2025-09-15 14:30:20,422] WARNING stocks.middleware_error: Request 1757946620416-140507299709296 returned 404
+Not Found: /api/realtime/AAPL/
+[2025-09-15 14:30:20,422] WARNING django.request: Not Found: /api/realtime/AAPL/
+[15/Sep/2025 14:30:20] "GET /api/realtime/AAPL/ HTTP/1.1" 404 44
+[2025-09-15 14:30:20,469] INFO stocks.middleware_error: Request 1757946620468-140507299713328: GET /api/statistics/
+[15/Sep/2025 14:30:20] "GET /api/statistics/ HTTP/1.1" 200 286
+[2025-09-15 14:30:20,524] INFO stocks.middleware_error: Request 1757946620524-140507299716784: GET /api/portfolio/
+[2025-09-15 14:30:20,528] ERROR stocks.portfolio_api_updated: Portfolio API error: Field 'id' expected a number but got <django.contrib.auth.models.AnonymousUser object at 0x7fca67b657c0>.
+[2025-09-15 14:30:20,529] WARNING stocks.middleware_error: Request 1757946620524-140507299716784 returned 500
+Internal Server Error: /api/portfolio/
+[2025-09-15 14:30:20,529] ERROR django.request: Internal Server Error: /api/portfolio/
+[15/Sep/2025 14:30:20] "GET /api/portfolio/ HTTP/1.1" 500 92
+[2025-09-15 14:30:20,572] INFO stocks.middleware_error: Request 1757946620572-140507299716496: GET /api/watchlist/
+[2025-09-15 14:30:20,586] ERROR stocks.watchlist_api_updated: Watchlist API error: Field 'id' expected a number but got <django.contrib.auth.models.AnonymousUser object at 0x7fca67ac0bb0>.
+[2025-09-15 14:30:20,587] WARNING stocks.middleware_error: Request 1757946620572-140507299716496 returned 500
+Internal Server Error: /api/watchlist/
+[2025-09-15 14:30:20,587] ERROR django.request: Internal Server Error: /api/watchlist/
+[15/Sep/2025 14:30:20] "GET /api/watchlist/ HTTP/1.1" 500 92
+[2025-09-15 14:30:20,632] INFO stocks.middleware_error: Request 1757946620632-140507642549968: GET /api/news/feed/
+[2025-09-15 14:30:20,635] INFO stocks.security_utils: API Request: get_personalized_feed from 127.0.0.1 by test_user
+[2025-09-15 14:30:20,639] INFO stocks.security_utils: API Response: get_personalized_feed - SUCCESS
+[15/Sep/2025 14:30:20] "GET /api/news/feed/ HTTP/1.1" 200 89
+[2025-09-15 14:30:20,684] INFO stocks.middleware_error: Request 1757946620684-140507300276720: GET /api/news/analytics/
+[2025-09-15 14:30:20,688] INFO stocks.security_utils: API Request: get_analytics from 127.0.0.1 by test_user
+[2025-09-15 14:30:20,693] INFO stocks.security_utils: API Response: get_analytics - SUCCESS
+[15/Sep/2025 14:30:20] "GET /api/news/analytics/ HTTP/1.1" 200 257
+[2025-09-15 14:30:20,737] INFO stocks.middleware_error: Request 1757946620737-140507300275856: GET /api/alerts/
+[15/Sep/2025 14:30:20] "GET /api/alerts/ HTTP/1.1" 200 13
+[2025-09-15 14:30:20,789] INFO stocks.middleware_error: Request 1757946620789-140507300269808: GET /api/billing/history/
+[2025-09-15 14:30:20,793] WARNING stocks.middleware_error: Request 1757946620789-140507300269808 returned 403
+Forbidden: /api/billing/history/
+[2025-09-15 14:30:20,793] WARNING django.request: Forbidden: /api/billing/history/
+[15/Sep/2025 14:30:20] "GET /api/billing/history/ HTTP/1.1" 403 63
+[2025-09-15 14:30:20,837] INFO stocks.middleware_error: Request 1757946620837-140507300270672: GET /api/billing/current-plan/
+[2025-09-15 14:30:20,840] WARNING stocks.middleware_error: Request 1757946620837-140507300270672 returned 403
+Forbidden: /api/billing/current-plan/
+[2025-09-15 14:30:20,840] WARNING django.request: Forbidden: /api/billing/current-plan/
+[15/Sep/2025 14:30:20] "GET /api/billing/current-plan/ HTTP/1.1" 403 63
+[2025-09-15 14:30:20,884] INFO stocks.middleware_error: Request 1757946620884-140507300276144: GET /api/billing/stats/
+[2025-09-15 14:30:20,888] WARNING stocks.middleware_error: Request 1757946620884-140507300276144 returned 403
+Forbidden: /api/billing/stats/
+[2025-09-15 14:30:20,888] WARNING django.request: Forbidden: /api/billing/stats/
+[15/Sep/2025 14:30:20] "GET /api/billing/stats/ HTTP/1.1" 403 63
+[2025-09-15 14:30:20,932] INFO stocks.middleware_error: Request 1757946620932-140507300278448: GET /api/usage-stats/
+[2025-09-15 14:30:20,936] WARNING stocks.middleware_error: Request 1757946620932-140507300278448 returned 403
+Forbidden: /api/usage-stats/
+[2025-09-15 14:30:20,936] WARNING django.request: Forbidden: /api/usage-stats/
+[15/Sep/2025 14:30:20] "GET /api/usage-stats/ HTTP/1.1" 403 63
+[2025-09-15 14:30:20,980] INFO stocks.middleware_error: Request 1757946620980-140507300277584: GET /api/usage/
+[2025-09-15 14:30:20,984] WARNING stocks.middleware_error: Request 1757946620980-140507300277584 returned 403
+Forbidden: /api/usage/
+[2025-09-15 14:30:20,984] WARNING django.request: Forbidden: /api/usage/
+[15/Sep/2025 14:30:20] "GET /api/usage/ HTTP/1.1" 403 63
+[2025-09-15 14:30:21,033] INFO stocks.middleware_error: Request 1757946621033-140507300279888: GET /api/usage/history/
+[2025-09-15 14:30:21,037] WARNING stocks.middleware_error: Request 1757946621033-140507300279888 returned 403
+Forbidden: /api/usage/history/
+[2025-09-15 14:30:21,037] WARNING django.request: Forbidden: /api/usage/history/
+[15/Sep/2025 14:30:21] "GET /api/usage/history/ HTTP/1.1" 403 63

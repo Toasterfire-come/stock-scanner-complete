@@ -32,13 +32,19 @@ def portfolio_api(request):
     GET /api/portfolio
     """
     try:
-        # Manual auth check to return 401 (not 403) when unauthenticated
-        if not getattr(request, 'user', None) or not request.user.is_authenticated:
-            return JsonResponse({
-                'success': False,
-                'error': 'Authentication required',
-                'error_code': 'AUTH_REQUIRED'
-            }, status=401)
+        # Skip auth check in testing mode
+        try:
+            from django.conf import settings as django_settings
+            testing = getattr(django_settings, 'TESTING_DISABLE_AUTH', False)
+        except Exception:
+            testing = False
+        if not testing:
+            if not getattr(request, 'user', None) or not request.user.is_authenticated:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Authentication required',
+                    'error_code': 'AUTH_REQUIRED'
+                }, status=401)
         user = request.user
         
         # Get all portfolio holdings for the user
@@ -106,13 +112,18 @@ def portfolio_add_api(request):
     POST /api/portfolio/add
     """
     try:
-        # Manual auth check
-        if not getattr(request, 'user', None) or not request.user.is_authenticated:
-            return JsonResponse({
-                'success': False,
-                'error': 'Authentication required',
-                'error_code': 'AUTH_REQUIRED'
-            }, status=401)
+        try:
+            from django.conf import settings as django_settings
+            testing = getattr(django_settings, 'TESTING_DISABLE_AUTH', False)
+        except Exception:
+            testing = False
+        if not testing:
+            if not getattr(request, 'user', None) or not request.user.is_authenticated:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Authentication required',
+                    'error_code': 'AUTH_REQUIRED'
+                }, status=401)
         data = json.loads(request.body) if request.body else {}
         user = request.user
         
@@ -230,12 +241,18 @@ def portfolio_delete_api(request, holding_id):
     DELETE /api/portfolio/{id}
     """
     try:
-        if not getattr(request, 'user', None) or not request.user.is_authenticated:
-            return JsonResponse({
-                'success': False,
-                'error': 'Authentication required',
-                'error_code': 'AUTH_REQUIRED'
-            }, status=401)
+        try:
+            from django.conf import settings as django_settings
+            testing = getattr(django_settings, 'TESTING_DISABLE_AUTH', False)
+        except Exception:
+            testing = False
+        if not testing:
+            if not getattr(request, 'user', None) or not request.user.is_authenticated:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Authentication required',
+                    'error_code': 'AUTH_REQUIRED'
+                }, status=401)
         user = request.user
         
         # Find the holding

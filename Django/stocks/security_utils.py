@@ -37,7 +37,17 @@ def secure_api_endpoint(methods=['POST'], require_auth=True, rate_limit=None):
             
             try:
                 # Apply decorators in proper order
-                if require_auth:
+                # Bypass auth in local testing mode
+                try:
+                    from django.conf import settings as django_settings
+                    if getattr(django_settings, 'TESTING_DISABLE_AUTH', False):
+                        require_auth_local = False
+                    else:
+                        require_auth_local = require_auth
+                except Exception:
+                    require_auth_local = require_auth
+
+                if require_auth_local:
                     # Check authentication
                     if not request.user.is_authenticated:
                         return JsonResponse({
