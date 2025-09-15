@@ -187,9 +187,9 @@ const About = () => {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">The Solution</h3>
                       <p className="text-gray-700">
-                        We built Trade Scan Pro to focus on NYSE stocks with comprehensive screening capabilities, 
+                        We built Trade Scan Pro to cover US stocks (NYSE + Nasdaq) with comprehensive screening capabilities, 
                         real-time alerts, and portfolio tracking. Our goal was to create a platform that combines 
-                        reliability with affordability, starting with code TRIAL for a 7‑day 1$ trial.
+                        reliability with affordability, starting with code TRIAL for a 7‑day $1 trial.
                       </p>
                     </div>
                   </div>

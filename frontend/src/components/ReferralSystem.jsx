@@ -97,7 +97,7 @@ Features I love:
 ✅ Professional screening tools
 ✅ API access for custom integrations
 
-Give it a try - there's a 7-day free trial!
+Give it a try - use code TRIAL for a 7‑day $1 trial!
 
 Best regards,
 ${user?.name || 'Your friend'}`;
@@ -281,8 +281,8 @@ ${user?.name || 'Your friend'}`;
                 <div className="flex items-start space-x-3">
                   <Zap className="h-5 w-5 text-blue-600 mt-1" />
                   <div>
-                    <h4 className="font-semibold">Highlight Free Trial</h4>
-                    <p className="text-sm text-gray-600">Emphasize the 7-day free trial with no credit card required.</p>
+                    <h4 className="font-semibold">Highlight $1 Trial</h4>
+                    <p className="text-sm text-gray-600">Emphasize the 7‑day $1 trial using code TRIAL.</p>
                   </div>
                 </div>
               </div>
