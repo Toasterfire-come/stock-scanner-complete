@@ -255,7 +255,7 @@ def watchlist_delete_api(request, item_id):
                     'error': 'Authentication required',
                     'error_code': 'AUTH_REQUIRED'
                 }, status=401)
-        user = request.user
+        user = _effective_user(request)
         
         # Find the watchlist item
         try:

@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_http_methods(["POST"])
-@login_required
 @secure_api_endpoint
 def validate_discount_code(request):
     """
@@ -78,7 +77,6 @@ def validate_discount_code(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-@login_required
 @secure_api_endpoint
 def apply_discount_code(request):
     """

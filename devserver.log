@@ -1108,3 +1108,37 @@ WARNING: This is a development server. Do not use it in a production setting. Us
 For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
 Watching for file changes with StatReloader
 [2025-09-15 20:39:50,186] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/watchlist_api_updated.py changed, reloading.
+[2025-09-15 20:45:08,494] INFO django.utils.autoreload: /workspace/Django/stocks/watchlist_api_updated.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 20:39:51
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 20:45:09,408] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/revenue_views.py changed, reloading.
+[2025-09-15 20:45:13,523] INFO django.utils.autoreload: /workspace/Django/stocks/revenue_views.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 20:45:10
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 20:45:14,338] INFO django.utils.autoreload: Watching for file changes with StatReloader
