@@ -133,7 +133,7 @@ def watchlist_add_api(request):
         watchlist, created = UserWatchlist.objects.get_or_create(
             user=user,
             name=watchlist_name,
-            defaults={'description': f'Watchlist for {user.username}', 'is_public': False}
+            defaults={'description': f'Watchlist for {user.username}'}
         )
         
         # Check if item already exists in watchlist
