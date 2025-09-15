@@ -70,9 +70,12 @@ class Migration(migrations.Migration):
                 ('last_updated', models.DateTimeField(auto_now=True)),
             ],
         ),
-        # Insert initial REF50 discount code
+        # Insert initial REF50 discount code (SQLite/MySQL compatible)
         migrations.RunSQL(
-            "INSERT INTO stocks_discountcode (code, discount_percentage, is_active, applies_to_first_payment_only, created_at) VALUES ('REF50', 50.00, 1, 1, NOW()) ON DUPLICATE KEY UPDATE discount_percentage=50.00, is_active=1;",
+            sql=(
+                "INSERT OR IGNORE INTO stocks_discountcode (code, discount_percentage, is_active, applies_to_first_payment_only, created_at) "
+                "VALUES ('REF50', 50.00, 1, 1, CURRENT_TIMESTAMP);"
+            ),
             reverse_sql="DELETE FROM stocks_discountcode WHERE code='REF50';"
         ),
     ]
