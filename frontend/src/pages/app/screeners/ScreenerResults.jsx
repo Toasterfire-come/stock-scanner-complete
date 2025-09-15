@@ -24,7 +24,24 @@ const ScreenerResults = () => {
     try {
       // Pull last-used params from localStorage (ad-hoc) or use params derived from screener id in future
       const stored = window.localStorage.getItem('screener:lastParams');
-      const params = stored ? JSON.parse(stored) : {};
+      let params = stored ? JSON.parse(stored) : {};
+      if (!stored) {
+        // Build params from a last-saved screener if present
+        try {
+          const saved = JSON.parse(window.localStorage.getItem('screener:lastSaved') || '{}');
+          if (saved && Array.isArray(saved.criteria)) {
+            params = saved.criteria.reduce((acc, c) => {
+              const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') acc[k] = v; };
+              const mode = c.mode || 'range';
+              const base = c.id === 'price' ? 'price' : (c.id === 'market_cap' ? 'market_cap' : c.id);
+              if (mode === 'eq') add(`${base}_eq`, c.value);
+              if (mode === 'gte' || mode === 'range') add(`${base}_min`, c.min);
+              if (mode === 'lte' || mode === 'range') add(`${base}_max`, c.max);
+              return acc;
+            }, {});
+          }
+        } catch {}
+      }
       const data = await filterStocks(params);
       const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
 

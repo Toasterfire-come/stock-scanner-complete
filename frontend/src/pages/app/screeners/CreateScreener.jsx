@@ -109,8 +109,11 @@ const CreateScreener = () => {
       return;
     }
 
-    // No mock save — this app currently does not persist screeners server-side
-    toast.info("Screener configuration is not yet persisted. Use Test Run to execute criteria.");
+    // Persist to local storage as the source of truth for now
+    try {
+      const payload = { ...screenerData, criteria };
+      window.localStorage.setItem('screener:lastSaved', JSON.stringify(payload));
+    } catch {}
   };
 
   const handleTest = async () => {
@@ -121,6 +124,8 @@ const CreateScreener = () => {
 
     setIsLoading(true);
     try {
+      // Save before testing
+      await handleSave();
       const params = buildFilterParams(criteria);
       const data = await filterStocks(params);
       const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
@@ -146,11 +151,7 @@ const CreateScreener = () => {
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleTest} disabled={isLoading}>
               <Play className="h-4 w-4 mr-2" />
-              Test Run
-            </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Screener
+              Save & Test
             </Button>
           </div>
         </div>
@@ -322,7 +323,7 @@ const CreateScreener = () => {
                 </div>
                 <Separator className="my-4" />
                 <div className="text-xs text-gray-500">
-                  Click "Test Run" to see how many stocks match your current criteria.
+                  Click "Save & Test" to save your configuration and see how many stocks match your criteria.
                 </div>
               </CardContent>
             </Card>

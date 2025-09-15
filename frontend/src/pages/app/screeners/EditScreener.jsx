@@ -95,10 +95,12 @@ const EditScreener = () => {
 
     setIsSaving(true);
     try {
-      // Simulate API call to update screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener updated successfully");
-      navigate("/app/screeners");
+      // Persist to local storage and then run a test
+      const payload = { ...screenerData, criteria };
+      window.localStorage.setItem('screener:lastSaved', JSON.stringify(payload));
+      toast.success("Screener saved");
+      // Also run a test with the current params
+      navigate("/app/screeners/adhoc/results");
     } catch (error) {
       toast.error("Failed to update screener");
     } finally {
@@ -147,8 +149,8 @@ const EditScreener = () => {
               Delete
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
+              <Play className="h-4 w-4 mr-2" />
+              Save & Test
             </Button>
           </div>
         </div>
