@@ -1064,3 +1064,13 @@ Not Found: /api/realtime/AAPL/
 [15/Sep/2025 14:46:39] "GET /api/usage/ HTTP/1.1" 200 173
 [2025-09-15 14:46:39,581] INFO stocks.middleware_error: Request 1757947599581-140437748011600: GET /api/usage/history/
 [15/Sep/2025 14:46:39] "GET /api/usage/history/ HTTP/1.1" 200 29
+[2025-09-15 16:19:05,016] INFO stocks.middleware_error: Request 1757953145015-140438110720880: GET /api/stocks/AAPL/
+[2025-09-15 16:19:05,168] WARNING stocks.middleware_error: Request 1757953145015-140438110720880 returned 404
+Not Found: /api/stocks/AAPL/
+[2025-09-15 16:19:05,169] WARNING django.request: Not Found: /api/stocks/AAPL/
+[15/Sep/2025 16:19:05] "GET /api/stocks/AAPL/ HTTP/1.1" 404 109
+[2025-09-15 16:19:40,599] INFO stocks.middleware_error: Request 1757953180599-140437768598256: GET /api/stock/AAPL/
+[2025-09-15 16:19:40,696] WARNING stocks.middleware_error: Request 1757953180599-140437768598256 returned 404
+Not Found: /api/stock/AAPL/
+[2025-09-15 16:19:40,696] WARNING django.request: Not Found: /api/stock/AAPL/
+[15/Sep/2025 16:19:40] "GET /api/stock/AAPL/ HTTP/1.1" 404 109
