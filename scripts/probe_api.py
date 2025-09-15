@@ -101,6 +101,12 @@ def probe(session: requests.Session, base_url: str, bearer: str | None = None) -
                         meta['count'] = data.get('count')
             except Exception:
                 pass
+            body_snippet = None
+            if not ok:
+                try:
+                    body_snippet = (r.text or '')[:300]
+                except Exception:
+                    body_snippet = None
             results.append({
                 "method": "GET",
                 "path": path,
@@ -108,6 +114,7 @@ def probe(session: requests.Session, base_url: str, bearer: str | None = None) -
                 "ok": ok,
                 "ms": elapsed,
                 "meta": meta,
+                "body": body_snippet,
             })
         except Exception as e:
             elapsed = round((time.time() - t0) * 1000)
@@ -226,6 +233,149 @@ def exercise_mutations(session: requests.Session, base_url: str, email: str, cac
         results.append({"op": "notifications_mark_all_read", "status": r.status_code, "ok": r.status_code < 400})
     except Exception as e:
         results.append({"op": "notifications_mark_all_read", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 5) Profile: GET then POST minimal update
+    try:
+        r = session.get(f"{base_url}/api/user/profile/", headers=headers, timeout=15)
+        results.append({"op": "profile_get", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "profile_get", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/user/profile/", json={"first_name": "API"}, headers=headers, timeout=15)
+        results.append({"op": "profile_post", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "profile_post", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 6) News: feed -> mark_read -> mark_clicked -> preferences
+    news_id = None
+    try:
+        rf = session.get(f"{base_url}/api/news/feed/", headers=headers, timeout=15)
+        if rf.status_code < 400:
+            try:
+                d = rf.json() or {}
+                items = (d.get('data') or {}).get('news_items') or []
+                if items:
+                    news_id = items[0].get('id')
+            except Exception:
+                pass
+        results.append({"op": "news_feed", "status": rf.status_code, "ok": rf.status_code < 400})
+    except Exception as e:
+        results.append({"op": "news_feed", "status": 0, "ok": False, "error": str(e)[:120]})
+    if news_id:
+        try:
+            r = session.post(f"{base_url}/api/news/mark-read/", json={"news_id": news_id}, headers=headers, timeout=15)
+            results.append({"op": "news_mark_read", "status": r.status_code, "ok": r.status_code < 400})
+        except Exception as e:
+            results.append({"op": "news_mark_read", "status": 0, "ok": False, "error": str(e)[:120]})
+        try:
+            r = session.post(f"{base_url}/api/news/mark-clicked/", json={"news_id": news_id}, headers=headers, timeout=15)
+            results.append({"op": "news_mark_clicked", "status": r.status_code, "ok": r.status_code < 400})
+        except Exception as e:
+            results.append({"op": "news_mark_clicked", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        prefs = {
+            "followed_stocks": ["AAPL","MSFT"],
+            "followed_sectors": ["Tech"],
+            "preferred_categories": ["earnings"],
+            "news_frequency": "daily"
+        }
+        r = session.post(f"{base_url}/api/news/preferences/", json=prefs, headers=headers, timeout=15)
+        results.append({"op": "news_preferences", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "news_preferences", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 7) Notification settings
+    try:
+        r = session.get(f"{base_url}/api/notifications/settings/", headers=headers, timeout=15)
+        results.append({"op": "notif_settings_get", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "notif_settings_get", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/notifications/settings/", json={"security": {"login_alerts": true}}, headers=headers, timeout=15)
+        results.append({"op": "notif_settings_post", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "notif_settings_post", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 8) Billing: create -> capture -> cancel -> status -> update_payment
+    order_id = None
+    try:
+        r = session.post(f"{base_url}/api/billing/create-paypal-order/", json={"plan_type": "bronze", "billing_cycle": "monthly"}, headers=headers, timeout=20)
+        if r.status_code < 400:
+            try:
+                jd = r.json() or {}
+                order_id = jd.get('order_id')
+            except Exception:
+                pass
+        results.append({"op": "billing_create_order", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "billing_create_order", "status": 0, "ok": False, "error": str(e)[:120]})
+    if order_id:
+        try:
+            r = session.post(f"{base_url}/api/billing/capture-paypal-order/", json={"order_id": order_id, "plan_type": "bronze", "billing_cycle": "monthly"}, headers=headers, timeout=20)
+            results.append({"op": "billing_capture_order", "status": r.status_code, "ok": r.status_code < 400})
+        except Exception as e:
+            results.append({"op": "billing_capture_order", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/billing/cancel", headers=headers, timeout=15)
+        results.append({"op": "billing_cancel", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "billing_cancel", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.get(f"{base_url}/api/billing/paypal-status/", headers=headers, timeout=15)
+        results.append({"op": "billing_paypal_status", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "billing_paypal_status", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/user/update-payment/", json={"payment_method": {"card_type": "VISA", "card_last_four": "4242"}}, headers=headers, timeout=15)
+        results.append({"op": "billing_update_payment", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "billing_update_payment", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 9) Revenue: init codes -> validate -> apply -> analytics
+    try:
+        r = session.post(f"{base_url}/api/revenue/initialize-codes/", headers=headers, timeout=15)
+        results.append({"op": "revenue_init_codes", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "revenue_init_codes", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/revenue/validate-discount/", json={"code": "TRIAL"}, headers=headers, timeout=15)
+        results.append({"op": "revenue_validate_discount", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "revenue_validate_discount", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/revenue/apply-discount/", json={"code": "TRIAL", "billing_cycle": "monthly"}, headers=headers, timeout=15)
+        results.append({"op": "revenue_apply_discount", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "revenue_apply_discount", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.get(f"{base_url}/api/revenue/revenue-analytics/", headers=headers, timeout=15)
+        results.append({"op": "revenue_analytics", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "revenue_analytics", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 10) Logs & usage
+    try:
+        r = session.post(f"{base_url}/api/logs/client/", json={"event": "probe", "ts": time.time()}, headers=headers, timeout=10)
+        results.append({"op": "logs_client", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "logs_client", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/logs/metrics/", json={"metric": "probe", "value": 1}, headers=headers, timeout=10)
+        results.append({"op": "logs_metrics", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "logs_metrics", "status": 0, "ok": False, "error": str(e)[:120]})
+    try:
+        r = session.post(f"{base_url}/api/usage/track/", json={"endpoint": "/api/stocks/", "method": "GET"}, headers=headers, timeout=10)
+        results.append({"op": "usage_track", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "usage_track", "status": 0, "ok": False, "error": str(e)[:120]})
+
+    # 11) WordPress subscribe
+    try:
+        r = session.post(f"{base_url}/api/wordpress/subscribe/", json={"email": email, "category": "general"}, headers=headers, timeout=15)
+        results.append({"op": "wp_subscribe", "status": r.status_code, "ok": r.status_code < 400})
+    except Exception as e:
+        results.append({"op": "wp_subscribe", "status": 0, "ok": False, "error": str(e)[:120]})
 
     return results
 
