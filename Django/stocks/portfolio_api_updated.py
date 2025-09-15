@@ -181,13 +181,14 @@ def portfolio_add_api(request):
             action = 'updated'
         else:
             # Create new holding
+            safe_current_price = float(getattr(stock, 'current_price', 0) or avg_cost)
             new_holding = PortfolioHolding.objects.create(
                 portfolio=portfolio,
                 stock=stock,
                 shares=shares,
                 average_cost=avg_cost,
-                current_price=getattr(stock, 'current_price', avg_cost),
-                created_at=timezone.now()
+                current_price=safe_current_price,
+                date_added=timezone.now()
             )
             holding_id = new_holding.id
             action = 'added'
@@ -198,8 +199,8 @@ def portfolio_add_api(request):
             'data': {
                 'id': str(holding_id),
                 'symbol': symbol,
-                'shares': shares,
-                'avg_cost': avg_cost,
+                'shares': float(shares),
+                'avg_cost': float(avg_cost),
                 'portfolio_name': portfolio.name,
                 'action': action
             }

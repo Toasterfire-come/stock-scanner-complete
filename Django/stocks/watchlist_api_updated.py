@@ -154,8 +154,10 @@ def watchlist_add_api(request):
             watchlist=watchlist,
             stock=stock,
             notes=notes,
-            alert_price=alert_price,
-            created_at=timezone.now()
+            target_price=alert_price if alert_price is not None else None,
+            added_price=float(getattr(stock, 'current_price', 0) or 0),
+            current_price=float(getattr(stock, 'current_price', 0) or 0),
+            added_at=timezone.now()
         )
         
         return JsonResponse({
@@ -165,11 +167,11 @@ def watchlist_add_api(request):
                 'id': str(new_item.id),
                 'symbol': symbol,
                 'company_name': getattr(stock, 'company_name', symbol),
-                'current_price': float(getattr(stock, 'current_price', 0) or 0),
+                'current_price': float(new_item.current_price),
                 'watchlist_name': watchlist.name,
                 'notes': notes,
                 'alert_price': float(alert_price) if alert_price else None,
-                'added_date': new_item.created_at.isoformat()
+                'added_date': new_item.added_at.isoformat()
             }
         })
         
