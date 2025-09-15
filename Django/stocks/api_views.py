@@ -865,25 +865,79 @@ def filter_stocks_api(request):
         queryset = Stock.objects.all()
         
         # Apply filters
+        # Support inclusive ranges and equality for all numeric fields
         min_price = request.GET.get('min_price')
         max_price = request.GET.get('max_price')
+        eq_price = request.GET.get('price_eq') or request.GET.get('eq_price')
         min_volume = request.GET.get('min_volume')
         max_volume = request.GET.get('max_volume')
+        eq_volume = request.GET.get('volume_eq') or request.GET.get('eq_volume')
         sector = request.GET.get('sector')
         exchange = request.GET.get('exchange')
+        # Additional numeric filters
+        min_market_cap = request.GET.get('market_cap_min')
+        max_market_cap = request.GET.get('market_cap_max')
+        eq_market_cap = request.GET.get('market_cap_eq')
+        min_pe = request.GET.get('pe_ratio_min') or request.GET.get('min_pe')
+        max_pe = request.GET.get('pe_ratio_max') or request.GET.get('max_pe')
+        eq_pe = request.GET.get('pe_ratio_eq') or request.GET.get('pe_eq')
+        min_div_yield = request.GET.get('dividend_yield_min')
+        max_div_yield = request.GET.get('dividend_yield_max')
+        eq_div_yield = request.GET.get('dividend_yield_eq')
+        min_change_pct = request.GET.get('change_percent_min')
+        max_change_pct = request.GET.get('change_percent_max')
+        eq_change_pct = request.GET.get('change_percent_eq')
         
-        if min_price:
-            queryset = queryset.filter(current_price__gte=float(min_price))
-        if max_price:
-            queryset = queryset.filter(current_price__lte=float(max_price))
-        if min_volume:
-            queryset = queryset.filter(volume__gte=int(min_volume))
-        if max_volume:
-            queryset = queryset.filter(volume__lte=int(max_volume))
+        if eq_price:
+            queryset = queryset.filter(current_price=float(eq_price))
+        else:
+            if min_price:
+                queryset = queryset.filter(current_price__gte=float(min_price))
+            if max_price:
+                queryset = queryset.filter(current_price__lte=float(max_price))
+        if eq_volume:
+            queryset = queryset.filter(volume=int(eq_volume))
+        else:
+            if min_volume:
+                queryset = queryset.filter(volume__gte=int(min_volume))
+            if max_volume:
+                queryset = queryset.filter(volume__lte=int(max_volume))
         if sector:
             queryset = queryset.filter(sector__icontains=sector)
         if exchange:
             queryset = queryset.filter(exchange__icontains=exchange)
+        # Market cap
+        if eq_market_cap:
+            queryset = queryset.filter(market_cap=int(eq_market_cap))
+        else:
+            if min_market_cap:
+                queryset = queryset.filter(market_cap__gte=int(min_market_cap))
+            if max_market_cap:
+                queryset = queryset.filter(market_cap__lte=int(max_market_cap))
+        # P/E
+        if eq_pe:
+            queryset = queryset.filter(pe_ratio=float(eq_pe))
+        else:
+            if min_pe:
+                queryset = queryset.filter(pe_ratio__gte=float(min_pe))
+            if max_pe:
+                queryset = queryset.filter(pe_ratio__lte=float(max_pe))
+        # Dividend yield
+        if eq_div_yield:
+            queryset = queryset.filter(dividend_yield=float(eq_div_yield))
+        else:
+            if min_div_yield:
+                queryset = queryset.filter(dividend_yield__gte=float(min_div_yield))
+            if max_div_yield:
+                queryset = queryset.filter(dividend_yield__lte=float(max_div_yield))
+        # Change percent (today)
+        if eq_change_pct:
+            queryset = queryset.filter(change_percent=float(eq_change_pct))
+        else:
+            if min_change_pct:
+                queryset = queryset.filter(change_percent__gte=float(min_change_pct))
+            if max_change_pct:
+                queryset = queryset.filter(change_percent__lte=float(max_change_pct))
         
         # Order by
         order_by = request.GET.get('order_by', 'ticker')

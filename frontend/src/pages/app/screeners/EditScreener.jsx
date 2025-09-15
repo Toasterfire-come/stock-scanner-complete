@@ -68,6 +68,7 @@ const EditScreener = () => {
       id: criterionId,
       name: criterionDef.name,
       type: criterionDef.type,
+      mode: "range",
       min: "",
       max: "",
       value: ""
@@ -215,26 +216,56 @@ const EditScreener = () => {
                     </div>
                     
                     {criterion.type === "range" && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Minimum</Label>
-                          <Input
-                            type="number"
-                            value={criterion.min}
-                            onChange={(e) => updateCriterion(criterion.id, "min", e.target.value)}
-                            placeholder="Min value"
-                          />
+                      <>
+                        <div className="mb-3">
+                          <Label>Operator</Label>
+                          <Select value={criterion.mode} onValueChange={(v) => updateCriterion(criterion.id, "mode", v)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select operator" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="range">Between (inclusive)</SelectItem>
+                              <SelectItem value="gte">Greater than or equal</SelectItem>
+                              <SelectItem value="lte">Less than or equal</SelectItem>
+                              <SelectItem value="eq">Equal to</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <div>
-                          <Label>Maximum</Label>
-                          <Input
-                            type="number"
-                            value={criterion.max}
-                            onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
-                            placeholder="Max value"
-                          />
-                        </div>
-                      </div>
+                        {criterion.mode === 'eq' ? (
+                          <div>
+                            <Label>Value</Label>
+                            <Input
+                              type="number"
+                              value={criterion.value}
+                              onChange={(e) => updateCriterion(criterion.id, "value", e.target.value)}
+                              placeholder="Exact value"
+                            />
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label>Minimum</Label>
+                              <Input
+                                type="number"
+                                value={criterion.min}
+                                onChange={(e) => updateCriterion(criterion.id, "min", e.target.value)}
+                                placeholder="Min value"
+                                disabled={criterion.mode === 'lte'}
+                              />
+                            </div>
+                            <div>
+                              <Label>Maximum</Label>
+                              <Input
+                                type="number"
+                                value={criterion.max}
+                                onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
+                                placeholder="Max value"
+                                disabled={criterion.mode === 'gte'}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 ))}

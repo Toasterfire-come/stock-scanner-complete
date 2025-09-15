@@ -1176,3 +1176,20 @@ WARNING: This is a development server. Do not use it in a production setting. Us
 For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
 Watching for file changes with StatReloader
 [2025-09-15 22:26:49,136] INFO django.utils.autoreload: Watching for file changes with StatReloader
+/workspace/Django/stocks/api_views.py changed, reloading.
+[2025-09-15 22:33:07,773] INFO django.utils.autoreload: /workspace/Django/stocks/api_views.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+INFO: Using standard MySQL configuration
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 15, 2025 - 22:26:50
+Django version 5.2.6, using settings 'stockscanner_django.settings_testing'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[2025-09-15 22:33:08,716] INFO django.utils.autoreload: Watching for file changes with StatReloader

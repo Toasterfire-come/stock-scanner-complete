@@ -40,6 +40,7 @@ const CreateScreener = () => {
       id: criterionId,
       name: criterionDef.name,
       type: criterionDef.type,
+      mode: "range",
       min: "",
       max: "",
       value: ""
@@ -59,13 +60,26 @@ const CreateScreener = () => {
       if (!Number.isFinite(n)) return;
       params[key] = n;
     };
+    const applyNumericFilter = (base, c) => {
+      const mode = (c.mode || 'range');
+      if (mode === 'eq') {
+        addNum(`${base}_eq`, c.value);
+        return;
+      }
+      if (mode === 'gte' || mode === 'range') {
+        addNum(`${base}_min`, c.min);
+      }
+      if (mode === 'lte' || mode === 'range') {
+        addNum `${base}_max`, c.max;
+      }
+    };
     for (const c of criteriaList) {
-      if (c.id === "market_cap") { addNum('market_cap_min', c.min); addNum('market_cap_max', c.max); }
-      if (c.id === "price") { addNum('price_min', c.min); addNum('price_max', c.max); }
-      if (c.id === "volume") { addNum('volume_min', c.min); addNum('volume_max', c.max); }
-      if (c.id === "pe_ratio") { addNum('pe_ratio_min', c.min); addNum('pe_ratio_max', c.max); }
-      if (c.id === "dividend_yield") { addNum('dividend_yield_min', c.min); addNum('dividend_yield_max', c.max); }
-      if (c.id === "change_percent") { addNum('change_percent_min', c.min); addNum('change_percent_max', c.max); }
+      if (c.id === "market_cap") { applyNumericFilter('market_cap', c); }
+      if (c.id === "price") { applyNumericFilter('price', c); }
+      if (c.id === "volume") { applyNumericFilter('volume', c); }
+      if (c.id === "pe_ratio") { applyNumericFilter('pe_ratio', c); }
+      if (c.id === "dividend_yield") { applyNumericFilter('dividend_yield', c); }
+      if (c.id === "change_percent") { applyNumericFilter('change_percent', c); }
       if (c.id === "exchange") {
         const v = (c.value || '').trim();
         if (v && v.toLowerCase() !== 'none' && v.toLowerCase() !== 'null') params.exchange = v;
@@ -209,26 +223,56 @@ const CreateScreener = () => {
                       </div>
                       
                       {criterion.type === "range" && (
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label>Minimum</Label>
-                            <Input
-                              type="number"
-                              value={criterion.min}
-                              onChange={(e) => updateCriterion(criterion.id, "min", e.target.value)}
-                              placeholder="Min value"
-                            />
+                        <>
+                          <div className="mb-3">
+                            <Label>Operator</Label>
+                            <Select value={criterion.mode} onValueChange={(v) => updateCriterion(criterion.id, "mode", v)}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select operator" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="range">Between (inclusive)</SelectItem>
+                                <SelectItem value="gte">Greater than or equal</SelectItem>
+                                <SelectItem value="lte">Less than or equal</SelectItem>
+                                <SelectItem value="eq">Equal to</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <div>
-                            <Label>Maximum</Label>
-                            <Input
-                              type="number"
-                              value={criterion.max}
-                              onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
-                              placeholder="Max value"
-                            />
-                          </div>
-                        </div>
+                          {criterion.mode === 'eq' ? (
+                            <div>
+                              <Label>Value</Label>
+                              <Input
+                                type="number"
+                                value={criterion.value}
+                                onChange={(e) => updateCriterion(criterion.id, "value", e.target.value)}
+                                placeholder="Exact value"
+                              />
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label>Minimum</Label>
+                                <Input
+                                  type="number"
+                                  value={criterion.min}
+                                  onChange={(e) => updateCriterion(criterion.id, "min", e.target.value)}
+                                  placeholder="Min value"
+                                  disabled={criterion.mode === 'lte'}
+                                />
+                              </div>
+                              <div>
+                                <Label>Maximum</Label>
+                                <Input
+                                  type="number"
+                                  value={criterion.max}
+                                  onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
+                                  placeholder="Max value"
+                                  disabled={criterion.mode === 'gte'}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {criterion.type === "select" && criterion.id === "exchange" && (
