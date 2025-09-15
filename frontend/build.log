@@ -1,0 +1,22 @@
+yarn run v1.22.22
+$ craco start
+(node:3193) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:3193) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Starting the development server...
+
+
+warn - The `darkMode` option in your Tailwind CSS configuration is set to `false`, which now behaves the same as `media`.
+warn - Change `darkMode` to `media` or remove it entirely.
+warn - https://tailwindcss.com/docs/upgrade-guide#remove-dark-mode-configuration
+Compiled successfully!
+
+You can now view frontend in the browser.
+
+  Local:            http://localhost:3001
+  On Your Network:  http://10.211.15.246:3001
+
+Note that the development build is not optimized.
+To create a production build, use yarn build.
+
+webpack compiled successfully
