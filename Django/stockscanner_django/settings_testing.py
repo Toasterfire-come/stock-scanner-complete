@@ -2,6 +2,7 @@ from .settings import *  # noqa
 
 # Testing overrides: disable security/auth/CSRF for local endpoint validation
 DEBUG = True
+TESTING_DISABLE_AUTH = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -24,8 +25,12 @@ MIDDLEWARE = [
         'stocks.rate_limit_middleware.RateLimitMiddleware',
     )
 ]
-# Inject test user middleware to simulate authenticated requests locally
-MIDDLEWARE.insert(0, 'stocks.testing_middleware.TestUserMiddleware')
+# Inject test user middleware immediately after auth middleware
+try:
+    _auth_index = MIDDLEWARE.index('django.contrib.auth.middleware.AuthenticationMiddleware')
+    MIDDLEWARE.insert(_auth_index + 1, 'stocks.testing_middleware.TestUserMiddleware')
+except ValueError:
+    MIDDLEWARE.insert(0, 'stocks.testing_middleware.TestUserMiddleware')
 
 # Force CORS allow all for local testing
 CORS_ALLOW_ALL_ORIGINS = True
