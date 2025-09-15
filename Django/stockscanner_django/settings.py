@@ -237,6 +237,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ENTERPRISE_EMAIL_WHITELIST = list(filter(None, [
     *(email.strip() for email in os.environ.get('ENTERPRISE_EMAILS', '').split(',') if email.strip()),
     'Carter.kiefer2010@outlook.com',
+    'carter.kiefer2010@outlook.com',  # ensure case-insensitive match
 ]))
 
 # Define which endpoints constitute stock market data for counting/limits
