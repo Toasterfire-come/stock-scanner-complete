@@ -272,7 +272,7 @@ const Pricing = () => {
               <Zap className="h-6 w-6 mr-2" />
               <span className="text-lg font-bold">TRIAL</span>
             </div>
-            <p className="text-xl mb-4">Use code TRIAL for a 7‑day 1$ trial on paid plans</p>
+            <p className="text-xl mb-4">Use code TRIAL for a 7‑day $1 trial on paid plans</p>
             <p className="text-sm opacity-90">Then continue at regular price or cancel anytime</p>
           </div>
 

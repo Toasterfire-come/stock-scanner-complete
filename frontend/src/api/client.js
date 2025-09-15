@@ -271,6 +271,8 @@ export function normalizeMarketStats(raw) {
     market_overview: {
       total_stocks: safeNumber(mo.total_stocks),
       nyse_stocks: safeNumber(mo.nyse_stocks),
+      nasdaq_stocks: safeNumber(mo.nasdaq_stocks),
+      us_stocks: safeNumber(mo.us_stocks || ((mo.nyse_stocks || 0) + (mo.nasdaq_stocks || 0))),
       gainers: safeNumber(mo.gainers),
       losers: safeNumber(mo.losers),
       unchanged: safeNumber(mo.unchanged),

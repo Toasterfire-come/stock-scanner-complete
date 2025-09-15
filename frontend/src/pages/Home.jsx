@@ -54,7 +54,7 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.",
+      description: "Screen 10,500+ NYSE and Nasdaq stocks with 14 technical and fundamental criteria including real-time data analysis.",
       details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
     },
     {
@@ -129,7 +129,7 @@ const Home = () => {
 
   const stats = [
     { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "3,200", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "US Stocks Covered", value: "10,500+", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
     { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
   ];
@@ -253,6 +253,10 @@ const Home = () => {
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 mr-2 sm:mr-3" />
                 Cancel Anytime
               </div>
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3" />
+                US Coverage: NYSE + Nasdaq (10,500+ stocks)
+              </div>
             </div>
           </div>
         </div>
@@ -270,9 +274,14 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               <div className="text-center">
                 <div className="text-2xl sm:text-4xl font-bold text-blue-600 mb-2">
-                  {Number(marketStats?.market_overview?.total_stocks ?? 0).toLocaleString()}
+                  {Number(
+                    marketStats?.market_overview?.us_stocks ??
+                    ((marketStats?.market_overview?.nyse_stocks || 0) + (marketStats?.market_overview?.nasdaq_stocks || 0)) ||
+                    marketStats?.market_overview?.total_stocks ||
+                    10500
+                  ).toLocaleString()}
                 </div>
-                <div className="text-sm sm:text-base text-gray-600">Stocks Analyzed Today</div>
+                <div className="text-sm sm:text-base text-gray-600">US Stocks Covered (NYSE + Nasdaq)</div>
               </div>
               
               <div className="text-center">
@@ -395,7 +404,7 @@ const Home = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              TRIAL: 7-Day Free Trial on All Paid Plans
+              Use code TRIAL for a 7‑day $1 trial on paid plans
             </div>
           </div>
           
@@ -442,7 +451,7 @@ const Home = () => {
                   
                   {!plan.isFree && (
                     <p className="text-xs text-gray-500 text-center mt-3">
-                      TRIAL: Start with 7-day free trial
+                      TRIAL: Start with 7‑day $1 trial
                     </p>
                   )}
                 </CardContent>

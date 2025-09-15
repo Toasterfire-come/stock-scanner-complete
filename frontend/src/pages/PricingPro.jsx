@@ -263,7 +263,7 @@ const PricingPro = () => {
             {[{icon: Shield, title: 'Secure Platform', desc: 'Industry-standard security and data protection'},
               {icon: Rocket, title: 'Fast & Reliable', desc: 'Consistent uptime and performance'},
               {icon: Star, title: 'Trader Approved', desc: 'Trusted by traders worldwide'},
-              {icon: BarChart3, title: 'Market Focused', desc: 'NYSE-focused insights'}].map((f, i) => {
+              {icon: BarChart3, title: 'Market Coverage', desc: 'NYSE + Nasdaq (10,500+ stocks)'}].map((f, i) => {
               const Icon = f.icon;
               return (
                 <div key={i} className="text-center">
