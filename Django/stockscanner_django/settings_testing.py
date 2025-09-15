@@ -11,12 +11,10 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Disable DRF authentication/permissions for testing
-REST_FRAMEWORK.update({
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-})
+REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+    'rest_framework.permissions.AllowAny',
+]
+REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = []
 
 # Remove rate limiting and API key middlewares for testing
 MIDDLEWARE = [
@@ -26,6 +24,8 @@ MIDDLEWARE = [
         'stocks.rate_limit_middleware.RateLimitMiddleware',
     )
 ]
+# Inject test user middleware to simulate authenticated requests locally
+MIDDLEWARE.insert(0, 'stocks.testing_middleware.TestUserMiddleware')
 
 # Force CORS allow all for local testing
 CORS_ALLOW_ALL_ORIGINS = True
