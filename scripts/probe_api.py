@@ -29,7 +29,12 @@ def get_csrf(session: requests.Session, base_url: str) -> str | None:
 
 def login(session: requests.Session, base_url: str, username: str, password: str) -> tuple[bool, str | None, str | None]:
     token = get_csrf(session, base_url)
-    headers = {'X-Requested-With': 'XMLHttpRequest'}
+    headers = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json',
+        'Referer': f"{base_url}/",
+        'Origin': base_url,
+    }
     if token:
         headers['X-CSRFToken'] = token
     try:
