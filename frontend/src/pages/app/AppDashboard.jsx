@@ -18,7 +18,7 @@ import {
   Play
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
-import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getUsageSummary } from "../../api/client";
+import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getUsageSummary, reconcileUsage } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
 
 const AppDashboard = () => {
@@ -42,7 +42,52 @@ const AppDashboard = () => {
 
         setMarketData(marketResponse?.data || null);
         setTrendingStocks(trendingResponse?.data || null);
-        setUsage(usageSummary?.data || stats?.data || null);
+
+        const serverUsage = usageSummary?.data || null;
+        // Read any cached local counts the app may keep
+        let localMonthlyApi = 0;
+        let localMonthlyReq = 0;
+        try {
+          const raw = window.localStorage.getItem('rts_usage_month');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const monthKey = new Date().toISOString().slice(0,7);
+            if (parsed && parsed[monthKey]) {
+              localMonthlyApi = Number(parsed[monthKey].api_calls || 0);
+              localMonthlyReq = Number(parsed[monthKey].requests || 0);
+            }
+          }
+        } catch {}
+
+        if (serverUsage && serverUsage.monthly) {
+          const suApi = Number(serverUsage.monthly.api_calls || 0);
+          const suReq = Number(serverUsage.monthly.requests || 0);
+          const higherApi = Math.max(suApi, localMonthlyApi);
+          const higherReq = Math.max(suReq, localMonthlyReq);
+          if (higherApi !== suApi || higherReq !== suReq) {
+            try {
+              const recon = await reconcileUsage(higherApi, higherReq);
+              if (recon?.success && recon?.data?.monthly) {
+                serverUsage.monthly.api_calls = recon.data.monthly.api_calls;
+                serverUsage.monthly.requests = recon.data.monthly.requests;
+              }
+            } catch {}
+          }
+
+          // Update local cache with reconciled counts
+          try {
+            const monthKey = new Date().toISOString().slice(0,7);
+            const store = window.localStorage.getItem('rts_usage_month');
+            const parsed = store ? JSON.parse(store) : {};
+            parsed[monthKey] = {
+              api_calls: serverUsage.monthly.api_calls,
+              requests: serverUsage.monthly.requests,
+            };
+            window.localStorage.setItem('rts_usage_month', JSON.stringify(parsed));
+          } catch {}
+        }
+
+        setUsage(serverUsage || stats?.data || null);
         // derive simple spark series if backend provides history; otherwise create placeholders
         const g = (marketResponse?.data?.history?.gainers || []).slice(-20);
         const l = (marketResponse?.data?.history?.losers || []).slice(-20);

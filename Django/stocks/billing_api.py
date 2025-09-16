@@ -31,6 +31,7 @@ from .models import DiscountCode
 import hmac
 import hashlib
 from django.conf import settings as django_settings
+from django.views.decorators.cache import never_cache
 
 # Dynamic permission that allows all in testing mode
 AuthPerm = AllowAny if getattr(django_settings, 'TESTING_DISABLE_AUTH', False) else IsAuthenticated
@@ -1132,9 +1133,9 @@ def usage_summary_api(request):
         month_start = timezone.now().replace(day=1).date()
 
         daily = UsageStats.objects.filter(user=user, date=today).first()
-        monthly = UsageStats.objects.filter(user=user, date__gte=month_start)
-        total_api_calls = monthly.aggregate(total=Sum('api_calls'))['total'] or 0
-        total_requests = monthly.aggregate(total=Sum('requests'))['total'] or 0
+        monthly_qs = UsageStats.objects.filter(user=user, date__gte=month_start)
+        total_api_calls = monthly_qs.aggregate(total=Sum('api_calls'))['total'] or 0
+        total_requests = monthly_qs.aggregate(total=Sum('requests'))['total'] or 0
 
         profile, _ = UserProfile.objects.get_or_create(user=user)
 
@@ -1160,6 +1161,67 @@ def usage_summary_api(request):
             'success': False,
             'error': 'Failed to retrieve usage summary',
             'error_code': 'USAGE_SUMMARY_ERROR'
+        }, status=500)
+
+
+@csrf_exempt
+@never_cache
+@api_view(['POST'])
+@permission_classes([AuthPerm])
+def usage_reconcile_api(request):
+    """
+    Reconcile frontend-reported monthly usage with server records by taking the max
+    and updating the lower one so both match. Returns the reconciled counts.
+    POST /api/usage/reconcile/
+    Body: { monthly_api_calls: number, monthly_requests: number }
+    """
+    try:
+        user = _effective_user(request)
+        data = getattr(request, 'data', None)
+        if data is None or data == {}:
+            data = json.loads(request.body) if request.body else {}
+
+        client_api = int(max(0, int(data.get('monthly_api_calls', 0))))
+        client_req = int(max(0, int(data.get('monthly_requests', 0))))
+
+        month_start = timezone.now().replace(day=1).date()
+        today = timezone.now().date()
+
+        # Calculate server totals for the month
+        monthly_qs = UsageStats.objects.filter(user=user, date__gte=month_start)
+        server_api = monthly_qs.aggregate(total=Sum('api_calls'))['total'] or 0
+        server_req = monthly_qs.aggregate(total=Sum('requests'))['total'] or 0
+
+        # Choose the higher counts as source of truth
+        recon_api = max(server_api, client_api)
+        recon_req = max(server_req, client_req)
+
+        # If server is behind, top up today's row so monthly equals reconciled max
+        if recon_api > server_api or recon_req > server_req:
+            todays, _ = UsageStats.objects.get_or_create(user=user, date=today)
+            api_delta = recon_api - server_api
+            req_delta = recon_req - server_req
+            if api_delta > 0:
+                todays.api_calls = (todays.api_calls or 0) + api_delta
+            if req_delta > 0:
+                todays.requests = (todays.requests or 0) + req_delta
+            todays.save()
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'monthly': {
+                    'api_calls': recon_api,
+                    'requests': recon_req
+                }
+            }
+        })
+    except Exception as e:
+        logger.error(f"Usage reconcile error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to reconcile usage',
+            'error_code': 'USAGE_RECONCILE_ERROR'
         }, status=500)
 
 
@@ -1212,15 +1274,17 @@ def usage_track_api(request):
         from django.utils import timezone
         today = timezone.now().date()
 
-        # Only count stock market data endpoints toward usage numbers
+        # Count stock, market, news, alerts, portfolio, screener endpoints toward usage numbers
         stock_prefixes = getattr(settings, 'STOCK_DATA_ENDPOINT_PREFIXES', [
             '/api/stocks/', '/api/stock/', '/api/search/', '/api/trending/', '/api/realtime/', '/api/filter/', '/api/market-stats/'
         ])
+        extra_prefixes = ['/api/market-data/', '/api/news/', '/api/alerts/', '/api/portfolio/', '/api/screeners/']
+        count_prefixes = list(dict.fromkeys([*stock_prefixes, *extra_prefixes]))
         free_prefixes = [
             '/health/', '/api/health/', '/health/detailed/', '/health/ready/', '/health/live/',
             '/docs/', '/api/docs/', '/endpoint-status/', '/api/endpoint-status/', '/api/auth/', '/static/', '/media/'
         ]
-        should_count = endpoint and any(endpoint.startswith(p) for p in stock_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
+        should_count = endpoint and any(endpoint.startswith(p) for p in count_prefixes) and not any(endpoint.startswith(p) for p in free_prefixes)
 
         # Track only for authenticated users; avoid undefined stats when unauthenticated
         stats_api_calls = 0

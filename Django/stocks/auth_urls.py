@@ -46,6 +46,7 @@ urlpatterns = [
     path('usage/', billing_api.usage_summary_api, name='usage_summary'),
     path('usage/history/', billing_api.usage_history_api, name='usage_history'),
     path('usage/track/', billing_api.usage_track_api, name='usage_track'),
+    path('usage/reconcile/', billing_api.usage_reconcile_api, name='usage_reconcile'),
     path('platform-stats', platform_views.platform_stats_api, name='platform_stats'),
     
     # Market data

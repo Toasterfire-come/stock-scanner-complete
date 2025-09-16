@@ -222,6 +222,17 @@ api.interceptors.response.use(
       if (shouldTrack) {
         // Use authorized API client so usage increments for logged-in users
         api.post('/usage/track/', { endpoint: `/api${path}`, method }).catch(() => {});
+        // Also maintain a local monthly usage counter so UI can reconcile against server
+        try {
+          const monthKey = new Date().toISOString().slice(0,7);
+          const raw = window.localStorage.getItem('rts_usage_month');
+          const store = raw ? JSON.parse(raw) : {};
+          const curr = store[monthKey] || { api_calls: 0, requests: 0 };
+          curr.api_calls = Number(curr.api_calls || 0) + 1;
+          curr.requests = Number(curr.requests || 0) + 1;
+          store[monthKey] = curr;
+          window.localStorage.setItem('rts_usage_month', JSON.stringify(store));
+        } catch {}
       }
     } catch {}
     return response;
@@ -570,6 +581,18 @@ export async function syncPortfolioNews() { const { data } = await api.post('/ne
 export async function getUsageSummary() {
   const { data } = await api.get('/usage/');
   return data;
+}
+
+export async function reconcileUsage(monthlyApiCalls, monthlyRequests) {
+  try {
+    const { data } = await api.post('/usage/reconcile/', {
+      monthly_api_calls: Number(monthlyApiCalls || 0),
+      monthly_requests: Number(monthlyRequests || 0),
+    });
+    return data;
+  } catch (error) {
+    return { success: false, error: 'Failed to reconcile usage' };
+  }
 }
 
 //====================
