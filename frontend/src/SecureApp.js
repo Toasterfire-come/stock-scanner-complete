@@ -179,6 +179,8 @@ function SecureApp() {
             <LatencyIndicator />
             <SystemErrorBoundary>
               <div className="min-h-screen bg-background">
+                {/* ARIA live region for announcements */}
+                <div id="sr-live-region" aria-live="polite" aria-atomic="true" className="sr-only" />
                 <StatusBanner />
                 <Suspense fallback={<div className="p-8 text-center animate-pulse">
                   <div className="mx-auto h-6 w-40 bg-gray-200 rounded mb-4" />

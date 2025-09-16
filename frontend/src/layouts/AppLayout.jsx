@@ -39,6 +39,7 @@ import ShortcutsHelp from "../components/ShortcutsHelp";
 import { Link as RouterLink } from "react-router-dom";
 import { useEffect as ReactUseEffect } from "react";
 import { api } from "../api/client";
+import { initLiveRegion } from "../lib/a11y";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -50,6 +51,8 @@ const AppLayout = () => {
   const [unreadNews, setUnreadNews] = useState(0);
   // Global keyboard shortcut: Ctrl+K / Cmd+K opens search
   useEffect(() => {
+    // Initialize SR live region announcer
+    try { initLiveRegion(); } catch {}
     const onKeyDown = (e) => {
       const isK = (e.key || '').toLowerCase() === 'k';
       if (isK && (e.ctrlKey || e.metaKey)) {
