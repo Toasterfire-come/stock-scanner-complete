@@ -393,9 +393,10 @@ const Watchlists = () => {
                                 variant="ghost" 
                                 asChild
                                 title="View Details"
+                                aria-label={`View ${item.symbol} details`}
                               >
                                 <Link to={`/app/stocks/${item.symbol}`}>
-                                  <Eye className="h-4 w-4" />
+                                  <Eye className="h-4 w-4" aria-hidden="true" />
                                 </Link>
                               </Button>
                               <Button 
@@ -404,8 +405,9 @@ const Watchlists = () => {
                                 onClick={() => handleRemoveFromWatchlist(item.id, item.symbol)}
                                 className="text-red-600 hover:text-red-700"
                                 title="Remove from Watchlist"
+                                aria-label={`Remove ${item.symbol} from watchlist`}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </Button>
                             </div>
                           </td>

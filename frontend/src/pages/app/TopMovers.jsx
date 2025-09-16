@@ -59,21 +59,21 @@ const TopMovers = () => {
       <TableCell>{formatPrice(stock.current_price)}</TableCell>
       <TableCell>
         <div className={`flex items-center ${Number(stock.change_percent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {Number(stock.change_percent) >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
+          {Number(stock.change_percent) >= 0 ? <TrendingUp className="h-4 w-4 mr-1" aria-hidden="true" /> : <TrendingDown className="h-4 w-4 mr-1" aria-hidden="true" />}
           {formatChange(stock.change_percent)}
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
-          <Volume2 className="h-4 w-4 mr-1 text-gray-400" />
+          <Volume2 className="h-4 w-4 mr-1 text-gray-400" aria-hidden="true" />
           {formatVolume(stock.volume)}
         </div>
       </TableCell>
       <TableCell>{formatMarketCap(stock.market_cap)}</TableCell>
       <TableCell>
         <Button size="sm" variant="outline" asChild>
-          <Link to={`/app/stocks/${stock.ticker}`}>
-            <Eye className="h-4 w-4 mr-1" /> View
+          <Link to={`/app/stocks/${stock.ticker}`} aria-label={`View ${stock.ticker} details`}>
+            <Eye className="h-4 w-4 mr-1" aria-hidden="true" /> View
           </Link>
         </Button>
       </TableCell>

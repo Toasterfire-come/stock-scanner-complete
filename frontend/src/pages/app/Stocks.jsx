@@ -257,12 +257,14 @@ const Stocks = () => {
                             <div className="p-4 font-medium text-gray-900">{stock.company_name}</div>
                             <div className="p-4 text-right font-medium">{stock.formatted_price || formatCurrency(stock.current_price)}</div>
                             <div className={`p-4 text-right ${(stock.is_gaining ?? (Number(stock.price_change_today)>=0)) ? 'text-green-600':'text-red-600'}`}>{(stock.price_change_today ?? 0) >= 0 ? '+' : ''}{Number(stock.price_change_today||0).toFixed(2)}</div>
-                            <div className={`p-4 text-right font-medium ${(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? 'text-green-600':'text-red-600'}`}>{stock.formatted_change || formatPercentage(stock.change_percent)}</div>
+                            <div className={`p-4 text-right font-medium ${(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? 'text-green-600':'text-red-600'}`}>
+                              {stock.formatted_change || formatPercentage(stock.change_percent)}
+                            </div>
                             <div className="p-4 text-right text-gray-600">{stock.formatted_volume || formatVolume(stock.volume)}</div>
                             <div className="p-4 text-right text-gray-600">{stock.formatted_market_cap || formatMarketCap(stock.market_cap)}</div>
                             <div className="p-4 flex items-center justify-center space-x-2">
-                              <Button size="sm" variant="ghost" onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)} title="Add to Watchlist"><Bookmark className="h-4 w-4" /></Button>
-                              <Button size="sm" variant="ghost" asChild title="View Details"><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" /></Link></Button>
+                              <Button size="sm" variant="ghost" aria-label={`Add ${stock.ticker} to watchlist`} onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)} title="Add to Watchlist"><Bookmark className="h-4 w-4" aria-hidden="true" /></Button>
+                              <Button size="sm" variant="ghost" asChild aria-label={`View ${stock.ticker} details`} title="View Details"><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" aria-hidden="true" /></Link></Button>
                             </div>
                           </div>
                         )}
@@ -287,11 +289,11 @@ const Stocks = () => {
                               <td className="p-4 text-right font-medium">{stock.formatted_price || formatCurrency(stock.current_price)}</td>
                               <td className={`p-4 text-right ${(stock.is_gaining ?? (Number(stock.price_change_today)>=0)) ? 'text-green-600' : 'text-red-600'}`}>{(stock.price_change_today ?? 0) >= 0 ? '+' : ''}{stock.price_change_today?.toFixed(2)}</td>
                               <td className={`p-4 text-right font-medium ${(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? 'text-green-600' : 'text-red-600'}`}>
-                                <div className="flex items-center justify-end">{(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? (<TrendingUp className="h-3 w-3 mr-1" />) : (<TrendingDown className="h-3 w-3 mr-1" />)}{stock.formatted_change || formatPercentage(stock.change_percent)}</div>
+                                <div className="flex items-center justify-end">{(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? (<TrendingUp className="h-3 w-3 mr-1" aria-hidden="true" />) : (<TrendingDown className="h-3 w-3 mr-1" aria-hidden="true" />)}{stock.formatted_change || formatPercentage(stock.change_percent)}</div>
                               </td>
                               <td className="p-4 text-right text-gray-600">{stock.formatted_volume || formatVolume(stock.volume)}</td>
                               <td className="p-4 text-right text-gray-600">{stock.formatted_market_cap || formatMarketCap(stock.market_cap)}</td>
-                              <td className="p-4"><div className="flex items-center justify-center space-x-2"><Button size="sm" variant="ghost" onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)} title="Add to Watchlist"><Bookmark className="h-4 w-4" /></Button><Button size="sm" variant="ghost" asChild title="View Details"><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" /></Link></Button></div></td>
+                              <td className="p-4"><div className="flex items-center justify-center space-x-2"><Button size="sm" variant="ghost" aria-label={`Add ${stock.ticker} to watchlist`} onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)} title="Add to Watchlist"><Bookmark className="h-4 w-4" aria-hidden="true" /></Button><Button size="sm" variant="ghost" asChild aria-label={`View ${stock.ticker} details`} title="View Details"><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" aria-hidden="true" /></Link></Button></div></td>
                             </tr>
                           ))}
                         </tbody>
