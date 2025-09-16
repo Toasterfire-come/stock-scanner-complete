@@ -143,7 +143,8 @@ const Pricing = () => {
         } catch {}
       }
 
-      const order = await createPayPalOrder(planId, cycle, (discountCode || 'TRIAL'));
+      const cleanedCode = (discountCode || '').trim();
+      const order = await createPayPalOrder(planId, cycle, cleanedCode ? cleanedCode : null);
       if (order?.approval_url) {
         // Redirect to PayPal approval
         window.location.href = order.approval_url;
