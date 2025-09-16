@@ -12,6 +12,8 @@ module.exports = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
+      // Set public path to root to ensure chunks load from correct location
+      webpackConfig.output.publicPath = '/';
       
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
