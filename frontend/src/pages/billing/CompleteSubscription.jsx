@@ -41,7 +41,7 @@ const CompleteSubscription = () => {
   }, [planType, billingCycle]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 py-10">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-6">
           <Button variant="ghost" onClick={() => navigate(-1)}>
@@ -54,8 +54,8 @@ const CompleteSubscription = () => {
             <Gift className="h-4 w-4 mr-2" />
             Use code TRIAL for a 7‑day $1 trial · REF50 for 50% off first month
           </div>
-          <h1 className="mt-5 text-3xl md:text-4xl font-bold text-gray-900">{title}</h1>
-          <p className="mt-3 text-gray-600">Secure checkout powered by PayPal</p>
+          <h1 className="mt-5 text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">Secure checkout powered by PayPal</p>
         </div>
 
         <Card className="shadow-xl">

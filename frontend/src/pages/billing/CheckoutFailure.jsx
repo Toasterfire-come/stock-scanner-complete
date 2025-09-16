@@ -33,17 +33,17 @@ const CheckoutFailure = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50/50 to-orange-50/50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50/50 to-orange-50/50 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Error Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="h-12 w-12 text-red-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Payment Failed
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             We couldn't process your payment. Don't worry, no charges were made.
           </p>
         </div>
@@ -108,9 +108,9 @@ const CheckoutFailure = () => {
             <CardTitle>Alternative Options</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Continue with Free Plan</h4>
-              <p className="text-sm text-blue-700 mb-3">
+            <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Continue with Free Plan</h4>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
                 Start using Trade Scan Pro with our free features while you resolve payment issues.
               </p>
               <Button asChild variant="outline" size="sm">
@@ -120,9 +120,9 @@ const CheckoutFailure = () => {
               </Button>
             </div>
             
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2">Need Help?</h4>
-              <p className="text-sm text-gray-600 mb-3">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Need Help?</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Our support team can help you resolve payment issues and get you set up.
               </p>
               <div className="flex space-x-2">

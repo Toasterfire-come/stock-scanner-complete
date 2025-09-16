@@ -144,7 +144,7 @@ const PricingPro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
@@ -155,8 +155,8 @@ const PricingPro = () => {
               Use code TRIAL for a 7‑day $1 trial on paid plans · Use code REF50 for 50% off first month
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">Choose Your Trading Edge</h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-6">Choose Your Trading Edge</h1>
+          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
             Join thousands of traders using our tools to make better trading decisions and improve their market analysis.
           </p>
           {/* Billing Toggle */}
@@ -181,7 +181,7 @@ const PricingPro = () => {
                 <CardHeader className={`rounded-t-lg p-8`}>
                   {/* Title & Desc */}
                   <CardTitle className="text-2xl font-bold text-center mb-2">{plan.name}</CardTitle>
-                  <p className="text-center text-gray-600 mb-6">{plan.description}</p>
+                  <p className="text-center text-gray-600 dark:text-gray-400 mb-6">{plan.description}</p>
                   <div className="text-center">
                     {plan.isFree ? (
                       <div className="flex items-baseline justify-center">
@@ -207,24 +207,24 @@ const PricingPro = () => {
 
                 <CardContent className="p-8 space-y-6">
                   {/* Usage Limits - improved styling */}
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-semibold mb-3 text-gray-900">Usage Limits</h4>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+                    <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Usage Limits</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                       <div className="flex flex-col">
-                        <span className="text-gray-500">API Calls</span>
-                        <span className="font-medium text-gray-900">{plan.limits.apiCalls}</span>
+                        <span className="text-gray-500 dark:text-gray-400">API Calls</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{plan.limits.apiCalls}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-500">Alerts</span>
-                        <span className="font-medium text-gray-900">{plan.limits.alerts}</span>
+                        <span className="text-gray-500 dark:text-gray-400">Alerts</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{plan.limits.alerts}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-500">Portfolios</span>
-                        <span className="font-medium text-gray-900">{plan.limits.portfolios}</span>
+                        <span className="text-gray-500 dark:text-gray-400">Portfolios</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{plan.limits.portfolios}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-500">Watchlists</span>
-                        <span className="font-medium text-gray-900">{plan.limits.watchlists}</span>
+                        <span className="text-gray-500 dark:text-gray-400">Watchlists</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{plan.limits.watchlists}</span>
                       </div>
                     </div>
                   </div>

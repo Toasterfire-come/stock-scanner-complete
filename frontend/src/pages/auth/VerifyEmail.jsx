@@ -66,8 +66,8 @@ const VerifyEmail = () => {
         </div>
         
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Email verified!</h2>
-          <p className="text-gray-600 mt-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Email verified!</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             Your email has been successfully verified. You can now sign in to your account.
           </p>
         </div>
@@ -86,8 +86,8 @@ const VerifyEmail = () => {
       </div>
       
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Verify your email</h2>
-        <p className="text-gray-600 mt-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Verify your email</h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
           We've sent a verification link to{" "}
           <span className="font-medium">{email}</span>
         </p>
@@ -121,7 +121,7 @@ const VerifyEmail = () => {
         </Button>
         
         <div className="flex flex-col space-y-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Wrong email address?{" "}
             <Link
               to="/auth/sign-up"

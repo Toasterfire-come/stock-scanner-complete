@@ -56,17 +56,17 @@ const CheckoutSuccess = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/50 to-blue-50/50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/50 to-blue-50/50 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="h-12 w-12 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Payment Successful!
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Thank you for upgrading to Trade Scan Pro {planNames[planId] || 'Premium'}
           </p>
         </div>
@@ -86,18 +86,18 @@ const CheckoutSuccess = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600">Plan:</span>
-              <span className="font-semibold">Trade Scan Pro {planNames[planId]}</span>
+              <span className="text-gray-600 dark:text-gray-400">Plan:</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">Trade Scan Pro {planNames[planId]}</span>
             </div>
             
             {discount && (
               <>
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-600">Original Amount:</span>
-                  <span className="line-through text-gray-500">${originalAmount}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Original Amount:</span>
+                  <span className="line-through text-gray-500 dark:text-gray-400">${originalAmount}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-600">Discount ({discount.code}):</span>
+                  <span className="text-gray-600 dark:text-gray-400">Discount ({discount.code}):</span>
                   <span className="text-green-600">-${discount.discount_amount}</span>
                 </div>
               </>
@@ -108,8 +108,8 @@ const CheckoutSuccess = () => {
               <span className="text-green-600">${amount}</span>
             </div>
             
-            <div className="bg-blue-50 p-4 rounded-lg mt-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg mt-4">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 <Mail className="h-4 w-4 inline mr-2" />
                 A receipt has been sent to your email address.
               </p>

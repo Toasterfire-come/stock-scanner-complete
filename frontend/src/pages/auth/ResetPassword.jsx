@@ -84,7 +84,7 @@ const ResetPassword = () => {
     return (
       <div className="space-y-6 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="text-gray-600">Validating reset token...</p>
+        <p className="text-gray-600 dark:text-gray-400">Validating reset token...</p>
       </div>
     );
   }
@@ -97,8 +97,8 @@ const ResetPassword = () => {
         </div>
         
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Invalid or expired link</h2>
-          <p className="text-gray-600 mt-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Invalid or expired link</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             This password reset link is invalid or has expired.
           </p>
         </div>
@@ -114,7 +114,7 @@ const ResetPassword = () => {
             <Link to="/auth/forgot-password">Request new link</Link>
           </Button>
           
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             <Link
               to="/auth/sign-in"
               className="text-blue-600 hover:text-blue-500 font-medium"
@@ -135,8 +135,8 @@ const ResetPassword = () => {
         </div>
         
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Password reset successful</h2>
-          <p className="text-gray-600 mt-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Password reset successful</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             Your password has been reset successfully. You'll be redirected to the sign-in page.
           </p>
         </div>
@@ -151,8 +151,8 @@ const ResetPassword = () => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Reset your password</h2>
-        <p className="text-gray-600 mt-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reset your password</h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
           Enter your new password below
         </p>
       </div>
@@ -161,7 +161,7 @@ const ResetPassword = () => {
         <div className="space-y-2">
           <Label htmlFor="password">New Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -171,7 +171,7 @@ const ResetPassword = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -185,7 +185,7 @@ const ResetPassword = () => {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirm New Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
@@ -195,7 +195,7 @@ const ResetPassword = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

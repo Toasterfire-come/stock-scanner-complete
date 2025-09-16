@@ -71,8 +71,8 @@ const TwoFactorAuth = () => {
         <div className="flex justify-center mb-4">
           <Shield className="h-12 w-12 text-blue-500" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Two-Factor Authentication</h2>
-        <p className="text-gray-600 mt-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Two-Factor Authentication</h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
           Enter the 6-digit verification code sent to {email}
         </p>
       </div>
@@ -101,7 +101,7 @@ const TwoFactorAuth = () => {
       </form>
 
       <div className="text-center space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Didn't receive the code?
         </p>
         
@@ -124,7 +124,7 @@ const TwoFactorAuth = () => {
           )}
         </Button>
 
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Having trouble?{" "}
           <Link
             to="/auth/sign-in"
