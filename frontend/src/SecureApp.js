@@ -243,14 +243,14 @@ function SecureApp() {
                     <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
                     <Route path="/app/top-movers" element={<TopMovers />} />
 
-                    {/* News */}
-                    <Route path="/app/news" element={<NewsFeed />} />
-                    <Route path="/app/news/preferences" element={<NewsPreferences />} />
-                    <Route path="/app/news/subscribe" element={<NewsSubscribe />} />
+                    {/* News - require auth */}
+                    <Route path="/app/news" element={<RequireAuth><NewsFeed /></RequireAuth>} />
+                    <Route path="/app/news/preferences" element={<RequireAuth><NewsPreferences /></RequireAuth>} />
+                    <Route path="/app/news/subscribe" element={<RequireAuth><NewsSubscribe /></RequireAuth>} />
 
-                    {/* Alerts & Signals */}
-                    <Route path="/app/alerts" element={<Alerts />} />
-                    <Route path="/app/alerts/history" element={<AlertHistory />} />
+                    {/* Alerts & Signals - require auth */}
+                    <Route path="/app/alerts" element={<RequireAuth><Alerts /></RequireAuth>} />
+                    <Route path="/app/alerts/history" element={<RequireAuth><AlertHistory /></RequireAuth>} />
 
                     {/* Watchlists */}
                     <Route path="/app/watchlists" element={<Watchlists />} />

@@ -34,12 +34,17 @@ import {
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
 import SearchDialog from "../components/SearchDialog";
+import { Link as RouterLink } from "react-router-dom";
+import { useEffect as ReactUseEffect } from "react";
+import { api } from "../api/client";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const [unreadNews, setUnreadNews] = useState(0);
   // Global keyboard shortcut: Ctrl+K / Cmd+K opens search
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -52,6 +57,25 @@ const AppLayout = () => {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  // Poll unread counts when authenticated
+  useEffect(() => {
+    let timer;
+    async function fetchUnread() {
+      if (!isAuthenticated) { setUnreadAlerts(0); setUnreadNews(0); return; }
+      try {
+        const [alertsRes, newsRes] = await Promise.all([
+          api.get('/alerts/unread-count/').catch(()=>({ data:{ count:0 }})),
+          api.get('/news/unread-count/').catch(()=>({ data:{ count:0 }}))
+        ]);
+        setUnreadAlerts(Number(alertsRes?.data?.count || 0));
+        setUnreadNews(Number(newsRes?.data?.count || 0));
+      } catch {}
+    }
+    fetchUnread();
+    timer = setInterval(fetchUnread, 60000);
+    return () => { if (timer) clearInterval(timer); };
+  }, [isAuthenticated]);
 
   const marketingPages = [
     { name: "Home", href: "/", icon: Home },
@@ -110,6 +134,30 @@ const AppLayout = () => {
                 <Search className="h-4 w-4 mr-2" />
                 <span className="hidden lg:inline">Search</span>
                 <kbd className="ml-2 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">Ctrl K</kbd>
+              </Button>
+
+              {/* Alerts */}
+              <Button asChild variant="ghost" className="hidden md:inline-flex h-9 px-3 rounded-md relative">
+                <RouterLink to="/app/alerts" aria-label="Alerts">
+                  <AlertCircle className="h-4 w-4" />
+                  {isAuthenticated && unreadAlerts > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-600 text-white">
+                      {unreadAlerts > 99 ? '99+' : unreadAlerts}
+                    </span>
+                  )}
+                </RouterLink>
+              </Button>
+
+              {/* News */}
+              <Button asChild variant="ghost" className="hidden md:inline-flex h-9 px-3 rounded-md relative">
+                <RouterLink to="/app/news" aria-label="News">
+                  <Newspaper className="h-4 w-4" />
+                  {isAuthenticated && unreadNews > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-600 text-white">
+                      {unreadNews > 99 ? '99+' : unreadNews}
+                    </span>
+                  )}
+                </RouterLink>
               </Button>
 
               {/* Hamburger menu - visible across all sizes */}
