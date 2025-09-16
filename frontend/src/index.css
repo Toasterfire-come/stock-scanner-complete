@@ -167,3 +167,21 @@ html {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
+
+/* High-contrast mode toggle support (prefers-contrast) */
+@media (prefers-contrast: more) {
+  :root, .dark {
+    --border: 0 0% 60%;
+    --muted-foreground: 0 0% 30%;
+  }
+  a, button {
+    text-decoration: underline;
+  }
+}
+
+/* Enlarge interactive targets on small screens for accessibility */
+@media (max-width: 640px) {
+  button, .btn, a[role="button"], input[type="checkbox"], input[type="radio"] {
+    min-height: 40px;
+  }
+}
