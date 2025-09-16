@@ -47,7 +47,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 dark:from-gray-900 dark:to-gray-950">
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">
@@ -57,12 +57,12 @@ const About = () => {
               About Trade Scan Pro
             </Badge>
             
-            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-8 leading-tight">
+            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-8 leading-tight">
               Empowering Traders with
               <span className="text-blue-600 block">Professional Tools</span>
             </h1>
             
-            <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
+            <p className="text-2xl text-gray-700 dark:text-gray-300 mb-12 leading-relaxed">
               We're focused on providing reliable stock screening and analysis tools 
               to help traders make informed decisions in the market.
             </p>
@@ -71,13 +71,13 @@ const About = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
+                <div className="text-gray-600 dark:text-gray-400">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -85,7 +85,7 @@ const About = () => {
       </section>
 
       {/* Mission Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
@@ -99,15 +99,15 @@ const About = () => {
               <CardContent className="p-12">
                 <div className="text-center">
                   <TrendingUp className="h-16 w-16 text-blue-600 mx-auto mb-8" />
-                  <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h3 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                     Making Trading Tools Accessible
                   </h3>
-                  <p className="text-xl text-gray-700 leading-relaxed mb-8">
+                  <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
                     Trade Scan Pro was built to provide traders with reliable stock screening and analysis tools 
                     at an affordable price. We focus on delivering practical functionality that helps traders 
                     make better-informed decisions.
                   </p>
-                  <p className="text-xl text-gray-700 leading-relaxed">
+                  <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
                     Our platform specializes in NYSE and NASDAQ stock analysis (10,500+ listings) with real-time alerts and comprehensive 
                     screening capabilities. We believe in transparent pricing and reliable service delivery.
                   </p>
@@ -119,7 +119,7 @@ const About = () => {
       </section>
 
       {/* Values Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Values</h2>
@@ -137,8 +137,8 @@ const About = () => {
                       {value.icon}
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">{value.title}</h3>
-                      <p className="text-gray-700 leading-relaxed">{value.description}</p>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{value.title}</h3>
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{value.description}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -149,12 +149,12 @@ const About = () => {
       </section>
 
       {/* Story Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
-              <p className="text-xl text-gray-600">
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">Our Story</h2>
+              <p className="text-xl text-gray-600 dark:text-gray-400">
                 Building better trading tools
               </p>
             </div>
@@ -167,8 +167,8 @@ const About = () => {
                       1
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">The Need</h3>
-                      <p className="text-gray-700">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">The Need</h3>
+                      <p className="text-gray-700 dark:text-gray-300">
                         We identified a need for reliable, affordable stock screening tools that focus on 
                         practical functionality rather than overwhelming complexity. Many existing platforms 
                         were either too expensive or lacked the specific features traders actually needed.
@@ -185,8 +185,8 @@ const About = () => {
                       2
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">The Solution</h3>
-                      <p className="text-gray-700">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">The Solution</h3>
+                      <p className="text-gray-700 dark:text-gray-300">
                         We built Trade Scan Pro to focus on comprehensive screening across NYSE and NASDAQ, 
                         real-time alerts, and portfolio tracking. Our goal was to create a platform that combines 
                         reliability with affordability, starting with code TRIAL for a 7‑day 1$ trial.
@@ -203,8 +203,8 @@ const About = () => {
                       3
                     </div>
                     <div>  
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">The Future</h3>
-                      <p className="text-gray-700">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">The Future</h3>
+                      <p className="text-gray-700 dark:text-gray-300">
                         We continue to improve our platform based on user feedback and market needs. 
                         Our roadmap includes enhanced analytics, improved user experience, and expanded 
                         screening capabilities while maintaining our focus on reliability and value.

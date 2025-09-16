@@ -60,7 +60,7 @@ const Contact = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 dark:from-gray-900 dark:to-gray-950">
       {/* Hero Section */}
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4">
@@ -69,10 +69,10 @@ const Contact = () => {
               <MessageSquare className="h-4 w-4 mr-2" />
               Get in Touch
             </Badge>
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight">We're Here to
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">We're Here to
               <span className="text-blue-600 block">Help You Succeed</span>
             </h1>
-            <p className="text-xl text-gray-700 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
               Have questions about Trade Scan Pro? Need help getting started? Our team is ready to assist you.
             </p>
           </div>
@@ -80,13 +80,13 @@ const Contact = () => {
       </section>
 
       {/* Contact Form */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
             <Card className="shadow-xl">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl">Send us a Message</CardTitle>
-                <p className="text-gray-600">Fill out the form below and we'll get back to you within 24 hours.</p>
+                <p className="text-gray-600 dark:text-gray-400">Fill out the form below and we'll get back to you within 24 hours.</p>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -141,11 +141,11 @@ const Contact = () => {
       </section>
 
       {/* FAQ Preview (kept minimal) */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
-            <p className="text-gray-600">Quick answers to common questions</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Frequently Asked Questions</h2>
+            <p className="text-gray-600 dark:text-gray-400">Quick answers to common questions</p>
           </div>
         </div>
       </section>

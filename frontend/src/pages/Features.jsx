@@ -110,7 +110,7 @@ const Features = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 dark:from-gray-900 dark:to-gray-950">
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">
@@ -120,12 +120,12 @@ const Features = () => {
               Professional Trading Platform
             </Badge>
             
-            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-8 leading-tight">
+            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-8 leading-tight">
               Powerful Features for
               <span className="text-blue-600 block">Serious Traders</span>
             </h1>
             
-            <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
+            <p className="text-2xl text-gray-700 dark:text-gray-300 mb-12 leading-relaxed">
               Everything you need to analyze markets, manage risk, and execute winning trades
               with confidence and precision.
             </p>
@@ -141,13 +141,13 @@ const Features = () => {
       </section>
 
       {/* Main Features */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               Core Features
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               Built by traders, for traders. Every feature is designed to give you an edge in the markets.
             </p>
           </div>
@@ -164,7 +164,7 @@ const Features = () => {
                         </div>
                         <div>
                           <CardTitle className="text-3xl">{feature.title}</CardTitle>
-                          <CardDescription className="text-lg text-gray-600 mt-2">
+                          <CardDescription className="text-lg text-gray-600 dark:text-gray-400 mt-2">
                             {feature.description}
                           </CardDescription>
                         </div>
@@ -175,7 +175,7 @@ const Features = () => {
                         {feature.details.map((detail, i) => (
                           <li key={i} className="flex items-start">
                             <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{detail}</span>
+                            <span className="text-gray-700 dark:text-gray-300">{detail}</span>
                           </li>
                         ))}
                       </ul>
@@ -183,7 +183,7 @@ const Features = () => {
                   </Card>
                 </div>
                 <div className="lg:w-1/2">
-                  <div className="rounded-2xl overflow-hidden border bg-white">
+                  <div className="rounded-2xl overflow-hidden border bg-white dark:bg-gray-800">
                     <img
                       src={`/react/screenshots/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.webp`}
                       alt={`${feature.title} screenshot`}
@@ -200,13 +200,13 @@ const Features = () => {
       </section>
 
       {/* Additional Features Grid */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               Additional Features
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-400">
               More tools to enhance your trading experience
             </p>
           </div>
@@ -220,8 +220,8 @@ const Features = () => {
                       {feature.icon}
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{feature.title}</h3>
-                      <p className="text-gray-600 mt-1">{feature.description}</p>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{feature.title}</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mt-1">{feature.description}</p>
                     </div>
                   </div>
                 </CardContent>

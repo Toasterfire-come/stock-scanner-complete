@@ -99,7 +99,7 @@ const EnterpriseContact = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
@@ -108,11 +108,11 @@ const EnterpriseContact = () => {
             Enterprise Solutions
           </Badge>
           
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-gray-100 mb-6">
             Enterprise & Custom Solutions
           </h1>
           
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
             Scalable trading platform solutions designed for financial institutions, 
             trading firms, and organizations with custom requirements.
           </p>
@@ -131,7 +131,7 @@ const EnterpriseContact = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Full Name *
                     </label>
                     <Input
@@ -143,7 +143,7 @@ const EnterpriseContact = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Work Email *
                     </label>
                     <Input
@@ -158,7 +158,7 @@ const EnterpriseContact = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Company Name *
                   </label>
                   <Input
@@ -172,7 +172,7 @@ const EnterpriseContact = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Phone Number
                     </label>
                     <Input
@@ -184,7 +184,7 @@ const EnterpriseContact = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Company Size
                     </label>
                     <select
@@ -204,7 +204,7 @@ const EnterpriseContact = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tell us about your requirements *
                   </label>
                   <Textarea
@@ -232,7 +232,7 @@ const EnterpriseContact = () => {
                   )}
                 </Button>
 
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                   We'll respond within 24 hours with a custom proposal
                 </p>
               </form>
@@ -256,8 +256,8 @@ const EnterpriseContact = () => {
                         {feature.icon}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                        <p className="text-gray-600">{feature.description}</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{feature.title}</h3>
+                        <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
                       </div>
                     </div>
                   ))}
@@ -274,7 +274,7 @@ const EnterpriseContact = () => {
                   {useCases.map((useCase, index) => (
                     <li key={index} className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{useCase}</span>
+                      <span className="text-gray-700 dark:text-gray-300">{useCase}</span>
                     </li>
                   ))}
                 </ul>
@@ -305,10 +305,10 @@ const EnterpriseContact = () => {
         {/* Process Section */}
         <div className="mt-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Our Enterprise Process
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-400">
               How we work with enterprise clients
             </p>
           </div>
