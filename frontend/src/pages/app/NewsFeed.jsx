@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Search, ExternalLink, Clock, RefreshCw, ArrowUp, Newspaper } from "lucide-react";
 import { toast } from "sonner";
 import { getWordPressNews, markNewsRead, markNewsClicked } from "../../api/client";
+import { announce } from "../../lib/a11y";
 
 const NewsFeed = () => {
   const [news, setNews] = useState([]);
@@ -168,8 +169,10 @@ const NewsFeed = () => {
     try {
       await markNewsRead(newsId);
       toast.success("Article marked as read");
+      try { announce('Article marked as read'); } catch {}
     } catch {
       toast.error("Failed to mark as read");
+      try { announce('Failed to mark as read'); } catch {}
     }
   };
 
@@ -179,6 +182,7 @@ const NewsFeed = () => {
     } catch {
       // non-blocking
     } finally {
+      try { announce('Opening article'); } catch {}
       if (url) window.open(url, "_blank", "noopener,noreferrer");
     }
   };

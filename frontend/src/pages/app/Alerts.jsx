@@ -11,6 +11,7 @@ import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } fro
 import { toast } from "sonner";
 import { useAuth } from "../../context/SecureAuthContext";
 import { getAlerts as apiGetAlerts, toggleAlert as apiToggleAlert, deleteAlert as apiDeleteAlert, createAlert as apiCreateAlert } from "../../api/client";
+import { announce } from "../../lib/a11y";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
@@ -68,13 +69,16 @@ const Alerts = () => {
       
       if (data.alert_id) {
         toast.success("Alert created successfully");
+        try { announce(`Alert created for ${newAlert.ticker.toUpperCase()}`); } catch {}
         setNewAlert({ ticker: "", targetPrice: "", condition: "above", email: "" });
         fetchAlerts(); // Refresh the list
       } else {
         toast.error("Failed to create alert");
+        try { announce('Failed to create alert'); } catch {}
       }
     } catch (error) {
       toast.error("Failed to create alert");
+      try { announce('Failed to create alert'); } catch {}
     } finally {
       setIsCreating(false);
     }
@@ -87,8 +91,10 @@ const Alerts = () => {
       await apiDeleteAlert(alertId);
       setAlerts((prev) => prev.filter(alert => alert.id !== alertId));
       toast.success("Alert deleted successfully");
+      try { announce('Alert deleted'); } catch {}
     } catch (error) {
       toast.error("Failed to delete alert");
+      try { announce('Failed to delete alert'); } catch {}
     }
   };
 
@@ -102,10 +108,12 @@ const Alerts = () => {
     try {
       await apiToggleAlert(alertId);
       toast.success("Alert status updated");
+      try { announce('Alert status updated'); } catch {}
     } catch (error) {
       // Rollback
       setAlerts((prev) => prev.map(a => a.id === alertId ? { ...a, isActive: !a.isActive } : a));
       toast.error("Failed to update alert");
+      try { announce('Failed to update alert'); } catch {}
     }
   };
 

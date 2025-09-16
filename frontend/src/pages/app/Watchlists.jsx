@@ -19,6 +19,7 @@ import {
   Search
 } from "lucide-react";
 import { getWatchlist, addWatchlist, deleteWatchlist } from "../../api/client";
+import { announce } from "../../lib/a11y";
 import { useAuth } from "../../context/SecureAuthContext";
 
 const Watchlists = () => {
@@ -72,14 +73,17 @@ const Watchlists = () => {
 
       if (response.success) {
         toast.success(`${newWatchItem.symbol.toUpperCase()} added to watchlist`);
+        try { announce(`${newWatchItem.symbol.toUpperCase()} added to watchlist`); } catch {}
         setNewWatchItem({ symbol: "", notes: "", alert_price: "", watchlist_name: "My Watchlist" });
         setIsAddModalOpen(false);
         fetchWatchlist();
       } else {
         toast.error(response.message || "Failed to add to watchlist");
+        try { announce('Failed to add to watchlist'); } catch {}
       }
     } catch (error) {
       toast.error("Failed to add stock to watchlist");
+      try { announce('Failed to add to watchlist'); } catch {}
     }
   };
 
@@ -90,12 +94,15 @@ const Watchlists = () => {
       const response = await deleteWatchlist(id);
       if (response.success) {
         toast.success(`${symbol} removed from watchlist`);
+        try { announce(`${symbol} removed from watchlist`); } catch {}
         fetchWatchlist();
       } else {
         toast.error("Failed to remove from watchlist");
+        try { announce('Failed to remove from watchlist'); } catch {}
       }
     } catch (error) {
       toast.error("Failed to remove from watchlist");
+      try { announce('Failed to remove from watchlist'); } catch {}
     }
   };
 
