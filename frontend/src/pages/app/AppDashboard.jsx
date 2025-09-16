@@ -64,7 +64,7 @@ const AppDashboard = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Non-authenticated user warning */}
           <Alert className="mb-8 border-orange-200 bg-orange-50">
@@ -77,8 +77,8 @@ const AppDashboard = () => {
 
           {/* Dashboard content for non-authenticated users */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Trade Scan Pro Dashboard</h1>
-            <p className="text-gray-600">Sign in to access full functionality and real-time data.</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Trade Scan Pro Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400">Sign in to access full functionality and real-time data.</p>
           </div>
 
           {/* Market Overview */}
@@ -138,14 +138,14 @@ const AppDashboard = () => {
 
   // Authenticated user dashboard
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Welcome back, {user?.name || 'Trader'}!
           </h1>
-          <p className="text-gray-600">Here's your trading dashboard overview</p>
+          <p className="text-gray-600 dark:text-gray-400">Here's your trading dashboard overview</p>
           <Badge variant="secondary" className="mt-2">
             {user?.plan || 'Bronze'} Plan
           </Badge>
@@ -231,10 +231,10 @@ const AppDashboard = () => {
               {trendingStocks?.top_gainers ? (
                 <div className="space-y-4">
                   {trendingStocks.top_gainers.slice(0, 5).map((stock, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <div>
                         <div className="font-semibold">{stock.ticker}</div>
-                        <div className="text-sm text-gray-600">{stock.name}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">{stock.name}</div>
                       </div>
                       <Badge variant="secondary" className="bg-green-100 text-green-800">
                         +{stock.change_percent?.toFixed(2)}%
@@ -243,7 +243,7 @@ const AppDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">Loading market data...</p>
+                <p className="text-gray-500 dark:text-gray-400">Loading market data...</p>
               )}
             </CardContent>
           </Card>
@@ -291,7 +291,7 @@ const AppDashboard = () => {
               <CardDescription>Your latest trading activities</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
                 Recent alerts, screener results, and portfolio changes will appear here.
               </div>
             </CardContent>
@@ -303,7 +303,7 @@ const AppDashboard = () => {
               <CardDescription>Today's market highlights</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
                 Market analysis and insights based on current conditions.
               </div>
             </CardContent>

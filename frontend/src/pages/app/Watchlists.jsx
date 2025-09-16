@@ -170,8 +170,8 @@ const Watchlists = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Watchlists</h1>
-            <p className="text-gray-600 mt-2">Keep track of stocks you're interested in</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Watchlists</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">Keep track of stocks you're interested in</p>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
@@ -238,7 +238,7 @@ const Watchlists = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Items</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Items</p>
                     <p className="text-2xl font-bold">{watchlist.summary.total_items}</p>
                   </div>
                   <Star className="h-8 w-8 text-blue-500" />
@@ -250,7 +250,7 @@ const Watchlists = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Gainers</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Gainers</p>
                     <div className="flex items-center">
                       <p className="text-2xl font-bold text-green-600">{watchlist.summary.gainers}</p>
                       <TrendingUp className="h-5 w-5 text-green-500 ml-2" />
@@ -265,7 +265,7 @@ const Watchlists = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Losers</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Losers</p>
                     <div className="flex items-center">
                       <p className="text-2xl font-bold text-red-600">{watchlist.summary.losers}</p>
                       <TrendingDown className="h-5 w-5 text-red-500 ml-2" />
@@ -280,7 +280,7 @@ const Watchlists = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">With Alerts</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">With Alerts</p>
                     <p className="text-2xl font-bold">{watchlist.data?.filter(item => item.alert_price).length || 0}</p>
                   </div>
                   <Bell className="h-8 w-8 text-purple-500" />
@@ -294,7 +294,7 @@ const Watchlists = () => {
         <Card>
           <CardContent className="p-6">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input 
                 placeholder="Search watchlist..." 
                 value={searchTerm}
@@ -320,7 +320,7 @@ const Watchlists = () => {
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b bg-gray-50">
+                      <tr className="border-b bg-gray-50 dark:bg-gray-800/60">
                         <th className="text-left p-4 font-medium">Symbol</th>
                         <th className="text-left p-4 font-medium">Company</th>
                         <th className="text-right p-4 font-medium">Price</th>
@@ -334,7 +334,7 @@ const Watchlists = () => {
                     </thead>
                     <tbody>
                       {filteredWatchlist.map((item) => (
-                        <tr key={item.id} className="border-b hover:bg-gray-50">
+                        <tr key={item.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                           <td className="p-4">
                             <div className="flex items-center space-x-3">
                               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -348,7 +348,7 @@ const Watchlists = () => {
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="font-medium text-gray-900">{item.company_name}</div>
+                            <div className="font-medium text-gray-900 dark:text-gray-100">{item.company_name}</div>
                           </td>
                           <td className="p-4 text-right font-medium">{formatCurrency(item.current_price)}</td>
                           <td className={`p-4 text-right ${item.price_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -363,9 +363,9 @@ const Watchlists = () => {
                               {formatPercentage(item.price_change_percent)}
                             </div>
                           </td>
-                          <td className="p-4 text-right text-gray-600">{formatVolume(item.volume)}</td>
+                          <td className="p-4 text-right text-gray-600 dark:text-gray-400">{formatVolume(item.volume)}</td>
                           <td className="p-4">
-                            <div className="text-sm text-gray-600 max-w-32 truncate" title={item.notes}>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 max-w-32 truncate" title={item.notes}>
                               {item.notes || '-'}
                             </div>
                           </td>
@@ -376,7 +376,7 @@ const Watchlists = () => {
                                 {formatCurrency(item.alert_price)}
                               </Badge>
                             ) : (
-                              <span className="text-gray-400">-</span>
+                              <span className="text-gray-400 dark:text-gray-500">-</span>
                             )}
                           </td>
                           <td className="p-4">

@@ -179,7 +179,7 @@ const TopMovers = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/3"></div><div className="h-12 bg-gray-200 rounded"></div><div className="h-96 bg-gray-200 rounded"></div></div></div>
+      <div className="container mx-auto px-4 py-8"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/3"></div><div className="h-12 bg-gray-200 dark:bg-gray-800 rounded"></div><div className="h-96 bg-gray-200 dark:bg-gray-800 rounded"></div></div></div>
     );
   }
 
@@ -187,8 +187,8 @@ const TopMovers = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Top Movers</h1>
-          <p className="text-gray-600 mt-2">Stocks with the highest price movements and volume</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Top Movers</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Stocks with the highest price movements and volume</p>
         </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline">{lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}</Badge>
@@ -197,7 +197,7 @@ const TopMovers = () => {
       </div>
 
       {error && (
-        <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/50 mb-6"><CardContent className="p-4 text-yellow-800 flex items-center justify-between"><span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> {error}</span><Button size="sm" variant="outline" onClick={fetchTrendingData}>Retry</Button></CardContent></Card>
+        <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/20 mb-6"><CardContent className="p-4 text-yellow-800 dark:text-yellow-300 flex items-center justify-between"><span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> {error}</span><Button size="sm" variant="outline" onClick={fetchTrendingData}>Retry</Button></CardContent></Card>
       )}
 
       <Tabs defaultValue="gainers" className="space-y-6">

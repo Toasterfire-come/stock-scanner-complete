@@ -203,7 +203,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 dark:from-gray-900 dark:to-gray-950">
       {/* Hero Section - Conversion Focused */}
       <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
         <div className="container mx-auto px-4">
@@ -213,12 +213,12 @@ const Home = () => {
               Trusted by 50,000+ Professional Traders
             </Badge>
             
-            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 dark:text-gray-100 mb-6 sm:mb-8 leading-tight">
               Turn Market Data Into 
               <span className="text-blue-600 block"> Profitable Trades</span>
             </h1>
             
-            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 dark:text-gray-300 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
               Join thousands of successful traders using our advanced screening tools, 
               real-time alerts, and AI-powered market intelligence to maximize their returns.
             </p>
@@ -260,11 +260,11 @@ const Home = () => {
 
       {/* Social Proof Stats */}
       {marketStats && marketStats.market_overview && (
-        <section className="py-12 sm:py-16 bg-white border-y">
+        <section className="py-12 sm:py-16 bg-white dark:bg-gray-900 border-y">
           <div className="container mx-auto px-4">
             <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Live Market Performance</h2>
-              <p className="text-gray-600">Real-time data from our trading platform</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Live Market Performance</h2>
+              <p className="text-gray-600 dark:text-gray-400">Real-time data from our trading platform</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
@@ -301,13 +301,13 @@ const Home = () => {
       )}
 
       {/* Features Section with Expandable Details */}
-      <section className="py-16 sm:py-24 bg-gray-50">
+      <section className="py-16 sm:py-24 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 sm:mb-20">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">
               Everything You Need to Dominate the Markets
             </h2>
-            <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               Professional-grade tools that give you the competitive edge
             </p>
           </div>
@@ -325,7 +325,7 @@ const Home = () => {
                           </div>
                           <div>
                             <CardTitle className="text-lg sm:text-2xl mb-2">{feature.title}</CardTitle>
-                            <CardDescription className="text-base sm:text-lg text-gray-600">
+                            <CardDescription className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
                               {feature.description}
                             </CardDescription>
                           </div>
@@ -336,7 +336,7 @@ const Home = () => {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0">
-                      <p className="text-gray-700 text-base sm:text-lg leading-relaxed pl-16 sm:pl-20">
+                      <p className="text-gray-700 dark:text-gray-300 text-base sm:text-lg leading-relaxed pl-16 sm:pl-20">
                         {feature.details}
                       </p>
                     </CardContent>
@@ -349,13 +349,13 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 sm:py-24 bg-white">
+      <section className="py-16 sm:py-24 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 sm:mb-20">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">
               Success Stories From Our Traders
             </h2>
-            <p className="text-xl sm:text-2xl text-gray-600">
+            <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-400">
               Real results from real traders using Trade Scan Pro
             </p>
           </div>
@@ -369,13 +369,13 @@ const Home = () => {
                       <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <blockquote className="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6 leading-relaxed">
+                  <blockquote className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
                     "{testimonial.content}"
                   </blockquote>
                   <div className="border-t pt-4 sm:pt-6">
-                    <div className="font-bold text-lg sm:text-xl text-gray-900">{testimonial.name}</div>
-                    <div className="text-gray-600 mb-2">{testimonial.role}</div>
-                    <div className="text-sm text-gray-500 mb-3">{testimonial.company}</div>
+                    <div className="font-bold text-lg sm:text-xl text-gray-900 dark:text-gray-100">{testimonial.name}</div>
+                    <div className="text-gray-600 dark:text-gray-400 mb-2">{testimonial.role}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">{testimonial.company}</div>
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                       <TrendingUp className="h-3 w-3 mr-1" />
                       {testimonial.profit}
@@ -453,13 +453,13 @@ const Home = () => {
       </section>
 
       {/* FAQ Section with Expandable Answers */}
-      <section className="py-16 sm:py-24 bg-gray-50">
+      <section className="py-16 sm:py-24 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 sm:mb-20">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl sm:text-2xl text-gray-600">
+            <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-400">
               Everything you need to know about getting started
             </p>
           </div>
@@ -480,7 +480,7 @@ const Home = () => {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0">
-                      <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{faq.answer}</p>
+                      <p className="text-gray-700 dark:text-gray-300 text-base sm:text-lg leading-relaxed">{faq.answer}</p>
                     </CardContent>
                   </CollapsibleContent>
                 </Card>
