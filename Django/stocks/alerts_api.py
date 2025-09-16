@@ -274,3 +274,19 @@ def alerts_delete_api(request, alert_id: int):
         logger.error(f"Delete alert error: {e}")
         return Response({'message': 'internal error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+# Unread count (used for header badge)
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
+def alerts_unread_count_api(request):
+    try:
+        if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            return Response({'count': 0}, status=status.HTTP_200_OK)
+        # Define unread as currently active alerts for the user
+        count = StockAlert.objects.filter(user=request.user, is_active=True).count()
+        return Response({'count': int(count)}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Alerts unread count error: {e}")
+        return Response({'count': 0}, status=status.HTTP_200_OK)

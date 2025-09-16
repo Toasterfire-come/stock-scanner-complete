@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .security_utils import secure_api_endpoint, validate_user_input
 from django.utils import timezone
+from django.db.models import Q
 
 app_name = 'news'
 
@@ -49,8 +50,8 @@ def get_personalized_feed(request):
                 'message': 'News feed retrieved successfully'
             })
 
-        # Fallback: return all news articles available
-        qs = NewsArticle.objects.all().order_by('-published_date')
+        # Fallback: return all news articles available (dedupe by URL)
+        qs = NewsArticle.objects.exclude(Q(url__isnull=True) | Q(url__exact='')).order_by('-published_date')
         if category:
             qs = qs.filter(sentiment_grade__iexact=category[:1])  # optional mapping
         articles = list(qs if limit is None else qs[:limit])
@@ -60,7 +61,14 @@ def get_personalized_feed(request):
                 return []
             return [t.strip().upper() for t in s.split(',') if t.strip()]
 
-        items = [{
+        seen = set()
+        items = []
+        for a in articles:
+            if a.url and a.url in seen:
+                continue
+            if a.url:
+                seen.add(a.url)
+            items.append({
             'id': a.id,
             'title': a.title,
             'content': a.summary,
@@ -72,7 +80,7 @@ def get_personalized_feed(request):
             'mentioned_tickers': a.mentioned_tickers,
             'published_at': a.published_date.isoformat() if a.published_date else None,
             'created_at': a.created_at.isoformat() if a.created_at else None,
-        } for a in articles]
+        })
 
         return JsonResponse({
             'success': True,

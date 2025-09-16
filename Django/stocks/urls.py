@@ -54,6 +54,7 @@ urlpatterns = [
     path('alerts/create/', alerts_api.alerts_create_api, name='create_alert'),
     path('alerts/<int:alert_id>/toggle/', alerts_api.alerts_toggle_api, name='toggle_alert'),
     path('alerts/<int:alert_id>/delete/', alerts_api.alerts_delete_api, name='delete_alert'),
+    path('alerts/unread-count/', alerts_api.alerts_unread_count_api, name='alerts_unread_count'),
     
     # Subscription endpoints
     path('subscription/', api_views.wordpress_subscription_api, name='wordpress_subscription'),
