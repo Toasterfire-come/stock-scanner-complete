@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
 import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getUsageSummary, reconcileUsage } from "../../api/client";
+import { Progress } from "../../components/ui/progress";
 import MiniSparkline from "../../components/MiniSparkline";
 
 const AppDashboard = () => {
@@ -258,8 +259,25 @@ const AppDashboard = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{usage?.monthly?.api_calls ?? '-'}</div>
-              <p className="text-xs text-muted-foreground">Calls this month (limit {usage?.monthly?.limit ?? '-'})</p>
+              {(() => {
+                const used = Number(usage?.monthly?.api_calls || 0);
+                const limit = Number(usage?.monthly?.limit || 0);
+                const percent = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
+                const remaining = limit > 0 ? Math.max(0, limit - used) : 0;
+                return (
+                  <div>
+                    <div className="flex items-end justify-between mb-2">
+                      <div className="text-2xl font-bold">{used.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">{limit ? `${limit.toLocaleString()} limit` : 'Unlimited'}</div>
+                    </div>
+                    <Progress value={percent} className="h-2" />
+                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Daily: {Number(usage?.daily?.api_calls || 0).toLocaleString()}</span>
+                      {limit > 0 && <span>{remaining.toLocaleString()} left</span>}
+                    </div>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>

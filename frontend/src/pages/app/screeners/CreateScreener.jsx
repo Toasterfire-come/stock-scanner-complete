@@ -70,7 +70,7 @@ const CreateScreener = () => {
         addNum(`${base}_min`, c.min);
       }
       if (mode === 'lte' || mode === 'range') {
-        addNum `${base}_max`, c.max;
+        addNum(`${base}_max`, c.max);
       }
     };
     for (const c of criteriaList) {
