@@ -13,7 +13,11 @@ module.exports = {
     },
     configure: (webpackConfig) => {
       // Set public path to root to ensure chunks load from correct location
-      webpackConfig.output.publicPath = '/';
+      webpackConfig.output = {
+        ...webpackConfig.output,
+        publicPath: '/',
+        chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+      };
       
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
