@@ -151,7 +151,11 @@ export default function PlanSelection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
+          role="radiogroup"
+          aria-label="Plans"
+        >
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
@@ -159,10 +163,19 @@ export default function PlanSelection() {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                  isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
-                } ${plan.popular ? "border-orange-200 scale-105" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
+                className={`relative h-full flex flex-col cursor-pointer transition-all duration-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  isSelected ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background shadow-lg" : ""
+                } ${plan.popular ? "border-orange-200 lg:scale-105" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
                 onClick={() => setSelectedPlan(plan.id)}
+                role="radio"
+                aria-checked={isSelected}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedPlan(plan.id);
+                  }
+                }}
               >
                 {plan.popular && (
                   <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-1">
@@ -183,7 +196,7 @@ export default function PlanSelection() {
                     }`} />
                   </div>
                   
-                  <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
+                  <CardTitle id={`plan-${plan.id}-title`} className="text-xl sm:text-2xl">{plan.name}</CardTitle>
                   
                   <div className="space-y-2">
                     {!plan.isFree && (
@@ -199,10 +212,10 @@ export default function PlanSelection() {
                     </div>
                   </div>
                   
-                  <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
+                  <CardDescription className="text-sm sm:text-base" id={`plan-${plan.id}-desc`}>{plan.description}</CardDescription>
                 </CardHeader>
                 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 flex-1 flex flex-col">
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
@@ -227,7 +240,7 @@ export default function PlanSelection() {
                   )}
                   
                   <Button
-                    className={`w-full mt-6 h-11 sm:h-12 text-base ${
+                    className={`w-full mt-auto h-11 sm:h-12 text-base ${
                       isSelected 
                         ? "bg-blue-600 hover:bg-blue-700" 
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -237,6 +250,7 @@ export default function PlanSelection() {
                       handlePlanSelect(plan.id);
                     }}
                     disabled={isLoading}
+                    aria-label={plan.isFree ? `Select ${plan.name} plan` : `Select ${plan.name} plan with trial`}
                   >
                     {plan.isFree ? "Get Started Free" : "Try for $1"}
                     <ArrowRight className="h-4 w-4 ml-2" />
