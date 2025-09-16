@@ -18,6 +18,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { listStocks, searchStocks, addWatchlist, fetchAllStocks } from "../../api/client";
+import { announce } from "../../lib/a11y";
 import VirtualizedList from "../../components/VirtualizedList";
 
 const Stocks = () => {
@@ -113,8 +114,10 @@ const Stocks = () => {
     try {
       await addWatchlist(ticker, { watchlist_name: "My Watchlist", notes: `Added ${name} from stocks page` });
       toast.success(`${ticker} added to watchlist`);
+      try { announce(`${ticker} added to watchlist`); } catch {}
     } catch (error) {
       toast.error(`Failed to add ${ticker} to watchlist`);
+      try { announce(`Failed to add ${ticker} to watchlist`); } catch {}
     }
   };
 

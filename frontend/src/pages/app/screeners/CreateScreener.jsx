@@ -11,6 +11,7 @@ import { Badge } from "../../../components/ui/badge";
 import { X, Plus, Save, Play } from "lucide-react";
 import { toast } from "sonner";
 import { filterStocks } from "../../../api/client";
+import { announce } from "../../../lib/a11y";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
@@ -101,11 +102,13 @@ const CreateScreener = () => {
   const handleSave = async () => {
     if (!screenerData.name.trim()) {
       toast.error("Please enter a screener name");
+      try { announce('Please enter a screener name'); } catch {}
       return;
     }
 
     if (criteria.length === 0) {
       toast.error("Please add at least one criterion");
+      try { announce('Please add at least one criterion'); } catch {}
       return;
     }
 
@@ -113,6 +116,7 @@ const CreateScreener = () => {
     try {
       const payload = { ...screenerData, criteria };
       window.localStorage.setItem('screener:lastSaved', JSON.stringify(payload));
+      try { announce('Screener saved'); } catch {}
     } catch {}
   };
 
@@ -132,9 +136,11 @@ const CreateScreener = () => {
       const count = rows.length || 0;
       window.localStorage.setItem('screener:lastParams', JSON.stringify(params));
       toast.success(`Found ${count} matching stocks`);
+      try { announce(`Found ${count} matching stocks`); } catch {}
       navigate(`/app/screeners/adhoc/results`);
     } catch (error) {
       toast.error("Failed to test screener");
+      try { announce('Failed to test screener'); } catch {}
     } finally {
       setIsLoading(false);
     }
