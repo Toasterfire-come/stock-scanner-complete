@@ -333,7 +333,7 @@ const Watchlists = () => {
                         <th className="text-right p-4 font-medium">Price</th>
                         <th className="text-right p-4 font-medium">Change</th>
                         <th className="text-right p-4 font-medium">% Change</th>
-                        <th className="text-right p-4 font-medium">Volume</th>
+                        <th className="text-right p-4 font-medium hidden sm:table-cell">Volume</th>
                         <th className="text-left p-4 font-medium">Notes</th>
                         <th className="text-center p-4 font-medium">Alert</th>
                         <th className="text-center p-4 font-medium">Actions</th>
@@ -370,7 +370,7 @@ const Watchlists = () => {
                               {formatPercentage(item.price_change_percent)}
                             </div>
                           </td>
-                          <td className="p-4 text-right text-gray-600 dark:text-gray-400">{formatVolume(item.volume)}</td>
+                          <td className="p-4 text-right text-gray-600 dark:text-gray-400 hidden sm:table-cell">{formatVolume(item.volume)}</td>
                           <td className="p-4">
                             <div className="text-sm text-gray-600 dark:text-gray-400 max-w-32 truncate" title={item.notes}>
                               {item.notes || '-'}

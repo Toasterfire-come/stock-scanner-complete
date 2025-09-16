@@ -88,21 +88,21 @@ const TopMovers = () => {
     if (isVirt) {
       return (
         <div className="border rounded">
-          <div className="grid grid-cols-6 text-sm font-medium text-muted-foreground px-4 py-2 border-b">
-            <div>Symbol</div><div>Company</div><div>Price</div><div>Change</div><div>Volume</div><div>Market Cap</div>
+          <div className="grid grid-cols-4 sm:grid-cols-6 text-sm font-medium text-muted-foreground px-4 py-2 border-b">
+            <div>Symbol</div><div>Company</div><div>Price</div><div>Change</div><div className="hidden sm:block">Volume</div><div className="hidden sm:block">Market Cap</div>
           </div>
           <VirtualizedList
             items={currentSlice}
             height={560}
             itemSize={56}
             row={({ item, style }) => (
-              <div style={{...style}} className="grid grid-cols-6 items-center px-4 border-b">
+              <div style={{...style}} className="grid grid-cols-4 sm:grid-cols-6 items-center px-4 border-b">
                 <div><Link to={`/app/stocks/${item.ticker}`} className="font-semibold text-blue-600 hover:underline">{item.ticker}</Link></div>
                 <div className="font-medium truncate">{item.name}</div>
                 <div>{formatPrice(item.current_price)}</div>
                 <div className={`${Number(item.change_percent)>=0?'text-green-600':'text-red-600'}`}>{formatChange(item.change_percent)}</div>
-                <div className="text-muted-foreground">{formatVolume(item.volume)}</div>
-                <div>{formatMarketCap(item.market_cap)}</div>
+                <div className="hidden sm:block text-muted-foreground">{formatVolume(item.volume)}</div>
+                <div className="hidden sm:block">{formatMarketCap(item.market_cap)}</div>
               </div>
             )}
           />
@@ -118,8 +118,8 @@ const TopMovers = () => {
             <TableHead>Company</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Change</TableHead>
-            {showVolume && <TableHead>Volume</TableHead>}
-            <TableHead>Market Cap</TableHead>
+            {showVolume && <TableHead className="hidden sm:table-cell">Volume</TableHead>}
+            <TableHead className="hidden sm:table-cell">Market Cap</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -138,14 +138,14 @@ const TopMovers = () => {
                 </div>
               </TableCell>
               {showVolume && (
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <div className="flex items-center">
                     <Volume2 className="h-4 w-4 mr-1 text-gray-400" />
                     {formatVolume(stock.volume)}
                   </div>
                 </TableCell>
               )}
-              <TableCell>{formatMarketCap(stock.market_cap)}</TableCell>
+              <TableCell className="hidden sm:table-cell">{formatMarketCap(stock.market_cap)}</TableCell>
               <TableCell>
                 <Button size="sm" variant="outline" asChild>
                   <Link to={`/app/stocks/${stock.ticker}`}>
