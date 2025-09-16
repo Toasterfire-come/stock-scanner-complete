@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import { HelmetProvider } from 'react-helmet-async';
 
 // Import the secure version instead of the regular App
 import SecureApp from "./SecureApp";
@@ -20,7 +21,9 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 const renderApp = () => {
   root.render(
     <React.StrictMode>
-      <SecureApp />
+      <HelmetProvider>
+        <SecureApp />
+      </HelmetProvider>
     </React.StrictMode>
   );
   

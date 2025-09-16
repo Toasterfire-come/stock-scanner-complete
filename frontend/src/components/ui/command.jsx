@@ -6,20 +6,20 @@ import { Dialog, DialogContent } from "./dialog"
 import { buttonVariants } from "./button"
 
 const Command = React.forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex h-10 items-center rounded-md border px-3 py-2 text-sm", className)} {...props} />
+  <div ref={ref} className={cn("flex h-10 items-center rounded-md border px-3 py-2 text-sm bg-white dark:bg-gray-900", className)} {...props} />
 ))
 Command.displayName = "Command"
 
 const CommandInput = React.forwardRef(({ className, ...props }, ref) => (
-  <div className={cn("flex items-center border-b px-3", className)}>
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-    <input ref={ref} className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50" {...props} />
+  <div className={cn("flex items-center border-b px-3 bg-white dark:bg-gray-900", className)}>
+    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
+    <input ref={ref} className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 text-gray-900 dark:text-gray-100" {...props} />
   </div>
 ))
 CommandInput.displayName = "CommandInput"
 
 const CommandList = React.forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)} {...props} />
+  <div ref={ref} className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden bg-white dark:bg-gray-900", className)} {...props} />
 ))
 CommandList.displayName = "CommandList"
 
@@ -39,7 +39,7 @@ const CommandSeparator = React.forwardRef(({ className, ...props }, ref) => (
 CommandSeparator.displayName = "CommandSeparator"
 
 const CommandItem = React.forwardRef(({ className, ...props }, ref) => (
-  <button ref={ref} className={cn("flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground", className)} {...props} />
+  <button ref={ref} className={cn("flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-gray-900 dark:text-gray-100 aria-selected:bg-accent aria-selected:text-accent-foreground", className)} {...props} />
 ))
 CommandItem.displayName = "CommandItem"
 

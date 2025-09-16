@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/SecureAuthContext";
 import { Button } from "../components/ui/button";
@@ -33,11 +33,25 @@ import {
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
+import SearchDialog from "../components/SearchDialog";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // Global keyboard shortcut: Ctrl+K / Cmd+K opens search
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const isK = (e.key || '').toLowerCase() === 'k';
+      if (isK && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const marketingPages = [
     { name: "Home", href: "/", icon: Home },
@@ -69,8 +83,8 @@ const AppLayout = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
               <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
-              <span className="text-lg sm:text-2xl font-bold text-gray-900 hidden sm:block">Trade Scan Pro</span>
-              <span className="text-lg font-bold text-gray-900 sm:hidden">TSP</span>
+              <span className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100 hidden sm:block">Trade Scan Pro</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100 sm:hidden">TSP</span>
             </Link>
 
             {/* Spacer */}
@@ -86,6 +100,18 @@ const AppLayout = () => {
               {/* Theme toggle */}
               <ThemeToggle />
 
+              {/* Search trigger */}
+              <Button
+                variant="ghost"
+                className="hidden md:inline-flex h-9 px-3 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Open search (Ctrl+K)"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                <span className="hidden lg:inline">Search</span>
+                <kbd className="ml-2 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">Ctrl K</kbd>
+              </Button>
+
               {/* Hamburger menu - visible across all sizes */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -98,19 +124,23 @@ const AppLayout = () => {
                     <div className="mb-6 md:hidden">
                       <MarketStatus />
                     </div>
-                    <nav className="flex flex-col space-y-3">
+                    <nav className="flex flex-col space-y-3" role="navigation" aria-label="Primary">
                       {/* App pages only when authenticated */}
                       {isAuthenticated && (
                         <>
                           <div className="text-xs text-muted-foreground font-medium uppercase pt-2">App</div>
                           {appPages.map((item) => {
                             const Icon = item.icon;
+                            const isActive = location.pathname === item.href;
                             return (
                               <Link
                                 key={item.name}
                                 to={item.href}
+                                aria-current={isActive ? 'page' : undefined}
                                 className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
-                                  location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                                  isActive
+                                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300'
+                                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                                 }`}
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
@@ -126,12 +156,16 @@ const AppLayout = () => {
                       <div className="text-xs text-muted-foreground font-medium uppercase pt-4">Marketing</div>
                       {marketingPages.map((item) => {
                         const Icon = item.icon;
+                        const isActive = location.pathname === item.href;
                         return (
                           <Link
                             key={item.name}
                             to={item.href}
+                            aria-current={isActive ? 'page' : undefined}
                             className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
-                              location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                              isActive
+                                ? 'bg-blue-100 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300'
+                                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                             }`}
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
@@ -220,21 +254,21 @@ const AppLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-gray-50">
+      <footer className="border-t bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8 sm:py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <BarChart3 className="h-6 w-6 text-blue-600" />
-                <span className="text-lg sm:text-xl font-bold">Trade Scan Pro</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">Trade Scan Pro</span>
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
                 Professional stock screening and market intelligence platform.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li><Link to="/features" className="hover:text-blue-600">Features</Link></li>
                 <li><Link to="/pricing" className="hover:text-blue-600">Pricing</Link></li>
                 <li><Link to="/app/dashboard" className="hover:text-blue-600">Dashboard</Link></li>
@@ -242,7 +276,7 @@ const AppLayout = () => {
             </div>
             <div>
               <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li><Link to="/about" className="hover:text-blue-600">About</Link></li>
                 <li><Link to="/contact" className="hover:text-blue-600">Contact</Link></li>
                 <li><Link to="/enterprise" className="hover:text-blue-600">Enterprise</Link></li>
@@ -250,17 +284,20 @@ const AppLayout = () => {
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li><Link to="/legal/privacy" className="hover:text-blue-600">Privacy Policy</Link></li>
                 <li><Link to="/legal/terms" className="hover:text-blue-600">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-gray-600">
+          <div className="border-t mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-gray-600 dark:text-gray-400">
             <p>&copy; 2025 Trade Scan Pro. All rights reserved.</p>
           </div>
         </div>
       </footer>
+
+      {/* Search Dialog */}
+      <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </div>
   );
 };

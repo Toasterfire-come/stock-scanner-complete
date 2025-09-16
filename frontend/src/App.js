@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from 'react-helmet-async';
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/SecureAuthContext";
@@ -114,6 +115,14 @@ function App() {
     <BackendStatusProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Helmet>
+            <title>Trade Scan Pro | Professional Stock Market Scanner</title>
+            <meta name="description" content="Professional stock market scanner, portfolio and research platform for modern traders." />
+            <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://tradescanpro.com/'} />
+            <meta property="og:title" content="Trade Scan Pro" />
+            <meta property="og:description" content="Professional stock market scanner, portfolio and research platform for modern traders." />
+            <meta property="og:type" content="website" />
+          </Helmet>
           <LatencyIndicator />
           <SystemErrorBoundary>
             <div className="min-h-screen bg-background">
