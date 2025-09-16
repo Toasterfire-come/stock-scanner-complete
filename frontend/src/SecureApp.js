@@ -1,7 +1,7 @@
 import React from "react";
 import { Helmet } from 'react-helmet-async';
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 
 // Security and Core Providers
@@ -120,6 +120,19 @@ const StatusBanner = () => {
 
 // Main App Component with Security Enhancements
 function SecureApp() {
+  const RequireAuth = ({ children }) => {
+    const location = window.location;
+    // We can't use useAuth here easily without reordering providers; rely on API token presence via storage gate instead
+    try {
+      const token = window.localStorage.getItem('rts_token') || '';
+      const hasSession = !!token;
+      if (!hasSession) {
+        const next = encodeURIComponent((location?.pathname || '/') + (location?.search || ''));
+        return <Navigate to={`/auth/sign-in?redirect=${next}`} replace />;
+      }
+    } catch {}
+    return children;
+  };
   // Global error handler
   React.useEffect(() => {
     const handleError = (event) => {
@@ -212,18 +225,18 @@ function SecureApp() {
                     <Route path="/help" element={<PlaceholderPage title="Help" />} />
                     <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
 
-                    {/* App Routes */}
-                    <Route path="/app/dashboard" element={<AppDashboard />} />
-                    <Route path="/app/markets" element={<Markets />} />
-                    <Route path="/app/stocks" element={<Stocks />} />
-                    <Route path="/app/stocks/:symbol" element={<StockDetail />} />
-                    <Route path="/app/portfolio" element={<Portfolio />} />
+                    {/* App Routes - require auth */}
+                    <Route path="/app/dashboard" element={<RequireAuth><AppDashboard /></RequireAuth>} />
+                    <Route path="/app/markets" element={<RequireAuth><Markets /></RequireAuth>} />
+                    <Route path="/app/stocks" element={<RequireAuth><Stocks /></RequireAuth>} />
+                    <Route path="/app/stocks/:symbol" element={<RequireAuth><StockDetail /></RequireAuth>} />
+                    <Route path="/app/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
 
-                    {/* Screener Suite */}
-                    <Route path="/app/screeners" element={<ScreenerLibrary />} />
-                    <Route path="/app/screeners/new" element={<CreateScreener />} />
-                    <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
-                    <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
+                    {/* Screener Suite - require auth */}
+                    <Route path="/app/screeners" element={<RequireAuth><ScreenerLibrary /></RequireAuth>} />
+                    <Route path="/app/screeners/new" element={<RequireAuth><CreateScreener /></RequireAuth>} />
+                    <Route path="/app/screeners/:id/edit" element={<RequireAuth><EditScreener /></RequireAuth>} />
+                    <Route path="/app/screeners/:id/results" element={<RequireAuth><ScreenerResults /></RequireAuth>} />
                     <Route path="/app/templates" element={<Templates />} />
 
                     {/* Market Overview */}
@@ -243,12 +256,12 @@ function SecureApp() {
                     <Route path="/app/watchlists" element={<Watchlists />} />
                     <Route path="/app/watchlists/:id" element={<WatchlistDetail />} />
 
-                    {/* Account Routes */}
-                    <Route path="/account/profile" element={<Profile />} />
-                    <Route path="/account/password" element={<ChangePassword />} />
-                    <Route path="/account/notifications" element={<NotificationSettings />} />
-                    <Route path="/account/billing" element={<BillingHistory />} />
-                    <Route path="/account/plan" element={<CurrentPlan />} />
+                    {/* Account Routes - require auth */}
+                    <Route path="/account/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+                    <Route path="/account/password" element={<RequireAuth><ChangePassword /></RequireAuth>} />
+                    <Route path="/account/notifications" element={<RequireAuth><NotificationSettings /></RequireAuth>} />
+                    <Route path="/account/billing" element={<RequireAuth><BillingHistory /></RequireAuth>} />
+                    <Route path="/account/plan" element={<RequireAuth><CurrentPlan /></RequireAuth>} />
 
                     {/* System Routes */}
                     <Route path="/endpoint-status" element={<EndpointStatus />} />
