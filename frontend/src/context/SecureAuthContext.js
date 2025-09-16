@@ -124,10 +124,11 @@ export const AuthProvider = ({ children }) => {
 
       // Call API login
       const response = await apiLogin(username, password);
+      console.log('API login response:', response); // Debug log
       
       if (response.success && response.data) {
         const userData = {
-          id: response.data.user_id,
+          id: response.data.user_id || response.data.id,
           username: response.data.username,
           email: response.data.email,
           name: response.data.first_name && response.data.last_name 
@@ -141,20 +142,27 @@ export const AuthProvider = ({ children }) => {
 
         // Store user data and token securely
         secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, userData, true);
-        if (response.data.api_token) {
-          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+        
+        // Store token - check multiple possible fields
+        const token = response.data.api_token || response.data.token || response.data.access_token;
+        if (token) {
+          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, token);
         }
         
         // Start session
         sessionManager.startSession();
         
-        // Update state
+        // Update state immediately
         setUser(userData);
         setIsAuthenticated(true);
+        setAuthError(null);
         
+        console.log('Login successful, user:', userData); // Debug log
         return { success: true, user: userData };
       } else {
-        throw new Error(response.message || 'Login failed');
+        const errorMsg = response.message || 'Login failed';
+        console.error('Login failed:', errorMsg); // Debug log
+        throw new Error(errorMsg);
       }
     } catch (error) {
       const errorMessage = error.response?.data?.detail || error.message || 'Login failed';

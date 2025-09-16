@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/SecureAuthContext';
 import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute = ({ children, requireAuth = true, redirectTo = '/auth/sign-in' }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
+  useEffect(() => {
+    // Give a small delay to allow auth state to settle after login
+    if (!isLoading) {
+      const timer = setTimeout(() => {
+        setShouldRedirect(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   // Show loading state while checking authentication
-  if (isLoading) {
+  if (isLoading || !shouldRedirect) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

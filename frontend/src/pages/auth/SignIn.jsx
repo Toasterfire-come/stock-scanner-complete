@@ -35,15 +35,25 @@ export default function SignIn() {
       return;
     }
 
-    const result = await login(formData.username, formData.password);
+    try {
+      const result = await login(formData.username, formData.password);
+      console.log('Login result:', result); // Debug log
 
-    if (result.success) {
-      // Prefetch dashboard chunk for a snappier first render
-      try { import(/* webpackPrefetch: true */ "../app/AppDashboard"); } catch {}
-      const redirectTo = searchParams.get("redirect") || "/app/dashboard";
-      navigate(redirectTo);
-    } else {
-      setError(result.error || "Login failed");
+      if (result && result.success) {
+        // Prefetch dashboard chunk for a snappier first render
+        try { import(/* webpackPrefetch: true */ "../app/AppDashboard"); } catch {}
+        
+        // Add a small delay to ensure state is updated
+        setTimeout(() => {
+          const redirectTo = searchParams.get("redirect") || "/app/dashboard";
+          navigate(redirectTo, { replace: true });
+        }, 100);
+      } else {
+        setError(result?.error || "Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError("An unexpected error occurred. Please try again.");
     }
   };
 

@@ -130,10 +130,10 @@ function App() {
             <div className="min-h-screen bg-background">
               <OfflineBanner />
               <Routes>
-                {/* Auth Routes - Redirect if already authenticated */}
+                {/* Auth Routes */}
                 <Route element={<AuthLayout />}>
-                  <Route path="/auth/sign-in" element={<ProtectedRoute requireAuth={false}><SignIn /></ProtectedRoute>} />
-                  <Route path="/auth/sign-up" element={<ProtectedRoute requireAuth={false}><SignUp /></ProtectedRoute>} />
+                  <Route path="/auth/sign-in" element={<SignIn />} />
+                  <Route path="/auth/sign-up" element={<SignUp />} />
                   <Route path="/auth/plan-selection" element={<PlanSelection />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
