@@ -74,7 +74,8 @@ class RateLimitMiddleware(MiddlewareMixin):
         self.get_response = get_response
         
         # Rate limit configuration
-        self.free_user_limit = getattr(settings, 'RATE_LIMIT_FREE_USERS', 100)  # requests per hour
+        # Free users per-hour limit derives from env and supports marketing requirement of 30 if set
+        self.free_user_limit = int(getattr(settings, 'RATE_LIMIT_FREE_USERS', 100))
         self.free_user_window = getattr(settings, 'RATE_LIMIT_WINDOW', 3600)  # 1 hour in seconds
         self.authenticated_user_limit = getattr(settings, 'RATE_LIMIT_AUTHENTICATED_USERS', 1000)  # requests per hour
         

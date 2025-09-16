@@ -369,7 +369,7 @@ KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))
 
 # Rate Limiting Configuration
-RATE_LIMIT_FREE_USERS = int(os.environ.get('RATE_LIMIT_FREE_USERS', '100'))  # requests per hour for free users
+RATE_LIMIT_FREE_USERS = int(os.environ.get('RATE_LIMIT_FREE_USERS', os.environ.get('FREE_MONTHLY_API_LIMIT', '30')))  # requests per hour for free users (env-driven)
 RATE_LIMIT_AUTHENTICATED_USERS = int(os.environ.get('RATE_LIMIT_AUTHENTICATED_USERS', '1000'))  # requests per hour for authenticated users
 RATE_LIMIT_WINDOW = int(os.environ.get('RATE_LIMIT_WINDOW', '3600'))  # Window in seconds (default: 1 hour)
 PREMIUM_USER_GROUPS = ['premium', 'pro', 'enterprise']  # User groups that have no rate limiting

@@ -94,8 +94,9 @@ export async function fetchAllStocks(baseParams = {}) {
 // ====================
 // Plan limits enforcement (client-side guard; server should enforce as source of truth)
 // ====================
+const FREE_MONTHLY_LIMIT = Number(process.env.REACT_APP_FREE_MONTHLY_API_LIMIT || process.env.REACT_APP_FREE_MONTHLY_API || 30);
 const PLAN_LIMITS = {
-  free: { monthlyApi: 100, alerts: 5, watchlists: 1, portfolios: 0 },
+  free: { monthlyApi: FREE_MONTHLY_LIMIT, alerts: 5, watchlists: 1, portfolios: 0 },
   bronze: { monthlyApi: 1500, alerts: 25, watchlists: 3, portfolios: 1 },
   silver: { monthlyApi: 5000, alerts: 100, watchlists: 10, portfolios: Infinity },
   gold: { monthlyApi: Infinity, alerts: Infinity, watchlists: Infinity, portfolios: Infinity },
@@ -196,21 +197,28 @@ api.interceptors.response.use(
     const dur = Date.now() - (response.config.metadata?.start || Date.now());
     if (dur > 600) window.__NET?.emit('slow', { url: response.config.metadata?.url, duration: dur, status: response.status });
     window.__NET?.emit('end');
-    // Non-blocking usage tracking for stock-data endpoints only
+    // Non-blocking usage tracking for stock/news/alerts/portfolio/screeners endpoints
     try {
       const cfg = response.config || {};
       const method = (cfg.method || 'get').toUpperCase();
       const path = String(cfg.url || '');
       const isTrack = path.includes('/usage/track');
-      const shouldTrack = method === 'GET' && !isTrack && (
-        path.startsWith('/stocks/') ||
-        path.startsWith('/stock/') ||
-        path.startsWith('/search/') ||
-        path.startsWith('/trending/') ||
-        path.startsWith('/realtime/') ||
-        path.startsWith('/filter/') ||
-        path.startsWith('/market-stats/')
-      );
+      const prefixes = [
+        '/stocks/',
+        '/stock/',
+        '/search/',
+        '/trending/',
+        '/realtime/',
+        '/filter/',
+        '/market-stats/',
+        '/market-data/',
+        '/news/',
+        '/alerts/',
+        '/portfolio/',
+        '/screeners/',
+      ];
+      const matches = prefixes.some((p) => path.startsWith(p));
+      const shouldTrack = !isTrack && matches && (method === 'GET' || method === 'POST');
       if (shouldTrack) {
         // Use authorized API client so usage increments for logged-in users
         api.post('/usage/track/', { endpoint: `/api${path}`, method }).catch(() => {});
