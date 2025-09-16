@@ -59,8 +59,8 @@ export default function SignIn() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Welcome back</h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
           Sign in to your Trade Scan Pro account
         </p>
       </div>

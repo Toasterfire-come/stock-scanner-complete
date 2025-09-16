@@ -125,7 +125,7 @@ export default function PlanSelection() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (
@@ -135,10 +135,10 @@ export default function PlanSelection() {
             </Badge>
           )}
           
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Choose Your Trading Plan
           </h1>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Select the perfect plan for your trading needs. All paid plans include a 7-day trial for just $1.
           </p>
         </div>
@@ -191,9 +191,9 @@ export default function PlanSelection() {
                         TRIAL: {plan.trialPrice} for 7 days
                       </div>
                     )}
-                    <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                       {plan.price}
-                      <span className="text-sm font-normal text-gray-500">
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
                         /{plan.period}
                       </span>
                     </div>
@@ -207,19 +207,19 @@ export default function PlanSelection() {
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
                         <Check className="w-4 h-4 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                        <span className="text-sm text-gray-600">{feature}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   
                   {plan.limitations && plan.limitations.length > 0 && (
                     <div className="border-t pt-3">
-                      <p className="text-xs text-gray-500 mb-2">Limitations:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Limitations:</p>
                       <ul className="space-y-1">
                         {plan.limitations.map((limitation, index) => (
                           <li key={index} className="flex items-start">
-                            <span className="text-xs text-gray-400 mr-2">•</span>
-                            <span className="text-xs text-gray-500">{limitation}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 mr-2">•</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{limitation}</span>
                           </li>
                         ))}
                       </ul>
@@ -243,7 +243,7 @@ export default function PlanSelection() {
                   </Button>
                   
                   {!plan.isFree && (
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                       TRIAL: 7-day trial for $1 then {plan.price}/{plan.period}
                     </p>
                   )}
@@ -266,11 +266,11 @@ export default function PlanSelection() {
             </Button>
           </div>
           
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             You can change your plan anytime from your account settings
           </p>
           
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
               Cancel anytime

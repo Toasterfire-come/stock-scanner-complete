@@ -82,8 +82,8 @@ const SignUp = () => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Create your account</h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
@@ -120,7 +120,7 @@ const SignUp = () => {
         <div className="space-y-2">
           <Label htmlFor="username" className="text-sm sm:text-base">Username</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="username"
               type="text"
@@ -137,7 +137,7 @@ const SignUp = () => {
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="email"
               type="email"
@@ -154,7 +154,7 @@ const SignUp = () => {
         <div className="space-y-2">
           <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -164,7 +164,7 @@ const SignUp = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -178,7 +178,7 @@ const SignUp = () => {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-sm sm:text-base">Confirm Password</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
@@ -188,7 +188,7 @@ const SignUp = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -206,7 +206,7 @@ const SignUp = () => {
             onCheckedChange={(checked) => setValue("agreeToTerms", checked)}
             className="mt-0.5"
           />
-          <Label htmlFor="agreeToTerms" className="text-sm leading-relaxed">
+          <Label htmlFor="agreeToTerms" className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
             I agree to the{" "}
             <Link to="/legal/terms" className="text-blue-600 hover:text-blue-500">
               Terms of Service

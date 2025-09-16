@@ -50,8 +50,8 @@ const ForgotPassword = () => {
         </div>
         
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
-          <p className="text-gray-600 mt-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Check your email</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             We've sent a password reset link to{" "}
             <span className="font-medium">{getValues("email")}</span>
           </p>
@@ -74,7 +74,7 @@ const ForgotPassword = () => {
             <Link to="/auth/sign-in">Back to Sign In</Link>
           </Button>
           
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Remember your password?{" "}
             <Link
               to="/auth/sign-in"
@@ -91,8 +91,8 @@ const ForgotPassword = () => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Forgot your password?</h2>
-        <p className="text-gray-600 mt-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Forgot your password?</h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
           Enter your email address and we'll send you a link to reset your password
         </p>
       </div>
@@ -101,7 +101,7 @@ const ForgotPassword = () => {
         <div className="space-y-2">
           <Label htmlFor="email">Email Address</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               id="email"
               type="email"
