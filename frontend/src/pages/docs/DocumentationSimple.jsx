@@ -202,6 +202,128 @@ const DocumentationSimple = () => {
         </div>
       </section>
 
+      {/* Glossary & Concepts */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Glossary and Core Concepts</h2>
+              <p className="text-lg text-gray-600">A concise dictionary of key terms used across the app</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                ['Ticker', 'A unique symbol assigned to a publicly traded company (e.g., AAPL).'],
+                ['Market Cap', 'Total market value of a company’s outstanding shares.'],
+                ['Volume', 'Number of shares traded during a period.'],
+                ['Change %', 'Percentage price change over a given period (intraday unless stated).'],
+                ['PE Ratio', 'Price-to-Earnings ratio; price divided by earnings per share.'],
+                ['Dividend Yield', 'Annual dividend per share divided by price per share.'],
+                ['Screener', 'A set of filters to find stocks matching criteria.'],
+                ['Alert', 'A notification rule triggered when conditions are met (e.g., price crosses value).'],
+                ['Watchlist', 'Custom list of tickers you monitor.'],
+                ['Portfolio', 'Your positions and performance tracking.'],
+                ['API Call', 'A request from the app to the server that counts toward monthly usage limits.'],
+                ['Usage Limit', 'Monthly quota of API calls based on plan.'],
+                ['Real-time Quote', 'Latest market price; may be subject to vendor consolidation and latency.'],
+              ].map(([term, def], i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <CardTitle className="text-base">{term}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-gray-600">{def}</CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Usage & Limits */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-900">Usage & Limits</h2>
+              <p className="text-gray-600">How usage is counted and how to stay within your plan</p>
+            </div>
+            <div className="space-y-4 text-sm text-gray-700">
+              <p>We count API calls for: Stocks, Single Stock, Search, Trending, Market Data/Stats, Screeners, Alerts, News, and Portfolio endpoints. Health/status docs and static assets do not count.</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Your dashboard shows daily and monthly totals with a progress bar.</li>
+                <li>Counts reconcile between frontend and backend automatically using the higher value.</li>
+                <li>Free plan limits remain as published; upgrading increases limits and removes certain caps.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Keyboard Shortcuts */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-900">Keyboard Shortcuts</h2>
+              <p className="text-gray-600">Navigate quickly with built-in shortcuts</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4 text-sm">
+              <Card>
+                <CardHeader><CardTitle className="text-base">Open Search</CardTitle></CardHeader>
+                <CardContent>Ctrl + K (or Cmd + K on Mac)</CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Close Dialog</CardTitle></CardHeader>
+                <CardContent>Esc</CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Navigate Results</CardTitle></CardHeader>
+                <CardContent>Up/Down Arrow Keys</CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Select Result</CardTitle></CardHeader>
+                <CardContent>Enter</CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Changelog & Roadmap */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-900">Changelog & Roadmap</h2>
+              <p className="text-gray-600">What changed recently and what’s coming next</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Updates</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-700 space-y-2">
+                  <div>• Usage reconciliation between frontend and backend</div>
+                  <div>• Dark mode polish and accessibility improvements</div>
+                  <div>• AI-ranked search with keyboard navigation</div>
+                  <div>• Alerts and News routes integrated (sign-in required)</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Near-Term Roadmap</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-700 space-y-2">
+                  <div>• Screener UX: saved lists, sorting, exports</div>
+                  <div>• Alerts UX: per-ticker thresholds and reliability</div>
+                  <div>• Portfolio CSV import and reconciliation</div>
+                  <div>• Status page and incident transparency</div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Support CTA */}
       <section className="py-16 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
