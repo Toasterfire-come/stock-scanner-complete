@@ -2,6 +2,7 @@ import React from "react";
 import { Helmet } from 'react-helmet-async';
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
@@ -221,8 +222,20 @@ function App() {
                   <Route path="/legal/privacy" element={<LegalPrivacy />} />
                 </Route>
 
-                {/* Default redirect */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                {/* 404 */}
+                <Route path="*" element={(
+                  <div className="container mx-auto px-4 py-16">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Page not found</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground mb-4">The page you’re looking for doesn’t exist. Use the navigation or go back home.</p>
+                        <a href="/" className="text-blue-600 underline">Go to Home</a>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )} />
               </Routes>
               <Toaster position="top-right" />
             </div>
