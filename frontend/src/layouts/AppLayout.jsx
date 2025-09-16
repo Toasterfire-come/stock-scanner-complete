@@ -60,6 +60,8 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip link for keyboard users */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 bg-blue-600 text-white px-3 py-2 rounded">Skip to main content</a>
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -213,7 +215,7 @@ const AppLayout = () => {
       </header>
 
       {/* Main content */}
-      <main>
+      <main id="main-content">
         <Outlet />
       </main>
 
