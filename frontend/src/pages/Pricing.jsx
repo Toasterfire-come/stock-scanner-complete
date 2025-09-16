@@ -143,7 +143,7 @@ const Pricing = () => {
         } catch {}
       }
 
-      const order = await createPayPalOrder(planId, cycle, discountCode || 'TRIAL');
+      const order = await createPayPalOrder(planId, cycle, (discountCode || 'TRIAL'));
       if (order?.approval_url) {
         // Redirect to PayPal approval
         window.location.href = order.approval_url;
@@ -174,20 +174,35 @@ const Pricing = () => {
     }
 
     try {
-      // Simulate TRIAL code validation
-      if (discountCode.toUpperCase() === "TRIAL") {
-        setAppliedDiscount({
-          code: "TRIAL",
-          description: "7-Day Trial for $1",
-          savings_percentage: 95,
-          final_amount: 1.00
-        });
-        toast.success("TRIAL code applied! 7 days for just $1");
+      const v = await validateDiscountCode(discountCode.trim());
+      if (v?.valid) {
+        if (String(discountCode).toUpperCase() === 'TRIAL') {
+          setAppliedDiscount({
+            code: 'TRIAL',
+            description: '7-Day Trial for $1',
+            savings_percentage: 95,
+            final_amount: 1.00
+          });
+          toast.success('TRIAL code applied! 7 days for just $1');
+        } else if (v.applies_discount) {
+          setAppliedDiscount({
+            code: v.discount?.code || discountCode.toUpperCase(),
+            description: `${v.discount_amount}% off first payment`,
+            savings_percentage: Number(v.discount_amount || 0),
+            final_amount: undefined
+          });
+          toast.success(`${(v.discount?.code || discountCode).toUpperCase()} applied!`);
+        } else {
+          setAppliedDiscount(null);
+          toast.error(v.message || 'Discount code does not apply');
+        }
       } else {
-        toast.error("Invalid discount code");
+        setAppliedDiscount(null);
+        toast.error(v?.message || 'Invalid discount code');
       }
     } catch (error) {
-      toast.error("Failed to apply discount code");
+      setAppliedDiscount(null);
+      toast.error("Failed to validate discount code");
     }
   };
 
