@@ -327,9 +327,27 @@ export function normalizeMarketStats(raw) {
 async function cachedGet(path, cacheKey, ttlMs = 30000) {
   const cached = getCache(cacheKey);
   if (cached) return { cached: true, data: cached };
-  const { data } = await api.get(path);
+  const { data } = await api.get(path, { headers: { 'x-cache': '1' } });
   setCache(cacheKey, data, ttlMs);
   return { cached: false, data };
+}
+
+// Simple retry wrapper for transient GET failures
+async function getWithRetry(path, params = undefined, tries = 2) {
+  let lastErr;
+  for (let i = 0; i < Math.max(1, tries); i++) {
+    try {
+      const { data } = await api.get(path, params ? { params } : undefined);
+      return data;
+    } catch (err) {
+      lastErr = err;
+      if (i < tries - 1) {
+        await new Promise(r => setTimeout(r, 150 + i * 200));
+        continue;
+      }
+    }
+  }
+  throw lastErr;
 }
 
 export async function getTrendingSafe() {
@@ -370,17 +388,17 @@ export async function getEndpointStatus() { const { data } = await publicApi.get
 // ====================
 export async function listStocks(params = {}) { 
   try {
-    const { data } = await api.get('/stocks/', { params: sanitizeParams(params) });
+    const data = await getWithRetry('/stocks/', { params: sanitizeParams(params) }, 2);
     return data;
   } catch (error) {
     console.error('Failed to fetch stocks:', error);
     throw error;
   }
 }
-export async function getStock(ticker) { const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`); return data; }
-export async function searchStocks(q) { const { data } = await api.get('/search/', { params: { q } }); return data; }
-export async function getTrending() { const { data } = await api.get('/trending/'); return data; }
-export async function getMarketStats() { const { data } = await api.get('/market-stats/'); return data; }
+export async function getStock(ticker) { const data = await getWithRetry(`/stock/${encodeURIComponent(ticker)}/`, undefined, 2); return data; }
+export async function searchStocks(q) { const data = await getWithRetry('/search/', { params: { q } }, 2); return data; }
+export async function getTrending() { const data = await getWithRetry('/trending/', undefined, 2); return data; }
+export async function getMarketStats() { const data = await getWithRetry('/market-stats/', undefined, 2); return data; }
 // Align with backend quote endpoint: /stocks/{symbol}/quote
 export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/quote`); return data; }
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params: sanitizeParams(params) }); return data; }

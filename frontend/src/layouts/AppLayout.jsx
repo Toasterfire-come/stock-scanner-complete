@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "../components/ui/breadcrumb";
 import { useAuth } from "../context/SecureAuthContext";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -95,6 +96,13 @@ const AppLayout = () => {
     { name: "Alerts", href: "/app/alerts", icon: AlertCircle },
     { name: "News", href: "/app/news", icon: Newspaper },
   ];
+
+  const segments = (location.pathname || '/').split('/').filter(Boolean);
+  const crumbs = segments.map((seg, idx) => {
+    const path = '/' + segments.slice(0, idx + 1).join('/');
+    const label = seg.replace(/[-_]/g, ' ');
+    return { path, label };
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,6 +306,33 @@ const AppLayout = () => {
 
       {/* Main content */}
       <main id="main-content">
+        <div className="container mx-auto px-4 py-2">
+          {segments.length > 0 && (
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {crumbs.map((c, i) => (
+                  <React.Fragment key={c.path}>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      {i === crumbs.length - 1 ? (
+                        <BreadcrumbPage>{c.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink asChild>
+                          <Link to={c.path}>{c.label}</Link>
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
+        </div>
         <Outlet />
       </main>
 
