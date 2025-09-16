@@ -275,6 +275,9 @@ const AppDashboard = () => {
                       <span>Daily: {Number(usage?.daily?.api_calls || 0).toLocaleString()}</span>
                       {limit > 0 && <span>{remaining.toLocaleString()} left</span>}
                     </div>
+                    {percent >= 80 && limit > 0 && (
+                      <div className="mt-1 text-xs text-amber-600">Approaching your monthly limit.</div>
+                    )}
                   </div>
                 );
               })()}

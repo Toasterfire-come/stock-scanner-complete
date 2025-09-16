@@ -1,45 +1,48 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
 
-class SystemErrorBoundary extends React.Component {
+export default class SystemErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, info: null };
   }
-
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('System error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-          <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
-              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h2>
-              <p className="text-gray-600 mb-6">
-                We encountered an unexpected error. Please refresh the page or try again later.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Refresh Page
-              </button>
-            </div>
-          </div>
-        </div>
-      );
+  componentDidCatch(error, info) {
+    this.setState({ info });
+    if (window.logClientError) {
+      window.logClientError({ message: error?.message, stack: error?.stack, info });
     }
-
-    return this.props.children;
+    // eslint-disable-next-line no-console
+    console.error('UI ErrorBoundary caught:', error, info);
+  }
+  onReload = () => window.location.reload();
+  onCopy = () => {
+    const text = `${this.state.error?.message || ''}\n\n${this.state.error?.stack || ''}`;
+    navigator.clipboard.writeText(text).catch(() => {});
+  };
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div className="container mx-auto px-4 py-12 max-w-3xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Something went wrong</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">An unexpected error occurred. You can try reloading the page. If the problem persists, please contact support.</p>
+            <div className="mt-4 flex items-center gap-2">
+              <Button onClick={this.onReload}>Reload</Button>
+              <Button variant="outline" onClick={this.onCopy}>Copy details</Button>
+            </div>
+            {this.state.error?.message && (
+              <pre className="mt-4 p-3 bg-muted rounded text-xs overflow-auto max-h-64">{this.state.error.message}</pre>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 }
-
-export default SystemErrorBoundary;
