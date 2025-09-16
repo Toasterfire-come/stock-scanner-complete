@@ -14,9 +14,16 @@ const ScreenerLibrary = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Placeholder for library fetch (no backend persistence yet). Keep minimal sample without fake data claims.
-    setScreeners([]);
-    setIsLoading(false);
+    // Load saved screeners from localStorage as a minimal persistence layer
+    try {
+      const raw = window.localStorage.getItem('rts_screeners') || '[]';
+      const list = JSON.parse(raw);
+      setScreeners(Array.isArray(list) ? list : []);
+    } catch {
+      setScreeners([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const filteredScreeners = screeners.filter(screener =>
@@ -71,7 +78,36 @@ const ScreenerLibrary = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredScreeners.length === 0 && (
+        {filteredScreeners.length > 0 ? filteredScreeners.map((screener, idx) => (
+          <Card key={idx} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="text-xl">{screener.name}</CardTitle>
+              <CardDescription>{screener.description || 'No description'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" asChild>
+                  <Link to={`/app/screeners/${encodeURIComponent(screener.id || 'adhoc')}/edit`}>
+                    <Filter className="h-4 w-4 mr-1" /> Edit
+                  </Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to={`/app/screeners/${encodeURIComponent(screener.id || 'adhoc')}/results`}>
+                    <BarChart3 className="h-4 w-4 mr-1" /> View Results
+                  </Link>
+                </Button>
+              </div>
+              {Array.isArray(screener.criteria) && screener.criteria.length > 0 && (
+                <div className="mt-3 text-xs text-muted-foreground">
+                  {screener.criteria.slice(0,4).map((c,i) => (
+                    <Badge key={i} variant="secondary" className="mr-1 mb-1">{c.name}</Badge>
+                  ))}
+                  {screener.criteria.length > 4 && <span className="opacity-60">+{screener.criteria.length - 4} more</span>}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )) : (
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="text-xl">No saved screeners yet</CardTitle>

@@ -59,7 +59,20 @@ const NewsFeed = () => {
   };
 
   const filterNews = () => {
-    let filtered = [...news];
+    // Dedupe by URL/title (favor newest)
+    const unique = new Map();
+    for (const a of news) {
+      const key = (a.url || a.link || a.title || '').toLowerCase();
+      if (!key) continue;
+      const prev = unique.get(key);
+      if (!prev) unique.set(key, a);
+      else {
+        const prevTs = new Date(prev.published_at || prev.publishedAt || prev.pubDate || 0).getTime();
+        const curTs = new Date(a.published_at || a.publishedAt || a.pubDate || 0).getTime();
+        if (curTs > prevTs) unique.set(key, a);
+      }
+    }
+    let filtered = Array.from(unique.values());
 
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
@@ -81,7 +94,17 @@ const NewsFeed = () => {
       filtered = filtered.filter((article) => (article.category || "").toLowerCase() === selectedCategory);
     }
 
+    // Prefer non-paywalled if metadata provided
+    filtered = filtered.filter(a => String(a.paywalled || a.is_paywalled || '').toLowerCase() !== 'true');
     setFilteredNews(filtered);
+  };
+
+  const markAllRead = async () => {
+    try {
+      // Best-effort mark read; ignore failures
+      await Promise.all(filteredNews.slice(0, 50).map(a => markNewsRead(a.id).catch(() => {})));
+      toast.success("Marked visible articles as read");
+    } catch {}
   };
 
   const getSentimentColor = (sentimentScore, sentimentGrade) => {
@@ -181,10 +204,13 @@ const NewsFeed = () => {
           <h1 className="text-3xl font-bold text-gray-900">News Feed</h1>
           <p className="text-gray-600 mt-2">Stay updated with the latest market news and analysis</p>
         </div>
-        <Button onClick={fetchNews} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={markAllRead} variant="outline">Mark All Read</Button>
+          <Button onClick={fetchNews} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 mb-6">

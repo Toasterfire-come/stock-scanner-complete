@@ -35,6 +35,7 @@ import {
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
 import SearchDialog from "../components/SearchDialog";
+import ShortcutsHelp from "../components/ShortcutsHelp";
 import { Link as RouterLink } from "react-router-dom";
 import { useEffect as ReactUseEffect } from "react";
 import { api } from "../api/client";
@@ -44,6 +45,7 @@ const AppLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
   const [unreadNews, setUnreadNews] = useState(0);
   // Global keyboard shortcut: Ctrl+K / Cmd+K opens search
@@ -53,6 +55,10 @@ const AppLayout = () => {
       if (isK && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setIsSearchOpen(true);
+      }
+      if ((e.key || '') === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setIsShortcutsOpen(true);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -379,8 +385,9 @@ const AppLayout = () => {
         </div>
       </footer>
 
-      {/* Search Dialog */}
+      {/* Dialogs */}
       <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+      <ShortcutsHelp open={isShortcutsOpen} onOpenChange={setIsShortcutsOpen} />
     </div>
   );
 };

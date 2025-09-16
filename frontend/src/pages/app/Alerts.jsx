@@ -97,15 +97,14 @@ const Alerts = () => {
       toast.error("Please sign in to update alerts");
       return;
     }
+    // Optimistic UI with rollback
+    setAlerts((prev) => prev.map(a => a.id === alertId ? { ...a, isActive: !a.isActive } : a));
     try {
       await apiToggleAlert(alertId);
-      setAlerts((prev) => prev.map(alert => 
-        alert.id === alertId 
-          ? { ...alert, isActive: !alert.isActive }
-          : alert
-      ));
       toast.success("Alert status updated");
     } catch (error) {
+      // Rollback
+      setAlerts((prev) => prev.map(a => a.id === alertId ? { ...a, isActive: !a.isActive } : a));
       toast.error("Failed to update alert");
     }
   };

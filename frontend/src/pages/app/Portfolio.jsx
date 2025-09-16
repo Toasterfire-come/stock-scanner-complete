@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
 import { toast } from "sonner";
 import { 
   Plus, 
@@ -167,54 +168,82 @@ const Portfolio = () => {
             <DialogContent aria-describedby="portfolio-dialog-desc">
               <DialogTitle className="sr-only">Add Holding</DialogTitle>
               <DialogDescription id="portfolio-dialog-desc" className="sr-only">Add or edit a portfolio holding</DialogDescription>
-              <DialogHeader>
-                <DialogTitle>Add New Holding</DialogTitle>
-                <DialogDescription>
-                  Add a stock to your portfolio to track its performance
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleAddHolding} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="symbol">Stock Symbol</Label>
-                  <Input
-                    id="symbol"
-                    placeholder="e.g. AAPL"
-                    value={newHolding.symbol}
-                    onChange={(e) => setNewHolding({...newHolding, symbol: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="shares">Number of Shares</Label>
-                  <Input
-                    id="shares"
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 100"
-                    value={newHolding.shares}
-                    onChange={(e) => setNewHolding({...newHolding, shares: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="avg_cost">Average Cost per Share</Label>
-                  <Input
-                    id="avg_cost"
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 150.25"
-                    value={newHolding.avg_cost}
-                    onChange={(e) => setNewHolding({...newHolding, avg_cost: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1">Add Holding</Button>
-                  <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
+              <Tabs defaultValue="manual">
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="manual">Manual</TabsTrigger>
+                  <TabsTrigger value="csv">Import CSV</TabsTrigger>
+                </TabsList>
+                <TabsContent value="manual">
+                  <DialogHeader>
+                    <DialogTitle>Add New Holding</DialogTitle>
+                    <DialogDescription>
+                      Add a stock to your portfolio to track its performance
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddHolding} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="symbol">Stock Symbol</Label>
+                      <Input id="symbol" placeholder="e.g. AAPL" value={newHolding.symbol} onChange={(e) => setNewHolding({...newHolding, symbol: e.target.value})} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shares">Number of Shares</Label>
+                      <Input id="shares" type="number" step="0.01" placeholder="e.g. 100" value={newHolding.shares} onChange={(e) => setNewHolding({...newHolding, shares: e.target.value})} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="avg_cost">Average Cost per Share</Label>
+                      <Input id="avg_cost" type="number" step="0.01" placeholder="e.g. 150.25" value={newHolding.avg_cost} onChange={(e) => setNewHolding({...newHolding, avg_cost: e.target.value})} required />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" className="flex-1">Add Holding</Button>
+                      <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+                    </div>
+                  </form>
+                </TabsContent>
+                <TabsContent value="csv">
+                  <DialogHeader>
+                    <DialogTitle>Import from CSV</DialogTitle>
+                    <DialogDescription>Upload a CSV with columns: symbol, shares, avg_cost</DialogDescription>
+                  </DialogHeader>
+                  <div className="mt-4 space-y-3">
+                    <Input type="file" accept=".csv,text/csv" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = async () => {
+                        try {
+                          const text = String(reader.result || '');
+                          const rows = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                          const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase()) || [];
+                          const idx = {
+                            symbol: header.indexOf('symbol'),
+                            shares: header.indexOf('shares'),
+                            avg_cost: header.indexOf('avg_cost'),
+                          };
+                          const items = rows.map(r => r.split(',')).map(cols => ({
+                            symbol: (cols[idx.symbol] || '').trim().toUpperCase(),
+                            shares: parseFloat(cols[idx.shares] || '0'),
+                            avg_cost: parseFloat(cols[idx.avg_cost] || '0'),
+                          })).filter(x => x.symbol && x.shares > 0 && x.avg_cost > 0);
+                          if (!items.length) { toast.error('No valid rows found'); return; }
+                          // Submit sequentially to backend; best-effort
+                          for (const it of items.slice(0, 200)) {
+                            try {
+                              await addPortfolio({ symbol: it.symbol, shares: it.shares, avg_cost: it.avg_cost, portfolio_name: newHolding.portfolio_name });
+                            } catch {}
+                          }
+                          toast.success(`Imported ${items.length} holdings`);
+                          setIsAddModalOpen(false);
+                          fetchPortfolio();
+                        } catch {
+                          toast.error('Failed to parse CSV');
+                        }
+                      };
+                      reader.readAsText(file);
+                    }} />
+                    <p className="text-xs text-muted-foreground">Tip: You can export from your broker and map columns to symbol, shares, avg_cost.</p>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
         </div>

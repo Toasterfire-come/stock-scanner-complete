@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../components/ui/select";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { filterStocks } from "../../../api/client";
@@ -11,6 +12,8 @@ import { filterStocks } from "../../../api/client";
 const ScreenerResults = () => {
   const { id } = useParams();
   const [results, setResults] = useState([]);
+  const [sortBy, setSortBy] = useState('ticker');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [screenerInfo, setScreenerInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -112,6 +115,18 @@ const ScreenerResults = () => {
     );
   }
 
+  const sorted = React.useMemo(() => {
+    const key = sortBy;
+    const copy = [...results];
+    copy.sort((a,b) => {
+      const av = a[key];
+      const bv = b[key];
+      if (typeof av === 'number' && typeof bv === 'number') return sortOrder === 'asc' ? av - bv : bv - av;
+      return sortOrder === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+    return copy;
+  }, [results, sortBy, sortOrder]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
@@ -120,6 +135,27 @@ const ScreenerResults = () => {
           <p className="text-gray-600 mt-2">{screenerInfo?.name}</p>
         </div>
         <div className="flex gap-2">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ticker">Ticker</SelectItem>
+              <SelectItem value="current_price">Price</SelectItem>
+              <SelectItem value="change_percent">% Change</SelectItem>
+              <SelectItem value="volume">Volume</SelectItem>
+              <SelectItem value="market_cap">Market Cap</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Asc</SelectItem>
+              <SelectItem value="desc">Desc</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
@@ -191,7 +227,7 @@ const ScreenerResults = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {results.map((stock) => (
+                  {sorted.map((stock) => (
                     <TableRow key={stock.ticker}>
                       <TableCell>
                         <Link 
