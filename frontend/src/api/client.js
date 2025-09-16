@@ -1,11 +1,13 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-// Use REACT_APP_BACKEND_URL from environment only to avoid cross-origin confusion
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
+// Use REACT_APP_BACKEND_URL when provided, otherwise fall back to production API
+const DEFAULT_API = 'https://api.retailtradescanner.com';
+const BASE_URL = (process.env.REACT_APP_BACKEND_URL && process.env.REACT_APP_BACKEND_URL.trim()) || DEFAULT_API;
 
-if (!BASE_URL) {
-  console.error("REACT_APP_BACKEND_URL is not set and window origin unavailable. API calls will fail.");
+// Log a warning if BASE_URL not set via env
+if (process.env.REACT_APP_BACKEND_URL === undefined) {
+  console.warn("REACT_APP_BACKEND_URL not set; falling back to", BASE_URL);
 }
 
 export const API_ROOT = `${BASE_URL.replace(/\/$/, '')}/api`;
