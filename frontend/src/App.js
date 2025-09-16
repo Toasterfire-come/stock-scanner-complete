@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Layouts
 import AppLayout from "./layouts/AppLayout.jsx";
@@ -129,10 +130,10 @@ function App() {
             <div className="min-h-screen bg-background">
               <OfflineBanner />
               <Routes>
-                {/* Auth Routes */}
+                {/* Auth Routes - Redirect if already authenticated */}
                 <Route element={<AuthLayout />}>
-                  <Route path="/auth/sign-in" element={<SignIn />} />
-                  <Route path="/auth/sign-up" element={<SignUp />} />
+                  <Route path="/auth/sign-in" element={<ProtectedRoute requireAuth={false}><SignIn /></ProtectedRoute>} />
+                  <Route path="/auth/sign-up" element={<ProtectedRoute requireAuth={false}><SignUp /></ProtectedRoute>} />
                   <Route path="/auth/plan-selection" element={<PlanSelection />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -169,19 +170,19 @@ function App() {
                   <Route path="/help" element={<PlaceholderPage title="Help" />} />
                   <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
 
-                  {/* App Routes */}
-                  <Route path="/app/dashboard" element={<AppDashboard />} />
+                  {/* App Routes - Protected */}
+                  <Route path="/app/dashboard" element={<ProtectedRoute><AppDashboard /></ProtectedRoute>} />
                   <Route path="/app/markets" element={<Markets />} />
                   <Route path="/app/stocks" element={<Stocks />} />
                   <Route path="/app/stocks/:symbol" element={<StockDetail />} />
-                  <Route path="/app/portfolio" element={<Portfolio />} />
+                  <Route path="/app/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
 
-                  {/* Screener Suite */}
-                  <Route path="/app/screeners" element={<ScreenerLibrary />} />
-                  <Route path="/app/screeners/new" element={<CreateScreener />} />
-                  <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
-                  <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
-                  <Route path="/app/templates" element={<Templates />} />
+                  {/* Screener Suite - Protected */}
+                  <Route path="/app/screeners" element={<ProtectedRoute><ScreenerLibrary /></ProtectedRoute>} />
+                  <Route path="/app/screeners/new" element={<ProtectedRoute><CreateScreener /></ProtectedRoute>} />
+                  <Route path="/app/screeners/:id/edit" element={<ProtectedRoute><EditScreener /></ProtectedRoute>} />
+                  <Route path="/app/screeners/:id/results" element={<ProtectedRoute><ScreenerResults /></ProtectedRoute>} />
+                  <Route path="/app/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
 
                   {/* Market Overview */}
                   <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
@@ -195,20 +196,20 @@ function App() {
                   <Route path="/app/news/preferences" element={<NewsPreferences />} />
                   <Route path="/app/news/subscribe" element={<NewsSubscribe />} />
 
-                  {/* Alerts & Signals */}
-                  <Route path="/app/alerts" element={<Alerts />} />
-                  <Route path="/app/alerts/history" element={<AlertHistory />} />
+                  {/* Alerts & Signals - Protected */}
+                  <Route path="/app/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
+                  <Route path="/app/alerts/history" element={<ProtectedRoute><AlertHistory /></ProtectedRoute>} />
 
-                  {/* Watchlists */}
-                  <Route path="/app/watchlists" element={<Watchlists />} />
-                  <Route path="/app/watchlists/:id" element={<WatchlistDetail />} />
+                  {/* Watchlists - Protected */}
+                  <Route path="/app/watchlists" element={<ProtectedRoute><Watchlists /></ProtectedRoute>} />
+                  <Route path="/app/watchlists/:id" element={<ProtectedRoute><WatchlistDetail /></ProtectedRoute>} />
 
-                  {/* Account Routes */}
-                  <Route path="/account/profile" element={<Profile />} />
-                  <Route path="/account/password" element={<ChangePassword />} />
-                  <Route path="/account/notifications" element={<NotificationSettings />} />
-                  <Route path="/account/billing" element={<BillingHistory />} />
-                  <Route path="/account/plan" element={<CurrentPlan />} />
+                  {/* Account Routes - Protected */}
+                  <Route path="/account/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/account/password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+                  <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
+                  <Route path="/account/billing" element={<ProtectedRoute><BillingHistory /></ProtectedRoute>} />
+                  <Route path="/account/plan" element={<ProtectedRoute><CurrentPlan /></ProtectedRoute>} />
 
                   {/* System Routes */}
                   <Route path="/endpoint-status" element={<EndpointStatus />} />

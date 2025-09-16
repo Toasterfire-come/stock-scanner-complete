@@ -56,8 +56,18 @@ export const AuthProvider = ({ children }) => {
       try {
         // Check for stored user data (encrypted or plain) and a valid local session
         const storedUser = getStoredUserSafe();
+        const token = secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
 
-        if (storedUser && sessionManager.isSessionValid()) {
+        if (storedUser && token) {
+          // If we have both user and token, consider authenticated
+          setUser(storedUser);
+          setIsAuthenticated(true);
+          
+          // Start or update the session
+          sessionManager.startSession();
+          sessionManager.updateActivity();
+        } else if (storedUser && sessionManager.isSessionValid()) {
+          // Fallback to session check if no token
           setUser(storedUser);
           setIsAuthenticated(true);
           sessionManager.updateActivity();
