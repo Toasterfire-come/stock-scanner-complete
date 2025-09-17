@@ -45,6 +45,7 @@ const AppDashboard = () => {
 
         setMarketData(marketResponse?.data || null);
         setTrendingStocks(trendingResponse?.data || null);
+        setDashboardStats(dashboardStatsResponse?.data || null);
 
         const serverUsage = usageSummary?.data || null;
         // Read any cached local counts the app may keep
