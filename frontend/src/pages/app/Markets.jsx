@@ -222,7 +222,7 @@ const Markets = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Gainers</p>
                     <div className="flex items-center">
-                      <p className="text-2xl font-bold text-green-600">{Number(marketStats.market_overview.gainers || 0).toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-green-600">{Number(dashboardStats?.totalGainers || marketStats?.market_overview?.gainers || 0).toLocaleString()}</p>
                       <ArrowUpRight className="h-5 w-5 text-green-500 ml-2" />
                     </div>
                     <p className="text-xs text-green-600">{safePct(marketStats.market_overview.gainers, marketStats.market_overview.total_stocks).toFixed(1)}%</p>
