@@ -69,10 +69,14 @@ def stock_list_api(request):
     - sort_order: Sort order (asc, desc) default: desc
     """
     try:
-        # Parse parameters
+        # Parse parameters with pagination support
+        page = int(request.GET.get('page', 1))
         limit = min(int(request.GET.get('limit', 50)), 1000)
         search = request.GET.get('search', '').strip()
         category = request.GET.get('category', '').strip()
+        
+        # Calculate offset for pagination
+        offset = (page - 1) * limit
         
         # Price filters
         min_price = request.GET.get('min_price')
