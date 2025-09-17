@@ -251,7 +251,7 @@ const DocumentationSimple = () => {
               <ul className="list-disc pl-6 space-y-2">
                 <li>Your dashboard shows daily and monthly totals with a progress bar.</li>
                 <li>Counts reconcile between frontend and backend automatically using the higher value.</li>
-                <li>Free plan limits remain as published; upgrading increases limits and removes certain caps.</li>
+                <li>Free Plan limits remain as published; upgrading increases limits and removes certain caps.</li>
               </ul>
             </div>
           </div>
