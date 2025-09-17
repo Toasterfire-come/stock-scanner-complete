@@ -126,15 +126,6 @@ const ScreenerLibrary = () => {
           </Card>
         )}
       </div>
-
-      {filteredScreeners.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">No screeners found</div>
-          <Button asChild>
-            <Link to="/app/screeners/new">Create your first screener</Link>
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
