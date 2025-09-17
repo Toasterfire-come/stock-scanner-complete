@@ -431,7 +431,11 @@ def stock_list_api(request):
 
         return Response({
             'success': True,
+            'page': page,
+            'limit': limit,
             'count': final_count,
+            'total_count': total_count,
+            'total_pages': (total_count + limit - 1) // limit,
             'total_available': final_total,
             'filters_applied': filters_applied,
             'data': stock_data,
