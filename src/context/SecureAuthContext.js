@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
         }
         
         // Start session
-        sessionManager.startSession();
+        sessionManager.startSession(userData);
         
         // Update state
         setUser(userData);
