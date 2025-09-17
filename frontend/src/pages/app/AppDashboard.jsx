@@ -29,6 +29,7 @@ const AppDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
   const [trendSeries, setTrendSeries] = useState({ gainers: [], losers: [], total: [] });
+  const [dashboardStats, setDashboardStats] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
