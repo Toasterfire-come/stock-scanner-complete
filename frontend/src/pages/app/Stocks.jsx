@@ -178,7 +178,7 @@ const Stocks = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">All Stocks</h1>
-            <p className="text-gray-600 mt-2">Browse and search through {Number(totalStocks||0).toLocaleString()} stocks</p>
+            <p className="text-gray-600 mt-2">Browse and search through {Number(totalTickersInDB||0).toLocaleString()} stocks</p>
           </div>
           <Button asChild><Link to="/app/screeners/new"><Filter className="h-4 w-4 mr-2" />Create Screener</Link></Button>
         </div>
