@@ -94,8 +94,14 @@ class StockScannerAPITester:
             # Update auth headers for subsequent requests
             if 'sessionid' in self.session.cookies:
                 self.auth_headers['X-CSRFToken'] = self.csrf_token
-                print("✅ Authentication successful")
-                return True
+            
+            # Store API token if available
+            if 'api_token' in response.get('data', {}):
+                self.api_token = response['data']['api_token']
+                print(f"✅ API token obtained: {self.api_token[:20]}...")
+            
+            print("✅ Authentication successful")
+            return True
         
         return False
 
