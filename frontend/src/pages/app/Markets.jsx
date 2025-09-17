@@ -17,7 +17,7 @@ import {
   Target,
   Clock
 } from "lucide-react";
-import { getMarketStatsSafe, getTrendingSafe, getStatisticsSafe } from "../../api/client";
+import { getMarketStatsSafe, getTrendingSafe, getStatisticsSafe, getDashboardStats } from "../../api/client";
 import { toast } from "sonner";
 
 const Markets = () => {
