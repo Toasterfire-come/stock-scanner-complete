@@ -55,6 +55,21 @@ const Stocks = () => {
     </th>
   );
 
+  // Fetch total tickers count from database
+  useEffect(() => {
+    const fetchTotalTickers = async () => {
+      try {
+        const response = await getTotalTickers();
+        if (response.success) {
+          setTotalTickersInDB(response.total_tickers || 0);
+        }
+      } catch (error) {
+        // Silently handle error, keep default 0
+      }
+    };
+    fetchTotalTickers();
+  }, []);
+
   useEffect(() => {
     const fetchStocks = async () => {
       try {
