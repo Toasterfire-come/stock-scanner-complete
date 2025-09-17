@@ -33,10 +33,11 @@ const Markets = () => {
     const fetchMarketData = async () => {
       setError("");
       try {
-        const [statsResponse, trendingResponse, statisticsResponse] = await Promise.all([
+        const [statsResponse, trendingResponse, statisticsResponse, dashboardStatsResponse] = await Promise.all([
           getMarketStatsSafe(),
           getTrendingSafe(),
           getStatisticsSafe(),
+          getDashboardStats(),
         ]);
 
         if (!statsResponse.success) {
