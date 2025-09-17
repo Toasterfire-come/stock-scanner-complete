@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class TradeScanProAPITester:
-    def __init__(self, base_url="https://api.retailtradescanner.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
