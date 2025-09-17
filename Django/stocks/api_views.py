@@ -1481,4 +1481,191 @@ def most_active_api(request):
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# PORTFOLIO ENDPOINTS
+
+from .models import UserPortfolio, PortfolioHolding, TradeTransaction
+from django.contrib.auth.decorators import login_required
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_value_api(request):
+    """
+    Get portfolio total value for authenticated user
+    URL: /api/portfolio/value/
+    """
+    try:
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get all portfolios for the user
+        portfolios = UserPortfolio.objects.filter(user=request.user)
+        
+        total_value = sum(portfolio.total_value for portfolio in portfolios)
+        portfolio_count = portfolios.count()
+        
+        return Response({
+            'success': True,
+            'total_value': float(total_value),
+            'portfolio_count': portfolio_count,
+            'portfolios': [
+                {
+                    'id': p.id,
+                    'name': p.name,
+                    'value': float(p.total_value),
+                    'return_percent': float(p.total_return_percent)
+                } for p in portfolios
+            ],
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in portfolio_value_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_pnl_api(request):
+    """
+    Get portfolio total P&L for authenticated user
+    URL: /api/portfolio/pnl/
+    """
+    try:
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get all portfolios for the user
+        portfolios = UserPortfolio.objects.filter(user=request.user)
+        
+        total_return = sum(portfolio.total_return for portfolio in portfolios)
+        total_cost = sum(portfolio.total_cost for portfolio in portfolios)
+        total_value = sum(portfolio.total_value for portfolio in portfolios)
+        
+        # Calculate overall return percentage
+        overall_return_percent = (total_return / total_cost * 100) if total_cost > 0 else 0
+        
+        return Response({
+            'success': True,
+            'total_pnl': float(total_return),
+            'total_cost': float(total_cost),
+            'total_value': float(total_value),
+            'return_percent': float(overall_return_percent),
+            'portfolios': [
+                {
+                    'id': p.id,
+                    'name': p.name,
+                    'pnl': float(p.total_return),
+                    'return_percent': float(p.total_return_percent),
+                    'cost': float(p.total_cost),
+                    'value': float(p.total_value)
+                } for p in portfolios
+            ],
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in portfolio_pnl_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_return_api(request):
+    """
+    Get portfolio total return for authenticated user
+    URL: /api/portfolio/return/
+    """
+    try:
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get all portfolios for the user
+        portfolios = UserPortfolio.objects.filter(user=request.user)
+        
+        total_return = sum(portfolio.total_return for portfolio in portfolios)
+        total_cost = sum(portfolio.total_cost for portfolio in portfolios)
+        
+        # Calculate overall return percentage
+        overall_return_percent = (total_return / total_cost * 100) if total_cost > 0 else 0
+        
+        return Response({
+            'success': True,
+            'total_return': float(total_return),
+            'return_percent': float(overall_return_percent),
+            'portfolios': [
+                {
+                    'id': p.id,
+                    'name': p.name,
+                    'return_amount': float(p.total_return),
+                    'return_percent': float(p.total_return_percent)
+                } for p in portfolios
+            ],
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in portfolio_return_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_holdings_count_api(request):
+    """
+    Get number of holdings in user's portfolios
+    URL: /api/portfolio/holdings-count/
+    """
+    try:
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get all portfolios for the user
+        portfolios = UserPortfolio.objects.filter(user=request.user)
+        
+        total_holdings = 0
+        portfolio_details = []
+        
+        for portfolio in portfolios:
+            holdings_count = PortfolioHolding.objects.filter(portfolio=portfolio).count()
+            total_holdings += holdings_count
+            
+            portfolio_details.append({
+                'id': portfolio.id,
+                'name': portfolio.name,
+                'holdings_count': holdings_count
+            })
+        
+        return Response({
+            'success': True,
+            'total_holdings': total_holdings,
+            'portfolio_count': portfolios.count(),
+            'portfolios': portfolio_details,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in portfolio_holdings_count_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # Helper functions - moved to utils for better organization
