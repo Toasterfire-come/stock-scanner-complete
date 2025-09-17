@@ -288,6 +288,58 @@ const AppDashboard = () => {
           </Card>
         </div>
 
+        {/* Portfolio & Alerts Summary */}
+        {isAuthenticated && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${dashboardStats?.portfolioValue?.toLocaleString() || '0'}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dashboardStats?.portfolioCount || 0} portfolio{dashboardStats?.portfolioCount !== 1 ? 's' : ''}
+                </p>
+                {dashboardStats && dashboardStats.portfolioReturnPercent !== 0 && (
+                  <div className={`text-xs font-medium mt-1 ${dashboardStats.portfolioReturnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {dashboardStats.portfolioReturnPercent >= 0 ? '+' : ''}{dashboardStats.portfolioReturnPercent?.toFixed(2)}% return
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Holdings</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardStats?.portfolioHoldings?.toLocaleString() || '0'}</div>
+                <p className="text-xs text-muted-foreground">Total positions</p>
+                {dashboardStats && dashboardStats.portfolioPnL !== 0 && (
+                  <div className={`text-xs font-medium mt-1 ${dashboardStats.portfolioPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {dashboardStats.portfolioPnL >= 0 ? '+' : ''}${dashboardStats.portfolioPnL?.toFixed(2)} P&L
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Alerts</CardTitle>
+                <Bell className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardStats?.totalAlerts?.toLocaleString() || '0'}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dashboardStats?.activeAlerts || 0} active
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Top Gainers */}
