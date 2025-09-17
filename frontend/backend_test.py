@@ -215,10 +215,10 @@ class TradeScanProAPITester:
         """Test gainers/losers statistics - should show real percentages"""
         success, response = self.run_test("Gainers/Losers Stats", "GET", "/api/stats/gainers-losers/", 200)
         if success:
-            gainers = response.get('gainers', 0)
-            losers = response.get('losers', 0)
-            gainers_percent = response.get('gainers_percentage', 0)
-            losers_percent = response.get('losers_percentage', 0)
+            gainers = response.get('total_gainers', 0)
+            losers = response.get('total_losers', 0)
+            gainers_percent = response.get('gainer_percentage', 0)
+            losers_percent = response.get('loser_percentage', 0)
             
             print(f"   📊 Gainers: {gainers} ({gainers_percent}%)")
             print(f"   📊 Losers: {losers} ({losers_percent}%)")
