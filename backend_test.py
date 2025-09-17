@@ -167,7 +167,9 @@ class StockScannerAPITester:
     # Portfolio Endpoints (require authentication)
     def test_portfolio_value(self):
         """Test portfolio value endpoint (requires auth)"""
-        success, response = self.run_test("Portfolio Value", "GET", "/api/portfolio/value/", 200)
+        # Try with API token from login response
+        headers = {'Authorization': f'Bearer {getattr(self, "api_token", "")}'}
+        success, response = self.run_test("Portfolio Value", "GET", "/api/portfolio/value/", 200, headers=headers)
         if success:
             value = response.get('total_value', 0)
             print(f"   📊 Portfolio value: ${value}")
@@ -178,7 +180,8 @@ class StockScannerAPITester:
 
     def test_portfolio_pnl(self):
         """Test portfolio P&L endpoint (requires auth)"""
-        success, response = self.run_test("Portfolio P&L", "GET", "/api/portfolio/pnl/", 200)
+        headers = {'Authorization': f'Bearer {getattr(self, "api_token", "")}'}
+        success, response = self.run_test("Portfolio P&L", "GET", "/api/portfolio/pnl/", 200, headers=headers)
         if success:
             pnl = response.get('total_pnl', 0)
             pnl_percent = response.get('pnl_percentage', 0)
@@ -187,9 +190,10 @@ class StockScannerAPITester:
 
     def test_portfolio_holdings_count(self):
         """Test portfolio holdings count endpoint (requires auth)"""
-        success, response = self.run_test("Portfolio Holdings Count", "GET", "/api/portfolio/holdings-count/", 200)
+        headers = {'Authorization': f'Bearer {getattr(self, "api_token", "")}'}
+        success, response = self.run_test("Portfolio Holdings Count", "GET", "/api/portfolio/holdings-count/", 200, headers=headers)
         if success:
-            count = response.get('holdings_count', 0)
+            count = response.get('total_holdings', 0)
             print(f"   📊 Portfolio holdings: {count}")
             if count != 3:
                 print(f"   ⚠️  Expected 3 holdings, got {count}")
