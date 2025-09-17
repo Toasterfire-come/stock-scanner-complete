@@ -31,6 +31,7 @@ const Stocks = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalStocks, setTotalStocks] = useState(0);
+  const [totalTickersInDB, setTotalTickersInDB] = useState(0);
 
   const stocksPerPage = 50; // fixed page size, client-side pagination
   const toggleSort = (field) => {
