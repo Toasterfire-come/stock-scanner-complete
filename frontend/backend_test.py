@@ -244,7 +244,7 @@ class TradeScanProAPITester:
         """Test top gainers endpoint"""
         success, response = self.run_test("Top Gainers", "GET", "/api/stocks/top-gainers/", 200)
         if success:
-            stocks = response.get('stocks', [])
+            stocks = response.get('data', [])
             print(f"   📊 Top gainers returned: {len(stocks)}")
             if len(stocks) == 0:
                 print(f"   ⚠️  No gainers found")
@@ -255,7 +255,7 @@ class TradeScanProAPITester:
         """Test top losers endpoint"""
         success, response = self.run_test("Top Losers", "GET", "/api/stocks/top-losers/", 200)
         if success:
-            stocks = response.get('stocks', [])
+            stocks = response.get('data', [])
             print(f"   📊 Top losers returned: {len(stocks)}")
             if len(stocks) == 0:
                 print(f"   ⚠️  No losers found")
@@ -266,7 +266,7 @@ class TradeScanProAPITester:
         """Test most active stocks endpoint"""
         success, response = self.run_test("Most Active", "GET", "/api/stocks/most-active/", 200)
         if success:
-            stocks = response.get('stocks', [])
+            stocks = response.get('data', [])
             print(f"   📊 Most active returned: {len(stocks)}")
             if len(stocks) == 0:
                 print(f"   ⚠️  No active stocks found")
