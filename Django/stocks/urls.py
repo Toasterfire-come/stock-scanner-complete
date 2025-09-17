@@ -26,6 +26,13 @@ urlpatterns = [
     # WordPress and search aliases should come BEFORE the generic stocks/<ticker> route
     path('stocks/search/', api_views.stock_search_api, name='stock_search_wp'),
     path('search/', api_views.stock_search_api, name='stock_search'),
+    
+    # NEW STOCK CATEGORY ENDPOINTS (must come before stocks/<ticker>/)
+    path('stocks/top-gainers/', api_views.top_gainers_api, name='top_gainers'),
+    path('stocks/top-losers/', api_views.top_losers_api, name='top_losers'),
+    path('stocks/most-active/', api_views.most_active_api, name='most_active'),
+    
+    # Generic stock endpoints (after specific routes)
     path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
     path('trending/', api_views.trending_stocks_api, name='trending_stocks'),
@@ -43,11 +50,6 @@ urlpatterns = [
     path('stats/total-tickers/', api_views.total_tickers_api, name='total_tickers'),
     path('stats/gainers-losers/', api_views.gainers_losers_stats_api, name='gainers_losers_stats'),
     path('stats/total-alerts/', api_views.total_alerts_api, name='total_alerts'),
-    
-    # Stock category endpoints with pagination
-    path('stocks/top-gainers/', api_views.top_gainers_api, name='top_gainers'),
-    path('stocks/top-losers/', api_views.top_losers_api, name='top_losers'),
-    path('stocks/most-active/', api_views.most_active_api, name='most_active'),
     
     # Portfolio endpoints
     path('portfolio/value/', api_views.portfolio_value_api, name='portfolio_value'),
