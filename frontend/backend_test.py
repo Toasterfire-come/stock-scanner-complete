@@ -178,8 +178,8 @@ class TradeScanProAPITester:
         success, response = self.run_test("Stocks List (Page 1)", "GET", "/api/stocks/?page=1&limit=50", 200)
         if success:
             # Check if we get actual data, not hardcoded values
-            stocks = response.get('stocks', [])
-            total = response.get('total', 0)
+            stocks = response.get('data', [])
+            total = response.get('total_count', 0)
             print(f"   📊 Total stocks in DB: {total}")
             print(f"   📊 Stocks returned: {len(stocks)}")
             
