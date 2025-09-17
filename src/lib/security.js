@@ -68,9 +68,16 @@ export const sessionManager = {
     return Date.now() - this.lastActivity < this.maxInactiveTime;
   },
   
+  startSession(userData) {
+    this.lastActivity = Date.now();
+    secureStorage.set(SECURITY_CONFIG.USER_STORAGE_KEY, userData);
+    console.log('Session started for user:', userData.username || userData.email);
+  },
+  
   endSession() {
     secureStorage.remove(SECURITY_CONFIG.TOKEN_STORAGE_KEY);
     secureStorage.remove(SECURITY_CONFIG.USER_STORAGE_KEY);
+    console.log('Session ended');
   }
 };
 
