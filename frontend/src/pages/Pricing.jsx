@@ -122,7 +122,7 @@ const Pricing = () => {
     }
 
     if (planId === "free") {
-      toast.success("You're already on the free plan!");
+      toast.success("You're already on the Free Plan!");
       return;
     }
 
