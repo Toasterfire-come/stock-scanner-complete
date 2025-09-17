@@ -316,8 +316,9 @@ def stock_list_api(request):
                 queryset = base_queryset.exclude(current_price__isnull=True).order_by('-last_updated')
             queryset = queryset[:limit]
 
-        # Limit results
-        stocks = queryset[:limit]
+        # Limit results with pagination
+        total_count = queryset.count()
+        stocks = queryset[offset:offset + limit]
 
         # Format comprehensive data
         stock_data = []
