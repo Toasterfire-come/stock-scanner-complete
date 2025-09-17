@@ -411,6 +411,72 @@ export async function getStatistics() { const { data } = await api.get('/statist
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
 
 // ====================
+// NEW DASHBOARD STATS ENDPOINTS
+// ====================
+export async function getTotalTickers() { 
+  try {
+    const { data } = await api.get('/stats/total-tickers/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_tickers: 0 };
+  }
+}
+
+export async function getGainersLosersStats() { 
+  try {
+    const { data } = await api.get('/stats/gainers-losers/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_gainers: 0, total_losers: 0, gainer_percentage: 0, loser_percentage: 0 };
+  }
+}
+
+export async function getTotalAlerts() { 
+  try {
+    const { data } = await api.get('/stats/total-alerts/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_alerts: 0, active_alerts: 0 };
+  }
+}
+
+export async function getPortfolioValue() { 
+  try {
+    const { data } = await api.get('/portfolio/value/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_value: 0, portfolio_count: 0 };
+  }
+}
+
+export async function getPortfolioPnL() { 
+  try {
+    const { data } = await api.get('/portfolio/pnl/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_pnl: 0, return_percent: 0 };
+  }
+}
+
+export async function getPortfolioReturn() { 
+  try {
+    const { data } = await api.get('/portfolio/return/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_return: 0, return_percent: 0 };
+  }
+}
+
+export async function getPortfolioHoldingsCount() { 
+  try {
+    const { data } = await api.get('/portfolio/holdings-count/'); 
+    return data; 
+  } catch (error) {
+    return { success: false, total_holdings: 0, portfolio_count: 0 };
+  }
+}
+
+// ====================
 // AUTHENTICATION
 // ====================
 export async function login(username, password) {
