@@ -200,6 +200,79 @@ class TradeScanProAPITester:
         """Test market statistics"""
         return self.run_test("Market Statistics", "GET", "/api/market-stats/", 200)
 
+    def test_total_tickers_endpoint(self):
+        """Test total tickers count - should return actual DB count"""
+        success, response = self.run_test("Total Tickers", "GET", "/api/stats/total-tickers/", 200)
+        if success:
+            total = response.get('total_tickers', 0)
+            print(f"   📊 Total tickers: {total} (expected: 8)")
+            if total != 8:
+                print(f"   ⚠️  Expected 8 tickers, got {total}")
+                self.failed_tests.append(f"Total Tickers: Expected 8, got {total}")
+        return success
+
+    def test_gainers_losers_stats_endpoint(self):
+        """Test gainers/losers statistics - should show real percentages"""
+        success, response = self.run_test("Gainers/Losers Stats", "GET", "/api/stats/gainers-losers/", 200)
+        if success:
+            gainers = response.get('gainers', 0)
+            losers = response.get('losers', 0)
+            gainers_percent = response.get('gainers_percentage', 0)
+            losers_percent = response.get('losers_percentage', 0)
+            
+            print(f"   📊 Gainers: {gainers} ({gainers_percent}%)")
+            print(f"   📊 Losers: {losers} ({losers_percent}%)")
+            
+            # Expected: 5 gainers (62.5%), 3 losers (37.5%)
+            if gainers != 5:
+                print(f"   ⚠️  Expected 5 gainers, got {gainers}")
+                self.failed_tests.append(f"Gainers/Losers: Expected 5 gainers, got {gainers}")
+            if losers != 3:
+                print(f"   ⚠️  Expected 3 losers, got {losers}")
+                self.failed_tests.append(f"Gainers/Losers: Expected 3 losers, got {losers}")
+        return success
+
+    def test_total_alerts_endpoint(self):
+        """Test total alerts count"""
+        success, response = self.run_test("Total Alerts", "GET", "/api/stats/total-alerts/", 200)
+        if success:
+            total = response.get('total_alerts', 0)
+            print(f"   📊 Total alerts: {total}")
+        return success
+
+    def test_top_gainers_endpoint(self):
+        """Test top gainers endpoint"""
+        success, response = self.run_test("Top Gainers", "GET", "/api/stocks/top-gainers/", 200)
+        if success:
+            stocks = response.get('stocks', [])
+            print(f"   📊 Top gainers returned: {len(stocks)}")
+            if len(stocks) == 0:
+                print(f"   ⚠️  No gainers found")
+                self.failed_tests.append("Top Gainers: No gainers returned")
+        return success
+
+    def test_top_losers_endpoint(self):
+        """Test top losers endpoint"""
+        success, response = self.run_test("Top Losers", "GET", "/api/stocks/top-losers/", 200)
+        if success:
+            stocks = response.get('stocks', [])
+            print(f"   📊 Top losers returned: {len(stocks)}")
+            if len(stocks) == 0:
+                print(f"   ⚠️  No losers found")
+                self.failed_tests.append("Top Losers: No losers returned")
+        return success
+
+    def test_most_active_endpoint(self):
+        """Test most active stocks endpoint"""
+        success, response = self.run_test("Most Active", "GET", "/api/stocks/most-active/", 200)
+        if success:
+            stocks = response.get('stocks', [])
+            print(f"   📊 Most active returned: {len(stocks)}")
+            if len(stocks) == 0:
+                print(f"   ⚠️  No active stocks found")
+                self.failed_tests.append("Most Active: No active stocks returned")
+        return success
+
     def test_security_headers(self):
         """Test security headers are present"""
         print(f"\n🔍 Testing Security Headers...")
