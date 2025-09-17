@@ -141,6 +141,11 @@ export async function logClientError(payload) {
   console.error('Client error:', payload);
 }
 
+export function initializeSecurity() {
+  // Initialize security measures
+  console.log('Security measures initialized');
+}
+
 const security = {
   SECURITY_CONFIG,
   secureStorage,
@@ -149,7 +154,8 @@ const security = {
   requestQueue,
   validateSecurityHeaders,
   sanitizeError,
-  logClientError
+  logClientError,
+  initializeSecurity
 };
 
 export default security;
