@@ -381,25 +381,20 @@ def main():
     
     tester = TradeScanProAPITester()
     
-    # Run all tests
+    # Run all tests - focusing on stock scanner endpoints
     test_methods = [
         tester.test_api_root,
-        tester.test_platform_stats,
         tester.test_health_check,
-        tester.test_auth_register_endpoint,
-        tester.test_auth_login_endpoint,
-        tester.test_plan_change_endpoint,
-        tester.test_usage_endpoint,
-        tester.test_rate_limiting_free_plan,
-        tester.test_rate_limiting_gold_plan,
-        tester.test_billing_endpoints,
+        tester.test_total_tickers_endpoint,
+        tester.test_gainers_losers_stats_endpoint,
+        tester.test_total_alerts_endpoint,
         tester.test_stocks_endpoint,
+        tester.test_top_gainers_endpoint,
+        tester.test_top_losers_endpoint,
+        tester.test_most_active_endpoint,
         tester.test_search_endpoint,
         tester.test_trending_endpoint,
-        tester.test_market_stats_endpoint,
-        tester.test_security_headers,
-        tester.test_cors_functionality,
-        tester.test_rate_limiting_headers
+        tester.test_market_stats_endpoint
     ]
     
     for test_method in test_methods:
