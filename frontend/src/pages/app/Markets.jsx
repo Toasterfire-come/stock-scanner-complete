@@ -55,6 +55,7 @@ const Markets = () => {
         setMarketStats(statsResponse.data);
         setTrending(trendingResponse.data);
         setStatistics(statisticsResponse.data);
+        setDashboardStats(dashboardStatsResponse.data);
       } catch (err) {
         const msg = "Failed to fetch market data";
         setError(msg);
