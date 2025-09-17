@@ -476,6 +476,47 @@ export async function getPortfolioHoldingsCount() {
   }
 }
 
+// Comprehensive dashboard stats function
+export async function getDashboardStats() {
+  try {
+    const [totalTickers, gainersLosers, totalAlerts, portfolioValue, portfolioPnL, portfolioHoldings] = await Promise.all([
+      getTotalTickers(),
+      getGainersLosersStats(),
+      getTotalAlerts(),
+      getPortfolioValue(),
+      getPortfolioPnL(),
+      getPortfolioHoldingsCount()
+    ]);
+
+    return {
+      success: true,
+      data: {
+        totalTickers: totalTickers.total_tickers || 0,
+        totalGainers: gainersLosers.total_gainers || 0,
+        totalLosers: gainersLosers.total_losers || 0,
+        gainerPercentage: gainersLosers.gainer_percentage || 0,
+        loserPercentage: gainersLosers.loser_percentage || 0,
+        totalAlerts: totalAlerts.total_alerts || 0,
+        activeAlerts: totalAlerts.active_alerts || 0,
+        portfolioValue: portfolioValue.total_value || 0,
+        portfolioPnL: portfolioPnL.total_pnl || 0,
+        portfolioReturnPercent: portfolioPnL.return_percent || 0,
+        portfolioHoldings: portfolioHoldings.total_holdings || 0,
+        portfolioCount: portfolioValue.portfolio_count || 0
+      }
+    };
+  } catch (error) {
+    return { 
+      success: false, 
+      data: {
+        totalTickers: 0, totalGainers: 0, totalLosers: 0, gainerPercentage: 0, loserPercentage: 0,
+        totalAlerts: 0, activeAlerts: 0, portfolioValue: 0, portfolioPnL: 0, portfolioReturnPercent: 0,
+        portfolioHoldings: 0, portfolioCount: 0
+      }
+    };
+  }
+}
+
 // ====================
 // AUTHENTICATION
 // ====================
