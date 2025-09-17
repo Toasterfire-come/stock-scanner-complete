@@ -245,8 +245,10 @@ class StockScannerAPITester:
         """Test individual stock detail endpoint"""
         success, response = self.run_test("Stock Detail (AAPL)", "GET", "/api/stocks/AAPL/", 200)
         if success:
-            ticker = response.get('ticker') or response.get('symbol')
-            price = response.get('current_price') or response.get('price')
+            # Check if data is nested
+            data = response.get('data', response)
+            ticker = data.get('ticker') or data.get('symbol')
+            price = data.get('current_price') or data.get('price')
             print(f"   📊 Stock: {ticker}, Price: ${price}")
             if not ticker:
                 print(f"   ⚠️  No ticker found in response")
