@@ -127,6 +127,15 @@ export function sanitizeError(error) {
   };
 }
 
+export function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+export function validatePassword(password) {
+  return password && password.length >= 8;
+}
+
 export async function logClientError(payload) {
   // This will be overridden by the API client
   console.error('Client error:', payload);
