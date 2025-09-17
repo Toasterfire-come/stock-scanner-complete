@@ -38,6 +38,23 @@ urlpatterns = [
     path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
     path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
     
+    # NEW ENDPOINTS REQUESTED BY USER
+    # Stats endpoints
+    path('stats/total-tickers/', api_views.total_tickers_api, name='total_tickers'),
+    path('stats/gainers-losers/', api_views.gainers_losers_stats_api, name='gainers_losers_stats'),
+    path('stats/total-alerts/', api_views.total_alerts_api, name='total_alerts'),
+    
+    # Stock category endpoints with pagination
+    path('stocks/top-gainers/', api_views.top_gainers_api, name='top_gainers'),
+    path('stocks/top-losers/', api_views.top_losers_api, name='top_losers'),
+    path('stocks/most-active/', api_views.most_active_api, name='most_active'),
+    
+    # Portfolio endpoints
+    path('portfolio/value/', api_views.portfolio_value_api, name='portfolio_value'),
+    path('portfolio/pnl/', api_views.portfolio_pnl_api, name='portfolio_pnl'),
+    path('portfolio/return/', api_views.portfolio_return_api, name='portfolio_return'),
+    path('portfolio/holdings-count/', api_views.portfolio_holdings_count_api, name='portfolio_holdings_count'),
+    
     # WordPress-friendly endpoints
     path('wordpress/stocks/', WordPressStockView.as_view(), name='wp_stocks'),
     path('wordpress/news/', WordPressNewsView.as_view(), name='wp_news'),
