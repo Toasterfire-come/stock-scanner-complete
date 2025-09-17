@@ -35,11 +35,12 @@ const AppDashboard = () => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        const [marketResponse, trendingResponse, stats, usageSummary] = await Promise.all([
+        const [marketResponse, trendingResponse, stats, usageSummary, dashboardStatsResponse] = await Promise.all([
           getMarketStatsSafe(),
           getTrendingSafe(),
           getStatisticsSafe().catch(() => ({ success: false, data: null })),
-          getUsageSummary().catch(() => ({ success: false, data: null }))
+          getUsageSummary().catch(() => ({ success: false, data: null })),
+          getDashboardStats().catch(() => ({ success: false, data: null }))
         ]);
 
         setMarketData(marketResponse?.data || null);
