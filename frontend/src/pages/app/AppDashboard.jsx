@@ -243,10 +243,10 @@ const AppDashboard = () => {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
+              <div className="text-2xl font-bold text-red-600">{dashboardStats?.totalLosers?.toLocaleString() || marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">Stocks down today</span>
-                <span className="text-red-600 font-medium">{((marketData?.market_overview?.losers_delta)||0)}%</span>
+                <span className="text-red-600 font-medium">{dashboardStats?.loserPercentage ? `${dashboardStats.loserPercentage}%` : `${((marketData?.market_overview?.losers_delta)||0)}%`}</span>
               </div>
               {Array.isArray(trendSeries.losers) && trendSeries.losers.length > 0 && (
                 <div className="mt-3">
