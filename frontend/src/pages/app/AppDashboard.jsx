@@ -18,7 +18,7 @@ import {
   Play
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
-import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getUsageSummary, reconcileUsage } from "../../api/client";
+import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getUsageSummary, reconcileUsage, getDashboardStats } from "../../api/client";
 import { Progress } from "../../components/ui/progress";
 import MiniSparkline from "../../components/MiniSparkline";
 
