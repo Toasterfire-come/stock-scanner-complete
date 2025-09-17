@@ -67,3 +67,9 @@ export const DialogTitle = ({ children, className = '', ...props }) => (
     {children}
   </h2>
 );
+
+export const DialogDescription = ({ children, className = '', ...props }) => (
+  <p className={`text-sm text-gray-600 ${className}`} {...props}>
+    {children}
+  </p>
+);
