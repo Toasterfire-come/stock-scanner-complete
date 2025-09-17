@@ -174,8 +174,19 @@ class TradeScanProAPITester:
         return success
 
     def test_stocks_endpoint(self):
-        """Test stocks endpoint with NYSE focus"""
-        return self.run_test("Stocks List (NYSE)", "GET", "/api/stocks/?category=nyse&limit=10", 200)
+        """Test stocks endpoint with pagination"""
+        success, response = self.run_test("Stocks List (Page 1)", "GET", "/api/stocks/?page=1&limit=50", 200)
+        if success:
+            # Check if we get actual data, not hardcoded values
+            stocks = response.get('stocks', [])
+            total = response.get('total', 0)
+            print(f"   📊 Total stocks in DB: {total}")
+            print(f"   📊 Stocks returned: {len(stocks)}")
+            
+            if total == 0:
+                print(f"   ⚠️  No stocks found in database")
+                self.failed_tests.append("Stocks endpoint: No stocks found in database")
+        return success
 
     def test_search_endpoint(self):
         """Test stock search"""
