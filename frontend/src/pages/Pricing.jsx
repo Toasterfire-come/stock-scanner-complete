@@ -548,7 +548,7 @@ const Pricing = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Yes, we offer a free plan with basic features including 15 stock lookups per month 
+                  Yes, we offer a Free Plan with basic features including 15 stock lookups per month 
                   and basic filtering. Perfect for getting started with our platform.
                 </p>
               </CardContent>
