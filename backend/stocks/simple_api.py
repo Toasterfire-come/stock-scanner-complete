@@ -90,37 +90,55 @@ class SimpleNewsView(View):
     """Simple news API with sample data"""
     
     def get(self, request):
-        """Return sample news data"""
+        """Return real news data from database with fallback"""
         try:
-            sample_news = [
-                {
-                    'id': 1,
-                    'title': 'Tech Stocks Rally on Strong Earnings',
-                    'summary': 'Major technology companies report better-than-expected quarterly results.',
-                    'sentiment': 'positive',
-                    'score': 0.85,
-                    'published_at': '2025-01-25T14:30:00Z',
-                    'source': 'MarketWatch'
-                },
-                {
-                    'id': 2,
-                    'title': 'Federal Reserve Hints at Rate Stability',
-                    'summary': 'Central bank signals potential pause in interest rate adjustments.',
-                    'sentiment': 'neutral',
-                    'score': 0.12,
-                    'published_at': '2025-01-25T12:15:00Z',
-                    'source': 'Reuters'
-                }
-            ]
+            # Import here to avoid dependencies
+            from news.models import NewsArticle
+            
+            # Get recent news from database
+            news_articles = NewsArticle.objects.filter(
+                is_active=True
+            ).order_by('-published_at')[:10]
+            
+            # If no news in database, provide informative message
+            if not news_articles.exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No news data available',
+                    'message': 'Database is empty. Please run the news scraper to populate with real news data.',
+                    'meta': {
+                        'endpoint': 'simple_news',
+                        'total_articles': 0,
+                        'api_version': '1.0.0',
+                        'database_required': True,
+                        'suggestion': 'Run: python news_scraper_with_restart.py'
+                    }
+                }, status=200)
+            
+            # Format real news data
+            news_data = []
+            for article in news_articles:
+                news_data.append({
+                    'id': article.id,
+                    'title': article.title,
+                    'summary': article.summary or article.content[:200] + '...' if article.content else '',
+                    'sentiment': article.sentiment or 'neutral',
+                    'score': float(article.sentiment_score) if article.sentiment_score else 0.0,
+                    'published_at': article.published_at.isoformat() if article.published_at else None,
+                    'source': article.source or 'Unknown',
+                    'url': article.url if hasattr(article, 'url') else None,
+                    'relevance_score': float(article.relevance_score) if hasattr(article, 'relevance_score') and article.relevance_score else 50.0
+                })
 
             return JsonResponse({
                 'success': True,
-                'data': sample_news,
+                'data': news_data,
                 'meta': {
                     'endpoint': 'simple_news',
-                    'total_articles': len(sample_news),
+                    'total_articles': len(news_data),
                     'api_version': '1.0.0',
-                    'database_required': False
+                    'database_required': True,
+                    'data_source': 'real_time_database'
                 }
             })
             
@@ -128,7 +146,11 @@ class SimpleNewsView(View):
             return JsonResponse({
                 'success': False,
                 'error': 'Unable to fetch news data',
-                'message': str(e)
+                'message': str(e),
+                'meta': {
+                    'endpoint': 'simple_news',
+                    'database_required': True
+                }
             }, status=500)
 
 
