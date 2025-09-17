@@ -17,7 +17,7 @@ import {
   BarChart3,
   RefreshCw
 } from "lucide-react";
-import { listStocks, searchStocks, addWatchlist, fetchAllStocks } from "../../api/client";
+import { listStocks, searchStocks, addWatchlist, fetchAllStocks, getTotalTickers } from "../../api/client";
 import { announce } from "../../lib/a11y";
 import VirtualizedList from "../../components/VirtualizedList";
 
