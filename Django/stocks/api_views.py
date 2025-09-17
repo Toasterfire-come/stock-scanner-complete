@@ -1230,4 +1230,255 @@ def create_alert_api(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+# NEW ENDPOINTS REQUESTED BY USER
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def total_tickers_api(request):
+    """
+    Get total number of tickers in the database
+    URL: /api/stats/total-tickers/
+    """
+    try:
+        total_tickers = Stock.objects.count()
+        return Response({
+            'success': True,
+            'total_tickers': total_tickers,
+            'timestamp': timezone.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error in total_tickers_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def gainers_losers_stats_api(request):
+    """
+    Get total gainers and losers with percentages
+    URL: /api/stats/gainers-losers/
+    """
+    try:
+        total_tickers = Stock.objects.count()
+        total_gainers = Stock.objects.filter(price_change_today__gt=0).count()
+        total_losers = Stock.objects.filter(price_change_today__lt=0).count()
+        
+        # Calculate percentages
+        gainer_percentage = round((total_gainers / total_tickers * 100), 2) if total_tickers > 0 else 0
+        loser_percentage = round((total_losers / total_tickers * 100), 2) if total_tickers > 0 else 0
+        
+        return Response({
+            'success': True,
+            'total_tickers': total_tickers,
+            'total_gainers': total_gainers,
+            'total_losers': total_losers,
+            'gainer_percentage': gainer_percentage,
+            'loser_percentage': loser_percentage,
+            'timestamp': timezone.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error in gainers_losers_stats_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def total_alerts_api(request):
+    """
+    Get total number of alerts in the system
+    URL: /api/stats/total-alerts/
+    """
+    try:
+        total_alerts = StockAlert.objects.count()
+        active_alerts = StockAlert.objects.filter(is_active=True).count()
+        
+        return Response({
+            'success': True,
+            'total_alerts': total_alerts,
+            'active_alerts': active_alerts,
+            'timestamp': timezone.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error in total_alerts_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def top_gainers_api(request):
+    """
+    Get top gainers with pagination
+    URL: /api/stocks/top-gainers/
+    Parameters:
+    - page: Page number (default: 1)
+    - limit: Results per page (default: 50)
+    """
+    try:
+        page = int(request.GET.get('page', 1))
+        limit = min(int(request.GET.get('limit', 50)), 100)
+        
+        # Calculate offset for pagination
+        offset = (page - 1) * limit
+        
+        # Get top gainers
+        queryset = Stock.objects.filter(
+            price_change_today__gt=0
+        ).order_by('-change_percent')
+        
+        total_count = queryset.count()
+        stocks = queryset[offset:offset + limit]
+        
+        stock_data = []
+        for stock in stocks:
+            stock_data.append({
+                'ticker': stock.ticker,
+                'company_name': stock.company_name or stock.name,
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change_today': format_decimal_safe(stock.price_change_today),
+                'change_percent': format_decimal_safe(stock.change_percent),
+                'volume': stock.volume,
+                'market_cap': stock.market_cap,
+                'formatted_price': stock.formatted_price,
+                'formatted_change': stock.formatted_change,
+                'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
+            })
+        
+        return Response({
+            'success': True,
+            'page': page,
+            'limit': limit,
+            'total_count': total_count,
+            'total_pages': (total_count + limit - 1) // limit,
+            'data': stock_data,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in top_gainers_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def top_losers_api(request):
+    """
+    Get top losers with pagination
+    URL: /api/stocks/top-losers/
+    Parameters:
+    - page: Page number (default: 1)
+    - limit: Results per page (default: 50)
+    """
+    try:
+        page = int(request.GET.get('page', 1))
+        limit = min(int(request.GET.get('limit', 50)), 100)
+        
+        # Calculate offset for pagination
+        offset = (page - 1) * limit
+        
+        # Get top losers
+        queryset = Stock.objects.filter(
+            price_change_today__lt=0
+        ).order_by('change_percent')
+        
+        total_count = queryset.count()
+        stocks = queryset[offset:offset + limit]
+        
+        stock_data = []
+        for stock in stocks:
+            stock_data.append({
+                'ticker': stock.ticker,
+                'company_name': stock.company_name or stock.name,
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change_today': format_decimal_safe(stock.price_change_today),
+                'change_percent': format_decimal_safe(stock.change_percent),
+                'volume': stock.volume,
+                'market_cap': stock.market_cap,
+                'formatted_price': stock.formatted_price,
+                'formatted_change': stock.formatted_change,
+                'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
+            })
+        
+        return Response({
+            'success': True,
+            'page': page,
+            'limit': limit,
+            'total_count': total_count,
+            'total_pages': (total_count + limit - 1) // limit,
+            'data': stock_data,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in top_losers_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def most_active_api(request):
+    """
+    Get most active stocks with pagination
+    URL: /api/stocks/most-active/
+    Parameters:
+    - page: Page number (default: 1)
+    - limit: Results per page (default: 50)
+    """
+    try:
+        page = int(request.GET.get('page', 1))
+        limit = min(int(request.GET.get('limit', 50)), 100)
+        
+        # Calculate offset for pagination
+        offset = (page - 1) * limit
+        
+        # Get most active stocks
+        queryset = Stock.objects.filter(
+            volume__isnull=False
+        ).exclude(volume=0).order_by('-volume')
+        
+        total_count = queryset.count()
+        stocks = queryset[offset:offset + limit]
+        
+        stock_data = []
+        for stock in stocks:
+            stock_data.append({
+                'ticker': stock.ticker,
+                'company_name': stock.company_name or stock.name,
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change_today': format_decimal_safe(stock.price_change_today),
+                'change_percent': format_decimal_safe(stock.change_percent),
+                'volume': stock.volume,
+                'market_cap': stock.market_cap,
+                'formatted_price': stock.formatted_price,
+                'formatted_change': stock.formatted_change,
+                'formatted_volume': stock.formatted_volume,
+                'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
+            })
+        
+        return Response({
+            'success': True,
+            'page': page,
+            'limit': limit,
+            'total_count': total_count,
+            'total_pages': (total_count + limit - 1) // limit,
+            'data': stock_data,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in most_active_api: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # Helper functions - moved to utils for better organization
