@@ -249,9 +249,9 @@ api.interceptors.response.use(
         const protectedPaths = ['/portfolio/', '/user/profile/', '/usage/', '/alerts/', '/news/mark-read/'];
         const isProtected = protectedPaths.some(p => path.startsWith(p));
         if (isProtected && typeof window !== 'undefined') {
-          // Redirect to sign-in preserving next
-          const next = encodeURIComponent(window.location.pathname + window.location.search);
-          setTimeout(() => { window.location.href = `/auth/sign-in?session_expired=true&next=${next}`; }, 50);
+          // Redirect to sign-in preserving redirect param for consistency
+          const redirect = encodeURIComponent((window.location.pathname || '/') + (window.location.search || ''));
+          setTimeout(() => { window.location.href = `/auth/sign-in?session_expired=true&redirect=${redirect}`; }, 50);
         }
       } catch {}
       return Promise.reject(error);

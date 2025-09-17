@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 
 // Security and Core Providers
 import SecurityProvider from "./components/SecurityProvider";
-import { AuthProvider } from "./context/SecureAuthContext";
+import { AuthProvider, useAuth } from "./context/SecureAuthContext";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 
 // Layouts
@@ -121,16 +121,22 @@ const StatusBanner = () => {
 // Main App Component with Security Enhancements
 function SecureApp() {
   const RequireAuth = ({ children }) => {
+    const { isAuthenticated, isLoading } = useAuth();
     const location = window.location;
-    // We can't use useAuth here easily without reordering providers; rely on API token presence via storage gate instead
-    try {
-      const token = window.localStorage.getItem('rts_token') || '';
-      const hasSession = !!token;
-      if (!hasSession) {
-        const next = encodeURIComponent((location?.pathname || '/') + (location?.search || ''));
-        return <Navigate to={`/auth/sign-in?redirect=${next}`} replace />;
-      }
-    } catch {}
+
+    if (isLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      );
+    }
+
+    if (!isAuthenticated) {
+      const next = encodeURIComponent((location?.pathname || '/') + (location?.search || ''));
+      return <Navigate to={`/auth/sign-in?redirect=${next}`} replace />;
+    }
+
     return children;
   };
   // Global error handler

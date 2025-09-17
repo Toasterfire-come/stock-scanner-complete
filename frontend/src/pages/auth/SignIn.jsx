@@ -45,7 +45,9 @@ export default function SignIn() {
         
         // Add a small delay to ensure state is updated
         setTimeout(() => {
-          const redirectTo = searchParams.get("redirect") || "/app/dashboard";
+          const nextParam = searchParams.get("next");
+          const redirectParam = searchParams.get("redirect");
+          const redirectTo = redirectParam || nextParam || "/app/dashboard";
           navigate(redirectTo, { replace: true });
         }, 100);
       } else {
