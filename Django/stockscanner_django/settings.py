@@ -219,7 +219,9 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'https://www.tradescanpro.com',
     'https://retailtradescanner.com',
     'https://www.retailtradescanner.com',
-]))
+    # Deployed static hosting domain(s)
+    'https://access-5018544625.webspace-host.com',
+] + [o.strip() for o in os.environ.get('EXTRA_CORS_ORIGINS', '').split(',') if o.strip()]))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
     'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'
@@ -363,7 +365,9 @@ else:
         'https://www.tradescanpro.com',
         'https://tradscanpro.com',
         'https://www.tradscanpro.com',
-    ]))
+        # Deployed static hosting domain(s)
+        'https://access-5018544625.webspace-host.com',
+    ] + [o.strip() for o in os.environ.get('EXTRA_CSRF_ORIGINS', '').split(',') if o.strip()]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))
