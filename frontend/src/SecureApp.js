@@ -2,7 +2,7 @@ import React from "react";
 import { Helmet } from 'react-helmet-async';
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 
 // Security and Core Providers
 import SecurityProvider from "./components/SecurityProvider";
@@ -133,6 +133,12 @@ function SecureApp() {
     }
 
     if (!isAuthenticated) {
+      try {
+        toast.info('Please sign in to access this page', {
+          description: 'This page requires an active account.',
+          duration: 4000,
+        });
+      } catch {}
       const next = encodeURIComponent((location?.pathname || '/') + (location?.search || ''));
       return <Navigate to={`/auth/sign-in?redirect=${next}`} replace />;
     }

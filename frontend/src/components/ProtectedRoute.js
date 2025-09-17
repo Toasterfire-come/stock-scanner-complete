@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/SecureAuthContext';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ProtectedRoute = ({ children, requireAuth = true, redirectTo = '/auth/sign-in' }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -31,6 +32,12 @@ const ProtectedRoute = ({ children, requireAuth = true, redirectTo = '/auth/sign
   if (requireAuth && !isAuthenticated) {
     // Preserve the attempted location for redirecting after login
     const redirectPath = location.pathname + location.search;
+    try {
+      toast.info('Please sign in to continue', {
+        description: 'This section requires an active account.',
+        duration: 4000,
+      });
+    } catch {}
     return <Navigate to={`${redirectTo}?redirect=${encodeURIComponent(redirectPath)}`} replace />;
   }
 
