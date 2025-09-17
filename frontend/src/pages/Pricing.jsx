@@ -544,7 +544,7 @@ const Pricing = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Is there a free plan available?</CardTitle>
+                <CardTitle className="text-lg">Is there a Free Plan available?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
