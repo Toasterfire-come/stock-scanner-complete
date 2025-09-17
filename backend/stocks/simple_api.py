@@ -16,52 +16,60 @@ class SimpleStockView(View):
     """Simple stock API with sample data"""
     
     def get(self, request):
-        """Return sample stock data"""
+        """Return real stock data from database with fallback"""
         try:
-            sample_stocks = [
-                {
-                    'ticker': 'AAPL',
-                    'company_name': 'Apple Inc.',
-                    'current_price': 175.25,
-                    'change_percent': 2.34,
-                    'volume': 45678900,
-                    'market_cap': 2750000000000,
-                    'trend': 'up',
-                    'formatted_price': '$175.25',
-                    'formatted_change': '+2.34%'
-                },
-                {
-                    'ticker': 'MSFT',
-                    'company_name': 'Microsoft Corporation',
-                    'current_price': 412.80,
-                    'change_percent': -0.87,
-                    'volume': 23456780,
-                    'market_cap': 3100000000000,
-                    'trend': 'down',
-                    'formatted_price': '$412.80',
-                    'formatted_change': '-0.87%'
-                },
-                {
-                    'ticker': 'GOOGL',
-                    'company_name': 'Alphabet Inc.',
-                    'current_price': 142.65,
-                    'change_percent': 1.56,
-                    'volume': 34567890,
-                    'market_cap': 1800000000000,
-                    'trend': 'up',
-                    'formatted_price': '$142.65',
-                    'formatted_change': '+1.56%'
-                }
-            ]
+            # Import here to avoid circular imports
+            from .models import Stock
+            from django.db.models import Q
+            
+            # Get recent stocks from database
+            stocks = Stock.objects.filter(
+                current_price__isnull=False,
+                current_price__gt=0
+            ).exclude(
+                ticker__isnull=True
+            ).order_by('-last_updated')[:10]
+            
+            # If no stocks in database, provide informative message
+            if not stocks.exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No stock data available',
+                    'message': 'Database is empty. Please run the stock data retrieval script to populate with real data.',
+                    'meta': {
+                        'endpoint': 'simple_stocks',
+                        'total_stocks': 0,
+                        'api_version': '1.0.0',
+                        'database_required': True,
+                        'suggestion': 'Run: python enhanced_stock_retrieval_working.py -test -save-to-db'
+                    }
+                }, status=200)
+            
+            # Format real stock data
+            stock_data = []
+            for stock in stocks:
+                stock_data.append({
+                    'ticker': stock.ticker,
+                    'company_name': stock.company_name or stock.name or stock.ticker,
+                    'current_price': float(stock.current_price) if stock.current_price else 0.0,
+                    'change_percent': float(stock.change_percent) if stock.change_percent else 0.0,
+                    'volume': int(stock.volume) if stock.volume else 0,
+                    'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                    'trend': 'up' if (stock.change_percent and stock.change_percent > 0) else 'down',
+                    'formatted_price': f"${float(stock.current_price):.2f}" if stock.current_price else "$0.00",
+                    'formatted_change': f"{float(stock.change_percent):+.2f}%" if stock.change_percent else "0.00%",
+                    'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
+                })
 
             return JsonResponse({
                 'success': True,
-                'data': sample_stocks,
+                'data': stock_data,
                 'meta': {
                     'endpoint': 'simple_stocks',
-                    'total_stocks': len(sample_stocks),
+                    'total_stocks': len(stock_data),
                     'api_version': '1.0.0',
-                    'database_required': False
+                    'database_required': True,
+                    'data_source': 'real_time_database'
                 }
             })
             
@@ -69,7 +77,11 @@ class SimpleStockView(View):
             return JsonResponse({
                 'success': False,
                 'error': 'Unable to fetch stock data',
-                'message': str(e)
+                'message': str(e),
+                'meta': {
+                    'endpoint': 'simple_stocks',
+                    'database_required': True
+                }
             }, status=500)
 
 
