@@ -78,3 +78,4 @@ agenthub/agents/youtube/db
 
 # Mobile development
 android-sdk/ temp_repo/.git/objects/pack/pack-1f7505b7d0f1607a3776a96f161a6e71ad3659ab.pack
+frontend/node_modules/.cache/default-development/1.pack

@@ -34,7 +34,8 @@ import {
   Building,
   Users,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Newspaper
 } from "lucide-react";
 import { getStock, getRealTimeQuote, addWatchlist, createAlert } from "../../api/client";
 
