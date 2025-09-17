@@ -210,7 +210,7 @@ const Markets = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Stocks</p>
-                    <p className="text-2xl font-bold">{Number(marketStats.market_overview.total_stocks || 0).toLocaleString()}</p>
+                    <p className="text-2xl font-bold">{Number(dashboardStats?.totalTickers || marketStats?.market_overview?.total_stocks || 0).toLocaleString()}</p>
                   </div>
                   <BarChart3 className="h-8 w-8 text-blue-500" />
                 </div>
