@@ -26,6 +26,7 @@ const Markets = () => {
   const [marketStats, setMarketStats] = useState(null);
   const [trending, setTrending] = useState(null);
   const [statistics, setStatistics] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
