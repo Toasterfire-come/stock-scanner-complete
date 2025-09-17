@@ -23,3 +23,9 @@ export const CardContent = ({ children, className = '', ...props }) => (
     {children}
   </div>
 );
+
+export const CardDescription = ({ children, className = '', ...props }) => (
+  <p className={`text-sm text-gray-600 ${className}`} {...props}>
+    {children}
+  </p>
+);
