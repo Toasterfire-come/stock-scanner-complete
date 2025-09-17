@@ -239,6 +239,13 @@ def login_api(request):
                 # Get or create user profile
                 profile, created = UserProfile.objects.get_or_create(user=user)
                 
+                # Ensure the session has a key we can return for BearerSessionAuthentication
+                try:
+                    if not request.session.session_key:
+                        request.session.save()
+                except Exception:
+                    pass
+
                 response = JsonResponse({
                     'success': True,
                     'data': {
@@ -248,7 +255,9 @@ def login_api(request):
                         'first_name': user.first_name,
                         'last_name': user.last_name,
                         'is_premium': profile.is_premium if hasattr(profile, 'is_premium') else False,
-                        'last_login': user.last_login.isoformat() if user.last_login else None
+                        'last_login': user.last_login.isoformat() if user.last_login else None,
+                        # Provide a session-based API token so SPA can authenticate via Authorization header
+                        'api_token': request.session.session_key,
                     },
                     'message': 'Login successful'
                 })

@@ -246,9 +246,14 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       try {
         const path = String(error.config?.url || '');
-        const protectedPaths = ['/portfolio/', '/user/profile/', '/usage/', '/alerts/', '/news/mark-read/'];
+        const protectedPaths = ['/portfolio/', '/user/profile/', '/alerts/', '/news/mark-read/'];
         const isProtected = protectedPaths.some(p => path.startsWith(p));
         if (isProtected && typeof window !== 'undefined') {
+          // Only redirect if we had attempted with a token to avoid loops when unauthenticated
+          const hadToken = Boolean((window.localStorage.getItem('rts_token') || '').trim());
+          if (!hadToken) {
+            return Promise.reject(error);
+          }
           // Redirect to sign-in preserving redirect param for consistency
           const redirect = encodeURIComponent((window.location.pathname || '/') + (window.location.search || ''));
           setTimeout(() => { window.location.href = `/auth/sign-in?session_expired=true&redirect=${redirect}`; }, 50);

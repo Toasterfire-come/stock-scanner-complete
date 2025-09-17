@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, registerUser as apiRegister, logout as apiLogout } from '../api/client';
+import { login as apiLogin, registerUser as apiRegister, logout as apiLogout, getProfile as apiGetProfile } from '../api/client';
 import security, { secureStorage, validateEmail, validatePassword, sessionManager } from '../lib/security';
 
 const AuthContext = createContext();
@@ -72,8 +72,33 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           sessionManager.updateActivity();
         } else {
-          // Clear invalid session data
-          await logout();
+          // Attempt to hydrate auth from server session cookie
+          try {
+            const prof = await apiGetProfile();
+            if (prof && (prof.success === true || prof.data)) {
+              const d = prof.data || prof;
+              const hydratedUser = {
+                id: d.user_id || d.id,
+                username: d.username,
+                email: d.email,
+                name: d.first_name && d.last_name ? `${d.first_name} ${d.last_name}`.trim() : (d.username || ''),
+                plan: d.plan || d.plan_type || 'free',
+                isVerified: d.is_verified || false,
+                joinDate: d.date_joined || new Date().toISOString(),
+                lastLogin: d.last_login || null,
+              };
+              secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, hydratedUser, true);
+              setUser(hydratedUser);
+              setIsAuthenticated(true);
+              sessionManager.startSession();
+              sessionManager.updateActivity();
+            } else {
+              await logout();
+            }
+          } catch {
+            // Not authenticated server-side
+            await logout();
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -143,7 +168,7 @@ export const AuthProvider = ({ children }) => {
         // Store user data and token securely
         secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, userData, true);
         
-        // Store token - check multiple possible fields
+        // Store token - prefer session key (api_token) from backend for Authorization: Bearer
         const token = response.data.api_token || response.data.token || response.data.access_token;
         if (token) {
           secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, token);
