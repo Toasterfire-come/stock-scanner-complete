@@ -232,6 +232,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'X-Requested-With',
     'authorization',
     'Authorization',
+    'x-api-key',
+    'X-API-Key',
 ]
 
 # Enterprise/Premium overrides
