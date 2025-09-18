@@ -197,25 +197,26 @@ class TradeScanProAPITester:
         return success1 and success2
 
     def test_status_endpoints(self):
-        """Test status check endpoints"""
-        # Test GET status checks
+        """Test status check endpoints - NEW /api/status endpoint"""
+        # Test GET status checks (NEW endpoint as per problem statement)
         success1, response = self.run_test(
-            "Get Status Checks",
+            "Get Status Checks - NEW /api/status endpoint",
             "GET",
-            "api/status",
+            "api/status/",
             200
         )
         
-        # Test POST status check
-        success2, response = self.run_test(
-            "Create Status Check",
-            "POST",
-            "api/status",
-            200,
-            data={"client_name": f"test_client_{datetime.now().strftime('%H%M%S')}"}
-        )
+        # Verify comprehensive system info is returned
+        if success1 and response:
+            required_fields = ['service', 'version', 'environment', 'timestamp', 'status', 'components', 'system_resources']
+            missing_fields = [field for field in required_fields if field not in response.get('data', {})]
+            if missing_fields:
+                print(f"⚠️  Missing fields in status response: {missing_fields}")
+                success1 = False
+            else:
+                print("✅ Status endpoint returns comprehensive system info")
         
-        return success1 and success2
+        return success1
 
     def test_plan_limits(self):
         """Test plan limit enforcement"""
