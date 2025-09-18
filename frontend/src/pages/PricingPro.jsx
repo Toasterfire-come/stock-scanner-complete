@@ -277,13 +277,21 @@ const PricingPro = () => {
                         </DialogHeader>
                         
                         {selectedPlan && (
-                          <PayPalCheckout
+                          (process.env.REACT_APP_PAYPAL_CLIENT_ID ? (
+                            <PayPalCheckout
                             planType={selectedPlan.name.toLowerCase()}
                             billingCycle={selectedPlan.billingCycle}
                             onSuccess={handlePaymentSuccess}
                             onError={handlePaymentError}
                             onCancel={() => setShowCheckout(false)}
-                          />
+                            />
+                          ) : (
+                            <Alert>
+                              <AlertDescription>
+                                Payments are currently unavailable. Please contact support or try again later.
+                              </AlertDescription>
+                            </Alert>
+                          ))
                         )}
                       </DialogContent>
                     </Dialog>

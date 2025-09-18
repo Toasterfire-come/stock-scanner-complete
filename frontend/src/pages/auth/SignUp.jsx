@@ -80,11 +80,18 @@ const SignUp = () => {
     window.location.href = `/auth/oauth/${provider}?action=signup`;
   };
 
+  const registrationEnabled = false; // gate until backend registration endpoint is available
+
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
         <p className="text-gray-600 mt-2">Get started with professional stock analysis</p>
+        {!registrationEnabled && (
+          <p className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-3 py-2 mt-3 inline-block">
+            Registration is currently unavailable. Please contact support or check back later.
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -219,7 +226,7 @@ const SignUp = () => {
           <p className="text-sm text-red-600">{errors.agreeToTerms.message}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isLoading || !agreeToTerms}>
+        <Button type="submit" className="w-full" disabled={isLoading || !agreeToTerms || !registrationEnabled}>
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>
