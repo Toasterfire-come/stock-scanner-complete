@@ -219,27 +219,50 @@ class TradeScanProAPITester:
         return success1
 
     def test_plan_limits(self):
-        """Test plan limit enforcement"""
-        print("\n🔒 Testing Plan Limit Enforcement...")
+        """Test plan limit enforcement - CRITICAL: Monthly rate limiting fix"""
+        print("\n🔒 Testing Monthly Rate Limit Enforcement...")
         
-        # Make multiple requests to test rate limiting
+        # Test with free plan (should hit limits quickly with monthly limits)
         user_id = f"limit_test_user_{datetime.now().strftime('%H%M%S')}"
         
-        # Test with free plan (should hit limits quickly)
+        # Make multiple requests to test rate limiting
+        # According to settings: RATE_LIMIT_FREE_USERS = 30 per month
         success_count = 0
-        for i in range(8):  # Free plan has hourly limit of 2
+        rate_limited = False
+        
+        for i in range(35):  # Test beyond the 30 request limit
             success, response = self.run_test(
-                f"Rate Limit Test {i+1}/8 - Free Plan",
+                f"Monthly Rate Limit Test {i+1}/35 - Free Plan",
                 "GET",
-                "api/stocks/TSLA/quote",
-                200 if i < 2 else 429,  # Expect 429 after 2 requests for free plan
+                "api/stocks/AAPL/quote",
+                200 if i < 30 else 429,  # Expect 429 after 30 requests for free plan
                 headers={"X-User-ID": user_id, "X-User-Plan": "free"}
             )
             if success:
                 success_count += 1
+            elif not success and i >= 30:
+                # Check if we got a 429 rate limit response
+                try:
+                    import requests
+                    url = f"{self.base_url}/api/stocks/AAPL/quote"
+                    resp = requests.get(url, headers={"X-User-ID": user_id, "X-User-Plan": "free"}, timeout=10)
+                    if resp.status_code == 429:
+                        rate_limited = True
+                        print(f"✅ Rate limiting working - got 429 after {success_count} requests")
+                        break
+                except:
+                    pass
         
-        print(f"Free plan successful requests: {success_count}/8 (expected: 2)")
-        return success_count <= 2  # Should be limited after 2 requests
+        print(f"Free plan successful requests: {success_count}/35")
+        print(f"Rate limiting triggered: {rate_limited}")
+        
+        # Rate limiting should kick in around 30 requests
+        if success_count <= 30 and rate_limited:
+            print("✅ Monthly rate limiting is working correctly")
+            return True
+        else:
+            print("❌ Monthly rate limiting is NOT working - this is a CRITICAL issue")
+            return False
 
 def main():
     print("🚀 Starting Trade Scan Pro API Tests...")
