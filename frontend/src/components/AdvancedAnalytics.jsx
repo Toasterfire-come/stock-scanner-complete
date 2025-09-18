@@ -69,48 +69,23 @@ const AdvancedAnalytics = ({ userId }) => {
     fetchAnalyticsData();
   }, [timeframe]);
 
-  // Mock data for demonstration (replace with real data from your API)
-  const performanceData = [
-    { date: "2024-01", portfolio: 95000, benchmark: 90000, returns: 5.5 },
-    { date: "2024-02", portfolio: 102000, benchmark: 93000, returns: 7.3 },
-    { date: "2024-03", portfolio: 98000, benchmark: 91000, returns: -3.9 },
-    { date: "2024-04", portfolio: 106000, benchmark: 95000, returns: 8.2 },
-    { date: "2024-05", portfolio: 112000, benchmark: 98000, returns: 5.7 },
-    { date: "2024-06", portfolio: 118000, benchmark: 101000, returns: 5.4 }
-  ];
+  const performanceData = Array.isArray(analyticsData?.performance)
+    ? analyticsData.performance
+    : [];
 
-  const sectorAllocation = [
-    { name: "Technology", value: 35, color: "#0088FE" },
-    { name: "Healthcare", value: 20, color: "#00C49F" },
-    { name: "Finance", value: 15, color: "#FFBB28" },
-    { name: "Consumer", value: 12, color: "#FF8042" },
-    { name: "Energy", value: 10, color: "#8884D8" },
-    { name: "Other", value: 8, color: "#82CA9D" }
-  ];
+  const sectorAllocation = Array.isArray(portfolioData?.sector_allocation)
+    ? portfolioData.sector_allocation
+    : [];
 
-  const riskMetrics = {
-    sharpeRatio: 1.42,
-    beta: 0.95,
-    volatility: 18.5,
-    maxDrawdown: -12.3,
-    var95: -4.2,
-    tracking_error: 3.1
-  };
+  const riskMetrics = analyticsData?.risk_metrics || null;
 
-  const topHoldings = [
-    { symbol: "AAPL", weight: 8.5, value: 95400, change: 2.3 },
-    { symbol: "MSFT", weight: 7.2, value: 80640, change: 1.8 },
-    { symbol: "NVDA", weight: 6.8, value: 76160, change: 4.1 },
-    { symbol: "GOOGL", weight: 5.9, value: 66080, change: -0.7 },
-    { symbol: "TSLA", weight: 4.8, value: 53760, change: 3.2 }
-  ];
+  const topHoldings = Array.isArray(portfolioData?.top_holdings)
+    ? portfolioData.top_holdings
+    : [];
 
-  const alertsData = [
-    { type: "Price Alert", count: 12, triggered: 3, color: "bg-blue-500" },
-    { type: "Volume Alert", count: 8, triggered: 2, color: "bg-green-500" },
-    { type: "News Alert", count: 15, triggered: 7, color: "bg-yellow-500" },
-    { type: "Technical Alert", count: 6, triggered: 1, color: "bg-purple-500" }
-  ];
+  const alertsData = Array.isArray(analyticsData?.alerts)
+    ? analyticsData.alerts
+    : [];
 
   if (isLoading) {
     return (
