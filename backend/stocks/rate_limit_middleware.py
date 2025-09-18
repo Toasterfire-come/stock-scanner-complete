@@ -257,12 +257,22 @@ class RateLimitMiddleware(MiddlewareMixin):
     
     def get_rate_limit(self, request):
         """
-        Get the rate limit for this user
+        Get the monthly rate limit for this user based on their plan
         """
         if getattr(getattr(request, 'user', None), 'is_authenticated', False):
-            return self.authenticated_user_limit
+            # Get user's plan from profile
+            try:
+                profile = getattr(request.user, 'profile', None)
+                plan_type = (getattr(profile, 'plan_type', 'free') if profile else 'free') or 'free'
+                plan_type = plan_type.lower()
+                
+                # Return monthly limit based on plan
+                limit = self.monthly_limits.get(plan_type, self.monthly_limits['free'])
+                return limit if limit != -1 else 999999  # Return large number for unlimited
+            except Exception:
+                return self.monthly_limits['free']
         else:
-            return self.free_user_limit
+            return self.monthly_limits['free']
     
     def check_rate_limit(self, user_id, limit):
         """
