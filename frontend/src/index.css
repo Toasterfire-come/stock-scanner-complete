@@ -421,34 +421,71 @@ code {
 
 /* ===== RADIX UI OVERRIDES ===== */
 
-/* Enhanced Radix Button integration */
+/* Enhanced Radix Button integration - using CSS classes directly */
 .radix-button {
-  @apply btn-enhanced;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-none);
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-bounce);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: -0.005em;
+  min-height: 44px;
+  white-space: nowrap;
 }
 
 .radix-button[data-variant="primary"] {
-  @apply btn-primary-enhanced;
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-lg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .radix-button[data-variant="secondary"] {
-  @apply btn-secondary-enhanced;
+  background: var(--color-surface);
+  color: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+  backdrop-filter: var(--glass-blur-light);
 }
 
 .radix-button[data-variant="outline"] {
-  @apply btn-outline-enhanced;
+  background: transparent;
+  color: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+  backdrop-filter: var(--glass-blur-light);
 }
 
 .radix-button[data-variant="ghost"] {
-  @apply btn-ghost-enhanced;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
 }
 
 .radix-button[data-variant="destructive"] {
-  @apply btn-destructive-enhanced;
+  background: var(--gradient-error);
+  color: white;
+  box-shadow: var(--shadow-lg);
 }
 
 /* Enhanced Radix Card integration */
 .radix-card {
-  @apply card-enhanced;
+  background: var(--gradient-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  position: relative;
 }
 
 /* Sonner Toast overrides for consistency */
