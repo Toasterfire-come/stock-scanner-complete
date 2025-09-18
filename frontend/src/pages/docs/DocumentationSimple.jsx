@@ -123,7 +123,7 @@ const DocumentationSimple = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Quick Start Guide</h2>
               <p className="text-xl text-gray-600">
-                Get up and running with TradeScan Pro in minutes
+                Get up and running with Trade Scan Pro in minutes
               </p>
             </div>
 
