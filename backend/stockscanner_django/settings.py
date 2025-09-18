@@ -34,7 +34,7 @@ else:
     ALLOWED_HOSTS = [
         "127.0.0.1",
         "localhost",
-        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescannet.com'),
     ]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
@@ -237,8 +237,8 @@ CORS_ALLOWED_ORIGINS = list(filter(None, [
     'http://127.0.0.1:8000',
     'https://tradescanpro.com',
     'https://www.tradescanpro.com',
-    'https://retailtradescanner.com',
-    'https://www.retailtradescanner.com',
+    'https://retailtradescannet.com',
+    'https://www.retailtradescannet.com',
     # Deployed static hosting domain(s)
     'https://access-5018544625.webspace-host.com',
 ] + [o.strip() for o in os.environ.get('EXTRA_CORS_ORIGINS', '').split(',') if o.strip()]))

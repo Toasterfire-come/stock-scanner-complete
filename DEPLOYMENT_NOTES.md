@@ -2,7 +2,7 @@
 
 Frontend (React)
 - Build with env set (example):
-  - REACT_APP_BACKEND_URL=https://api.retailtradescanner.com
+  - REACT_APP_BACKEND_URL=https://api.retailtradescannet.com
   - REACT_APP_PAYPAL_CLIENT_ID=... (if payments enabled)
 - Run: `yarn build` (or `npm run build`).
 - Upload `frontend/build/` to the static webspace for tradescanpro.com.
