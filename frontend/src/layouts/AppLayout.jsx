@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import EnhancedThemeToggle from "../components/ui/enhanced-theme-toggle";
 import EnhancedButton from "../components/ui/enhanced-button";
 import {
   Home,
@@ -18,7 +17,12 @@ import {
   HelpCircle,
   LogOut,
   ChevronDown,
-  Activity
+  Activity,
+  FileText,
+  BookOpen,
+  Info,
+  MessageCircle,
+  CreditCard
 } from "lucide-react";
 
 const AppLayout = () => {
@@ -56,8 +60,12 @@ const AppLayout = () => {
     { name: 'Dashboard', href: '/app/dashboard', icon: BarChart3 },
     { name: 'Profile', href: '/account/profile', icon: User },
     { name: 'Settings', href: '/account/notifications', icon: Settings },
-    { name: 'Billing', href: '/account/billing', icon: DollarSign },
-    { name: 'Help', href: '/help', icon: HelpCircle },
+    { name: 'Billing', href: '/account/billing', icon: CreditCard },
+    { name: 'Documentation', href: '/docs', icon: BookOpen },
+    { name: 'About', href: '/about', icon: Info },
+    { name: 'Features', href: '/features', icon: FileText },
+    { name: 'Contact', href: '/contact', icon: MessageCircle },
+    { name: 'Help Center', href: '/help', icon: HelpCircle },
   ];
 
   const isActiveRoute = (href) => {
@@ -72,8 +80,8 @@ const AppLayout = () => {
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${isScrolled 
-            ? 'glass backdrop-blur-xl border-b border-border/50 shadow-lg' 
-            : 'bg-background/80 backdrop-blur-sm border-b border-border/20'
+            ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-lg' 
+            : 'bg-white/90 backdrop-blur-sm border-b border-gray-200/30'
           }
         `}
       >
@@ -83,16 +91,16 @@ const AppLayout = () => {
             <div className="flex items-center space-x-4">
               <Link 
                 to="/" 
-                className="flex items-center space-x-3 hover-scale transition-transform"
+                className="flex items-center space-x-3 hover:scale-105 transition-transform"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-xl font-bold text-gradient">
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                     Trade Scan Pro
                   </h1>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-600 font-medium">
                     Professional Trading Platform
                   </p>
                 </div>
@@ -109,10 +117,10 @@ const AppLayout = () => {
                     to={item.href}
                     className={`
                       flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium
-                      transition-all duration-200 hover-lift
+                      transition-all duration-200 hover:scale-105
                       ${isActiveRoute(item.href)
-                        ? 'bg-primary/10 text-primary border border-primary/20'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }
                     `}
                   >
@@ -126,16 +134,13 @@ const AppLayout = () => {
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center space-x-4">
               {/* Live Market Status */}
-              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-medium">
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-200">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                 <span>Markets Open</span>
               </div>
 
-              {/* Theme Toggle */}
-              <EnhancedThemeToggle />
-
               {/* Notifications */}
-              <EnhancedButton variant="ghost" size="sm">
+              <EnhancedButton variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
                 <Bell className="w-5 h-5" />
               </EnhancedButton>
 
@@ -143,43 +148,43 @@ const AppLayout = () => {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-muted/50 transition-colors"
+                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
                     <User className="w-4 h-4 text-white" />
                   </div>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* User Dropdown */}
+                {/* User Dropdown with Scroll */}
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 glass rounded-2xl border border-border/20 shadow-2xl overflow-hidden">
-                    <div className="p-4 border-b border-border/20 bg-muted/30">
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
                           <User className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <p className="font-semibold">John Trader</p>
-                          <p className="text-sm text-muted-foreground">Gold Plan</p>
+                          <p className="font-semibold text-gray-900">Professional Trader</p>
+                          <p className="text-sm text-gray-600">Active Plan</p>
                         </div>
                       </div>
                     </div>
-                    <div className="p-2">
+                    <div className="p-2 max-h-80 overflow-y-auto">
                       {userNavigation.map((item) => {
                         const Icon = item.icon;
                         return (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="flex items-center space-x-3 w-full px-3 py-2 rounded-lg text-sm hover:bg-muted/50 transition-colors"
+                            className="flex items-center space-x-3 w-full px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           >
                             <Icon className="w-4 h-4" />
                             <span>{item.name}</span>
                           </Link>
                         );
                       })}
-                      <hr className="my-2 border-border/20" />
+                      <hr className="my-2 border-gray-200" />
                       <button className="flex items-center space-x-3 w-full px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors">
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
@@ -190,7 +195,7 @@ const AppLayout = () => {
               </div>
 
               {/* CTA Button */}
-              <EnhancedButton variant="primary" size="sm" className="ml-4">
+              <EnhancedButton variant="primary" size="sm" className="ml-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Shield className="w-4 h-4" />
                 Upgrade Plan
               </EnhancedButton>
@@ -198,15 +203,14 @@ const AppLayout = () => {
 
             {/* Mobile Menu Button */}
             <div className="lg:hidden flex items-center space-x-2">
-              <EnhancedThemeToggle />
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-xl hover:bg-muted/50 transition-colors"
+                className="p-2 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
+                  <X className="w-6 h-6 text-gray-600" />
                 ) : (
-                  <Menu className="w-6 h-6" />
+                  <Menu className="w-6 h-6 text-gray-600" />
                 )}
               </button>
             </div>
@@ -215,16 +219,16 @@ const AppLayout = () => {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-border/20 glass">
+          <div className="lg:hidden border-t border-gray-200 bg-white/95 backdrop-blur-xl">
             <div className="container-enhanced py-4">
               {/* Mobile User Info */}
-              <div className="flex items-center space-x-3 mb-6 p-4 rounded-2xl bg-muted/30">
-                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center">
+              <div className="flex items-center space-x-3 mb-6 p-4 rounded-2xl bg-gray-50">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="font-semibold">John Trader</p>
-                  <p className="text-sm text-muted-foreground">Gold Plan</p>
+                  <p className="font-semibold text-gray-900">Professional Trader</p>
+                  <p className="text-sm text-gray-600">Active Plan</p>
                 </div>
               </div>
 
@@ -240,8 +244,8 @@ const AppLayout = () => {
                         flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-base font-medium
                         transition-all duration-200
                         ${isActiveRoute(item.href)
-                          ? 'bg-primary/10 text-primary border border-primary/20'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
                     >
@@ -253,12 +257,25 @@ const AppLayout = () => {
               </nav>
 
               {/* Mobile Actions */}
-              <div className="space-y-3">
-                <EnhancedButton variant="primary" className="w-full">
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {userNavigation.slice(4).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="flex items-center space-x-3 w-full px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+                <EnhancedButton variant="primary" className="w-full bg-gradient-to-r from-blue-600 to-blue-700">
                   <Shield className="w-4 h-4" />
                   Upgrade Plan
                 </EnhancedButton>
-                <EnhancedButton variant="outline" className="w-full">
+                <EnhancedButton variant="outline" className="w-full border-gray-300 text-gray-700">
                   <Settings className="w-4 h-4" />
                   Account Settings
                 </EnhancedButton>
@@ -280,60 +297,60 @@ const AppLayout = () => {
       </main>
 
       {/* Enhanced Footer */}
-      <footer className="border-t border-border/20 bg-muted/30 mt-20">
+      <footer className="border-t border-gray-200 bg-gray-50 mt-20">
         <div className="container-enhanced py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gradient">Trade Scan Pro</h3>
-                  <p className="text-sm text-muted-foreground">Professional Trading Platform</p>
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Trade Scan Pro</h3>
+                  <p className="text-sm text-gray-600">Professional Trading Platform</p>
                 </div>
               </div>
-              <p className="text-muted-foreground mb-4">
-                Empowering traders with institutional-grade tools, real-time data, and advanced analytics 
-                to make informed investment decisions.
+              <p className="text-gray-600 mb-4">
+                Empowering traders with professional-grade tools, real-time data, and advanced analytics 
+                to make informed investment decisions with comprehensive documentation and support.
               </p>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span>99.9% Uptime • Bank-Level Security</span>
+                <span>99.9% Uptime • Professional Security</span>
               </div>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/app/stocks" className="hover:text-foreground transition-colors">Stock Scanner</Link></li>
-                <li><Link to="/app/screeners" className="hover:text-foreground transition-colors">Custom Screeners</Link></li>
-                <li><Link to="/app/portfolio" className="hover:text-foreground transition-colors">Portfolio Tracker</Link></li>
-                <li><Link to="/app/alerts" className="hover:text-foreground transition-colors">Price Alerts</Link></li>
+              <h4 className="font-semibold mb-4 text-gray-900">Platform</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><Link to="/app/stocks" className="hover:text-gray-900 transition-colors">Stock Scanner</Link></li>
+                <li><Link to="/app/screeners" className="hover:text-gray-900 transition-colors">Custom Screeners</Link></li>
+                <li><Link to="/app/portfolio" className="hover:text-gray-900 transition-colors">Portfolio Tracker</Link></li>
+                <li><Link to="/app/alerts" className="hover:text-gray-900 transition-colors">Price Alerts</Link></li>
               </ul>
             </div>
 
             {/* Support */}
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
-                <li><Link to="/docs" className="hover:text-foreground transition-colors">Documentation</Link></li>
-                <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
-                <li><Link to="/endpoint-status" className="hover:text-foreground transition-colors">System Status</Link></li>
+              <h4 className="font-semibold mb-4 text-gray-900">Support</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><Link to="/docs" className="hover:text-gray-900 transition-colors">Documentation</Link></li>
+                <li><Link to="/help" className="hover:text-gray-900 transition-colors">Help Center</Link></li>
+                <li><Link to="/contact" className="hover:text-gray-900 transition-colors">Contact Us</Link></li>
+                <li><Link to="/endpoint-status" className="hover:text-gray-900 transition-colors">System Status</Link></li>
               </ul>
             </div>
           </div>
 
-          <hr className="my-8 border-border/20" />
+          <hr className="my-8 border-gray-200" />
 
-          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
             <p>&copy; 2024 Trade Scan Pro. All rights reserved.</p>
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-              <Link to="/legal/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link to="/legal/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link to="/legal/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link>
+              <Link to="/legal/terms" className="hover:text-gray-900 transition-colors">Terms</Link>
               <div className="flex items-center space-x-1">
                 <span>Made with</span>
                 <span className="text-red-500">♥</span>
