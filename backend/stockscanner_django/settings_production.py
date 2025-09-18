@@ -7,29 +7,12 @@ from .settings import *
 
 # Security settings for external access
 DEBUG = False
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+SECRET_KEY = os.environ.get('SECRET_KEY', os.environ.get('DJANGO_SECRET_KEY', 'your-secret-key-here'))
 
-# Allow external hosts
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-    'YOUR_COMPUTER_IP',  # Replace with your computer's IP
-    'YOUR_DOMAIN.com',   # Replace with your WordPress domain
-]
+# Inherit ALLOWED_HOSTS and CORS from base settings.py which reads environment variables
+# Do not override here; ensure DJANGO_ALLOWED_HOSTS and CSRF/CORS envs are set in .env
 
-# CORS settings for WordPress
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'https://YOUR_WORDPRESS_DOMAIN.com',  # Replace with your WordPress domain
-    'http://YOUR_WORDPRESS_DOMAIN.com',   # Replace with your WordPress domain
-]
-
-# For development, you can allow all origins (less secure)
-# CORS_ALLOW_ALL_ORIGINS = True
+# CORS is configured in base settings using env vars
 
 # Rate limiting - use safe throttles that tolerate cache outages
 REST_FRAMEWORK = {
