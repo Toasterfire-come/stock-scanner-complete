@@ -138,13 +138,14 @@ function App() {
                 <Route path="/app/analytics" element={<AdvancedAnalytics />} />
                 <Route path="/app/referrals" element={<ReferralSystem />} />
 
-                {/* Marketing Pages - Using placeholders */}
-                <Route path="/product" element={<PlaceholderPage title="Product" />} />
-                <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />
-                <Route path="/use-cases" element={<PlaceholderPage title="Use Cases" />} />
-                <Route path="/changelog" element={<PlaceholderPage title="Changelog" />} />
-                <Route path="/help" element={<PlaceholderPage title="Help" />} />
-                <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
+                {/* Marketing Pages - Now using real components */}
+                <Route path="/product" element={<Marketing.Product />} />
+                <Route path="/data" element={<Marketing.DataCoverage />} />
+                <Route path="/use-cases" element={<Marketing.UseCases />} />
+                <Route path="/changelog" element={<Marketing.Changelog />} />
+                <Route path="/help" element={<Marketing.Help />} />
+                <Route path="/help/faq" element={<Marketing.FAQ />} />
+                <Route path="/enterprise" element={<EnterpriseContact />} />
 
                 {/* App Routes */}
                 <Route path="/app/dashboard" element={<AppDashboard />} />
