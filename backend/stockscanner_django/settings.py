@@ -92,6 +92,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
+# Optional multi-DB router (enabled automatically if secondary DB configured)
+if 'stocks' in globals().get('DATABASES', {}):
+    DATABASE_ROUTERS = ['stockscanner_django.db_router.StocksRouter']
+
 
 # Optional Sentry error reporting (enabled when SENTRY_DSN is set)
 try:
@@ -150,7 +154,7 @@ else:
         }
         print("INFO: Using SQLite configuration")
     else:
-        # Standard MySQL configuration
+        # Standard MySQL configuration with optional secondary DB
         DATABASES = {
             'default': {
                 'ENGINE': _db_engine,
@@ -159,13 +163,29 @@ else:
                 'PASSWORD': os.environ.get('DB_PASSWORD', ''),
                 'HOST': os.environ.get('DB_HOST', 'localhost'),
                 'PORT': os.environ.get('DB_PORT', '3306'),
+                'CONN_MAX_AGE': int(os.environ.get('CONN_MAX_AGE', '60')),
                 'OPTIONS': {
                     'charset': 'utf8mb4',
                     'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
                 }
             }
         }
-        print("INFO: Using standard MySQL configuration")
+        # Optional secondary DB for stock data (read-heavy)
+        if os.environ.get('DB2_NAME'):
+            DATABASES['stocks'] = {
+                'ENGINE': os.environ.get('DB2_ENGINE', _db_engine),
+                'NAME': os.environ.get('DB2_NAME'),
+                'USER': os.environ.get('DB2_USER', os.environ.get('DB_USER', '')),
+                'PASSWORD': os.environ.get('DB2_PASSWORD', os.environ.get('DB_PASSWORD', '')),
+                'HOST': os.environ.get('DB2_HOST', os.environ.get('DB_HOST', 'localhost')),
+                'PORT': os.environ.get('DB2_PORT', os.environ.get('DB_PORT', '3306')),
+                'CONN_MAX_AGE': int(os.environ.get('DB2_CONN_MAX_AGE', os.environ.get('CONN_MAX_AGE', '60'))),
+                'OPTIONS': {
+                    'charset': 'utf8mb4',
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                }
+            }
+        print("INFO: Using standard MySQL configuration" + (" with secondary 'stocks' DB" if 'stocks' in DATABASES else ""))
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
