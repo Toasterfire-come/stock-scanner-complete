@@ -31,7 +31,7 @@ import {
   LineChart,
   Globe,
   Lock,
-  Smartphone
+  BookOpen
 } from "lucide-react";
 import { getMarketStatsSafe } from "../api/client";
 
@@ -71,29 +71,29 @@ const Home = () => {
     {
       icon: <Search className="h-8 w-8" />,
       title: "Advanced Stock Screening",
-      description: "Filter through 10,000+ stocks with 50+ technical and fundamental criteria.",
-      details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities with institutional-grade precision.",
+      description: "Filter through thousands of stocks with comprehensive technical and fundamental criteria.",
+      details: "Our professional screening engine processes extensive data to help you find investment opportunities with institutional-grade precision and comprehensive filtering options.",
       gradient: "from-blue-500 to-blue-600"
     },
     {
       icon: <Bell className="h-8 w-8" />,
       title: "Real-Time Alerts",
       description: "Never miss a trading opportunity with instant price and volume alerts.",
-      details: "Set custom alerts for price movements, volume spikes, news events, and technical indicators. Get notified via email, SMS, or push notifications with zero latency.",
+      details: "Set custom alerts for price movements, volume spikes, news events, and technical indicators. Get notified via email with reliable and timely notifications.",
       gradient: "from-green-500 to-green-600"
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
       title: "Portfolio Analytics",
-      description: "Track performance with institutional-grade portfolio management tools.",
-      details: "Advanced risk metrics, performance attribution, sector allocation analysis, and detailed profit/loss tracking with comprehensive tax reporting and export capabilities.",
+      description: "Track performance with professional-grade portfolio management tools.",
+      details: "Comprehensive risk metrics, performance tracking, sector allocation analysis, and detailed profit/loss tracking with professional reporting and export capabilities.",
       gradient: "from-purple-500 to-purple-600"
     },
     {
-      icon: <TrendingUp className="h-8 w-8" />,
-      title: "AI Market Intelligence",
-      description: "AI-powered insights and sentiment analysis from news and social media.",
-      details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements with 87% accuracy.",
+      icon: <BookOpen className="h-8 w-8" />,
+      title: "Comprehensive Documentation",
+      description: "Extensive documentation and guides for all platform features and trading strategies.",
+      details: "Professional documentation with step-by-step guides, best practices, API references, and comprehensive support materials to help you maximize your trading success.",
       gradient: "from-orange-500 to-orange-600"
     }
   ];
@@ -103,27 +103,27 @@ const Home = () => {
       name: "Sarah Chen",
       role: "Professional Day Trader",
       company: "Peak Capital Trading",
-      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise. The real-time alerts alone have paid for my subscription 10x over.",
+      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise. The documentation is excellent.",
       rating: 5,
-      profit: "+342% ROI in 6 months",
+      profit: "Improved Strategy Results",
       avatar: "SC"
     },
     {
       name: "Michael Rodriguez",
       role: "Portfolio Manager",
       company: "Evergreen Investments",
-      content: "The institutional-grade analytics and risk management tools are outstanding. The platform's reliability and accuracy are unmatched in the industry. Our fund's performance has improved significantly since we started using Trade Scan Pro.",
+      content: "The professional-grade analytics and risk management tools are outstanding. The platform's reliability and accuracy are excellent. Our fund's performance has improved since we started using Trade Scan Pro.",
       rating: 5,
-      profit: "Prevented $50K+ in losses",
+      profit: "Enhanced Performance",
       avatar: "MR"
     },
     {
       name: "Jennifer Park",
       role: "Investment Advisor",
       company: "Wealth Strategies LLC",
-      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process. The professional presentations help me close more deals and retain clients longer.",
+      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process. The professional presentations help me serve clients better.",
       rating: 5,
-      profit: "Managing $2.3M in assets",
+      profit: "Better Client Service",
       avatar: "JP"
     }
   ];
@@ -131,7 +131,7 @@ const Home = () => {
   const faqs = [
     {
       question: "How accurate is your market data?",
-      answer: "Our data is sourced directly from major exchanges and updated in real-time with 99.9% uptime. We maintain institutional-grade data quality through multiple validation layers, redundant connections, and advanced error correction algorithms."
+      answer: "Our data is sourced directly from major exchanges and updated in real-time with excellent uptime. We maintain professional-grade data quality through multiple validation layers, redundant connections, and advanced error correction algorithms."
     },
     {
       question: "Can I cancel my subscription anytime?",
@@ -139,11 +139,11 @@ const Home = () => {
     },
     {
       question: "Do you offer API access?",
-      answer: "Yes! Our Silver and Gold plans include full REST API access with comprehensive documentation, allowing you to integrate our data into your own applications, trading systems, and investment platforms. We also provide WebSocket connections for real-time data streaming."
+      answer: "Yes! Our professional plans include REST API access with comprehensive documentation, allowing you to integrate our data into your own applications, trading systems, and investment platforms."
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ in API call limits, features, and support levels. Bronze (1,500 calls/month) is perfect for casual traders, Silver (5,000 calls/month) for active traders with advanced screening, and Gold (unlimited) for professional traders and institutions with full API access."
+      answer: "Plans differ in features and support levels. Our Bronze plan is perfect for casual traders, Silver for active traders with advanced screening, and Gold for professional traders with full access and priority support."
     },
     {
       question: "Do you provide investment advice?",
@@ -151,15 +151,8 @@ const Home = () => {
     },
     {
       question: "How secure is my data?",
-      answer: "We employ bank-level security with 256-bit SSL encryption, SOC 2 compliance, and regular security audits. Your personal information and trading data are protected by industry-leading security measures and are never shared with third parties."
+      answer: "We employ professional-level security with SSL encryption, regular security audits, and industry-standard security measures. Your personal information and trading data are protected and are never shared with third parties."
     }
-  ];
-
-  const stats = [
-    { label: "Active Traders", value: "50,000+", icon: <Users className="h-6 w-6" />, color: "text-blue-600" },
-    { label: "Stocks Tracked", value: "10,000+", icon: <BarChart3 className="h-6 w-6" />, color: "text-green-600" },
-    { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-6 w-6" />, color: "text-purple-600" },
-    { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-6 w-6" />, color: "text-orange-600" }
   ];
 
   const pricingPlans = [
@@ -169,17 +162,14 @@ const Home = () => {
       period: "/month",
       description: "Perfect for individual traders getting started",
       features: [
-        "1,500 API calls per month",
-        "10 calls per hour limit", 
-        "Full stock scanner & lookup",
+        "Professional stock scanner & lookup",
         "Email alerts & notifications",
-        "News sentiment analysis",
         "Basic portfolio tracking",
-        "Mobile app included",
-        "Community support"
+        "Documentation access",
+        "Email support"
       ],
       popular: false,
-      cta: "Start 7-Day Free Trial",
+      cta: "Start $1 Trial (7 Days)",
       gradient: "from-gray-100 to-gray-200",
       textColor: "text-gray-900"
     },
@@ -189,17 +179,15 @@ const Home = () => {
       period: "/month",
       description: "Advanced tools for serious traders",
       features: [
-        "5,000 API calls per month",
-        "25 calls per hour limit",
         "Advanced filtering & screening",
-        "1-year historical data access",
+        "Historical data access",
         "Custom watchlists (unlimited)",
         "Priority email support",
         "Advanced charting tools",
         "Export capabilities (PDF/CSV)"
       ],
       popular: true,
-      cta: "Start 7-Day Free Trial",
+      cta: "Start $1 Trial (7 Days)",
       gradient: "from-blue-500 to-blue-600",
       textColor: "text-white"
     },
@@ -209,17 +197,15 @@ const Home = () => {
       period: "/month",
       description: "Ultimate professional trading experience",
       features: [
-        "Unlimited API calls",
-        "No hourly or daily limits",
         "All premium features included",
         "Real-time streaming data",
         "Full REST API access",
         "Priority phone support",
-        "White-label options",
-        "Dedicated account manager"
+        "Professional reporting",
+        "Dedicated account support"
       ],
       popular: false,
-      cta: "Start 7-Day Free Trial",
+      cta: "Start $1 Trial (7 Days)",
       gradient: "from-yellow-400 to-yellow-500",
       textColor: "text-gray-900"
     }
@@ -243,7 +229,7 @@ const Home = () => {
             <div className="animate-fade-in">
               <Badge variant="secondary" className="mb-8 text-lg px-6 py-3 bg-white/80 backdrop-blur-sm border border-blue-200/50 hover-lift">
                 <Award className="h-5 w-5 mr-3 text-blue-600" />
-                Trusted by 50,000+ Professional Traders Worldwide
+                Trusted by Professional Traders Worldwide
               </Badge>
             </div>
             
@@ -258,9 +244,9 @@ const Home = () => {
             
             <div className="animate-fade-in delay-400">
               <p className="typography-body-large mb-12 max-w-4xl mx-auto text-gray-700">
-                Join thousands of successful traders using our advanced screening tools, 
-                real-time alerts, and AI-powered market intelligence to maximize their returns 
-                with institutional-grade precision.
+                Join successful traders using our advanced screening tools, 
+                real-time alerts, and comprehensive documentation to maximize their returns 
+                with professional-grade precision and extensive support.
               </p>
             </div>
             
@@ -269,11 +255,11 @@ const Home = () => {
               <EnhancedButton 
                 variant="primary" 
                 size="xl" 
-                className="group shadow-2xl hover:shadow-blue-500/25 transition-all duration-500"
+                className="group shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 bg-gradient-to-r from-blue-600 to-blue-700"
                 icon={<Play className="h-6 w-6" />}
               >
                 <Link to="/auth/sign-up" className="flex items-center">
-                  Start 7-Day Free Trial
+                  Start $1 Trial (7 Days)
                   <ArrowRight className="h-6 w-6 ml-3 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </EnhancedButton>
@@ -294,10 +280,10 @@ const Home = () => {
             {/* Enhanced Trust Indicators */}
             <div className="animate-fade-in delay-700 flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
               {[
-                { icon: CheckCircle, text: "7-Day Money-Back Guarantee", color: "text-green-500" },
-                { icon: Shield, text: "Bank-Level Security", color: "text-blue-500" },
+                { icon: CheckCircle, text: "Professional Grade Tools", color: "text-green-500" },
+                { icon: Shield, text: "Secure & Reliable", color: "text-blue-500" },
                 { icon: Clock, text: "Cancel Anytime", color: "text-purple-500" },
-                { icon: Globe, text: "99.9% Uptime SLA", color: "text-orange-500" }
+                { icon: BookOpen, text: "Extensive Documentation", color: "text-orange-500" }
               ].map((item, index) => (
                 <div key={index} className="flex items-center hover-lift cursor-default">
                   <item.icon className={`h-6 w-6 mr-3 ${item.color}`} />
@@ -352,11 +338,11 @@ const Home = () => {
                 <EnhancedCard className="text-center hover-lift">
                   <EnhancedCardContent className="p-8">
                     <div className="text-5xl font-bold text-purple-600 mb-3">
-                      1M+
+                      99.9%
                     </div>
-                    <div className="text-gray-600 font-medium">Alerts Sent This Month</div>
+                    <div className="text-gray-600 font-medium">Platform Uptime</div>
                     <div className="mt-4 flex justify-center">
-                      <Bell className="h-8 w-8 text-purple-500 opacity-50" />
+                      <Shield className="h-8 w-8 text-purple-500 opacity-50" />
                     </div>
                   </EnhancedCardContent>
                 </EnhancedCard>
@@ -364,9 +350,9 @@ const Home = () => {
                 <EnhancedCard className="text-center hover-lift">
                   <EnhancedCardContent className="p-8">
                     <div className="text-5xl font-bold text-orange-600 mb-3">
-                      99.9%
+                      Professional
                     </div>
-                    <div className="text-gray-600 font-medium">Data Accuracy Rate</div>
+                    <div className="text-gray-600 font-medium">Grade Analytics</div>
                     <div className="mt-4 flex justify-center">
                       <Target className="h-8 w-8 text-orange-500 opacity-50" />
                     </div>
@@ -375,22 +361,63 @@ const Home = () => {
               </div>
             </div>
           ) : (
-            <div className="grid md:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
-                <EnhancedCard key={index} className="text-center hover-lift">
+            <div className="text-center mb-16">
+              <h2 className="typography-headline-1 mb-6 text-gray-900">
+                Professional Trading Platform
+              </h2>
+              <p className="typography-body-medium text-gray-600 mb-12">
+                Trusted by professional traders for reliable market analysis
+              </p>
+              
+              <div className="grid md:grid-cols-4 gap-8">
+                <EnhancedCard className="text-center hover-lift">
                   <EnhancedCardContent className="p-8">
-                    <div className={`text-5xl font-bold mb-3 ${stat.color}`}>
-                      {stat.value}
+                    <div className="text-5xl font-bold text-blue-600 mb-3">
+                      Professional
                     </div>
-                    <div className="text-gray-600 font-medium">{stat.label}</div>
+                    <div className="text-gray-600 font-medium">Grade Tools</div>
                     <div className="mt-4 flex justify-center">
-                      <div className={`${stat.color} opacity-50`}>
-                        {stat.icon}
-                      </div>
+                      <BarChart3 className="h-8 w-8 text-blue-500 opacity-50" />
                     </div>
                   </EnhancedCardContent>
                 </EnhancedCard>
-              ))}
+                
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-green-600 mb-3">
+                      Real-Time
+                    </div>
+                    <div className="text-gray-600 font-medium">Market Data</div>
+                    <div className="mt-4 flex justify-center">
+                      <TrendingUp className="h-8 w-8 text-green-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+                
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-purple-600 mb-3">
+                      Comprehensive
+                    </div>
+                    <div className="text-gray-600 font-medium">Documentation</div>
+                    <div className="mt-4 flex justify-center">
+                      <BookOpen className="h-8 w-8 text-purple-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+                
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-orange-600 mb-3">
+                      Expert
+                    </div>
+                    <div className="text-gray-600 font-medium">Support Team</div>
+                    <div className="mt-4 flex justify-center">
+                      <Target className="h-8 w-8 text-orange-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+              </div>
             </div>
           )}
         </div>
@@ -405,10 +432,10 @@ const Home = () => {
           <div className="text-center mb-20">
             <h2 className="typography-display-2 mb-8 text-gray-900">
               Everything You Need to
-              <span className="text-gradient block">Dominate the Markets</span>
+              <span className="text-gradient block">Excel in Trading</span>
             </h2>
             <p className="typography-body-large max-w-3xl mx-auto text-gray-600">
-              Professional-grade tools that give you the competitive edge with institutional-quality analytics
+              Professional-grade tools with comprehensive documentation and expert support
             </p>
           </div>
           
@@ -468,7 +495,7 @@ const Home = () => {
               <span className="text-gradient block">Trading Community</span>
             </h2>
             <p className="typography-body-large text-gray-600">
-              Real results from real traders using Trade Scan Pro to transform their trading performance
+              Real results from real traders using Trade Scan Pro to enhance their trading performance
             </p>
           </div>
           
@@ -488,7 +515,7 @@ const Home = () => {
                   
                   <div className="border-t pt-6">
                     <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-bold text-lg mr-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg mr-4">
                         {testimonial.avatar}
                       </div>
                       <div>
@@ -524,7 +551,7 @@ const Home = () => {
             </p>
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-8 py-4 rounded-full font-bold text-lg shadow-lg">
               <Zap className="h-6 w-6 mr-3" />
-              7-Day Free Trial on All Plans - No Credit Card Required
+              $1 Trial for 7 Days - No Credit Card Required
             </div>
           </div>
           
@@ -637,8 +664,8 @@ const Home = () => {
             Ready to Transform Your Trading?
           </h2>
           <p className="typography-body-large mb-12 max-w-3xl mx-auto text-green-100">
-            Join 50,000+ successful traders who rely on our platform for profitable trading decisions.
-            Start your journey to consistent profits today.
+            Join successful traders who rely on our platform for professional trading decisions.
+            Start your journey with comprehensive tools and documentation.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
@@ -649,7 +676,7 @@ const Home = () => {
               icon={<Play className="h-6 w-6" />}
             >
               <Link to="/auth/sign-up" className="flex items-center">
-                Start 7-Day Free Trial
+                Start $1 Trial (7 Days)
                 <ArrowRight className="h-6 w-6 ml-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </EnhancedButton>
@@ -671,7 +698,7 @@ const Home = () => {
             {[
               { icon: CheckCircle, text: "No Setup Fees" },
               { icon: CheckCircle, text: "Cancel Anytime" },
-              { icon: CheckCircle, text: "24/7 Support" },
+              { icon: BookOpen, text: "Full Documentation" },
               { icon: Lock, text: "Secure & Private" }
             ].map((item, index) => (
               <div key={index} className="flex items-center hover-lift cursor-default">
