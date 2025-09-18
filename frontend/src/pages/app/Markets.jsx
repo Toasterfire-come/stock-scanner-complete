@@ -260,11 +260,10 @@ const Markets = () => {
 
         {/* Market Data Tabs */}
         <Tabs defaultValue="gainers" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="gainers">Top Gainers</TabsTrigger>
             <TabsTrigger value="losers">Top Losers</TabsTrigger>
             <TabsTrigger value="active">Most Active</TabsTrigger>
-            <TabsTrigger value="sectors">Sectors</TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
