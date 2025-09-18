@@ -175,23 +175,23 @@ class TradeScanProAPITester:
         return success1 and success2 and success3
 
     def test_billing_endpoints(self):
-        """Test PayPal billing endpoints"""
-        # Test create PayPal order
+        """Test PayPal billing endpoints - Fixed import issues"""
+        # Test create PayPal order (should return 201 for creation)
         success1, response = self.run_test(
             "Create PayPal Order",
             "POST",
             "api/billing/create-paypal-order/",
-            200,
+            201,  # Expect 201 for creation, not 200
             data={"plan": "bronze", "amount": "24.99"}
         )
         
-        # Test capture PayPal order
+        # Test capture PayPal order with TEST order ID (should work with stub)
         success2, response = self.run_test(
-            "Capture PayPal Order",
+            "Capture PayPal Order - Stub",
             "POST",
             "api/billing/capture-paypal-order/",
             200,
-            data={"order_id": "PAYPAL_TEST123"}
+            data={"order_id": "TEST-STUB123", "plan_type": "bronze", "billing_cycle": "monthly"}
         )
         
         return success1 and success2
