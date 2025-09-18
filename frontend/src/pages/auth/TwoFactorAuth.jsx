@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
+import { api } from "../../api/client";
 import { toast } from "sonner";
 import { Shield, RefreshCw } from "lucide-react";
 
@@ -34,16 +35,9 @@ const TwoFactorAuth = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Simulate 2FA verification API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate successful verification
-      if (data.code === "123456") {
-        toast.success("Two-factor authentication successful!");
-        navigate(from, { replace: true });
-      } else {
-        toast.error("Invalid verification code. Please try again.");
-      }
+      const { data: res } = await api.post('/auth/2fa/verify/', { code: data.code });
+      if (res?.success) { toast.success("Two-factor authentication successful!"); navigate(from, { replace: true }); }
+      else { toast.error(res?.message || "Invalid verification code."); }
     } catch (error) {
       toast.error("Verification failed. Please try again.");
     } finally {
@@ -54,8 +48,7 @@ const TwoFactorAuth = () => {
   const resendCode = async () => {
     setIsResending(true);
     try {
-      // Simulate resend 2FA code API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await api.post('/auth/2fa/resend/', { email });
       toast.success("New verification code sent!");
     } catch (error) {
       toast.error("Failed to send verification code. Please try again.");
@@ -76,11 +69,7 @@ const TwoFactorAuth = () => {
         </p>
       </div>
 
-      <Alert>
-        <AlertDescription>
-          For demo purposes, use code <strong>123456</strong> to proceed.
-        </AlertDescription>
-      </Alert>
+      
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">

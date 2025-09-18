@@ -73,6 +73,17 @@ const AppLayout = () => {
     return location.pathname.startsWith(href);
   };
 
+  const docsAnchorByRoute = (pathname) => {
+    if (pathname.startsWith('/app/markets')) return '/docs#stock-data';
+    if (pathname.startsWith('/app/stocks')) return '/docs#stock-data';
+    if (pathname.startsWith('/app/screeners')) return '/docs#screening';
+    if (pathname.startsWith('/app/portfolio')) return '/docs#portfolio';
+    if (pathname.startsWith('/app/watchlists')) return '/docs#watchlists';
+    if (pathname.startsWith('/app/alerts')) return '/docs#alerts';
+    if (pathname.startsWith('/account')) return '/docs#account-setup';
+    return '/docs';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Enhanced Navigation Header */}
@@ -143,6 +154,11 @@ const AppLayout = () => {
               <EnhancedButton variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
                 <Bell className="w-5 h-5" />
               </EnhancedButton>
+
+              {/* Contextual Docs */}
+              <Link to={docsAnchorByRoute(location.pathname)} className="text-sm text-blue-700 hover:text-blue-900 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                Docs
+              </Link>
 
               {/* User Menu */}
               <div className="relative">

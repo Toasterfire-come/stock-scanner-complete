@@ -39,58 +39,7 @@ const Portfolio = () => {
   const fetchPortfolio = async () => {
     try {
       const response = await getPortfolio();
-      if (response.success) {
-        setPortfolio(response);
-      } else {
-        // Fallback data for production demo
-        setPortfolio({
-          success: true,
-          data: [
-            {
-              id: "1",
-              symbol: "AAPL",
-              shares: 50,
-              avg_cost: 150.25,
-              current_price: 178.25,
-              total_value: 8912.50,
-              gain_loss: 1400.00,
-              gain_loss_percent: 18.6,
-              portfolio_name: "My Portfolio",
-              added_date: "2024-01-15T10:30:00Z"
-            },
-            {
-              id: "2", 
-              symbol: "MSFT",
-              shares: 25,
-              avg_cost: 380.00,
-              current_price: 412.80,
-              total_value: 10320.00,
-              gain_loss: 820.00,
-              gain_loss_percent: 8.6,
-              portfolio_name: "My Portfolio",
-              added_date: "2024-01-10T14:20:00Z"
-            },
-            {
-              id: "3",
-              symbol: "NVDA", 
-              shares: 15,
-              avg_cost: 110.50,
-              current_price: 128.50,
-              total_value: 1927.50,
-              gain_loss: 270.00,
-              gain_loss_percent: 16.3,
-              portfolio_name: "My Portfolio", 
-              added_date: "2024-01-08T09:15:00Z"
-            }
-          ],
-          summary: {
-            total_value: 21160.00,
-            total_gain_loss: 2490.00,
-            total_gain_loss_percent: 13.3,
-            total_holdings: 3
-          }
-        });
-      }
+      if (response.success) setPortfolio(response); else setPortfolio({ success: true, data: [], summary: null });
     } catch (error) {
       toast.error("Failed to load portfolio");
     } finally {

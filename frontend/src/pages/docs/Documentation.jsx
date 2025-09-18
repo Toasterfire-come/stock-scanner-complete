@@ -68,24 +68,21 @@ const Documentation = () => {
     }
   ];
 
-  const quickStart = `// Quick Start Example
+  const quickStart = `// Quick Start Example (React)
+// Backend base URL is embedded at build-time via REACT_APP_BACKEND_URL
 const apiKey = 'your_api_key_here';
-const baseUrl = 'https://api.tradescanpro.com/v1';
+const baseUrl = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
 
-// Get stock quote
-fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
+// Get stock quote (Django: /api/stocks/{symbol}/quote)
+fetch(baseUrl + '/api/stocks/AAPL/quote', {
   headers: {
-    'Authorization': \`Bearer \${apiKey}\`,
+    'Authorization': 'Bearer ' + apiKey,
     'Content-Type': 'application/json'
   }
 })
-.then(response => response.json())
-.then(data => {
-  console.log('AAPL Quote:', data);
-})
-.catch(error => {
-  console.error('Error:', error);
-});`;
+  .then((r) => r.json())
+  .then((data) => console.log('AAPL Quote:', data))
+  .catch((err) => console.error('Error:', err));`;
 
   const copyToClipboard = (code) => {
     navigator.clipboard.writeText(code);
@@ -340,6 +337,22 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
 
       {/* Anchors */}
       <div id="api-reference" className="sr-only" />
+      <div id="account-setup" className="sr-only" />
+      <div id="first-login" className="sr-only" />
+      <div id="dashboard" className="sr-only" />
+      <div id="navigation" className="sr-only" />
+      <div id="api-auth" className="sr-only" />
+      <div id="stock-data" className="sr-only" />
+      <div id="portfolio-api" className="sr-only" />
+      <div id="rate-limits" className="sr-only" />
+      <div id="screening" className="sr-only" />
+      <div id="alerts" className="sr-only" />
+      <div id="portfolio" className="sr-only" />
+      <div id="watchlists" className="sr-only" />
+      <div id="login-issues" className="sr-only" />
+      <div id="data-issues" className="sr-only" />
+      <div id="api-errors" className="sr-only" />
+      <div id="billing" className="sr-only" />
 
       {/* Popular Guides */}
       <section className="py-24 bg-gray-50">
