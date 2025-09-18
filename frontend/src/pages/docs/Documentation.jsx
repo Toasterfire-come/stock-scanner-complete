@@ -294,9 +294,11 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
                       <p className="text-sm text-gray-600">Get historical price data</p>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full mt-6">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Full API Docs
+                  <Button asChild variant="outline" className="w-full mt-6">
+                    <a href="#api-reference">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Full API Docs
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
@@ -323,9 +325,11 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
                       <p className="text-sm text-gray-600">Get detailed performance metrics</p>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full mt-6">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Portfolio Docs
+                  <Button asChild variant="outline" className="w-full mt-6">
+                    <a href="#portfolio-api">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Portfolio Docs
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
@@ -333,6 +337,9 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
           </div>
         </div>
       </section>
+
+      {/* Anchors */}
+      <div id="api-reference" className="sr-only" />
 
       {/* Popular Guides */}
       <section className="py-24 bg-gray-50">

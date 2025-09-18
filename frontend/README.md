@@ -1,6 +1,26 @@
-# Getting Started with Create React App
+# Trade Scan Pro Frontend (React)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the React SPA for Trade Scan Pro. It is deployed to a static webspace connected to `https://tradescanpro.com` and communicates with a separate Django backend over HTTPS.
+
+## Environment Configuration
+
+Copy `.env.example` to `.env` and set values before building:
+
+```
+REACT_APP_BACKEND_URL=https://api.tradescanpro.com
+REACT_APP_API_PASSWORD=
+REACT_APP_PAYPAL_CLIENT_ID=
+```
+
+Notes:
+- `REACT_APP_BACKEND_URL` must point to the Django server base URL. All API calls go to `${REACT_APP_BACKEND_URL}/api` and revenue to `${REACT_APP_BACKEND_URL}/revenue`.
+- `REACT_APP_API_PASSWORD` is optional and, if used, is sent as `X-API-Key` on requests.
+- `REACT_APP_PAYPAL_CLIENT_ID` should be your PayPal public client id for the selected environment (sandbox or live).
+- Values are embedded at build time; rebuild after changing.
+
+## Routing on Static Hosting
+
+The app uses hash-based routing (`HashRouter`) to ensure deep links work on static hosting without server rewrites. All links are of the form `/#/path`.
 
 ## Available Scripts
 
@@ -26,6 +46,17 @@ It correctly bundles React in production mode and optimizes the build for the be
 
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
+
+Deploy the `build/` directory to your static webspace for `tradescanpro.com`. Ensure environment variables were set prior to the build.
+
+## Django Backend
+
+The Django backend runs on a separate server and should be configured to allow CORS for the static origin. Typical base URL example: `https://api.tradescanpro.com`.
+
+## Documentation
+
+- In-app docs: navigate to `/#/docs`
+- Glossary and quick start are provided and interlinked.
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 

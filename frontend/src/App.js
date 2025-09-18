@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 
@@ -77,7 +77,7 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 // Content & Docs
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
-import Documentation from "./pages/docs/DocumentationSimple";
+import Documentation from "./pages/docs/Documentation";
 import EnterpriseContact from "./pages/EnterpriseContact";
 
 // Marketing Pages
@@ -103,7 +103,7 @@ const PlaceholderPage = ({ title }) => (
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <LatencyIndicator />
         <SystemErrorBoundary>
           <div className="min-h-screen bg-background">
@@ -210,7 +210,7 @@ function App() {
             <Toaster position="top-right" />
           </div>
         </SystemErrorBoundary>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 }

@@ -28,8 +28,10 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const profileResponse = await getProfile();
-        if (profileResponse.success) {
-          setUser(profileResponse.data);
+        const ok = (profileResponse && (profileResponse.success === true || profileResponse.user || profileResponse.data));
+        const userData = profileResponse?.data || profileResponse?.user || profileResponse;
+        if (ok && userData) {
+          setUser(userData);
           setIsAuthenticated(true);
         } else {
           localStorage.removeItem("rts_token");
@@ -48,18 +50,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const result = await apiLogin(username, password);
-      
-      if (result.success && result.token) {
-        setUser(result.data);
+      const token = result?.token;
+      const userData = result?.data || result?.user || null;
+      if (result?.success && token) {
+        setUser(userData);
         setIsAuthenticated(true);
-        localStorage.setItem("rts_token", result.token);
+        localStorage.setItem("rts_token", token);
         return { success: true };
-      } else {
-        return { 
-          success: false, 
-          message: result.message || "Login failed" 
-        };
       }
+      return { success: false, message: result?.message || "Login failed" };
     } catch (error) {
       return { 
         success: false, 

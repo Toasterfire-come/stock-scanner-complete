@@ -1,5 +1,16 @@
 # Trade Scan Pro - Production Ready Improvements
 
+Branch: `main-2.0`
+
+Frontend (React) changes in this session (static hosting compatibility and env config):
+- Switched routing to `HashRouter` in `frontend/src/App.js` to support static hosting on tradescanpro.com without server rewrites.
+- Updated docs route to use `Documentation` and added working anchors for internal links.
+- Refactored `frontend/src/pages/app/Alerts.jsx` to use the centralized Axios client and backend endpoints (`/alerts/*`) respecting `REACT_APP_BACKEND_URL`.
+- Hardened `frontend/src/context/AuthContext.jsx` to accept varied backend response shapes and stabilize login/profile flows.
+- Removed hardcoded `user_id` from `frontend/src/components/PayPalCheckout.jsx` (backend must infer from auth token).
+- Added `frontend/.env.example` and expanded `frontend/README.md` with environment, routing, deployment, and Django separation notes.
+- Noted build-time env usage in `frontend/public/contracts.md`.
+
 ## Overview
 Successfully implemented comprehensive improvements to make the stock scanner application more profitable, production-ready, and professional. The platform now rivals institutional-grade trading platforms.
 

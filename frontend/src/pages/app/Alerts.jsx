@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { api } from "../../api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -28,45 +29,8 @@ const Alerts = () => {
   const fetchAlerts = async () => {
     setIsLoading(true);
     try {
-      // Simulate fetching existing alerts
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setAlerts([
-        {
-          id: 1,
-          ticker: "AAPL",
-          targetPrice: 220.00,
-          currentPrice: 210.50,
-          condition: "above",
-          email: "user@example.com",
-          isActive: true,
-          isTriggered: false,
-          createdAt: "2024-01-15T10:30:00Z"
-        },
-        {
-          id: 2,
-          ticker: "MSFT",
-          targetPrice: 400.00,
-          currentPrice: 440.30,
-          condition: "below",
-          email: "user@example.com",
-          isActive: true,
-          isTriggered: true,
-          createdAt: "2024-01-14T15:20:00Z",
-          triggeredAt: "2024-01-15T09:45:00Z"
-        },
-        {
-          id: 3,
-          ticker: "TSLA",
-          targetPrice: 250.00,
-          currentPrice: 245.80,
-          condition: "above",
-          email: "user@example.com",
-          isActive: false,
-          isTriggered: false,
-          createdAt: "2024-01-13T14:15:00Z"
-        }
-      ]);
+      const { data } = await api.get('/alerts/list/');
+      setAlerts(Array.isArray(data) ? data : (data?.alerts || []));
     } catch (error) {
       toast.error("Failed to fetch alerts");
     } finally {
@@ -82,27 +46,18 @@ const Alerts = () => {
 
     setIsCreating(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ticker: newAlert.ticker.toUpperCase(),
-          target_price: parseFloat(newAlert.targetPrice),
-          condition: newAlert.condition,
-          email: newAlert.email
-        })
+      const { data } = await api.post('/alerts/create/', {
+        ticker: newAlert.ticker.toUpperCase(),
+        target_price: parseFloat(newAlert.targetPrice),
+        condition: newAlert.condition,
+        email: newAlert.email
       });
-
-      const data = await response.json();
-      
-      if (data.alert_id) {
+      if (data?.alert_id || data?.success) {
         toast.success("Alert created successfully");
         setNewAlert({ ticker: "", targetPrice: "", condition: "above", email: "" });
-        fetchAlerts(); // Refresh the list
+        fetchAlerts();
       } else {
-        toast.error("Failed to create alert");
+        toast.error(data?.message || "Failed to create alert");
       }
     } catch (error) {
       toast.error("Failed to create alert");
@@ -115,8 +70,7 @@ const Alerts = () => {
     if (!confirm("Are you sure you want to delete this alert?")) return;
     
     try {
-      // Simulate API call to delete alert
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await api.delete(`/alerts/${alertId}/`);
       setAlerts(alerts.filter(alert => alert.id !== alertId));
       toast.success("Alert deleted successfully");
     } catch (error) {
@@ -126,8 +80,7 @@ const Alerts = () => {
 
   const toggleAlert = async (alertId) => {
     try {
-      // Simulate API call to toggle alert
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await api.post(`/alerts/${alertId}/toggle/`);
       setAlerts(alerts.map(alert => 
         alert.id === alertId 
           ? { ...alert, isActive: !alert.isActive }
