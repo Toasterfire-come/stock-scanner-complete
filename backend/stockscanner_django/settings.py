@@ -385,8 +385,7 @@ else:
         os.environ.get('PRIMARY_ORIGIN', 'https://tradescanpro.com'),
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
-        'https://tradscanpro.com',
-        'https://www.tradscanpro.com',
+    # Removed alias typos to reduce confusion
         # Deployed static hosting domain(s)
         'https://access-5018544625.webspace-host.com',
     ] + [o.strip() for o in os.environ.get('EXTRA_CSRF_ORIGINS', '').split(',') if o.strip()]))
