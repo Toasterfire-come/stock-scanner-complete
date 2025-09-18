@@ -80,3 +80,4 @@ agenthub/agents/youtube/db
 android-sdk/ temp_repo/.git/objects/pack/pack-6f31cac1074197aa15f8c4986dd54e5b91bbfcae.pack
 temp_main19/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
 temp_main/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
+frontend/node_modules/.cache/default-development/0.pack

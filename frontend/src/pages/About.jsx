@@ -17,10 +17,10 @@ import {
 
 const About = () => {
   const stats = [
-    { label: "Active Traders", value: "50,000+" },
-    { label: "API Calls Daily", value: "10M+" },
-    { label: "Years in Business", value: "5+" },
-    { label: "Customer Satisfaction", value: "98%" }
+    { label: "Stocks Available", value: "10,000+" },
+    { label: "Real-time Updates", value: "24/7" },
+    { label: "Professional Tools", value: "Advanced" },
+    { label: "Documentation", value: "Complete" }
   ];
 
   const team = [
