@@ -26,6 +26,7 @@ const Markets = () => {
   const [marketStats, setMarketStats] = useState(null);
   const [trending, setTrending] = useState(null);
   const [statistics, setStatistics] = useState(null);
+  const [isFallback, setIsFallback] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -52,6 +53,7 @@ const Markets = () => {
 
         setMarketStats(statsResponse.data);
         setTrending(trendingResponse.data);
+        setIsFallback(Boolean(trendingResponse.fallback));
         setStatistics(statisticsResponse.data);
       } catch (err) {
         const msg = "Failed to fetch market data";
@@ -81,6 +83,7 @@ const Markets = () => {
       if (!trendingResponse.success) toast.error(trendingResponse.error);
       setMarketStats(statsResponse.data);
       setTrending(trendingResponse.data);
+      setIsFallback(Boolean(trendingResponse.fallback));
     } catch (err) {
       toast.error("Refresh failed");
     } finally {
@@ -259,7 +262,7 @@ const Markets = () => {
         )}
 
         {/* Demo Data Notice */}
-        {trending && trending.fallback && (
+        {isFallback && (
           <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
             <CardContent className="p-4 text-blue-800">
               You are viewing demo market data while the live API is unavailable.

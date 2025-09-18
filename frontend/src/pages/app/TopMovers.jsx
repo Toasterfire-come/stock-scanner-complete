@@ -13,6 +13,7 @@ import VirtualizedList from "../../components/VirtualizedList";
 const TopMovers = () => {
   const [trendingData, setTrendingData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFallback, setIsFallback] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState("");
   const [page, setPage] = useState({ gainers: 1, losers: 1, volume: 1 });
@@ -25,7 +26,7 @@ const TopMovers = () => {
     try {
       const res = await getTrendingSafe();
       if (!res.success) { setError(res.error); toast.error(res.error); }
-      setTrendingData(res.data); setLastUpdated(new Date());
+      setTrendingData(res.data); setLastUpdated(new Date()); setIsFallback(Boolean(res.fallback));
     } catch (error) { const msg = "Failed to fetch trending data"; setError(msg); toast.error(msg); }
     finally { setIsLoading(false); }
   };
@@ -200,7 +201,7 @@ const TopMovers = () => {
         <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/50 mb-6"><CardContent className="p-4 text-yellow-800 flex items-center justify-between"><span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> {error}</span><Button size="sm" variant="outline" onClick={fetchTrendingData}>Retry</Button></CardContent></Card>
       )}
 
-      {trendingData?.fallback && (
+      {isFallback && (
         <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 mb-6"><CardContent className="p-4 text-blue-800">You are viewing demo market data while the live API is unavailable.</CardContent></Card>
       )}
 
