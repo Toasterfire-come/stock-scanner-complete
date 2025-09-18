@@ -276,9 +276,12 @@ class RateLimitMiddleware(MiddlewareMixin):
     
     def check_rate_limit(self, user_id, limit):
         """
-        Check if user has exceeded rate limit
+        Check if user has exceeded monthly rate limit
         """
-        cache_key = f"rate_limit_{user_id}"
+        if limit >= 999999:  # Unlimited plans
+            return True
+            
+        cache_key = f"monthly_rate_limit_{user_id}"
         current_time = time.time()
         
         # Get current request data from cache
@@ -294,11 +297,11 @@ class RateLimitMiddleware(MiddlewareMixin):
                 'count': 1,
                 'window_start': current_time,
                 'requests': [current_time]
-            }, self.free_user_window)
+            }, self.rate_limit_window)
             return True
         
-        # Clean old requests outside the window
-        window_start = current_time - self.free_user_window
+        # Clean old requests outside the 30-day window
+        window_start = current_time - self.rate_limit_window
         request_data['requests'] = [
             req_time for req_time in request_data['requests']
             if req_time > window_start
@@ -306,7 +309,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         
         # Check if limit exceeded
         if len(request_data['requests']) >= limit:
-            logger.warning(f"Rate limit exceeded for {user_id}: {len(request_data['requests'])} requests in window")
+            logger.warning(f"Monthly rate limit exceeded for {user_id}: {len(request_data['requests'])} requests in 30-day window")
             return False
         
         # Add current request
@@ -315,7 +318,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         
         # Update cache
         try:
-            cache.set(cache_key, request_data, self.free_user_window)
+            cache.set(cache_key, request_data, self.rate_limit_window)
         except Exception:
             pass
         
