@@ -351,11 +351,7 @@ const AppLayout = () => {
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">
               <Link to="/legal/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-gray-900 transition-colors">Terms</Link>
-              <div className="flex items-center space-x-1">
-                <span>Made with</span>
-                <span className="text-red-500">♥</span>
-                <span>for traders</span>
-              </div>
+              {/* watermark removed */}
             </div>
           </div>
         </div>
