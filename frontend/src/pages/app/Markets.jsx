@@ -258,6 +258,15 @@ const Markets = () => {
           </div>
         )}
 
+        {/* Demo Data Notice */}
+        {trending && trending.fallback && (
+          <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
+            <CardContent className="p-4 text-blue-800">
+              You are viewing demo market data while the live API is unavailable.
+            </CardContent>
+          </Card>
+        )}
+
         {/* Market Data Tabs */}
         <Tabs defaultValue="gainers" className="w-full">
           <TabsList className="grid w-full grid-cols-3">

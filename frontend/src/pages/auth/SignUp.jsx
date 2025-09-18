@@ -245,6 +245,7 @@ const SignUp = () => {
           variant="outline"
           onClick={() => handleOAuthSignUp("google")}
           className="w-full"
+          disabled={!registrationEnabled}
         >
           <Chrome className="h-4 w-4 mr-2" />
           Google
@@ -253,6 +254,7 @@ const SignUp = () => {
           variant="outline"
           onClick={() => handleOAuthSignUp("github")}
           className="w-full"
+          disabled={!registrationEnabled}
         >
           <Github className="h-4 w-4 mr-2" />
           GitHub

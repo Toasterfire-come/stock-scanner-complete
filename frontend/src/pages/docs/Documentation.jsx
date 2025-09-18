@@ -414,8 +414,8 @@ fetch(\`\${baseUrl}/stocks/AAPL/quote\`, {
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-              <Link to="/community">
-                Join Community
+              <Link to="/docs">
+                Browse Docs
               </Link>
             </Button>
           </div>
