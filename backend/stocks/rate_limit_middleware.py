@@ -73,11 +73,21 @@ class RateLimitMiddleware(MiddlewareMixin):
     def __init__(self, get_response):
         self.get_response = get_response
         
-        # Rate limit configuration
-        # Free users per-hour limit derives from env and supports marketing requirement of 30 if set
-        self.free_user_limit = int(getattr(settings, 'RATE_LIMIT_FREE_USERS', 100))
-        self.free_user_window = getattr(settings, 'RATE_LIMIT_WINDOW', 3600)  # 1 hour in seconds
-        self.authenticated_user_limit = getattr(settings, 'RATE_LIMIT_AUTHENTICATED_USERS', 1000)  # requests per hour
+        # Rate limit configuration - Monthly limits as per problem statement
+        # free: 30, basic: 1500, pro: 5000, enterprise: unlimited per month
+        self.monthly_limits = {
+            'free': int(getattr(settings, 'RATE_LIMIT_FREE_USERS', 30)),
+            'basic': 1500,
+            'bronze': 1500,  # alias for basic
+            'silver': 5000,  # alias for pro
+            'pro': 5000,
+            'gold': -1,      # unlimited
+            'enterprise': -1  # unlimited
+        }
+        self.rate_limit_window = getattr(settings, 'RATE_LIMIT_WINDOW', 2592000)  # 30 days in seconds
+        
+        # Legacy hourly limit for backwards compatibility (for non-stock endpoints)
+        self.hourly_limit = getattr(settings, 'RATE_LIMIT_AUTHENTICATED_USERS', 1000)  # requests per hour
         
         # Premium user settings (no rate limiting)
         self.premium_user_groups = getattr(settings, 'PREMIUM_USER_GROUPS', ['premium', 'pro', 'enterprise'])
