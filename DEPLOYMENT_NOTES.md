@@ -1,3 +1,42 @@
+## Deployment Notes
+
+### Frontend (Static Hosting)
+
+1) Build with backend URL
+```
+cd frontend
+REACT_APP_BACKEND_URL=https://api.retailtradescannet.com npm run build
+```
+
+2) Upload `frontend/build/` to your static webspace. The app uses HashRouter, so deep links are `/#/path` and do not require server rewrites.
+
+### Backend (Django)
+
+1) `.env`
+Copy `backend/.env.example` to `backend/.env` and fill credentials.
+
+2) Install and migrate
+```
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate --database=default
+python manage.py migrate --database=stocks stocks
+# Optional news in stocks DB
+python manage.py migrate --database=stocks news
+```
+
+3) Create superuser
+```
+python manage.py createsuperuser --database=default
+```
+
+4) Run
+```
+python manage.py runserver 0.0.0.0:8000
+```
+
+Ensure CORS and CSRF envs allow `https://tradescanpro.com`.
 # Deployment Notes
 
 Frontend (React)

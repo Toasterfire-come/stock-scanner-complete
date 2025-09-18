@@ -155,7 +155,9 @@ async function cachedGet(path, cacheKey, ttlMs = 30000) {
 export async function getTrendingSafe() {
   try {
     const res = await cachedGet('/trending/', 'trending', 30000);
-    return { success: true, data: normalizeTrending(res.data) };
+    const payload = res.data || {};
+    const isFallback = Boolean(payload.fallback || payload.demo || payload.is_fallback);
+    return { success: true, data: normalizeTrending(payload), fallback: isFallback };
   } catch (error) {
     // Fallback to demo data for production-ready experience
     const fallbackData = {

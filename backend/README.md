@@ -1,3 +1,38 @@
+## Backend (Django) Setup
+
+### 1) Environment
+
+Copy `.env.example` to `.env` and fill values. Ensure `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, and DB credentials are set. To enable a second DB for stocks/news, set the `DB2_*` variables.
+
+### 2) Install
+
+```
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3) Migrations
+
+```
+python manage.py migrate --database=default
+python manage.py migrate --database=stocks stocks
+# Optional if news app is stored in stocks DB
+python manage.py migrate --database=stocks news
+```
+
+### 4) Superuser
+
+```
+python manage.py createsuperuser --database=default
+```
+
+### 5) Run
+
+```
+python manage.py runserver 0.0.0.0:8000
+```
+
+CORS/CSRF and ALLOWED_HOSTS are env-driven in `settings.py`. The optional router for the `stocks` DB is enabled only if `DB2_NAME` is set.
 # Stock Scanner Backend (Django)
 
 This backend serves the Trade Scan Pro React frontend hosted on a separate static webspace. Configure via `.env` and use MySQL in production.

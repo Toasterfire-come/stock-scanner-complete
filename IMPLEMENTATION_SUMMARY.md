@@ -1,3 +1,23 @@
+## Frontend
+- Switched to HashRouter and added React.lazy for major routes with Suspense fallback.
+- Docs route points to `pages/docs/Documentation` with anchors and CTA linking to `/#/docs`.
+- Alerts now uses centralized axios client with endpoints: list/create/delete/toggle.
+- Markets and TopMovers show a blue banner when fallback demo data is used.
+- PricingPro hides PayPal checkout unless `REACT_APP_PAYPAL_CLIENT_ID` is set.
+- SignUp gated (`registrationEnabled=false`) and disables submit/OAuth with a yellow notice.
+- Marketing pages link to `/#/docs` to avoid dead ends.
+- Footer watermark removed from `AppLayout`.
+- Contracts note updated to mention HashRouter and build-time envs; added `.env.example`.
+
+## Backend
+- Default `PRIMARY_DOMAIN` fallback set to `api.retailtradescannet.com`.
+- CORS allowlist aligned to `tradescanpro.com` and `retailtradescannet.com` domains; typo aliases removed.
+- Optional dual-DB support wired via `DB2_*` envs; `StocksRouter` routes `stocks` and `news` apps.
+- Production settings inherit env-driven hosts/CORS and read `SECRET_KEY` from `SECRET_KEY` or `DJANGO_SECRET_KEY`.
+- Added backend `.env.example` and README with migration steps.
+
+## Deployment
+- Added deployment notes for static React hosting and Django API.
 # Trade Scan Pro - Production Ready Improvements
 
 Branch: `main-2.0`
