@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getEndpointStatus } from "../api/client";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import EnhancedButton from "../components/ui/enhanced-button";
@@ -38,6 +39,28 @@ const AppLayout = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const [statusBanner, setStatusBanner] = useState(null);
+  useEffect(() => {
+    let mounted = true;
+    const pollStatus = async () => {
+      try {
+        const data = await getEndpointStatus().catch(() => ({}));
+        if (!mounted) return;
+        // Expecting shape: { backend_up: bool, maintenance: bool, message?: string }
+        const backendUp = data?.backend_up !== false;
+        const maintenance = Boolean(data?.maintenance);
+        if (!backendUp) setStatusBanner({ type: 'down', text: data?.message || 'Service is currently offline. Some features may be unavailable.' });
+        else if (maintenance) setStatusBanner({ type: 'maint', text: data?.message || 'Scheduled maintenance in progress. Performance may be impacted.' });
+        else setStatusBanner(null);
+      } catch {
+        // leave as is
+      }
+    };
+    pollStatus();
+    const t = setInterval(pollStatus, 60000);
+    return () => { mounted = false; clearInterval(t); };
   }, []);
 
   // Close mobile menu when route changes
@@ -97,6 +120,11 @@ const AppLayout = () => {
         `}
       >
         <div className="container-enhanced">
+          {statusBanner && (
+            <div className={`text-center text-sm py-2 ${statusBanner.type==='down' ? 'bg-red-600 text-white' : 'bg-yellow-100 text-yellow-900 border-b border-yellow-200'}`}>
+              {statusBanner.text}
+            </div>
+          )}
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
             <div className="flex items-center space-x-4">

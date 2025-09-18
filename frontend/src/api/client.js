@@ -309,6 +309,8 @@ export async function deleteWatchlist(id) { const { data } = await api.delete(`/
 // ====================
 export async function alertsMeta() { const { data } = await api.get('/alerts/create/'); return data; }
 export async function createAlert(payload) { const { data } = await api.post('/alerts/create/', payload); return data; }
+export async function toggleAlert(alertId) { const { data } = await api.post(`/alerts/${encodeURIComponent(alertId)}/toggle/`); return data; }
+export async function deleteAlert(alertId) { const { data } = await api.delete(`/alerts/${encodeURIComponent(alertId)}/`); return data; }
 
 // ====================
 // BILLING
