@@ -78,6 +78,10 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/Documentation";
+import EnterpriseContact from "./pages/EnterpriseContact";
+
+// Marketing Pages
+import * as Marketing from "./pages/Marketing";
 
 // Mobile
 import MobileDashboard from "./pages/mobile/MobileDashboard";
