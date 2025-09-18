@@ -244,9 +244,8 @@ const About = () => {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">The Future</h3>
                       <p className="text-gray-700">
-                        Today, we serve over 50,000 traders worldwide and continue to innovate. Our roadmap includes 
-                        advanced AI-powered analytics, social trading features, and expanded international market coverage. 
-                        We're just getting started in our mission to democratize professional trading tools.
+                        Today, we continue to expand our platform with professional trading tools and serve the trading community worldwide with reliability and excellence. Our roadmap focuses on 
+                        enhanced analytics, improved user experience, and comprehensive documentation to help traders succeed.
                       </p>
                     </div>
                   </div>
