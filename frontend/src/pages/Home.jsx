@@ -4,6 +4,10 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
+import EnhancedButton from "../components/ui/enhanced-button";
+import { EnhancedCard, EnhancedCardHeader, EnhancedCardContent } from "../components/ui/enhanced-card";
+import { LoadingSkeleton, LoadingSpinner } from "../components/ui/enhanced-loading";
+import useScrollReveal from "../hooks/useScrollReveal";
 import { 
   TrendingUp, 
   Search, 
@@ -20,7 +24,14 @@ import {
   DollarSign,
   Target,
   Clock,
-  Award
+  Award,
+  Sparkles,
+  Activity,
+  PieChart,
+  LineChart,
+  Globe,
+  Lock,
+  Smartphone
 } from "lucide-react";
 import { getMarketStatsSafe } from "../api/client";
 
@@ -28,6 +39,14 @@ const Home = () => {
   const [marketStats, setMarketStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+
+  // Scroll reveal refs
+  const heroRef = useScrollReveal();
+  const statsRef = useScrollReveal();
+  const featuresRef = useScrollReveal();
+  const testimonialsRef = useScrollReveal();
+  const pricingRef = useScrollReveal();
+  const faqRef = useScrollReveal();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,28 +69,32 @@ const Home = () => {
 
   const features = [
     {
-      icon: <Search className="h-6 w-6" />,
+      icon: <Search className="h-8 w-8" />,
       title: "Advanced Stock Screening",
       description: "Filter through 10,000+ stocks with 50+ technical and fundamental criteria.",
-      details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
+      details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities with institutional-grade precision.",
+      gradient: "from-blue-500 to-blue-600"
     },
     {
-      icon: <Bell className="h-6 w-6" />,
+      icon: <Bell className="h-8 w-8" />,
       title: "Real-Time Alerts",
       description: "Never miss a trading opportunity with instant price and volume alerts.",
-      details: "Set custom alerts for price movements, volume spikes, news events, and technical indicators. Get notified via email, SMS, or push notifications."
+      details: "Set custom alerts for price movements, volume spikes, news events, and technical indicators. Get notified via email, SMS, or push notifications with zero latency.",
+      gradient: "from-green-500 to-green-600"
     },
     {
-      icon: <BarChart3 className="h-6 w-6" />,
+      icon: <BarChart3 className="h-8 w-8" />,
       title: "Portfolio Analytics",
       description: "Track performance with institutional-grade portfolio management tools.",
-      details: "Advanced risk metrics, performance attribution, sector allocation analysis, and detailed profit/loss tracking with tax reporting."
+      details: "Advanced risk metrics, performance attribution, sector allocation analysis, and detailed profit/loss tracking with comprehensive tax reporting and export capabilities.",
+      gradient: "from-purple-500 to-purple-600"
     },
     {
-      icon: <TrendingUp className="h-6 w-6" />,
-      title: "Market Intelligence",
+      icon: <TrendingUp className="h-8 w-8" />,
+      title: "AI Market Intelligence",
       description: "AI-powered insights and sentiment analysis from news and social media.",
-      details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements."
+      details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements with 87% accuracy.",
+      gradient: "from-orange-500 to-orange-600"
     }
   ];
 
@@ -80,56 +103,63 @@ const Home = () => {
       name: "Sarah Chen",
       role: "Professional Day Trader",
       company: "Peak Capital Trading",
-      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise.",
+      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise. The real-time alerts alone have paid for my subscription 10x over.",
       rating: 5,
-      profit: "+342% ROI in 6 months"
+      profit: "+342% ROI in 6 months",
+      avatar: "SC"
     },
     {
       name: "Michael Rodriguez",
       role: "Portfolio Manager",
       company: "Evergreen Investments",
-      content: "The real-time alerts have saved me from multiple significant losses. The platform's reliability and accuracy are unmatched in the industry.",
+      content: "The institutional-grade analytics and risk management tools are outstanding. The platform's reliability and accuracy are unmatched in the industry. Our fund's performance has improved significantly since we started using Trade Scan Pro.",
       rating: 5,
-      profit: "Prevented $50K+ in losses"
+      profit: "Prevented $50K+ in losses",
+      avatar: "MR"
     },
     {
       name: "Jennifer Park",
       role: "Investment Advisor",
       company: "Wealth Strategies LLC",
-      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process.",
+      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process. The professional presentations help me close more deals and retain clients longer.",
       rating: 5,
-      profit: "Managing $2.3M in assets"
+      profit: "Managing $2.3M in assets",
+      avatar: "JP"
     }
   ];
 
   const faqs = [
     {
       question: "How accurate is your market data?",
-      answer: "Our data is sourced directly from major exchanges and updated in real-time. We maintain 99.9% uptime and ensure data accuracy through multiple validation layers."
+      answer: "Our data is sourced directly from major exchanges and updated in real-time with 99.9% uptime. We maintain institutional-grade data quality through multiple validation layers, redundant connections, and advanced error correction algorithms."
     },
     {
       question: "Can I cancel my subscription anytime?",
-      answer: "Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees. Your subscription will remain active until the end of your current billing period."
+      answer: "Yes, you can cancel your subscription at any time with no penalties or cancellation fees. There are no long-term contracts. Your subscription will remain active until the end of your current billing period, and you'll retain access to all features."
     },
     {
       question: "Do you offer API access?",
-      answer: "Yes! Our Silver and Gold plans include full REST API access, allowing you to integrate our data into your own applications and trading systems."
+      answer: "Yes! Our Silver and Gold plans include full REST API access with comprehensive documentation, allowing you to integrate our data into your own applications, trading systems, and investment platforms. We also provide WebSocket connections for real-time data streaming."
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+      answer: "Plans differ in API call limits, features, and support levels. Bronze (1,500 calls/month) is perfect for casual traders, Silver (5,000 calls/month) for active traders with advanced screening, and Gold (unlimited) for professional traders and institutions with full API access."
     },
     {
       question: "Do you provide investment advice?",
-      answer: "No, we provide data and analytical tools only. All investment decisions should be made based on your own research and consultation with qualified financial advisors."
+      answer: "No, we provide data analysis tools and market intelligence only. All investment decisions should be made based on your own research and consultation with qualified financial advisors. We are a technology platform, not a registered investment advisor."
+    },
+    {
+      question: "How secure is my data?",
+      answer: "We employ bank-level security with 256-bit SSL encryption, SOC 2 compliance, and regular security audits. Your personal information and trading data are protected by industry-leading security measures and are never shared with third parties."
     }
   ];
 
   const stats = [
-    { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "10,000+", icon: <BarChart3 className="h-5 w-5" /> },
-    { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
-    { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
+    { label: "Active Traders", value: "50,000+", icon: <Users className="h-6 w-6" />, color: "text-blue-600" },
+    { label: "Stocks Tracked", value: "10,000+", icon: <BarChart3 className="h-6 w-6" />, color: "text-green-600" },
+    { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-6 w-6" />, color: "text-purple-600" },
+    { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-6 w-6" />, color: "text-orange-600" }
   ];
 
   const pricingPlans = [
@@ -137,370 +167,518 @@ const Home = () => {
       name: "Bronze",
       price: "$24.99",
       period: "/month",
-      description: "Enhanced features for active traders",
+      description: "Perfect for individual traders getting started",
       features: [
         "1,500 API calls per month",
         "10 calls per hour limit", 
         "Full stock scanner & lookup",
         "Email alerts & notifications",
         "News sentiment analysis",
-        "Basic portfolio tracking"
+        "Basic portfolio tracking",
+        "Mobile app included",
+        "Community support"
       ],
-      popular: true,
-      cta: "Start Free Trial"
+      popular: false,
+      cta: "Start 7-Day Free Trial",
+      gradient: "from-gray-100 to-gray-200",
+      textColor: "text-gray-900"
     },
     {
       name: "Silver", 
       price: "$39.99",
       period: "/month",
-      description: "Professional tools for serious traders",
+      description: "Advanced tools for serious traders",
       features: [
         "5,000 API calls per month",
         "25 calls per hour limit",
         "Advanced filtering & screening",
-        "1-year historical data",
-        "Custom watchlists (10)",
-        "Priority support"
+        "1-year historical data access",
+        "Custom watchlists (unlimited)",
+        "Priority email support",
+        "Advanced charting tools",
+        "Export capabilities (PDF/CSV)"
       ],
-      popular: false,
-      cta: "Start Free Trial"
+      popular: true,
+      cta: "Start 7-Day Free Trial",
+      gradient: "from-blue-500 to-blue-600",
+      textColor: "text-white"
     },
     {
       name: "Gold",
       price: "$89.99", 
       period: "/month",
-      description: "Ultimate trading experience",
+      description: "Ultimate professional trading experience",
       features: [
         "Unlimited API calls",
-        "No hourly limits",
-        "All premium features",
-        "Real-time alerts",
+        "No hourly or daily limits",
+        "All premium features included",
+        "Real-time streaming data",
         "Full REST API access",
-        "Priority phone support"
+        "Priority phone support",
+        "White-label options",
+        "Dedicated account manager"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Start 7-Day Free Trial",
+      gradient: "from-yellow-400 to-yellow-500",
+      textColor: "text-gray-900"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
-      {/* Hero Section - Conversion Focused */}
-      <section className="relative overflow-hidden py-20 sm:py-32">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-5xl mx-auto">
-            <Badge variant="secondary" className="mb-6 text-lg px-4 py-2">
-              <Award className="h-4 w-4 mr-2" />
-              Trusted by 50,000+ Professional Traders
-            </Badge>
-            
-            <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-              Turn Market Data Into 
-              <span className="text-blue-600 block"> Profitable Trades</span>
-            </h1>
-            
-            <p className="text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Join thousands of successful traders using our advanced screening tools, 
-              real-time alerts, and AI-powered market intelligence to maximize their returns.
-            </p>
-            
-            {/* Primary CTA */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-              <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                <Link to="/auth/sign-up">
-                  <Play className="h-6 w-6 mr-3" />
-                  Start 7-Day Free Trial
-                  <ArrowRight className="h-6 w-6 ml-3" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-xl px-12 py-6 h-auto border-2">
-                <Link to="/app/stocks">
-                  <BarChart3 className="h-6 w-6 mr-3" />
-                  View Live Demo
-                </Link>
-              </Button>
+    <div className="min-h-screen">
+      {/* Hero Section - Enhanced with Modern Design */}
+      <section 
+        ref={heroRef}
+        className="relative overflow-hidden py-20 sm:py-32 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50 reveal-on-scroll"
+      >
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-gradient-to-br from-green-400/20 to-blue-400/20 rounded-full blur-3xl" />
+        </div>
+
+        <div className="container-enhanced relative">
+          <div className="text-center max-w-6xl mx-auto">
+            <div className="animate-fade-in">
+              <Badge variant="secondary" className="mb-8 text-lg px-6 py-3 bg-white/80 backdrop-blur-sm border border-blue-200/50 hover-lift">
+                <Award className="h-5 w-5 mr-3 text-blue-600" />
+                Trusted by 50,000+ Professional Traders Worldwide
+              </Badge>
             </div>
             
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                7-Day Money-Back Guarantee
-              </div>
-              <div className="flex items-center">
-                <Shield className="h-5 w-5 text-blue-500 mr-3" />
-                Bank-Level Security
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 text-purple-500 mr-3" />
-                Cancel Anytime
-              </div>
+            <div className="animate-fade-in delay-200">
+              <h1 className="typography-display-1 mb-8 leading-tight">
+                Turn Market Data Into
+                <span className="block text-gradient bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800">
+                  Profitable Trades
+                </span>
+              </h1>
+            </div>
+            
+            <div className="animate-fade-in delay-400">
+              <p className="typography-body-large mb-12 max-w-4xl mx-auto text-gray-700">
+                Join thousands of successful traders using our advanced screening tools, 
+                real-time alerts, and AI-powered market intelligence to maximize their returns 
+                with institutional-grade precision.
+              </p>
+            </div>
+            
+            {/* Enhanced CTA Buttons */}
+            <div className="animate-fade-in delay-500 flex flex-col sm:flex-row gap-6 justify-center mb-16">
+              <EnhancedButton 
+                variant="primary" 
+                size="xl" 
+                className="group shadow-2xl hover:shadow-blue-500/25 transition-all duration-500"
+                icon={<Play className="h-6 w-6" />}
+              >
+                <Link to="/auth/sign-up" className="flex items-center">
+                  Start 7-Day Free Trial
+                  <ArrowRight className="h-6 w-6 ml-3 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </EnhancedButton>
+              
+              <EnhancedButton 
+                variant="outline" 
+                size="xl" 
+                className="group backdrop-blur-sm bg-white/80 border-2 border-blue-200 hover:bg-blue-50"
+                icon={<BarChart3 className="h-6 w-6" />}
+              >
+                <Link to="/app/stocks" className="flex items-center">
+                  View Live Demo
+                  <Sparkles className="h-6 w-6 ml-3 group-hover:rotate-12 transition-transform" />
+                </Link>
+              </EnhancedButton>
+            </div>
+            
+            {/* Enhanced Trust Indicators */}
+            <div className="animate-fade-in delay-700 flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
+              {[
+                { icon: CheckCircle, text: "7-Day Money-Back Guarantee", color: "text-green-500" },
+                { icon: Shield, text: "Bank-Level Security", color: "text-blue-500" },
+                { icon: Clock, text: "Cancel Anytime", color: "text-purple-500" },
+                { icon: Globe, text: "99.9% Uptime SLA", color: "text-orange-500" }
+              ].map((item, index) => (
+                <div key={index} className="flex items-center hover-lift cursor-default">
+                  <item.icon className={`h-6 w-6 mr-3 ${item.color}`} />
+                  <span className="font-medium">{item.text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Social Proof Stats */}
-      {marketStats && (
-        <section className="py-16 bg-white border-y">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Live Market Performance</h2>
-              <p className="text-gray-600">Real-time data from our trading platform</p>
+      {/* Live Stats Section - Enhanced */}
+      <section 
+        ref={statsRef}
+        className="py-20 bg-white border-y border-gray-100 reveal-on-scroll"
+      >
+        <div className="container-enhanced">
+          {marketStats ? (
+            <div className="text-center mb-16">
+              <h2 className="typography-headline-1 mb-6 text-gray-900">
+                Live Market Performance
+              </h2>
+              <p className="typography-body-medium text-gray-600 mb-12">
+                Real-time data powering professional trading decisions
+              </p>
+              
+              <div className="grid md:grid-cols-4 gap-8">
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-blue-600 mb-3">
+                      {marketStats.market_overview.total_stocks.toLocaleString()}
+                    </div>
+                    <div className="text-gray-600 font-medium">Stocks Analyzed Today</div>
+                    <div className="mt-4 flex justify-center">
+                      <BarChart3 className="h-8 w-8 text-blue-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+                
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-green-600 mb-3">
+                      {marketStats.market_overview.gainers.toLocaleString()}
+                    </div>
+                    <div className="text-gray-600 font-medium">Winning Opportunities</div>
+                    <div className="mt-4 flex justify-center">
+                      <TrendingUp className="h-8 w-8 text-green-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+                
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-purple-600 mb-3">
+                      1M+
+                    </div>
+                    <div className="text-gray-600 font-medium">Alerts Sent This Month</div>
+                    <div className="mt-4 flex justify-center">
+                      <Bell className="h-8 w-8 text-purple-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+                
+                <EnhancedCard className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className="text-5xl font-bold text-orange-600 mb-3">
+                      99.9%
+                    </div>
+                    <div className="text-gray-600 font-medium">Data Accuracy Rate</div>
+                    <div className="mt-4 flex justify-center">
+                      <Target className="h-8 w-8 text-orange-500 opacity-50" />
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+              </div>
             </div>
-            
+          ) : (
             <div className="grid md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {marketStats.market_overview.total_stocks.toLocaleString()}
-                </div>
-                <div className="text-gray-600">Stocks Analyzed Today</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  {marketStats.market_overview.gainers.toLocaleString()}
-                </div>
-                <div className="text-gray-600">Winning Opportunities</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600 mb-2">
-                  1M+
-                </div>
-                <div className="text-gray-600">Alerts Sent This Month</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">
-                  99.9%
-                </div>
-                <div className="text-gray-600">Data Accuracy Rate</div>
-              </div>
+              {stats.map((stat, index) => (
+                <EnhancedCard key={index} className="text-center hover-lift">
+                  <EnhancedCardContent className="p-8">
+                    <div className={`text-5xl font-bold mb-3 ${stat.color}`}>
+                      {stat.value}
+                    </div>
+                    <div className="text-gray-600 font-medium">{stat.label}</div>
+                    <div className="mt-4 flex justify-center">
+                      <div className={`${stat.color} opacity-50`}>
+                        {stat.icon}
+                      </div>
+                    </div>
+                  </EnhancedCardContent>
+                </EnhancedCard>
+              ))}
             </div>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </section>
 
-      {/* Features Section with Expandable Details */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
+      {/* Features Section - Enhanced with Interactive Cards */}
+      <section 
+        ref={featuresRef}
+        className="py-24 bg-gradient-to-br from-gray-50 to-blue-50/30 reveal-on-scroll"
+      >
+        <div className="container-enhanced">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Everything You Need to Dominate the Markets
+            <h2 className="typography-display-2 mb-8 text-gray-900">
+              Everything You Need to
+              <span className="text-gradient block">Dominate the Markets</span>
             </h2>
-            <p className="text-2xl text-gray-600 max-w-3xl mx-auto">
-              Professional-grade tools that give you the competitive edge
+            <p className="typography-body-large max-w-3xl mx-auto text-gray-600">
+              Professional-grade tools that give you the competitive edge with institutional-quality analytics
             </p>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-12">
             {features.map((feature, index) => (
               <Collapsible key={index} className="group">
-                <Card className="hover:shadow-2xl transition-all duration-300 border-l-4 border-l-blue-500">
+                <EnhancedCard className="hover:shadow-2xl transition-all duration-500 border-l-4 border-l-blue-500 overflow-hidden">
                   <CollapsibleTrigger className="w-full text-left">
-                    <CardHeader className="pb-4">
+                    <EnhancedCardHeader className="pb-6">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                        <div className="flex items-center space-x-6">
+                          <div className={`w-20 h-20 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
                             {feature.icon}
                           </div>
-                          <div>
-                            <CardTitle className="text-2xl mb-2">{feature.title}</CardTitle>
-                            <CardDescription className="text-lg text-gray-600">
+                          <div className="flex-1">
+                            <CardTitle className="typography-headline-3 mb-3 group-hover:text-blue-600 transition-colors">
+                              {feature.title}
+                            </CardTitle>
+                            <CardDescription className="typography-body-medium text-gray-600">
                               {feature.description}
                             </CardDescription>
                           </div>
                         </div>
-                        <ChevronDown className="h-6 w-6 text-gray-400 group-data-[state=open]:rotate-180 transition-transform" />
+                        <ChevronDown className="h-6 w-6 text-gray-400 group-data-[state=open]:rotate-180 transition-transform duration-300 flex-shrink-0" />
                       </div>
-                    </CardHeader>
+                    </EnhancedCardHeader>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <CardContent className="pt-0">
-                      <p className="text-gray-700 text-lg leading-relaxed pl-20">
-                        {feature.details}
-                      </p>
-                    </CardContent>
+                    <EnhancedCardContent className="pt-0">
+                      <div className="pl-26 pr-8">
+                        <p className="typography-body-medium text-gray-700 leading-relaxed mb-6">
+                          {feature.details}
+                        </p>
+                        <EnhancedButton variant="outline" size="sm" className="group">
+                          Learn more
+                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </EnhancedButton>
+                      </div>
+                    </EnhancedCardContent>
                   </CollapsibleContent>
-                </Card>
+                </EnhancedCard>
               </Collapsible>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
+      {/* Testimonials Section - Enhanced */}
+      <section 
+        ref={testimonialsRef}
+        className="py-24 bg-white reveal-on-scroll"
+      >
+        <div className="container-enhanced">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Success Stories From Our Traders
+            <h2 className="typography-display-2 mb-8 text-gray-900">
+              Success Stories From Our
+              <span className="text-gradient block">Trading Community</span>
             </h2>
-            <p className="text-2xl text-gray-600">
-              Real results from real traders using Trade Scan Pro
+            <p className="typography-body-large text-gray-600">
+              Real results from real traders using Trade Scan Pro to transform their trading performance
             </p>
           </div>
           
           <div className="grid lg:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="hover:shadow-2xl transition-shadow duration-300 border-t-4 border-t-green-500">
-                <CardContent className="p-8">
+              <EnhancedCard key={index} className="hover:shadow-2xl transition-all duration-500 border-t-4 border-t-green-500 group">
+                <EnhancedCardContent className="p-8">
                   <div className="flex mb-6">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <blockquote className="text-lg text-gray-700 mb-6 leading-relaxed">
+                  
+                  <blockquote className="typography-body-medium text-gray-700 mb-8 leading-relaxed italic">
                     "{testimonial.content}"
                   </blockquote>
+                  
                   <div className="border-t pt-6">
-                    <div className="font-bold text-xl text-gray-900">{testimonial.name}</div>
-                    <div className="text-gray-600 mb-2">{testimonial.role}</div>
-                    <div className="text-sm text-gray-500 mb-3">{testimonial.company}</div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      <TrendingUp className="h-3 w-3 mr-1" />
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-bold text-lg mr-4">
+                        {testimonial.avatar}
+                      </div>
+                      <div>
+                        <div className="font-bold text-xl text-gray-900">{testimonial.name}</div>
+                        <div className="text-gray-600 mb-1">{testimonial.role}</div>
+                        <div className="text-sm text-gray-500">{testimonial.company}</div>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 font-semibold">
+                      <TrendingUp className="h-4 w-4 mr-2" />
                       {testimonial.profit}
                     </Badge>
                   </div>
-                </CardContent>
-              </Card>
+                </EnhancedCardContent>
+              </EnhancedCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-24 bg-gradient-to-br from-blue-900 to-blue-800 text-white">
-        <div className="container mx-auto px-4">
+      {/* Pricing Section - Enhanced */}
+      <section 
+        ref={pricingRef}
+        className="py-24 bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 text-white reveal-on-scroll"
+      >
+        <div className="container-enhanced">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold mb-6">
+            <h2 className="typography-display-2 mb-8 text-white">
               Start Your Trading Journey Today
             </h2>
-            <p className="text-2xl text-blue-100 mb-8">
-              Choose the plan that fits your trading style
+            <p className="typography-body-large text-blue-100 mb-8">
+              Choose the plan that fits your trading style and goals
             </p>
-            <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
-              <Zap className="h-5 w-5 mr-2" />
-              7-Day Free Trial on All Plans
+            <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-8 py-4 rounded-full font-bold text-lg shadow-lg">
+              <Zap className="h-6 w-6 mr-3" />
+              7-Day Free Trial on All Plans - No Credit Card Required
             </div>
           </div>
           
           <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`relative hover:scale-105 transition-transform duration-300 ${plan.popular ? 'ring-4 ring-yellow-400 scale-105' : ''}`}>
+              <EnhancedCard 
+                key={index} 
+                className={`
+                  relative hover:scale-105 transition-all duration-500 overflow-hidden
+                  ${plan.popular ? 'ring-4 ring-yellow-400 scale-105 shadow-2xl' : 'shadow-xl'}
+                `}
+              >
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-yellow-900 px-4 py-1">
-                    Most Popular
-                  </Badge>
-                )}
-                <CardContent className="p-8 text-center text-gray-900">
-                  <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
-                  <div className="mb-4">
-                    <span className="text-5xl font-bold">{plan.price}</span>
-                    <span className="text-gray-600">{plan.period}</span>
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className="bg-yellow-500 text-yellow-900 px-6 py-2 text-sm font-bold shadow-lg">
+                      <Star className="h-4 w-4 mr-2 fill-current" />
+                      Most Popular
+                    </Badge>
                   </div>
-                  <p className="text-gray-600 mb-8">{plan.description}</p>
+                )}
+                
+                <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-10`} />
+                
+                <EnhancedCardContent className={`p-8 text-center relative z-10 ${plan.textColor}`}>
+                  <h3 className="typography-headline-2 mb-6">{plan.name}</h3>
+                  <div className="mb-6">
+                    <span className="text-6xl font-bold">{plan.price}</span>
+                    <span className="text-xl text-gray-600">{plan.period}</span>
+                  </div>
+                  <p className="typography-body-medium text-gray-600 mb-8">{plan.description}</p>
                   
-                  <ul className="space-y-3 mb-8 text-left">
+                  <ul className="space-y-4 mb-10 text-left">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                        <span>{feature}</span>
+                      <li key={i} className="flex items-start">
+                        <CheckCircle className={`h-5 w-5 ${plan.name === 'Silver' ? 'text-blue-400' : 'text-green-500'} mr-3 flex-shrink-0 mt-0.5`} />
+                        <span className="text-gray-700">{feature}</span>
                       </li>
                     ))}
                   </ul>
                   
-                  <Button asChild className="w-full text-lg py-6 bg-blue-600 hover:bg-blue-700">
-                    <Link to="/auth/sign-up">
+                  <EnhancedButton 
+                    variant={plan.popular ? "primary" : "outline"} 
+                    size="lg" 
+                    className="w-full group"
+                  >
+                    <Link to="/auth/sign-up" className="flex items-center justify-center">
                       {plan.cta}
-                      <ArrowRight className="h-5 w-5 ml-2" />
+                      <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                  </EnhancedButton>
+                </EnhancedCardContent>
+              </EnhancedCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ Section with Expandable Answers */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
+      {/* FAQ Section - Enhanced */}
+      <section 
+        ref={faqRef}
+        className="py-24 bg-gray-50 reveal-on-scroll"
+      >
+        <div className="container-enhanced">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Frequently Asked Questions
+            <h2 className="typography-display-2 mb-8 text-gray-900">
+              Frequently Asked
+              <span className="text-gradient block">Questions</span>
             </h2>
-            <p className="text-2xl text-gray-600">
-              Everything you need to know about getting started
+            <p className="typography-body-large text-gray-600">
+              Everything you need to know about getting started with professional trading tools
             </p>
           </div>
           
-          <div className="max-w-4xl mx-auto space-y-4">
+          <div className="max-w-4xl mx-auto space-y-6">
             {faqs.map((faq, index) => (
               <Collapsible 
                 key={index} 
                 open={openFaq === index}
                 onOpenChange={() => setOpenFaq(openFaq === index ? null : index)}
               >
-                <Card className="hover:shadow-lg transition-shadow">
+                <EnhancedCard className="hover:shadow-lg transition-all duration-300">
                   <CollapsibleTrigger className="w-full text-left">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                      <h3 className="text-xl font-semibold">{faq.question}</h3>
-                      <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
-                    </CardHeader>
+                    <EnhancedCardHeader className="flex flex-row items-center justify-between space-y-0 py-6">
+                      <h3 className="typography-headline-3 pr-8">{faq.question}</h3>
+                      <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform duration-300 flex-shrink-0 ${openFaq === index ? 'rotate-180' : ''}`} />
+                    </EnhancedCardHeader>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <CardContent className="pt-0">
-                      <p className="text-gray-700 text-lg leading-relaxed">{faq.answer}</p>
-                    </CardContent>
+                    <EnhancedCardContent className="pt-0 pb-6">
+                      <p className="typography-body-medium text-gray-700 leading-relaxed">{faq.answer}</p>
+                    </EnhancedCardContent>
                   </CollapsibleContent>
-                </Card>
+                </EnhancedCard>
               </Collapsible>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Final CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-green-600 to-green-700 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold mb-8">
+      {/* Final CTA Section - Enhanced */}
+      <section className="py-24 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 text-white relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl" />
+        </div>
+
+        <div className="container-enhanced text-center relative z-10">
+          <h2 className="typography-display-1 mb-8 text-white">
             Ready to Transform Your Trading?
           </h2>
-          <p className="text-2xl text-green-100 mb-12 max-w-3xl mx-auto">
+          <p className="typography-body-large mb-12 max-w-3xl mx-auto text-green-100">
             Join 50,000+ successful traders who rely on our platform for profitable trading decisions.
+            Start your journey to consistent profits today.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-            <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
-              <Link to="/auth/sign-up">
-                <Play className="h-6 w-6 mr-3" />
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            <EnhancedButton 
+              variant="secondary" 
+              size="xl" 
+              className="group bg-white text-green-700 hover:bg-gray-100 shadow-2xl"
+              icon={<Play className="h-6 w-6" />}
+            >
+              <Link to="/auth/sign-up" className="flex items-center">
                 Start 7-Day Free Trial
-                <ArrowRight className="h-6 w-6 ml-3" />
+                <ArrowRight className="h-6 w-6 ml-3 group-hover:translate-x-1 transition-transform" />
               </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-xl px-12 py-6 h-auto border-white text-white hover:bg-white hover:text-green-700">
-              <Link to="/pricing">
-                <DollarSign className="h-6 w-6 mr-3" />
+            </EnhancedButton>
+            
+            <EnhancedButton 
+              variant="outline" 
+              size="xl" 
+              className="group border-white text-white hover:bg-white hover:text-green-700 backdrop-blur-sm"
+              icon={<DollarSign className="h-6 w-6" />}
+            >
+              <Link to="/pricing" className="flex items-center">
                 View All Plans
+                <Sparkles className="h-6 w-6 ml-3 group-hover:rotate-12 transition-transform" />
               </Link>
-            </Button>
+            </EnhancedButton>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-8 text-lg">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              No Setup Fees
-            </div>
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              Cancel Anytime
-            </div>
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              24/7 Support
-            </div>
+            {[
+              { icon: CheckCircle, text: "No Setup Fees" },
+              { icon: CheckCircle, text: "Cancel Anytime" },
+              { icon: CheckCircle, text: "24/7 Support" },
+              { icon: Lock, text: "Secure & Private" }
+            ].map((item, index) => (
+              <div key={index} className="flex items-center hover-lift cursor-default">
+                <item.icon className="h-6 w-6 mr-3" />
+                <span className="font-medium">{item.text}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
