@@ -25,22 +25,10 @@ const About = () => {
 
   const team = [
     {
-      name: "Sarah Johnson",
-      role: "CEO & Co-Founder",
-      background: "Former Goldman Sachs quantitative analyst with 15+ years in fintech",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face"
-    },
-    {
-      name: "Michael Chen",
-      role: "CTO & Co-Founder", 
-      background: "Ex-Google engineer, built trading systems for hedge funds",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face"
-    },
-    {
-      name: "David Rodriguez",
-      role: "Head of Product",
-      background: "Former Bloomberg terminal product manager, 12+ years in financial data",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=face"
+      name: "Trade Scan Pro Team",
+      role: "Professional Development Team",
+      background: "Experienced professionals dedicated to building superior trading tools",
+      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&h=300&fit=crop&crop=faces"
     }
   ];
 
