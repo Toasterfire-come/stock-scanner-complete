@@ -33,7 +33,6 @@ import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 
 // App Pages
-import ReactLazy from 'react';
 const AppDashboard = React.lazy(() => import("./pages/app/AppDashboard"));
 const Markets = React.lazy(() => import("./pages/app/Markets"));
 const StockDetail = React.lazy(() => import("./pages/app/StockDetail"));
