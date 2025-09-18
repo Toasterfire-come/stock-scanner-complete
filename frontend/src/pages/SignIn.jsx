@@ -26,16 +26,16 @@ export default function SignIn() {
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>
             <label className="text-sm">Username or email</label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="demo" />
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your@email.com" />
           </div>
           <div>
             <label className="text-sm">Password</label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="password123" />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
           <Button type="submit" disabled={loading} className="w-full">Sign in</Button>
         </form>
-        <p className="text-xs text-muted-foreground mt-3">Tip: demo / password123</p>
+        <p className="text-xs text-muted-foreground mt-3">Forgot password? Use the reset link.</p>
       </CardContent>
     </Card>
   );

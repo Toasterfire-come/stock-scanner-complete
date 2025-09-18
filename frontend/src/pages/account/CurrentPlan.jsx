@@ -33,41 +33,10 @@ const CurrentPlan = () => {
     const fetchPlan = async () => {
       try {
         const response = await getCurrentPlan();
-        if (response.success) {
-          setPlanData(response.data);
-        } else {
-          // Mock data for demo
-          setPlanData({
-            plan_name: "Professional",
-            plan_type: "pro",
-            is_premium: true,
-            billing_cycle: "monthly",
-            next_billing_date: "2024-04-15T00:00:00Z",
-            features: {
-              api_calls_limit: 10000,
-              real_time_data: true,
-              advanced_screening: true,
-              portfolio_analytics: true,
-              premium_support: true
-            }
-          });
-        }
+        if (response.success) setPlanData(response.data); else setPlanData(null);
       } catch (error) {
         console.error("Failed to load plan data:", error);
-        setPlanData({
-          plan_name: "Free",
-          plan_type: "free",
-          is_premium: false,
-          billing_cycle: null,
-          next_billing_date: null,
-          features: {
-            api_calls_limit: 1000,
-            real_time_data: false,
-            advanced_screening: false,
-            portfolio_analytics: false,
-            premium_support: false
-          }
-        });
+        setPlanData(null);
       } finally {
         setIsLoading(false);
       }
