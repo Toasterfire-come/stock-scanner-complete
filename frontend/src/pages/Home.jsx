@@ -100,31 +100,31 @@ const Home = () => {
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Professional Day Trader",
-      company: "Peak Capital Trading",
-      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise. The documentation is excellent.",
+      name: "Professional Trader",
+      role: "Active Market Participant",
+      company: "Independent Trading",
+      content: "The screening tools are comprehensive and help identify potential opportunities efficiently. The documentation is well-organized and the platform provides reliable market data access.",
       rating: 5,
-      profit: "Improved Strategy Results",
-      avatar: "SC"
+      profit: "Professional Tools",
+      avatar: "PT"
     },
     {
-      name: "Michael Rodriguez",
-      role: "Portfolio Manager",
-      company: "Evergreen Investments",
-      content: "The professional-grade analytics and risk management tools are outstanding. The platform's reliability and accuracy are excellent. Our fund's performance has improved since we started using Trade Scan Pro.",
+      name: "Investment Researcher",
+      role: "Market Analyst",
+      company: "Research Professional",
+      content: "The platform offers good data quality and useful analytical features. The interface is professional and the tools help with market research and analysis tasks.",
       rating: 5,
-      profit: "Enhanced Performance",
-      avatar: "MR"
+      profit: "Research Tools",
+      avatar: "IR"
     },
     {
-      name: "Jennifer Park",
-      role: "Investment Advisor",
-      company: "Wealth Strategies LLC",
-      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process. The professional presentations help me serve clients better.",
+      name: "Trading Professional",
+      role: "Market Specialist",
+      company: "Trading Operations",
+      content: "Solid platform with reliable data and useful features for market analysis. The professional documentation and tools support our trading operations effectively.",
       rating: 5,
-      profit: "Better Client Service",
-      avatar: "JP"
+      profit: "Reliable Platform",
+      avatar: "TP"
     }
   ];
 
