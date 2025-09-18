@@ -15,6 +15,9 @@ urlpatterns = [
     path('health/ready/', views_health.readiness_check, name='readiness_check'),
     path('health/live/', views_health.liveness_check, name='liveness_check'),
     
+    # Status endpoint (required by problem statement)  
+    path('status/', simple_status_api, name='api_status'),
+    
     # Basic API endpoint
     path('', views.index, name='index'),
     
