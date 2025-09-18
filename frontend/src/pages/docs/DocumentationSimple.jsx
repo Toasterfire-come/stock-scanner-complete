@@ -78,7 +78,7 @@ const DocumentationSimple = () => {
             
             <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
               Comprehensive guides and API references to help you 
-              make the most of TradeScan Pro.
+              make the most of Trade Scan Pro.
             </p>
           </div>
         </div>
