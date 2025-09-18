@@ -2,7 +2,7 @@ from django.urls import path, include
 from . import views, api_views, views_health
 from . import alerts_api
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
-from .simple_api import SimpleStockView, SimpleNewsView
+from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from .billing_api import cancel_subscription_api
