@@ -326,36 +326,38 @@ class RateLimitMiddleware(MiddlewareMixin):
     
     def rate_limit_exceeded_response(self, user_id, limit):
         """
-        Return response when rate limit is exceeded
+        Return response when monthly rate limit is exceeded
         """
-        cache_key = f"rate_limit_{user_id}"
+        cache_key = f"monthly_rate_limit_{user_id}"
         try:
             request_data = cache.get(cache_key, {})
         except Exception:
             # Fail-open if cache backend is unavailable
             request_data = {}
         
-        # Calculate when the oldest request will expire
+        # Calculate when the oldest request will expire (30 days from oldest request)
         if request_data and request_data.get('requests'):
             oldest_request = min(request_data['requests'])
-            retry_after = int(oldest_request + self.free_user_window - time.time())
-            retry_after = max(retry_after, 1)  # At least 1 second
+            retry_after = int(oldest_request + self.rate_limit_window - time.time())
+            retry_after = max(retry_after, 60)  # At least 60 seconds
         else:
-            retry_after = 60  # Default to 60 seconds
+            retry_after = 86400  # Default to 24 hours
         
         response = JsonResponse({
-            'error': 'Rate limit exceeded',
-            'message': f'You have exceeded the rate limit of {limit} requests per hour.',
+            'error': 'Monthly rate limit exceeded',
+            'message': f'You have exceeded the monthly rate limit of {limit} requests.',
             'retry_after': retry_after,
             'limit': limit,
-            'window': self.free_user_window,
-            'upgrade_message': 'Upgrade to a premium account for higher limits or unlimited access.'
+            'window': 'monthly',
+            'window_seconds': self.rate_limit_window,
+            'upgrade_message': 'Upgrade to a higher plan for increased monthly limits or unlimited access.'
         }, status=429)
         
         response['Retry-After'] = str(retry_after)
         response['X-RateLimit-Limit'] = str(limit)
         response['X-RateLimit-Remaining'] = '0'
         response['X-RateLimit-Reset'] = str(int(time.time() + retry_after))
+        response['X-RateLimit-Period'] = 'monthly'
         
         return response
 
