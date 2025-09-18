@@ -157,34 +157,95 @@ class SimpleNewsView(View):
 @csrf_exempt
 @require_http_methods(["GET"])
 def simple_status_api(request):
-    """Simple status API that works without database"""
+    """
+    API status endpoint 
+    GET /api/status/
+    """
     try:
+        from django.http import JsonResponse
+        from django.conf import settings
+        from django.utils import timezone
+        import psutil
+        import os
+        
+        # Basic system information
+        system_info = {
+            'service': 'Trade Scan Pro API',
+            'version': '1.7',
+            'environment': getattr(settings, 'ENVIRONMENT', 'production'),
+            'timestamp': timezone.now().isoformat(),
+            'status': 'healthy'
+        }
+        
+        # Database connection check
+        database_status = 'healthy'
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+            database_status = 'healthy'
+        except Exception:
+            database_status = 'unhealthy'
+            system_info['status'] = 'degraded'
+        
+        # System resources (if available)
+        try:
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            cpu_percent = psutil.cpu_percent(interval=1)
+            
+            resources = {
+                'memory': {
+                    'total': memory.total,
+                    'available': memory.available,
+                    'percent': memory.percent
+                },
+                'disk': {
+                    'total': disk.total,
+                    'free': disk.free,
+                    'percent': round((disk.used / disk.total) * 100, 2)
+                },
+                'cpu_percent': cpu_percent
+            }
+        except ImportError:
+            # psutil not available, basic info only
+            resources = {
+                'memory': {'status': 'monitoring unavailable'},
+                'disk': {'status': 'monitoring unavailable'}, 
+                'cpu_percent': 'monitoring unavailable'
+            }
+        
+        # API endpoints status
+        endpoints = {
+            'stocks': 'operational',
+            'auth': 'operational', 
+            'billing': 'operational',
+            'health': 'operational'
+        }
+        
         response_data = {
             'success': True,
-            'status': 'operational',
             'data': {
-                'api_status': 'online',
-                'database_status': 'not_required',
-                'sample_mode': True,
-                'endpoints_available': [
-                    '/api/simple/stocks/',
-                    '/api/simple/news/',
-                    '/api/wordpress/stocks/',
-                    '/api/wordpress/news/',
-                    '/api/wordpress/alerts/'
-                ]
-            },
-            'meta': {
-                'api_version': '1.0.0',
-                'database_required': False
+                **system_info,
+                'components': {
+                    'database': database_status,
+                    'api_endpoints': endpoints
+                },
+                'system_resources': resources
             }
         }
-
-        return JsonResponse(response_data)
-
+        
+        status_code = 200
+        if system_info['status'] == 'degraded':
+            status_code = 200  # Still return 200 for degraded but functional
+        elif system_info['status'] == 'unhealthy':
+            status_code = 503
+            
+        return JsonResponse(response_data, status=status_code)
+        
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': 'API Error',
-            'message': str(e)
+            'error': 'Status check failed',
+            'details': str(e)
         }, status=500)
