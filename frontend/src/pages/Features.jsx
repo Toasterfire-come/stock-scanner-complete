@@ -200,8 +200,8 @@ const Features = () => {
                         <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
                           {React.cloneElement(feature.icon, { className: "h-12 w-12" })}
                         </div>
-                        <p className="text-xl font-medium">Feature Preview</p>
-                        <p className="text-blue-100 mt-2">Interactive demo coming soon</p>
+                        <p className="text-xl font-medium">Feature Overview</p>
+                        <p className="text-blue-100 mt-2">Explore this feature in the app and Documentation</p>
                       </div>
                     </div>
                   </div>

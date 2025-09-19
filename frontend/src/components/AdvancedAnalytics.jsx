@@ -77,7 +77,7 @@ const AdvancedAnalytics = ({ userId }) => {
     ? portfolioData.sector_allocation
     : [];
 
-  const riskMetrics = analyticsData?.risk_metrics || null;
+  const riskMetrics = analyticsData?.risk_metrics || {};
 
   const topHoldings = Array.isArray(portfolioData?.top_holdings)
     ? portfolioData.top_holdings
@@ -146,7 +146,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Sharpe Ratio</p>
-                <p className="text-2xl font-bold text-blue-600">{riskMetrics.sharpeRatio}</p>
+                <p className="text-2xl font-bold text-blue-600">{riskMetrics.sharpeRatio ?? 'N/A'}</p>
                 <p className="text-xs text-gray-500">Risk-adjusted returns</p>
               </div>
               <Target className="h-8 w-8 text-blue-600" />
@@ -159,7 +159,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Max Drawdown</p>
-                <p className="text-2xl font-bold text-red-600">{riskMetrics.maxDrawdown}%</p>
+                <p className="text-2xl font-bold text-red-600">{riskMetrics.maxDrawdown ?? 'N/A'}%</p>
                 <p className="text-xs text-gray-500">Peak-to-trough decline</p>
               </div>
               <TrendingDown className="h-8 w-8 text-red-600" />
@@ -172,7 +172,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Portfolio Beta</p>
-                <p className="text-2xl font-bold text-purple-600">{riskMetrics.beta}</p>
+                <p className="text-2xl font-bold text-purple-600">{riskMetrics.beta ?? 'N/A'}</p>
                 <p className="text-xs text-gray-500">Market sensitivity</p>
               </div>
               <Activity className="h-8 w-8 text-purple-600" />
@@ -312,7 +312,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <h3 className="font-semibold text-gray-600">Volatility</h3>
-                <p className="text-3xl font-bold text-orange-600">{riskMetrics.volatility}%</p>
+                <p className="text-3xl font-bold text-orange-600">{riskMetrics.volatility ?? 'N/A'}%</p>
                 <p className="text-sm text-gray-500">Annual standard deviation</p>
               </CardContent>
             </Card>
@@ -320,7 +320,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <h3 className="font-semibold text-gray-600">Value at Risk (95%)</h3>
-                <p className="text-3xl font-bold text-red-600">{riskMetrics.var95}%</p>
+                <p className="text-3xl font-bold text-red-600">{riskMetrics.var95 ?? 'N/A'}%</p>
                 <p className="text-sm text-gray-500">Daily potential loss</p>
               </CardContent>
             </Card>
@@ -328,7 +328,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <h3 className="font-semibold text-gray-600">Tracking Error</h3>
-                <p className="text-3xl font-bold text-purple-600">{riskMetrics.tracking_error}%</p>
+                <p className="text-3xl font-bold text-purple-600">{riskMetrics.tracking_error ?? 'N/A'}%</p>
                 <p className="text-sm text-gray-500">vs benchmark deviation</p>
               </CardContent>
             </Card>

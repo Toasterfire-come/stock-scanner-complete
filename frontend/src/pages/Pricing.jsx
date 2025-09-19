@@ -25,7 +25,7 @@ import {
   Headphones
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { validateDiscountCode as revenueValidate, applyDiscountCode as revenueApply, createPayPalOrder } from "../api/client";
+import { validateDiscountCode as revenueValidate, applyDiscountCode as revenueApply, createPayPalOrder as createPayPalOrderApi } from "../api/client";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -142,7 +142,7 @@ const Pricing = () => {
 
   const createPayPalOrder = async (planId, amount) => {
     try {
-      const order = await createPayPalOrder(planId, isAnnual ? 'annual' : 'monthly', discountCode || null);
+      const order = await createPayPalOrderApi(planId, isAnnual ? 'annual' : 'monthly', discountCode || null);
       // Let backend drive redirection; for now navigate to success page with context
       navigate("/checkout/success", { state: { planId, amount, order } });
     } catch (e) {

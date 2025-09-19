@@ -25,7 +25,7 @@ import {
   Zap
 } from "lucide-react";
 import { toast } from "sonner";
-import { initializeDiscountCodes, logClientMetric } from "../api/client";
+import { initializeDiscountCodes } from "../api/client";
 
 const ReferralSystem = ({ user }) => {
   const [referralCode, setReferralCode] = useState("");
@@ -51,19 +51,15 @@ const ReferralSystem = ({ user }) => {
         await initializeDiscountCodes();
         
         // Use metrics endpoint to retrieve aggregates if available
-        try {
-          const metrics = await logClientMetric({ type: 'referral_init' });
-          const d = metrics?.data || {};
-          setReferralStats({
-            totalReferrals: d.totalReferrals || 0,
-            activeReferrals: d.activeReferrals || 0,
-            totalEarnings: d.totalEarnings || 0,
-            pendingEarnings: d.pendingEarnings || 0,
-            conversionRate: d.conversionRate || 0,
-            lifetimeValue: d.lifetimeValue || 0,
-          });
-          setRecentReferrals(Array.isArray(d.recentReferrals) ? d.recentReferrals : []);
-        } catch {}
+        setReferralStats({
+          totalReferrals: 0,
+          activeReferrals: 0,
+          totalEarnings: 0,
+          pendingEarnings: 0,
+          conversionRate: 0,
+          lifetimeValue: 0,
+        });
+        setRecentReferrals([]);
       } catch (error) {
         console.error("Failed to initialize referral system:", error);
       } finally {
