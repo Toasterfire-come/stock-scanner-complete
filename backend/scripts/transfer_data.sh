@@ -55,16 +55,40 @@ transfer_mysql_db() {
   export MYSQL_PWD="$MYSQL_PWD_LOCAL"
 
   # Create dump
-  DUMP_FILE="/tmp/${local_name}_dump_$(date +%s).sql"
+  local dump_dir="${DUMP_DIR:-backups}"
+  mkdir -p "$dump_dir"
+  local timestamp
+  timestamp="$(date +%Y%m%d_%H%M%S)"
+  DUMP_FILE="${dump_dir}/${local_name}_dump_${timestamp}.sql"
   mysqldump --single-transaction --quick --skip-lock-tables \
     -h "$local_host" -P "$local_port" -u "$local_user" "$local_name" > "$DUMP_FILE"
 
-  # Import to remote
-  export MYSQL_PWD="$MYSQL_PWD_REMOTE"
-  mysql -h "$remote_host" -P "$remote_port" -u "$remote_user" "$remote_name" < "$DUMP_FILE"
+  # Optionally skip remote import (export-only mode)
+  if [ "${EXPORT_ONLY:-}" = "1" ] || [ "${EXPORT_ONLY:-}" = "true" ]; then
+    echo "EXPORT_ONLY is set; wrote dump at $DUMP_FILE and skipped remote import."
+    return 0
+  fi
 
-  rm -f "$DUMP_FILE"
-  echo "Transfer complete for '$local_name'."
+  # Basic DNS reachability check for remote host (Windows-safe: nslookup)
+  if have_cmd nslookup; then
+    if ! nslookup "$remote_host" >/dev/null 2>&1; then
+      echo "DNS lookup failed for $remote_host. Keeping dump at $DUMP_FILE. Skipping remote import."
+      return 0
+    fi
+  fi
+
+  # Import to remote (do not abort on error; keep dump for manual import)
+  export MYSQL_PWD="$MYSQL_PWD_REMOTE"
+  set +e
+  mysql -h "$remote_host" -P "$remote_port" -u "$remote_user" "$remote_name" < "$DUMP_FILE"
+  local import_rc=$?
+  set -e
+  if [ $import_rc -ne 0 ]; then
+    echo "Remote import failed (exit $import_rc). Keeping dump at $DUMP_FILE for manual import (e.g., phpMyAdmin)."
+    return 0
+  fi
+
+  echo "Transfer complete for '$local_name'. Imported to remote and kept dump at $DUMP_FILE."
 }
 
 transfer_via_django() {
@@ -73,6 +97,10 @@ transfer_via_django() {
   # Remote targets must be present via DB_* and DB2_*
   require_env DB_HOST; require_env DB_NAME; require_env DB_USER; require_env DB_PASSWORD
   require_env DB2_HOST; require_env DB2_NAME; require_env DB2_USER; require_env DB2_PASSWORD
+
+  local dump_dir
+  dump_dir="${DUMP_DIR:-backups}"
+  mkdir -p "$dump_dir"
 
   # Dump LOCAL databases by overriding env to point Django to local sources
   echo "Dumping LOCAL default DB via Django..."
@@ -83,7 +111,7 @@ transfer_via_django() {
     export DB2_HOST="$LOCAL_DB2_HOST" DB2_NAME="$LOCAL_DB2_NAME" DB2_USER="$LOCAL_DB2_USER" DB2_PASSWORD="$LOCAL_DB2_PASSWORD" DB2_PORT="$LOCAL_DB2_PORT"
     python manage.py dumpdata --database=default \
       --exclude=contenttypes --exclude=auth.permission --exclude=sessions.Session \
-      --natural-foreign --natural-primary --indent 2 > /tmp/default_data.json
+      --natural-foreign --natural-primary --indent 2 > "$dump_dir/default_data.json"
   )
 
   echo "Dumping LOCAL stocks DB via Django (apps: stocks, news)..."
@@ -92,22 +120,38 @@ transfer_via_django() {
     export DB_HOST="$LOCAL_DB_HOST" DB_NAME="$LOCAL_DB_NAME" DB_USER="$LOCAL_DB_USER" DB_PASSWORD="$LOCAL_DB_PASSWORD" DB_PORT="$LOCAL_DB_PORT"
     export DB2_HOST="$LOCAL_DB2_HOST" DB2_NAME="$LOCAL_DB2_NAME" DB2_USER="$LOCAL_DB2_USER" DB2_PASSWORD="$LOCAL_DB2_PASSWORD" DB2_PORT="$LOCAL_DB2_PORT"
     python manage.py dumpdata --database=stocks stocks news \
-      --natural-foreign --natural-primary --indent 2 > /tmp/stocks_data.json
+      --natural-foreign --natural-primary --indent 2 > "$dump_dir/stocks_data.json"
   )
+
+  # Optionally skip remote import
+  if [ "${EXPORT_ONLY:-}" = "1" ] || [ "${EXPORT_ONLY:-}" = "true" ]; then
+    echo "EXPORT_ONLY is set; wrote fixtures to $dump_dir and skipped remote import."
+    return 0
+  fi
 
   # Load into REMOTE by ensuring DB_* and DB2_* (already set) are used
   echo "Loading fixtures into REMOTE default DB..."
   (
     export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stockscanner_django.settings_production}"
     export DB_HOST="$DB_HOST" DB_NAME="$DB_NAME" DB_USER="$DB_USER" DB_PASSWORD="$DB_PASSWORD" DB_PORT="${DB_PORT:-3306}"
-    python manage.py loaddata --database=default /tmp/default_data.json --ignorenonexistent
+    set +e
+    python manage.py loaddata --database=default "$dump_dir/default_data.json" --ignorenonexistent
+    if [ $? -ne 0 ]; then
+      echo "Remote load (default) failed. You can import $dump_dir/default_data.json manually."
+    fi
+    set -e
   )
 
   echo "Loading fixtures into REMOTE stocks DB..."
   (
     export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stockscanner_django.settings_production}"
     export DB2_HOST="$DB2_HOST" DB2_NAME="$DB2_NAME" DB2_USER="$DB2_USER" DB2_PASSWORD="$DB2_PASSWORD" DB2_PORT="${DB2_PORT:-3306}"
-    python manage.py loaddata --database=stocks /tmp/stocks_data.json --ignorenonexistent
+    set +e
+    python manage.py loaddata --database=stocks "$dump_dir/stocks_data.json" --ignorenonexistent
+    if [ $? -ne 0 ]; then
+      echo "Remote load (stocks) failed. You can import $dump_dir/stocks_data.json manually."
+    fi
+    set -e
   )
 
   echo "Fixture-based transfer complete."
