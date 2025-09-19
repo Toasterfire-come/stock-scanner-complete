@@ -44,6 +44,76 @@ load_local_env() {
   fi
 }
 
+# Resolve a hostname to an IPv4 address using multiple methods
+resolve_host_ip() {
+  local host="$1"
+  local ip=""
+
+  # Allow manual override
+  if [ -n "${REMOTE_DB_HOST_IP:-}" ]; then
+    echo "$REMOTE_DB_HOST_IP"
+    return 0
+  fi
+
+  if have_cmd nslookup; then
+    ip=$(nslookup "$host" 2>/dev/null | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | tail -n1 || true)
+  fi
+  if [ -z "$ip" ]; then
+    # Try ping (Windows: -n 1, Unix: -c 1)
+    if have_cmd ping; then
+      ip=$(ping -n 1 "$host" 2>/dev/null | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n1 || true)
+      if [ -z "$ip" ]; then
+        ip=$(ping -c 1 "$host" 2>/dev/null | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n1 || true)
+      fi
+    fi
+  fi
+  if [ -z "$ip" ] && have_cmd curl; then
+    # Try Google DoH
+    ip=$(curl -s "https://dns.google/resolve?name=${host}&type=A" | grep -oE '\\"data\\":\\"([0-9]{1,3}\\.){3}[0-9]{1,3}\\"' | head -n1 | sed 's/.*\\"data\\":\\"\([^\\"]*\)\\".*/\1/' || true)
+    if [ -z "$ip" ]; then
+      # Try Cloudflare DoH
+      ip=$(curl -s -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=${host}&type=A" | grep -oE '\\"data\\":\\"([0-9]{1,3}\\.){3}[0-9]{1,3}\\"' | head -n1 | sed 's/.*\\"data\\":\\"\([^\\"]*\)\\".*/\1/' || true)
+    fi
+  fi
+  echo "$ip"
+}
+
+# Optionally create an SSH tunnel through a jump host (e.g., your SFTP host)
+setup_ssh_tunnel() {
+  local remote_host="$1"
+  local remote_port="$2"
+  local ssh_host="${SSH_TUNNEL_HOST:-}"
+  local ssh_user="${SSH_TUNNEL_USER:-}"
+  local ssh_port="${SSH_TUNNEL_PORT:-22}"
+  local local_port="${TUNNEL_LOCAL_PORT:-33306}"
+
+  if [ -z "$ssh_host" ] || [ -z "$ssh_user" ]; then
+    echo "SSH tunnel requested but SSH_TUNNEL_HOST/SSH_TUNNEL_USER not set; skipping tunnel."
+    return 1
+  fi
+  if ! have_cmd ssh; then
+    echo "ssh not available; cannot create tunnel."
+    return 1
+  fi
+
+  local base_cmd=(ssh -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -p "$ssh_port" -f -N -L "${local_port}:${remote_host}:${remote_port}" "${ssh_user}@${ssh_host}")
+  if [ -n "${SSH_TUNNEL_KEY:-}" ] && [ -f "$SSH_TUNNEL_KEY" ]; then
+    base_cmd=(ssh -i "$SSH_TUNNEL_KEY" -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -p "$ssh_port" -f -N -L "${local_port}:${remote_host}:${remote_port}" "${ssh_user}@${ssh_host}")
+  elif [ -n "${SSH_TUNNEL_PASSWORD:-}" ] && have_cmd sshpass; then
+    base_cmd=(sshpass -p "$SSH_TUNNEL_PASSWORD" ssh -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -p "$ssh_port" -f -N -L "${local_port}:${remote_host}:${remote_port}" "${ssh_user}@${ssh_host}")
+  fi
+
+  echo "Establishing SSH tunnel on localhost:${local_port} -> ${remote_host}:${remote_port} via ${ssh_user}@${ssh_host}:${ssh_port}"
+  if ! "${base_cmd[@]}"; then
+    echo "Failed to establish SSH tunnel."
+    return 1
+  fi
+  # Give it a moment
+  sleep 1
+  export TUNNEL_LOCAL_PORT="$local_port"
+  return 0
+}
+
 transfer_mysql_db() {
   local local_host="$1" local_name="$2" local_user="$3" local_pass="$4" local_port="${5:-3306}"
   local remote_host="$6" remote_name="$7" remote_user="$8" remote_pass="$9" remote_port="${10:-3306}"
@@ -69,18 +139,31 @@ transfer_mysql_db() {
     return 0
   fi
 
-  # Basic DNS reachability check for remote host (Windows-safe: nslookup)
-  if have_cmd nslookup; then
-    if ! nslookup "$remote_host" >/dev/null 2>&1; then
-      echo "DNS lookup failed for $remote_host. Keeping dump at $DUMP_FILE. Skipping remote import."
-      return 0
+  # Determine how to reach remote: SSH tunnel, IP fallback, or hostname
+  target_host="$remote_host"
+  target_port="$remote_port"
+
+  if [ "${USE_SSH_TUNNEL:-}" = "1" ] || [ "${USE_SSH_TUNNEL:-}" = "true" ]; then
+    if setup_ssh_tunnel "$remote_host" "$remote_port"; then
+      target_host="127.0.0.1"
+      target_port="${TUNNEL_LOCAL_PORT}"
+    fi
+  fi
+
+  if [ "$target_host" = "$remote_host" ]; then
+    ip_fallback=$(resolve_host_ip "$remote_host")
+    if [ -n "$ip_fallback" ]; then
+      target_host="$ip_fallback"
+      echo "Resolved $remote_host to $target_host via fallback DNS."
+    else
+      echo "Warning: could not resolve $remote_host; attempting direct connect anyway."
     fi
   fi
 
   # Import to remote (do not abort on error; keep dump for manual import)
   export MYSQL_PWD="$MYSQL_PWD_REMOTE"
   set +e
-  mysql -h "$remote_host" -P "$remote_port" -u "$remote_user" "$remote_name" < "$DUMP_FILE"
+  mysql -h "$target_host" -P "$target_port" -u "$remote_user" "$remote_name" < "$DUMP_FILE"
   local import_rc=$?
   set -e
   if [ $import_rc -ne 0 ]; then
