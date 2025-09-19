@@ -2,7 +2,7 @@
 
 ### 1) Environment
 
-Copy `.env.example` to `.env` and fill values. Ensure `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, and DB credentials are set. To enable a second DB for stocks/news, set the `DB2_*` variables.
+Copy `.env.example` to `.env` and fill values. Ensure `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, and DB credentials are set. Single-DB (local MySQL) is the default. To enable a second DB for stocks/news, set the `DB2_*` variables.
 
 ### 2) Install
 
@@ -13,10 +13,15 @@ pip install -r requirements.txt
 
 ### 3) Migrations
 
+Single-DB (default):
+```
+python manage.py migrate --database=default
+```
+
+Optional dual-DB:
 ```
 python manage.py migrate --database=default
 python manage.py migrate --database=stocks stocks
-# Optional if news app is stored in stocks DB
 python manage.py migrate --database=stocks news
 ```
 
@@ -32,7 +37,7 @@ python manage.py createsuperuser --database=default
 python manage.py runserver 0.0.0.0:8000
 ```
 
-CORS/CSRF and ALLOWED_HOSTS are env-driven in `settings.py`. The optional router for the `stocks` DB is enabled only if `DB2_NAME` is set.
+CORS/CSRF and ALLOWED_HOSTS are env-driven in `settings.py`. The optional router for the `stocks` DB is disabled in single-DB mode and only used if `DB2_*` is configured.
 # Stock Scanner Backend (Django)
 
 This backend serves the Trade Scan Pro React frontend hosted on a separate static webspace. Configure via `.env` and use MySQL in production.
@@ -50,19 +55,14 @@ cp .env.example .env
 pip install -r requirements.txt
 ```
 
-3) Migrate databases (MySQL)
-
-Default (single DB):
+3) Migrate databases
 ```
+# Single-DB (default)
 python manage.py migrate --database=default
-```
 
-Optional dual-DB (if DB2_* set):
-- The router sends `stocks` and `news` apps to the `stocks` database.
-```
-python manage.py migrate --database=default
-python manage.py migrate --database=stocks stocks
-python manage.py migrate --database=stocks news
+# Dual-DB (optional; only if DB2_* is set)
+# python manage.py migrate --database=stocks stocks
+# python manage.py migrate --database=stocks news
 ```
 
 4) Create superuser
@@ -77,7 +77,8 @@ python manage.py runserver 0.0.0.0:8000
 
 ## Environment
 See `.env.example` for all keys. Key values:
-- DB_*, DB2_* for MySQL connection(s)
+- DB_* for MySQL connection (single DB by default)
+- DB2_* optional for secondary stocks DB
 - DJANGO_ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS, FRONTEND_URL
 - PAYPAL_* (live)
 - EMAIL_* (SMTP)
@@ -91,7 +92,7 @@ Ensure `FRONTEND_URL` includes your static site (e.g., https://tradescanpro.com)
 
 ## Data transfer: local → server (both databases)
 
-The script uses your existing `DB_*` and `DB2_*` as REMOTE targets automatically, and `LOCAL_DB_*` / `LOCAL_DB2_*` (or localhost defaults) as LOCAL sources.
+The script uses your existing `DB_*` as REMOTE targets automatically, and `LOCAL_DB_*` / `LOCAL_DB2_*` (or localhost defaults) as LOCAL sources. `DB2_*` is optional for single-DB mode.
 
 ```bash
 cd backend
@@ -104,13 +105,9 @@ export DJANGO_SETTINGS_MODULE=stockscanner_django.settings_production
 # export LOCAL_DB_PASSWORD=...
 # export LOCAL_DB_PORT=3306
 
-# export LOCAL_DB2_HOST=127.0.0.1
+# Dual-DB optional:
 # export LOCAL_DB2_NAME=stocks
-# export LOCAL_DB2_USER=root
-# export LOCAL_DB2_PASSWORD=...
-# export LOCAL_DB2_PORT=3306
 
-# Ensure your .env has DB_* and DB2_* for the REMOTE
 ./scripts/transfer_data.sh
 ```
 

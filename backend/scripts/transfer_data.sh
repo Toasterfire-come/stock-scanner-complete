@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # Remote targets are taken from your existing DB_* and DB2_* env (or .env):
 #   - DB_*   => remote default DB (users/auth/etc.)
-#   - DB2_*  => remote stocks DB (stocks + news)
+#   - DB2_*  => remote stocks DB (stocks + news) [optional in single-DB mode]
 #
 # Local sources can be provided via LOCAL_DB_* and LOCAL_DB2_*; if omitted, sensible
 # localhost defaults are used (127.0.0.1, root, no password, 3306, names: stockscanner/stocks).
@@ -224,7 +224,7 @@ transfer_via_django() {
 
   # Remote targets must be present via DB_* and DB2_*
   require_env DB_HOST; require_env DB_NAME; require_env DB_USER; require_env DB_PASSWORD
-  require_env DB2_HOST; require_env DB2_NAME; require_env DB2_USER; require_env DB2_PASSWORD
+  # DB2_* optional in single-DB mode
 
   local dump_dir
   dump_dir="${DUMP_DIR:-backups}"
@@ -303,7 +303,7 @@ main() {
 
   # Remote targets come from DB_* and DB2_* in env/.env (already set)
   require_env DB_HOST; require_env DB_NAME; require_env DB_USER; require_env DB_PASSWORD
-  require_env DB2_HOST; require_env DB2_NAME; require_env DB2_USER; require_env DB2_PASSWORD
+  # DB2_* optional in single-DB mode
 
   if have_cmd mysqldump && have_cmd mysql; then
     if [ "${SKIP_DEFAULT:-}" != "1" ] && [ "${SKIP_DEFAULT:-}" != "true" ]; then
@@ -313,11 +313,11 @@ main() {
       echo "Skipping default DB transfer due to SKIP_DEFAULT flag."
     fi
 
-    if [ "${SKIP_STOCKS:-}" != "1" ] && [ "${SKIP_STOCKS:-}" != "true" ]; then
+    if [ -n "${DB2_NAME:-}" ] && [ "${SKIP_STOCKS:-}" != "1" ] && [ "${SKIP_STOCKS:-}" != "true" ]; then
       transfer_mysql_db "$LOCAL_DB2_HOST" "$LOCAL_DB2_NAME" "$LOCAL_DB2_USER" "$LOCAL_DB2_PASSWORD" "$LOCAL_DB2_PORT" \
                         "$DB2_HOST" "${DB2_NAME}" "${DB2_USER}" "${DB2_PASSWORD}" "${DB2_PORT:-3306}"
     else
-      echo "Skipping stocks DB transfer due to SKIP_STOCKS flag."
+      echo "Skipping stocks DB transfer (single-DB mode or SKIP_STOCKS set)."
     fi
   else
     transfer_via_django
