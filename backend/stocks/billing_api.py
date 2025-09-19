@@ -23,6 +23,7 @@ import os
 from decimal import Decimal
 
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
+from .models import ReferralAccount, ReferralInvite, ReferralRedemption
 from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
@@ -32,6 +33,7 @@ import hmac
 import hashlib
 from django.conf import settings as django_settings
 from django.views.decorators.cache import never_cache
+from django.db import transaction
 
 # Dynamic permission that allows all in testing mode
 AuthPerm = AllowAny if getattr(django_settings, 'TESTING_DISABLE_AUTH', False) else IsAuthenticated
@@ -133,6 +135,9 @@ def paypal_webhook_api(request):
                     user = None
 
             if user is not None:
+                # Apply referral credit first; if applied, do not record paid revenue for this cycle
+                if _apply_referral_credit_if_available(user):
+                    return JsonResponse({'success': True, 'referral_credit': True})
                 try:
                     DiscountService.record_payment(
                         user=user,
@@ -192,6 +197,45 @@ def _paypal_get_access_token():
     resp = requests.post(url, headers=headers, data={ 'grant_type': 'client_credentials' }, timeout=15)
     resp.raise_for_status()
     return resp.json().get('access_token')
+
+
+def _apply_referral_credit_if_available(user) -> bool:
+    """Consume 3 paid invites for 1 free month; extend next_billing_date and record redemption.
+    Returns True if credit was applied (no charge should occur), else False.
+    """
+    try:
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        inviter_uid = str(getattr(user, 'id', ''))  # use user id as uid baseline
+        account = ReferralAccount.objects.filter(inviter_uid=inviter_uid).first()
+        if not account:
+            return False
+        total_paid = ReferralInvite.objects.filter(inviter_uid=account.inviter_uid, status='paid').count()
+        earned_months = total_paid // 3
+        redeemed = int(account.free_months_redeemed or 0)
+        if earned_months <= redeemed:
+            return False
+        # Consume exactly one month per renewal application
+        with transaction.atomic():
+            # Re-check within transaction
+            account_locked = ReferralAccount.objects.select_for_update().get(id=account.id)
+            total_paid_locked = ReferralInvite.objects.filter(inviter_uid=account_locked.inviter_uid, status='paid').count()
+            earned_locked = total_paid_locked // 3
+            redeemed_locked = int(account_locked.free_months_redeemed or 0)
+            if earned_locked <= redeemed_locked:
+                return False
+            # Record redemption and advance next billing date by one month equivalent
+            ReferralRedemption.objects.create(inviter_uid=account_locked.inviter_uid, months=1, invites_consumed=3)
+            account_locked.free_months_redeemed = redeemed_locked + 1
+            account_locked.save(update_fields=['free_months_redeemed', 'updated_at'])
+            # Extend profile without charging
+            days = 30 if getattr(profile, 'billing_cycle', 'monthly') == 'monthly' else 365
+            current = getattr(profile, 'next_billing_date', None) or timezone.now()
+            profile.next_billing_date = current + timedelta(days=days)
+            profile.save(update_fields=['next_billing_date'])
+            return True
+    except Exception as e:
+        logger.error(f"Apply referral credit failed: {e}")
+        return False
 
 @csrf_exempt
 @api_view(['POST'])
@@ -322,6 +366,21 @@ def create_paypal_order_api(request):
         # Safety: amounts must be >= 0.50 for PayPal sandbox, but allow $1 trial
         if final_amount <= 0:
             final_amount = Decimal('0.50')
+
+        # If user has referral credit, don't create a paid order; return a free approval stub
+        if request.user.is_authenticated and _apply_referral_credit_if_available(request.user):
+            return JsonResponse({
+                'success': True,
+                'order_id': f"FREE-{timezone.now().strftime('%Y%m%d%H%M%S')}",
+                'approval_url': None,
+                'currency': currency,
+                'plan_type': plan_type,
+                'billing_cycle': billing_cycle,
+                'discount_applied': {'code': 'REFERRAL', 'type': 'free_month'},
+                'amount': float(original_amount),
+                'final_amount': 0.0,
+                'referral_credit': True
+            }, status=201)
 
         # Prepare order payload (token retrieval moved into try block below for graceful fallback)
         purchase_unit = {
@@ -481,6 +540,17 @@ def capture_paypal_order_api(request):
                     discount_obj = None
 
             if inferred_user is not None:
+                # If user has referral credit, apply it and short-circuit charging logic
+                if _apply_referral_credit_if_available(inferred_user):
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Referral credit applied: 1 month free (no charge)',
+                        'order_id': order_id,
+                        'status': 'COMPLETED',
+                        'plan_type': plan_type,
+                        'billing_cycle': billing_cycle,
+                        'referral_credit': True
+                    })
                 # Determine final amount from PayPal capture if not provided
                 if final_amount is None:
                     if is_stub:
@@ -816,7 +886,9 @@ def current_plan_api(request):
                     'portfolio_tracking': True,
                     'alerts': getattr(profile, 'is_premium', False),
                     'advanced_analytics': getattr(profile, 'is_premium', False)
-                }
+                },
+                'auto_renew': getattr(profile, 'auto_renew', False),
+                'subscription_status': getattr(profile, 'subscription_status', 'active')
             }
         })
         

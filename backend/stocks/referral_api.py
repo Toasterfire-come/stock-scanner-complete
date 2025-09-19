@@ -11,7 +11,7 @@ import logging
 import secrets
 from django.contrib.auth import get_user_model
 
-from .models import ReferralAccount, ReferralInvite
+from .models import ReferralAccount, ReferralInvite, ReferralRedemption
 
 logger = logging.getLogger(__name__)
 
@@ -114,13 +114,15 @@ def referral_summary_api(request):
         total_invited = ReferralInvite.objects.filter(inviter_uid=account.inviter_uid).count()
         total_paid = ReferralInvite.objects.filter(inviter_uid=account.inviter_uid, status='paid').count()
         rewards_months_earned = total_paid // 3
-        pending_rewards_months = max(0, rewards_months_earned - int(account.rewards_months_granted or 0))
+        redeemed = int(account.free_months_redeemed or 0)
+        pending_rewards_months = max(0, rewards_months_earned - redeemed)
         return JsonResponse({
             'inviter_id': account.inviter_uid,
             'total_invited': total_invited,
             'total_paid': total_paid,
             'rewards_months_earned': rewards_months_earned,
             'rewards_months_granted': int(account.rewards_months_granted or 0),
+            'free_months_redeemed': redeemed,
             'pending_rewards_months': pending_rewards_months,
         })
     except Exception as e:

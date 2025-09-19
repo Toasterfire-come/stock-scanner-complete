@@ -678,6 +678,7 @@ class ReferralAccount(models.Model):
     inviter_uid = models.CharField(max_length=64, db_index=True, help_text="External inviter identifier for non-auth flows")
     referral_code = models.CharField(max_length=16, unique=True, db_index=True)
     rewards_months_granted = models.IntegerField(default=0)
+    free_months_redeemed = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -717,3 +718,19 @@ class ReferralInvite(models.Model):
 
     def __str__(self):
         return f"Invite {self.invitee_email} via {self.referral_code} [{self.status}]"
+
+
+class ReferralRedemption(models.Model):
+    """Tracks consumption of paid referrals for free months."""
+    inviter_uid = models.CharField(max_length=64, db_index=True)
+    months = models.PositiveIntegerField(default=1)
+    invites_consumed = models.PositiveIntegerField(default=3)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['inviter_uid', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"Redeemed {self.months}m using {self.invites_consumed} invites for {self.inviter_uid}"
