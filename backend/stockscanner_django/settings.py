@@ -92,9 +92,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'stockscanner_django.wsgi.application'
-# Optional multi-DB router (enabled automatically if secondary DB configured)
-if 'stocks' in globals().get('DATABASES', {}):
-    DATABASE_ROUTERS = ['stockscanner_django.db_router.StocksRouter']
 
 
 # Optional Sentry error reporting (enabled when SENTRY_DSN is set)
@@ -186,6 +183,10 @@ else:
                 }
             }
         print("INFO: Using standard MySQL configuration" + (" with secondary 'stocks' DB" if 'stocks' in DATABASES else ""))
+
+# Database router: enable when secondary 'stocks' DB is configured
+if 'stocks' in DATABASES:
+    DATABASE_ROUTERS = ['stockscanner_django.db_router.StocksRouter']
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
