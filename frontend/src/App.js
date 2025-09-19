@@ -27,15 +27,15 @@ const Home = () => {
     const load = async () => {
       try {
         const [h, b, u, link, sum] = await Promise.all([
-          axios.get(`${API}/health`).then(r => r.data),
-          axios.get(`${API}/scans/breakouts`, { params: { universe: "sp500", limit: 5 } }).then(r => r.data),
-          axios.get(`${API}/scans/undervalued`, { params: { universe: "sp500", limit: 5 } }).then(r => r.data),
+          axios.get(`${API}/health/`).then(r => r.data),
+          axios.get(`${API}/stocks/top-gainers/`, { params: { limit: 5 } }).then(r => r.data),
+          axios.get(`${API}/filter/`, { params: { max_pe: 15, min_market_cap: 1000000000, limit: 5 } }).then(r => r.data),
           axios.get(`${API}/referrals/link`, { params: { user_id: userId } }).then(r => r.data),
           axios.get(`${API}/referrals/summary`, { params: { user_id: userId } }).then(r => r.data),
         ]);
         setHealth(h);
-        setBreakouts(b.results || []);
-        setUndervalued(u.results || []);
+        setBreakouts((b && (b.data || b.stocks)) || []);
+        setUndervalued((u && (u.stocks || u.data)) || []);
         setReferral({ link: link.referral_link, code: link.referral_code, summary: sum });
       } catch (e) {
         setError(e?.response?.data?.detail || e.message || "Failed to load data");
@@ -92,8 +92,8 @@ const Home = () => {
           <h2 className="text-xl font-semibold">Breakouts</h2>
           <ul className="mt-2 list-disc ml-5">
             {breakouts.map((r) => (
-              <li key={r.symbol}>
-                <span className="font-mono">{r.symbol}</span> · +{r.pct_above_prior_high?.toFixed(2)}% above 20d high · Vol x{r.volume_ratio_vs_20d?.toFixed(2)}
+              <li key={r.ticker || r.symbol}>
+                <span className="font-mono">{r.ticker || r.symbol}</span> · Change {Number(r.change_percent ?? r.price_change_today ?? 0).toFixed(2)}%
               </li>
             ))}
           </ul>
@@ -102,8 +102,8 @@ const Home = () => {
           <h2 className="text-xl font-semibold">Undervalued</h2>
           <ul className="mt-2 list-disc ml-5">
             {undervalued.map((r) => (
-              <li key={r.symbol}>
-                <span className="font-mono">{r.symbol}</span> · P/E {r.pe_ratio?.toFixed(2)} · P/B {r.price_to_book?.toFixed(2)} · Score {r.undervalued_score?.toFixed(2)}
+              <li key={r.ticker || r.symbol}>
+                <span className="font-mono">{r.ticker || r.symbol}</span> · P/E {Number(r.pe_ratio ?? 0).toFixed(2)} · Mkt Cap ${Number(r.market_cap ?? 0).toLocaleString()}
               </li>
             ))}
           </ul>
