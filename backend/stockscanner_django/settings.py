@@ -113,84 +113,30 @@ except Exception:
     # Sentry is optional; never block startup
     pass
 
-# Database configuration - Auto-detect XAMPP or use environment settings
-if USE_XAMPP and IS_XAMPP_AVAILABLE:
-    # XAMPP Configuration (no password by default)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'stockscanner'),
-            'USER': os.environ.get('DB_USER', 'root'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # XAMPP default: no password
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'use_unicode': True,
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES',innodb_strict_mode=1",
-                'autocommit': True,
-                'connect_timeout': 60,
-                'read_timeout': 300,
-                'write_timeout': 300,
-            },
-            'CONN_MAX_AGE': 0,
-            'ATOMIC_REQUESTS': True,
-        }
+"""
+Single-database configuration for local MySQL (root, no password).
+To use: ensure MySQL is running locally and database 'stockscanner' exists.
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'stockscanner'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+        'CONN_MAX_AGE': 0,
+        'ATOMIC_REQUESTS': True,
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'autocommit': True,
+        },
     }
-    print("INFO: Using XAMPP MySQL configuration")
-else:
-    if IS_XAMPP_AVAILABLE and not USE_XAMPP:
-        print("INFO: XAMPP detected but USE_XAMPP=false; using environment-driven DB configuration")
-else:
-    # Support SQLite for local/testing via DB_ENGINE env, otherwise default to MySQL
-    _db_engine = os.environ.get('DB_ENGINE', 'django.db.backends.mysql')
-    if _db_engine == 'django.db.backends.sqlite3':
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-                'CONN_MAX_AGE': 0,
-                'ATOMIC_REQUESTS': True,
-            }
-        }
-        print("INFO: Using SQLite configuration")
-    else:
-        # Standard MySQL configuration with optional secondary DB
-        DATABASES = {
-            'default': {
-                'ENGINE': _db_engine,
-                'NAME': os.environ.get('DB_NAME', 'stockscanner'),
-                'USER': os.environ.get('DB_USER', 'stockscanner_user'),
-                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-                'HOST': os.environ.get('DB_HOST', 'localhost'),
-                'PORT': os.environ.get('DB_PORT', '3306'),
-                'CONN_MAX_AGE': int(os.environ.get('CONN_MAX_AGE', '60')),
-                'OPTIONS': {
-                    'charset': 'utf8mb4',
-                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                }
-            }
-        }
-        # Optional secondary DB for stock data (read-heavy)
-        if os.environ.get('DB2_NAME'):
-            DATABASES['stocks'] = {
-                'ENGINE': os.environ.get('DB2_ENGINE', _db_engine),
-                'NAME': os.environ.get('DB2_NAME'),
-                'USER': os.environ.get('DB2_USER', os.environ.get('DB_USER', '')),
-                'PASSWORD': os.environ.get('DB2_PASSWORD', os.environ.get('DB_PASSWORD', '')),
-                'HOST': os.environ.get('DB2_HOST', os.environ.get('DB_HOST', 'localhost')),
-                'PORT': os.environ.get('DB2_PORT', os.environ.get('DB_PORT', '3306')),
-                'CONN_MAX_AGE': int(os.environ.get('DB2_CONN_MAX_AGE', os.environ.get('CONN_MAX_AGE', '60'))),
-                'OPTIONS': {
-                    'charset': 'utf8mb4',
-                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                }
-            }
-        print("INFO: Using standard MySQL configuration" + (" with secondary 'stocks' DB" if 'stocks' in DATABASES else ""))
+}
 
-# Database router: enable when secondary 'stocks' DB is configured
-if 'stocks' in DATABASES:
-    DATABASE_ROUTERS = ['stockscanner_django.db_router.StocksRouter']
+# No database routers in single-DB mode
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

@@ -18,7 +18,7 @@ from datetime import datetime
 
 # Django imports for database integration
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings_production'))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'))
 django.setup()
 
 from django.utils import timezone
