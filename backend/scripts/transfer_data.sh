@@ -55,6 +55,34 @@ resolve_host_ip() {
     return 0
   fi
 
+  # Prefer Python for accurate resolution when available
+  if have_cmd python3; then
+    ip=$(python3 - <<PY
+import socket, sys
+host = sys.argv[1]
+try:
+    print(socket.gethostbyname(host))
+except Exception:
+    pass
+PY
+"$host")
+  fi
+  if [ -z "$ip" ] && have_cmd python; then
+    ip=$(python - <<PY
+import socket, sys
+host = sys.argv[1]
+try:
+    print(socket.gethostbyname(host))
+except Exception:
+    pass
+PY
+"$host")
+  fi
+
+  if [ -z "$ip" ] && have_cmd getent; then
+    ip=$(getent hosts "$host" | awk '{print $1; exit}' || true)
+  fi
+
   if have_cmd nslookup; then
     ip=$(nslookup "$host" 2>/dev/null | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | tail -n1 || true)
   fi
@@ -74,6 +102,10 @@ resolve_host_ip() {
       # Try Cloudflare DoH
       ip=$(curl -s -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=${host}&type=A" | grep -oE '\\"data\\":\\"([0-9]{1,3}\\.){3}[0-9]{1,3}\\"' | head -n1 | sed 's/.*\\"data\\":\\"\([^\\"]*\)\\".*/\1/' || true)
     fi
+  fi
+  # Avoid returning DNS server IPs as bogus results
+  if [ "$ip" = "1.1.1.1" ] || [ "$ip" = "8.8.8.8" ]; then
+    ip=""
   fi
   echo "$ip"
 }
@@ -130,8 +162,21 @@ transfer_mysql_db() {
   local timestamp
   timestamp="$(date +%Y%m%d_%H%M%S)"
   DUMP_FILE="${dump_dir}/${local_name}_dump_${timestamp}.sql"
+  local err_file="${dump_dir}/${local_name}_dump_${timestamp}.err"
+  set +e
   mysqldump --single-transaction --quick --skip-lock-tables \
-    -h "$local_host" -P "$local_port" -u "$local_user" "$local_name" > "$DUMP_FILE"
+    -h "$local_host" -P "$local_port" -u "$local_user" "$local_name" > "$DUMP_FILE" 2>"$err_file"
+  local dump_rc=$?
+  set -e
+  if [ $dump_rc -ne 0 ]; then
+    if grep -qi "Unknown database" "$err_file"; then
+      echo "Local database '$local_name' not found; skipping this DB. See $err_file."
+      rm -f "$DUMP_FILE"
+      return 0
+    fi
+    echo "mysqldump failed (exit $dump_rc). See $err_file. Skipping remote import; keeping any partial dump at $DUMP_FILE."
+    return 0
+  fi
 
   # Optionally skip remote import (export-only mode)
   if [ "${EXPORT_ONLY:-}" = "1" ] || [ "${EXPORT_ONLY:-}" = "true" ]; then
@@ -261,11 +306,19 @@ main() {
   require_env DB2_HOST; require_env DB2_NAME; require_env DB2_USER; require_env DB2_PASSWORD
 
   if have_cmd mysqldump && have_cmd mysql; then
-    transfer_mysql_db "$LOCAL_DB_HOST" "$LOCAL_DB_NAME" "$LOCAL_DB_USER" "$LOCAL_DB_PASSWORD" "$LOCAL_DB_PORT" \
-                      "$DB_HOST" "${DB_NAME}" "${DB_USER}" "${DB_PASSWORD}" "${DB_PORT:-3306}"
+    if [ "${SKIP_DEFAULT:-}" != "1" ] && [ "${SKIP_DEFAULT:-}" != "true" ]; then
+      transfer_mysql_db "$LOCAL_DB_HOST" "$LOCAL_DB_NAME" "$LOCAL_DB_USER" "$LOCAL_DB_PASSWORD" "$LOCAL_DB_PORT" \
+                        "$DB_HOST" "${DB_NAME}" "${DB_USER}" "${DB_PASSWORD}" "${DB_PORT:-3306}"
+    else
+      echo "Skipping default DB transfer due to SKIP_DEFAULT flag."
+    fi
 
-    transfer_mysql_db "$LOCAL_DB2_HOST" "$LOCAL_DB2_NAME" "$LOCAL_DB2_USER" "$LOCAL_DB2_PASSWORD" "$LOCAL_DB2_PORT" \
-                      "$DB2_HOST" "${DB2_NAME}" "${DB2_USER}" "${DB2_PASSWORD}" "${DB2_PORT:-3306}"
+    if [ "${SKIP_STOCKS:-}" != "1" ] && [ "${SKIP_STOCKS:-}" != "true" ]; then
+      transfer_mysql_db "$LOCAL_DB2_HOST" "$LOCAL_DB2_NAME" "$LOCAL_DB2_USER" "$LOCAL_DB2_PASSWORD" "$LOCAL_DB2_PORT" \
+                        "$DB2_HOST" "${DB2_NAME}" "${DB2_USER}" "${DB2_PASSWORD}" "${DB2_PORT:-3306}"
+    else
+      echo "Skipping stocks DB transfer due to SKIP_STOCKS flag."
+    fi
   else
     transfer_via_django
   fi
