@@ -50,38 +50,45 @@ class SimpleAPITester:
             self.failed_tests.append(f"{name}: Error - {str(e)}")
             return False, {}
 
-    def test_root_endpoint(self):
-        """Test the root API endpoint"""
+    def test_trade_scanner_endpoints(self):
+        """Test Trade Scanner specific endpoints"""
+        # Test basic API health
         success, response = self.run_test(
-            "Root API Endpoint",
+            "API Health Check",
             "GET",
             "api/",
             200
         )
-        return success
-
-    def test_create_status_check(self):
-        """Test creating a status check"""
-        test_data = {
-            "client_name": f"test_client_{datetime.now().strftime('%H%M%S')}"
-        }
+        
+        # Test stocks endpoint
         success, response = self.run_test(
-            "Create Status Check",
-            "POST",
-            "api/status",
-            200,
-            data=test_data
-        )
-        return response.get('id') if success else None
-
-    def test_get_status_checks(self):
-        """Test getting all status checks"""
-        success, response = self.run_test(
-            "Get Status Checks",
-            "GET",
-            "api/status",
+            "Stocks Endpoint",
+            "GET", 
+            "api/stocks/",
             200
         )
+        
+        # Test market data
+        success, response = self.run_test(
+            "Market Data",
+            "GET",
+            "api/market/",
+            200
+        )
+        
+        return success
+
+    def test_authentication_endpoints(self):
+        """Test authentication endpoints"""
+        # Test login endpoint structure
+        success, response = self.run_test(
+            "Login Endpoint",
+            "POST",
+            "api/auth/login/",
+            400,  # Expect 400 for invalid credentials
+            data={"username": "test", "password": "test"}
+        )
+        
         return success
 
 def main():
