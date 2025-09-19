@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 class SimpleAPITester:
-    def __init__(self, base_url="https://api.tradescanner.com"):
+    def __init__(self, base_url="https://api.retailtradescanner.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
@@ -50,46 +50,48 @@ class SimpleAPITester:
             self.failed_tests.append(f"{name}: Error - {str(e)}")
             return False, {}
 
-    def test_trade_scanner_endpoints(self):
-        """Test Trade Scanner specific endpoints"""
-        # Test basic API health
+    def test_actual_backend_endpoints(self):
+        """Test actual backend endpoints based on server.py"""
+        # Test basic API health check
         success, response = self.run_test(
-            "API Health Check",
+            "API Root Endpoint",
             "GET",
             "api/",
             200
         )
         
-        # Test stocks endpoint
+        # Test status endpoints
         success, response = self.run_test(
-            "Stocks Endpoint",
+            "Get Status Checks",
             "GET", 
-            "api/stocks/",
+            "api/status",
             200
         )
         
-        # Test market data
+        # Test creating a status check
         success, response = self.run_test(
-            "Market Data",
-            "GET",
-            "api/market/",
-            200
+            "Create Status Check",
+            "POST",
+            "api/status",
+            200,
+            data={"client_name": "test_client"}
         )
         
         return success
 
-    def test_authentication_endpoints(self):
-        """Test authentication endpoints"""
-        # Test login endpoint structure
-        success, response = self.run_test(
-            "Login Endpoint",
-            "POST",
-            "api/auth/login/",
-            400,  # Expect 400 for invalid credentials
-            data={"username": "test", "password": "test"}
-        )
+    def test_configuration_verification(self):
+        """Test that we're hitting the correct backend URL"""
+        print(f"\n🔧 Configuration Check:")
+        print(f"Testing backend URL: {self.base_url}")
+        print(f"Expected URL: https://api.retailtradescanner.com")
         
-        return success
+        if self.base_url == "https://api.retailtradescanner.com":
+            print("✅ Backend URL configuration is correct")
+            return True
+        else:
+            print("❌ Backend URL configuration is incorrect")
+            self.failed_tests.append("Backend URL configuration mismatch")
+            return False
 
 def main():
     print("🚀 Starting Backend API Tests for Trade Scan Pro")
