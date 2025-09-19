@@ -10,12 +10,13 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# XAMPP Auto-Detection and Configuration
+# XAMPP Auto-Detection and Configuration (disabled by default unless USE_XAMPP=true)
+USE_XAMPP = os.environ.get('USE_XAMPP', 'false').lower() == 'true'
 XAMPP_PATH = r"C:\xampp"
 XAMPP_MYSQL_PATH = os.path.join(XAMPP_PATH, "mysql", "bin")
 IS_XAMPP_AVAILABLE = os.path.exists(XAMPP_PATH) and os.path.exists(XAMPP_MYSQL_PATH)
 
-if IS_XAMPP_AVAILABLE:
+if USE_XAMPP and IS_XAMPP_AVAILABLE:
     print("INFO: XAMPP detected - configuring for XAMPP MySQL")
     # Add XAMPP MySQL to PATH
     if XAMPP_MYSQL_PATH not in os.environ.get('PATH', ''):
@@ -113,7 +114,7 @@ except Exception:
     pass
 
 # Database configuration - Auto-detect XAMPP or use environment settings
-if IS_XAMPP_AVAILABLE:
+if USE_XAMPP and IS_XAMPP_AVAILABLE:
     # XAMPP Configuration (no password by default)
     DATABASES = {
         'default': {
@@ -137,6 +138,9 @@ if IS_XAMPP_AVAILABLE:
         }
     }
     print("INFO: Using XAMPP MySQL configuration")
+else:
+    if IS_XAMPP_AVAILABLE and not USE_XAMPP:
+        print("INFO: XAMPP detected but USE_XAMPP=false; using environment-driven DB configuration")
 else:
     # Support SQLite for local/testing via DB_ENGINE env, otherwise default to MySQL
     _db_engine = os.environ.get('DB_ENGINE', 'django.db.backends.mysql')
