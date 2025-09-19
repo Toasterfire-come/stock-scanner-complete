@@ -1,24 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Transfer both Django databases (default=user, stocks=stock/news) from local to remote.
-# Prefers mysqldump for speed; falls back to Django dumpdata/loaddata if mysqldump is unavailable.
+# Transfer both Django databases (default=user, stocks=stock/news) from LOCAL -> REMOTE.
 #
-# Usage (env-driven):
+# Remote targets are taken from your existing DB_* and DB2_* env (or .env):
+#   - DB_*   => remote default DB (users/auth/etc.)
+#   - DB2_*  => remote stocks DB (stocks + news)
+#
+# Local sources can be provided via LOCAL_DB_* and LOCAL_DB2_*; if omitted, sensible
+# localhost defaults are used (127.0.0.1, root, no password, 3306, names: stockscanner/stocks).
+#
+# Prefers mysqldump for speed; falls back to Django dumpdata/loaddata automatically.
+#
+# Usage:
 #   cd backend
 #   export DJANGO_SETTINGS_MODULE=stockscanner_django.settings_production
-#   # Local defaults are read from your current .env/ENV (DB_*, DB2_*)
-#   # Provide remote targets:
-#   export REMOTE_DB_HOST=...
-#   export REMOTE_DB_NAME=...
-#   export REMOTE_DB_USER=...
-#   export REMOTE_DB_PASSWORD=...
-#   export REMOTE_DB_PORT=3306
-#   export REMOTE_DB2_HOST=...
-#   export REMOTE_DB2_NAME=...
-#   export REMOTE_DB2_USER=...
-#   export REMOTE_DB2_PASSWORD=...
-#   export REMOTE_DB2_PORT=3306
+#   # Ensure your .env holds DB_* and DB2_* for the REMOTE servers (already set)
+#   # Optionally set LOCAL_DB_* and LOCAL_DB2_* for your local MySQL
 #   ./scripts/transfer_data.sh
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
@@ -72,28 +70,43 @@ transfer_mysql_db() {
 transfer_via_django() {
   echo "mysqldump not available. Falling back to Django dumpdata/loaddata fixtures..."
 
-  # Dump local default DB
-  python manage.py dumpdata --database=default \
-    --exclude=contenttypes --exclude=auth.permission --exclude=sessions.Session \
-    --natural-foreign --natural-primary --indent 2 > /tmp/default_data.json
+  # Remote targets must be present via DB_* and DB2_*
+  require_env DB_HOST; require_env DB_NAME; require_env DB_USER; require_env DB_PASSWORD
+  require_env DB2_HOST; require_env DB2_NAME; require_env DB2_USER; require_env DB2_PASSWORD
 
-  # Dump local stocks DB (stocks + news apps)
-  python manage.py dumpdata --database=stocks stocks news \
-    --natural-foreign --natural-primary --indent 2 > /tmp/stocks_data.json
-
-  # Load into remote by overriding DB_* and DB2_* in a subshell
-  require_env REMOTE_DB_HOST; require_env REMOTE_DB_NAME; require_env REMOTE_DB_USER; require_env REMOTE_DB_PASSWORD
-  require_env REMOTE_DB2_HOST; require_env REMOTE_DB2_NAME; require_env REMOTE_DB2_USER; require_env REMOTE_DB2_PASSWORD
-
-  echo "Loading fixtures into remote default DB..."
+  # Dump LOCAL databases by overriding env to point Django to local sources
+  echo "Dumping LOCAL default DB via Django..."
   (
-    export DB_HOST="$REMOTE_DB_HOST" DB_NAME="$REMOTE_DB_NAME" DB_USER="$REMOTE_DB_USER" DB_PASSWORD="$REMOTE_DB_PASSWORD" DB_PORT="${REMOTE_DB_PORT:-3306}"
+    export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stockscanner_django.settings_production}"
+    export DB_HOST="$LOCAL_DB_HOST" DB_NAME="$LOCAL_DB_NAME" DB_USER="$LOCAL_DB_USER" DB_PASSWORD="$LOCAL_DB_PASSWORD" DB_PORT="$LOCAL_DB_PORT"
+    # Ensure local stocks DB is configured
+    export DB2_HOST="$LOCAL_DB2_HOST" DB2_NAME="$LOCAL_DB2_NAME" DB2_USER="$LOCAL_DB2_USER" DB2_PASSWORD="$LOCAL_DB2_PASSWORD" DB2_PORT="$LOCAL_DB2_PORT"
+    python manage.py dumpdata --database=default \
+      --exclude=contenttypes --exclude=auth.permission --exclude=sessions.Session \
+      --natural-foreign --natural-primary --indent 2 > /tmp/default_data.json
+  )
+
+  echo "Dumping LOCAL stocks DB via Django (apps: stocks, news)..."
+  (
+    export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stockscanner_django.settings_production}"
+    export DB_HOST="$LOCAL_DB_HOST" DB_NAME="$LOCAL_DB_NAME" DB_USER="$LOCAL_DB_USER" DB_PASSWORD="$LOCAL_DB_PASSWORD" DB_PORT="$LOCAL_DB_PORT"
+    export DB2_HOST="$LOCAL_DB2_HOST" DB2_NAME="$LOCAL_DB2_NAME" DB2_USER="$LOCAL_DB2_USER" DB2_PASSWORD="$LOCAL_DB2_PASSWORD" DB2_PORT="$LOCAL_DB2_PORT"
+    python manage.py dumpdata --database=stocks stocks news \
+      --natural-foreign --natural-primary --indent 2 > /tmp/stocks_data.json
+  )
+
+  # Load into REMOTE by ensuring DB_* and DB2_* (already set) are used
+  echo "Loading fixtures into REMOTE default DB..."
+  (
+    export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stockscanner_django.settings_production}"
+    export DB_HOST="$DB_HOST" DB_NAME="$DB_NAME" DB_USER="$DB_USER" DB_PASSWORD="$DB_PASSWORD" DB_PORT="${DB_PORT:-3306}"
     python manage.py loaddata --database=default /tmp/default_data.json --ignorenonexistent
   )
 
-  echo "Loading fixtures into remote stocks DB..."
+  echo "Loading fixtures into REMOTE stocks DB..."
   (
-    export DB2_HOST="$REMOTE_DB2_HOST" DB2_NAME="$REMOTE_DB2_NAME" DB2_USER="$REMOTE_DB2_USER" DB2_PASSWORD="$REMOTE_DB2_PASSWORD" DB2_PORT="${REMOTE_DB2_PORT:-3306}"
+    export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stockscanner_django.settings_production}"
+    export DB2_HOST="$DB2_HOST" DB2_NAME="$DB2_NAME" DB2_USER="$DB2_USER" DB2_PASSWORD="$DB2_PASSWORD" DB2_PORT="${DB2_PORT:-3306}"
     python manage.py loaddata --database=stocks /tmp/stocks_data.json --ignorenonexistent
   )
 
@@ -116,16 +129,16 @@ main() {
   LOCAL_DB2_PASSWORD="${LOCAL_DB2_PASSWORD:-${DB2_PASSWORD:-$LOCAL_DB_PASSWORD}}"
   LOCAL_DB2_PORT="${LOCAL_DB2_PORT:-${DB2_PORT:-$LOCAL_DB_PORT}}"
 
-  # Require remote targets
-  require_env REMOTE_DB_HOST; require_env REMOTE_DB_NAME; require_env REMOTE_DB_USER; require_env REMOTE_DB_PASSWORD
-  require_env REMOTE_DB2_HOST; require_env REMOTE_DB2_NAME; require_env REMOTE_DB2_USER; require_env REMOTE_DB2_PASSWORD
+  # Remote targets come from DB_* and DB2_* in env/.env (already set)
+  require_env DB_HOST; require_env DB_NAME; require_env DB_USER; require_env DB_PASSWORD
+  require_env DB2_HOST; require_env DB2_NAME; require_env DB2_USER; require_env DB2_PASSWORD
 
   if have_cmd mysqldump && have_cmd mysql; then
     transfer_mysql_db "$LOCAL_DB_HOST" "$LOCAL_DB_NAME" "$LOCAL_DB_USER" "$LOCAL_DB_PASSWORD" "$LOCAL_DB_PORT" \
-                      "$REMOTE_DB_HOST" "${REMOTE_DB_NAME}" "${REMOTE_DB_USER}" "${REMOTE_DB_PASSWORD}" "${REMOTE_DB_PORT:-3306}"
+                      "$DB_HOST" "${DB_NAME}" "${DB_USER}" "${DB_PASSWORD}" "${DB_PORT:-3306}"
 
     transfer_mysql_db "$LOCAL_DB2_HOST" "$LOCAL_DB2_NAME" "$LOCAL_DB2_USER" "$LOCAL_DB2_PASSWORD" "$LOCAL_DB2_PORT" \
-                      "$REMOTE_DB2_HOST" "${REMOTE_DB2_NAME}" "${REMOTE_DB2_USER}" "${REMOTE_DB2_PASSWORD}" "${REMOTE_DB2_PORT:-3306}"
+                      "$DB2_HOST" "${DB2_NAME}" "${DB2_USER}" "${DB2_PASSWORD}" "${DB2_PORT:-3306}"
   else
     transfer_via_django
   fi

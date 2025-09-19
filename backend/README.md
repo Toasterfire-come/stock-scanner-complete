@@ -91,26 +91,29 @@ Ensure `FRONTEND_URL` includes your static site (e.g., https://tradescanpro.com)
 
 ## Data transfer: local → server (both databases)
 
-Fast path (MySQL tools):
+The script uses your existing `DB_*` and `DB2_*` as REMOTE targets automatically, and `LOCAL_DB_*` / `LOCAL_DB2_*` (or localhost defaults) as LOCAL sources.
 
 ```bash
 cd backend
 export DJANGO_SETTINGS_MODULE=stockscanner_django.settings_production
 
-# Remote targets
-export REMOTE_DB_HOST=your.mysql.host
-export REMOTE_DB_NAME=stockscanner
-export REMOTE_DB_USER=youruser
-export REMOTE_DB_PASSWORD=yourpass
-export REMOTE_DB_PORT=3306
+# Optional: set local sources if not using defaults (127.0.0.1/root)
+# export LOCAL_DB_HOST=127.0.0.1
+# export LOCAL_DB_NAME=stockscanner
+# export LOCAL_DB_USER=root
+# export LOCAL_DB_PASSWORD=...
+# export LOCAL_DB_PORT=3306
 
-export REMOTE_DB2_HOST=your.mysql.host
-export REMOTE_DB2_NAME=stocks
-export REMOTE_DB2_USER=youruser
-export REMOTE_DB2_PASSWORD=yourpass
-export REMOTE_DB2_PORT=3306
+# export LOCAL_DB2_HOST=127.0.0.1
+# export LOCAL_DB2_NAME=stocks
+# export LOCAL_DB2_USER=root
+# export LOCAL_DB2_PASSWORD=...
+# export LOCAL_DB2_PORT=3306
 
+# Ensure your .env has DB_* and DB2_* for the REMOTE
 ./scripts/transfer_data.sh
 ```
 
-Fallback (no mysqldump): the script automatically uses Django fixtures (dumpdata/loaddata) and loads them into the remote DBs by overriding `DB_*` and `DB2_*` in a subshell.
+Notes:
+- If `mysqldump`/`mysql` are available, the script performs a fast dump/import.
+- Otherwise, it falls back to Django `dumpdata/loaddata` and handles env overrides internally.
