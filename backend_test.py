@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 class SimpleAPITester:
-    def __init__(self, base_url="https://header-nav-fixes.preview.emergentagent.com"):
+    def __init__(self, base_url="https://api.tradescanner.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
