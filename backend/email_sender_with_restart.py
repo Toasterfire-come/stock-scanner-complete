@@ -19,7 +19,7 @@ from collections import defaultdict
 
 # Django imports for database integration
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings_production'))
 django.setup()
 
 from django.utils import timezone

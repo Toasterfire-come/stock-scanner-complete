@@ -173,13 +173,21 @@ class MarketHoursManager:
             # Change to project directory
             logger.info(f"Starting {component_name}: {' '.join(cmd)}")
             
+            # Prepare environment to ensure proper Django settings (avoid localhost defaults)
+            env = os.environ.copy()
+            env.setdefault('DJANGO_SETTINGS_MODULE', env.get('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings_production'))
+            env.setdefault('PYTHONIOENCODING', 'utf-8')
+            env.setdefault('LANG', 'C.UTF-8')
+            env.setdefault('LC_ALL', 'C.UTF-8')
+
             # Start process - redirect to DEVNULL to avoid PIPE deadlocks
             process = subprocess.Popen(
                 cmd,
                 cwd=self.project_root,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                text=True
+                text=True,
+                env=env
             )
             
             component['process'] = process
