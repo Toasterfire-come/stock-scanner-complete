@@ -34,6 +34,7 @@ import hashlib
 from django.conf import settings as django_settings
 from django.views.decorators.cache import never_cache
 from django.db import transaction
+from django.contrib.auth.models import User
 
 # Dynamic permission that allows all in testing mode
 AuthPerm = AllowAny if getattr(django_settings, 'TESTING_DISABLE_AUTH', False) else IsAuthenticated
@@ -831,6 +832,77 @@ def download_invoice_api(request, invoice_id):
             'error': 'Failed to download invoice',
             'error_code': 'DOWNLOAD_ERROR'
         }, status=500)
+
+
+# Cron-safe renewal processor
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def process_renewals_api(request):
+    """
+    Process due renewals:
+    - Applies referral credit first (3 paid invites => 1 month free)
+    - If no credit and auto_renew is false or plan canceled: mark as past_due without extending
+    - If no credit and auto_renew is true: leave for payment capture flow (no auto-charge here)
+    Security: Requires X-Cron-Secret header matching settings.CRON_SECRET, or staff user.
+    Body: { limit?: int, dry_run?: bool }
+    """
+    try:
+        # Auth via header secret or staff session
+        secret_header = request.META.get('HTTP_X_CRON_SECRET') or request.META.get('HTTP_X_TASK_SECRET')
+        cron_secret = getattr(settings, 'CRON_SECRET', None) or os.environ.get('CRON_SECRET')
+        is_staff = getattr(request, 'user', None) and getattr(request.user, 'is_staff', False)
+        if not (is_staff or (cron_secret and secret_header and secret_header == cron_secret)):
+            return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+        body = getattr(request, 'data', None) or {}
+        if body == {}:
+            import json as _json
+            try:
+                body = _json.loads(request.body or '{}')
+            except Exception:
+                body = {}
+        limit = int(body.get('limit', 200))
+        dry_run = bool(body.get('dry_run', False))
+
+        now = timezone.now()
+        due_profiles = UserProfile.objects.filter(
+            auto_renew=True,
+            subscription_status__in=['active', 'past_due'],
+            next_billing_date__lte=now
+        ).select_related('user').order_by('next_billing_date')[:limit]
+
+        results = []
+        counters = {'processed': 0, 'credits_applied': 0, 'past_due': 0, 'skipped': 0}
+
+        for profile in due_profiles:
+            user = profile.user
+            rec = {'user_id': user.id, 'plan': profile.plan_type, 'billing_cycle': profile.billing_cycle, 'action': None}
+            # Skip canceled accounts regardless
+            if profile.subscription_status == 'canceled' or not profile.is_active if hasattr(profile, 'is_active') else False:
+                rec['action'] = 'skipped_canceled'
+                results.append(rec)
+                counters['skipped'] += 1
+                continue
+
+            if not dry_run and _apply_referral_credit_if_available(user):
+                rec['action'] = 'applied_referral_credit'
+                counters['credits_applied'] += 1
+            else:
+                # No credit; do not extend; mark as past_due to ensure no continuation
+                if not dry_run:
+                    profile.subscription_status = 'past_due'
+                    profile.save(update_fields=['subscription_status'])
+                rec['action'] = 'marked_past_due'
+                counters['past_due'] += 1
+
+            counters['processed'] += 1
+            results.append(rec)
+
+        return JsonResponse({'success': True, 'summary': counters, 'count': len(results), 'results': results})
+    except Exception as e:
+        logger.error(f"process_renewals_api error: {e}")
+        return JsonResponse({'success': False, 'error': 'Failed to process renewals'}, status=500)
 
 @csrf_exempt
 @api_view(['GET'])
