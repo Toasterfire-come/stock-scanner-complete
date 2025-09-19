@@ -160,11 +160,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Cross-site cookies for embedded clients
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SAMESITE = 'None'
+# Cross-site cookies for embedded clients (dev-friendly)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
+CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
 SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', str(6 * 60 * 60)))
 
 # PayPal configuration (env-driven)
@@ -179,20 +179,25 @@ RECAPTCHA_SECRET = os.environ.get('RECAPTCHA_SECRET', '')
 # CORS settings
 # Always use explicit allow-list to avoid wildcard (*) with credentials
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = list(filter(None, [
-    os.environ.get('FRONTEND_URL'),
-    os.environ.get('WORDPRESS_URL'),
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'https://tradescanpro.com',
-    'https://www.tradescanpro.com',
-    'https://retailtradescannet.com',
-    'https://www.retailtradescannet.com',
-    # Deployed static hosting domain(s)
-    'https://access-5018544625.webspace-host.com',
-] + [o.strip() for o in os.environ.get('EXTRA_CORS_ORIGINS', '').split(',') if o.strip()]))
+_extra_cors = [o.strip() for o in os.environ.get('EXTRA_CORS_ORIGINS', '').split(',') if o.strip()]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ] + _extra_cors
+else:
+    CORS_ALLOWED_ORIGINS = list(filter(None, [
+        os.environ.get('FRONTEND_URL'),
+        os.environ.get('WORDPRESS_URL'),
+        'https://tradescanpro.com',
+        'https://www.tradescanpro.com',
+        'https://retailtradescannet.com',
+        'https://www.retailtradescannet.com',
+        # Deployed static hosting domain(s)
+        'https://access-5018544625.webspace-host.com',
+    ] + _extra_cors))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
     'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'
