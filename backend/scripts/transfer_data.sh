@@ -116,18 +116,18 @@ transfer_via_django() {
 main() {
   load_local_env
 
-  # Resolve local DBs from env (allow overrides via LOCAL_* if set)
-  LOCAL_DB_HOST="${LOCAL_DB_HOST:-${DB_HOST:-127.0.0.1}}"
-  LOCAL_DB_NAME="${LOCAL_DB_NAME:-${DB_NAME:-stockscanner}}"
-  LOCAL_DB_USER="${LOCAL_DB_USER:-${DB_USER:-root}}"
-  LOCAL_DB_PASSWORD="${LOCAL_DB_PASSWORD:-${DB_PASSWORD:-}}"
-  LOCAL_DB_PORT="${LOCAL_DB_PORT:-${DB_PORT:-3306}}"
+  # Resolve LOCAL sources strictly from LOCAL_DB_* or sane localhost defaults
+  LOCAL_DB_HOST="${LOCAL_DB_HOST:-127.0.0.1}"
+  LOCAL_DB_NAME="${LOCAL_DB_NAME:-stockscanner}"
+  LOCAL_DB_USER="${LOCAL_DB_USER:-root}"
+  LOCAL_DB_PASSWORD="${LOCAL_DB_PASSWORD:-}"
+  LOCAL_DB_PORT="${LOCAL_DB_PORT:-3306}"
 
-  LOCAL_DB2_HOST="${LOCAL_DB2_HOST:-${DB2_HOST:-$LOCAL_DB_HOST}}"
-  LOCAL_DB2_NAME="${LOCAL_DB2_NAME:-${DB2_NAME:-stocks}}"
-  LOCAL_DB2_USER="${LOCAL_DB2_USER:-${DB2_USER:-$LOCAL_DB_USER}}"
-  LOCAL_DB2_PASSWORD="${LOCAL_DB2_PASSWORD:-${DB2_PASSWORD:-$LOCAL_DB_PASSWORD}}"
-  LOCAL_DB2_PORT="${LOCAL_DB2_PORT:-${DB2_PORT:-$LOCAL_DB_PORT}}"
+  LOCAL_DB2_HOST="${LOCAL_DB2_HOST:-$LOCAL_DB_HOST}"
+  LOCAL_DB2_NAME="${LOCAL_DB2_NAME:-stocks}"
+  LOCAL_DB2_USER="${LOCAL_DB2_USER:-$LOCAL_DB_USER}"
+  LOCAL_DB2_PASSWORD="${LOCAL_DB2_PASSWORD:-$LOCAL_DB_PASSWORD}"
+  LOCAL_DB2_PORT="${LOCAL_DB2_PORT:-$LOCAL_DB_PORT}"
 
   # Remote targets come from DB_* and DB2_* in env/.env (already set)
   require_env DB_HOST; require_env DB_NAME; require_env DB_USER; require_env DB_PASSWORD
