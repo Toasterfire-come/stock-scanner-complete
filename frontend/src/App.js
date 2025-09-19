@@ -7,6 +7,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Home = () => {
+  const [cookieConsent, setCookieConsent] = useState(() => window.localStorage.getItem('cookie_consent') || '');
   const [health, setHealth] = useState(null);
   const [breakouts, setBreakouts] = useState([]);
   const [undervalued, setUndervalued] = useState([]);
@@ -62,6 +63,15 @@ const Home = () => {
 
   return (
     <div className="container mx-auto p-6">
+      {!cookieConsent && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white border shadow p-4 rounded max-w-xl w-[90%] z-50">
+          <p className="text-sm">We use cookies to improve your experience, analyze usage, and personalize content. See our <a className="underline" href="/privacy">Privacy Policy</a>.</p>
+          <div className="mt-3 flex gap-2 justify-end">
+            <button className="px-3 py-1 border rounded" onClick={() => {window.localStorage.setItem('cookie_consent','declined'); setCookieConsent('declined');}}>Decline</button>
+            <button className="px-3 py-1 bg-black text-white rounded" onClick={() => {window.localStorage.setItem('cookie_consent','accepted'); setCookieConsent('accepted');}}>Accept</button>
+          </div>
+        </div>
+      )}
       <header className="flex flex-col gap-2 items-start">
         <h1 className="text-3xl font-bold">RetailTradeScanner</h1>
         <p className="text-gray-600">

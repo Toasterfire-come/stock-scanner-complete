@@ -734,3 +734,24 @@ class ReferralRedemption(models.Model):
 
     def __str__(self):
         return f"Redeemed {self.months}m using {self.invites_consumed} invites for {self.inviter_uid}"
+
+
+class WebhookEvent(models.Model):
+    """Idempotency store for webhook events."""
+    source = models.CharField(max_length=32, help_text="stripe|paypal|custom")
+    event_id = models.CharField(max_length=128, unique=True, db_index=True)
+    signature = models.CharField(max_length=256, blank=True)
+    payload_hash = models.CharField(max_length=64, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=16, default='received')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['source', 'event_id']),
+            models.Index(fields=['status']),
+            models.Index(fields=['received_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.source}:{self.event_id} [{self.status}]"

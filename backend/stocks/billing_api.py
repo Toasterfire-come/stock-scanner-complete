@@ -24,6 +24,7 @@ from decimal import Decimal
 
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
 from .models import ReferralAccount, ReferralInvite, ReferralRedemption
+from .models import WebhookEvent
 from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
@@ -35,6 +36,11 @@ from django.conf import settings as django_settings
 from django.views.decorators.cache import never_cache
 from django.db import transaction
 from django.contrib.auth.models import User
+try:
+    # PDF generation via WeasyPrint (optional; fallback to text if unavailable)
+    from weasyprint import HTML
+except Exception:
+    HTML = None
 
 # Dynamic permission that allows all in testing mode
 AuthPerm = AllowAny if getattr(django_settings, 'TESTING_DISABLE_AUTH', False) else IsAuthenticated
@@ -172,6 +178,13 @@ def paypal_webhook_api(request):
                 except Exception as e:
                     logger.error(f"Webhook plan activation failed: {e}")
 
+        # Mark event processed
+        try:
+            ev_id = (data.get('id') or data.get('event_type') or '')
+            if ev_id:
+                WebhookEvent.objects.filter(event_id=str(ev_id)).update(status='processed', processed_at=timezone.now())
+        except Exception:
+            pass
         return JsonResponse({'success': True})
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
@@ -810,20 +823,36 @@ def download_invoice_api(request, invoice_id):
                 'error_code': 'INVOICE_NOT_FOUND'
             }, status=404)
         
-        # Generate PDF content (simplified for demo)
-        pdf_content = f"""
-        INVOICE {invoice_id}
-        
-        Date: {billing_record.created_at.strftime('%Y-%m-%d')}
-        Amount: ${getattr(billing_record, 'amount', 49.99):.2f}
-        Status: {getattr(billing_record, 'status', 'Paid')}
-        
-        Thank you for your business!
+        # Generate PDF invoice (HTML -> PDF) if WeasyPrint available
+        invoice_date = billing_record.created_at.strftime('%Y-%m-%d')
+        amount_str = f"${getattr(billing_record, 'amount', 49.99):.2f}"
+        status_str = getattr(billing_record, 'status', 'Paid')
+        html = f"""
+        <html><head><meta charset='utf-8'><style>
+        body {{ font-family: Arial, sans-serif; font-size: 12px; }}
+        .wrap {{ max-width: 700px; margin: 30px auto; }}
+        h1 {{ font-size: 18px; }}
+        .box {{ border: 1px solid #ddd; padding: 16px; border-radius: 8px; }}
+        .meta td {{ padding: 4px 8px; }}
+        </style></head><body><div class='wrap'>
+        <h1>Invoice {invoice_id}</h1>
+        <div class='box'>
+        <table class='meta'>
+          <tr><td><strong>Date</strong></td><td>{invoice_date}</td></tr>
+          <tr><td><strong>Amount</strong></td><td>{amount_str}</td></tr>
+          <tr><td><strong>Status</strong></td><td>{status_str}</td></tr>
+        </table>
+        <p>Thank you for your business!</p>
+        </div>
+        </div></body></html>
         """
-        
-        response = HttpResponse(pdf_content.encode('utf-8'), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice_id}.pdf"'
-        return response
+        if HTML:
+            pdf = HTML(string=html).write_pdf()
+            resp = HttpResponse(pdf, content_type='application/pdf')
+            resp['Content-Disposition'] = f'attachment; filename="invoice_{invoice_id}.pdf"'
+            return resp
+        # Fallback to text if WeasyPrint not installed
+        return HttpResponse(html.encode('utf-8'), content_type='text/html')
         
     except Exception as e:
         logger.error(f"Download invoice error: {str(e)}")
@@ -903,6 +932,55 @@ def process_renewals_api(request):
     except Exception as e:
         logger.error(f"process_renewals_api error: {e}")
         return JsonResponse({'success': False, 'error': 'Failed to process renewals'}, status=500)
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def process_dunning_api(request):
+    """
+    Dunning processor: for users with subscription_status=past_due, send reminders and escalate.
+    Auth via X-Cron-Secret like renewals.
+    Body: { limit?: int, dry_run?: bool }
+    """
+    try:
+        secret_header = request.META.get('HTTP_X_CRON_SECRET') or request.META.get('HTTP_X_TASK_SECRET')
+        cron_secret = getattr(settings, 'CRON_SECRET', None) or os.environ.get('CRON_SECRET')
+        is_staff = getattr(request, 'user', None) and getattr(request.user, 'is_staff', False)
+        if not (is_staff or (cron_secret and secret_header and secret_header == cron_secret)):
+            return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+        import json as _json
+        try:
+            body = getattr(request, 'data', None) or _json.loads(request.body or '{}')
+        except Exception:
+            body = {}
+        limit = int(body.get('limit', 300))
+        dry_run = bool(body.get('dry_run', False))
+
+        from django.core.mail import send_mail
+
+        due_profiles = UserProfile.objects.filter(subscription_status='past_due').select_related('user').order_by('next_billing_date')[:limit]
+        processed = 0
+        notified = 0
+        for profile in due_profiles:
+            processed += 1
+            user = profile.user
+            if not dry_run:
+                try:
+                    send_mail(
+                        subject='Payment Issue: Action Required',
+                        message='Your subscription payment is past due. Please update your payment method to avoid service interruption.',
+                        from_email=os.environ.get('EMAIL_FROM', 'no-reply@retailtradescanner.com'),
+                        recipient_list=[getattr(user, 'email', None) or ''],
+                        fail_silently=True,
+                    )
+                    notified += 1
+                except Exception:
+                    pass
+        return JsonResponse({'success': True, 'processed': processed, 'notified': notified})
+    except Exception as e:
+        logger.error(f"process_dunning_api error: {e}")
+        return JsonResponse({'success': False, 'error': 'Failed to process dunning'}, status=500)
 
 @csrf_exempt
 @api_view(['GET'])

@@ -5,7 +5,7 @@ from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlert
 from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
-from .billing_api import cancel_subscription_api, process_renewals_api
+from .billing_api import cancel_subscription_api, process_renewals_api, process_dunning_api
 from . import referral_api
 from django.http import JsonResponse
 
@@ -98,6 +98,7 @@ urlpatterns = [
     # Billing management
     path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
     path('billing/process-renewals', process_renewals_api, name='process_renewals'),
+    path('billing/process-dunning', process_dunning_api, name='process_dunning'),
 
     # Logging & monitoring endpoints
     path('logs/client/', logs_api.client_logs_api, name='client_logs'),

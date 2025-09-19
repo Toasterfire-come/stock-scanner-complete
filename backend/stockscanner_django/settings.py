@@ -63,6 +63,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Third-party CORS as high as possible
     'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
     'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
+    'stocks.middleware.WebhookIdempotencyMiddleware',  # Idempotent webhooks
     'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection (sets request.is_api_request)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

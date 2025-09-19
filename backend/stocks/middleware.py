@@ -1,3 +1,65 @@
+import hashlib
+import json
+from django.http import JsonResponse
+from django.utils.deprecation import MiddlewareMixin
+from .models import WebhookEvent
+
+
+class WebhookIdempotencyMiddleware(MiddlewareMixin):
+    """
+    Protects webhook endpoints by rejecting duplicate event_ids.
+    Expects headers:
+      - X-Webhook-Source: stripe|paypal|custom
+      - X-Webhook-Event-Id: unique event id
+      - X-Webhook-Signature: optional signature
+    Apply only to specific webhook paths via settings or simple prefix match.
+    """
+
+    WEBHOOK_PATH_PREFIXES = (
+        '/paypal/webhook/',
+        '/api/referrals/webhook',
+    )
+
+    def process_request(self, request):
+        path = request.path or ''
+        if not any(path.startswith(p) for p in self.WEBHOOK_PATH_PREFIXES):
+            return None
+
+        source = (request.META.get('HTTP_X_WEBHOOK_SOURCE') or '').lower() or (
+            'paypal' if path.startswith('/paypal/webhook/') else 'custom'
+        )
+        event_id = request.META.get('HTTP_X_WEBHOOK_EVENT_ID') or ''
+        signature = request.META.get('HTTP_X_WEBHOOK_SIGNATURE') or ''
+        if not event_id:
+            # Some providers use id field in JSON
+            try:
+                data = json.loads(request.body or '{}')
+                event_id = str(data.get('id') or data.get('event_id') or '')
+            except Exception:
+                event_id = ''
+
+        if not event_id:
+            return JsonResponse({'success': False, 'error': 'Missing event id'}, status=400)
+
+        # Compute payload hash for reference
+        try:
+            payload_hash = hashlib.sha256(request.body or b'').hexdigest()
+        except Exception:
+            payload_hash = ''
+
+        # Idempotency check
+        exists = WebhookEvent.objects.filter(event_id=event_id).exists()
+        if exists:
+            return JsonResponse({'success': True, 'idempotent': True})
+
+        WebhookEvent.objects.create(
+            source=source or 'custom',
+            event_id=event_id,
+            signature=signature,
+            payload_hash=payload_hash,
+            status='received'
+        )
+        return None
 """
 Middleware for handling both HTML and API responses
 Enables WordPress compatibility while maintaining HTML interface
