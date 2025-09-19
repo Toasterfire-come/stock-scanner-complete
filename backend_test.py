@@ -100,12 +100,13 @@ def main():
     # Setup
     tester = SimpleAPITester()
 
+    # Test configuration first
+    print("\n🔧 Testing Configuration...")
+    tester.test_configuration_verification()
+
     # Run tests
-    print("\n📡 Testing Trade Scanner API Endpoints...")
-    tester.test_trade_scanner_endpoints()
-    
-    print("\n🔐 Testing Authentication Endpoints...")
-    tester.test_authentication_endpoints()
+    print("\n📡 Testing Actual Backend API Endpoints...")
+    tester.test_actual_backend_endpoints()
 
     # Print results
     print("\n" + "=" * 50)
