@@ -319,6 +319,8 @@ class MarketHoursManager:
         """Setup scheduled tasks for component management"""
         # Component management every 1 minute
         schedule.every(1).minutes.do(self.manage_components)
+        # Run renewal processor daily at 03:00 ET (before market opens)
+        schedule.every().day.at("03:00").do(self.trigger_renewal_processing)
         
     def run_scheduler(self):
         """Run the scheduled tasks in a separate thread"""
@@ -394,27 +396,45 @@ class MarketHoursManager:
         for component_name in list(self.components.keys()):
             self.stop_component(component_name)
         
-        # Populate fallback data to ensure API functionality
-        try:
-            import subprocess
-            # Ensure UTF-8 encoding to avoid Unicode issues on Windows consoles
-            env = os.environ.copy()
-            env.setdefault('PYTHONIOENCODING', 'utf-8')
-            env.setdefault('LANG', 'C.UTF-8')
-            env.setdefault('LC_ALL', 'C.UTF-8')
-            result = subprocess.run([
-                self.python_exe,
-                os.path.join(self.project_root, 'populate_fallback_data.py')
-            ], capture_output=True, text=True, timeout=300, env=env)
-            
-            if result.returncode == 0:
-                logger.info("Fallback data populated successfully")
-            else:
-                logger.error(f"Failed to populate fallback data: {result.stderr}")
-        except Exception as e:
-            logger.error(f"Error running fallback data script: {e}")
+        # Populate fallback data only if explicitly enabled
+        if os.environ.get('ENABLE_FALLBACK_POPULATION', 'false').lower() == 'true':
+            try:
+                import subprocess
+                env = os.environ.copy()
+                env.setdefault('PYTHONIOENCODING', 'utf-8')
+                env.setdefault('LANG', 'C.UTF-8')
+                env.setdefault('LC_ALL', 'C.UTF-8')
+                result = subprocess.run([
+                    self.python_exe,
+                    os.path.join(self.project_root, 'populate_fallback_data.py')
+                ], capture_output=True, text=True, timeout=300, env=env)
+                if result.returncode == 0:
+                    logger.info("Fallback data populated successfully")
+                else:
+                    logger.error(f"Failed to populate fallback data: {result.stderr}")
+            except Exception as e:
+                logger.error(f"Error running fallback data script: {e}")
         
         logger.info("Market closed period handling complete")
+
+    def trigger_renewal_processing(self):
+        """Calls the API renewal processor with CRON secret if configured."""
+        try:
+            import requests
+            api_url = os.environ.get('API_BASE_URL') or 'https://api.retailtradescanner.com'
+            cron_secret = os.environ.get('CRON_SECRET')
+            if not cron_secret:
+                logger.warning('CRON_SECRET not set; skipping renewal processing')
+                return
+            url = f"{api_url.rstrip('/')}/api/billing/process-renewals"
+            headers = {'X-Cron-Secret': cron_secret, 'Content-Type': 'application/json', 'User-Agent': 'MarketHoursManager/1.0'}
+            resp = requests.post(url, headers=headers, json={'limit': int(os.environ.get('RENEWAL_LIMIT', '500')), 'dry_run': False}, timeout=30)
+            if resp.status_code < 400:
+                logger.info(f"Renewal processing success: {resp.text[:200]}")
+            else:
+                logger.error(f"Renewal processing failed: {resp.status_code} {resp.text}")
+        except Exception as e:
+            logger.error(f"Renewal processing error: {e}")
 
 def main():
     """Main entry point"""
