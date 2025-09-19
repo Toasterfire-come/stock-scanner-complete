@@ -159,28 +159,7 @@ export async function getTrendingSafe() {
     const isFallback = Boolean(payload.fallback || payload.demo || payload.is_fallback);
     return { success: true, data: normalizeTrending(payload), fallback: isFallback };
   } catch (error) {
-    // Fallback to demo data for production-ready experience
-    const fallbackData = {
-      top_gainers: [
-        { ticker: "NVDA", name: "NVIDIA Corporation", current_price: 128.50, change_percent: 4.75, volume: 125334455, market_cap: 3200000000000 },
-        { ticker: "AAPL", name: "Apple Inc.", current_price: 178.25, change_percent: 2.15, volume: 52341234, market_cap: 2800000000000 },
-        { ticker: "MSFT", name: "Microsoft Corporation", current_price: 412.80, change_percent: 1.95, volume: 35876543, market_cap: 3100000000000 },
-        { ticker: "GOOGL", name: "Alphabet Inc.", current_price: 145.30, change_percent: 1.82, volume: 28765432, market_cap: 1800000000000 },
-        { ticker: "TSLA", name: "Tesla Inc.", current_price: 245.60, change_percent: 3.45, volume: 85432109, market_cap: 780000000000 }
-      ],
-      top_losers: [
-        { ticker: "META", name: "Meta Platforms Inc.", current_price: 298.40, change_percent: -2.85, volume: 45123456, market_cap: 750000000000 },
-        { ticker: "NFLX", name: "Netflix Inc.", current_price: 425.30, change_percent: -1.75, volume: 12345678, market_cap: 180000000000 },
-        { ticker: "AMZN", name: "Amazon.com Inc.", current_price: 145.80, change_percent: -1.25, volume: 65432198, market_cap: 1500000000000 }
-      ],
-      most_active: [
-        { ticker: "SPY", name: "SPDR S&P 500 ETF", current_price: 441.25, change_percent: 0.85, volume: 98765432, market_cap: 450000000000 },
-        { ticker: "QQQ", name: "Invesco QQQ Trust", current_price: 378.90, change_percent: 1.25, volume: 87654321, market_cap: 190000000000 },
-        { ticker: "TSLA", name: "Tesla Inc.", current_price: 245.60, change_percent: 3.45, volume: 85432109, market_cap: 780000000000 }
-      ],
-      last_updated: new Date().toISOString()
-    };
-    return { success: true, data: normalizeTrending(fallbackData), fallback: true };
+    return { success: false, error: 'Service unavailable', data: normalizeTrending({}), fallback: false };
   }
 }
 
@@ -189,32 +168,48 @@ export async function getMarketStatsSafe() {
     const res = await cachedGet('/market-stats/', 'market-stats', 30000);
     return { success: true, data: normalizeMarketStats(res.data) };
   } catch (error) {
-    // Fallback to demo data for production-ready experience
-    const fallbackData = {
-      market_overview: {
-        total_stocks: 8547,
-        nyse_stocks: 3421,
-        gainers: 3841,
-        losers: 2156,
-        unchanged: 2550
-      },
-      top_gainers: [
-        { ticker: "NVDA", name: "NVIDIA Corporation", current_price: 128.50, change_percent: 4.75 },
-        { ticker: "AAPL", name: "Apple Inc.", current_price: 178.25, change_percent: 2.15 },
-        { ticker: "MSFT", name: "Microsoft Corporation", current_price: 412.80, change_percent: 1.95 }
-      ],
-      top_losers: [
-        { ticker: "META", name: "Meta Platforms Inc.", current_price: 298.40, change_percent: -2.85 },
-        { ticker: "NFLX", name: "Netflix Inc.", current_price: 425.30, change_percent: -1.75 }
-      ],
-      most_active: [
-        { ticker: "SPY", name: "SPDR S&P 500 ETF", current_price: 441.25, volume: 98765432 },
-        { ticker: "QQQ", name: "Invesco QQQ Trust", current_price: 378.90, volume: 87654321 }
-      ],
-      last_updated: new Date().toISOString()
-    };
-    return { success: true, data: normalizeMarketStats(fallbackData), fallback: true };
+    return { success: false, error: 'Service unavailable', data: normalizeMarketStats({}), fallback: false };
   }
+}
+
+// ====================
+// RETRY HELPERS
+// ====================
+async function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function postWithRetry(path, payload = undefined, tries = 3, backoffMs = 400) {
+  let attempt = 0; let lastError = null;
+  while (attempt < tries) {
+    try {
+      const { data } = await api.post(path, payload);
+      return data;
+    } catch (err) {
+      lastError = err;
+      const status = err?.response?.status;
+      // Retry on network errors and 5xx
+      if (status && status < 500) break;
+      attempt += 1;
+      if (attempt < tries) await delay(backoffMs * attempt);
+    }
+  }
+  throw lastError || new Error('Request failed');
+}
+
+async function deleteWithRetry(path, tries = 3, backoffMs = 400) {
+  let attempt = 0; let lastError = null;
+  while (attempt < tries) {
+    try {
+      const { data } = await api.delete(path);
+      return data;
+    } catch (err) {
+      lastError = err;
+      const status = err?.response?.status;
+      if (status && status < 500) break;
+      attempt += 1;
+      if (attempt < tries) await delay(backoffMs * attempt);
+    }
+  }
+  throw lastError || new Error('Delete failed');
 }
 
 export async function getStatisticsSafe() {
@@ -255,6 +250,7 @@ export async function getRealTimeQuote(ticker) { const { data } = await api.get(
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
 export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
+export async function getSectorsOverview(params = {}) { const { data } = await api.get('/sectors/', { params }); return data; }
 
 // ====================
 // AUTHENTICATION
@@ -286,8 +282,8 @@ export async function getPortfolio() {
     throw error;
   }
 }
-export async function addPortfolio(payload) { const { data } = await api.post('/portfolio/add/', payload); return data; }
-export async function deletePortfolio(id) { const { data } = await api.delete(`/portfolio/${id}/`); return data; }
+export async function addPortfolio(payload) { return await postWithRetry('/portfolio/add/', payload); }
+export async function deletePortfolio(id) { return await deleteWithRetry(`/portfolio/${id}/`); }
 
 // ====================
 // WATCHLISTS
@@ -301,16 +297,16 @@ export async function getWatchlist() {
     throw error;
   }
 }
-export async function addWatchlist(symbol, opts = {}) { const { data } = await api.post('/watchlist/add/', { symbol, ...opts }); return data; }
-export async function deleteWatchlist(id) { const { data } = await api.delete(`/watchlist/${id}/`); return data; }
+export async function addWatchlist(symbol, opts = {}) { return await postWithRetry('/watchlist/add/', { symbol, ...opts }); }
+export async function deleteWatchlist(id) { return await deleteWithRetry(`/watchlist/${id}/`); }
 
 // ====================
 // ALERTS
 // ====================
 export async function alertsMeta() { const { data } = await api.get('/alerts/create/'); return data; }
-export async function createAlert(payload) { const { data } = await api.post('/alerts/create/', payload); return data; }
-export async function toggleAlert(alertId) { const { data } = await api.post(`/alerts/${encodeURIComponent(alertId)}/toggle/`); return data; }
-export async function deleteAlert(alertId) { const { data } = await api.delete(`/alerts/${encodeURIComponent(alertId)}/`); return data; }
+export async function createAlert(payload) { return await postWithRetry('/alerts/create/', payload); }
+export async function toggleAlert(alertId) { return await postWithRetry(`/alerts/${encodeURIComponent(alertId)}/toggle/`); }
+export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/`); }
 
 // ====================
 // BILLING
@@ -336,8 +332,37 @@ export async function markNotificationsRead(payload) { const { data } = await ap
 export async function getNewsFeed(params = {}) { const { data } = await api.get('/news/feed/', { params }); return data; }
 export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
 export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
+export async function getNewsPreferences() { const { data } = await api.get('/news/preferences/'); return data; }
 export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
+
+// ====================
+// SCREENERS
+// ====================
+export async function listScreeners(params = {}) { const { data } = await api.get('/screeners/', { params }); return data; }
+export async function getScreener(screenerId) { const { data } = await api.get(`/screeners/${encodeURIComponent(screenerId)}/`); return data; }
+export async function createScreener(screener) { return await postWithRetry('/screeners/create/', screener); }
+export async function updateScreener(screenerId, payload) { return await postWithRetry(`/screeners/${encodeURIComponent(screenerId)}/update/`, payload); }
+export async function deleteScreener(screenerId) { return await deleteWithRetry(`/screeners/${encodeURIComponent(screenerId)}/`); }
+export async function testScreener(payload) { const { data } = await api.post('/screeners/test/', payload); return data; }
+export async function runScreener(screenerId, params = {}) { const { data } = await api.get(`/screeners/${encodeURIComponent(screenerId)}/results/`, { params }); return data; }
+export async function getScreenerTemplates() { const { data } = await api.get('/screeners/templates/'); return data; }
+
+// ====================
+// CALENDAR & EXTENDED HOURS
+// ====================
+export async function getEconomicCalendar(params = {}) { const { data } = await api.get('/economic-calendar/', { params }); return data; }
+export async function getExtendedHoursMarket() { const { data } = await api.get('/market/extended-hours/'); return data; }
+
+// ====================
+// ALERTS HISTORY
+// ====================
+export async function getAlertHistory(params = {}) { const { data } = await api.get('/alerts/history/', { params }); return data; }
+
+// ====================
+// FEATURE FLAGS
+// ====================
+export async function getFeatureFlags() { const { data } = await api.get('/feature-flags/'); return data; }
 
 //====================
 // REVENUE & PAYMENTS (PAYPAL INTEGRATION)

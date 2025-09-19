@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Mail, CheckCircle, RefreshCw } from "lucide-react";
+import { api } from "../../api/client";
 
 const VerifyEmail = () => {
   const location = useLocation();
@@ -25,9 +26,7 @@ const VerifyEmail = () => {
   const verifyEmailWithToken = async (token) => {
     setIsLoading(true);
     try {
-      // Simulate email verification API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await api.post('/auth/verify-email/', { token });
       setIsVerified(true);
       toast.success("Email verified successfully!");
       
@@ -45,9 +44,7 @@ const VerifyEmail = () => {
   const resendVerificationEmail = async () => {
     setIsLoading(true);
     try {
-      // Simulate resend verification email API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await api.post('/auth/verify-email/resend/', { email });
       toast.success("Verification email sent!");
     } catch (error) {
       toast.error("Failed to send verification email. Please try again.");

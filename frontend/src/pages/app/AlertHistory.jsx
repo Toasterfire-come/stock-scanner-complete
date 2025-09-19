@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Search, Download, Filter, TrendingUp, TrendingDown, Calendar, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { getAlertHistory } from "../../api/client";
 
 const AlertHistory = () => {
   const [alertHistory, setAlertHistory] = useState([]);
@@ -42,78 +43,13 @@ const AlertHistory = () => {
   const fetchAlertHistory = async () => {
     setIsLoading(true);
     try {
-      // Simulate fetching alert history
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockHistory = [
-        {
-          id: 1,
-          ticker: "AAPL",
-          targetPrice: 200.00,
-          triggerPrice: 202.15,
-          condition: "above",
-          status: "triggered",
-          createdAt: "2024-01-10T09:30:00Z",
-          triggeredAt: "2024-01-12T14:25:00Z",
-          email: "user@example.com",
-          gain: 2.15
-        },
-        {
-          id: 2,
-          ticker: "MSFT",
-          targetPrice: 450.00,
-          triggerPrice: 445.80,
-          condition: "below",
-          status: "triggered",
-          createdAt: "2024-01-08T11:15:00Z",
-          triggeredAt: "2024-01-11T10:30:00Z",
-          email: "user@example.com",
-          gain: -4.20
-        },
-        {
-          id: 3,
-          ticker: "GOOGL",
-          targetPrice: 140.00,
-          triggerPrice: null,
-          condition: "above",
-          status: "expired",
-          createdAt: "2024-01-05T16:20:00Z",
-          expiredAt: "2024-01-15T16:20:00Z",
-          email: "user@example.com",
-          gain: null
-        },
-        {
-          id: 4,
-          ticker: "TSLA",
-          targetPrice: 280.00,
-          triggerPrice: null,
-          condition: "above",
-          status: "cancelled",
-          createdAt: "2024-01-07T13:45:00Z",
-          cancelledAt: "2024-01-09T09:15:00Z",
-          email: "user@example.com",
-          gain: null
-        },
-        {
-          id: 5,
-          ticker: "NVDA",
-          targetPrice: 120.00,
-          triggerPrice: 125.30,
-          condition: "above",
-          status: "triggered",
-          createdAt: "2024-01-06T08:00:00Z",
-          triggeredAt: "2024-01-08T11:45:00Z",
-          email: "user@example.com",
-          gain: 5.30
-        }
-      ];
-
-      setAlertHistory(mockHistory);
+      const res = await getAlertHistory();
+      const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setAlertHistory(items);
     } catch (error) {
       toast.error("Failed to fetch alert history");
-    } finally {
-      setIsLoading(false);
-    }
+      setAlertHistory([]);
+    } finally { setIsLoading(false); }
   };
 
   const filterHistory = () => {

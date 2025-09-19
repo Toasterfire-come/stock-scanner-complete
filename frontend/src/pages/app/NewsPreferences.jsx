@@ -9,6 +9,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { Badge } from "../../components/ui/badge";
 import { X, Plus, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { getNewsPreferences, updateNewsPreferences, syncPortfolioNews } from "../../api/client";
 
 const NewsPreferences = () => {
   const navigate = useNavigate();
@@ -53,24 +54,22 @@ const NewsPreferences = () => {
     { value: "weekly", label: "Weekly Report" }
   ];
 
-  useEffect(() => {
-    fetchPreferences();
-  }, []);
+  useEffect(() => { fetchPreferences(); }, []);
 
   const fetchPreferences = async () => {
     setIsLoading(true);
     try {
-      // Simulate loading existing preferences
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const res = await getNewsPreferences();
+      const p = res?.data || res || {};
       setPreferences({
-        followedStocks: ["AAPL", "MSFT", "GOOGL"],
-        followedSectors: ["Technology", "Healthcare"],
-        preferredCategories: ["earnings", "markets", "breaking"],
-        newsFrequency: "daily"
+        followedStocks: Array.isArray(p.followedStocks) ? p.followedStocks : [],
+        followedSectors: Array.isArray(p.followedSectors) ? p.followedSectors : [],
+        preferredCategories: Array.isArray(p.preferredCategories) ? p.preferredCategories : [],
+        newsFrequency: p.newsFrequency || "realtime"
       });
     } catch (error) {
       toast.error("Failed to load preferences");
+      setPreferences({ followedStocks: [], followedSectors: [], preferredCategories: [], newsFrequency: "realtime" });
     } finally {
       setIsLoading(false);
     }
@@ -119,8 +118,8 @@ const NewsPreferences = () => {
   const savePreferences = async () => {
     setIsSaving(true);
     try {
-      // Simulate API call to save preferences
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const payload = { ...preferences };
+      await updateNewsPreferences(payload);
       toast.success("Preferences saved successfully");
       navigate("/app/news");
     } catch (error) {
@@ -132,23 +131,16 @@ const NewsPreferences = () => {
 
   const syncPortfolio = async () => {
     try {
-      // Simulate API call to sync portfolio stocks
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Add mock portfolio stocks
-      const portfolioStocks = ["TSLA", "NVDA", "AMZN"];
-      const newStocks = portfolioStocks.filter(stock => 
-        !preferences.followedStocks.includes(stock)
-      );
-      
+      const res = await syncPortfolioNews();
+      const newStocks = Array.isArray(res?.added) ? res.added : [];
       if (newStocks.length > 0) {
-        setPreferences({
-          ...preferences,
-          followedStocks: [...preferences.followedStocks, ...newStocks]
-        });
+        setPreferences((prev) => ({
+          ...prev,
+          followedStocks: [...prev.followedStocks, ...newStocks.filter((s) => !prev.followedStocks.includes(s))]
+        }));
         toast.success(`Added ${newStocks.length} stocks from your portfolio`);
       } else {
-        toast.info("All portfolio stocks are already being followed");
+        toast.info("No new portfolio stocks to follow");
       }
     } catch (error) {
       toast.error("Failed to sync portfolio");

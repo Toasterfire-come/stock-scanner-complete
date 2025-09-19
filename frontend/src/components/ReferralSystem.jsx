@@ -25,7 +25,7 @@ import {
   Zap
 } from "lucide-react";
 import { toast } from "sonner";
-import { initializeDiscountCodes } from "../api/client";
+import { initializeDiscountCodes, logClientMetric } from "../api/client";
 
 const ReferralSystem = ({ user }) => {
   const [referralCode, setReferralCode] = useState("");
@@ -44,28 +44,26 @@ const ReferralSystem = ({ user }) => {
     const initializeReferral = async () => {
       try {
         // Generate referral code based on user info
-        const code = `REF${user?.id || '123'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+        const code = `REF${user?.id || 'USER'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
         setReferralCode(code);
         
         // Initialize discount codes in backend
         await initializeDiscountCodes();
         
-        // Mock data - replace with real API calls
-        setReferralStats({
-          totalReferrals: 23,
-          activeReferrals: 18,
-          totalEarnings: 1247.50,
-          pendingEarnings: 385.20,
-          conversionRate: 78.3,
-          lifetimeValue: 2847.30
-        });
-
-        setRecentReferrals([
-          { name: "John D.", plan: "Silver", status: "active", date: "2024-01-15", earnings: 39.99 },
-          { name: "Sarah M.", plan: "Gold", status: "active", date: "2024-01-12", earnings: 89.99 },
-          { name: "Mike R.", plan: "Bronze", status: "trial", date: "2024-01-10", earnings: 0 },
-          { name: "Lisa K.", plan: "Silver", status: "active", date: "2024-01-08", earnings: 39.99 },
-        ]);
+        // Use metrics endpoint to retrieve aggregates if available
+        try {
+          const metrics = await logClientMetric({ type: 'referral_init' });
+          const d = metrics?.data || {};
+          setReferralStats({
+            totalReferrals: d.totalReferrals || 0,
+            activeReferrals: d.activeReferrals || 0,
+            totalEarnings: d.totalEarnings || 0,
+            pendingEarnings: d.pendingEarnings || 0,
+            conversionRate: d.conversionRate || 0,
+            lifetimeValue: d.lifetimeValue || 0,
+          });
+          setRecentReferrals(Array.isArray(d.recentReferrals) ? d.recentReferrals : []);
+        } catch {}
       } catch (error) {
         console.error("Failed to initialize referral system:", error);
       } finally {

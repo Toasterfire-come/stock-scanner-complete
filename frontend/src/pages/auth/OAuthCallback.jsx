@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { api } from "../../api/client";
 import { toast } from "sonner";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 
@@ -31,35 +32,15 @@ const OAuthCallback = () => {
       }
 
       try {
-        // In a real implementation, you would exchange the code for a token
-        // For now, we'll simulate a successful OAuth login
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Simulate successful OAuth login response
-        const mockUserData = {
-          success: true,
-          token: "oauth_mock_token_123",
-          data: {
-            user_id: "oauth_user_123",
-            username: "oauth_user",
-            email: "oauth@example.com",
-            first_name: "OAuth",
-            last_name: "User",
-            is_premium: false,
-          }
-        };
-
-        // Store the token and user data
-        localStorage.setItem("rts_token", mockUserData.token);
-        
-        setStatus("success");
-        toast.success("Successfully signed in!");
-        
-        // Redirect to dashboard
-        setTimeout(() => {
-          navigate("/app/dashboard");
-        }, 2000);
-
+        const { data: res } = await api.post('/auth/oauth/callback/', { code, state });
+        if (res?.success && res?.token) {
+          localStorage.setItem('rts_token', res.token);
+          setStatus('success');
+          toast.success('Successfully signed in!');
+          setTimeout(() => navigate('/app/dashboard'), 1500);
+        } else {
+          throw new Error('OAuth exchange failed');
+        }
       } catch (error) {
         console.error("OAuth callback error:", error);
         setStatus("error");

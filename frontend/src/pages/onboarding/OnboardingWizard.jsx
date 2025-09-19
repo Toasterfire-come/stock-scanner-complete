@@ -20,6 +20,7 @@ import {
   Clock
 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "../../api/client";
 
 const OnboardingWizard = () => {
   const navigate = useNavigate();
@@ -75,13 +76,8 @@ const OnboardingWizard = () => {
 
   const completeOnboarding = async () => {
     try {
-      // Here you would typically send the data to your backend
-      console.log("Onboarding data:", formData);
-      
-      // Show success message
+      await api.post('/user/onboarding/', formData);
       toast.success("Welcome to Trade Scan Pro! Your account is set up.");
-      
-      // Navigate to dashboard
       navigate("/app/dashboard");
     } catch (error) {
       toast.error("Something went wrong. Please try again.");

@@ -18,6 +18,7 @@ import {
   Building
 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "../api/client";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -42,9 +43,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await api.post('/contact/', formData);
       toast.success("Message sent successfully! We'll get back to you within 24 hours.");
       
       // Reset form

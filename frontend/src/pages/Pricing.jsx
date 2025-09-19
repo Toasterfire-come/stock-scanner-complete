@@ -25,7 +25,7 @@ import {
   Headphones
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { revenueValidate, revenueApply } from "../api/client";
+import { validateDiscountCode as revenueValidate, applyDiscountCode as revenueApply, createPayPalOrder } from "../api/client";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -141,21 +141,13 @@ const Pricing = () => {
   };
 
   const createPayPalOrder = async (planId, amount) => {
-    const finalAmount = amount;
-      
-    toast.success(`Redirecting to PayPal for $${finalAmount} payment...`);
-    
-    // Simulate redirect to PayPal
-    setTimeout(() => {
-      navigate("/checkout/success", { 
-        state: { 
-          planId, 
-          amount: finalAmount,
-          originalAmount: plans.find(p => p.id === planId).price.monthly,
-          discount: { code: "TRIAL", description: "7-Day Trial" }
-        } 
-      });
-    }, 2000);
+    try {
+      const order = await createPayPalOrder(planId, isAnnual ? 'annual' : 'monthly', discountCode || null);
+      // Let backend drive redirection; for now navigate to success page with context
+      navigate("/checkout/success", { state: { planId, amount, order } });
+    } catch (e) {
+      toast.error("Failed to initiate PayPal checkout");
+    }
   };
 
   const applyDiscountCode = async () => {
@@ -165,21 +157,20 @@ const Pricing = () => {
     }
 
     try {
-      // Simulate TRIAL code validation
-      if (discountCode.toUpperCase() === "TRIAL") {
+      const valid = await revenueValidate(discountCode);
+      if (valid?.valid) {
+        const plan = plans.find(p => p.id !== 'free');
+        const originalAmount = isAnnual ? plan.price.annual : plan.price.monthly;
+        const applied = await revenueApply(discountCode, originalAmount);
         setAppliedDiscount({
-          code: "TRIAL",
-          description: "7-Day Trial for $1",
-          savings_percentage: 95,
-          final_amount: 1.00
+          code: discountCode.toUpperCase(),
+          description: applied?.description || 'Discount applied',
+          savings_percentage: applied?.discount_percentage || 0,
+          final_amount: applied?.final_amount ?? originalAmount
         });
-        toast.success("TRIAL code applied! 7 days for just $1");
-      } else {
-        toast.error("Invalid discount code");
-      }
-    } catch (error) {
-      toast.error("Failed to apply discount code");
-    }
+        toast.success("Discount code applied");
+      } else { toast.error(valid?.message || "Invalid discount code"); }
+    } catch (error) { toast.error("Failed to apply discount code"); }
   };
 
   const features = [

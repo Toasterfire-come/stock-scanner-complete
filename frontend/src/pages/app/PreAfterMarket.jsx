@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Clock, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { getExtendedHoursMarket } from "../../api/client";
 
 const PreAfterMarket = () => {
   const [marketData, setMarketData] = useState(null);
@@ -21,71 +22,15 @@ const PreAfterMarket = () => {
   const fetchMarketData = async () => {
     setIsLoading(true);
     try {
-      // Simulate pre/after market data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const res = await getExtendedHoursMarket();
+      const d = res?.data || res || {};
       setMarketData({
-        preMarket: [
-          {
-            ticker: "AAPL",
-            name: "Apple Inc.",
-            price: 212.45,
-            change: 1.95,
-            changePercent: 0.93,
-            volume: 245820,
-            lastUpdate: "2024-01-15T08:30:00Z"
-          },
-          {
-            ticker: "MSFT", 
-            name: "Microsoft Corporation",
-            price: 442.10,
-            change: 1.80,
-            changePercent: 0.41,
-            volume: 156742,
-            lastUpdate: "2024-01-15T08:29:45Z"
-          },
-          {
-            ticker: "GOOGL",
-            name: "Alphabet Inc.",
-            price: 138.75,
-            change: -0.45,
-            changePercent: -0.32,
-            volume: 98654,
-            lastUpdate: "2024-01-15T08:28:12Z"
-          }
-        ],
-        afterHours: [
-          {
-            ticker: "NVDA",
-            name: "NVIDIA Corporation", 
-            price: 129.80,
-            change: 1.60,
-            changePercent: 1.25,
-            volume: 321456,
-            lastUpdate: "2024-01-14T20:45:30Z"
-          },
-          {
-            ticker: "TSLA",
-            name: "Tesla, Inc.",
-            price: 248.90,
-            change: -3.20,
-            changePercent: -1.27,
-            volume: 456789,
-            lastUpdate: "2024-01-14T20:42:15Z"
-          },
-          {
-            ticker: "AMZN",
-            name: "Amazon.com Inc.",
-            price: 152.40,
-            change: 2.15,
-            changePercent: 1.43,
-            volume: 198765,
-            lastUpdate: "2024-01-14T20:38:22Z"
-          }
-        ]
+        preMarket: Array.isArray(d.preMarket) ? d.preMarket : [],
+        afterHours: Array.isArray(d.afterHours) ? d.afterHours : []
       });
     } catch (error) {
       toast.error("Failed to fetch market data");
+      setMarketData({ preMarket: [], afterHours: [] });
     } finally {
       setIsLoading(false);
     }

@@ -10,6 +10,7 @@ import { Separator } from "../../../components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
 import { X, Plus, Save, Play } from "lucide-react";
 import { toast } from "sonner";
+import { createScreener, testScreener } from "../../../api/client";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
@@ -70,15 +71,13 @@ const CreateScreener = () => {
 
     setIsLoading(true);
     try {
-      // Simulate API call to save screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const payload = { ...screenerData, criteria };
+      await createScreener(payload);
       toast.success("Screener saved successfully");
       navigate("/app/screeners");
     } catch (error) {
       toast.error("Failed to save screener");
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
   const handleTest = async () => {
@@ -89,14 +88,11 @@ const CreateScreener = () => {
 
     setIsLoading(true);
     try {
-      // Simulate API call to test screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Found 15 matching stocks");
-    } catch (error) {
-      toast.error("Failed to test screener");
-    } finally {
-      setIsLoading(false);
-    }
+      const payload = { ...screenerData, criteria };
+      const res = await testScreener(payload);
+      const count = Array.isArray(res?.results) ? res.results.length : (res?.count ?? 0);
+      toast.success(`Found ${count} matching stocks`);
+    } catch (error) { toast.error("Failed to test screener"); } finally { setIsLoading(false); }
   };
 
   return (

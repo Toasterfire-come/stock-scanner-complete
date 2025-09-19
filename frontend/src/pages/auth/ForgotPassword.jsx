@@ -9,6 +9,7 @@ import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { api } from "../../api/client";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -30,9 +31,7 @@ const ForgotPassword = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await api.post('/auth/password/forgot/', { email: data.email });
       setEmailSent(true);
       toast.success("Password reset email sent!");
     } catch (error) {

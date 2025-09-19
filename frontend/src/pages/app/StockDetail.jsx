@@ -44,26 +44,7 @@ const StockDetail = () => {
           getRealTimeQuote(symbol).catch(() => null)
         ]);
 
-        if (stockResponse?.success) {
-          setStockData(stockResponse.data);
-        } else {
-          // Mock data fallback
-          setStockData({
-            ticker: symbol,
-            symbol: symbol,
-            company_name: `${symbol} Company`,
-            exchange: "NASDAQ",
-            current_price: 150.25,
-            price_change_today: 2.34,
-            change_percent: 1.58,
-            volume: 12345678,
-            market_cap: 500000000000,
-            currency: "USD",
-            pe_ratio: 25.4,
-            dividend_yield: 1.2,
-            last_updated: new Date().toISOString()
-          });
-        }
+        if (stockResponse?.success) setStockData(stockResponse.data); else setStockData(null);
 
         if (realtimeResponse) {
           setRealtimeData(realtimeResponse);
@@ -106,12 +87,7 @@ const StockDetail = () => {
 
   const handleCreateAlert = async () => {
     try {
-      await createAlert({
-        ticker: symbol,
-        target_price: stockData.current_price * 1.05, // 5% above current
-        condition: "above",
-        email: "user@example.com" // Should come from user context
-      });
+      await createAlert({ ticker: symbol, target_price: stockData.current_price * 1.05, condition: "above" });
       toast.success("Price alert created successfully");
     } catch (error) {
       toast.error("Failed to create price alert");
@@ -195,8 +171,8 @@ const StockDetail = () => {
     );
   }
 
-  const currentData = realtimeData || stockData;
-  const isPositive = currentData.change_percent >= 0;
+  const currentData = (realtimeData || stockData) || {};
+  const isPositive = (currentData.change_percent ?? 0) >= 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -221,12 +197,12 @@ const StockDetail = () => {
                     <h1 className="text-3xl font-bold text-gray-900">{stockData.ticker}</h1>
                     <Badge variant="outline">{stockData.exchange}</Badge>
                   </div>
-                  <h2 className="text-xl text-gray-600 mt-1">{stockData.company_name}</h2>
+                  <h2 className="text-xl text-gray-600 mt-1">{stockData.company_name || ''}</h2>
                 </div>
                 
                 <div className="text-right">
                   <div className="text-3xl font-bold">
-                    {formatCurrency(currentData.current_price)}
+                    {formatCurrency(currentData.current_price || 0)}
                   </div>
                   <div className={`flex items-center text-lg font-semibold ${
                     isPositive ? 'text-green-600' : 'text-red-600'
@@ -236,8 +212,8 @@ const StockDetail = () => {
                     ) : (
                       <TrendingDown className="h-5 w-5 mr-1" />
                     )}
-                    {isPositive ? '+' : ''}{currentData.price_change_today?.toFixed(2)} 
-                    ({isPositive ? '+' : ''}{currentData.change_percent?.toFixed(2)}%)
+                    {isPositive ? '+' : ''}{(currentData.price_change_today ?? 0).toFixed(2)} 
+                    ({isPositive ? '+' : ''}{(currentData.change_percent ?? 0).toFixed(2)}%)
                   </div>
                 </div>
               </div>
@@ -255,7 +231,7 @@ const StockDetail = () => {
             </div>
             
             <div className="mt-4 text-sm text-gray-500">
-              Last updated: {new Date(currentData.last_updated).toLocaleString()}
+              Last updated: {currentData.last_updated ? new Date(currentData.last_updated).toLocaleString() : 'N/A'}
             </div>
           </CardContent>
         </Card>
@@ -290,7 +266,7 @@ const StockDetail = () => {
                       <div className="text-center p-4 bg-green-50 rounded-lg">
                         <Building className="h-6 w-6 text-green-500 mx-auto mb-2" />
                         <div className="text-2xl font-bold text-green-600">
-                          {formatMarketCap(currentData.market_cap)}
+                          {formatMarketCap(currentData.market_cap || 0)}
                         </div>
                         <div className="text-sm text-green-600">Market Cap</div>
                       </div>

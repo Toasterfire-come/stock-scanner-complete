@@ -9,6 +9,7 @@ import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Eye, EyeOff, Lock, CheckCircle, AlertTriangle } from "lucide-react";
+import { api } from "../../api/client";
 
 const resetPasswordSchema = z.object({
   password: z
@@ -41,31 +42,18 @@ const ResetPassword = () => {
   });
 
   useEffect(() => {
-    // Validate token on mount
     const validateToken = async () => {
-      if (!token) {
-        setIsValidToken(false);
-        return;
-      }
-
-      try {
-        // Simulate token validation
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsValidToken(true);
-      } catch (error) {
-        setIsValidToken(false);
-      }
+      if (!token) { setIsValidToken(false); return; }
+      try { await api.post('/auth/password/validate-token/', { token }); setIsValidToken(true); }
+      catch { setIsValidToken(false); }
     };
-
     validateToken();
   }, [token]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Simulate password reset API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await api.post('/auth/password/reset/', { token, password: data.password });
       setPasswordReset(true);
       toast.success("Password reset successfully!");
       

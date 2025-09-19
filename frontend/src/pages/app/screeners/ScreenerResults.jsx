@@ -6,6 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { runScreener, getScreener } from "../../../api/client";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -14,60 +15,29 @@ const ScreenerResults = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchResults();
-  }, [id]);
+  useEffect(() => { fetchResults(); }, [id]);
 
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call to fetch screener results
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setScreenerInfo({
-        name: "High Growth Tech",
-        description: "Technology stocks with >20% revenue growth",
-        lastRun: new Date().toISOString(),
-        criteria: [
-          "Market Cap > $1B",
-          "Price Change > 5%"
-        ]
-      });
-
-      setResults([
-        {
-          ticker: "AAPL",
-          company_name: "Apple Inc.",
-          current_price: 210.50,
-          change_percent: 1.01,
-          volume: 80234123,
-          market_cap: 3300000000000,
-          exchange: "NASDAQ"
-        },
-        {
-          ticker: "NVDA",
-          company_name: "NVIDIA Corporation",
-          current_price: 128.20,
-          change_percent: 4.57,
-          volume: 120334455,
-          market_cap: 3100000000000,
-          exchange: "NASDAQ"
-        },
-        {
-          ticker: "MSFT",
-          company_name: "Microsoft Corporation",
-          current_price: 440.30,
-          change_percent: -0.27,
-          volume: 42100123,
-          market_cap: 3300000000000,
-          exchange: "NASDAQ"
-        }
+      const [meta, res] = await Promise.all([
+        getScreener(id).catch(() => ({})),
+        runScreener(id, { limit: 200 }).catch(() => ({}))
       ]);
+      const info = meta?.data || meta || {};
+      setScreenerInfo({
+        name: info.name || 'Untitled Screener',
+        description: info.description || '',
+        lastRun: info.last_run || null,
+        criteria: Array.isArray(info.criteria) ? info.criteria.map(c => c.name || c.id || 'Criterion') : []
+      });
+      const items = res?.data?.results || res?.results || res?.data || [];
+      setResults(Array.isArray(items) ? items : []);
     } catch (error) {
       toast.error("Failed to fetch results");
-    } finally {
-      setIsLoading(false);
-    }
+      setScreenerInfo(null);
+      setResults([]);
+    } finally { setIsLoading(false); }
   };
 
   const handleRefresh = async () => {

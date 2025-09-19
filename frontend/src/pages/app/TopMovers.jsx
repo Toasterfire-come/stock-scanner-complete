@@ -25,7 +25,7 @@ const TopMovers = () => {
     setIsLoading(true); setError("");
     try {
       const res = await getTrendingSafe();
-      if (!res.success) { setError(res.error); toast.error(res.error); }
+      if (!res.success) { setError(res.error || 'Failed to fetch trending data'); toast.error(res.error || 'Failed to fetch trending data'); }
       setTrendingData(res.data); setLastUpdated(new Date()); setIsFallback(Boolean(res.fallback));
     } catch (error) { const msg = "Failed to fetch trending data"; setError(msg); toast.error(msg); }
     finally { setIsLoading(false); }

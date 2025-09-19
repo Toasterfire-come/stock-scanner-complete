@@ -9,6 +9,7 @@ import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
 import { X, Save, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { getScreener, updateScreener, deleteScreener, testScreener } from "../../../api/client";
 
 const EditScreener = () => {
   const { id } = useParams();
@@ -32,33 +33,16 @@ const EditScreener = () => {
     { id: "exchange", name: "Exchange", type: "select" }
   ];
 
-  useEffect(() => {
-    // Simulate loading existing screener data
-    setTimeout(() => {
-      setScreenerData({
-        name: "High Growth Tech",
-        description: "Technology stocks with >20% revenue growth",
-        isPublic: true
-      });
-      setCriteria([
-        {
-          id: "market_cap",
-          name: "Market Cap",
-          type: "range",
-          min: "1000000000",
-          max: "100000000000"
-        },
-        {
-          id: "change_percent",
-          name: "Price Change %",
-          type: "range",
-          min: "5",
-          max: ""
-        }
-      ]);
-      setIsLoading(false);
-    }, 1000);
-  }, [id]);
+  useEffect(() => { (async () => {
+    setIsLoading(true);
+    try {
+      const res = await getScreener(id);
+      const d = res?.data || res || {};
+      setScreenerData({ name: d.name || "", description: d.description || "", isPublic: Boolean(d.is_public) });
+      setCriteria(Array.isArray(d.criteria) ? d.criteria : []);
+    } catch { setScreenerData({ name: "", description: "", isPublic: false }); setCriteria([]); }
+    finally { setIsLoading(false); }
+  })(); }, [id]);
 
   const addCriterion = (criterionId) => {
     const criterionDef = availableCriteria.find(c => c.id === criterionId);
@@ -93,32 +77,18 @@ const EditScreener = () => {
     }
 
     setIsSaving(true);
-    try {
-      // Simulate API call to update screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener updated successfully");
-      navigate("/app/screeners");
-    } catch (error) {
-      toast.error("Failed to update screener");
-    } finally {
-      setIsSaving(false);
-    }
+    try { await updateScreener(id, { ...screenerData, criteria }); toast.success("Screener updated successfully"); navigate("/app/screeners"); }
+    catch (error) { toast.error("Failed to update screener"); }
+    finally { setIsSaving(false); }
   };
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this screener?")) return;
 
     setIsSaving(true);
-    try {
-      // Simulate API call to delete screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener deleted successfully");
-      navigate("/app/screeners");
-    } catch (error) {
-      toast.error("Failed to delete screener");
-    } finally {
-      setIsSaving(false);
-    }
+    try { await deleteScreener(id); toast.success("Screener deleted successfully"); navigate("/app/screeners"); }
+    catch (error) { toast.error("Failed to delete screener"); }
+    finally { setIsSaving(false); }
   };
 
   if (isLoading) {

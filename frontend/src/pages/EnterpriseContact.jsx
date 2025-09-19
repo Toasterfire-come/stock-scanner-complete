@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
+import { api } from "../api/client";
 import {
   Building2,
   Users,
@@ -42,8 +43,7 @@ const EnterpriseContact = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.post('/enterprise/contact/', formData);
       
       toast.success("Your request has been submitted!", {
         description: "Our enterprise team will contact you within 24 hours.",

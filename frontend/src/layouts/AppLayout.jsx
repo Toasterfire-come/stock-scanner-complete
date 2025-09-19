@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getEndpointStatus } from "../api/client";
+import { getEndpointStatus, getFeatureFlags } from "../api/client";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import EnhancedButton from "../components/ui/enhanced-button";
@@ -63,6 +63,19 @@ const AppLayout = () => {
     return () => { mounted = false; clearInterval(t); };
   }, []);
 
+  // Server-driven feature flags
+  const [flags, setFlags] = useState({});
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getFeatureFlags();
+        const f = res?.data || res || {};
+        if (mounted) setFlags(f);
+      } catch { if (mounted) setFlags({}); }
+    })();
+  }, []);
+
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -71,12 +84,12 @@ const AppLayout = () => {
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Markets', href: '/app/markets', icon: TrendingUp },
-    { name: 'Stocks', href: '/app/stocks', icon: BarChart3 },
-    { name: 'Portfolio', href: '/app/portfolio', icon: DollarSign },
-    { name: 'Watchlists', href: '/app/watchlists', icon: Activity },
-    { name: 'Screeners', href: '/app/screeners', icon: Search },
-    { name: 'Alerts', href: '/app/alerts', icon: Bell },
+    ...(flags?.markets !== false ? [{ name: 'Markets', href: '/app/markets', icon: TrendingUp }] : []),
+    ...(flags?.stocks !== false ? [{ name: 'Stocks', href: '/app/stocks', icon: BarChart3 }] : []),
+    ...(flags?.portfolio !== false ? [{ name: 'Portfolio', href: '/app/portfolio', icon: DollarSign }] : []),
+    ...(flags?.watchlists !== false ? [{ name: 'Watchlists', href: '/app/watchlists', icon: Activity }] : []),
+    ...(flags?.screeners !== false ? [{ name: 'Screeners', href: '/app/screeners', icon: Search }] : []),
+    ...(flags?.alerts !== false ? [{ name: 'Alerts', href: '/app/alerts', icon: Bell }] : []),
   ];
 
   const userNavigation = [

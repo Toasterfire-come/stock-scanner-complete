@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
 import { TrendingUp, TrendingDown, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { getSectorsOverview } from "../../api/client";
 
 const SectorsIndustries = () => {
   const [sectorsData, setSectorsData] = useState([]);
@@ -19,19 +20,13 @@ const SectorsIndustries = () => {
     setIsLoading(true);
     setError("");
     try {
-      // Simulated sector data (API not provided). Keep graceful UX.
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setSectorsData([
-        { name: "Technology", stocks: 45, avgChange: 2.34, volume: 2.5e9, marketCap: 1.2e12, topStocks: ["AAPL", "MSFT", "GOOGL"] },
-        { name: "Healthcare", stocks: 32, avgChange: 1.23, volume: 1.8e9, marketCap: 8.5e11, topStocks: ["JNJ", "PFE", "UNH"] },
-        { name: "Financial Services", stocks: 28, avgChange: -0.45, volume: 1.2e9, marketCap: 7.8e11, topStocks: ["JPM", "BAC", "WFC"] },
-        { name: "Consumer Discretionary", stocks: 25, avgChange: 0.89, volume: 1.5e9, marketCap: 6.2e11, topStocks: ["AMZN", "TSLA", "HD"] },
-        { name: "Energy", stocks: 18, avgChange: -1.67, volume: 8.5e8, marketCap: 4.1e11, topStocks: ["XOM", "CVX", "COP"] },
-        { name: "Industrials", stocks: 22, avgChange: 0.56, volume: 7.2e8, marketCap: 5.3e11, topStocks: ["CAT", "BA", "GE"] },
-      ]);
+      const res = await getSectorsOverview();
+      const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setSectorsData(items);
     } catch (error) {
       setError("Failed to fetch sectors data");
       toast.error("Failed to fetch sectors data");
+      setSectorsData([]);
     } finally {
       setIsLoading(false);
     }
