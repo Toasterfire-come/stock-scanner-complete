@@ -99,20 +99,11 @@ def main():
     tester = SimpleAPITester()
 
     # Run tests
-    print("\n📡 Testing API Connectivity...")
-    if not tester.test_root_endpoint():
-        print("❌ Root endpoint failed - backend may be down")
+    print("\n📡 Testing Trade Scanner API Endpoints...")
+    tester.test_trade_scanner_endpoints()
     
-    print("\n📝 Testing Status Check Creation...")
-    status_id = tester.test_create_status_check()
-    if not status_id:
-        print("❌ Status check creation failed")
-    else:
-        print(f"✅ Created status check with ID: {status_id}")
-
-    print("\n📋 Testing Status Check Retrieval...")
-    if not tester.test_get_status_checks():
-        print("❌ Status check retrieval failed")
+    print("\n🔐 Testing Authentication Endpoints...")
+    tester.test_authentication_endpoints()
 
     # Print results
     print("\n" + "=" * 50)
@@ -123,7 +114,13 @@ def main():
         for failed_test in tester.failed_tests:
             print(f"  - {failed_test}")
     
-    if tester.tests_passed == tester.tests_run:
+    success_rate = (tester.tests_passed / tester.tests_run * 100) if tester.tests_run > 0 else 0
+    print(f"Success rate: {success_rate:.1f}%")
+    
+    if success_rate < 50:
+        print("❌ CRITICAL: More than 50% of API tests failed")
+        return 1
+    elif tester.tests_passed == tester.tests_run:
         print("🎉 All backend tests passed!")
         return 0
     else:
