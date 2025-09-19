@@ -88,3 +88,29 @@ Ensure `FRONTEND_URL` includes your static site (e.g., https://tradescanpro.com)
 ## Notes
 - No Redis required. Cache can be locmem/db/file.
 - Celery uses RabbitMQ in this environment; disable via `CELERY_ENABLED=false` if not used.
+
+## Data transfer: local → server (both databases)
+
+Fast path (MySQL tools):
+
+```bash
+cd backend
+export DJANGO_SETTINGS_MODULE=stockscanner_django.settings_production
+
+# Remote targets
+export REMOTE_DB_HOST=your.mysql.host
+export REMOTE_DB_NAME=stockscanner
+export REMOTE_DB_USER=youruser
+export REMOTE_DB_PASSWORD=yourpass
+export REMOTE_DB_PORT=3306
+
+export REMOTE_DB2_HOST=your.mysql.host
+export REMOTE_DB2_NAME=stocks
+export REMOTE_DB2_USER=youruser
+export REMOTE_DB2_PASSWORD=yourpass
+export REMOTE_DB2_PORT=3306
+
+./scripts/transfer_data.sh
+```
+
+Fallback (no mysqldump): the script automatically uses Django fixtures (dumpdata/loaddata) and loads them into the remote DBs by overriding `DB_*` and `DB2_*` in a subshell.
