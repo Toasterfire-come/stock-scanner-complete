@@ -1,0 +1,3 @@
+2025-09-20 21:42:23,993 INFO Set uid to user 0 succeeded
+Error: Another program is already listening on a port that one of our HTTP servers is configured to use.  Shut this program down first before starting supervisord.
+For help, use /usr/bin/supervisord -h
