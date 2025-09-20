@@ -18,8 +18,9 @@ import {
   Play
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
-import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats } from "../../api/client";
+import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getCurrentApiUsage, getPlanLimits } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
+import UsageTracker from "../../components/UsageTracker";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
