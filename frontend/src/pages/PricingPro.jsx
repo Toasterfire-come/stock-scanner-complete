@@ -24,7 +24,11 @@ import {
   Globe,
   ArrowRight,
   Gift,
-  Mail
+  Mail,
+  Database,
+  Filter,
+  Briefcase,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/SecureAuthContext";
@@ -54,6 +58,35 @@ const PricingPro = () => {
 
   const plans = [
     {
+      name: "Free",
+      description: "Perfect for getting started with trading",
+      icon: <Star className="h-8 w-8" />,
+      color: "border-gray-300 bg-gray-100",
+      headerColor: "bg-gradient-to-r from-gray-500 to-gray-600",
+      price: { monthly: 0, annual: 0 },
+      popular: false,
+      isFree: true,
+      features: [
+        { name: "30 API calls per month", included: true },
+        { name: "Basic stock data access", included: true },
+        { name: "1 Basic stock screener", included: true },
+        { name: "1 Portfolio", included: true },
+        { name: "Community support", included: true },
+        { name: "Email alerts", included: false },
+        { name: "Advanced screener filters", included: false },
+        { name: "Custom watchlists", included: false },
+        { name: "API access", included: false },
+        { name: "Priority support", included: false }
+      ],
+      limits: {
+        apiCalls: "30 calls/month",
+        screeners: "1 screener",
+        portfolios: "1 portfolio",
+        watchlists: "0 watchlists",
+        alerts: "0 alerts"
+      }
+    },
+    {
       name: "Bronze",
       description: "Perfect for individual traders getting started",
       icon: <BarChart3 className="h-8 w-8" />,
@@ -62,23 +95,27 @@ const PricingPro = () => {
       price: { monthly: 24.99, annual: 249.99 },
       popular: true,
       features: [
-        { name: "150 API calls per day, 1500/month", included: true },
-        { name: "Real-time stock data", included: true },
+        { name: "1500 API calls per month", included: true },
+        { name: "10 Screeners", included: true },
+        { name: "100 Email Alerts per month", included: true },
+        { name: "2 Watchlists", included: true },
+        { name: "Professional stock data access", included: true },
+        { name: "Real-time market information", included: true },
         { name: "Basic stock screener", included: true },
         { name: "Email alerts & notifications", included: true },
-        { name: "Real-time alerts", included: true },
-        { name: "Portfolio tracking (5 positions)", included: true },
+        { name: "Portfolio tracking", included: true },
+        { name: "High Quality News and Sentiment Analysis", included: true },
         { name: "Email support", included: true },
-        { name: "Advanced screener filters", included: false },
-        { name: "Custom watchlists", included: false },
-        { name: "API access", included: false },
-        { name: "Priority support", included: false }
+        { name: "Advanced screener filters", included: true },
+        { name: "Custom watchlists", included: true },
+        { name: "Priority support", included: true }
       ],
       limits: {
-        apiCalls: "100/day, 1500/month",
+        apiCalls: "1500 calls/month",
+        screeners: "10 screeners",
         portfolios: "1 portfolio",
-        watchlists: "3 watchlists",
-        alerts: "25 alerts"
+        watchlists: "2 watchlists",
+        alerts: "100 alerts/month"
       }
     },
     {
@@ -90,23 +127,24 @@ const PricingPro = () => {
       price: { monthly: 39.99, annual: 399.99 },
       popular: false,
       features: [
-        { name: "500 API calls per day, 5000/month", included: true },
-        { name: "Real-time stock data", included: true },
-        { name: "Advanced stock screener", included: true },
-        { name: "Email alerts", included: true },
-        { name: "Real-time alerts", included: true },
-        { name: "Portfolio tracking (5 portfolios)", included: true },
-        { name: "Priority email support", included: true },
-        { name: "Advanced screener filters", included: true },
-        { name: "Custom watchlists (10)", included: true },
-        { name: "Basic API access", included: true },
-        { name: "Enhanced analytics", included: true }
+        { name: "5000 API calls per month", included: true },
+        { name: "20 Screeners", included: true },
+        { name: "500 Alerts per month", included: true },
+        { name: "5 Watchlists", included: true },
+        { name: "Portfolio Access", included: true },
+        { name: "Advanced Screener Tools (JSON input and CSV + JSON output)", included: true },
+        { name: "Advanced Watchlist Tools (JSON input and CSV + JSON output)", included: true },
+        { name: "Historical data access", included: true },
+        { name: "Custom Portfolios", included: true },
+        { name: "Higher Call limits", included: true },
+        { name: "Everything included in Bronze", included: true }
       ],
       limits: {
-        apiCalls: "500/day, 5000/month",
+        apiCalls: "5000 calls/month",
+        screeners: "20 screeners",
         portfolios: "5 portfolios",
-        watchlists: "10 watchlists",
-        alerts: "50 alerts"
+        watchlists: "5 watchlists",
+        alerts: "500 alerts/month"
       }
     },
     {
@@ -118,51 +156,23 @@ const PricingPro = () => {
       price: { monthly: 89.99, annual: 899.99 },
       popular: false,
       features: [
-        { name: "Unlimited API calls", included: true },
-        { name: "Real-time stock data", included: true },
-        { name: "Premium stock screener", included: true },
-        { name: "Multi-channel alerts", included: true },
-        { name: "Real-time alerts", included: true },
+        { name: "Unlimited Everything", included: true },
+        { name: "Professional stock data access", included: true },
+        { name: "Highest Limits", included: true },
         { name: "Portfolio tracking (unlimited)", included: true },
-        { name: "Priority email support", included: true },
-        { name: "All screener filters", included: true },
+        { name: "Complete documentation access", included: true },
+        { name: "All Screener and Watchlist Tools", included: true },
         { name: "Unlimited watchlists", included: true },
-        { name: "Advanced insights", included: true },
-        { name: "Full REST API access", included: true },
-        { name: "Real-time market data", included: true }
+        { name: "API Key Access", included: true },
+        { name: "Real-time market data", included: true },
+        { name: "Professional reporting", included: true }
       ],
       limits: {
         apiCalls: "Unlimited",
+        screeners: "Unlimited",
         portfolios: "Unlimited",
         watchlists: "Unlimited",
         alerts: "Unlimited"
-      }
-    },
-    {
-      name: "Free",
-      description: "Perfect for getting started with trading",
-      icon: <Star className="h-8 w-8" />,
-      color: "border-gray-300 bg-gray-100",
-      headerColor: "bg-gradient-to-r from-gray-500 to-gray-600",
-      price: { monthly: 0, annual: 0 },
-      popular: false,
-      isFree: true,
-      features: [
-        { name: "15 API calls per month", included: true },
-        { name: "Basic stock screening", included: true },
-        { name: "Community support", included: true },
-        { name: "Basic portfolio tracking", included: true },
-        { name: "Advanced screener filters", included: false },
-        { name: "Custom watchlists", included: false },
-        { name: "API access", included: false },
-        { name: "Priority support", included: false },
-        { name: "Email alerts", included: false }
-      ],
-      limits: {
-        apiCalls: "15/month",
-        portfolios: "1 portfolio",
-        watchlists: "0 watchlists",  
-        alerts: "0 alerts"
       }
     }
   ];
@@ -241,29 +251,29 @@ const PricingPro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 sm:py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12 sm:mb-16">
           {/* TRIAL Banner - Updated messaging */}
           <div className="mb-6">
-            <div className="inline-flex items-center bg-yellow-100 text-yellow-800 px-6 py-3 rounded-full font-medium text-lg border border-yellow-200">
-              <Gift className="h-5 w-5 mr-2" />
+            <div className="inline-flex items-center bg-yellow-100 text-yellow-800 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-medium text-base sm:text-lg border border-yellow-200">
+              <Gift className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Use code TRIAL for a 7‑day 1$ trial on paid plans
             </div>
           </div>
           
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
             Choose Your Trading Edge
           </h1>
           
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8">
             Join thousands of traders using our tools to make better trading decisions and improve their market analysis.
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
-            <span className={`text-lg font-medium ${!isAnnual ? 'text-blue-600' : 'text-gray-500'}`}>
+          <div className="flex items-center justify-center space-x-4 mb-6 sm:mb-8">
+            <span className={`text-base sm:text-lg font-medium ${!isAnnual ? 'text-blue-600' : 'text-gray-500'}`}>
               Monthly
             </span>
             <Switch
@@ -271,7 +281,7 @@ const PricingPro = () => {
               onCheckedChange={setIsAnnual}
               className="data-[state=checked]:bg-blue-600"
             />
-            <span className={`text-lg font-medium ${isAnnual ? 'text-blue-600' : 'text-gray-500'}`}>
+            <span className={`text-base sm:text-lg font-medium ${isAnnual ? 'text-blue-600' : 'text-gray-500'}`}>
               Annual
             </span>
             {isAnnual && (
@@ -283,7 +293,7 @@ const PricingPro = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-12 sm:mb-16">
           {plans.map((plan, index) => {
             const currentPrice = isAnnual ? plan.price.annual : plan.price.monthly;
             const savings = calculateSavings(plan);
@@ -293,45 +303,45 @@ const PricingPro = () => {
                 key={plan.name} 
                 className={`relative hover:shadow-2xl transition-all duration-300 ${plan.color} ${
                   plan.popular ? 'ring-2 ring-blue-500 scale-105' : ''
-                }`}
+                } h-full flex flex-col`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-0 right-0 flex justify-center">
-                    <Badge className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
-                      <Star className="h-4 w-4 mr-1" />
+                    <Badge className="bg-blue-600 text-white px-4 sm:px-6 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold">
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       Most Popular
                     </Badge>
                   </div>
                 )}
 
-                <CardHeader className={`text-white ${plan.headerColor} rounded-t-lg p-8`}>
-                  <div className="flex items-center justify-center mb-4">
+                <CardHeader className={`text-white ${plan.headerColor} rounded-t-lg p-4 sm:p-6 lg:p-8`}>
+                  <div className="flex items-center justify-center mb-3 sm:mb-4">
                     {plan.icon}
                   </div>
-                  <CardTitle className="text-2xl font-bold text-center mb-2">
+                  <CardTitle className="text-xl sm:text-2xl font-bold text-center mb-2">
                     {plan.name}
                   </CardTitle>
-                  <p className="text-center text-white/90 mb-6">
+                  <p className="text-center text-white/90 mb-4 sm:mb-6 text-sm sm:text-base">
                     {plan.description}
                   </p>
                   
                   <div className="text-center">
                     {plan.isFree ? (
                       <div className="flex items-baseline justify-center">
-                        <span className="text-4xl font-bold">
+                        <span className="text-3xl sm:text-4xl font-bold">
                           $0
                         </span>
-                        <span className="text-lg ml-1">
+                        <span className="text-base sm:text-lg ml-1">
                           /forever
                         </span>
                       </div>
                     ) : (
                       <>
                         <div className="flex items-baseline justify-center">
-                          <span className="text-4xl font-bold">
+                          <span className="text-3xl sm:text-4xl font-bold">
                             ${isAnnual ? Math.round(currentPrice / 12) : currentPrice}
                           </span>
-                          <span className="text-lg ml-1">
+                          <span className="text-base sm:text-lg ml-1">
                             /{isAnnual ? 'mo' : 'month'}
                           </span>
                         </div>
@@ -340,7 +350,7 @@ const PricingPro = () => {
                     
                     {isAnnual && (
                       <div className="mt-2">
-                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        <span className="text-xs sm:text-sm bg-white/20 px-2 sm:px-3 py-1 rounded-full">
                           Billed ${currentPrice} annually (Save {savings}%)
                         </span>
                       </div>
@@ -348,40 +358,46 @@ const PricingPro = () => {
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-8 space-y-6">
+                <CardContent className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 flex-1 flex flex-col">
                   {/* Key Limits */}
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-semibold mb-3 text-gray-900">Usage Limits:</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                      <div>
+                  <div className="bg-white p-3 sm:p-4 rounded-lg border">
+                    <h4 className="font-semibold mb-2 sm:mb-3 text-gray-900 text-sm sm:text-base">Usage Limits:</h4>
+                    <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+                      <div className="flex justify-between">
                         <span className="text-gray-600">API Calls:</span>
-                        <span className="ml-2 font-medium">{plan.limits.apiCalls}</span>
+                        <span className="font-medium">{plan.limits.apiCalls}</span>
                       </div>
-                      <div>
-                        <span className="text-gray-600">Alerts:</span>
-                        <span className="ml-2 font-medium">{plan.limits.alerts}</span>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Screeners:</span>
+                        <span className="font-medium">{plan.limits.screeners}</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Portfolios:</span>
-                        <span className="ml-2 font-medium">{plan.limits.portfolios}</span>
+                        <span className="font-medium">{plan.limits.portfolios}</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Watchlists:</span>
-                        <span className="ml-2 font-medium">{plan.limits.watchlists}</span>
+                        <span className="font-medium">{plan.limits.watchlists}</span>
                       </div>
+                      {plan.limits.alerts && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Alerts:</span>
+                          <span className="font-medium">{plan.limits.alerts}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Features List */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3 flex-1">
                     {plan.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-center space-x-3">
+                      <div key={featureIndex} className="flex items-start space-x-2 sm:space-x-3">
                         {feature.included ? (
-                          <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0 mt-0.5" />
                         ) : (
-                          <X className="h-5 w-5 text-gray-300 flex-shrink-0" />
+                          <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300 flex-shrink-0 mt-0.5" />
                         )}
-                        <span className={`text-sm ${feature.included ? 'text-gray-900' : 'text-gray-400'}`}>
+                        <span className={`text-xs sm:text-sm ${feature.included ? 'text-gray-900' : 'text-gray-400'}`}>
                           {feature.name}
                         </span>
                       </div>
@@ -393,11 +409,11 @@ const PricingPro = () => {
                     <Dialog open={showCheckout && selectedPlan?.name === plan.name} onOpenChange={setShowCheckout}>
                       <DialogTrigger asChild>
                         <Button 
-                          className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                          className="w-full text-base sm:text-lg py-4 sm:py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                           onClick={() => handlePlanSelect(plan, isAnnual ? 'annual' : 'monthly')}
                         >
-                          {plan.isFree ? "Try Now for Free" : "Try for $1"}
-                          <ArrowRight className="h-5 w-5 ml-2" />
+                          {plan.isFree ? "Get Started Free" : "Start Free Trial"}
+                          <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                         </Button>
                       </DialogTrigger>
                       
@@ -427,78 +443,78 @@ const PricingPro = () => {
         </div>
 
         {/* Additional Features */}
-        <div className="bg-white rounded-2xl p-12 mb-16 shadow-xl">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+        <div className="bg-white rounded-2xl p-8 sm:p-12 mb-12 sm:mb-16 shadow-xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
             Why Choose Trade Scan Pro?
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {additionalFeatures.map((feature, index) => (
               <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                   <div className="text-blue-600">
                     {feature.icon}
                   </div>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600 text-sm">{feature.description}</p>
+                <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{feature.title}</h3>
+                <p className="text-gray-600 text-xs sm:text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Enterprise CTA */}
-        <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white">
-          <CardContent className="p-12 text-center">
-            <h2 className="text-3xl font-bold mb-4">Need a Custom Solution?</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+        <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white mb-12 sm:mb-16">
+          <CardContent className="p-8 sm:p-12 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Need a Custom Solution?</h2>
+            <p className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
               Enterprise plans with custom API limits, dedicated support, and tailored solutions available.
             </p>
-            <Button variant="secondary" size="lg" className="text-lg px-8 py-4">
-              <Mail className="h-5 w-5 mr-2" />
+            <Button variant="secondary" size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4">
+              <Mail className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Contact Sales
             </Button>
           </CardContent>
         </Card>
 
         {/* FAQ Section */}
-        <div className="mt-16 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
             Frequently Asked Questions
           </h2>
           
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">How does the 7-day trial work?</h3>
-                <p className="text-gray-600">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="font-semibold text-base sm:text-lg mb-2">How does the 7-day trial work?</h3>
+                <p className="text-gray-600 text-sm sm:text-base">
                   Use code TRIAL during signup to access your chosen plan for 7 days for just $1. After the trial, you'll be charged the regular monthly price unless you cancel.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">Can I change plans later?</h3>
-                <p className="text-gray-600">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="font-semibold text-base sm:text-lg mb-2">Can I change plans later?</h3>
+                <p className="text-gray-600 text-sm sm:text-base">
                   Yes! Upgrade or downgrade anytime. Changes take effect immediately, and we'll prorate the billing difference.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">What payment methods do you accept?</h3>
-                <p className="text-gray-600">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="font-semibold text-base sm:text-lg mb-2">What payment methods do you accept?</h3>
+                <p className="text-gray-600 text-sm sm:text-base">
                   We accept all major credit cards and PayPal. All payments are secured with industry-standard encryption.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">Is there a refund policy?</h3>
-                <p className="text-gray-600">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="font-semibold text-base sm:text-lg mb-2">Is there a refund policy?</h3>
+                <p className="text-gray-600 text-sm sm:text-base">
                   You can cancel anytime during your trial period. Regular subscriptions can be cancelled anytime to prevent future charges.
                 </p>
               </CardContent>
