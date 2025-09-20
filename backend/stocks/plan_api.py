@@ -169,7 +169,6 @@ def user_plan_info(request):
         }, status=500)
 
 
-@login_required
 @require_http_methods(["GET"])
 def plan_comparison(request):
     """Get plan comparison data"""
