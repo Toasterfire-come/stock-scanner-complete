@@ -306,7 +306,7 @@ export async function deleteWatchlist(id) { return await deleteWithRetry(`/watch
 export async function alertsMeta() { const { data } = await api.get('/alerts/create/'); return data; }
 export async function createAlert(payload) { return await postWithRetry('/alerts/create/', payload); }
 export async function toggleAlert(alertId) { return await postWithRetry(`/alerts/${encodeURIComponent(alertId)}/toggle/`); }
-export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/`); }
+export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/delete/`); }
 
 // ====================
 // ALERTS - EXTRA HELPERS
@@ -389,12 +389,16 @@ export async function getExtendedHoursMarket() { const { data } = await api.get(
 // ====================
 // ALERTS HISTORY
 // ====================
-export async function getAlertHistory(params = {}) { const { data } = await api.get('/alerts/history/', { params }); return data; }
+export async function getAlertHistory(params = {}) {
+  // Backend does not provide a separate history endpoint; use current alerts list
+  const { data } = await api.get('/alerts/', { params });
+  return Array.isArray(data) ? data : (data?.alerts || []);
+}
 
 // ====================
 // FEATURE FLAGS
 // ====================
-export async function getFeatureFlags() { const { data } = await api.get('/feature-flags/'); return data; }
+export async function getFeatureFlags() { try { const { data } = await api.get('/feature-flags/'); return data; } catch { return {}; } }
 
 // ====================
 // USAGE & RATE LIMITS
