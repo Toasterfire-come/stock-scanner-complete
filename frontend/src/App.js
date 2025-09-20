@@ -157,8 +157,8 @@ function App() {
                   <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />
                   <Route path="/use-cases" element={<PlaceholderPage title="Use Cases" />} />
                   <Route path="/changelog" element={<PlaceholderPage title="Changelog" />} />
-                  <Route path="/help" element={<PlaceholderPage title="Help" />} />
-                  <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/help/faq" element={<Help />} />
                   <Route path="/enterprise" element={<EnterpriseContact />} />
 
                   {/* Protected Analytics and Referral Routes */}
