@@ -768,3 +768,40 @@ class UsageStats(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.date} - {self.api_calls} calls"
+
+
+class APICallLog(models.Model):
+    """Log individual API calls for tracking and billing"""
+    ENDPOINT_TYPES = [
+        ('stocks_list', 'List All Stocks'),           # 5 calls
+        ('stock_detail', 'Individual Stock'),         # 1 call
+        ('screener_run', 'Run Screener'),            # 2 calls
+        ('alert_create', 'Create Alert'),            # 2 calls
+        ('market_data', 'Market Page Load'),         # 2 calls
+        ('watchlist_create', 'Create Watchlist'),    # 2 calls
+        ('other', 'Other'),                          # 1 call
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_calls', null=True, blank=True)
+    endpoint = models.CharField(max_length=200, help_text="API endpoint called")
+    endpoint_type = models.CharField(max_length=20, choices=ENDPOINT_TYPES, default='other')
+    call_count = models.IntegerField(default=1, help_text="Number of API calls this action counts as")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    request_method = models.CharField(max_length=10, default='GET')
+    response_status = models.IntegerField(null=True, blank=True)
+    response_time_ms = models.IntegerField(null=True, blank=True, help_text="Response time in milliseconds")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['endpoint_type', '-created_at']),
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['user', 'endpoint_type']),
+        ]
+    
+    def __str__(self):
+        username = self.user.username if self.user else 'Anonymous'
+        return f"{username} - {self.endpoint_type} ({self.call_count} calls)"
