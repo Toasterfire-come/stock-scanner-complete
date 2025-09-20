@@ -213,7 +213,7 @@ const Alerts = () => {
                 />
               </div>
               <div className="flex items-end">
-                <Button onClick={createAlert} disabled={isCreating} className="w-full">
+                <Button onClick={createAlertHandler} disabled={isCreating} className="w-full">
                   <Bell className="h-4 w-4 mr-2" />
                   Create Alert
                 </Button>
