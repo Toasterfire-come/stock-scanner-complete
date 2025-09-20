@@ -400,65 +400,20 @@ const StockDetail = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="chart">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Price History (6M)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-96">
-                      {isChartLoading ? (
-                        <div className="h-full flex items-center justify-center text-gray-500">Loading chart…</div>
-                      ) : chartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="colorClose" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35}/>
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                            <XAxis dataKey="date" tickFormatter={(d) => new Date(d).toLocaleDateString()} minTickGap={32} stroke="#9ca3af" />
-                            <YAxis domain={["auto", "auto"]} tickFormatter={(v) => `$${v.toFixed(2)}`} stroke="#9ca3af" />
-                            <Tooltip labelFormatter={(l) => new Date(l).toLocaleString()} formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Close']} />
-                            <Area type="monotone" dataKey="close" stroke="#2563eb" fillOpacity={1} fill="url(#colorClose)" />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full flex items-center justify-center text-gray-500">No chart data</div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+              <TabsContent value="chart" className="space-y-4">
+                <GoogleFinanceChart 
+                  symbol={symbol} 
+                  height={500}
+                  showControls={true}
+                />
               </TabsContent>
 
-              {/* technicals and fundamentals tabs removed per spec */}
-
-              <TabsContent value="news">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Related News</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {newsItems.length === 0 ? (
-                      <div className="text-gray-500">No recent news.</div>
-                    ) : (
-                      <div className="space-y-4">
-                        {newsItems.map((n, idx) => (
-                          <div key={idx} className="p-4 border rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <a href={n.link} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:underline">
-                                {n.title}
-                              </a>
-                              <div className="text-xs text-gray-500">{n.publisher || ''} {n.pubDate ? `· ${new Date(n.pubDate).toLocaleString()}` : ''}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+              <TabsContent value="news" className="space-y-4">
+                <StockNewsIntegration 
+                  symbol={symbol}
+                  maxItems={15}
+                  showHeader={false}
+                />
               </TabsContent>
             </Tabs>
           </div>
