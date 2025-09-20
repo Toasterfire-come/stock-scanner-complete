@@ -82,6 +82,7 @@ import ChangePassword from "./pages/account/ChangePassword";
 import NotificationSettings from "./pages/account/NotificationSettings";
 import BillingHistory from "./pages/account/BillingHistory";
 import CurrentPlan from "./pages/account/CurrentPlan";
+import Settings from "./pages/account/Settings";
 
 // System Pages
 import EndpointStatus from "./pages/system/EndpointStatus";
