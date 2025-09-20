@@ -32,6 +32,7 @@
         transform: rotate(360deg);
     }
 }
+<<<<<<< HEAD
 
 /* Global responsive containers and elements */
 .container-enhanced {
@@ -51,3 +52,5 @@ body { overflow-x: hidden; }
 .table-responsive { overflow-x: auto; }
 .table-responsive table { min-width: 720px; }
 
+=======
+>>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)

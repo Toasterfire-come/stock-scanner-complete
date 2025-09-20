@@ -77,8 +77,12 @@ agenthub/agents/youtube/db
 .cache/
 
 # Mobile development
+<<<<<<< HEAD
 android-sdk/ temp_repo/.git/objects/pack/pack-6f31cac1074197aa15f8c4986dd54e5b91bbfcae.pack
 temp_main19/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
 temp_main/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
 frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/1.pack
+=======
+android-sdk/ 
+>>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)

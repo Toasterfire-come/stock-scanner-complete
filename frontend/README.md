@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Trade Scan Pro Frontend (React)
 
 This is the React SPA for Trade Scan Pro. It is deployed to a static webspace connected to `https://tradescanpro.com` and communicates with a separate Django backend over HTTPS.
@@ -21,6 +22,11 @@ Notes:
 ## Routing on Static Hosting
 
 The app uses hash-based routing (`HashRouter`) to ensure deep links work on static hosting without server rewrites. All links are of the form `/#/path`.
+=======
+# Getting Started with Create React App
+
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+>>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)
 
 ## Available Scripts
 
@@ -47,6 +53,7 @@ It correctly bundles React in production mode and optimizes the build for the be
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
+<<<<<<< HEAD
 Deploy the `build/` directory to your static webspace for `tradescanpro.com`. Ensure environment variables were set prior to the build.
 
 ## Django Backend
@@ -58,6 +65,8 @@ The Django backend runs on a separate server and should be configured to allow C
 - In-app docs: navigate to `/#/docs`
 - Glossary and quick start are provided and interlinked.
 
+=======
+>>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 ### `npm run eject`
