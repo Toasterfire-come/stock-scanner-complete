@@ -138,7 +138,7 @@ const AppDashboard = () => {
             </CardContent>
           </Card>
 
-          <UsageTracker />
+          <PlanUsage />
         </div>
 
         {/* Main Content Grid */}
