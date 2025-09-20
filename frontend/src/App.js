@@ -166,7 +166,7 @@ function App() {
                 <Route path="/checkout/failure" element={<CheckoutFailure />} />
 
                 {/* Main App Routes */}
-                <Route element={<AppLayout />}>
+                <Route element={<EnhancedAppLayout />}>
                   {/* Public/Marketing Routes - Available to all users */}
                   <Route path="/" element={<Home />} />
                   <Route path="/features" element={<Features />} />
