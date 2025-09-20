@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
+import { mapCriteriaToFilterParams } from "../lib/screeners";
 
 const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
 const API_PASSWORD = process.env.REACT_APP_API_PASSWORD || "";
@@ -372,19 +373,6 @@ export async function syncPortfolioNews() { const { data } = await api.post('/ne
 // ====================
 export async function listScreeners(params = {}) { const { data } = await api.get('/screeners/', { params }); return data; }
 export async function getScreener(id) { const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/`); return data; }
-function mapCriteriaToFilterParams(criteria = []) {
-  const params = {};
-  for (const c of criteria) {
-    if (c.id === 'market_cap') { if (c.min) params.market_cap_min = c.min; if (c.max) params.market_cap_max = c.max; }
-    if (c.id === 'price') { if (c.min) params.min_price = c.min; if (c.max) params.max_price = c.max; }
-    if (c.id === 'volume') { if (c.min) params.min_volume = c.min; if (c.max) params.max_volume = c.max; }
-    if (c.id === 'pe_ratio') { if (c.min) params.pe_ratio_min = c.min; if (c.max) params.pe_ratio_max = c.max; }
-    if (c.id === 'dividend_yield') { if (c.min) params.dividend_yield_min = c.min; if (c.max) params.dividend_yield_max = c.max; }
-    if (c.id === 'change_percent') { if (c.min) params.change_percent_min = c.min; if (c.max) params.change_percent_max = c.max; }
-    if (c.id === 'exchange') { if (c.value) params.exchange = c.value; }
-  }
-  return params;
-}
 export { mapCriteriaToFilterParams };
 export async function createScreener(screener) { const data = await postWithRetry('/screeners/create/', screener); return data; }
 export async function updateScreener(id, payload) { const data = await postWithRetry(`/screeners/${encodeURIComponent(id)}/update/`, payload); return data; }

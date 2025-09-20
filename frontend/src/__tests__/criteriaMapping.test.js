@@ -1,4 +1,4 @@
-import { mapCriteriaToFilterParams } from "../api/client";
+import { mapCriteriaToFilterParams } from "../lib/screeners";
 
 describe('mapCriteriaToFilterParams', () => {
   it('maps ranges and exchange correctly', () => {
