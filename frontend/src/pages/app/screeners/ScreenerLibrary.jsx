@@ -5,13 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../../components/ui/badge";
 import { Input } from "../../../components/ui/input";
 import { Plus, Search, Filter, TrendingUp, BarChart3, PlayCircle, Edit3, Download, Upload } from "lucide-react";
-import { listScreeners, api } from "../../../api/client";
+import { listScreeners, api, getCurrentPlan } from "../../../api/client";
+import { showError, showSuccess } from "../../../lib/errors";
+import { trackEvent } from "../../../lib/telemetry";
 
 const ScreenerLibrary = () => {
   const [screeners, setScreeners] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [resultCounts, setResultCounts] = useState({});
+  const [plan, setPlan] = useState({ plan_type: 'free', is_premium: false });
 
   useEffect(() => { (async () => {
     setIsLoading(true);
@@ -23,6 +26,7 @@ const ScreenerLibrary = () => {
       setScreeners([]);
     } finally { setIsLoading(false); }
   })(); }, []);
+  useEffect(() => { (async () => { try { const p = await getCurrentPlan(); const d=p?.data||p||{}; setPlan(d); } catch {} })(); }, []);
 
   const exportJson = (s) => {
     const blob = new Blob([JSON.stringify({ name: s.name, description: s.description, isPublic: s.is_public, criteria: s.criteria || [] }, null, 2)], { type: 'application/json' });
@@ -141,7 +145,7 @@ const ScreenerLibrary = () => {
                     <Edit3 className="h-4 w-4 mr-1" /> Edit
                   </Link>
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => exportJson(s)}>
+                <Button size="sm" variant="outline" onClick={() => { exportJson(s); trackEvent('screener_export_json', { id: s.id }); }}>
                   <Download className="h-4 w-4 mr-1" /> Export JSON
                 </Button>
               </div>
@@ -154,9 +158,12 @@ const ScreenerLibrary = () => {
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">No screeners found</div>
           <div className="flex gap-2 justify-center">
-            <Button asChild>
+            <Button asChild disabled={!plan.is_premium && screeners.length >= 3} title={!plan.is_premium && screeners.length >= 3 ? 'Upgrade for more saved screeners' : undefined}>
               <Link to="/app/screeners/new">Create your first Screener</Link>
             </Button>
+            {!plan.is_premium && screeners.length >= 3 && (
+              <Link to="/pricing" className="text-blue-600 text-sm">Upgrade for more</Link>
+            )}
             <label className="inline-flex items-center">
               <input type="file" accept="application/json" className="hidden" onChange={(e)=>importJsonToDraft(e)} />
               <Button variant="outline">

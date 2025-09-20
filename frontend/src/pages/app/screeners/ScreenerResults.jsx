@@ -6,7 +6,9 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw, SortAsc, SortDesc, PlusCircle, BellPlus } from "lucide-react";
 import { toast } from "sonner";
-import { runScreener, getScreener, exportScreenerCsvUrl, addWatchlist, createAlert } from "../../../api/client";
+import { runScreener, getScreener, exportScreenerCsvUrl, addWatchlist, createAlert, getCurrentPlan } from "../../../api/client";
+import { trackEvent, trackError } from "../../../lib/telemetry";
+import { showError, showSuccess } from "../../../lib/errors";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -17,8 +19,10 @@ const ScreenerResults = () => {
   const [sortBy, setSortBy] = useState({ key: 'change_percent', dir: 'desc' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [plan, setPlan] = useState({ plan_type: 'free', is_premium: false });
 
   useEffect(() => { fetchResults(); }, [id]);
+  useEffect(() => { (async () => { try { const p = await getCurrentPlan(); const d=p?.data||p||{}; setPlan(d); } catch {} })(); }, []);
 
   const fetchResults = async () => {
     setIsLoading(true);
@@ -37,7 +41,8 @@ const ScreenerResults = () => {
       const items = res?.data?.results || res?.results || res?.data || [];
       setResults(Array.isArray(items) ? items : []);
     } catch (error) {
-      toast.error("Failed to fetch results");
+      showError("Failed to fetch results");
+      trackError('screener_results_error', error, { screener_id: id });
       setScreenerInfo(null);
       setResults([]);
     } finally { setIsLoading(false); }
@@ -57,6 +62,10 @@ const ScreenerResults = () => {
 
   const handleExport = () => {
     // Use backend CSV export for consistency
+    if (!plan.is_premium) {
+      toast.error('Upgrade required', { description: 'CSV export is available on paid plans.' });
+      return;
+    }
     const url = exportScreenerCsvUrl(id);
     const a = document.createElement('a');
     a.href = url;
@@ -64,7 +73,8 @@ const ScreenerResults = () => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    toast.success("Downloading CSV");
+    showSuccess("Downloading CSV");
+    trackEvent('screener_export_csv', { screener_id: id });
   };
 
   const sorted = useMemo(() => {
@@ -97,13 +107,13 @@ const ScreenerResults = () => {
   };
 
   const addToWatchlist = async (ticker) => {
-    try { await addWatchlist(ticker); toast.success('Added to Watchlist'); }
-    catch { toast.error('Failed to add to Watchlist'); }
+    try { await addWatchlist(ticker); showSuccess('Added to Watchlist'); trackEvent('watchlist_add', { ticker }); }
+    catch (e) { showError('Failed to add to Watchlist'); trackError('watchlist_add_error', e, { ticker }); }
   };
 
   const createPriceAlert = async (ticker) => {
-    try { await createAlert({ ticker, target_price: 0, condition: 'above', email: '' }); toast.success('Alert created'); }
-    catch { toast.error('Failed to create alert'); }
+    try { await createAlert({ ticker, target_price: 0, condition: 'above', email: '' }); showSuccess('Alert created'); trackEvent('alert_created', { ticker }); }
+    catch (e) { showError('Failed to create alert'); trackError('alert_create_error', e, { ticker }); }
   };
 
   if (isLoading) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getEndpointStatus, getFeatureFlags } from "../api/client";
+import { getEndpointStatus, getFeatureFlags, getUsageSummary } from "../api/client";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import EnhancedButton from "../components/ui/enhanced-button";
@@ -42,6 +42,7 @@ const AppLayout = () => {
   }, []);
 
   const [statusBanner, setStatusBanner] = useState(null);
+  const [usageBanner, setUsageBanner] = useState(null);
   useEffect(() => {
     let mounted = true;
     const pollStatus = async () => {
@@ -61,6 +62,26 @@ const AppLayout = () => {
     pollStatus();
     const t = setInterval(pollStatus, 60000);
     return () => { mounted = false; clearInterval(t); };
+  }, []);
+
+  // Usage banner (75%+)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getUsageSummary();
+        const monthly = res?.data?.monthly || {};
+        const used = Number(monthly.api_calls || 0);
+        const limit = Number(monthly.limit || 0);
+        if (limit > 0) {
+          const pct = Math.round((used / limit) * 100);
+          if (pct >= 75) {
+            if (mounted) setUsageBanner({ pct, used, limit });
+          }
+        }
+      } catch {}
+    })();
+    return () => { mounted = false; };
   }, []);
 
   // Server-driven feature flags
@@ -136,6 +157,12 @@ const AppLayout = () => {
           {statusBanner && (
             <div className={`text-center text-sm py-2 ${statusBanner.type==='down' ? 'bg-red-600 text-white' : 'bg-yellow-100 text-yellow-900 border-b border-yellow-200'}`}>
               {statusBanner.text}
+            </div>
+          )}
+          {usageBanner && (
+            <div className="text-center text-sm py-2 bg-blue-50 text-blue-900 border-b border-blue-200">
+              You have used {usageBanner.pct}% of your monthly API limit ({usageBanner.used}/{usageBanner.limit}).
+              <Link to="/pricing" className="ml-2 underline">Upgrade now</Link>
             </div>
           )}
           <div className="flex items-center justify-between h-16">

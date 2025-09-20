@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from core.views import homepage, health_check, api_documentation, endpoint_status, endpoint_status_api, kill_switch, csrf, robots_txt, sitemap_xml
+from core.views import homepage, health_check, endpoint_status_api, kill_switch, csrf, robots_txt, sitemap_xml
 from stocks.simple_api import simple_status_api
 from stocks.billing_api import paypal_webhook_api
 
@@ -8,8 +8,6 @@ urlpatterns = [
     path('', homepage, name='homepage'),
     path('health/', health_check, name='health_check'),
     path('api/health/', health_check, name='api_health_check'),  # WordPress expects this
-    path('docs/', api_documentation, name='api_documentation'),  # API Documentation
-    path('endpoint-status/', endpoint_status, name='endpoint_status'),  # Endpoint status check
     path('api/endpoint-status/', endpoint_status_api, name='endpoint_status_api'),
     path('status/simple/', simple_status_api, name='simple_status_api'),
     path('api/auth/csrf/', csrf, name='csrf'),
