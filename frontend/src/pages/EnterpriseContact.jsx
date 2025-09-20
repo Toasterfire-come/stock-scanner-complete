@@ -308,7 +308,7 @@ const EnterpriseContact = () => {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <Mail className="h-5 w-5 mr-3" />
-                    <span>enterprise@tradescanpro.com</span>
+                    <span>{process.env.REACT_APP_CONTACT_EMAIL || 'noreply.retailtradescanner@gmail.com'}</span>
                   </div>
                   <div className="flex items-center">
                     <Clock className="h-5 w-5 mr-3" />
