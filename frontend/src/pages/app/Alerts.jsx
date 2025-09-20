@@ -36,9 +36,9 @@ const Alerts = () => {
   const fetchAlerts = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/`, { method: 'GET' });
-      const data = await resp.json().catch(() => ({}));
-      const rows = Array.isArray(data?.alerts) ? data.alerts : (Array.isArray(data) ? data : []);
+      // Use the proper API client function with quota tracking
+      const data = await api.get('/alerts/');
+      const rows = Array.isArray(data?.data?.alerts) ? data.data.alerts : (Array.isArray(data?.data) ? data.data : []);
       setAlerts(rows);
     } catch (error) {
       toast.error("Failed to fetch alerts");
