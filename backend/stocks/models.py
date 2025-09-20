@@ -220,6 +220,64 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f'{self.user.username} - {self.username or "No public username"}'
+    
+    def get_plan_limits(self):
+        """Get limits for current plan"""
+        plan_limits = {
+            'free': {
+                'api_calls': 30,
+                'screeners': 1,
+                'alerts': 0,
+                'watchlists': 1,
+                'portfolios': 1,
+                'features': ['stock_data_access', 'basic_screener']
+            },
+            'bronze': {
+                'api_calls': 1500,
+                'screeners': 10,
+                'alerts': 100,
+                'watchlists': 2,
+                'portfolios': 2,
+                'features': ['stock_data_access', 'basic_screener', 'email_alerts', 'portfolio_tracking', 'news_sentiment', 'advanced_screener', 'custom_watchlists', 'priority_support']
+            },
+            'silver': {
+                'api_calls': 5000,
+                'screeners': 20,
+                'alerts': 500,
+                'watchlists': 5,
+                'portfolios': 5,
+                'features': ['stock_data_access', 'basic_screener', 'email_alerts', 'portfolio_tracking', 'news_sentiment', 'advanced_screener', 'custom_watchlists', 'priority_support', 'advanced_screener_tools', 'advanced_watchlist_tools', 'historical_data', 'custom_portfolios', 'higher_limits']
+            },
+            'gold': {
+                'api_calls': -1,  # Unlimited
+                'screeners': -1,  # Unlimited
+                'alerts': -1,    # Unlimited
+                'watchlists': -1, # Unlimited
+                'portfolios': -1, # Unlimited
+                'features': ['unlimited_everything', 'api_key_access', 'real_time_data', 'professional_reporting', 'all_screener_tools', 'all_watchlist_tools', 'complete_documentation']
+            }
+        }
+        return plan_limits.get(self.plan_type, plan_limits['free'])
+    
+    def can_make_api_call(self):
+        """Check if user can make another API call"""
+        limits = self.get_plan_limits()
+        if limits['api_calls'] == -1:  # Unlimited
+            return True
+        return self.api_calls_used < limits['api_calls']
+    
+    def increment_api_usage(self, count=1):
+        """Increment API usage counter"""
+        self.api_calls_used += count
+        self.save()
+    
+    def reset_monthly_usage(self):
+        """Reset monthly usage counters"""
+        from django.utils import timezone
+        self.api_calls_used = 0
+        self.alerts_sent = 0
+        self.usage_reset_date = timezone.now()
+        self.save()
 
 class UserPortfolio(models.Model):
     """User stock portfolios with performance tracking"""
