@@ -42,23 +42,41 @@ const EnterpriseContact = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Your request has been submitted!", {
-        description: "Our enterprise team will contact you within 24 hours.",
+      // Call the backend API to submit enterprise contact form
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/enterprise/contact/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contact_name: formData.name,
+          contact_email: formData.email,
+          company_name: formData.company,
+          phone: formData.phone,
+          message: `Company Size: ${formData.employees}\n\nRequirements: ${formData.message}`,
+          solution_type: 'enterprise'
+        })
       });
 
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        company: "",
-        phone: "",
-        employees: "",
-        message: ""
-      });
+      if (response.ok) {
+        toast.success("Your request has been submitted!", {
+          description: "Our enterprise team will contact you within 24 hours.",
+        });
+
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          company: "",
+          phone: "",
+          employees: "",
+          message: ""
+        });
+      } else {
+        throw new Error('Failed to submit form');
+      }
     } catch (error) {
+      console.error('Enterprise contact form submission failed:', error);
       toast.error("Failed to submit request", {
         description: "Please try again or contact us directly.",
       });
