@@ -48,7 +48,7 @@ const Alerts = () => {
     }
   };
 
-  const createAlert = async () => {
+  const createAlertHandler = async () => {
     if (!isAuthenticated) {
       toast.error("Please sign in to create alerts");
       return;
@@ -60,22 +60,15 @@ const Alerts = () => {
 
     setIsCreating(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ticker: newAlert.ticker.toUpperCase(),
-          target_price: parseFloat(newAlert.targetPrice),
-          condition: newAlert.condition,
-          email: newAlert.email
-        })
+      // Use the proper API client function with quota tracking
+      const response = await createAlert({
+        ticker: newAlert.ticker.toUpperCase(),
+        target_price: parseFloat(newAlert.targetPrice),
+        condition: newAlert.condition,
+        email: newAlert.email
       });
 
-      const data = await response.json();
-      
-      if (data.alert_id) {
+      if (response.alert_id || response.success) {
         toast.success("Alert created successfully");
         setNewAlert({ ticker: "", targetPrice: "", condition: "above", email: "" });
         fetchAlerts(); // Refresh the list
@@ -83,7 +76,8 @@ const Alerts = () => {
         toast.error("Failed to create alert");
       }
     } catch (error) {
-      toast.error("Failed to create alert");
+      const errorMessage = error.message || "Failed to create alert";
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }
