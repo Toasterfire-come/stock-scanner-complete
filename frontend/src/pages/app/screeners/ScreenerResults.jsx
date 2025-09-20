@@ -216,7 +216,7 @@ const ScreenerResults = () => {
                 </TableHeader>
                 <TableBody>
                   {paged.map((stock) => (
-                    <TableRow key={stock.ticker}>
+                    <TableRow key={stock.ticker} className="whitespace-nowrap">
                       <TableCell>
                         <Link 
                           to={`/app/stocks/${stock.ticker}`}
@@ -226,7 +226,7 @@ const ScreenerResults = () => {
                         </Link>
                       </TableCell>
                       <TableCell className="font-medium">{stock.company_name}</TableCell>
-                      <TableCell>${Number(stock.current_price||0).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${Number(stock.current_price||0).toFixed(2)}</TableCell>
                       <TableCell>
                         <div className={`flex items-center ${stock.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {stock.change_percent >= 0 ? (
@@ -237,8 +237,8 @@ const ScreenerResults = () => {
                           {stock.change_percent >= 0 ? '+' : ''}{Number(stock.change_percent||0).toFixed(2)}%
                         </div>
                       </TableCell>
-                      <TableCell>{Number(stock.volume||0).toLocaleString()}</TableCell>
-                      <TableCell>${formatCap(stock.market_cap)}</TableCell>
+                      <TableCell className="text-right">{Number(stock.volume||0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">${formatCap(stock.market_cap)}</TableCell>
                       <TableCell>{stock.exchange}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
