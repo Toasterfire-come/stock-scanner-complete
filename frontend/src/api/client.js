@@ -657,6 +657,177 @@ export async function updateStocks(symbols) { const { data } = await api.post('/
 export async function updateNews() { const { data } = await api.post('/news/update/'); return data; }
 
 // ====================
+// PORTFOLIO ANALYTICS & ADVANCED FEATURES
+// ====================
+
+// Portfolio Analytics
+export async function getPortfolioAnalytics() { 
+  ensureApiQuotaAndIncrement('getPortfolioAnalytics');
+  const { data } = await api.get('/portfolio/analytics/'); 
+  return data; 
+}
+
+export async function getPortfolioSectorAllocation() { 
+  ensureApiQuotaAndIncrement('getPortfolioAnalytics');
+  const { data } = await api.get('/portfolio/sector-allocation/'); 
+  return data; 
+}
+
+export async function getPortfolioDividendTracking() { 
+  ensureApiQuotaAndIncrement('getPortfolioAnalytics');
+  const { data } = await api.get('/portfolio/dividend-tracking/'); 
+  return data; 
+}
+
+// Advanced Screeners
+export async function getScreeners() { 
+  ensureApiQuotaAndIncrement('getScreeners');
+  const { data } = await api.get('/screeners/'); 
+  return data; 
+}
+
+export async function createScreener(screenerData) { 
+  ensureApiQuotaAndIncrement('createScreener');
+  const { data } = await api.post('/screeners/', screenerData); 
+  return data; 
+}
+
+export async function getScreener(id) { 
+  ensureApiQuotaAndIncrement('getScreener');
+  const { data } = await api.get(`/screeners/${id}/`); 
+  return data; 
+}
+
+export async function updateScreener(id, screenerData) { 
+  ensureApiQuotaAndIncrement('updateScreener');
+  const { data } = await api.put(`/screeners/${id}/`, screenerData); 
+  return data; 
+}
+
+export async function deleteScreener(id) { 
+  ensureApiQuotaAndIncrement('deleteScreener');
+  const { data } = await api.delete(`/screeners/${id}/`); 
+  return data; 
+}
+
+export async function getScreenerTemplates() { 
+  ensureApiQuotaAndIncrement('getScreenerTemplates');
+  const { data } = await api.get('/screeners/templates/'); 
+  return data; 
+}
+
+export async function runScreener(id) { 
+  ensureApiQuotaAndIncrement('runScreener');
+  const { data } = await api.post(`/screeners/${id}/run/`); 
+  return data; 
+}
+
+// Data Export
+export async function exportStocksCSV(params = {}) { 
+  const response = await api.get('/export/stocks/csv', { params, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function exportPortfolioCSV(params = {}) { 
+  const response = await api.get('/export/portfolio/csv', { params, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function exportScreenerResultsCSV(screenerId, params = {}) { 
+  const response = await api.get('/export/screener-results/csv', { params: { ...params, screener_id: screenerId }, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function exportWatchlistCSV(params = {}) { 
+  const response = await api.get('/export/watchlist/csv', { params, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function generateCustomReport(reportData) { 
+  const { data } = await api.post('/reports/custom/', reportData); 
+  return data; 
+}
+
+export async function downloadReport(id) { 
+  const response = await api.get(`/reports/${id}/download`, { responseType: 'blob' }); 
+  return response.data; 
+}
+
+// Enhanced Market Data
+export async function getSectorPerformance() { 
+  ensureApiQuotaAndIncrement('loadMarket');
+  const { data } = await api.get('/market/sectors/performance'); 
+  return data; 
+}
+
+export async function getMarketStatus() { 
+  ensureApiQuotaAndIncrement('getMarketStatus');
+  const { data } = await api.get('/market/market-status'); 
+  return data; 
+}
+
+export async function getStockNews(symbol) { 
+  ensureApiQuotaAndIncrement('getStockNews');
+  const { data } = await api.get(`/stocks/${encodeURIComponent(symbol)}/news`); 
+  return data; 
+}
+
+// Developer Tools (Gold Plan)
+export async function getApiKeys() { 
+  const { data } = await api.get('/developer/api-keys/'); 
+  return data; 
+}
+
+export async function createApiKey(keyData) { 
+  const { data } = await api.post('/developer/api-keys/', keyData); 
+  return data; 
+}
+
+export async function deleteApiKey(id) { 
+  const { data } = await api.delete(`/developer/api-keys/${id}/`); 
+  return data; 
+}
+
+export async function getUsageStats() { 
+  const { data } = await api.get('/developer/usage-stats/'); 
+  return data; 
+}
+
+export async function getApiDocumentation() { 
+  const { data } = await api.get('/developer/documentation/'); 
+  return data; 
+}
+
+// Enterprise Solutions
+export async function submitEnterpriseContact(contactData) { 
+  const { data } = await api.post('/enterprise/contact/', contactData); 
+  return data; 
+}
+
+export async function getEnterpriseSolutions() { 
+  const { data } = await api.get('/enterprise/solutions/'); 
+  return data; 
+}
+
+export async function submitQuoteRequest(quoteData) { 
+  const { data } = await api.post('/enterprise/quote-request/', quoteData); 
+  return data; 
+}
+
+// User Activity & Analytics
+export async function getUserActivityFeed() { 
+  ensureApiQuotaAndIncrement('getUserActivity');
+  const { data } = await api.get('/user/activity-feed/'); 
+  return data; 
+}
+
+export async function getUserInsights() { 
+  ensureApiQuotaAndIncrement('getUserInsights');
+  const { data } = await api.get('/analytics/user-insights/'); 
+  return data; 
+}
+
+// ====================
 // USAGE TRACKING & LIMITS EXPORT
 // ====================
 export { getCurrentApiUsage, getPlanLimits, getStoredUserPlan, API_CALL_COSTS };
