@@ -5,6 +5,9 @@ import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 
+// Components
+import ProtectedRoute from "./components/ProtectedRoute";
+
 // Layouts
 import AppLayout from "./layouts/AppLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout";
@@ -34,7 +37,7 @@ import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 
-// App Pages
+// App Pages (Protected)
 import AppDashboard from "./pages/app/AppDashboard";
 import Markets from "./pages/app/Markets";
 import StockDetail from "./pages/app/StockDetail";
@@ -43,30 +46,30 @@ import Portfolio from "./pages/app/Portfolio";
 import Watchlists from "./pages/app/Watchlists";
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
-// Screener Suite
+// Screener Suite (Protected)
 import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
 import CreateScreener from "./pages/app/screeners/CreateScreener";
 import EditScreener from "./pages/app/screeners/EditScreener";
 import ScreenerResults from "./pages/app/screeners/ScreenerResults";
 import Templates from "./pages/app/Templates";
 
-// Market Overview
+// Market Overview (Protected)
 import MarketHeatmap from "./pages/app/MarketHeatmap";
 import SectorsIndustries from "./pages/app/SectorsIndustries";
 import TopMovers from "./pages/app/TopMovers";
 import PreAfterMarket from "./pages/app/PreAfterMarket";
 import EconomicCalendar from "./pages/app/EconomicCalendar";
 
-// News
+// News (Protected)
 import NewsFeed from "./pages/app/NewsFeed";
 import NewsPreferences from "./pages/app/NewsPreferences";
 import NewsSubscribe from "./pages/app/NewsSubscribe";
 
-// Alerts & Signals
+// Alerts & Signals (Protected)
 import Alerts from "./pages/app/Alerts";
 import AlertHistory from "./pages/app/AlertHistory";
 
-// Account Pages
+// Account Pages (Protected)
 import Profile from "./pages/account/Profile";
 import ChangePassword from "./pages/account/ChangePassword";
 import NotificationSettings from "./pages/account/NotificationSettings";
@@ -81,8 +84,6 @@ import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/DocumentationSimple";
 import EnterpriseContact from "./pages/EnterpriseContact";
-
-// Mobile routes removed as requested
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
@@ -131,7 +132,11 @@ function App() {
                 </Route>
 
                 {/* Onboarding */}
-                <Route path="/onboarding" element={<OnboardingWizard />} />
+                <Route path="/onboarding" element={
+                  <ProtectedRoute>
+                    <OnboardingWizard />
+                  </ProtectedRoute>
+                } />
 
                 {/* Billing Routes */}
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
@@ -139,16 +144,14 @@ function App() {
 
                 {/* Main App Routes */}
                 <Route element={<AppLayout />}>
-                  {/* Public Routes */}
+                  {/* Public/Marketing Routes - Available to all users */}
                   <Route path="/" element={<Home />} />
                   <Route path="/features" element={<Features />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
-                  <Route path="/app/analytics" element={<AdvancedAnalytics />} />
-                  <Route path="/app/referrals" element={<ReferralSystem />} />
-
+                  
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />
                   <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />
@@ -156,54 +159,174 @@ function App() {
                   <Route path="/changelog" element={<PlaceholderPage title="Changelog" />} />
                   <Route path="/help" element={<PlaceholderPage title="Help" />} />
                   <Route path="/help/faq" element={<PlaceholderPage title="FAQ" />} />
+                  <Route path="/enterprise" element={<EnterpriseContact />} />
 
-                  {/* App Routes */}
-                  <Route path="/app/dashboard" element={<AppDashboard />} />
-                  <Route path="/app/markets" element={<Markets />} />
-                  <Route path="/app/stocks" element={<Stocks />} />
-                  <Route path="/app/stocks/:symbol" element={<StockDetail />} />
-                  <Route path="/app/portfolio" element={<Portfolio />} />
+                  {/* Protected Analytics and Referral Routes */}
+                  <Route path="/app/analytics" element={
+                    <ProtectedRoute>
+                      <AdvancedAnalytics />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/referrals" element={
+                    <ProtectedRoute>
+                      <ReferralSystem />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* Screener Suite */}
-                  <Route path="/app/screeners" element={<ScreenerLibrary />} />
-                  <Route path="/app/screeners/new" element={<CreateScreener />} />
-                  <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
-                  <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
-                  <Route path="/app/templates" element={<Templates />} />
+                  {/* User Pages - ONLY accessible to signed-in users */}
+                  <Route path="/app/dashboard" element={
+                    <ProtectedRoute>
+                      <AppDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/markets" element={
+                    <ProtectedRoute>
+                      <Markets />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/stocks" element={
+                    <ProtectedRoute>
+                      <Stocks />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/stocks/:symbol" element={
+                    <ProtectedRoute>
+                      <StockDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/portfolio" element={
+                    <ProtectedRoute>
+                      <Portfolio />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* Market Overview */}
-                  <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
-                  <Route path="/app/sectors" element={<SectorsIndustries />} />
-                  <Route path="/app/top-movers" element={<TopMovers />} />
-                  <Route path="/app/pre-after-market" element={<PreAfterMarket />} />
-                  <Route path="/app/economic-calendar" element={<EconomicCalendar />} />
+                  {/* Screener Suite - Protected */}
+                  <Route path="/app/screeners" element={
+                    <ProtectedRoute>
+                      <ScreenerLibrary />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/new" element={
+                    <ProtectedRoute>
+                      <CreateScreener />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/:id/edit" element={
+                    <ProtectedRoute>
+                      <EditScreener />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/:id/results" element={
+                    <ProtectedRoute>
+                      <ScreenerResults />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/templates" element={
+                    <ProtectedRoute>
+                      <Templates />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* News */}
-                  <Route path="/app/news" element={<NewsFeed />} />
-                  <Route path="/app/news/preferences" element={<NewsPreferences />} />
-                  <Route path="/app/news/subscribe" element={<NewsSubscribe />} />
+                  {/* Market Overview - Protected */}
+                  <Route path="/app/market-heatmap" element={
+                    <ProtectedRoute>
+                      <MarketHeatmap />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/sectors" element={
+                    <ProtectedRoute>
+                      <SectorsIndustries />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/top-movers" element={
+                    <ProtectedRoute>
+                      <TopMovers />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/pre-after-market" element={
+                    <ProtectedRoute>
+                      <PreAfterMarket />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/economic-calendar" element={
+                    <ProtectedRoute>
+                      <EconomicCalendar />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* Alerts & Signals */}
-                  <Route path="/app/alerts" element={<Alerts />} />
-                  <Route path="/app/alerts/history" element={<AlertHistory />} />
+                  {/* News - Protected */}
+                  <Route path="/app/news" element={
+                    <ProtectedRoute>
+                      <NewsFeed />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/news/preferences" element={
+                    <ProtectedRoute>
+                      <NewsPreferences />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/news/subscribe" element={
+                    <ProtectedRoute>
+                      <NewsSubscribe />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* Watchlists */}
-                  <Route path="/app/watchlists" element={<Watchlists />} />
-                  <Route path="/app/watchlists/:id" element={<WatchlistDetail />} />
+                  {/* Alerts & Signals - Protected */}
+                  <Route path="/app/alerts" element={
+                    <ProtectedRoute>
+                      <Alerts />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/alerts/history" element={
+                    <ProtectedRoute>
+                      <AlertHistory />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* Account Routes */}
-                  <Route path="/account/profile" element={<Profile />} />
-                  <Route path="/account/password" element={<ChangePassword />} />
-                  <Route path="/account/notifications" element={<NotificationSettings />} />
-                  <Route path="/account/billing" element={<BillingHistory />} />
-                  <Route path="/account/plan" element={<CurrentPlan />} />
+                  {/* Watchlists - Protected */}
+                  <Route path="/app/watchlists" element={
+                    <ProtectedRoute>
+                      <Watchlists />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/watchlists/:id" element={
+                    <ProtectedRoute>
+                      <WatchlistDetail />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Account Routes - Protected */}
+                  <Route path="/account/profile" element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/password" element={
+                    <ProtectedRoute>
+                      <ChangePassword />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/notifications" element={
+                    <ProtectedRoute>
+                      <NotificationSettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/billing" element={
+                    <ProtectedRoute>
+                      <BillingHistory />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/plan" element={
+                    <ProtectedRoute>
+                      <CurrentPlan />
+                    </ProtectedRoute>
+                  } />
 
                   {/* System Routes */}
                   <Route path="/endpoint-status" element={<EndpointStatus />} />
 
                   {/* Docs & Content */}
                   <Route path="/docs" element={<Documentation />} />
-                  <Route path="/enterprise" element={<EnterpriseContact />} />
 
                   {/* Legal */}
                   <Route path="/legal/terms" element={<LegalTerms />} />
