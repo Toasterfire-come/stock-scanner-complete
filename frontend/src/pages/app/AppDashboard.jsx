@@ -21,6 +21,7 @@ import { useAuth } from "../../context/SecureAuthContext";
 import { getTrendingSafe, getMarketStatsSafe, getEndpointStatus, getStatisticsSafe, getMarketStats, getCurrentApiUsage, getPlanLimits } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
 import UsageTracker from "../../components/UsageTracker";
+import PlanUsage from "../../components/PlanUsage";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
