@@ -35,7 +35,12 @@ else:
     ALLOWED_HOSTS = [
         "127.0.0.1",
         "localhost",
-        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescannet.com'),
+        # Primary API domain
+        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+        # Common aliases
+        'api.retailtradescanner.com',
+        'retailtradescanner.com',
+        'www.retailtradescanner.com',
     ]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
@@ -166,6 +171,9 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
 CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
+CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS + [
+    'https://api.retailtradescanner.com'
+]))
 SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', str(6 * 60 * 60)))
 
 # PayPal configuration (env-driven)
@@ -192,12 +200,11 @@ else:
     CORS_ALLOWED_ORIGINS = list(filter(None, [
         os.environ.get('FRONTEND_URL'),
         os.environ.get('WORDPRESS_URL'),
+        'https://retailtradescanner.com',
+        'https://www.retailtradescanner.com',
+        # Optionally support marketing site(s)
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
-        'https://retailtradescannet.com',
-        'https://www.retailtradescannet.com',
-        # Deployed static hosting domain(s)
-        'https://access-5018544625.webspace-host.com',
     ] + _extra_cors))
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
@@ -211,14 +218,13 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'Authorization',
     'x-api-key',
     'X-API-Key',
+    'X-Cron-Secret',
 ]
 
 # Enterprise/Premium overrides
 # Comma-separated list via ENTERPRISE_EMAILS, plus hardcoded important recipients
 ENTERPRISE_EMAIL_WHITELIST = list(filter(None, [
-    *(email.strip() for email in os.environ.get('ENTERPRISE_EMAILS', '').split(',') if email.strip()),
-    'Carter.kiefer2010@outlook.com',
-    'carter.kiefer2010@outlook.com',  # ensure case-insensitive match
+    *(email.strip() for email in os.environ.get('ENTERPRISE_EMAILS', '').split(',') if email.strip())
 ]))
 
 # Forced plan mapping by email (takes precedence over enterprise whitelist)
@@ -226,10 +232,8 @@ ENTERPRISE_EMAIL_WHITELIST = list(filter(None, [
 FORCED_PLAN_BY_EMAIL = {
     **{k.strip().lower(): v.strip().lower() for k, v in (
         # Load from env FORCED_PLAN_EMAILS as pairs email:plan separated by commas
-        # Example: FORCED_PLAN_EMAILS="carter.kiefer2010@outlook.com:gold, vip@example.com:enterprise"
         [tuple(item.split(':', 1)) for item in os.environ.get('FORCED_PLAN_EMAILS', '').split(',') if ':' in item]
-    )},
-    'carter.kiefer2010@outlook.com': 'gold',
+    )}
 }
 
 # Define which endpoints constitute stock market data for counting/limits
@@ -330,8 +334,25 @@ LOGGING = {
         'handlers': ['console'],
         'level': os.environ.get('LOG_LEVEL', 'INFO'),
     },
+    'loggers': {
+        'django.security.csrf': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    }
 }
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 # Allow configuration of CSRF_TRUSTED_ORIGINS via environment variable (comma-separated)
 _csrf_trusted = os.environ.get('CSRF_TRUSTED_ORIGINS')
@@ -339,11 +360,13 @@ if _csrf_trusted:
     CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_trusted.split(',') if origin.strip()]
 else:
     CSRF_TRUSTED_ORIGINS = list(filter(None, [
-        os.environ.get('PRIMARY_ORIGIN', 'https://tradescanpro.com'),
+        os.environ.get('PRIMARY_ORIGIN', 'https://retailtradescanner.com'),
+        'https://retailtradescanner.com',
+        'https://www.retailtradescanner.com',
+        'https://api.retailtradescanner.com',
+        # Optionally support marketing site(s)
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
-        # Deployed static hosting domain(s)
-        'https://access-5018544625.webspace-host.com',
     ] + [o.strip() for o in os.environ.get('EXTRA_CSRF_ORIGINS', '').split(',') if o.strip()]))
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')

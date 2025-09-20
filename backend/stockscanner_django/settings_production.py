@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', os.environ.get('DJANGO_SECRET_KEY', 'y
 
 # CORS is configured in base settings using env vars
 
-# Rate limiting - use safe throttles that tolerate cache outages
+# DRF throttling: enable safe throttles in production as defense-in-depth
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -24,9 +24,14 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # Disable DRF throttling in production since RateLimitMiddleware handles it
-    'DEFAULT_THROTTLE_CLASSES': [],
-    'DEFAULT_THROTTLE_RATES': {},
+    'DEFAULT_THROTTLE_CLASSES': [
+        'stocks.throttling.SafeAnonRateThrottle',
+        'stocks.throttling.SafeUserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.environ.get('THROTTLE_RATE_ANON', '200/hour'),
+        'user': os.environ.get('THROTTLE_RATE_USER', '2000/hour'),
+    },
     'DEFAULT_THROTTLE_CACHE': 'default',
 }
 

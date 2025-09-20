@@ -7,7 +7,6 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Home = () => {
-  const [cookieConsent, setCookieConsent] = useState(() => window.localStorage.getItem('cookie_consent') || '');
   const [health, setHealth] = useState(null);
   const [breakouts, setBreakouts] = useState([]);
   const [undervalued, setUndervalued] = useState([]);
@@ -63,15 +62,6 @@ const Home = () => {
 
   return (
     <div className="container mx-auto p-6">
-      {!cookieConsent && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white border shadow p-4 rounded max-w-xl w-[90%] z-50">
-          <p className="text-sm">We use cookies to improve your experience, analyze usage, and personalize content. See our <a className="underline" href="/privacy">Privacy Policy</a>.</p>
-          <div className="mt-3 flex gap-2 justify-end">
-            <button className="px-3 py-1 border rounded" onClick={() => {window.localStorage.setItem('cookie_consent','declined'); setCookieConsent('declined');}}>Decline</button>
-            <button className="px-3 py-1 bg-black text-white rounded" onClick={() => {window.localStorage.setItem('cookie_consent','accepted'); setCookieConsent('accepted');}}>Accept</button>
-          </div>
-        </div>
-      )}
       <header className="flex flex-col gap-2 items-start">
         <h1 className="text-3xl font-bold">RetailTradeScanner</h1>
         <p className="text-gray-600">
@@ -145,14 +135,33 @@ const Home = () => {
 };
 
 function App() {
+  const [cookieConsent, setCookieConsent] = useState(() => window.localStorage.getItem('cookie_consent') || '');
   return (
     <div className="App">
       <BrowserRouter>
+        {!cookieConsent && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white border shadow p-4 rounded max-w-xl w-[90%] z-50">
+            <p className="text-sm">We use cookies to improve your experience, analyze usage, and personalize content. See our <a className="underline" href="/privacy">Privacy Policy</a>.</p>
+            <div className="mt-3 flex gap-2 justify-end">
+              <button className="px-3 py-1 border rounded" onClick={() => {window.localStorage.setItem('cookie_consent','declined'); setCookieConsent('declined');}}>Decline</button>
+              <button className="px-3 py-1 bg-black text-white rounded" onClick={() => {window.localStorage.setItem('cookie_consent','accepted'); setCookieConsent('accepted');}}>Accept</button>
+            </div>
+          </div>
+        )}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/terms" element={<div className="p-6 max-w-3xl mx-auto"><h1 className="text-2xl font-bold mb-4">Terms of Service</h1><p>By using this site, you agree to the following terms and conditions.</p><h3 className="font-semibold mt-4">Use of Service</h3><p>Do not misuse the service or attempt to disrupt operations.</p><h3 className="font-semibold mt-4">No Financial Advice</h3><p>Information provided is for educational purposes only and not investment advice.</p></div>} />
           <Route path="/privacy" element={<div className="p-6 max-w-3xl mx-auto"><h1 className="text-2xl font-bold mb-2">Privacy Policy</h1><p className="text-sm text-gray-600 mb-4">How we collect, use, and protect your personal information</p><h2 className="text-xl font-semibold mt-4">Information We Collect</h2><p>We collect information you provide directly to us, such as when you create an account, use our services, or contact support. This may include your name, email address, and usage preferences.</p><h2 className="text-xl font-semibold mt-4">How We Use Your Information</h2><ul className="list-disc ml-6"><li>Provide and maintain our stock analysis services</li><li>Personalize your experience and recommendations</li><li>Communicate with you about your account and our services</li><li>Improve and enhance our platform</li><li>Ensure security and prevent fraud</li></ul><h2 className="text-xl font-semibold mt-4">Data Security</h2><p>We implement appropriate security measures to protect your personal information.</p><h2 className="text-xl font-semibold mt-4">Cookies and Tracking</h2><p>We use cookies and similar technologies to enhance your browsing experience. You can control cookie settings in your browser.</p><h2 className="text-xl font-semibold mt-4">Contact Us</h2><p>If you have any questions, email privacy@stockscanner.com.</p><p className="text-xs text-gray-500 mt-4">Last updated: January 2025</p></div>} />
         </Routes>
+        <footer className="mt-12 border-t pt-6 text-sm text-gray-600">
+          <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row gap-2 justify-between">
+            <div>© {new Date().getFullYear()} RetailTradeScanner</div>
+            <nav className="flex gap-4">
+              <a className="underline" href="/terms">Terms of Service</a>
+              <a className="underline" href="/privacy">Privacy Policy</a>
+            </nav>
+          </div>
+        </footer>
       </BrowserRouter>
     </div>
   );
