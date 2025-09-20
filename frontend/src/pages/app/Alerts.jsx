@@ -87,8 +87,8 @@ const Alerts = () => {
     if (!confirm("Are you sure you want to delete this alert?")) return;
     
     try {
-      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/delete/`, { method: 'POST' });
-      if (!resp.ok) throw new Error('delete failed');
+      // Use the proper API client function
+      await api.post(`/alerts/${encodeURIComponent(alertId)}/delete/`);
       setAlerts((prev) => prev.filter(alert => alert.id !== alertId));
       toast.success("Alert deleted successfully");
     } catch (error) {
