@@ -1173,10 +1173,32 @@ def trending_stocks_api(request):
                 'market_cap': format_decimal_safe(stock.market_cap) or 0.0
             } for stock in stocks]
         
+        # Add top losers
+        top_losers_qs = Stock.objects.filter(
+            change_percent__lt=0
+        ).order_by('change_percent')[:10]
+        top_losers = format_stock_data(top_losers_qs)
+
+        # Add unusual volume by dvav (day volume over average)
+        try:
+            unusual_qs = Stock.objects.exclude(dvav__isnull=True).order_by('-dvav')[:10]
+            unusual_volume = [{
+                'ticker': s.ticker,
+                'name': s.name or s.company_name or s.ticker,
+                'current_price': format_decimal_safe(s.current_price) or 0.0,
+                'dvav': format_decimal_safe(s.dvav) or 0.0,
+                'volume': int(s.volume) if s.volume else 0,
+                'avg_volume_3mon': int(s.avg_volume_3mon) if s.avg_volume_3mon else 0
+            } for s in unusual_qs]
+        except Exception:
+            unusual_volume = []
+
         trending_data = {
             'high_volume': format_stock_data(high_volume_stocks),
             'top_gainers': format_stock_data(top_gainers),
+            'top_losers': top_losers,
             'most_active': format_stock_data(most_active),
+            'unusual_volume': unusual_volume,
             'last_updated': timezone.now().isoformat()
         }
         
@@ -1191,7 +1213,9 @@ def trending_stocks_api(request):
         return Response({
             'high_volume': [],
             'top_gainers': [],
+            'top_losers': [],
             'most_active': [],
+            'unusual_volume': [],
             'last_updated': timezone.now().isoformat(),
             'warning': 'fallback'
         }, status=status.HTTP_200_OK)
@@ -1200,9 +1224,11 @@ def trending_stocks_api(request):
 # ====================
 # SCREENERS CRUD (powered by filter_stocks_api)
 # ====================
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def screeners_list_api(request):
+    if request.method == 'POST':
+        return screeners_create_api(request)
     user = getattr(request, 'user', None)
     qs = Screener.objects.all()
     if user and getattr(user, 'is_authenticated', False):
@@ -1219,18 +1245,37 @@ def screeners_list_api(request):
     } for s in qs.order_by('-updated_at')[:100]]
     return Response({ 'data': items })
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([AllowAny])
 def screeners_detail_api(request, screener_id: str):
     try:
         s = Screener.objects.get(id=screener_id)
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+    if request.method == 'GET':
         return Response({ 'data': {
             'id': s.id, 'name': s.name, 'description': s.description,
             'criteria': s.criteria, 'is_public': s.is_public,
             'last_run': s.last_run.isoformat() if s.last_run else None,
         }})
-    except Screener.DoesNotExist:
-        return Response({'error': 'Not found'}, status=404)
+    if request.method == 'PUT':
+        # Reuse update logic
+        try:
+            body = getattr(request, 'data', None) or json.loads(request.body or '{}')
+            if 'name' in body: s.name = (body.get('name') or s.name)
+            if 'description' in body: s.description = body.get('description') or ''
+            if 'criteria' in body: s.criteria = body.get('criteria') or []
+            if 'is_public' in body or 'isPublic' in body: s.is_public = bool(body.get('is_public') or body.get('isPublic'))
+            s.save()
+            return Response({ 'success': True })
+        except Exception as e:
+            logger.error(f"Update screener failed: {e}")
+            return Response({'success': False}, status=500)
+    if request.method == 'DELETE':
+        s.delete()
+        return Response({ 'success': True })
+    return Response({'error': 'Method not allowed'}, status=405)
+    
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -1275,6 +1320,25 @@ def screeners_delete_api(request, screener_id: str):
         return Response({ 'success': True })
     except Screener.DoesNotExist:
         return Response({'error': 'Not found'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def screeners_run_api(request, screener_id: str):
+    """Alias: POST /api/screeners/{id}/run/ returning results."""
+    try:
+        s = Screener.objects.get(id=screener_id)
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+    request._dont_enforce_csrf_checks = True
+    try:
+        request.body = json.dumps({ 'criteria': s.criteria }).encode('utf-8')
+        resp = filter_stocks_api(request)
+        if hasattr(resp, 'data'):
+            s.last_run = timezone.now(); s.save(update_fields=['last_run'])
+        return resp
+    except Exception as e:
+        logger.error(f"Screener run failed: {e}")
+        return Response({'stocks': [], 'total_count': 0})
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
@@ -1340,6 +1404,35 @@ def screeners_export_csv_api(request, screener_id: str):
 def screeners_templates_api(request):
     # Placeholder templates
     return Response({ 'data': [] })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_news_api(request, symbol: str):
+    """
+    GET /api/stocks/{symbol}/news
+    Returns news articles mentioning the given ticker symbol.
+    """
+    try:
+        from news.models import NewsArticle
+        ticker = (symbol or '').upper()
+        qs = NewsArticle.objects.filter(mentioned_tickers__icontains=ticker).order_by('-published_date')[:500]
+        items = []
+        for a in qs:
+            items.append({
+                'id': a.id,
+                'title': a.title,
+                'content': a.summary,
+                'url': a.url,
+                'source': a.source,
+                'sentiment_score': format_decimal_safe(a.sentiment_score),
+                'sentiment_grade': a.sentiment_grade,
+                'published_at': a.published_date.isoformat() if a.published_date else None,
+            })
+        return Response({'success': True, 'data': {'news_items': items, 'count': len(items)}, 'timestamp': timezone.now().isoformat()})
+    except Exception as e:
+        logger.error(f"stock_news_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to load news'}, status=500)
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])

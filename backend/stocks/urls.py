@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views, api_views, views_health
+from . import portfolio_analytics_api, developer_api, export_api, enterprise_api
 from . import alerts_api
 from . import plan_api
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
@@ -8,6 +9,7 @@ from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from .billing_api import cancel_subscription_api
 from django.http import JsonResponse
+from . import market_api, user_activity_api
 
 urlpatterns = [
     # Health check endpoints (must be first for monitoring)
@@ -41,6 +43,7 @@ urlpatterns = [
     path('screeners/create/', api_views.screeners_create_api, name='screeners_create'),
     path('screeners/<str:screener_id>/', api_views.screeners_detail_api, name='screeners_detail'),
     path('screeners/<str:screener_id>/update/', api_views.screeners_update_api, name='screeners_update'),
+    path('screeners/<str:screener_id>/run/', api_views.screeners_run_api, name='screeners_run'),
     path('screeners/<str:screener_id>/results/', api_views.screeners_results_api, name='screeners_results'),
     path('screeners/<str:screener_id>/export.csv', api_views.screeners_export_csv_api, name='screeners_export_csv'),
     path('screeners/templates/', api_views.screeners_templates_api, name='screeners_templates'),
@@ -55,8 +58,11 @@ urlpatterns = [
     # path('nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks'),  # Removed: only NYSE in DB
     path('stocks/', api_views.stock_list_api, name='stock_list'),
     path('stocks/<str:ticker>/quote/', api_views.stock_detail_api, name='stock_quote'),
+    path('stocks/<str:symbol>/news', api_views.stock_news_api, name='stock_news'),
     path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
     path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
+    path('market/sectors/performance', market_api.sectors_performance_api, name='sectors_performance'),
+    path('market/market-status', market_api.market_status_api, name='market_status'),
     
     # NEW ENDPOINTS REQUESTED BY USER
     # Stats endpoints
@@ -69,6 +75,8 @@ urlpatterns = [
     path('portfolio/pnl/', api_views.portfolio_pnl_api, name='portfolio_pnl'),
     path('portfolio/return/', api_views.portfolio_return_api, name='portfolio_return'),
     path('portfolio/holdings-count/', api_views.portfolio_holdings_count_api, name='portfolio_holdings_count'),
+    # Enhanced portfolio root with analytics summary
+    path('portfolio/', portfolio_analytics_api.portfolio_with_analytics_api, name='portfolio_root_enhanced'),
     
     # WordPress-friendly endpoints
     path('wordpress/stocks/', WordPressStockView.as_view(), name='wp_stocks'),
@@ -94,6 +102,9 @@ urlpatterns = [
     
     # Portfolio endpoints
     path('portfolio/', include('stocks.portfolio_urls')),
+    path('portfolio/analytics/', portfolio_analytics_api.portfolio_analytics_api, name='portfolio_analytics'),
+    path('portfolio/sector-allocation/', portfolio_analytics_api.portfolio_sector_allocation_api, name='portfolio_sector_allocation'),
+    path('portfolio/dividend-tracking/', portfolio_analytics_api.portfolio_dividend_tracking_api, name='portfolio_dividend_tracking'),
     
     # Watchlist endpoints  
     path('watchlist/', include('stocks.watchlist_urls')),
@@ -112,8 +123,35 @@ urlpatterns = [
     path('plans/comparison/', plan_api.plan_comparison, name='plan_comparison'),
     path('billing/history/', plan_api.billing_history, name='billing_history'),
 
+    # Developer APIs
+    path('developer/api-keys/', developer_api.api_keys_root_api, name='api_keys_root'),
+    path('developer/api-keys', developer_api.api_keys_root_api, name='api_keys_root_no_slash'),
+    path('developer/api-keys/<int:key_id>/', developer_api.api_keys_delete_api, name='api_keys_delete'),
+    path('developer/usage-stats/', developer_api.developer_usage_stats_api, name='developer_usage_stats'),
+    path('developer/documentation/', developer_api.developer_documentation_api, name='developer_documentation'),
+
+    # Export endpoints
+    path('export/stocks/csv', export_api.export_stocks_csv_api, name='export_stocks_csv'),
+    path('export/portfolio/csv', export_api.export_portfolio_csv_api, name='export_portfolio_csv'),
+    path('export/screener-results/csv', export_api.export_screener_results_csv_api, name='export_screener_results_csv'),
+    path('export/watchlist/csv', export_api.export_watchlist_csv_api, name='export_watchlist_csv'),
+    path('reports/custom/', export_api.reports_custom_create_api, name='reports_custom_create'),
+    path('reports/<str:report_id>/download', export_api.reports_download_api, name='reports_download'),
+
+    # Enterprise endpoints
+    path('enterprise/contact/', enterprise_api.enterprise_contact_api, name='enterprise_contact'),
+    path('enterprise/solutions/', enterprise_api.enterprise_solutions_api, name='enterprise_solutions'),
+    path('enterprise/quote-request/', enterprise_api.enterprise_quote_request_api, name='enterprise_quote_request'),
+    path('white-label/configurations/', enterprise_api.white_label_config_get_api, name='white_label_get'),
+    path('white-label/configurations', enterprise_api.white_label_config_get_api, name='white_label_get_no_slash'),
+    path('white-label/configurations/create/', enterprise_api.white_label_config_create_api, name='white_label_create'),
+
     # Logging & monitoring endpoints
     path('logs/client/', logs_api.client_logs_api, name='client_logs'),
     path('logs/metrics/', logs_api.metrics_logs_api, name='metrics_logs'),
     path('logs/security/', logs_api.security_logs_api, name='security_logs'),
+    
+    # User activity & analytics
+    path('user/activity-feed/', user_activity_api.user_activity_feed_api, name='user_activity_feed'),
+    path('analytics/user-insights/', user_activity_api.analytics_user_insights_api, name='analytics_user_insights'),
 ]
