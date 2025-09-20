@@ -155,6 +155,7 @@ const Home = () => {
       name: "Bronze",
       price: "$24.99",
       period: "/month",
+      annualPrice: "$254.99",
       description: "Enhanced features for active traders",
       features: [
         "1500 API calls per month",
