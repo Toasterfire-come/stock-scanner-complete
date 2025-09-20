@@ -9,8 +9,6 @@ import {
   HelpCircle,
   BookOpen,
   MessageSquare,
-  Video,
-  Download,
   ArrowRight,
   ChevronDown,
   BarChart3,
@@ -19,8 +17,10 @@ import {
   DollarSign,
   Target,
   Mail,
-  Phone,
-  Clock
+  Clock,
+  Code,
+  TrendingUp,
+  Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -33,72 +33,72 @@ const Help = () => {
       icon: <BookOpen className="h-6 w-6" />,
       title: "Getting Started",
       description: "Learn the basics of using Trade Scan Pro",
+      link: "/docs/getting-started",
       articles: [
-        "Creating your first account",
-        "Understanding your dashboard",
-        "Setting up your first stock screener",
-        "How to read stock data",
-        "Managing your subscription"
+        { title: "Creating your first account", link: "/docs/getting-started/create-account" },
+        { title: "Understanding your dashboard", link: "/docs/getting-started/dashboard" },
+        { title: "Setting up your first stock screener", link: "/docs/getting-started/first-screener" },
+        { title: "How to read stock data", link: "/docs/getting-started/read-data" }
       ]
     },
     {
       icon: <BarChart3 className="h-6 w-6" />,
       title: "Stock Screening",
       description: "Master our advanced screening tools",
+      link: "/docs/stock-screening",
       articles: [
-        "Advanced screening techniques",
-        "Understanding technical indicators",
-        "Using fundamental filters",
-        "Saving and sharing screeners",
-        "Exporting screening results"
+        { title: "Advanced screening techniques", link: "/docs/stock-screening/advanced-techniques" },
+        { title: "Understanding technical indicators", link: "/docs/stock-screening/technical-indicators" },
+        { title: "Using fundamental filters", link: "/docs/stock-screening/fundamental-filters" },
+        { title: "Saving and sharing screeners", link: "/docs/stock-screening/save-share" }
       ]
     },
     {
       icon: <Bell className="h-6 w-6" />,
       title: "Alerts & Notifications",
       description: "Set up and manage your alerts",
+      link: "/docs/alerts",
       articles: [
-        "Creating price alerts",
-        "Volume and news alerts",
-        "Managing alert settings",
-        "Alert history and tracking",
-        "Mobile notifications"
+        { title: "Creating price alerts", link: "/docs/alerts/price-alerts" },
+        { title: "Volume and news alerts", link: "/docs/alerts/volume-news-alerts" },
+        { title: "Managing alert settings", link: "/docs/alerts/settings" },
+        { title: "Alert history and tracking", link: "/docs/alerts/history" }
       ]
     },
     {
       icon: <DollarSign className="h-6 w-6" />,
       title: "Portfolio Management",
       description: "Track and analyze your investments",
+      link: "/docs/portfolio",
       articles: [
-        "Adding stocks to portfolio",
-        "Portfolio analytics overview",
-        "Performance tracking",
-        "Dividend monitoring",
-        "Risk analysis tools"
+        { title: "Adding stocks to portfolio", link: "/docs/portfolio/add-stocks" },
+        { title: "Portfolio analytics overview", link: "/docs/portfolio/analytics" },
+        { title: "Performance tracking", link: "/docs/portfolio/performance" },
+        { title: "Dividend monitoring", link: "/docs/portfolio/dividends" }
       ]
     },
     {
       icon: <Eye className="h-6 w-6" />,
       title: "Watchlists",
       description: "Organize and monitor your stocks",
+      link: "/docs/watchlists",
       articles: [
-        "Creating custom watchlists",
-        "Adding and removing stocks",
-        "Watchlist analytics",
-        "Sharing watchlists",
-        "Export watchlist data"
+        { title: "Creating custom watchlists", link: "/docs/watchlists/create" },
+        { title: "Adding and removing stocks", link: "/docs/watchlists/manage" },
+        { title: "Watchlist analytics", link: "/docs/watchlists/analytics" },
+        { title: "Sharing watchlists", link: "/docs/watchlists/sharing" }
       ]
     },
     {
-      icon: <Target className="h-6 w-6" />,
+      icon: <Code className="h-6 w-6" />,
       title: "API & Integrations",
       description: "Connect Trade Scan Pro with other tools",
+      link: "/docs/api",
       articles: [
-        "API key management",
-        "API rate limits and usage",
-        "Integration examples",
-        "Webhook setup",
-        "Developer documentation"
+        { title: "API key management", link: "/docs/api/keys" },
+        { title: "API rate limits and usage", link: "/docs/api/limits" },
+        { title: "Integration examples", link: "/docs/api/examples" },
+        { title: "Webhook setup", link: "/docs/api/webhooks" }
       ]
     }
   ];
@@ -146,13 +146,6 @@ const Help = () => {
     }
   ];
 
-  const quickLinks = [
-    { title: "Video Tutorials", icon: <Video className="h-4 w-4" />, link: "#" },
-    { title: "API Documentation", icon: <BookOpen className="h-4 w-4" />, link: "#" },
-    { title: "Download User Guide", icon: <Download className="h-4 w-4" />, link: "#" },
-    { title: "Contact Support", icon: <MessageSquare className="h-4 w-4" />, link: "/contact" }
-  ];
-
   const supportChannels = [
     {
       icon: <Mail className="h-6 w-6" />,
@@ -166,14 +159,16 @@ const Help = () => {
       title: "Contact Form",
       description: "Send us a detailed message",
       contact: "Use our contact form",
-      responseTime: "Within 24 hours"
+      responseTime: "Within 24 hours",
+      link: "/contact"
     },
     {
       icon: <BookOpen className="h-6 w-6" />,
       title: "Documentation",
       description: "Comprehensive guides and tutorials",
       contact: "Self-service help",
-      responseTime: "Available 24/7"
+      responseTime: "Available 24/7",
+      link: "/docs"
     }
   ];
 
@@ -216,18 +211,6 @@ const Help = () => {
                 />
               </div>
             </div>
-
-            {/* Quick Links */}
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              {quickLinks.map((link, index) => (
-                <Button key={index} asChild variant="outline" className="text-base">
-                  <Link to={link.link}>
-                    {link.icon}
-                    <span className="ml-2">{link.title}</span>
-                  </Link>
-                </Button>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -257,17 +240,25 @@ const Help = () => {
                 <CardContent>
                   <ul className="space-y-2">
                     {category.articles.slice(0, 4).map((article, articleIndex) => (
-                      <li key={articleIndex} className="flex items-center text-sm text-gray-700 hover:text-blue-600 cursor-pointer">
-                        <ArrowRight className="h-3 w-3 mr-2" />
-                        {article}
+                      <li key={articleIndex}>
+                        <Link 
+                          to={article.link}
+                          className="flex items-center text-sm text-gray-700 hover:text-blue-600 cursor-pointer"
+                        >
+                          <ArrowRight className="h-3 w-3 mr-2" />
+                          {article.title}
+                        </Link>
                       </li>
                     ))}
-                    {category.articles.length > 4 && (
-                      <li className="text-sm text-blue-600 font-medium cursor-pointer">
-                        + {category.articles.length - 4} more articles
-                      </li>
-                    )}
                   </ul>
+                  <div className="mt-4">
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={category.link}>
+                        View All Articles
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -344,22 +335,21 @@ const Help = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-800 font-medium mb-2">{channel.contact}</p>
-                  <div className="flex items-center justify-center text-sm text-gray-500">
+                  <div className="flex items-center justify-center text-sm text-gray-500 mb-4">
                     <Clock className="h-4 w-4 mr-1" />
                     {channel.responseTime}
                   </div>
+                  {channel.link && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={channel.link}>
+                        Get Help
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Button asChild size="lg">
-              <Link to="/contact">
-                <MessageSquare className="h-5 w-5 mr-2" />
-                Contact Support
-              </Link>
-            </Button>
           </div>
         </div>
       </section>
