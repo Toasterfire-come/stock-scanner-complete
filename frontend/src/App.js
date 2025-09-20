@@ -407,6 +407,8 @@ function App() {
 
                   {/* Docs & Content */}
                   <Route path="/docs" element={<Documentation />} />
+                  <Route path="/docs/getting-started/create-account" element={<CreateAccount />} />
+                  <Route path="/docs/getting-started/dashboard" element={<Dashboard />} />
 
                   {/* Legal */}
                   <Route path="/legal/terms" element={<LegalTerms />} />
