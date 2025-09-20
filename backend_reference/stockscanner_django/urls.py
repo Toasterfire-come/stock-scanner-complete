@@ -1,0 +1,23 @@
+from django.contrib import admin
+from django.urls import path, include
+from core.views import homepage, health_check, endpoint_status_api, kill_switch, csrf, robots_txt, sitemap_xml
+from stocks.simple_api import simple_status_api
+from stocks.billing_api import paypal_webhook_api
+
+urlpatterns = [
+    path('', homepage, name='homepage'),
+    path('health/', health_check, name='health_check'),
+    path('api/health/', health_check, name='api_health_check'),  # WordPress expects this
+    path('api/endpoint-status/', endpoint_status_api, name='endpoint_status_api'),
+    path('status/simple/', simple_status_api, name='simple_status_api'),
+    path('api/auth/csrf/', csrf, name='csrf'),
+    path('kill', kill_switch, name='kill_switch'),  # Kill switch (GET/POST)
+    path('kill/', kill_switch, name='kill_switch_slash'),
+    path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
+    path('api/', include('stocks.urls')),
+    path('revenue/', include('stocks.revenue_urls')),
+    path('paypal/webhook/', paypal_webhook_api, name='paypal_webhook_root'),
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
+]
