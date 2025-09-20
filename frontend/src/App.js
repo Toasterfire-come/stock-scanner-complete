@@ -173,6 +173,16 @@ function App() {
                   <Route path="/help" element={<Help />} />
                   <Route path="/help/faq" element={<Help />} />
                   <Route path="/enterprise" element={<EnterpriseContact />} />
+                  <Route path="/enterprise/contact" element={<EnterpriseContact />} />
+                  <Route path="/enterprise/quote" element={<QuoteRequest />} />
+                  <Route path="/enterprise/solutions" element={<SolutionsShowcase />} />
+
+                  {/* White-label Configuration - Protected (Gold Plan) */}
+                  <Route path="/enterprise/white-label" element={
+                    <ProtectedRoute>
+                      <WhiteLabelConfig />
+                    </ProtectedRoute>
+                  } />
 
                   {/* Protected Analytics and Referral Routes */}
                   <Route path="/app/analytics" element={
