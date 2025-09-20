@@ -229,11 +229,9 @@ const AppDashboard = () => {
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">Stocks up today</span>
               </div>
-              {Array.isArray(realTrendSeries.gainers) && realTrendSeries.gainers.length > 0 && (
-                <div className="mt-3">
-                  <MiniSparkline data={realTrendSeries.gainers} color="#16a34a" />
-                </div>
-              )}
+              <div className="mt-3">
+                <RealTrendingSparkline dataType="gainers" color="#16a34a" width={60} height={20} />
+              </div>
             </CardContent>
           </Card>
 
