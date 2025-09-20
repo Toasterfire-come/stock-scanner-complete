@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
-// Import the secure version instead of the regular App
-import SecureApp from "./SecureApp";
+// Import the regular App
+import App from "./App";
 import { initSentry } from './sentry';
 import { toast } from 'sonner';
 
