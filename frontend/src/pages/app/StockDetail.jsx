@@ -37,6 +37,8 @@ import {
   ExternalLink
 } from "lucide-react";
 import { getStock, getRealTimeQuote, addWatchlist, createAlert } from "../../api/client";
+import GoogleFinanceChart from "../../components/GoogleFinanceChart";
+import StockNewsIntegration from "../../components/StockNewsIntegration";
 
 const StockDetail = () => {
   const { symbol } = useParams();
