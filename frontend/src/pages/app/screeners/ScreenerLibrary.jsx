@@ -4,7 +4,7 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Input } from "../../../components/ui/input";
-import { Plus, Search, Filter, TrendingUp, BarChart3 } from "lucide-react";
+import { Plus, Search, Filter, TrendingUp, BarChart3, PlayCircle, Edit3, ExternalLink } from "lucide-react";
 import { listScreeners } from "../../../api/client";
 
 const ScreenerLibrary = () => {
@@ -12,7 +12,16 @@ const ScreenerLibrary = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => { setIsLoading(false); setScreeners([]); }, []);
+  useEffect(() => { (async () => {
+    setIsLoading(true);
+    try {
+      const res = await listScreeners();
+      const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      setScreeners(items);
+    } catch {
+      setScreeners([]);
+    } finally { setIsLoading(false); }
+  })(); }, []);
 
   const filteredScreeners = screeners.filter(screener =>
     screener.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,9 +97,35 @@ const ScreenerLibrary = () => {
             </div>
           </CardContent>
         </Card>
+
+        {filteredScreeners.map((s) => (
+          <Card key={s.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-xl">{s.name || 'Untitled Screener'}</CardTitle>
+                <Badge variant="outline">{s.is_public ? 'Public' : 'Private'}</Badge>
+              </div>
+              <CardDescription>{s.description || 'No description'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <Button size="sm" variant="default" asChild>
+                  <Link to={`/app/screeners/${s.id}/results`}>
+                    <PlayCircle className="h-4 w-4 mr-1" /> Run
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to={`/app/screeners/${s.id}/edit`}>
+                    <Edit3 className="h-4 w-4 mr-1" /> Edit
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {true && (
+      {filteredScreeners.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">No screeners found</div>
           <Button asChild>

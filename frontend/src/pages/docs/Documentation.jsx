@@ -27,7 +27,7 @@ export default function Documentation() {
           <li>Build filters using criteria: Price, Volume, Market Cap, P/E Ratio, Dividend Yield, Change %, Exchange.</li>
           <li>Test Run: runs your criteria against all stocks and shows matches.</li>
           <li>Save: stores your screener (name, description, criteria) for later use.</li>
-          <li>Results: view matching stocks; export CSV for offline analysis.</li>
+          <li>Results: view matching stocks; export CSV for offline analysis. Import/Export criteria as JSON from Create/Edit pages.</li>
         </ul>
         <p>Endpoints:</p>
         <ul>
@@ -38,6 +38,7 @@ export default function Documentation() {
           <li>POST <code>/api/screeners/&lt;id&gt;/update/</code> – update a screener.</li>
           <li>DELETE <code>/api/screeners/&lt;id&gt;/</code> – delete a screener.</li>
           <li>GET/POST <code>/api/screeners/&lt;id&gt;/results/</code> – run and return results.</li>
+          <li>GET <code>/api/screeners/&lt;id&gt;/export.csv</code> – download results as CSV.</li>
         </ul>
       </Section>
 

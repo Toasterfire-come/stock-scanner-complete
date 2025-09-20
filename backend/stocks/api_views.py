@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
@@ -864,7 +864,7 @@ def market_stats_api(request):
             'warning': 'fallback'
         }, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def filter_stocks_api(request):
     """
@@ -953,52 +953,62 @@ def filter_stocks_api(request):
         if order_by in ['ticker', 'current_price', 'volume', 'price_change_percent']:
             queryset = queryset.order_by(order_by)
         
-        # Allow JSON body as alternate input (POST for complex JSON criteria)
+        # Allow JSON body as alternate input (supports GET with body and POST)
         try:
-            if request.method == 'POST':
-                body = getattr(request, 'data', None) or json.loads(request.body or '{}')
-                # Merge JSON criteria into params-like dict
-                if isinstance(body, dict):
-                    if 'criteria' in body and isinstance(body['criteria'], list):
-                        # translate array criteria
-                        for c in body['criteria']:
-                            cid = (c.get('id') or '').lower()
-                            if cid == 'market_cap':
-                                if c.get('min') is not None: queryset = queryset.filter(market_cap__gte=int(c['min']))
-                                if c.get('max') is not None: queryset = queryset.filter(market_cap__lte=int(c['max']))
-                            if cid == 'price':
-                                if c.get('min') is not None: queryset = queryset.filter(current_price__gte=float(c['min']))
-                                if c.get('max') is not None: queryset = queryset.filter(current_price__lte=float(c['max']))
-                            if cid == 'volume':
-                                if c.get('min') is not None: queryset = queryset.filter(volume__gte=int(c['min']))
-                                if c.get('max') is not None: queryset = queryset.filter(volume__lte=int(c['max']))
-                            if cid == 'pe_ratio':
-                                if c.get('min') is not None: queryset = queryset.filter(pe_ratio__gte=float(c['min']))
-                                if c.get('max') is not None: queryset = queryset.filter(pe_ratio__lte=float(c['max']))
-                            if cid == 'dividend_yield':
-                                if c.get('min') is not None: queryset = queryset.filter(dividend_yield__gte=float(c['min']))
-                                if c.get('max') is not None: queryset = queryset.filter(dividend_yield__lte=float(c['max']))
-                            if cid == 'change_percent':
-                                if c.get('min') is not None: queryset = queryset.filter(change_percent__gte=float(c['min']))
-                                if c.get('max') is not None: queryset = queryset.filter(change_percent__lte=float(c['max']))
-                            if cid == 'exchange':
-                                if c.get('value'): queryset = queryset.filter(exchange__icontains=str(c['value']))
-                    else:
-                        # simple flat mapping
-                        m = body
-                        if 'min_price' in m: queryset = queryset.filter(current_price__gte=float(m['min_price']))
-                        if 'max_price' in m: queryset = queryset.filter(current_price__lte=float(m['max_price']))
-                        if 'min_volume' in m: queryset = queryset.filter(volume__gte=int(m['min_volume']))
-                        if 'max_volume' in m: queryset = queryset.filter(volume__lte=int(m['max_volume']))
-                        if 'market_cap_min' in m: queryset = queryset.filter(market_cap__gte=int(m['market_cap_min']))
-                        if 'market_cap_max' in m: queryset = queryset.filter(market_cap__lte=int(m['market_cap_max']))
-                        if 'pe_ratio_min' in m: queryset = queryset.filter(pe_ratio__gte=float(m['pe_ratio_min']))
-                        if 'pe_ratio_max' in m: queryset = queryset.filter(pe_ratio__lte=float(m['pe_ratio_max']))
-                        if 'dividend_yield_min' in m: queryset = queryset.filter(dividend_yield__gte=float(m['dividend_yield_min']))
-                        if 'dividend_yield_max' in m: queryset = queryset.filter(dividend_yield__lte=float(m['dividend_yield_max']))
-                        if 'change_percent_min' in m: queryset = queryset.filter(change_percent__gte=float(m['change_percent_min']))
-                        if 'change_percent_max' in m: queryset = queryset.filter(change_percent__lte=float(m['change_percent_max']))
-                        if 'exchange' in m: queryset = queryset.filter(exchange__icontains=str(m['exchange']))
+            body = None
+            try:
+                # DRF Request may have .data already parsed
+                body = getattr(request, 'data', None)
+            except Exception:
+                body = None
+            if body is None:
+                raw = getattr(request, 'body', b'') or b''
+                if raw:
+                    try:
+                        body = json.loads(raw.decode('utf-8')) if isinstance(raw, (bytes, bytearray)) else json.loads(raw or '{}')
+                    except Exception:
+                        body = None
+            if isinstance(body, dict):
+                if 'criteria' in body and isinstance(body['criteria'], list):
+                    # translate array criteria
+                    for c in body['criteria']:
+                        cid = (c.get('id') or '').lower()
+                        if cid == 'market_cap':
+                            if c.get('min') is not None: queryset = queryset.filter(market_cap__gte=int(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(market_cap__lte=int(c['max']))
+                        if cid == 'price':
+                            if c.get('min') is not None: queryset = queryset.filter(current_price__gte=float(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(current_price__lte=float(c['max']))
+                        if cid == 'volume':
+                            if c.get('min') is not None: queryset = queryset.filter(volume__gte=int(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(volume__lte=int(c['max']))
+                        if cid == 'pe_ratio':
+                            if c.get('min') is not None: queryset = queryset.filter(pe_ratio__gte=float(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(pe_ratio__lte=float(c['max']))
+                        if cid == 'dividend_yield':
+                            if c.get('min') is not None: queryset = queryset.filter(dividend_yield__gte=float(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(dividend_yield__lte=float(c['max']))
+                        if cid == 'change_percent':
+                            if c.get('min') is not None: queryset = queryset.filter(change_percent__gte=float(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(change_percent__lte=float(c['max']))
+                        if cid == 'exchange':
+                            if c.get('value'): queryset = queryset.filter(exchange__icontains=str(c['value']))
+                else:
+                    # simple flat mapping
+                    m = body
+                    if 'min_price' in m: queryset = queryset.filter(current_price__gte=float(m['min_price']))
+                    if 'max_price' in m: queryset = queryset.filter(current_price__lte=float(m['max_price']))
+                    if 'min_volume' in m: queryset = queryset.filter(volume__gte=int(m['min_volume']))
+                    if 'max_volume' in m: queryset = queryset.filter(volume__lte=int(m['max_volume']))
+                    if 'market_cap_min' in m: queryset = queryset.filter(market_cap__gte=int(m['market_cap_min']))
+                    if 'market_cap_max' in m: queryset = queryset.filter(market_cap__lte=int(m['market_cap_max']))
+                    if 'pe_ratio_min' in m: queryset = queryset.filter(pe_ratio__gte=float(m['pe_ratio_min']))
+                    if 'pe_ratio_max' in m: queryset = queryset.filter(pe_ratio__lte=float(m['pe_ratio_max']))
+                    if 'dividend_yield_min' in m: queryset = queryset.filter(dividend_yield__gte=float(m['dividend_yield_min']))
+                    if 'dividend_yield_max' in m: queryset = queryset.filter(dividend_yield__lte=float(m['dividend_yield_max']))
+                    if 'change_percent_min' in m: queryset = queryset.filter(change_percent__gte=float(m['change_percent_min']))
+                    if 'change_percent_max' in m: queryset = queryset.filter(change_percent__lte=float(m['change_percent_max']))
+                    if 'exchange' in m: queryset = queryset.filter(exchange__icontains=str(m['exchange']))
         except Exception as _:
             # ignore malformed JSON; fall back to query params only
             pass
@@ -1196,7 +1206,7 @@ def screeners_list_api(request):
     user = getattr(request, 'user', None)
     qs = Screener.objects.all()
     if user and getattr(user, 'is_authenticated', False):
-        qs = qs.filter(models.Q(is_public=True) | models.Q(user=user))
+        qs = qs.filter(Q(is_public=True) | Q(user=user))
     else:
         qs = qs.filter(is_public=True)
     items = [{
@@ -1284,6 +1294,46 @@ def screeners_results_api(request, screener_id: str):
     except Exception as e:
         logger.error(f"Screener results failed: {e}")
         return Response({'stocks': [], 'total_count': 0})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_export_csv_api(request, screener_id: str):
+    """Export screener results as CSV."""
+    try:
+        s = Screener.objects.get(id=screener_id)
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    # Reuse filter_stocks_api to get results
+    try:
+        request._dont_enforce_csrf_checks = True
+        request.body = json.dumps({ 'criteria': s.criteria }).encode('utf-8')
+        resp = filter_stocks_api(request)
+        payload = getattr(resp, 'data', {}) or {}
+        stocks = payload.get('stocks') or payload.get('data') or []
+    except Exception as e:
+        logger.error(f"Export screener CSV failed: {e}")
+        stocks = []
+
+    # Build CSV
+    headers = ["Ticker","Company","Price","Change %","Volume","Market Cap","Exchange"]
+    lines = [",".join(headers)]
+    for st in stocks:
+        ticker = str(st.get('ticker') or st.get('symbol') or '-')
+        company = str(st.get('company_name') or st.get('name') or '').replace(',', ' ')
+        price = f"{float(st.get('current_price') or 0):.2f}"
+        chg = f"{float(st.get('price_change_percent') or st.get('change_percent') or 0):.2f}"
+        vol = str(int(st.get('volume') or 0))
+        cap = str(int(float(st.get('market_cap') or 0)))
+        exch = str(st.get('exchange') or '')
+        lines.append(
+            ",".join([ticker, company, price, chg, vol, cap, exch])
+        )
+
+    csv_content = "\n".join(lines)
+    response = HttpResponse(csv_content, content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="screener-{screener_id}-results.csv"'
+    return response
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

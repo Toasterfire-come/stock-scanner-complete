@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { runScreener, getScreener } from "../../../api/client";
+import { runScreener, getScreener, exportScreenerCsvUrl } from "../../../api/client";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -53,25 +53,15 @@ const ScreenerResults = () => {
   };
 
   const handleExport = () => {
-    const csv = [
-      "Ticker,Company,Price,Change %,Volume,Market Cap,Exchange",
-      ...results.map(stock => {
-        const price = Number(stock.current_price ?? 0).toFixed(2);
-        const change = Number(stock.change_percent ?? 0).toFixed(2);
-        const vol = Number(stock.volume ?? 0);
-        const cap = Number(stock.market_cap ?? 0);
-        return `${stock.ticker},${(stock.company_name||'').replace(/,/g,' ')},${price},${change},${vol},${cap},${stock.exchange||''}`;
-      })
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    // Use backend CSV export for consistency
+    const url = exportScreenerCsvUrl(id);
+    const a = document.createElement('a');
     a.href = url;
     a.download = `screener-results-${id}.csv`;
+    document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success("Results exported to CSV");
+    document.body.removeChild(a);
+    toast.success("Downloading CSV");
   };
 
   if (isLoading) {

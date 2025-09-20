@@ -7,7 +7,7 @@ import { Label } from "../../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
-import { X, Save, Play, Trash2 } from "lucide-react";
+import { X, Save, Play, Trash2, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
 import { getScreener, updateScreener, deleteScreener, testScreener } from "../../../api/client";
 
@@ -82,6 +82,34 @@ const EditScreener = () => {
     finally { setIsSaving(false); }
   };
 
+  const handleImportJson = async (event) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const importedCriteria = Array.isArray(parsed?.criteria) ? parsed.criteria : [];
+      const name = parsed?.name || screenerData.name;
+      const description = parsed?.description || screenerData.description;
+      setScreenerData({ ...screenerData, name, description });
+      setCriteria(importedCriteria);
+      toast.success("Criteria imported from JSON");
+    } catch {
+      toast.error("Invalid JSON file");
+    } finally { event.target.value = ""; }
+  };
+
+  const handleExportJson = () => {
+    const payload = { ...screenerData, criteria };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(screenerData.name || 'screener').replace(/\s+/g,'-').toLowerCase()}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this screener?")) return;
 
@@ -119,6 +147,17 @@ const EditScreener = () => {
               <Save className="h-4 w-4 mr-2" />
               Save Changes
             </Button>
+            <Button type="button" variant="outline" onClick={handleExportJson}>
+              <Download className="h-4 w-4 mr-2" /> Export JSON
+            </Button>
+            <label className="inline-flex items-center">
+              <input type="file" accept="application/json" className="hidden" onChange={handleImportJson} />
+              <Button asChild variant="outline">
+                <span>
+                  <Upload className="h-4 w-4 mr-2" /> Import JSON
+                </span>
+              </Button>
+            </label>
           </div>
         </div>
 

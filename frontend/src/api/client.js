@@ -370,8 +370,8 @@ export async function syncPortfolioNews() { const { data } = await api.post('/ne
 // ====================
 // SCREENERS
 // ====================
-export async function listScreeners() { return []; }
-export async function getScreener() { return {}; }
+export async function listScreeners(params = {}) { const { data } = await api.get('/screeners/', { params }); return data; }
+export async function getScreener(id) { const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/`); return data; }
 function mapCriteriaToFilterParams(criteria = []) {
   const params = {};
   for (const c of criteria) {
@@ -385,12 +385,28 @@ function mapCriteriaToFilterParams(criteria = []) {
   }
   return params;
 }
-export async function createScreener(screener) { return { success: true }; }
-export async function updateScreener() { return { success: true }; }
-export async function deleteScreener() { return { success: true }; }
-export async function testScreener(payload) { const params = mapCriteriaToFilterParams(payload?.criteria || []); const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] }; }
-export async function runScreener(_id, params = {}) { const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] }; }
-export async function getScreenerTemplates() { return []; }
+export async function createScreener(screener) { const data = await postWithRetry('/screeners/create/', screener); return data; }
+export async function updateScreener(id, payload) { const data = await postWithRetry(`/screeners/${encodeURIComponent(id)}/update/`, payload); return data; }
+export async function deleteScreener(id) { return await deleteWithRetry(`/screeners/${encodeURIComponent(id)}/`); }
+export async function testScreener(payload) {
+  try {
+    const { data } = await api.post('/filter/', payload);
+    return { success: true, results: data?.stocks || data?.data || [] };
+  } catch (e) {
+    // fallback to GET mapping
+    const params = mapCriteriaToFilterParams(payload?.criteria || []); const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] };
+  }
+}
+export async function runScreener(id, params = {}) {
+  try {
+    const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/results/`, { params });
+    return { success: true, results: data?.stocks || data?.data || [] };
+  } catch (e) {
+    return { success: false, results: [] };
+  }
+}
+export function exportScreenerCsvUrl(id) { return `${API_ROOT}/screeners/${encodeURIComponent(id)}/export.csv`; }
+export async function getScreenerTemplates() { const { data } = await api.get('/screeners/templates/'); return data; }
 
 // ====================
 // ALERTS HISTORY
