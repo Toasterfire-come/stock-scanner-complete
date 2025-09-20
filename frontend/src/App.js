@@ -46,6 +46,13 @@ import Portfolio from "./pages/app/Portfolio";
 import Watchlists from "./pages/app/Watchlists";
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
+// Developer Tools (Gold Plan)
+import DeveloperDashboard from "./pages/app/developer/DeveloperDashboard";
+import ApiKeyManagement from "./pages/app/developer/ApiKeyManagement";
+import UsageStatistics from "./pages/app/developer/UsageStatistics";
+import ApiDocumentation from "./pages/app/developer/ApiDocumentation";
+import DeveloperConsole from "./pages/app/developer/DeveloperConsole";
+
 // Screener Suite (Protected)
 import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
 import CreateScreener from "./pages/app/screeners/CreateScreener";
