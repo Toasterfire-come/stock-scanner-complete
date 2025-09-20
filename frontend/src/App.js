@@ -351,6 +351,28 @@ function App() {
                     </ProtectedRoute>
                   } />
 
+                  {/* Data Export System - Protected */}
+                  <Route path="/app/exports" element={
+                    <ProtectedRoute>
+                      <ExportManager />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/exports/custom-report" element={
+                    <ProtectedRoute>
+                      <CustomReportBuilder />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/exports/scheduled" element={
+                    <ProtectedRoute>
+                      <ScheduledExports />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/exports/history" element={
+                    <ProtectedRoute>
+                      <DownloadHistory />
+                    </ProtectedRoute>
+                  } />
+
                   {/* Account Routes - Protected */}
                   <Route path="/account/profile" element={
                     <ProtectedRoute>
