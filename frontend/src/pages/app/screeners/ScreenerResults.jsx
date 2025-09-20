@@ -55,9 +55,13 @@ const ScreenerResults = () => {
   const handleExport = () => {
     const csv = [
       "Ticker,Company,Price,Change %,Volume,Market Cap,Exchange",
-      ...results.map(stock => 
-        `${stock.ticker},${stock.company_name},${stock.current_price},${stock.change_percent},${stock.volume},${stock.market_cap},${stock.exchange}`
-      )
+      ...results.map(stock => {
+        const price = Number(stock.current_price ?? 0).toFixed(2);
+        const change = Number(stock.change_percent ?? 0).toFixed(2);
+        const vol = Number(stock.volume ?? 0);
+        const cap = Number(stock.market_cap ?? 0);
+        return `${stock.ticker},${(stock.company_name||'').replace(/,/g,' ')},${price},${change},${vol},${cap},${stock.exchange||''}`;
+      })
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });

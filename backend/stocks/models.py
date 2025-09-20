@@ -575,6 +575,29 @@ class MonthlyRevenueSummary(models.Model):
         return f"Revenue Summary {self.month_year}: ${self.total_revenue}"
 
 
+# Screeners
+class Screener(models.Model):
+    """Saved stock screener definitions with JSON criteria."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='screeners', null=True, blank=True)
+    name = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    criteria = models.JSONField(default=list, help_text="Array of criteria objects or a criteria mapping")
+    is_public = models.BooleanField(default=False)
+    last_run = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['is_public', '-updated_at']),
+            models.Index(fields=['user', '-updated_at']),
+        ]
+
+    def __str__(self):
+        owner = self.user.username if self.user else 'anon'
+        return f"{self.name} ({owner})"
+
 class BillingHistory(models.Model):
     """User billing and payment history"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='billing_history')

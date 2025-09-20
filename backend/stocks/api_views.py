@@ -20,7 +20,7 @@ import logging
 from decimal import Decimal
 from django.contrib.auth.models import User
 
-from .models import Stock, StockAlert, StockPrice
+from .models import Stock, StockAlert, StockPrice, Screener
 from emails.models import EmailSubscription
 # import yfinance as yf  # Disabled: DB-only mode
 # import requests  # Disabled: DB-only mode
@@ -953,6 +953,56 @@ def filter_stocks_api(request):
         if order_by in ['ticker', 'current_price', 'volume', 'price_change_percent']:
             queryset = queryset.order_by(order_by)
         
+        # Allow JSON body as alternate input (POST for complex JSON criteria)
+        try:
+            if request.method == 'POST':
+                body = getattr(request, 'data', None) or json.loads(request.body or '{}')
+                # Merge JSON criteria into params-like dict
+                if isinstance(body, dict):
+                    if 'criteria' in body and isinstance(body['criteria'], list):
+                        # translate array criteria
+                        for c in body['criteria']:
+                            cid = (c.get('id') or '').lower()
+                            if cid == 'market_cap':
+                                if c.get('min') is not None: queryset = queryset.filter(market_cap__gte=int(c['min']))
+                                if c.get('max') is not None: queryset = queryset.filter(market_cap__lte=int(c['max']))
+                            if cid == 'price':
+                                if c.get('min') is not None: queryset = queryset.filter(current_price__gte=float(c['min']))
+                                if c.get('max') is not None: queryset = queryset.filter(current_price__lte=float(c['max']))
+                            if cid == 'volume':
+                                if c.get('min') is not None: queryset = queryset.filter(volume__gte=int(c['min']))
+                                if c.get('max') is not None: queryset = queryset.filter(volume__lte=int(c['max']))
+                            if cid == 'pe_ratio':
+                                if c.get('min') is not None: queryset = queryset.filter(pe_ratio__gte=float(c['min']))
+                                if c.get('max') is not None: queryset = queryset.filter(pe_ratio__lte=float(c['max']))
+                            if cid == 'dividend_yield':
+                                if c.get('min') is not None: queryset = queryset.filter(dividend_yield__gte=float(c['min']))
+                                if c.get('max') is not None: queryset = queryset.filter(dividend_yield__lte=float(c['max']))
+                            if cid == 'change_percent':
+                                if c.get('min') is not None: queryset = queryset.filter(change_percent__gte=float(c['min']))
+                                if c.get('max') is not None: queryset = queryset.filter(change_percent__lte=float(c['max']))
+                            if cid == 'exchange':
+                                if c.get('value'): queryset = queryset.filter(exchange__icontains=str(c['value']))
+                    else:
+                        # simple flat mapping
+                        m = body
+                        if 'min_price' in m: queryset = queryset.filter(current_price__gte=float(m['min_price']))
+                        if 'max_price' in m: queryset = queryset.filter(current_price__lte=float(m['max_price']))
+                        if 'min_volume' in m: queryset = queryset.filter(volume__gte=int(m['min_volume']))
+                        if 'max_volume' in m: queryset = queryset.filter(volume__lte=int(m['max_volume']))
+                        if 'market_cap_min' in m: queryset = queryset.filter(market_cap__gte=int(m['market_cap_min']))
+                        if 'market_cap_max' in m: queryset = queryset.filter(market_cap__lte=int(m['market_cap_max']))
+                        if 'pe_ratio_min' in m: queryset = queryset.filter(pe_ratio__gte=float(m['pe_ratio_min']))
+                        if 'pe_ratio_max' in m: queryset = queryset.filter(pe_ratio__lte=float(m['pe_ratio_max']))
+                        if 'dividend_yield_min' in m: queryset = queryset.filter(dividend_yield__gte=float(m['dividend_yield_min']))
+                        if 'dividend_yield_max' in m: queryset = queryset.filter(dividend_yield__lte=float(m['dividend_yield_max']))
+                        if 'change_percent_min' in m: queryset = queryset.filter(change_percent__gte=float(m['change_percent_min']))
+                        if 'change_percent_max' in m: queryset = queryset.filter(change_percent__lte=float(m['change_percent_max']))
+                        if 'exchange' in m: queryset = queryset.filter(exchange__icontains=str(m['exchange']))
+        except Exception as _:
+            # ignore malformed JSON; fall back to query params only
+            pass
+
         # Pagination
         limit = int(request.GET.get('limit', 100))
         offset = int(request.GET.get('offset', 0))
@@ -1135,6 +1185,111 @@ def trending_stocks_api(request):
             'last_updated': timezone.now().isoformat(),
             'warning': 'fallback'
         }, status=status.HTTP_200_OK)
+
+
+# ====================
+# SCREENERS CRUD (powered by filter_stocks_api)
+# ====================
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_list_api(request):
+    user = getattr(request, 'user', None)
+    qs = Screener.objects.all()
+    if user and getattr(user, 'is_authenticated', False):
+        qs = qs.filter(models.Q(is_public=True) | models.Q(user=user))
+    else:
+        qs = qs.filter(is_public=True)
+    items = [{
+        'id': s.id,
+        'name': s.name,
+        'description': s.description,
+        'criteria': s.criteria,
+        'is_public': s.is_public,
+        'last_run': s.last_run.isoformat() if s.last_run else None,
+    } for s in qs.order_by('-updated_at')[:100]]
+    return Response({ 'data': items })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_detail_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+        return Response({ 'data': {
+            'id': s.id, 'name': s.name, 'description': s.description,
+            'criteria': s.criteria, 'is_public': s.is_public,
+            'last_run': s.last_run.isoformat() if s.last_run else None,
+        }})
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def screeners_create_api(request):
+    try:
+        body = getattr(request, 'data', None) or json.loads(request.body or '{}')
+        name = (body.get('name') or 'Untitled').strip()
+        description = body.get('description') or ''
+        criteria = body.get('criteria') or []
+        is_public = bool(body.get('isPublic') or body.get('is_public') or False)
+        user = request.user if getattr(request, 'user', None) and request.user.is_authenticated else None
+        s = Screener.objects.create(user=user, name=name, description=description, criteria=criteria, is_public=is_public)
+        return Response({ 'success': True, 'id': s.id })
+    except Exception as e:
+        logger.error(f"Create screener failed: {e}")
+        return Response({'success': False}, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def screeners_update_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+        body = getattr(request, 'data', None) or json.loads(request.body or '{}')
+        if 'name' in body: s.name = (body.get('name') or s.name)
+        if 'description' in body: s.description = body.get('description') or ''
+        if 'criteria' in body: s.criteria = body.get('criteria') or []
+        if 'is_public' in body or 'isPublic' in body: s.is_public = bool(body.get('is_public') or body.get('isPublic'))
+        s.save()
+        return Response({ 'success': True })
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Update screener failed: {e}")
+        return Response({'success': False}, status=500)
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def screeners_delete_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+        s.delete()
+        return Response({ 'success': True })
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def screeners_results_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+    except Screener.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+    # Proxy to filter_stocks_api using criteria as JSON
+    request._dont_enforce_csrf_checks = True
+    try:
+        request.body = json.dumps({ 'criteria': s.criteria }).encode('utf-8')
+        resp = filter_stocks_api(request)
+        if hasattr(resp, 'data'):
+            s.last_run = timezone.now(); s.save(update_fields=['last_run'])
+        return resp
+    except Exception as e:
+        logger.error(f"Screener results failed: {e}")
+        return Response({'stocks': [], 'total_count': 0})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_templates_api(request):
+    # Placeholder templates
+    return Response({ 'data': [] })
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
