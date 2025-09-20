@@ -439,21 +439,7 @@ const Markets = () => {
               </div>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Economic Calendar</h3>
-                  <p className="text-gray-600 text-sm">Upcoming events</p>
-                </div>
-                <Button asChild variant="ghost">
-                  <Link to="/app/economic-calendar">
-                    <Clock className="h-6 w-6" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">

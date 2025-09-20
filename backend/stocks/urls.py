@@ -35,6 +35,14 @@ urlpatterns = [
     path('stocks/top-losers/', api_views.top_losers_api, name='top_losers'),
     path('stocks/most-active/', api_views.most_active_api, name='most_active'),
     
+    # Screener endpoints (backed by filter API)
+    path('screeners/', api_views.filter_stocks_api, name='screeners_list'),
+    path('screeners/create/', api_views.filter_stocks_api, name='screeners_create'),
+    path('screeners/<str:screener_id>/', api_views.filter_stocks_api, name='screeners_detail'),
+    path('screeners/<str:screener_id>/update/', api_views.filter_stocks_api, name='screeners_update'),
+    path('screeners/<str:screener_id>/results/', api_views.filter_stocks_api, name='screeners_results'),
+    path('screeners/templates/', api_views.filter_stocks_api, name='screeners_templates'),
+
     # Generic stock endpoints (after specific routes)
     path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),

@@ -12,16 +12,7 @@ const ScreenerLibrary = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => { (async () => {
-    setIsLoading(true);
-    try {
-      const res = await listScreeners();
-      const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-      setScreeners(items);
-    } catch {
-      setScreeners([]);
-    } finally { setIsLoading(false); }
-  })(); }, []);
+  useEffect(() => { setIsLoading(false); setScreeners([]); }, []);
 
   const filteredScreeners = screeners.filter(screener =>
     screener.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,51 +66,31 @@ const ScreenerLibrary = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredScreeners.map((screener) => (
-          <Card key={screener.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-xl">{screener.name}</CardTitle>
-                {screener.is_public && <Badge variant="secondary">Public</Badge>}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <CardTitle className="text-xl">Quick Filter</CardTitle>
+              <Badge variant="secondary">Default</Badge>
+            </div>
+            <CardDescription>Start with a new filter to scan all stocks.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="text-xs text-gray-500">Create a screen using the filter tool.</div>
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1" asChild>
+                  <Link to="/app/screeners/new">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Open Filter
+                  </Link>
+                </Button>
               </div>
-              <CardDescription>{screener.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-500">Criteria</div>
-                    <div className="font-semibold">{screener.criteria_count ?? 0}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">Matches</div>
-                    <div className="font-semibold text-blue-600">{screener.matches ?? 0}</div>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Last run: {screener.last_run ? new Date(screener.last_run).toLocaleDateString() : 'Never'}
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" asChild>
-                    <Link to={`/app/screeners/${screener.id}/results`}>
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      View Results
-                    </Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to={`/app/screeners/${screener.id}/edit`}>
-                      <BarChart3 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {filteredScreeners.length === 0 && (
+      {true && (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">No screeners found</div>
           <Button asChild>

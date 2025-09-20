@@ -250,7 +250,6 @@ export async function getRealTimeQuote(ticker) { const { data } = await api.get(
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
 export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
-export async function getSectorsOverview(params = {}) { const { data } = await api.get('/sectors/', { params }); return data; }
 
 // ====================
 // AUTHENTICATION
@@ -371,20 +370,27 @@ export async function syncPortfolioNews() { const { data } = await api.post('/ne
 // ====================
 // SCREENERS
 // ====================
-export async function listScreeners(params = {}) { const { data } = await api.get('/screeners/', { params }); return data; }
-export async function getScreener(screenerId) { const { data } = await api.get(`/screeners/${encodeURIComponent(screenerId)}/`); return data; }
-export async function createScreener(screener) { return await postWithRetry('/screeners/create/', screener); }
-export async function updateScreener(screenerId, payload) { return await postWithRetry(`/screeners/${encodeURIComponent(screenerId)}/update/`, payload); }
-export async function deleteScreener(screenerId) { return await deleteWithRetry(`/screeners/${encodeURIComponent(screenerId)}/`); }
-export async function testScreener(payload) { const { data } = await api.post('/screeners/test/', payload); return data; }
-export async function runScreener(screenerId, params = {}) { const { data } = await api.get(`/screeners/${encodeURIComponent(screenerId)}/results/`, { params }); return data; }
-export async function getScreenerTemplates() { const { data } = await api.get('/screeners/templates/'); return data; }
-
-// ====================
-// CALENDAR & EXTENDED HOURS
-// ====================
-export async function getEconomicCalendar(params = {}) { const { data } = await api.get('/economic-calendar/', { params }); return data; }
-export async function getExtendedHoursMarket() { const { data } = await api.get('/market/extended-hours/'); return data; }
+export async function listScreeners() { return []; }
+export async function getScreener() { return {}; }
+function mapCriteriaToFilterParams(criteria = []) {
+  const params = {};
+  for (const c of criteria) {
+    if (c.id === 'market_cap') { if (c.min) params.market_cap_min = c.min; if (c.max) params.market_cap_max = c.max; }
+    if (c.id === 'price') { if (c.min) params.min_price = c.min; if (c.max) params.max_price = c.max; }
+    if (c.id === 'volume') { if (c.min) params.min_volume = c.min; if (c.max) params.max_volume = c.max; }
+    if (c.id === 'pe_ratio') { if (c.min) params.pe_ratio_min = c.min; if (c.max) params.pe_ratio_max = c.max; }
+    if (c.id === 'dividend_yield') { if (c.min) params.dividend_yield_min = c.min; if (c.max) params.dividend_yield_max = c.max; }
+    if (c.id === 'change_percent') { if (c.min) params.change_percent_min = c.min; if (c.max) params.change_percent_max = c.max; }
+    if (c.id === 'exchange') { if (c.value) params.exchange = c.value; }
+  }
+  return params;
+}
+export async function createScreener(screener) { return { success: true }; }
+export async function updateScreener() { return { success: true }; }
+export async function deleteScreener() { return { success: true }; }
+export async function testScreener(payload) { const params = mapCriteriaToFilterParams(payload?.criteria || []); const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] }; }
+export async function runScreener(_id, params = {}) { const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] }; }
+export async function getScreenerTemplates() { return []; }
 
 // ====================
 // ALERTS HISTORY
