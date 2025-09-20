@@ -56,7 +56,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+    <div className="container-enhanced py-8">
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">

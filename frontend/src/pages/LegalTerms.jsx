@@ -7,7 +7,7 @@ import { ArrowLeft, Mail, MapPin, FileText } from "lucide-react";
 const LegalTerms = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container-enhanced py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
           <Button asChild variant="ghost" className="mb-4">

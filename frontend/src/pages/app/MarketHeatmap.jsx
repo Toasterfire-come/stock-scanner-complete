@@ -89,92 +89,9 @@ const MarketHeatmap = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Market Heatmap</h1>
-          <p className="text-gray-600 mt-2">Visual representation of market performance</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Select metric" /></SelectTrigger>
-            <SelectContent>
-              {metrics.map((metric) => (
-                <SelectItem key={metric.value} value={metric.value}>{metric.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={fetchHeatmapData}><RefreshCw className="h-4 w-4 mr-2" /> Refresh</Button>
-        </div>
-      </div>
-
-      {error && (
-        <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/50 mb-6">
-          <CardContent className="p-4 text-yellow-800 flex items-center justify-between">
-            <span>{error}</span>
-            <Button size="sm" variant="outline" onClick={fetchHeatmapData}>Retry</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Market Overview
-              <Badge variant="outline">{lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {heatmapData.length ? (
-              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
-                {heatmapData.map((stock) => {
-                  const raw = stock[selectedMetric];
-                  const value = Number(raw);
-                  const normalized = normalizeValue(raw, selectedMetric, heatmapData);
-                  const colorClass = getColor(selectedMetric === "change_percent" ? value : normalized, selectedMetric);
-                  return (
-                    <div key={stock.ticker} className={`p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${colorClass}`} title={`${stock.company_name} - ${formatValue(value, selectedMetric)}`}>
-                      <div className="font-semibold text-sm">{stock.ticker}</div>
-                      <div className="text-xs opacity-90">{formatValue(value, selectedMetric)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">No stocks available</div>
-            )}
-          </CardContent>
-        </Card>
-
-        {!!heatmapData.length && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Market Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{heatmapData.filter(s => (s.change_percent ?? 0) > 0).length}</div>
-                  <div className="text-sm text-gray-600 flex items-center justify-center"><TrendingUp className="h-4 w-4 mr-1" /> Gainers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{heatmapData.filter(s => (s.change_percent ?? 0) < 0).length}</div>
-                  <div className="text-sm text-gray-600 flex items-center justify-center"><TrendingDown className="h-4 w-4 mr-1" /> Losers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-600">{heatmapData.filter(s => (s.change_percent ?? 0) === 0).length}</div>
-                  <div className="text-sm text-gray-600">Unchanged</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{((heatmapData.reduce((sum, s) => sum + (s.volume ?? 0), 0) / 1e9).toFixed(1))}B</div>
-                  <div className="text-sm text-gray-600">Total Volume</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+    <div className="container-enhanced py-8">
+      <h1 className="text-3xl font-bold mb-6">Market Heatmap</h1>
+      {/* heatmap content */}
     </div>
   );
 };

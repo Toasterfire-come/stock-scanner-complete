@@ -115,7 +115,8 @@ const NewsSubscribe = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container-enhanced py-8">
+      <h1 className="text-3xl font-bold mb-6">Subscribe</h1>
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
