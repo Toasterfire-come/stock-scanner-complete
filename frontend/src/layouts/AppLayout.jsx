@@ -39,6 +39,10 @@ import {
   Settings,
   LogOut,
   Crown,
+  FileText,
+  Phone,
+  HelpCircle,
+  Building
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
@@ -48,26 +52,29 @@ const AppLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
+  // Marketing pages - available to all users
+  const marketingNavigation = [
     { name: "Home", href: "/", icon: Home },
     { name: "Features", href: "/features", icon: Activity },
-    { name: "About", href: "/about", icon: User },
-    { name: "Contact", href: "/contact", icon: User },
+    { name: "About", href: "/about", icon: FileText },
+    { name: "Contact", href: "/contact", icon: Phone },
     { name: "Pricing", href: "/pricing", icon: Crown },
+    { name: "Help", href: "/help", icon: HelpCircle },
+    { name: "Enterprise", href: "/enterprise", icon: Building },
   ];
 
-  const appNavigation = [
+  // User pages - only accessible to signed-in users
+  const userNavigation = [
     { name: "Dashboard", href: "/app/dashboard", icon: BarChart3 },
     { name: "Markets", href: "/app/markets", icon: TrendingUp },
     { name: "Stocks", href: "/app/stocks", icon: Activity },
-    { name: "Screeners", href: "/app/screeners", icon: Search },
     { name: "Portfolio", href: "/app/portfolio", icon: Target },
     { name: "Watchlists", href: "/app/watchlists", icon: Eye },
+    { name: "Screeners", href: "/app/screeners", icon: Search },
     { name: "Alerts", href: "/app/alerts", icon: AlertCircle },
-    { name: "News", href: "/app/news", icon: Newspaper },
   ];
 
-  const isAppRoute = location.pathname.startsWith("/app");
+  const isUserPage = location.pathname.startsWith("/app");
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,10 +93,67 @@ const AppLayout = () => {
               </span>
             </Link>
 
-            {/* Desktop Navigation - Show app pages only when authenticated */}
+            {/* Desktop Navigation */}
             <div className="flex items-center space-x-4">
-              {!isAuthenticated || !isAppRoute ? (
-                // Public navigation dropdown
+              {isAuthenticated ? (
+                // Show both user pages and marketing pages in dropdown for authenticated users
+                <div className="flex space-x-2">
+                  {/* User Pages Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="text-sm font-medium">
+                        App
+                        <Menu className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48" align="start">
+                      {userNavigation.map((item) => (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <Link
+                            to={item.href}
+                            className={`flex items-center space-x-2 ${
+                              location.pathname === item.href
+                                ? "text-blue-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Marketing Pages Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="text-sm font-medium">
+                        Pages
+                        <Menu className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48" align="start">
+                      {marketingNavigation.map((item) => (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <Link
+                            to={item.href}
+                            className={`flex items-center space-x-2 ${
+                              location.pathname === item.href
+                                ? "text-blue-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                // Show only marketing pages for non-authenticated users
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="text-sm font-medium">
@@ -98,34 +162,7 @@ const AppLayout = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48" align="start">
-                    {navigation.map((item) => (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          to={item.href}
-                          className={`flex items-center space-x-2 ${
-                            location.pathname === item.href
-                              ? "text-blue-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                // App navigation dropdown
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-sm font-medium">
-                      App
-                      <Menu className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48" align="start">
-                    {appNavigation.map((item) => (
+                    {marketingNavigation.map((item) => (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
                           to={item.href}
@@ -145,7 +182,7 @@ const AppLayout = () => {
               )}
             </div>
 
-            {/* Right side - Toggles, Auth buttons or user menu */}
+            {/* Right side */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Market Status - always show */}
               <div className="hidden md:block">
@@ -159,10 +196,10 @@ const AppLayout = () => {
                 <>
                   {/* User badge */}
                   <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
-                    {user.plan} Plan
+                    {user.plan || 'Free'} Plan
                   </Badge>
 
-                  {/* User menu */}
+                  {/* User menu - only show for authenticated users */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -172,7 +209,7 @@ const AppLayout = () => {
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{user.name}</p>
+                          <p className="font-medium">{user.name || user.username}</p>
                           <p className="w-[200px] truncate text-sm text-muted-foreground">
                             {user.email}
                           </p>
@@ -185,6 +222,12 @@ const AppLayout = () => {
                           <span>Profile</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/account/plan">
+                          <Crown className="mr-2 h-4 w-4" />
+                          <span>Plan & Billing</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={logout}>
                         <LogOut className="mr-2 h-4 w-4" />
@@ -194,6 +237,7 @@ const AppLayout = () => {
                   </DropdownMenu>
                 </>
               ) : (
+                // Auth buttons for non-authenticated users
                 <div className="flex items-center space-x-2 sm:space-x-4">
                   <Button variant="ghost" asChild className="hidden sm:inline-flex">
                     <Link to="/auth/sign-in">Sign In</Link>
@@ -219,7 +263,38 @@ const AppLayout = () => {
                     </div>
                     
                     <nav className="flex flex-col space-y-3">
-                      {((isAuthenticated && isAppRoute) ? appNavigation : navigation).map((item) => {
+                      {/* Show user pages first for authenticated users */}
+                      {isAuthenticated && (
+                        <>
+                          <div className="text-sm font-medium text-gray-500 px-3 py-2 border-b">
+                            App Pages
+                          </div>
+                          {userNavigation.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <Link
+                                key={item.name}
+                                to={item.href}
+                                className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
+                                  location.pathname === item.href
+                                    ? "bg-blue-100 text-blue-600"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <Icon className="h-5 w-5" />
+                                <span>{item.name}</span>
+                              </Link>
+                            );
+                          })}
+                          <div className="text-sm font-medium text-gray-500 px-3 py-2 border-b border-t mt-4">
+                            Marketing Pages
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Marketing pages */}
+                      {marketingNavigation.map((item) => {
                         const Icon = item.icon;
                         return (
                           <Link
@@ -238,7 +313,7 @@ const AppLayout = () => {
                         );
                       })}
                       
-                      {/* Mobile Auth buttons */}
+                      {/* Mobile Auth buttons for non-authenticated users */}
                       {!isAuthenticated && (
                         <div className="border-t pt-4 mt-4 space-y-3">
                           <Link
@@ -297,11 +372,13 @@ const AppLayout = () => {
                     Pricing
                   </Link>
                 </li>
-                <li>
-                  <Link to="/app/dashboard" className="hover:text-blue-600">
-                    Dashboard
-                  </Link>
-                </li>
+                {isAuthenticated && (
+                  <li>
+                    <Link to="/app/dashboard" className="hover:text-blue-600">
+                      Dashboard
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
             <div>
