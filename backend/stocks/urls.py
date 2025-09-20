@@ -106,6 +106,11 @@ urlpatterns = [
     # Billing management
     path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
 
+    # Plan and usage endpoints
+    path('user/plan/', 'stocks.plan_api.user_plan_info', name='user_plan_info'),
+    path('plans/comparison/', 'stocks.plan_api.plan_comparison', name='plan_comparison'),
+    path('billing/history/', 'stocks.plan_api.billing_history', name='billing_history'),
+
     # Logging & monitoring endpoints
     path('logs/client/', logs_api.client_logs_api, name='client_logs'),
     path('logs/metrics/', logs_api.metrics_logs_api, name='metrics_logs'),
