@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
     path('api/', include('stocks.urls')),
+    path('api/', include('core.urls')),
     path('revenue/', include('stocks.revenue_urls')),
     path('paypal/webhook/', paypal_webhook_api, name='paypal_webhook_root'),
     path('robots.txt', robots_txt, name='robots_txt'),

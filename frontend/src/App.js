@@ -6,6 +6,37 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+const LegalPage = ({ type }) => {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    const endpoint = type === 'privacy' ? `${BACKEND_URL}/api/legal/privacy` : `${BACKEND_URL}/api/legal/terms`;
+    axios.get(endpoint)
+      .then(r => setData(r.data))
+      .catch(e => setError(e?.response?.data?.error || e.message || 'Failed to load'));
+  }, [type]);
+  if (error) return <div className="p-6 max-w-3xl mx-auto"><p className="text-red-600">{error}</p></div>;
+  if (!data) return <div className="p-6 max-w-3xl mx-auto"><p>Loading…</p></div>;
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-2">{data.title}</h1>
+      {data.intro && <p className="text-sm text-gray-600 mb-4">{data.intro}</p>}
+      {Array.isArray(data.sections) && data.sections.map((s, idx) => (
+        <div key={idx} className="mt-4">
+          {s.heading && <h2 className="text-xl font-semibold">{s.heading}</h2>}
+          {s.body && <p className="mt-1">{s.body}</p>}
+          {Array.isArray(s.list) && (
+            <ul className="list-disc ml-6 mt-2">
+              {s.list.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+      {data.last_updated && <p className="text-xs text-gray-500 mt-4">Last updated: {data.last_updated}</p>}
+    </div>
+  );
+};
+
 const Home = () => {
   const [health, setHealth] = useState(null);
   const [breakouts, setBreakouts] = useState([]);
@@ -150,8 +181,8 @@ function App() {
         )}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/terms" element={<div className="p-6 max-w-3xl mx-auto"><h1 className="text-2xl font-bold mb-4">Terms of Service</h1><p>By using this site, you agree to the following terms and conditions.</p><h3 className="font-semibold mt-4">Use of Service</h3><p>Do not misuse the service or attempt to disrupt operations.</p><h3 className="font-semibold mt-4">No Financial Advice</h3><p>Information provided is for educational purposes only and not investment advice.</p></div>} />
-          <Route path="/privacy" element={<div className="p-6 max-w-3xl mx-auto"><h1 className="text-2xl font-bold mb-2">Privacy Policy</h1><p className="text-sm text-gray-600 mb-4">How we collect, use, and protect your personal information</p><h2 className="text-xl font-semibold mt-4">Information We Collect</h2><p>We collect information you provide directly to us, such as when you create an account, use our services, or contact support. This may include your name, email address, and usage preferences.</p><h2 className="text-xl font-semibold mt-4">How We Use Your Information</h2><ul className="list-disc ml-6"><li>Provide and maintain our stock analysis services</li><li>Personalize your experience and recommendations</li><li>Communicate with you about your account and our services</li><li>Improve and enhance our platform</li><li>Ensure security and prevent fraud</li></ul><h2 className="text-xl font-semibold mt-4">Data Security</h2><p>We implement appropriate security measures to protect your personal information.</p><h2 className="text-xl font-semibold mt-4">Cookies and Tracking</h2><p>We use cookies and similar technologies to enhance your browsing experience. You can control cookie settings in your browser.</p><h2 className="text-xl font-semibold mt-4">Contact Us</h2><p>If you have any questions, email privacy@stockscanner.com.</p><p className="text-xs text-gray-500 mt-4">Last updated: January 2025</p></div>} />
+          <Route path="/terms" element={<LegalPage type="terms" />} />
+          <Route path="/privacy" element={<LegalPage type="privacy" />} />
         </Routes>
         <footer className="mt-12 border-t pt-6 text-sm text-gray-600">
           <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row gap-2 justify-between">
