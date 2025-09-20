@@ -4,7 +4,8 @@ from .models import (
     UserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
     PortfolioFollowing, DiscountCode, UserDiscountUsage,
-    RevenueTracking, MonthlyRevenueSummary
+    RevenueTracking, MonthlyRevenueSummary,
+    ReferralAccount, ReferralInvite, ReferralRedemption, WebhookEvent, APIKey
 )
 
 # Basic models
@@ -140,3 +141,35 @@ class MonthlyRevenueSummaryAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # These are auto-generated, so disable manual addition
         return False
+
+# Referrals and webhooks
+@admin.register(ReferralAccount)
+class ReferralAccountAdmin(admin.ModelAdmin):
+    list_display = ('inviter_uid', 'user', 'referral_code', 'rewards_months_granted', 'free_months_redeemed', 'created_at')
+    search_fields = ('inviter_uid', 'referral_code', 'user__username', 'user__email')
+    list_filter = ('created_at',)
+
+@admin.register(ReferralInvite)
+class ReferralInviteAdmin(admin.ModelAdmin):
+    list_display = ('inviter_uid', 'invitee_email', 'referral_code', 'status', 'created_at', 'paid_at')
+    list_filter = ('status', 'created_at', 'paid_at')
+    search_fields = ('inviter_uid', 'invitee_email', 'referral_code')
+
+@admin.register(ReferralRedemption)
+class ReferralRedemptionAdmin(admin.ModelAdmin):
+    list_display = ('inviter_uid', 'months', 'invites_consumed', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('inviter_uid',)
+
+@admin.register(WebhookEvent)
+class WebhookEventAdmin(admin.ModelAdmin):
+    list_display = ('source', 'event_id', 'status', 'received_at', 'processed_at')
+    list_filter = ('source', 'status', 'received_at')
+    search_fields = ('event_id',)
+    readonly_fields = ('received_at', 'processed_at')
+
+@admin.register(APIKey)
+class APIKeyAdmin(admin.ModelAdmin):
+    list_display = ('user', 'name', 'prefix', 'is_active', 'created_at', 'last_used_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('user__username', 'user__email', 'prefix', 'name')

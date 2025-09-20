@@ -11,6 +11,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
+from django.utils.http import http_date
+from django.utils.crypto import constant_time_compare
+from hashlib import md5
 from django.db.models import Q, F
 from django.core.exceptions import FieldError
 from django.utils import timezone
@@ -1358,7 +1361,7 @@ def top_gainers_api(request):
                 'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
             })
         
-        return Response({
+        payload = {
             'success': True,
             'page': page,
             'limit': limit,
@@ -1366,7 +1369,13 @@ def top_gainers_api(request):
             'total_pages': (total_count + limit - 1) // limit,
             'data': stock_data,
             'timestamp': timezone.now().isoformat()
-        })
+        }
+        # ETag/Last-Modified
+        etag = md5(json.dumps(payload, sort_keys=True).encode('utf-8')).hexdigest()
+        resp = Response(payload)
+        resp['ETag'] = etag
+        resp['Last-Modified'] = http_date()
+        return resp
         
     except Exception as e:
         logger.error(f"Error in top_gainers_api: {e}", exc_info=True)
@@ -1473,7 +1482,7 @@ def most_active_api(request):
                 'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
             })
         
-        return Response({
+        payload = {
             'success': True,
             'page': page,
             'limit': limit,
@@ -1481,7 +1490,12 @@ def most_active_api(request):
             'total_pages': (total_count + limit - 1) // limit,
             'data': stock_data,
             'timestamp': timezone.now().isoformat()
-        })
+        }
+        etag = md5(json.dumps(payload, sort_keys=True).encode('utf-8')).hexdigest()
+        resp = Response(payload)
+        resp['ETag'] = etag
+        resp['Last-Modified'] = http_date()
+        return resp
         
     except Exception as e:
         logger.error(f"Error in most_active_api: {e}", exc_info=True)

@@ -37,6 +37,61 @@ const LegalPage = ({ type }) => {
   );
 };
 
+const Account = () => {
+  const [plan, setPlan] = useState(null);
+  const [autoRenew, setAutoRenew] = useState(null);
+  const [usage, setUsage] = useState(null);
+  const [refSum, setRefSum] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const userId = useMemo(() => window.localStorage.getItem('rts_user_id') || '', []);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [p, u, r] = await Promise.all([
+          axios.get(`${API}/billing/current-plan/`, { withCredentials: true }).then(r=>r.data),
+          axios.get(`${API}/usage/`, { withCredentials: true }).then(r=>r.data),
+          axios.get(`${API}/referrals/summary`, { params: { user_id: userId }}).then(r=>r.data),
+        ]);
+        setPlan(p?.data || {});
+        setAutoRenew(!!p?.data?.auto_renew);
+        setUsage(u?.data || {});
+        setRefSum(r || {});
+      } catch (e) {}
+      setLoading(false);
+    };
+    load();
+  }, [userId]);
+  const onToggle = async () => {
+    try {
+      const r = await axios.post(`${API}/billing/auto-renew/`, { auto_renew: !autoRenew }, { withCredentials: true });
+      setAutoRenew(!!r.data.auto_renew);
+    } catch (e) { alert('Failed to update'); }
+  };
+  if (loading) return <div className="p-6">Loading…</div>;
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Account</h1>
+      <div className="border rounded p-4">
+        <h2 className="text-lg font-semibold">Plan</h2>
+        <p className="text-sm text-gray-600">{plan?.plan_name} · Billing: {plan?.billing_cycle}</p>
+        <p className="text-sm">Next billing date: {plan?.next_billing_date || '—'}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-sm">Auto renew:</span>
+          <button className="px-3 py-1 border rounded" onClick={onToggle}>{autoRenew ? 'On' : 'Off'}</button>
+        </div>
+      </div>
+      <div className="border rounded p-4 mt-4">
+        <h2 className="text-lg font-semibold">Usage</h2>
+        <p className="text-sm">Monthly API calls: {usage?.monthly?.api_calls ?? 0} / {usage?.monthly?.limit ?? 0}</p>
+      </div>
+      <div className="border rounded p-4 mt-4">
+        <h2 className="text-lg font-semibold">Referrals</h2>
+        <p className="text-sm">Invited: {refSum?.total_invited ?? 0} · Paid: {refSum?.total_paid ?? 0} · Pending free months: {refSum?.pending_rewards_months ?? 0}</p>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const [health, setHealth] = useState(null);
   const [breakouts, setBreakouts] = useState([]);
@@ -231,6 +286,8 @@ function App() {
         )}
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="*" element={<div className="p-6"><h1 className="text-2xl font-bold">404</h1><p className="text-gray-600">Page not found.</p></div>} />
           <Route path="/terms" element={<LegalPage type="terms" />} />
           <Route path="/privacy" element={<LegalPage type="privacy" />} />
         </Routes>

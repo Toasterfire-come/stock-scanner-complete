@@ -421,10 +421,9 @@ def sitemap_xml(request):
     content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>{base}/</loc></url>
-  <url><loc>{base}/pricing</loc></url>
-  <url><loc>{base}/checkout/subscribe</loc></url>
-  <url><loc>{base}/features</loc></url>
-  <url><loc>{base}/contact</loc></url>
+  <url><loc>{base}/account</loc></url>
+  <url><loc>{base}/terms</loc></url>
+  <url><loc>{base}/privacy</loc></url>
 </urlset>
 """
     return HttpResponse(content, content_type="application/xml")

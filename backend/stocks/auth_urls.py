@@ -34,6 +34,7 @@ urlpatterns = [
     path('billing/capture-paypal-order/', billing_api.capture_paypal_order_api, name='capture_paypal_order'),
     path('billing/paypal-webhook/', billing_api.paypal_webhook_api, name='paypal_webhook'),
     path('billing/paypal-status/', billing_api.paypal_status_api, name='paypal_status'),
+    path('billing/auto-renew/', billing_api.set_auto_renew_api, name='set_auto_renew'),
     
     # Notification endpoints
     path('user/notification-settings/', billing_api.notification_settings_api, name='user_notification_settings'),

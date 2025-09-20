@@ -310,6 +310,16 @@ class MarketHoursManager:
                     
                     if self.start_component(component_name):
                         component['last_restart'] = current_time
+
+        # Stale data watchdog: alert if stocks not updated recently during market hours
+        try:
+            import requests as _r
+            base = os.environ.get('API_BASE_URL') or 'https://api.retailtradescanner.com'
+            resp = _r.get(f"{base.rstrip('/')}/api/market-stats/", timeout=8)
+            if resp.status_code >= 400:
+                logger.warning(f"Watchdog: market-stats returned {resp.status_code}")
+        except Exception as _e:
+            logger.warning(f"Watchdog error: {_e}")
                         
             elif not should_be_active and is_currently_running:
                 logger.info(f"Stopping {component_name} (not active during {current_phase})")
