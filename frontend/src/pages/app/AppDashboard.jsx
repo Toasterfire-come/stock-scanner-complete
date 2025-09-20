@@ -61,79 +61,9 @@ const AppDashboard = () => {
     fetchDashboardData();
   }, [isAuthenticated]);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Non-authenticated user warning */}
-          <Alert className="mb-8 border-orange-200 bg-orange-50">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-orange-800">
-              Limited access. 
-              <Link to="/auth/sign-up" className="ml-2 text-blue-600 hover:underline font-medium">Sign in to access real-time data and full features →</Link>
-            </AlertDescription>
-          </Alert>
-
-          {/* Dashboard content for non-authenticated users */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Trade Scan Pro Dashboard</h1>
-            <p className="text-gray-600">Sign in to access full functionality and real-time data.</p>
-          </div>
-
-          {/* Market Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Stocks</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{marketData?.market_overview?.total_stocks?.toLocaleString() || '-'}</div>
-                <p className="text-xs text-muted-foreground">NYSE listings</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Gainers</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{marketData?.market_overview?.gainers?.toLocaleString() || '-'}</div>
-                <p className="text-xs text-muted-foreground">Stocks up today</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Losers</CardTitle>
-                <TrendingDown className="h-4 w-4 text-red-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">{marketData?.market_overview?.losers?.toLocaleString() || '-'}</div>
-                <p className="text-xs text-muted-foreground">Stocks down today</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Call to Action */}
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-            <CardContent className="p-8 text-center">
-              <h2 className="text-2xl font-bold mb-4">Unlock Full Dashboard Features</h2>
-              <p className="text-blue-100 mb-6 text-lg">
-                Get real-time data, alerts, portfolio tracking, and advanced screening tools
-              </p>
-              <Button asChild size="lg" variant="secondary" className="text-blue-700">
-                <Link to="/auth/sign-up">
-                  <Play className="h-5 w-5 mr-2" />
-                  Try Now for Free
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // Note: This component is now protected by ProtectedRoute, 
+  // so non-authenticated users won't reach this code.
+  // The ProtectedRoute component will handle the redirect/access control.
 
   // Authenticated user dashboard
   return (
