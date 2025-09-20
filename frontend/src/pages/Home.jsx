@@ -119,11 +119,11 @@ const Home = () => {
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Free plan includes 30 calls/month, Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
     },
     {
-      question: "Do you provide investment advice?",
-      answer: "No, we provide data and analytical tools only. All investment decisions should be made based on your own research and consultation with qualified financial advisors."
+      question: "How does the API call counting work?",
+      answer: "Different operations consume different amounts of API calls: listing all stocks (5 calls), single stock data (1 call), running screeners (2 calls), creating alerts (2 calls), loading market data (2 calls), and making watchlists (2 calls)."
     }
   ];
 
@@ -136,20 +136,38 @@ const Home = () => {
 
   const pricingPlans = [
     {
+      name: "Free",
+      price: "$0",
+      period: "/forever",
+      description: "Perfect for getting started",
+      features: [
+        "30 API calls per month",
+        "Basic stock data access",
+        "1 Basic stock screener",
+        "1 Portfolio",
+        "Community support"
+      ],
+      popular: false,
+      cta: "Get Started Free",
+      isFree: true
+    },
+    {
       name: "Bronze",
       price: "$24.99",
       period: "/month",
       description: "Enhanced features for active traders",
       features: [
-        "150 API calls per day, 1500/month",
-        "Unlimited scanner combinations", 
-        "Full stock scanner & lookup",
-        "Email alerts & notifications",
-        "News sentiment analysis",
-        "Basic portfolio tracking"
+        "1500 API calls per month",
+        "10 Screeners",
+        "100 Email Alerts per month",
+        "2 Watchlists",
+        "Professional stock data access",
+        "Real-time market information",
+        "High Quality News and Sentiment Analysis",
+        "Email support"
       ],
       popular: true,
-      cta: "Try for $1"
+      cta: "Start Free Trial"
     },
     {
       name: "Silver", 
@@ -157,15 +175,18 @@ const Home = () => {
       period: "/month",
       description: "Professional tools for serious traders",
       features: [
-        "500 API calls per day, 5000/month",
-        "Unlimited scanner combinations",
-        "Advanced filtering & screening",
-        "1-year historical data",
-        "Custom watchlists (10)",
+        "5000 API calls per month",
+        "20 Screeners",
+        "500 Alerts per month",
+        "5 Watchlists",
+        "Portfolio Access",
+        "Advanced Screener Tools (JSON input/output)",
+        "Advanced Watchlist Tools",
+        "Historical data access",
         "Priority support"
       ],
       popular: false,
-      cta: "Try for $1"
+      cta: "Start Free Trial"
     },
     {
       name: "Gold",
@@ -173,32 +194,17 @@ const Home = () => {
       period: "/month",
       description: "Ultimate trading experience",
       features: [
-        "Unlimited API calls",
-        "Unlimited daily calls",
-        "All premium features",
-        "Real-time alerts",
-        "Full REST API access",
-        "Priority phone support"
+        "Unlimited Everything",
+        "Professional stock data access",
+        "Highest Limits",
+        "Portfolio tracking (unlimited)",
+        "All Screener and Watchlist Tools",
+        "API Key Access",
+        "Real-time market data",
+        "Professional reporting"
       ],
       popular: false,
-      cta: "Try for $1"
-    },
-    {
-      name: "Free",
-      price: "$0",
-      period: "/forever",
-      description: "Perfect for getting started",
-      features: [
-        "15 API calls per month",
-        "Unlimited scanner combinations",
-        "Basic stock screening",
-        "Email alerts",
-        "Community support",
-        "Basic portfolio tracking"
-      ],
-      popular: false,
-      cta: "Get Started Free",
-      isFree: true
+      cta: "Start Free Trial"
     }
   ];
 
@@ -527,7 +533,7 @@ const Home = () => {
             </div>
             <div className="flex items-center">
               <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              24/7 Support
+              Email Support
             </div>
           </div>
         </div>
