@@ -90,8 +90,13 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/DocumentationSimple";
-import EnterpriseContact from "./pages/EnterpriseContact";
+import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
 import Help from "./pages/Help";
+
+// Enterprise Solutions
+import QuoteRequest from "./pages/enterprise/QuoteRequest";
+import SolutionsShowcase from "./pages/enterprise/SolutionsShowcase";
+import WhiteLabelConfig from "./pages/enterprise/WhiteLabelConfig";
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
