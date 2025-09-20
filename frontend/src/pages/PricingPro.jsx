@@ -81,8 +81,8 @@ const PricingPro = () => {
     },
     bronze: {
       name: 'Bronze Plan', 
-      price: 15,
-      price_yearly: 150,
+      price: 24.99,
+      price_yearly: 254.99,
       popular: false,
       limits: {
         api_calls: 1500,
@@ -110,8 +110,8 @@ const PricingPro = () => {
     },
     silver: {
       name: 'Silver Plan',
-      price: 30,
-      price_yearly: 300,
+      price: 49.99,
+      price_yearly: 509.99,
       popular: true,
       limits: {
         api_calls: 5000,
@@ -121,24 +121,24 @@ const PricingPro = () => {
         portfolios: 5,
       },
       features: [
-        'Professional stock data access',
+        'All Bronze features',
         '5,000 API calls per month',
         '20 Screeners',
         '500 Alerts per month',
         '5 Watchlists',
-        'Portfolio Access',
-        'Advanced Screener Tools (JSON input and CSV + JSON output)',
-        'Advanced Watchlist Tools (JSON input and CSV + JSON output)',
+        'Portfolio Analytics',
+        'Advanced Screener Tools (JSON input/output)',
+        'Advanced Watchlist Tools (JSON input/output)',
         'Historical data access',
         'Custom Portfolios',
-        'Higher Call limits',
-        'Everything included in Bronze'
+        'Data Export (CSV, JSON)',
+        'Priority support'
       ]
     },
     gold: {
       name: 'Gold Plan',
-      price: 100,
-      price_yearly: 1000,
+      price: 79.99,
+      price_yearly: 814.99,
       popular: false,
       limits: {
         api_calls: -1,
@@ -148,16 +148,17 @@ const PricingPro = () => {
         portfolios: -1,
       },
       features: [
-        'Unlimited Everything',
-        'Professional stock data access',
-        'Highest Limits',
-        'Portfolio tracking (unlimited)',
-        'Complete documentation access',
-        'All Screener and Watchlist Tools',
-        'Unlimited watchlists',
+        'Everything in Silver',
+        'Unlimited API calls',
+        'Unlimited everything',
         'API Key Access',
+        'Developer Tools',
+        'White-label Solutions',
+        'Custom Reports',
         'Real-time market data',
-        'Professional reporting'
+        'Professional analytics',
+        'Advanced export options',
+        'Premium support'
       ]
     }
   });
@@ -187,6 +188,14 @@ const PricingPro = () => {
     return limit.toLocaleString();
   };
 
+  const getAnnualSavings = (monthly, yearly) => {
+    if (monthly === 0) return 0;
+    const monthlyCost = monthly * 12;
+    const savings = monthlyCost - yearly;
+    const percentage = Math.round((savings / monthlyCost) * 100);
+    return { amount: savings, percentage };
+  };
+
   const handleSubscribe = async (planKey) => {
     if (!isAuthenticated) {
       navigate('/auth/sign-in');
@@ -209,6 +218,11 @@ const PricingPro = () => {
     <div className="container mx-auto px-4 py-16">
       {/* Header */}
       <div className="text-center mb-16">
+        <Badge variant="secondary" className="mb-4">
+          <Star className="h-4 w-4 mr-1" />
+          Track 10,500+ stocks with professional tools
+        </Badge>
+        
         <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
           Choose Your Plan
         </h1>
@@ -230,121 +244,130 @@ const PricingPro = () => {
             Annual
           </Label>
           <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2">
-            Save 17%
+            Save 15%
           </Badge>
         </div>
       </div>
 
       {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-        {Object.entries(plans).map(([planKey, plan]) => (
-          <Card key={planKey} className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${getPlanColor(planKey)}`}>
-            {plan.popular && (
-              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white">
-                Most Popular
-              </Badge>
-            )}
-            
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-4">
-                {getPlanIcon(planKey)}
-              </div>
-              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-              <div className="mt-4">
-                <div className="text-4xl font-bold text-gray-900">
-                  ${isAnnual ? plan.price_yearly : plan.price}
-                  {plan.price > 0 && (
-                    <span className="text-lg font-normal text-gray-600">
-                      /{isAnnual ? 'year' : 'month'}
-                    </span>
-                  )}
+        {Object.entries(plans).map(([planKey, plan]) => {
+          const savings = getAnnualSavings(plan.price, plan.price_yearly);
+          
+          return (
+            <Card key={planKey} className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${getPlanColor(planKey)}`}>
+              {plan.popular && (
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white">
+                  Most Popular
+                </Badge>
+              )}
+              
+              <CardHeader className="text-center pb-4">
+                <div className="flex justify-center mb-4">
+                  {getPlanIcon(planKey)}
                 </div>
-                {isAnnual && plan.price > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    ${(plan.price_yearly / 12).toFixed(2)}/month billed annually
-                  </p>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              {/* Limits Summary */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-gray-600">API Calls:</span>
-                    <span className="font-medium ml-1">{formatLimit(plan.limits.api_calls)}</span>
+                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                <div className="mt-4">
+                  <div className="text-4xl font-bold text-gray-900">
+                    ${isAnnual ? plan.price_yearly : plan.price}
+                    {plan.price > 0 && (
+                      <span className="text-lg font-normal text-gray-600">
+                        /{isAnnual ? 'year' : 'month'}
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <span className="text-gray-600">Screeners:</span>
-                    <span className="font-medium ml-1">{formatLimit(plan.limits.screeners)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Alerts:</span>
-                    <span className="font-medium ml-1">{formatLimit(plan.limits.alerts)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Watchlists:</span>
-                    <span className="font-medium ml-1">{formatLimit(plan.limits.watchlists)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Features List */}
-              <ul className="space-y-3 mb-8">
-                {plan.features.slice(0, 6).map((feature, index) => (
-                  <li key={index} className="flex items-start space-x-3">
-                    <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">{feature}</span>
-                  </li>
-                ))}
-                {plan.features.length > 6 && (
-                  <li className="text-sm text-gray-500">
-                    + {plan.features.length - 6} more features
-                  </li>
-                )}
-              </ul>
-
-              {/* CTA Button */}
-              <div className="space-y-3">
-                <Button
-                  className={`w-full ${
-                    plan.popular
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : currentPlan === planKey
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gray-900 hover:bg-gray-800'
-                  }`}
-                  onClick={() => handleSubscribe(planKey)}
-                  disabled={isLoading || currentPlan === planKey || planKey === 'free'}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing...</span>
+                  {isAnnual && plan.price > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        ${(plan.price_yearly / 12).toFixed(2)}/month billed annually
+                      </p>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 mt-1">
+                        Save ${savings.amount.toFixed(2)} ({savings.percentage}%)
+                      </Badge>
                     </div>
-                  ) : currentPlan === planKey ? (
-                    'Current Plan'
-                  ) : planKey === 'free' ? (
-                    'Get Started Free'
-                  ) : (
-                    `Upgrade to ${plan.name}`
                   )}
-                </Button>
-                
-                {planKey === 'free' && !isAuthenticated && (
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-0">
+                {/* Limits Summary */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-600">API Calls:</span>
+                      <span className="font-medium ml-1">{formatLimit(plan.limits.api_calls)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Screeners:</span>
+                      <span className="font-medium ml-1">{formatLimit(plan.limits.screeners)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Alerts:</span>
+                      <span className="font-medium ml-1">{formatLimit(plan.limits.alerts)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Watchlists:</span>
+                      <span className="font-medium ml-1">{formatLimit(plan.limits.watchlists)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Features List */}
+                <ul className="space-y-3 mb-8">
+                  {plan.features.slice(0, 6).map((feature, index) => (
+                    <li key={index} className="flex items-start space-x-3">
+                      <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                  {plan.features.length > 6 && (
+                    <li className="text-sm text-gray-500">
+                      + {plan.features.length - 6} more features
+                    </li>
+                  )}
+                </ul>
+
+                {/* CTA Button */}
+                <div className="space-y-3">
                   <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => navigate('/auth/sign-up')}
+                    className={`w-full ${
+                      plan.popular
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : currentPlan === planKey
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gray-900 hover:bg-gray-800'
+                    }`}
+                    onClick={() => handleSubscribe(planKey)}
+                    disabled={isLoading || currentPlan === planKey || planKey === 'free'}
                   >
-                    Create Free Account
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </div>
+                    ) : currentPlan === planKey ? (
+                      'Current Plan'
+                    ) : planKey === 'free' ? (
+                      'Get Started Free'
+                    ) : (
+                      `Upgrade to ${plan.name}`
+                    )}
                   </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  
+                  {planKey === 'free' && !isAuthenticated && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate('/auth/sign-up')}
+                    >
+                      Create Free Account
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* API Call Pricing Explanation */}
@@ -405,10 +428,30 @@ const PricingPro = () => {
             <p className="text-gray-600">The free plan includes stock data access, 30 API calls per month, basic stock screener (30 calls, 1 screener, 1 portfolio).</p>
           </div>
           <div className="bg-white rounded-lg border p-6">
+            <h4 className="font-semibold mb-2">How much do I save with annual billing?</h4>
+            <p className="text-gray-600">Annual plans save you 15% compared to monthly billing. For example, Bronze saves $44.89/year, Silver saves $89.89/year, and Gold saves $144.89/year.</p>
+          </div>
+          <div className="bg-white rounded-lg border p-6">
             <h4 className="font-semibold mb-2">Do you offer refunds?</h4>
-            <p className="text-gray-600">We offer a 30-day money-back guarantee for all paid plans. Contact support if you're not satisfied.</p>
+            <p className="text-gray-600">We offer a 30-day money-back guarantee for all paid plans. Contact {process.env.REACT_APP_SUPPORT_EMAIL || 'noreply.retailtradescanner@gmail.com'} if you're not satisfied.</p>
           </div>
         </div>
+      </div>
+
+      {/* Contact Support */}
+      <div className="text-center mt-16">
+        <h3 className="text-xl font-bold text-gray-900 mb-4">
+          Need help choosing a plan?
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Contact our team for personalized recommendations.
+        </p>
+        <Button asChild variant="outline" size="lg">
+          <Link to="/contact">
+            <Mail className="h-5 w-5 mr-2" />
+            Contact Support
+          </Link>
+        </Button>
       </div>
     </div>
   );
