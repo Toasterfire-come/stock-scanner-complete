@@ -9,7 +9,7 @@ import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatus
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Layouts
-import AppLayout from "./layouts/AppLayout.jsx";
+import EnhancedAppLayout from "./layouts/EnhancedAppLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout";
 
 // Auth Pages
