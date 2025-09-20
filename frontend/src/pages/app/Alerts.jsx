@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/SecureAuthContext";
+import { alertsMeta, createAlert, api } from "../../api/client";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
