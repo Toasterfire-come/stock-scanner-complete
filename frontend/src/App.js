@@ -98,6 +98,12 @@ import QuoteRequest from "./pages/enterprise/QuoteRequest";
 import SolutionsShowcase from "./pages/enterprise/SolutionsShowcase";
 import WhiteLabelConfig from "./pages/enterprise/WhiteLabelConfig";
 
+// Data Export System
+import ExportManager from "./pages/app/exports/ExportManager";
+import CustomReportBuilder from "./pages/app/exports/CustomReportBuilder";
+import ScheduledExports from "./pages/app/exports/ScheduledExports";
+import DownloadHistory from "./pages/app/exports/DownloadHistory";
+
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
 import LatencyIndicator from "./components/LatencyIndicator";
