@@ -129,7 +129,7 @@ const Home = () => {
 
   const stats = [
     { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "3,200", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "Stocks Tracked", value: "10,500+", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
     { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
   ];
