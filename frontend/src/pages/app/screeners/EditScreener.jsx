@@ -232,19 +232,19 @@ const EditScreener = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Screening Criteria</CardTitle>
+              <CardTitle id="edit-criteria-title">Screening Criteria</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
                 <Select onValueChange={addCriterion}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Add a criterion" />
+                    <SelectValue placeholder="Add a criterion" aria-label="Add a criterion" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableCriteria
                       .filter(c => !criteria.some(existing => existing.id === c.id))
                       .map(criterion => (
-                        <SelectItem key={criterion.id} value={criterion.id}>
+                        <SelectItem key={criterion.id} value={criterion.id} aria-label={criterion.name}>
                           {criterion.name}
                         </SelectItem>
                       ))}

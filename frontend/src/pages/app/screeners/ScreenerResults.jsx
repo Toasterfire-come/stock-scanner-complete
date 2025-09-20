@@ -193,9 +193,9 @@ const ScreenerResults = () => {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
+              <Table role="table" aria-label="Screener results">
                 <TableHeader>
-                  <TableRow>
+                  <TableRow role="row">
                     <TableHead className="sticky top-0 bg-white">Symbol</TableHead>
                     <TableHead className="sticky top-0 bg-white">Company</TableHead>
                     <TableHead className="sticky top-0 bg-white cursor-pointer" onClick={() => changeSort('current_price')}>
