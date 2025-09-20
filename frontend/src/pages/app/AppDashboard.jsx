@@ -141,11 +141,7 @@ const AppDashboard = () => {
             <Badge variant="secondary" className="text-sm">
               {user?.plan || 'Bronze'} Plan
             </Badge>
-            {marketStatus && (
-              <Badge variant={marketStatus.is_open ? "default" : "secondary"} className="text-sm">
-                Market {marketStatus.is_open ? 'Open' : 'Closed'}
-              </Badge>
-            )}
+            <MarketStatusIndicator compact={true} />
           </div>
         </div>
 
