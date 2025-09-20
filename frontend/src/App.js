@@ -84,6 +84,7 @@ import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/DocumentationSimple";
 import EnterpriseContact from "./pages/EnterpriseContact";
+import Help from "./pages/Help";
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
