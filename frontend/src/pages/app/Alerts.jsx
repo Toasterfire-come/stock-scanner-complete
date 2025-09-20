@@ -102,8 +102,8 @@ const Alerts = () => {
       return;
     }
     try {
-      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/alerts/${encodeURIComponent(alertId)}/toggle/`, { method: 'POST' });
-      if (!resp.ok) throw new Error('toggle failed');
+      // Use the proper API client function
+      await api.post(`/alerts/${encodeURIComponent(alertId)}/toggle/`);
       setAlerts((prev) => prev.map(alert => 
         alert.id === alertId 
           ? { ...alert, isActive: !alert.isActive }
