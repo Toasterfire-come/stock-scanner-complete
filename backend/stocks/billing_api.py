@@ -118,6 +118,13 @@ def paypal_webhook_api(request):
                 v.raise_for_status()
                 if (v.json() or {}).get('verification_status') != 'SUCCESS':
                     return JsonResponse({'success': False, 'error': 'Invalid webhook signature'}, status=400)
+                # Persist verification success on matching WebhookEvent
+                try:
+                    ev_id = str(data.get('id') or '')
+                    if ev_id:
+                        WebhookEvent.objects.filter(event_id=ev_id).update(status='verified', processed_at=timezone.now())
+                except Exception:
+                    pass
         except Exception as _sig_err:
             logger.warning(f"PayPal webhook signature verification skipped/failed: {_sig_err}")
 
@@ -798,6 +805,25 @@ def cancel_subscription_api(request):
     except Exception as e:
         logger.error(f"Cancel subscription error: {e}")
         return JsonResponse({'success': False, 'error': 'Failed to cancel subscription'}, status=500)
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AuthPerm])
+def set_auto_renew_api(request):
+    """Toggle auto_renew for current user: POST { auto_renew: bool }"""
+    try:
+        user = _effective_user(request)
+        data = getattr(request, 'data', None) or json.loads(request.body or '{}')
+        auto = bool(data.get('auto_renew', True))
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.auto_renew = auto
+        if not auto and profile.subscription_status == 'active':
+            profile.subscription_status = 'canceled'
+        profile.save(update_fields=['auto_renew', 'subscription_status'])
+        return JsonResponse({'success': True, 'auto_renew': profile.auto_renew, 'subscription_status': profile.subscription_status})
+    except Exception as e:
+        logger.error(f"set_auto_renew_api error: {e}")
+        return JsonResponse({'success': False, 'error': 'Failed to update auto_renew'}, status=500)
 
 @csrf_exempt
 @api_view(['GET'])

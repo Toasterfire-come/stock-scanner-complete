@@ -10,6 +10,8 @@ import json
 import logging
 import secrets
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.conf import settings
 
 from .models import ReferralAccount, ReferralInvite, ReferralRedemption
 
@@ -80,6 +82,28 @@ def create_referral_invite_api(request):
         if not inviter_uid or not invitee_email:
             return JsonResponse({'error': 'inviter_id and invitee_email required'}, status=400)
         user = request.user if request.user.is_authenticated else None
+        # Prevent self-referrals if authenticated
+        try:
+            if user and (user.email or '').lower() == invitee_email:
+                return JsonResponse({'error': 'Cannot invite your own email'}, status=400)
+        except Exception:
+            pass
+        # Prevent disposable emails (basic check, extendable via env)
+        disposable_domains = set(filter(None, [d.strip().lower() for d in (os.environ.get('DISPOSABLE_EMAIL_DOMAINS') or '').split(',')])) or {
+            'mailinator.com','guerrillamail.com','10minutemail.com','tempmail.com','trashmail.com'
+        }
+        try:
+            domain = invitee_email.split('@',1)[1]
+            if domain in disposable_domains:
+                return JsonResponse({'error': 'Disposable emails are not allowed'}, status=400)
+        except Exception:
+            pass
+        # Rate-limit invites per inviter
+        rl_limit = int(os.environ.get('REFERRAL_INVITES_PER_HOUR', '20'))
+        rl_key = f"ref_invites:{inviter_uid}:{timezone.now().strftime('%Y%m%d%H')}"
+        count = cache.get(rl_key, 0)
+        if count >= rl_limit:
+            return JsonResponse({'error': 'Invite rate limit exceeded'}, status=429)
         account = ReferralAccount.objects.filter(Q(inviter_uid=inviter_uid) | Q(user=user)).first()
         if not account:
             account = ReferralAccount.objects.create(inviter_uid=inviter_uid, user=user, referral_code=_gen_code(8))
@@ -93,6 +117,10 @@ def create_referral_invite_api(request):
             referral_code=account.referral_code,
             status='invited'
         )
+        try:
+            cache.set(rl_key, count + 1, timeout=3600)
+        except Exception:
+            pass
         return JsonResponse({'status': 'ok', 'id': inv.id})
     except Exception as e:
         logger.error(f"Referral invite error: {e}")

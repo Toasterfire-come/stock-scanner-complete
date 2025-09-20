@@ -34,6 +34,7 @@ urlpatterns = [
     path('billing/capture-paypal-order/', billing_api.capture_paypal_order_api, name='capture_paypal_order'),
     path('billing/paypal-webhook/', billing_api.paypal_webhook_api, name='paypal_webhook'),
     path('billing/paypal-status/', billing_api.paypal_status_api, name='paypal_status'),
+    path('billing/auto-renew/', billing_api.set_auto_renew_api, name='set_auto_renew'),
     
     # Notification endpoints
     path('user/notification-settings/', billing_api.notification_settings_api, name='user_notification_settings'),
@@ -48,6 +49,10 @@ urlpatterns = [
     path('usage/track/', billing_api.usage_track_api, name='usage_track'),
     path('usage/reconcile/', billing_api.usage_reconcile_api, name='usage_reconcile'),
     path('platform-stats', platform_views.platform_stats_api, name='platform_stats'),
+    # API keys (feature-gated)
+    path('user/api-keys/create/', auth_api.api_keys_create_api, name='api_keys_create'),
+    path('user/api-keys/', auth_api.api_keys_list_api, name='api_keys_list'),
+    path('user/api-keys/revoke/', auth_api.api_keys_revoke_api, name='api_keys_revoke'),
     
     # Market data
     path('market-data/', auth_api.market_data_api, name='market_data'),

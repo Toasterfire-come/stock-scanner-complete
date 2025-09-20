@@ -6,8 +6,93 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+const LegalPage = ({ type }) => {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    const endpoint = type === 'privacy' ? `${BACKEND_URL}/api/legal/privacy` : `${BACKEND_URL}/api/legal/terms`;
+    axios.get(endpoint)
+      .then(r => setData(r.data))
+      .catch(e => setError(e?.response?.data?.error || e.message || 'Failed to load'));
+  }, [type]);
+  if (error) return <div className="p-6 max-w-3xl mx-auto"><p className="text-red-600">{error}</p></div>;
+  if (!data) return <div className="p-6 max-w-3xl mx-auto"><p>Loading…</p></div>;
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-2">{data.title}</h1>
+      {data.intro && <p className="text-sm text-gray-600 mb-4">{data.intro}</p>}
+      {Array.isArray(data.sections) && data.sections.map((s, idx) => (
+        <div key={idx} className="mt-4">
+          {s.heading && <h2 className="text-xl font-semibold">{s.heading}</h2>}
+          {s.body && <p className="mt-1">{s.body}</p>}
+          {Array.isArray(s.list) && (
+            <ul className="list-disc ml-6 mt-2">
+              {s.list.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+      {data.last_updated && <p className="text-xs text-gray-500 mt-4">Last updated: {data.last_updated}</p>}
+    </div>
+  );
+};
+
+const Account = () => {
+  const [plan, setPlan] = useState(null);
+  const [autoRenew, setAutoRenew] = useState(null);
+  const [usage, setUsage] = useState(null);
+  const [refSum, setRefSum] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const userId = useMemo(() => window.localStorage.getItem('rts_user_id') || '', []);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [p, u, r] = await Promise.all([
+          axios.get(`${API}/billing/current-plan/`, { withCredentials: true }).then(r=>r.data),
+          axios.get(`${API}/usage/`, { withCredentials: true }).then(r=>r.data),
+          axios.get(`${API}/referrals/summary`, { params: { user_id: userId }}).then(r=>r.data),
+        ]);
+        setPlan(p?.data || {});
+        setAutoRenew(!!p?.data?.auto_renew);
+        setUsage(u?.data || {});
+        setRefSum(r || {});
+      } catch (e) {}
+      setLoading(false);
+    };
+    load();
+  }, [userId]);
+  const onToggle = async () => {
+    try {
+      const r = await axios.post(`${API}/billing/auto-renew/`, { auto_renew: !autoRenew }, { withCredentials: true });
+      setAutoRenew(!!r.data.auto_renew);
+    } catch (e) { alert('Failed to update'); }
+  };
+  if (loading) return <div className="p-6">Loading…</div>;
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Account</h1>
+      <div className="border rounded p-4">
+        <h2 className="text-lg font-semibold">Plan</h2>
+        <p className="text-sm text-gray-600">{plan?.plan_name} · Billing: {plan?.billing_cycle}</p>
+        <p className="text-sm">Next billing date: {plan?.next_billing_date || '—'}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-sm">Auto renew:</span>
+          <button className="px-3 py-1 border rounded" onClick={onToggle}>{autoRenew ? 'On' : 'Off'}</button>
+        </div>
+      </div>
+      <div className="border rounded p-4 mt-4">
+        <h2 className="text-lg font-semibold">Usage</h2>
+        <p className="text-sm">Monthly API calls: {usage?.monthly?.api_calls ?? 0} / {usage?.monthly?.limit ?? 0}</p>
+      </div>
+      <div className="border rounded p-4 mt-4">
+        <h2 className="text-lg font-semibold">Referrals</h2>
+        <p className="text-sm">Invited: {refSum?.total_invited ?? 0} · Paid: {refSum?.total_paid ?? 0} · Pending free months: {refSum?.pending_rewards_months ?? 0}</p>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
-  const [cookieConsent, setCookieConsent] = useState(() => window.localStorage.getItem('cookie_consent') || '');
   const [health, setHealth] = useState(null);
   const [breakouts, setBreakouts] = useState([]);
   const [undervalued, setUndervalued] = useState([]);
@@ -15,6 +100,8 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [referral, setReferral] = useState({ link: null, code: null, summary: null });
   const [inviteEmail, setInviteEmail] = useState("");
+  const [keys, setKeys] = useState([]);
+  const [newKeyName, setNewKeyName] = useState('');
   const userId = useMemo(() => {
     // Placeholder for real auth user id integration
     const stored = window.localStorage.getItem("rts_user_id");
@@ -61,17 +148,37 @@ const Home = () => {
     }
   };
 
+  const loadKeys = async () => {
+    try {
+      const r = await axios.get(`${API}/user/api-keys/`, { withCredentials: true });
+      setKeys((r.data && r.data.keys) || []);
+    } catch (e) {
+      /* silently ignore if disabled */
+    }
+  };
+  useEffect(() => { loadKeys(); }, []);
+
+  const onCreateKey = async () => {
+    try {
+      const r = await axios.post(`${API}/user/api-keys/create/`, { name: newKeyName || 'default' }, { withCredentials: true });
+      alert(`Copy your API key now: ${r.data.api_key}`);
+      setNewKeyName('');
+      loadKeys();
+    } catch (e) {
+      alert(e?.response?.data?.detail || 'Failed to create key');
+    }
+  };
+  const onRevokeKey = async (id) => {
+    try {
+      await axios.post(`${API}/user/api-keys/revoke/`, { id }, { withCredentials: true });
+      loadKeys();
+    } catch (e) {
+      alert('Failed to revoke key');
+    }
+  };
+
   return (
     <div className="container mx-auto p-6">
-      {!cookieConsent && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white border shadow p-4 rounded max-w-xl w-[90%] z-50">
-          <p className="text-sm">We use cookies to improve your experience, analyze usage, and personalize content. See our <a className="underline" href="/privacy">Privacy Policy</a>.</p>
-          <div className="mt-3 flex gap-2 justify-end">
-            <button className="px-3 py-1 border rounded" onClick={() => {window.localStorage.setItem('cookie_consent','declined'); setCookieConsent('declined');}}>Decline</button>
-            <button className="px-3 py-1 bg-black text-white rounded" onClick={() => {window.localStorage.setItem('cookie_consent','accepted'); setCookieConsent('accepted');}}>Accept</button>
-          </div>
-        </div>
-      )}
       <header className="flex flex-col gap-2 items-start">
         <h1 className="text-3xl font-bold">RetailTradeScanner</h1>
         <p className="text-gray-600">
@@ -140,19 +247,59 @@ const Home = () => {
           </p>
         )}
       </section>
+
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">API access (private)</h2>
+        <p className="text-gray-600 text-sm">Use API keys for server-to-server access. Keys are hidden by default in production.</p>
+        <div className="mt-3 flex gap-2 items-center">
+          <input className="border px-3 py-2 rounded" placeholder="Key name" value={newKeyName} onChange={(e)=>setNewKeyName(e.target.value)} />
+          <button className="bg-black text-white px-4 py-2 rounded" onClick={onCreateKey}>Create key</button>
+        </div>
+        {!!keys.length && (
+          <ul className="mt-3 list-disc ml-5">
+            {keys.map(k => (
+              <li key={k.id} className="flex items-center gap-2">
+                <span>{k.name} · {k.prefix}•••• · {k.is_active ? 'active' : 'revoked'}</span>
+                {k.is_active && <button className="text-red-600 underline" onClick={()=>onRevokeKey(k.id)}>Revoke</button>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 };
 
 function App() {
+  const [cookieConsent, setCookieConsent] = useState(() => window.localStorage.getItem('cookie_consent') || '');
   return (
     <div className="App">
       <BrowserRouter>
+        {!cookieConsent && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white border shadow p-4 rounded max-w-xl w-[90%] z-50">
+            <p className="text-sm">We use cookies to improve your experience, analyze usage, and personalize content. See our <a className="underline" href="/privacy">Privacy Policy</a>.</p>
+            <div className="mt-3 flex gap-2 justify-end">
+              <button className="px-3 py-1 border rounded" onClick={() => {window.localStorage.setItem('cookie_consent','declined'); setCookieConsent('declined');}}>Decline</button>
+              <button className="px-3 py-1 bg-black text-white rounded" onClick={() => {window.localStorage.setItem('cookie_consent','accepted'); setCookieConsent('accepted');}}>Accept</button>
+            </div>
+          </div>
+        )}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/terms" element={<div className="p-6 max-w-3xl mx-auto"><h1 className="text-2xl font-bold mb-4">Terms of Service</h1><p>By using this site, you agree to the following terms and conditions.</p><h3 className="font-semibold mt-4">Use of Service</h3><p>Do not misuse the service or attempt to disrupt operations.</p><h3 className="font-semibold mt-4">No Financial Advice</h3><p>Information provided is for educational purposes only and not investment advice.</p></div>} />
-          <Route path="/privacy" element={<div className="p-6 max-w-3xl mx-auto"><h1 className="text-2xl font-bold mb-2">Privacy Policy</h1><p className="text-sm text-gray-600 mb-4">How we collect, use, and protect your personal information</p><h2 className="text-xl font-semibold mt-4">Information We Collect</h2><p>We collect information you provide directly to us, such as when you create an account, use our services, or contact support. This may include your name, email address, and usage preferences.</p><h2 className="text-xl font-semibold mt-4">How We Use Your Information</h2><ul className="list-disc ml-6"><li>Provide and maintain our stock analysis services</li><li>Personalize your experience and recommendations</li><li>Communicate with you about your account and our services</li><li>Improve and enhance our platform</li><li>Ensure security and prevent fraud</li></ul><h2 className="text-xl font-semibold mt-4">Data Security</h2><p>We implement appropriate security measures to protect your personal information.</p><h2 className="text-xl font-semibold mt-4">Cookies and Tracking</h2><p>We use cookies and similar technologies to enhance your browsing experience. You can control cookie settings in your browser.</p><h2 className="text-xl font-semibold mt-4">Contact Us</h2><p>If you have any questions, email privacy@stockscanner.com.</p><p className="text-xs text-gray-500 mt-4">Last updated: January 2025</p></div>} />
+          <Route path="/account" element={<Account />} />
+          <Route path="*" element={<div className="p-6"><h1 className="text-2xl font-bold">404</h1><p className="text-gray-600">Page not found.</p></div>} />
+          <Route path="/terms" element={<LegalPage type="terms" />} />
+          <Route path="/privacy" element={<LegalPage type="privacy" />} />
         </Routes>
+        <footer className="mt-12 border-t pt-6 text-sm text-gray-600">
+          <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row gap-2 justify-between">
+            <div>© {new Date().getFullYear()} RetailTradeScanner</div>
+            <nav className="flex gap-4">
+              <a className="underline" href="/terms">Terms of Service</a>
+              <a className="underline" href="/privacy">Privacy Policy</a>
+            </nav>
+          </div>
+        </footer>
       </BrowserRouter>
     </div>
   );

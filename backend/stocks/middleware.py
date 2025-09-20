@@ -30,22 +30,24 @@ class WebhookIdempotencyMiddleware(MiddlewareMixin):
         )
         event_id = request.META.get('HTTP_X_WEBHOOK_EVENT_ID') or ''
         signature = request.META.get('HTTP_X_WEBHOOK_SIGNATURE') or ''
+
+        # Attempt to derive event id from JSON body if missing
         if not event_id:
-            # Some providers use id field in JSON
             try:
                 data = json.loads(request.body or '{}')
                 event_id = str(data.get('id') or data.get('event_id') or '')
             except Exception:
                 event_id = ''
 
-        if not event_id:
-            return JsonResponse({'success': False, 'error': 'Missing event id'}, status=400)
-
-        # Compute payload hash for reference
+        # Compute payload hash for reference (used as a fallback id if needed)
         try:
             payload_hash = hashlib.sha256(request.body or b'').hexdigest()
         except Exception:
             payload_hash = ''
+
+        # If event id is still missing, fall back to payload hash (best-effort idempotency)
+        if not event_id:
+            event_id = payload_hash or f"{source}:{path}"
 
         # Idempotency check
         exists = WebhookEvent.objects.filter(event_id=event_id).exists()

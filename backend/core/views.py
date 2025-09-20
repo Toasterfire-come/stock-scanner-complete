@@ -421,10 +421,39 @@ def sitemap_xml(request):
     content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>{base}/</loc></url>
-  <url><loc>{base}/pricing</loc></url>
-  <url><loc>{base}/checkout/subscribe</loc></url>
-  <url><loc>{base}/features</loc></url>
-  <url><loc>{base}/contact</loc></url>
+  <url><loc>{base}/account</loc></url>
+  <url><loc>{base}/terms</loc></url>
+  <url><loc>{base}/privacy</loc></url>
 </urlset>
 """
     return HttpResponse(content, content_type="application/xml")
+
+# Legal content (simple JSON; could be backed by DB or CMS in future)
+@require_http_methods(["GET"]) 
+def terms_api(request):
+    return JsonResponse({
+        'title': 'Terms of Service',
+        'sections': [
+            {'heading': 'Use of Service', 'body': 'Do not misuse the service or attempt to disrupt operations.'},
+            {'heading': 'No Financial Advice', 'body': 'Information provided is for educational purposes only and not investment advice.'}
+        ]
+    })
+
+@require_http_methods(["GET"]) 
+def privacy_api(request):
+    return JsonResponse({
+        'title': 'Privacy Policy',
+        'intro': 'How we collect, use, and protect your personal information',
+        'sections': [
+            {'heading': 'Information We Collect', 'body': 'We collect information you provide directly to us when you create an account, use our services, or contact support.'},
+            {'heading': 'How We Use Your Information', 'list': [
+                'Provide and maintain our stock analysis services',
+                'Personalize your experience and recommendations',
+                'Communicate with you about your account and our services',
+                'Improve and enhance our platform',
+                'Ensure security and prevent fraud']},
+            {'heading': 'Data Security', 'body': 'We implement appropriate security measures to protect your personal information.'},
+            {'heading': 'Cookies and Tracking', 'body': 'We use cookies and similar technologies to enhance your browsing experience.'}
+        ],
+        'last_updated': '2025-01-01'
+    })
