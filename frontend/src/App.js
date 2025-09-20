@@ -403,6 +403,11 @@ function App() {
                       <CurrentPlan />
                     </ProtectedRoute>
                   } />
+                  <Route path="/account/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
 
                   {/* System Routes */}
                   <Route path="/endpoint-status" element={<EndpointStatus />} />
