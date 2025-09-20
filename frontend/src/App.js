@@ -89,7 +89,9 @@ import EndpointStatus from "./pages/system/EndpointStatus";
 // Content & Docs
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
-import Documentation from "./pages/docs/DocumentationSimple";
+import Documentation from "./pages/docs/Documentation";
+import CreateAccount from "./pages/docs/getting-started/CreateAccount";
+import Dashboard from "./pages/docs/getting-started/Dashboard";
 import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
 import Help from "./pages/Help";
 
