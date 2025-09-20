@@ -276,12 +276,14 @@ def plan_comparison(request):
         }
     }
     
-    # Get current user's plan
-    try:
-        profile = UserProfile.objects.get(user=request.user)
-        current_plan = profile.plan_type
-    except UserProfile.DoesNotExist:
-        current_plan = 'free'
+    # Get current user's plan if authenticated
+    current_plan = 'free'
+    if request.user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            current_plan = profile.plan_type
+        except UserProfile.DoesNotExist:
+            current_plan = 'free'
     
     return JsonResponse({
         'success': True,
