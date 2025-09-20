@@ -303,6 +303,33 @@ function App() {
                     </ProtectedRoute>
                   } />
 
+                  {/* Developer Tools - Protected (Gold Plan) */}
+                  <Route path="/app/developer" element={
+                    <ProtectedRoute>
+                      <DeveloperDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/api-keys" element={
+                    <ProtectedRoute>
+                      <ApiKeyManagement />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/usage-statistics" element={
+                    <ProtectedRoute>
+                      <UsageStatistics />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/api-documentation" element={
+                    <ProtectedRoute>
+                      <ApiDocumentation />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/console" element={
+                    <ProtectedRoute>
+                      <DeveloperConsole />
+                    </ProtectedRoute>
+                  } />
+
                   {/* Account Routes - Protected */}
                   <Route path="/account/profile" element={
                     <ProtectedRoute>

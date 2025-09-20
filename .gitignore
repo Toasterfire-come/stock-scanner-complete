@@ -81,3 +81,4 @@ android-sdk/ temp_repo/.git/objects/pack/pack-941ece1e18a9a9549a935b62e1c92b9dc4
 temp_repo/.git/objects/pack/pack-941ece1e18a9a9549a935b62e1c92b9dc42612ef.pack
 frontend/node_modules/.cache/default-development/1.pack
 frontend/node_modules/.cache/default-development/2.pack
+frontend/node_modules/.cache/default-development/3.pack_
