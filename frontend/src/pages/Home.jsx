@@ -172,15 +172,16 @@ const Home = () => {
     },
     {
       name: "Silver", 
-      price: "$39.99",
+      price: "$49.99",
       period: "/month",
+      annualPrice: "$509.99",
       description: "Professional tools for serious traders",
       features: [
         "5000 API calls per month",
         "20 Screeners",
         "500 Alerts per month",
         "5 Watchlists",
-        "Portfolio Access",
+        "Portfolio Analytics",
         "Advanced Screener Tools (JSON input/output)",
         "Advanced Watchlist Tools",
         "Historical data access",
