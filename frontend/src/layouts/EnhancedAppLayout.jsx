@@ -1,0 +1,458 @@
+import React, { useState } from "react";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/SecureAuthContext";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { SmartBreadcrumb } from "../components/ui/breadcrumb";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "../components/ui/navigation-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+} from "../components/ui/sheet";
+import {
+  BarChart3,
+  TrendingUp,
+  Search,
+  Bell,
+  User,
+  Menu,
+  Home,
+  Activity,
+  Eye,
+  Target,
+  AlertCircle,
+  Settings,
+  LogOut,
+  Crown,
+  FileText,
+  Phone,
+  HelpCircle,
+  Building,
+  Zap,
+  ChevronDown
+} from "lucide-react";
+import MarketStatus from "../components/MarketStatus";
+import QuickActions from "../components/QuickActions";
+
+const EnhancedAppLayout = () => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Enhanced navigation structure with better grouping
+  const navigationGroups = {
+    solutions: {
+      label: "Solutions",
+      items: [
+        { name: "Features", href: "/features", icon: Activity, description: "Powerful trading tools" },
+        { name: "Pricing", href: "/pricing", icon: Crown, description: "Plans for every trader" },
+        { name: "Enterprise", href: "/enterprise", icon: Building, description: "Solutions for institutions" }
+      ]
+    },
+    trading: {
+      label: "Trading Tools",
+      items: [
+        { name: "Dashboard", href: "/app/dashboard", icon: BarChart3, description: "Overview & insights" },
+        { name: "Screeners", href: "/app/screeners", icon: Search, description: "Find trading opportunities" },
+        { name: "Markets", href: "/app/markets", icon: TrendingUp, description: "Market overview" },
+        { name: "Alerts", href: "/app/alerts", icon: AlertCircle, description: "Price & volume alerts" }
+      ]
+    },
+    portfolio: {
+      label: "Portfolio",
+      items: [
+        { name: "Stocks", href: "/app/stocks", icon: Activity, description: "Stock analysis" },
+        { name: "Portfolio", href: "/app/portfolio", icon: Target, description: "Track performance" },
+        { name: "Watchlists", href: "/app/watchlists", icon: Eye, description: "Monitor favorites" }
+      ]
+    },
+    resources: {
+      label: "Resources",
+      items: [
+        { name: "Help Center", href: "/help", icon: HelpCircle, description: "Get support" },
+        { name: "Documentation", href: "/docs", icon: FileText, description: "Learn the platform" },
+        { name: "About", href: "/about", icon: Building, description: "Our story" },
+        { name: "Contact", href: "/contact", icon: Phone, description: "Get in touch" }
+      ]
+    }
+  };
+
+  const isUserPage = location.pathname.startsWith("/app");
+  const showBreadcrumbs = isUserPage || location.pathname.startsWith("/docs");
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Enhanced Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo with enhanced hover effect */}
+            <Link 
+              to="/" 
+              className="flex items-center space-x-2 flex-shrink-0 group transition-all duration-200 hover:scale-105"
+            >
+              <div className="relative">
+                <BarChart3 className="h-8 w-8 text-blue-600 transition-colors duration-200 group-hover:text-blue-700" />
+                <div className="absolute inset-0 bg-blue-600 rounded opacity-0 group-hover:opacity-20 transition-opacity duration-200" />
+              </div>
+              <span className="text-xl font-bold text-gray-900 hidden sm:block">
+                Trade Scan Pro
+              </span>
+              <span className="text-lg font-bold text-gray-900 sm:hidden">
+                TSP
+              </span>
+            </Link>
+
+            {/* Enhanced Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-1">
+              {/* Solutions Dropdown */}
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="text-sm font-medium">
+                      Solutions
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="grid w-[400px] gap-3 p-4">
+                        {navigationGroups.solutions.items.map((item) => (
+                          <NavigationMenuLink key={item.name} asChild>
+                            <Link
+                              to={item.href}
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <item.icon className="h-4 w-4" />
+                                <div className="text-sm font-medium">{item.name}</div>
+                              </div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                {item.description}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        ))}
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+
+              {/* Trading Tools - Only show if authenticated */}
+              {isAuthenticated && (
+                <NavigationMenu>
+                  <NavigationMenuList>
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger className="text-sm font-medium">
+                        Trading
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <div className="grid w-[500px] gap-3 p-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            {navigationGroups.trading.items.concat(navigationGroups.portfolio.items).map((item) => (
+                              <NavigationMenuLink key={item.name} asChild>
+                                <Link
+                                  to={item.href}
+                                  className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <item.icon className="h-4 w-4" />
+                                    <div className="text-sm font-medium">{item.name}</div>
+                                  </div>
+                                  <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                    {item.description}
+                                  </p>
+                                </Link>
+                              </NavigationMenuLink>
+                            ))}
+                          </div>
+                        </div>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
+              )}
+
+              {/* Resources */}
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="text-sm font-medium">
+                      Resources
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="grid w-[400px] gap-3 p-4">
+                        {navigationGroups.resources.items.map((item) => (
+                          <NavigationMenuLink key={item.name} asChild>
+                            <Link
+                              to={item.href}
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <item.icon className="h-4 w-4" />
+                                <div className="text-sm font-medium">{item.name}</div>
+                              </div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                {item.description}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        ))}
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
+
+            {/* Quick Actions for authenticated users */}
+            {isAuthenticated && (
+              <div className="hidden md:block">
+                <QuickActions variant="horizontal" className="mr-4" />
+              </div>
+            )}
+
+            {/* Right side */}
+            <div className="flex items-center space-x-3">
+              {/* Market Status */}
+              <div className="hidden lg:block">
+                <MarketStatus />
+              </div>
+
+              {isAuthenticated && user ? (
+                <>
+                  {/* User Plan Badge */}
+                  <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
+                    {user.plan || 'Free'} Plan
+                  </Badge>
+
+                  {/* User Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                        <User className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.name || user.username}</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/account/profile">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Settings</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/account/plan">
+                          <Crown className="mr-2 h-4 w-4" />
+                          <span>Plan & Billing</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={logout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                // Enhanced Auth buttons
+                <div className="flex items-center space-x-3">
+                  <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                    <Link to="/auth/sign-in">Sign In</Link>
+                  </Button>
+                  <Button asChild size="sm" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                    <Link to="/auth/sign-up">
+                      <Zap className="h-4 w-4 mr-1" />
+                      Try Free
+                    </Link>
+                  </Button>
+                </div>
+              )}
+
+              {/* Enhanced Mobile menu */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" className="lg:hidden h-9 w-9 p-0">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+                  <SheetHeader>
+                    <SheetTitle className="text-left">Menu</SheetTitle>
+                  </SheetHeader>
+                  
+                  <div className="mt-6 space-y-6">
+                    {/* Market Status in mobile */}
+                    <div className="lg:hidden">
+                      <MarketStatus />
+                    </div>
+                    
+                    {/* Mobile Navigation */}
+                    <nav className="space-y-6">
+                      {Object.entries(navigationGroups).map(([key, group]) => {
+                        // Filter trading tools if not authenticated
+                        if ((key === 'trading' || key === 'portfolio') && !isAuthenticated) {
+                          return null;
+                        }
+                        
+                        return (
+                          <div key={key}>
+                            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                              {group.label}
+                            </h3>
+                            <div className="space-y-1">
+                              {group.items.map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                  <Link
+                                    key={item.name}
+                                    to={item.href}
+                                    className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
+                                      location.pathname === item.href
+                                        ? "bg-blue-100 text-blue-600"
+                                        : "text-gray-700 hover:bg-gray-100"
+                                    }`}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                  >
+                                    <Icon className="h-5 w-5" />
+                                    <div>
+                                      <div>{item.name}</div>
+                                      <div className="text-xs text-gray-500">{item.description}</div>
+                                    </div>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Mobile Auth buttons */}
+                      {!isAuthenticated && (
+                        <div className="border-t pt-6 space-y-3">
+                          <Link
+                            to="/auth/sign-in"
+                            className="flex items-center justify-center px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            to="/auth/sign-up"
+                            className="flex items-center justify-center px-4 py-3 rounded-lg text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Zap className="h-4 w-4 mr-2" />
+                            Try Free
+                          </Link>
+                        </div>
+                      )}
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+
+          {/* Breadcrumbs */}
+          {showBreadcrumbs && (
+            <div className="py-3 border-t border-gray-100">
+              <SmartBreadcrumb />
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="relative">
+        <Outlet />
+      </main>
+
+      {/* Quick Actions Floating Button */}
+      <QuickActions />
+
+      {/* Enhanced Footer */}
+      <footer className="border-t bg-gray-50/80 backdrop-blur">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+                <span className="text-xl font-bold">Trade Scan Pro</span>
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Professional stock screening and market intelligence platform for serious traders.
+              </p>
+              <div className="mt-4">
+                <Badge variant="outline" className="text-xs">
+                  Trusted by 50,000+ traders
+                </Badge>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><Link to="/features" className="hover:text-blue-600 transition-colors">Features</Link></li>
+                <li><Link to="/pricing" className="hover:text-blue-600 transition-colors">Pricing</Link></li>
+                <li><Link to="/docs" className="hover:text-blue-600 transition-colors">Documentation</Link></li>
+                {isAuthenticated && (
+                  <li><Link to="/app/dashboard" className="hover:text-blue-600 transition-colors">Dashboard</Link></li>
+                )}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><Link to="/about" className="hover:text-blue-600 transition-colors">About</Link></li>
+                <li><Link to="/contact" className="hover:text-blue-600 transition-colors">Contact</Link></li>
+                <li><Link to="/enterprise" className="hover:text-blue-600 transition-colors">Enterprise</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><Link to="/help" className="hover:text-blue-600 transition-colors">Help Center</Link></li>
+                <li><Link to="/legal/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/legal/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
+            <p>&copy; 2025 Trade Scan Pro. All rights reserved. Built for serious traders.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default EnhancedAppLayout;
