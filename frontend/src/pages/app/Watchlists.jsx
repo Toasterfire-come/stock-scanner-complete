@@ -141,12 +141,12 @@ const Watchlists = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container-enhanced py-8">
+      <h1 className="text-3xl font-bold mb-6">Watchlists</h1>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Watchlists</h1>
             <p className="text-gray-600 mt-2">Keep track of stocks you're interested in</p>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>

@@ -32,7 +32,7 @@ export default function Docs() {
   if (loading) return (<div className="container mx-auto px-4 py-8 max-w-4xl"><Skeleton className="h-8 w-48 mb-4" /><Skeleton className="h-96 w-full" /></div>);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container-enhanced py-8">
       <Card>
         <CardHeader>
           <CardTitle>Integration Contracts</CardTitle>

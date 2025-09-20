@@ -4,24 +4,42 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Input } from "../../../components/ui/input";
-import { Plus, Search, Filter, TrendingUp, BarChart3 } from "lucide-react";
-import { listScreeners } from "../../../api/client";
+import { Plus, Search, Filter, TrendingUp, BarChart3, PlayCircle, Edit3, Download, Upload } from "lucide-react";
+import { listScreeners, api, getCurrentPlan } from "../../../api/client";
+import { showError, showSuccess } from "../../../lib/errors";
+import { trackEvent } from "../../../lib/telemetry";
 
 const ScreenerLibrary = () => {
   const [screeners, setScreeners] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [resultCounts, setResultCounts] = useState({});
+  const [plan, setPlan] = useState({ plan_type: 'free', is_premium: false });
 
   useEffect(() => { (async () => {
     setIsLoading(true);
     try {
       const res = await listScreeners();
-      const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
       setScreeners(items);
     } catch {
       setScreeners([]);
     } finally { setIsLoading(false); }
   })(); }, []);
+  useEffect(() => { (async () => { try { const p = await getCurrentPlan(); const d=p?.data||p||{}; setPlan(d); } catch {} })(); }, []);
+
+  const exportJson = (s) => {
+    const blob = new Blob([JSON.stringify({ name: s.name, description: s.description, isPublic: s.is_public, criteria: s.criteria || [] }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(s.name||'screener').replace(/\s+/g,'-').toLowerCase()}.json`; a.click(); URL.revokeObjectURL(url);
+  };
+
+  const importJsonToDraft = async (event) => {
+    try {
+      const file = event.target.files?.[0]; if (!file) return; const text = await file.text(); const parsed = JSON.parse(text);
+      localStorage.setItem('draft_screener_import', JSON.stringify(parsed));
+      window.location.hash = '#/app/screeners/new';
+    } catch {}
+  };
 
   const filteredScreeners = screeners.filter(screener =>
     screener.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,44 +93,61 @@ const ScreenerLibrary = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredScreeners.map((screener) => (
-          <Card key={screener.id} className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <CardTitle className="text-xl">Quick Filter</CardTitle>
+              <Badge variant="secondary">Default</Badge>
+            </div>
+            <CardDescription>Start with a new filter to scan all stocks.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="text-xs text-gray-500">Create a screen using the screener builder.</div>
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1" asChild>
+                  <Link to="/app/screeners/new">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Open Screener Builder
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {filteredScreeners.map((s) => (
+          <Card key={s.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <CardTitle className="text-xl">{screener.name}</CardTitle>
-                {screener.is_public && <Badge variant="secondary">Public</Badge>}
+                <CardTitle className="text-xl">{s.name || 'Untitled Screener'}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{s.is_public ? 'Public' : 'Private'}</Badge>
+                  {resultCounts[s.id] != null && (
+                    <Badge variant="secondary">{resultCounts[s.id]} results</Badge>
+                  )}
+                </div>
               </div>
-              <CardDescription>{screener.description}</CardDescription>
+              <CardDescription>
+                {s.description || 'No description'}
+                <span className="ml-2 text-xs text-gray-500">{s.last_run ? `Last run: ${new Date(s.last_run).toLocaleString()}` : 'Never run'}</span>
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-500">Criteria</div>
-                    <div className="font-semibold">{screener.criteria_count ?? 0}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">Matches</div>
-                    <div className="font-semibold text-blue-600">{screener.matches ?? 0}</div>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Last run: {screener.last_run ? new Date(screener.last_run).toLocaleDateString() : 'Never'}
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" asChild>
-                    <Link to={`/app/screeners/${screener.id}/results`}>
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      View Results
-                    </Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to={`/app/screeners/${screener.id}/edit`}>
-                      <BarChart3 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Link>
-                  </Button>
-                </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="default" asChild>
+                  <Link to={`/app/screeners/${s.id}/results`}>
+                    <PlayCircle className="h-4 w-4 mr-1" /> Run
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to={`/app/screeners/${s.id}/edit`}>
+                    <Edit3 className="h-4 w-4 mr-1" /> Edit
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { exportJson(s); trackEvent('screener_export_json', { id: s.id }); }}>
+                  <Download className="h-4 w-4 mr-1" /> Export JSON
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -122,9 +157,20 @@ const ScreenerLibrary = () => {
       {filteredScreeners.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">No screeners found</div>
-          <Button asChild>
-            <Link to="/app/screeners/new">Create your first screener</Link>
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button asChild disabled={!plan.is_premium && screeners.length >= 3} title={!plan.is_premium && screeners.length >= 3 ? 'Upgrade for more saved screeners' : undefined}>
+              <Link to="/app/screeners/new">Create your first Screener</Link>
+            </Button>
+            {!plan.is_premium && screeners.length >= 3 && (
+              <Link to="/pricing" className="text-blue-600 text-sm">Upgrade for more</Link>
+            )}
+            <label className="inline-flex items-center">
+              <input type="file" accept="application/json" className="hidden" onChange={(e)=>importJsonToDraft(e)} />
+              <Button variant="outline">
+                <Upload className="h-4 w-4 mr-2" /> Import JSON
+              </Button>
+            </label>
+          </div>
         </div>
       )}
     </div>

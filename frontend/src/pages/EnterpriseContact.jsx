@@ -100,7 +100,7 @@ const EnterpriseContact = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 py-12">
-      <div className="container mx-auto px-4">
+      <div className="container-enhanced py-8">
         {/* Header */}
         <div className="text-center mb-16">
           <Badge className="mb-4 text-lg px-4 py-2 bg-blue-100 text-blue-800">

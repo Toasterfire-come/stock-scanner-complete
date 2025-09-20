@@ -120,7 +120,7 @@ const Stocks = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container-enhanced py-8">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ const Stocks = () => {
               <>
                 {/* Desktop: virtualized when many rows */}
                 <div className="hidden lg:block">
-                  <div className="overflow-x-auto">
+                  <div className="table-responsive">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b bg-gray-50">

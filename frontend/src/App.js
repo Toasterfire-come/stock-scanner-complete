@@ -50,10 +50,7 @@ const Templates = React.lazy(() => import("./pages/app/Templates"));
 
 // Market Overview
 const MarketHeatmap = React.lazy(() => import("./pages/app/MarketHeatmap"));
-const SectorsIndustries = React.lazy(() => import("./pages/app/SectorsIndustries"));
 const TopMovers = React.lazy(() => import("./pages/app/TopMovers"));
-const PreAfterMarket = React.lazy(() => import("./pages/app/PreAfterMarket"));
-const EconomicCalendar = React.lazy(() => import("./pages/app/EconomicCalendar"));
 
 // News
 const NewsFeed = React.lazy(() => import("./pages/app/NewsFeed"));
@@ -156,10 +153,7 @@ function App() {
 
                 {/* Market Overview */}
                 <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
-                <Route path="/app/sectors" element={<SectorsIndustries />} />
                 <Route path="/app/top-movers" element={<TopMovers />} />
-                <Route path="/app/pre-after-market" element={<PreAfterMarket />} />
-                <Route path="/app/economic-calendar" element={<EconomicCalendar />} />
 
                 {/* News */}
                 <Route path="/app/news" element={<NewsFeed />} />

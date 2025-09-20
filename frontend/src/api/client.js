@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
+import { mapCriteriaToFilterParams } from "../lib/screeners";
 
 const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
 const API_PASSWORD = process.env.REACT_APP_API_PASSWORD || "";
@@ -250,7 +251,6 @@ export async function getRealTimeQuote(ticker) { const { data } = await api.get(
 export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
 export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
 export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
-export async function getSectorsOverview(params = {}) { const { data } = await api.get('/sectors/', { params }); return data; }
 
 // ====================
 // AUTHENTICATION
@@ -306,7 +306,19 @@ export async function deleteWatchlist(id) { return await deleteWithRetry(`/watch
 export async function alertsMeta() { const { data } = await api.get('/alerts/create/'); return data; }
 export async function createAlert(payload) { return await postWithRetry('/alerts/create/', payload); }
 export async function toggleAlert(alertId) { return await postWithRetry(`/alerts/${encodeURIComponent(alertId)}/toggle/`); }
-export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/`); }
+export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/delete/`); }
+
+// ====================
+// ALERTS - EXTRA HELPERS
+// ====================
+export async function listAlerts(params = {}) {
+  const { data } = await api.get('/alerts/', { params });
+  return data; // { alerts: [...] }
+}
+export async function getAlertsUnreadCount() {
+  const { data } = await api.get('/alerts/unread-count/');
+  return data; // { count }
+}
 
 // ====================
 // BILLING
@@ -332,37 +344,81 @@ export async function markNotificationsRead(payload) { const { data } = await ap
 export async function getNewsFeed(params = {}) { const { data } = await api.get('/news/feed/', { params }); return data; }
 export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
 export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
-export async function getNewsPreferences() { const { data } = await api.get('/news/preferences/'); return data; }
-export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
+export async function getNewsPreferences() {
+  const { data } = await api.get('/news/preferences/');
+  // Normalize snake_case to camelCase for the app
+  const prefs = data?.data || data || {};
+  return {
+    followedStocks: Array.isArray(prefs.followed_stocks) ? prefs.followed_stocks : (prefs.followedStocks || []),
+    followedSectors: Array.isArray(prefs.followed_sectors) ? prefs.followed_sectors : (prefs.followedSectors || []),
+    preferredCategories: Array.isArray(prefs.preferred_categories) ? prefs.preferred_categories : (prefs.preferredCategories || []),
+    newsFrequency: prefs.news_frequency || prefs.newsFrequency || 'realtime',
+  };
+}
+export async function updateNewsPreferences(preferences) {
+  // Convert camelCase to snake_case expected by backend
+  const payload = {
+    followed_stocks: preferences.followedStocks || [],
+    followed_sectors: preferences.followedSectors || [],
+    preferred_categories: preferences.preferredCategories || [],
+    news_frequency: preferences.newsFrequency || 'realtime',
+  };
+  const { data } = await api.post('/news/preferences/', payload);
+  return data;
+}
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
 
 // ====================
 // SCREENERS
 // ====================
 export async function listScreeners(params = {}) { const { data } = await api.get('/screeners/', { params }); return data; }
-export async function getScreener(screenerId) { const { data } = await api.get(`/screeners/${encodeURIComponent(screenerId)}/`); return data; }
-export async function createScreener(screener) { return await postWithRetry('/screeners/create/', screener); }
-export async function updateScreener(screenerId, payload) { return await postWithRetry(`/screeners/${encodeURIComponent(screenerId)}/update/`, payload); }
-export async function deleteScreener(screenerId) { return await deleteWithRetry(`/screeners/${encodeURIComponent(screenerId)}/`); }
-export async function testScreener(payload) { const { data } = await api.post('/screeners/test/', payload); return data; }
-export async function runScreener(screenerId, params = {}) { const { data } = await api.get(`/screeners/${encodeURIComponent(screenerId)}/results/`, { params }); return data; }
+export async function getScreener(id) { const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/`); return data; }
+export { mapCriteriaToFilterParams };
+export async function createScreener(screener) { const data = await postWithRetry('/screeners/create/', screener); return data; }
+export async function updateScreener(id, payload) { const data = await postWithRetry(`/screeners/${encodeURIComponent(id)}/update/`, payload); return data; }
+export async function deleteScreener(id) { return await deleteWithRetry(`/screeners/${encodeURIComponent(id)}/`); }
+export async function testScreener(payload) {
+  try {
+    const { data } = await api.post('/filter/', payload);
+    return { success: true, results: data?.stocks || data?.data || [] };
+  } catch (e) {
+    // fallback to GET mapping
+    const params = mapCriteriaToFilterParams(payload?.criteria || []); const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] };
+  }
+}
+export async function runScreener(id, params = {}) {
+  try {
+    const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/results/`, { params });
+    return { success: true, results: data?.stocks || data?.data || [] };
+  } catch (e) {
+    return { success: false, results: [] };
+  }
+}
+export function exportScreenerCsvUrl(id) { return `${API_ROOT}/screeners/${encodeURIComponent(id)}/export.csv`; }
 export async function getScreenerTemplates() { const { data } = await api.get('/screeners/templates/'); return data; }
-
-// ====================
-// CALENDAR & EXTENDED HOURS
-// ====================
-export async function getEconomicCalendar(params = {}) { const { data } = await api.get('/economic-calendar/', { params }); return data; }
-export async function getExtendedHoursMarket() { const { data } = await api.get('/market/extended-hours/'); return data; }
 
 // ====================
 // ALERTS HISTORY
 // ====================
-export async function getAlertHistory(params = {}) { const { data } = await api.get('/alerts/history/', { params }); return data; }
+export async function getAlertHistory(params = {}) {
+  // Backend does not provide a separate history endpoint; use current alerts list
+  const { data } = await api.get('/alerts/', { params });
+  return Array.isArray(data) ? data : (data?.alerts || []);
+}
 
 // ====================
 // FEATURE FLAGS
 // ====================
-export async function getFeatureFlags() { const { data } = await api.get('/feature-flags/'); return data; }
+export async function getFeatureFlags() { try { const { data } = await api.get('/feature-flags/'); return data; } catch { return {}; } }
+
+// ====================
+// USAGE & RATE LIMITS
+// ====================
+export async function getUsageSummary() { const { data } = await api.get('/usage/'); return data; }
+export async function getUsageStats() { const { data } = await api.get('/usage-stats/'); return data; }
+export async function getUsageHistory(params = {}) { const { data } = await api.get('/usage/history/', { params }); return data; }
+export async function usageTrack(payload = {}) { const { data } = await api.post('/usage/track/', payload); return data; }
+export async function usageReconcile(payload = {}) { const { data } = await api.post('/usage/reconcile/', payload); return data; }
 
 //====================
 // REVENUE & PAYMENTS (PAYPAL INTEGRATION)
@@ -438,3 +494,23 @@ export async function getWordPressNews(params = {}) { const { data } = await api
 export async function getWordPressAlerts(params = {}) { const { data } = await api.get('/wordpress/alerts/', { params }); return data; }
 export async function updateStocks(symbols) { const { data } = await api.post('/stocks/update/', { symbols }); return data; }
 export async function updateNews() { const { data } = await api.post('/news/update/'); return data; }
+
+// ====================
+// NEWS - EXTRA
+// ====================
+export async function getNewsByTicker(ticker, params = {}) { const { data } = await api.get(`/news/ticker/${encodeURIComponent(ticker)}/`, { params }); return data; }
+
+// ====================
+// PORTFOLIO - EXTRA STATS
+// ====================
+export async function getPortfolioValue() { const { data } = await api.get('/portfolio/value/'); return data; }
+export async function getPortfolioPnl() { const { data } = await api.get('/portfolio/pnl/'); return data; }
+export async function getPortfolioReturn() { const { data } = await api.get('/portfolio/return/'); return data; }
+export async function getPortfolioHoldingsCount() { const { data } = await api.get('/portfolio/holdings-count/'); return data; }
+
+// ====================
+// STATS
+// ====================
+export async function getTotalTickers() { const { data } = await api.get('/stats/total-tickers/'); return data; }
+export async function getGainersLosersStats() { const { data } = await api.get('/stats/gainers-losers/'); return data; }
+export async function getTotalAlertsCount() { const { data } = await api.get('/stats/total-alerts/'); return data; }

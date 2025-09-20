@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getMarketStatsSafe, getTrendingSafe, getUsageSummary, getPortfolioValue, getAlertsUnreadCount } from "../../api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -27,32 +28,50 @@ import {
 
 const AppDashboard = () => {
   const [usageData, setUsageData] = useState({
-    plan: "Bronze",
-    apiCalls: {
-      used: 892,
-      limit: 1500,
-      hourlyUsed: 7,
-      hourlyLimit: 10,
-      dailyUsed: 34,
-      dailyLimit: 50
-    },
-    alerts: {
-      active: 12,
-      triggered: 3
-    },
-    portfolio: {
-      value: 125420.50,
-      change: 2840.20,
-      changePercent: 2.32
-    }
+    plan: "-",
+    apiCalls: { used: 0, limit: 100, hourlyUsed: 0, hourlyLimit: 0, dailyUsed: 0, dailyLimit: 0 },
+    alerts: { active: 0, triggered: 0 },
+    portfolio: { value: 0, change: 0, changePercent: 0 }
   });
 
-  const [marketOverview, setMarketOverview] = useState({
-    gainers: 1247,
-    losers: 892,
-    unchanged: 341,
-    volume: "4.2B"
-  });
+  const [marketOverview, setMarketOverview] = useState({ gainers: 0, losers: 0, unchanged: 0, volume: "-" });
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [statsRes, trendingRes, usageRes, portfolioRes, unreadRes] = await Promise.all([
+          getMarketStatsSafe().catch(() => ({ success: false })),
+          getTrendingSafe().catch(() => ({ success: false })),
+          getUsageSummary().catch(() => null),
+          getPortfolioValue().catch(() => null),
+          getAlertsUnreadCount().catch(() => ({ count: 0 }))
+        ]);
+
+        if (statsRes?.success && statsRes.data?.market_overview) {
+          const mo = statsRes.data.market_overview;
+          setMarketOverview({
+            gainers: Number(mo.gainers || 0),
+            losers: Number(mo.losers || 0),
+            unchanged: Number(mo.unchanged || 0),
+            volume: "—"
+          });
+        }
+
+        const plan = (usageRes?.data?.account?.plan_type || usageRes?.data?.plan_type || "-").toString().replace(/^./, c => c.toUpperCase());
+        const usedMonthly = Number(usageRes?.data?.monthly?.api_calls || 0);
+        const limit = Number(usageRes?.data?.monthly?.limit || 100);
+        const portfolioValue = Number(portfolioRes?.total_value || portfolioRes?.data?.total_value || 0);
+        const activeAlerts = Number(unreadRes?.count || 0);
+
+        setUsageData((prev) => ({
+          plan: plan || prev.plan,
+          apiCalls: { used: usedMonthly, limit, hourlyUsed: prev.apiCalls.hourlyUsed, hourlyLimit: prev.apiCalls.hourlyLimit, dailyUsed: prev.apiCalls.dailyUsed, dailyLimit: prev.apiCalls.dailyLimit },
+          alerts: { active: activeAlerts, triggered: prev.alerts.triggered },
+          portfolio: { value: portfolioValue, change: prev.portfolio.change, changePercent: prev.portfolio.changePercent }
+        }));
+      } catch {}
+    };
+    load();
+  }, []);
 
   const quickLinks = [
     {
@@ -139,11 +158,15 @@ const AppDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
+      <div className="container-enhanced">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-xl text-gray-600">Welcome back! Here's your trading overview.</p>
+          <div className="mt-3 flex gap-2">
+            <Button asChild size="sm"><Link to="/app/screeners/new"><Filter className="h-4 w-4 mr-1"/>Create Screener</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/app/screeners"><Search className="h-4 w-4 mr-1"/>Your Screeners</Link></Button>
+          </div>
         </div>
 
         {/* Usage Overview */}
