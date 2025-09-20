@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, Download, RefreshCw, SortAsc, SortDesc, PlusCircle, BellPlus } from "lucide-react";
 import { toast } from "sonner";
-import { runScreener, getScreener, exportScreenerCsvUrl } from "../../../api/client";
+import { runScreener, getScreener, exportScreenerCsvUrl, addWatchlist, createAlert } from "../../../api/client";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -14,6 +14,9 @@ const ScreenerResults = () => {
   const [screenerInfo, setScreenerInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sortBy, setSortBy] = useState({ key: 'change_percent', dir: 'desc' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => { fetchResults(); }, [id]);
 
@@ -62,6 +65,45 @@ const ScreenerResults = () => {
     a.click();
     document.body.removeChild(a);
     toast.success("Downloading CSV");
+  };
+
+  const sorted = useMemo(() => {
+    const data = [...results];
+    const { key, dir } = sortBy;
+    data.sort((a,b) => {
+      const va = a[key] ?? 0; const vb = b[key] ?? 0;
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return data;
+  }, [results, sortBy]);
+
+  const paged = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, page, pageSize]);
+
+  const changeSort = (key) => {
+    setSortBy((prev) => prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' });
+  };
+
+  const formatCap = (v) => {
+    const n = Number(v || 0);
+    if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
+    if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+    return n.toLocaleString();
+  };
+
+  const addToWatchlist = async (ticker) => {
+    try { await addWatchlist(ticker); toast.success('Added to Watchlist'); }
+    catch { toast.error('Failed to add to Watchlist'); }
+  };
+
+  const createPriceAlert = async (ticker) => {
+    try { await createAlert({ ticker, target_price: 0, condition: 'above', email: '' }); toast.success('Alert created'); }
+    catch { toast.error('Failed to create alert'); }
   };
 
   if (isLoading) {
@@ -144,18 +186,26 @@ const ScreenerResults = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Change</TableHead>
-                    <TableHead>Volume</TableHead>
-                    <TableHead>Market Cap</TableHead>
-                    <TableHead>Exchange</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="sticky top-0 bg-white">Symbol</TableHead>
+                    <TableHead className="sticky top-0 bg-white">Company</TableHead>
+                    <TableHead className="sticky top-0 bg-white cursor-pointer" onClick={() => changeSort('current_price')}>
+                      Price {sortBy.key==='current_price' ? (sortBy.dir==='asc'?<SortAsc className="inline h-3 w-3"/>:<SortDesc className="inline h-3 w-3"/>) : null}
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-white cursor-pointer" onClick={() => changeSort('change_percent')}>
+                      Change {sortBy.key==='change_percent' ? (sortBy.dir==='asc'?<SortAsc className="inline h-3 w-3"/>:<SortDesc className="inline h-3 w-3"/>) : null}
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-white cursor-pointer" onClick={() => changeSort('volume')}>
+                      Volume {sortBy.key==='volume' ? (sortBy.dir==='asc'?<SortAsc className="inline h-3 w-3"/>:<SortDesc className="inline h-3 w-3"/>) : null}
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-white cursor-pointer" onClick={() => changeSort('market_cap')}>
+                      Market Cap {sortBy.key==='market_cap' ? (sortBy.dir==='asc'?<SortAsc className="inline h-3 w-3"/>:<SortDesc className="inline h-3 w-3"/>) : null}
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-white">Exchange</TableHead>
+                    <TableHead className="sticky top-0 bg-white">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {results.map((stock) => (
+                  {paged.map((stock) => (
                     <TableRow key={stock.ticker}>
                       <TableCell>
                         <Link 
@@ -166,7 +216,7 @@ const ScreenerResults = () => {
                         </Link>
                       </TableCell>
                       <TableCell className="font-medium">{stock.company_name}</TableCell>
-                      <TableCell>${stock.current_price.toFixed(2)}</TableCell>
+                      <TableCell>${Number(stock.current_price||0).toFixed(2)}</TableCell>
                       <TableCell>
                         <div className={`flex items-center ${stock.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {stock.change_percent >= 0 ? (
@@ -174,24 +224,45 @@ const ScreenerResults = () => {
                           ) : (
                             <TrendingDown className="h-4 w-4 mr-1" />
                           )}
-                          {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
+                          {stock.change_percent >= 0 ? '+' : ''}{Number(stock.change_percent||0).toFixed(2)}%
                         </div>
                       </TableCell>
-                      <TableCell>{stock.volume.toLocaleString()}</TableCell>
-                      <TableCell>${(stock.market_cap / 1e9).toFixed(1)}B</TableCell>
+                      <TableCell>{Number(stock.volume||0).toLocaleString()}</TableCell>
+                      <TableCell>${formatCap(stock.market_cap)}</TableCell>
                       <TableCell>{stock.exchange}</TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline" asChild>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" asChild>
                           <Link to={`/app/stocks/${stock.ticker}`}>
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Link>
-                        </Button>
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => addToWatchlist(stock.ticker)}>
+                            <PlusCircle className="h-4 w-4 mr-1" /> Watchlist
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => createPriceAlert(stock.ticker)}>
+                            <BellPlus className="h-4 w-4 mr-1" /> Alert
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-600">Page {page} of {Math.max(1, Math.ceil(results.length / pageSize))}</div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={page===1} onClick={() => setPage(p => Math.max(1, p-1))}>Prev</Button>
+                <Button variant="outline" size="sm" disabled={page*pageSize >= results.length} onClick={() => setPage(p => p+1)}>Next</Button>
+                <select className="text-sm border rounded px-2 py-1" value={pageSize} onChange={(e)=>{setPageSize(Number(e.target.value)); setPage(1);}}>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
             </div>
 
             {results.length === 0 && (

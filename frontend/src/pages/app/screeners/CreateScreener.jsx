@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
@@ -11,9 +11,14 @@ import { Badge } from "../../../components/ui/badge";
 import { X, Plus, Save, Play, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
 import { createScreener, testScreener } from "../../../api/client";
+import { useAuth } from "../../../context/AuthContext";
+import { Link, useLocation } from "react-router-dom";
+import { logClientMetric } from "../../../api/client";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [screenerData, setScreenerData] = useState({
     name: "",
     description: "",
@@ -21,6 +26,39 @@ const CreateScreener = () => {
   });
   const [criteria, setCriteria] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Load from querystring or localStorage drafts
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const criteriaParam = params.get('criteria');
+      if (criteriaParam) {
+        const parsed = JSON.parse(decodeURIComponent(criteriaParam));
+        if (Array.isArray(parsed)) setCriteria(parsed);
+      }
+    } catch {}
+    try {
+      const draft = JSON.parse(localStorage.getItem('draft_screener_new') || 'null');
+      if (draft && Array.isArray(draft.criteria)) {
+        setCriteria(draft.criteria);
+        setScreenerData(draft.meta || screenerData);
+      }
+    } catch {}
+    try {
+      const imported = JSON.parse(localStorage.getItem('draft_screener_import') || 'null');
+      if (imported && Array.isArray(imported.criteria)) {
+        setCriteria(imported.criteria);
+        setScreenerData({ name: imported.name || '', description: imported.description || '', isPublic: Boolean(imported.isPublic) });
+        localStorage.removeItem('draft_screener_import');
+      }
+    } catch {}
+  }, []);
+
+  // Autosave drafts
+  useEffect(() => {
+    localStorage.setItem('draft_screener_new', JSON.stringify({ criteria, meta: screenerData }));
+  }, [criteria, screenerData]);
 
   const availableCriteria = [
     { id: "market_cap", name: "Market Cap", type: "range" },
@@ -58,6 +96,23 @@ const CreateScreener = () => {
     ));
   };
 
+  const validate = () => {
+    const next = {};
+    for (const c of criteria) {
+      if (c.type === 'range') {
+        const min = c.min === '' ? null : Number(c.min);
+        const max = c.max === '' ? null : Number(c.max);
+        if ((c.min !== '' && Number.isNaN(min)) || (c.max !== '' && Number.isNaN(max))) {
+          next[c.id] = 'Enter numeric values';
+        } else if (min !== null && max !== null && min > max) {
+          next[c.id] = 'Min cannot exceed Max';
+        }
+      }
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSave = async () => {
     if (!screenerData.name.trim()) {
       toast.error("Please enter a screener name");
@@ -69,12 +124,22 @@ const CreateScreener = () => {
       return;
     }
 
+    if (!validate()) return;
+
+    if (!isAuthenticated) {
+      toast.error("Please sign in to save a Screener");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const payload = { ...screenerData, criteria };
-      await createScreener(payload);
+      const res = await createScreener(payload);
       toast.success("Screener saved successfully");
-      navigate("/app/screeners");
+      logClientMetric({ event: 'screener_created' });
+      const sid = res?.id;
+      if (sid) navigate(`/app/screeners/${sid}/results`);
+      else navigate("/app/screeners");
     } catch (error) {
       toast.error("Failed to save screener");
     } finally { setIsLoading(false); }
@@ -92,6 +157,11 @@ const CreateScreener = () => {
       const res = await testScreener(payload);
       const count = Array.isArray(res?.results) ? res.results.length : (res?.count ?? 0);
       toast.success(`Found ${count} matching stocks`);
+      // Update URL with shareable criteria
+      const params = new URLSearchParams(location.search);
+      params.set('criteria', encodeURIComponent(JSON.stringify(criteria)));
+      window.history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
+      logClientMetric({ event: 'screener_test_run', count });
     } catch (error) { toast.error("Failed to test screener"); } finally { setIsLoading(false); }
   };
 
@@ -132,16 +202,24 @@ const CreateScreener = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Create Stock Screener</h1>
             <p className="text-gray-600 mt-2">Set up criteria to find stocks that match your strategy</p>
+              <div className="text-xs mt-2">
+                <Link to="/docs#screeners" className="text-blue-600">Learn more about Screeners</Link>
+              </div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleTest} disabled={isLoading}>
               <Play className="h-4 w-4 mr-2" />
               Test Run
             </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
+            <Button onClick={handleSave} disabled={isLoading || !isAuthenticated} aria-disabled={!isAuthenticated} title={!isAuthenticated ? 'Sign in to save' : undefined}>
               <Save className="h-4 w-4 mr-2" />
               Save Screener
             </Button>
+            {!isAuthenticated && (
+              <Button asChild variant="secondary">
+                <Link to="/auth/sign-in">Sign in</Link>
+              </Button>
+            )}
             <Button type="button" variant="outline" onClick={handleExportJson}>
               <Download className="h-4 w-4 mr-2" />
               Export JSON
@@ -233,7 +311,13 @@ const CreateScreener = () => {
                               value={criterion.min}
                               onChange={(e) => updateCriterion(criterion.id, "min", e.target.value)}
                               placeholder="Min value"
+                              aria-label={`${criterion.name} minimum`}
                             />
+                            <div className="text-xs text-gray-500 mt-1">
+                              {criterion.id === 'price' && 'USD'}
+                              {criterion.id === 'volume' && 'Shares'}
+                              {criterion.id === 'market_cap' && 'USD'}
+                            </div>
                           </div>
                           <div>
                             <Label>Maximum</Label>
@@ -242,7 +326,11 @@ const CreateScreener = () => {
                               value={criterion.max}
                               onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
                               placeholder="Max value"
+                              aria-label={`${criterion.name} maximum`}
                             />
+                            {errors[criterion.id] && (
+                              <div className="text-xs text-red-600 mt-1">{errors[criterion.id]}</div>
+                            )}
                           </div>
                         </div>
                       )}

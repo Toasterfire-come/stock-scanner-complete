@@ -163,6 +163,10 @@ const AppDashboard = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-xl text-gray-600">Welcome back! Here's your trading overview.</p>
+          <div className="mt-3 flex gap-2">
+            <Button asChild size="sm"><Link to="/app/screeners/new"><Filter className="h-4 w-4 mr-1"/>Create Screener</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/app/screeners"><Search className="h-4 w-4 mr-1"/>Your Screeners</Link></Button>
+          </div>
         </div>
 
         {/* Usage Overview */}

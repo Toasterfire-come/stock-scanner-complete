@@ -29,6 +29,21 @@ export default function Documentation() {
           <li>Save: stores your screener (name, description, criteria) for later use.</li>
           <li>Results: view matching stocks; export CSV for offline analysis. Import/Export criteria as JSON from Create/Edit pages.</li>
         </ul>
+        <p className="mt-2 text-sm text-gray-600">JSON schema for import:</p>
+        <pre className="text-xs overflow-x-auto p-3 bg-gray-50 border rounded">
+{`{
+  "name": "High Dividend Value Stocks",
+  "description": "Large cap, value screen",
+  "isPublic": false,
+  "criteria": [
+    { "id": "market_cap", "min": 5000000000, "max": 1000000000000 },
+    { "id": "price", "min": 5, "max": 200 },
+    { "id": "pe_ratio", "max": 20 },
+    { "id": "dividend_yield", "min": 2 },
+    { "id": "exchange", "value": "NYSE" }
+  ]
+}`}
+        </pre>
         <p>Endpoints:</p>
         <ul>
           <li>GET/POST <code>/api/filter/</code> – execute a filter (JSON criteria supported via POST).</li>
