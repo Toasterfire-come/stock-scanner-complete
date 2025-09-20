@@ -828,6 +828,7 @@ def current_plan_api(request):
             'data': {
                 'plan_name': getattr(profile, 'plan_name', 'Free'),
                 'plan_type': plan,
+                'plan': plan,  # convenience alias
                 'is_premium': getattr(profile, 'is_premium', False),
                 'billing_cycle': getattr(profile, 'billing_cycle', 'monthly'),
                 'next_billing_date': getattr(profile, 'next_billing_date', None),
@@ -838,11 +839,10 @@ def current_plan_api(request):
                     'alerts': getattr(profile, 'is_premium', False),
                     'advanced_analytics': getattr(profile, 'is_premium', False)
                 },
-                'plan_enhanced': {
-                    'features': features,
-                    'api_keys': api_keys,
-                    'api_calls_remaining': 'unlimited' if plan == 'gold' else max(0, getattr(profile, 'api_calls_limit', 0) - 0)
-                }
+                # Enhanced keys matching spec
+                'api_calls_remaining': 'unlimited' if plan == 'gold' else max(0, getattr(profile, 'api_calls_limit', 0) - 0),
+                'api_keys': api_keys,
+                'plan_features': features
             }
         })
         
