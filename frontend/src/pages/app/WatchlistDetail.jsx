@@ -77,54 +77,59 @@ export default function WatchlistDetail() {
   const list = groups[groupName] || [];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button asChild variant="ghost"><Link to="/app/watchlists"><ArrowLeft className="h-4 w-4" /></Link></Button>
-          <h1 className="text-2xl font-semibold">Watchlist: {groupName}</h1>
-          <Badge variant="outline">{list.length} items</Badge>
-        </div>
-      </div>
-
-      {!list.length ? (
-        <Card><CardContent className="p-6 text-gray-600">No items in this watchlist.</CardContent></Card>
-      ) : (
-        <Card>
-          <CardHeader><CardTitle>Symbols</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {list.map((it, idx) => (
-                <div key={it.id || idx} className="grid grid-cols-1 md:grid-cols-6 gap-3 p-3 border rounded">
-                  <div className="md:col-span-1">
-                    <div className="font-semibold">{it.symbol}</div>
-                    <div className="text-sm text-gray-600">{it.company_name}</div>
-                  </div>
-                  <div className="md:col-span-1">
-                    <div className="text-sm">Price</div>
-                    <div className="font-medium">${(it.current_price ?? 0).toLocaleString()}</div>
-                    <div className={`text-sm ${Number(it.price_change_percent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {Number(it.price_change_percent) >= 0 ? <TrendingUp className="h-3 w-3 inline" /> : <TrendingDown className="h-3 w-3 inline" />}
-                      {`${(it.price_change_percent ?? 0).toFixed(2)}%`}
-                    </div>
-                  </div>
-                  <div className="md:col-span-2">
-                    <div className="text-sm">Notes</div>
-                    <Textarea value={it.notes || ''} onChange={(e) => setInline(idx, { notes: e.target.value })} rows={2} />
-                  </div>
-                  <div className="md:col-span-1">
-                    <div className="text-sm">Alert price</div>
-                    <Input value={it.alert_price ?? ''} type="number" step="0.01" onChange={(e) => setInline(idx, { alert_price: e.target.value })} />
-                  </div>
-                  <div className="md:col-span-1 flex items-end gap-2">
-                    <Button size="sm" variant="outline" onClick={() => onSaveInline(it, idx)}><Save className="h-3 w-3 mr-1" /> Save</Button>
-                    <Button size="sm" onClick={() => onCreateAlert(it)}><Bell className="h-3 w-3 mr-1" /> Alert</Button>
-                  </div>
-                </div>
-              ))}
+    <div className="container-enhanced py-8">
+      <h1 className="text-3xl font-bold mb-6">Watchlist</h1>
+      <div className="table-responsive">
+        <table className="min-w-full">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Button asChild variant="ghost"><Link to="/app/watchlists"><ArrowLeft className="h-4 w-4" /></Link></Button>
+              <h1 className="text-2xl font-semibold">Watchlist: {groupName}</h1>
+              <Badge variant="outline">{list.length} items</Badge>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {!list.length ? (
+            <Card><CardContent className="p-6 text-gray-600">No items in this watchlist.</CardContent></Card>
+          ) : (
+            <Card>
+              <CardHeader><CardTitle>Symbols</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {list.map((it, idx) => (
+                    <div key={it.id || idx} className="grid grid-cols-1 md:grid-cols-6 gap-3 p-3 border rounded">
+                      <div className="md:col-span-1">
+                        <div className="font-semibold">{it.symbol}</div>
+                        <div className="text-sm text-gray-600">{it.company_name}</div>
+                      </div>
+                      <div className="md:col-span-1">
+                        <div className="text-sm">Price</div>
+                        <div className="font-medium">${(it.current_price ?? 0).toLocaleString()}</div>
+                        <div className={`text-sm ${Number(it.price_change_percent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {Number(it.price_change_percent) >= 0 ? <TrendingUp className="h-3 w-3 inline" /> : <TrendingDown className="h-3 w-3 inline" />}
+                          {`${(it.price_change_percent ?? 0).toFixed(2)}%`}
+                        </div>
+                      </div>
+                      <div className="md:col-span-2">
+                        <div className="text-sm">Notes</div>
+                        <Textarea value={it.notes || ''} onChange={(e) => setInline(idx, { notes: e.target.value })} rows={2} />
+                      </div>
+                      <div className="md:col-span-1">
+                        <div className="text-sm">Alert price</div>
+                        <Input value={it.alert_price ?? ''} type="number" step="0.01" onChange={(e) => setInline(idx, { alert_price: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-1 flex items-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => onSaveInline(it, idx)}><Save className="h-3 w-3 mr-1" /> Save</Button>
+                        <Button size="sm" onClick={() => onCreateAlert(it)}><Bell className="h-3 w-3 mr-1" /> Alert</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </table>
+      </div>
     </div>
   );
 }

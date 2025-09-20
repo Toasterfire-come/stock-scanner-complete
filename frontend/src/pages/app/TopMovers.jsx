@@ -185,43 +185,11 @@ const TopMovers = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Top Movers</h1>
-          <p className="text-gray-600 mt-2">Stocks with the highest price movements and volume</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="outline">{lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}</Badge>
-          <Button onClick={fetchTrendingData} variant="outline"><RefreshCw className="h-4 w-4 mr-2" /> Refresh</Button>
-        </div>
+    <div className="container-enhanced py-8">
+      <h1 className="text-3xl font-bold mb-6">Top Movers</h1>
+      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {/* cards */}
       </div>
-
-      {error && (
-        <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/50 mb-6"><CardContent className="p-4 text-yellow-800 flex items-center justify-between"><span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> {error}</span><Button size="sm" variant="outline" onClick={fetchTrendingData}>Retry</Button></CardContent></Card>
-      )}
-
-      {isFallback && (
-        <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 mb-6"><CardContent className="p-4 text-blue-800">You are viewing demo market data while the live API is unavailable.</CardContent></Card>
-      )}
-
-      <Tabs defaultValue="gainers" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="gainers" className="flex items-center gap-2"><TrendingUp className="h-4 w-4" /> Top Gainers</TabsTrigger>
-          <TabsTrigger value="losers" className="flex items-center gap-2"><TrendingDown className="h-4 w-4" /> Top Losers</TabsTrigger>
-          <TabsTrigger value="volume" className="flex items-center gap-2"><Volume2 className="h-4 w-4" /> Most Active</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="gainers">
-          <Card><CardHeader><CardTitle className="flex items-center gap-2 text-green-600"><TrendingUp className="h-5 w-5" /> Top Gainers</CardTitle></CardHeader><CardContent>{renderTable('gainers', true)}<Paginator k="gainers" /></CardContent></Card>
-        </TabsContent>
-        <TabsContent value="losers">
-          <Card><CardHeader><CardTitle className="flex items-center gap-2 text-red-600"><TrendingDown className="h-5 w-5" /> Top Losers</CardTitle></CardHeader><CardContent>{renderTable('losers', true)}<Paginator k="losers" /></CardContent></Card>
-        </TabsContent>
-        <TabsContent value="volume">
-          <Card><CardHeader><CardTitle className="flex items-center gap-2 text-blue-600"><Volume2 className="h-5 w-5" /> Most Active by Volume</CardTitle></CardHeader><CardContent>{renderTable('volume', true)}<Paginator k="volume" /></CardContent></Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
