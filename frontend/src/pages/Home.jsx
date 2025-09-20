@@ -192,8 +192,9 @@ const Home = () => {
     },
     {
       name: "Gold",
-      price: "$89.99", 
+      price: "$79.99", 
       period: "/month",
+      annualPrice: "$814.99",
       description: "Ultimate trading experience",
       features: [
         "Unlimited Everything",
