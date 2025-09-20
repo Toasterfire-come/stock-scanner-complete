@@ -29,7 +29,7 @@ const Alerts = () => {
   const fetchAlerts = async () => {
     setIsLoading(true);
     try {
-      const { data } = await api.get('/alerts/list/');
+      const { data } = await api.get('/alerts/');
       setAlerts(Array.isArray(data) ? data : (data?.alerts || []));
     } catch (error) {
       toast.error("Failed to fetch alerts");

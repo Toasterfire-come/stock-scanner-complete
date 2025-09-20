@@ -309,6 +309,18 @@ export async function toggleAlert(alertId) { return await postWithRetry(`/alerts
 export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/`); }
 
 // ====================
+// ALERTS - EXTRA HELPERS
+// ====================
+export async function listAlerts(params = {}) {
+  const { data } = await api.get('/alerts/', { params });
+  return data; // { alerts: [...] }
+}
+export async function getAlertsUnreadCount() {
+  const { data } = await api.get('/alerts/unread-count/');
+  return data; // { count }
+}
+
+// ====================
 // BILLING
 // ====================
 export async function getBillingHistory(params = {}) { const { data } = await api.get('/billing/history/', { params }); return data; }
@@ -332,8 +344,28 @@ export async function markNotificationsRead(payload) { const { data } = await ap
 export async function getNewsFeed(params = {}) { const { data } = await api.get('/news/feed/', { params }); return data; }
 export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
 export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
-export async function getNewsPreferences() { const { data } = await api.get('/news/preferences/'); return data; }
-export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
+export async function getNewsPreferences() {
+  const { data } = await api.get('/news/preferences/');
+  // Normalize snake_case to camelCase for the app
+  const prefs = data?.data || data || {};
+  return {
+    followedStocks: Array.isArray(prefs.followed_stocks) ? prefs.followed_stocks : (prefs.followedStocks || []),
+    followedSectors: Array.isArray(prefs.followed_sectors) ? prefs.followed_sectors : (prefs.followedSectors || []),
+    preferredCategories: Array.isArray(prefs.preferred_categories) ? prefs.preferred_categories : (prefs.preferredCategories || []),
+    newsFrequency: prefs.news_frequency || prefs.newsFrequency || 'realtime',
+  };
+}
+export async function updateNewsPreferences(preferences) {
+  // Convert camelCase to snake_case expected by backend
+  const payload = {
+    followed_stocks: preferences.followedStocks || [],
+    followed_sectors: preferences.followedSectors || [],
+    preferred_categories: preferences.preferredCategories || [],
+    news_frequency: preferences.newsFrequency || 'realtime',
+  };
+  const { data } = await api.post('/news/preferences/', payload);
+  return data;
+}
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
 
 // ====================
@@ -363,6 +395,15 @@ export async function getAlertHistory(params = {}) { const { data } = await api.
 // FEATURE FLAGS
 // ====================
 export async function getFeatureFlags() { const { data } = await api.get('/feature-flags/'); return data; }
+
+// ====================
+// USAGE & RATE LIMITS
+// ====================
+export async function getUsageSummary() { const { data } = await api.get('/usage/'); return data; }
+export async function getUsageStats() { const { data } = await api.get('/usage-stats/'); return data; }
+export async function getUsageHistory(params = {}) { const { data } = await api.get('/usage/history/', { params }); return data; }
+export async function usageTrack(payload = {}) { const { data } = await api.post('/usage/track/', payload); return data; }
+export async function usageReconcile(payload = {}) { const { data } = await api.post('/usage/reconcile/', payload); return data; }
 
 //====================
 // REVENUE & PAYMENTS (PAYPAL INTEGRATION)
@@ -438,3 +479,23 @@ export async function getWordPressNews(params = {}) { const { data } = await api
 export async function getWordPressAlerts(params = {}) { const { data } = await api.get('/wordpress/alerts/', { params }); return data; }
 export async function updateStocks(symbols) { const { data } = await api.post('/stocks/update/', { symbols }); return data; }
 export async function updateNews() { const { data } = await api.post('/news/update/'); return data; }
+
+// ====================
+// NEWS - EXTRA
+// ====================
+export async function getNewsByTicker(ticker, params = {}) { const { data } = await api.get(`/news/ticker/${encodeURIComponent(ticker)}/`, { params }); return data; }
+
+// ====================
+// PORTFOLIO - EXTRA STATS
+// ====================
+export async function getPortfolioValue() { const { data } = await api.get('/portfolio/value/'); return data; }
+export async function getPortfolioPnl() { const { data } = await api.get('/portfolio/pnl/'); return data; }
+export async function getPortfolioReturn() { const { data } = await api.get('/portfolio/return/'); return data; }
+export async function getPortfolioHoldingsCount() { const { data } = await api.get('/portfolio/holdings-count/'); return data; }
+
+// ====================
+// STATS
+// ====================
+export async function getTotalTickers() { const { data } = await api.get('/stats/total-tickers/'); return data; }
+export async function getGainersLosersStats() { const { data } = await api.get('/stats/gainers-losers/'); return data; }
+export async function getTotalAlertsCount() { const { data } = await api.get('/stats/total-alerts/'); return data; }
