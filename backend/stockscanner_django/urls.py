@@ -3,6 +3,8 @@ from django.urls import path, include
 from core.views import homepage, health_check, api_documentation, endpoint_status, endpoint_status_api, kill_switch, csrf, robots_txt, sitemap_xml
 from stocks.simple_api import simple_status_api
 from stocks.billing_api import paypal_webhook_api
+from django.http import HttpResponseNotFound
+from django.conf import settings
 
 urlpatterns = [
     path('', homepage, name='homepage'),
@@ -24,3 +26,13 @@ urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
 ]
+
+# Hide backend docs behind a switch (return 404 when disabled)
+if not getattr(settings, 'BACKEND_DOCS_ENABLED', False):
+    def _docs_404(request, *args, **kwargs):
+        return HttpResponseNotFound('Not found')
+    urlpatterns = [
+        path('docs/', _docs_404),
+        path('api/endpoint-status/', _docs_404),
+        *urlpatterns
+    ]

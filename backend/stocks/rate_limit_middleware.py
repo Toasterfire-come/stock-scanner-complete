@@ -11,7 +11,7 @@ from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
 from django.utils import timezone
 from django.db.models import Sum
-from .models import UsageStats, UserProfile
+from .models import UsageStats, UserProfile, APIKey
 
 logger = logging.getLogger(__name__)
 
@@ -165,6 +165,10 @@ class RateLimitMiddleware(MiddlewareMixin):
         if method in ("OPTIONS", "HEAD"):
             return False
         
+        # API key bypass for rate-limiting if enabled
+        if getattr(settings, 'API_KEYS_ENABLED', False) and getattr(request, 'api_key_authenticated', False) and getattr(settings, 'API_KEYS_BYPASS_RATE_LIMIT', True):
+            return False
+
         # Check if endpoint is in free list (no rate limiting)
         for free_endpoint in self.FREE_ENDPOINTS:
             if path.startswith(free_endpoint):
@@ -407,14 +411,24 @@ class APIKeyAuthenticationMiddleware(MiddlewareMixin):
         self.api_key = getattr(settings, 'WORDPRESS_API_KEY', '')
     
     def __call__(self, request):
-        # Check for API key in headers
-        provided_api_key = request.META.get('HTTP_X_API_KEY', '')
-        
+        # Check for API key in headers (per-account) when feature is enabled
+        provided_api_key = request.META.get('HTTP_X_API_KEY', '') or request.GET.get('api_key', '')
+        request.api_key_authenticated = False
+        request.api_key_user = None
+
+        # First, allow legacy WORDPRESS_API_KEY
         if provided_api_key and provided_api_key == self.api_key:
-            # Mark request as authenticated via API key
             request.api_key_authenticated = True
-            logger.debug(f"API key authentication successful for {request.path}")
-        else:
-            request.api_key_authenticated = False
+        elif provided_api_key and getattr(settings, 'API_KEYS_ENABLED', False):
+            # Validate per-account API key by prefix + hash
+            try:
+                prefix = provided_api_key[:8]
+                key_hash = APIKey.hash_key(provided_api_key)
+                api_row = APIKey.objects.select_related('user').filter(prefix=prefix, key_hash=key_hash, is_active=True).first()
+                if api_row:
+                    request.api_key_authenticated = True
+                    request.api_key_user = api_row.user
+            except Exception:
+                request.api_key_authenticated = False
         
         return self.get_response(request)

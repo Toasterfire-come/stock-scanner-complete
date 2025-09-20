@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
 import json
+import hashlib
+import os
 
 class Stock(models.Model):
     # Basic stock info
@@ -755,3 +757,28 @@ class WebhookEvent(models.Model):
 
     def __str__(self):
         return f"{self.source}:{self.event_id} [{self.status}]"
+
+
+class APIKey(models.Model):
+    """Per-account API keys with hashed storage."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
+    name = models.CharField(max_length=100, default='default')
+    key_hash = models.CharField(max_length=128, db_index=True)
+    prefix = models.CharField(max_length=12, db_index=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['prefix', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} ({self.name}) [{self.prefix}]"
+
+    @staticmethod
+    def hash_key(raw_key: str) -> str:
+        pepper = os.environ.get('API_KEY_PEPPER', '')
+        return hashlib.sha256((pepper + raw_key).encode('utf-8')).hexdigest()

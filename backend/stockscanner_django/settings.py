@@ -197,7 +197,7 @@ if DEBUG:
         'http://127.0.0.1:8000',
     ] + _extra_cors
 else:
-    CORS_ALLOWED_ORIGINS = list(filter(None, [
+    cors_list = list(filter(None, [
         os.environ.get('FRONTEND_URL'),
         os.environ.get('WORDPRESS_URL'),
         'https://retailtradescanner.com',
@@ -206,6 +206,12 @@ else:
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
     ] + _extra_cors))
+    # When API key is used and bypass CORS is enabled, allow all; otherwise strict list
+    if os.environ.get('API_KEYS_ENABLED', 'false').lower() == 'true' and os.environ.get('API_KEYS_BYPASS_CORS', 'true').lower() == 'true':
+        CORS_ALLOW_ALL_ORIGINS = True
+        CORS_ALLOWED_ORIGINS = []
+    else:
+        CORS_ALLOWED_ORIGINS = cors_list
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = list({
     'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'
@@ -371,6 +377,13 @@ else:
 KILL_SWITCH_ENABLED = os.environ.get('KILL_SWITCH_ENABLED', 'false').lower() == 'true'
 KILL_SWITCH_PASSWORD = os.environ.get('KILL_SWITCH_PASSWORD', '')
 KILL_SWITCH_DELAY_SECONDS = int(os.environ.get('KILL_SWITCH_DELAY_SECONDS', '5'))
+
+# Feature toggles
+API_KEYS_ENABLED = os.environ.get('API_KEYS_ENABLED', 'false').lower() == 'true'
+API_KEYS_BYPASS_RATE_LIMIT = os.environ.get('API_KEYS_BYPASS_RATE_LIMIT', 'true').lower() == 'true'
+API_KEYS_BYPASS_CORS = os.environ.get('API_KEYS_BYPASS_CORS', 'true').lower() == 'true'
+API_KEY_PEPPER = os.environ.get('API_KEY_PEPPER', '')
+BACKEND_DOCS_ENABLED = os.environ.get('BACKEND_DOCS_ENABLED', 'false').lower() == 'true'
 
 # Rate Limiting Configuration
 RATE_LIMIT_FREE_USERS = int(os.environ.get('RATE_LIMIT_FREE_USERS', os.environ.get('FREE_MONTHLY_API_LIMIT', '30')))  # requests per hour for free users (env-driven)

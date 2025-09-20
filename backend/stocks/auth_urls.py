@@ -48,6 +48,10 @@ urlpatterns = [
     path('usage/track/', billing_api.usage_track_api, name='usage_track'),
     path('usage/reconcile/', billing_api.usage_reconcile_api, name='usage_reconcile'),
     path('platform-stats', platform_views.platform_stats_api, name='platform_stats'),
+    # API keys (feature-gated)
+    path('user/api-keys/create/', auth_api.api_keys_create_api, name='api_keys_create'),
+    path('user/api-keys/', auth_api.api_keys_list_api, name='api_keys_list'),
+    path('user/api-keys/revoke/', auth_api.api_keys_revoke_api, name='api_keys_revoke'),
     
     # Market data
     path('market-data/', auth_api.market_data_api, name='market_data'),

@@ -45,6 +45,8 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [referral, setReferral] = useState({ link: null, code: null, summary: null });
   const [inviteEmail, setInviteEmail] = useState("");
+  const [keys, setKeys] = useState([]);
+  const [newKeyName, setNewKeyName] = useState('');
   const userId = useMemo(() => {
     // Placeholder for real auth user id integration
     const stored = window.localStorage.getItem("rts_user_id");
@@ -88,6 +90,35 @@ const Home = () => {
       alert("Invite sent!");
     } catch (e) {
       alert(e?.response?.data?.detail || e.message || "Failed to send invite");
+    }
+  };
+
+  const loadKeys = async () => {
+    try {
+      const r = await axios.get(`${API}/user/api-keys/`, { withCredentials: true });
+      setKeys((r.data && r.data.keys) || []);
+    } catch (e) {
+      /* silently ignore if disabled */
+    }
+  };
+  useEffect(() => { loadKeys(); }, []);
+
+  const onCreateKey = async () => {
+    try {
+      const r = await axios.post(`${API}/user/api-keys/create/`, { name: newKeyName || 'default' }, { withCredentials: true });
+      alert(`Copy your API key now: ${r.data.api_key}`);
+      setNewKeyName('');
+      loadKeys();
+    } catch (e) {
+      alert(e?.response?.data?.detail || 'Failed to create key');
+    }
+  };
+  const onRevokeKey = async (id) => {
+    try {
+      await axios.post(`${API}/user/api-keys/revoke/`, { id }, { withCredentials: true });
+      loadKeys();
+    } catch (e) {
+      alert('Failed to revoke key');
     }
   };
 
@@ -159,6 +190,25 @@ const Home = () => {
           <p className="text-sm mt-2">
             Invited: {referral.summary.total_invited} · Paid: {referral.summary.total_paid} · Earned months: {referral.summary.rewards_months_earned} · Granted: {referral.summary.rewards_months_granted} · Pending: {referral.summary.pending_rewards_months}
           </p>
+        )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">API access (private)</h2>
+        <p className="text-gray-600 text-sm">Use API keys for server-to-server access. Keys are hidden by default in production.</p>
+        <div className="mt-3 flex gap-2 items-center">
+          <input className="border px-3 py-2 rounded" placeholder="Key name" value={newKeyName} onChange={(e)=>setNewKeyName(e.target.value)} />
+          <button className="bg-black text-white px-4 py-2 rounded" onClick={onCreateKey}>Create key</button>
+        </div>
+        {!!keys.length && (
+          <ul className="mt-3 list-disc ml-5">
+            {keys.map(k => (
+              <li key={k.id} className="flex items-center gap-2">
+                <span>{k.name} · {k.prefix}•••• · {k.is_active ? 'active' : 'revoked'}</span>
+                {k.is_active && <button className="text-red-600 underline" onClick={()=>onRevokeKey(k.id)}>Revoke</button>}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </div>

@@ -16,6 +16,7 @@ from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils import timezone
+import secrets
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import json
@@ -23,7 +24,7 @@ import logging
 from datetime import datetime, timedelta
 from django.db import transaction, IntegrityError
 
-from .models import UserProfile, BillingHistory, NotificationSettings
+from .models import UserProfile, BillingHistory, NotificationSettings, APIKey
 from .security_utils import secure_api_endpoint, validate_user_input
 
 logger = logging.getLogger(__name__)
@@ -354,6 +355,58 @@ def user_profile_api(request):
                     'is_premium': getattr(profile, 'is_premium', False)
                 }
             })
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_keys_create_api(request):
+    """Create a new API key for the authenticated user. Returns the raw key once.
+    Only available when API_KEYS_ENABLED=true.
+    """
+    if not getattr(settings, 'API_KEYS_ENABLED', False):
+        return JsonResponse({'detail': 'API keys are disabled'}, status=404)
+    name = (getattr(request, 'data', {}) or {}).get('name') or 'default'
+    raw_key = secrets.token_urlsafe(32)
+    prefix = raw_key[:8]
+    key_hash = APIKey.hash_key(raw_key)
+    APIKey.objects.create(user=request.user, name=name.strip() or 'default', key_hash=key_hash, prefix=prefix)
+    return JsonResponse({'success': True, 'api_key': raw_key, 'prefix': prefix})
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_keys_list_api(request):
+    if not getattr(settings, 'API_KEYS_ENABLED', False):
+        return JsonResponse({'detail': 'API keys are disabled'}, status=404)
+    keys = [
+        {
+            'id': k.id,
+            'name': k.name,
+            'prefix': k.prefix,
+            'is_active': k.is_active,
+            'created_at': k.created_at.isoformat(),
+            'last_used_at': k.last_used_at.isoformat() if k.last_used_at else None
+        } for k in request.user.api_keys.all().order_by('-created_at')
+    ]
+    return JsonResponse({'success': True, 'keys': keys})
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_keys_revoke_api(request):
+    if not getattr(settings, 'API_KEYS_ENABLED', False):
+        return JsonResponse({'detail': 'API keys are disabled'}, status=404)
+    key_id = (getattr(request, 'data', {}) or {}).get('id')
+    try:
+        key = request.user.api_keys.get(id=key_id)
+        key.is_active = False
+        key.save(update_fields=['is_active'])
+        return JsonResponse({'success': True})
+    except APIKey.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
         
         elif request.method == 'POST':
             data = json.loads(request.body) if request.body else {}
