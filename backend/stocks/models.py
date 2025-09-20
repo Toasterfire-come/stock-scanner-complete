@@ -175,13 +175,32 @@ class UserProfile(models.Model):
     company = models.CharField(max_length=100, blank=True, help_text="User company")
     
     # Subscription and billing information
+    PLAN_CHOICES = [
+        ('free', 'Free Plan'),
+        ('bronze', 'Bronze Plan'),
+        ('silver', 'Silver Plan'), 
+        ('gold', 'Gold Plan'),
+    ]
+    
     is_premium = models.BooleanField(default=False, help_text="Whether user has premium subscription")
-    plan_type = models.CharField(max_length=20, default='free', help_text="Current subscription plan")
-    plan_name = models.CharField(max_length=50, default='Free', help_text="Display name of current plan")
+    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='free', help_text="Current subscription plan")
+    plan_name = models.CharField(max_length=50, default='Free Plan', help_text="Display name of current plan")
     billing_cycle = models.CharField(max_length=20, default='monthly', help_text="Billing cycle (monthly/yearly)")
     auto_renew = models.BooleanField(default=True, help_text="Whether subscription auto-renews at next_billing_date")
     subscription_status = models.CharField(max_length=20, default='active', help_text="Subscription status: active, canceled, past_due")
-    api_calls_limit = models.IntegerField(default=100, help_text="API calls limit per month")
+    
+    # Plan-specific limits
+    api_calls_limit = models.IntegerField(default=30, help_text="API calls limit per month")
+    screeners_limit = models.IntegerField(default=1, help_text="Number of screeners allowed")
+    alerts_limit = models.IntegerField(default=0, help_text="Email alerts limit per month")
+    watchlists_limit = models.IntegerField(default=1, help_text="Number of watchlists allowed")
+    portfolios_limit = models.IntegerField(default=1, help_text="Number of portfolios allowed")
+    
+    # Usage tracking
+    api_calls_used = models.IntegerField(default=0, help_text="API calls used this month")
+    alerts_sent = models.IntegerField(default=0, help_text="Alerts sent this month")
+    usage_reset_date = models.DateTimeField(null=True, blank=True, help_text="When usage counters were last reset")
+    
     next_billing_date = models.DateTimeField(null=True, blank=True, help_text="Next billing date")
     
     # Payment information
