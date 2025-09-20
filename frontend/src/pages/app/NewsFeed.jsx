@@ -21,3 +21,5 @@ const NewsFeed = () => {
 };
 
 export default NewsFeed;
+
+export default NewsFeed;
