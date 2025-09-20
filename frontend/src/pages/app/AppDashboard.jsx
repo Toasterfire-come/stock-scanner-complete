@@ -358,6 +358,7 @@ const AppDashboard = () => {
           <div>
             <MarketStatusIndicator />
           </div>
+        </div>
       </div>
     </div>
   );
