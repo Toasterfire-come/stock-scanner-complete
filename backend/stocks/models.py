@@ -805,3 +805,78 @@ class APICallLog(models.Model):
     def __str__(self):
         username = self.user.username if self.user else 'Anonymous'
         return f"{username} - {self.endpoint_type} ({self.call_count} calls)"
+
+
+# Portfolio analytics snapshots
+class PortfolioAnalytics(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='portfolio_analytics')
+    date = models.DateField()
+    total_value = models.DecimalField(max_digits=15, decimal_places=2)
+    day_change = models.DecimalField(max_digits=15, decimal_places=2)
+    performance_metrics = models.JSONField()
+
+    class Meta:
+        unique_together = ('user', 'date')
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['user', '-date']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date}"
+
+
+class APIKey(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
+    key = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+
+
+class EnterpriseInquiry(models.Model):
+    company_name = models.CharField(max_length=200)
+    contact_email = models.EmailField()
+    contact_name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=20)
+    message = models.TextField()
+    solution_type = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['contact_email', '-created_at']),
+            models.Index(fields=['solution_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.company_name} - {self.solution_type}"
+
+
+class UserActivity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    action_type = models.CharField(max_length=50)
+    details = models.JSONField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['action_type', '-timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action_type}"

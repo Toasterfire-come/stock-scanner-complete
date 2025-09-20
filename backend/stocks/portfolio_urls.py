@@ -5,12 +5,13 @@ Dedicated URL patterns for portfolio management endpoints.
 
 from django.urls import path
 from . import portfolio_api, portfolio_api_updated
+from . import portfolio_analytics_api
 
 app_name = 'portfolio'
 
 urlpatterns = [
     # New RESTful endpoints (matching specification)
-    path('', portfolio_api_updated.portfolio_api, name='portfolio_list'),
+    path('', portfolio_analytics_api.portfolio_with_analytics_api, name='portfolio_list'),
     path('add/', portfolio_api_updated.portfolio_add_api, name='portfolio_add'),
     path('<str:holding_id>/', portfolio_api_updated.portfolio_delete_api, name='portfolio_delete'),
     

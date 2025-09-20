@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 import os
 from decimal import Decimal
 
-from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
+from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats, APIKey
 from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
@@ -802,11 +802,32 @@ def current_plan_api(request):
                 profile.api_calls_limit = max(getattr(profile, 'api_calls_limit', 100000), 100000)
                 profile.save()
         
+        # Gold plan API details
+        plan = getattr(profile, 'plan_type', 'free')
+        is_gold = plan == 'gold'
+        api_keys = []
+        if is_gold:
+            for k in APIKey.objects.filter(user=user, is_active=True).order_by('-created_at')[:10]:
+                api_keys.append({
+                    'id': k.id,
+                    'name': k.name,
+                    'key': k.key,
+                    'created_at': k.created_at.isoformat(),
+                    'last_used': k.last_used.isoformat() if k.last_used else None
+                })
+
+        features = {
+            'api_access': plan in ['gold', 'enterprise'],
+            'bulk_export': plan in ['gold', 'enterprise', 'silver'],
+            'advanced_analytics': plan in ['gold', 'enterprise', 'silver'],
+            'white_label': plan in ['gold', 'enterprise'],
+        }
+
         return JsonResponse({
             'success': True,
             'data': {
                 'plan_name': getattr(profile, 'plan_name', 'Free'),
-                'plan_type': getattr(profile, 'plan_type', 'free'),
+                'plan_type': plan,
                 'is_premium': getattr(profile, 'is_premium', False),
                 'billing_cycle': getattr(profile, 'billing_cycle', 'monthly'),
                 'next_billing_date': getattr(profile, 'next_billing_date', None),
@@ -816,6 +837,11 @@ def current_plan_api(request):
                     'portfolio_tracking': True,
                     'alerts': getattr(profile, 'is_premium', False),
                     'advanced_analytics': getattr(profile, 'is_premium', False)
+                },
+                'plan_enhanced': {
+                    'features': features,
+                    'api_keys': api_keys,
+                    'api_calls_remaining': 'unlimited' if plan == 'gold' else max(0, getattr(profile, 'api_calls_limit', 0) - 0)
                 }
             }
         })
