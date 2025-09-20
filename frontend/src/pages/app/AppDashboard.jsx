@@ -339,89 +339,25 @@ const AppDashboard = () => {
           </Card>
         </div>
 
-        {/* Bottom Grid - Activity & Sectors */}
+        {/* Bottom Grid - Enhanced Portfolio & Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your latest trading activities</CardDescription>
-              </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/app/activity">
-                  <Calendar className="h-4 w-4" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {userActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {userActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div>
-                        <div className="text-sm font-medium">{activity.action_type}</div>
-                        <div className="text-xs text-gray-600">{activity.details}</div>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(activity.timestamp).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center py-8 text-gray-500">
-                  <div className="text-center">
-                    <Activity className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p>Your recent activity will appear here</p>
-                    <p className="text-sm">Start by creating screeners or alerts</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Sector Performance */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Sector Performance</CardTitle>
-                <CardDescription>Top performing sectors today</CardDescription>
-              </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/app/sectors">
-                  <PieChart className="h-4 w-4" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {sectorPerformance.length > 0 ? (
-                <div className="space-y-3">
-                  {sectorPerformance.map((sector, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{sector.name}</div>
-                        <div className="text-xs text-gray-600">{sector.stocks_count} stocks</div>
-                      </div>
-                      <Badge variant={sector.change >= 0 ? "default" : "secondary"} 
-                             className={sector.change >= 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                        {formatPercentage(sector.change)}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center py-8 text-gray-500">
-                  <div className="text-center">
-                    <PieChart className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p>Sector data loading...</p>
-                    <p className="text-sm">Real-time sector performance coming soon</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Enhanced Portfolio Analytics */}
+          <div className="lg:col-span-2">
+            <EnhancedPortfolioAnalytics />
+          </div>
         </div>
+
+        {/* Activity & Market Status Grid */}  
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* Real User Activity Feed */}
+          <div className="lg:col-span-2">
+            <RealUserActivityFeed maxItems={8} />
+          </div>
+
+          {/* Market Status */}
+          <div>
+            <MarketStatusIndicator />
+          </div>
       </div>
     </div>
   );
