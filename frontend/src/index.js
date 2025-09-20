@@ -20,7 +20,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 const renderApp = () => {
   root.render(
     <React.StrictMode>
-      <SecureApp />
+      <App />
     </React.StrictMode>
   );
   
