@@ -34,8 +34,12 @@ import {
   getSectorPerformance
 } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
+import RealTrendingSparkline from "../../components/RealTrendingSparkline";
 import UsageTracker from "../../components/UsageTracker";
 import PlanUsage from "../../components/PlanUsage";
+import EnhancedPortfolioAnalytics from "../../components/EnhancedPortfolioAnalytics";
+import RealUserActivityFeed from "../../components/RealUserActivityFeed";
+import MarketStatusIndicator from "../../components/MarketStatusIndicator";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
