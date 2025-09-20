@@ -17,6 +17,101 @@ code {
         monospace;
 }
 
+/* Fix background cutoff issues on larger screens */
+.min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for better mobile support */
+}
+
+/* Ensure seamless backgrounds and gradients */
+.bg-gradient-to-br,
+.bg-gradient-to-r {
+    background-attachment: scroll;
+    background-size: cover;
+}
+
+/* Professional sizing for all screen sizes */
+@media (min-width: 1536px) {
+    .container {
+        max-width: 1400px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1600px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .container {
+        max-width: 2000px;
+    }
+}
+
+/* Fix pricing card cutoff issues */
+.pricing-card-container {
+    min-height: fit-content;
+    height: auto;
+}
+
+/* Ensure cards don't get cut off */
+.card-responsive {
+    min-height: 400px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-responsive .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Improve scrolling on all devices */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Better responsive typography */
+@media (min-width: 640px) {
+    .responsive-text-sm { font-size: 0.875rem; }
+    .responsive-text-base { font-size: 1rem; }
+    .responsive-text-lg { font-size: 1.125rem; }
+    .responsive-text-xl { font-size: 1.25rem; }
+}
+
+@media (min-width: 768px) {
+    .responsive-text-sm { font-size: 0.875rem; }
+    .responsive-text-base { font-size: 1rem; }
+    .responsive-text-lg { font-size: 1.125rem; }
+    .responsive-text-xl { font-size: 1.25rem; }
+    .responsive-text-2xl { font-size: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+    .responsive-text-sm { font-size: 0.875rem; }
+    .responsive-text-base { font-size: 1rem; }
+    .responsive-text-lg { font-size: 1.125rem; }
+    .responsive-text-xl { font-size: 1.25rem; }
+    .responsive-text-2xl { font-size: 1.5rem; }
+    .responsive-text-3xl { font-size: 1.875rem; }
+}
+
+/* Fix overflow issues */
+.overflow-x-hidden {
+    overflow-x: hidden;
+}
+
+/* Ensure full viewport coverage */
+.full-viewport {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100%;
+}
+
 
 
 @layer base {
