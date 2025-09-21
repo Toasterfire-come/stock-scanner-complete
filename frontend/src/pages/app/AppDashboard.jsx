@@ -31,7 +31,10 @@ import {
   getPortfolioAnalytics,
   getUserActivityFeed,
   getMarketStatus,
-  getSectorPerformance
+  getSectorPerformance,
+  API_ROOT,
+  normalizeMarketStats,
+  normalizeTrending
 } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
 import RealTrendingSparkline from "../../components/RealTrendingSparkline";
@@ -76,12 +79,40 @@ const AppDashboard = () => {
           getSectorPerformance().catch(() => [])
         ]);
 
-        setMarketData(marketResponse.data);
-        setTrendingStocks(trendingResponse.data);
+        // Fallback direct fetch to guarantee calls happen even if wrappers fail silently
+        let marketDataResolved = marketResponse?.data;
+        if (!marketDataResolved) {
+          try {
+            const r = await fetch(`${API_ROOT}/market-stats/`, { credentials: 'include' });
+            const jd = await r.json();
+            marketDataResolved = normalizeMarketStats(jd);
+          } catch {}
+        }
+
+        let trendingResolved = trendingResponse?.data;
+        if (!trendingResolved) {
+          try {
+            const r = await fetch(`${API_ROOT}/trending/`, { credentials: 'include' });
+            const jd = await r.json();
+            trendingResolved = normalizeTrending(jd);
+          } catch {}
+        }
+
+        setMarketData(marketDataResolved || null);
+        setTrendingStocks(trendingResolved || null);
         setUsage(stats?.data || null);
         setPortfolioAnalytics(portfolioResponse);
         setUserActivity(activityResponse?.slice(0, 5) || []);
-        setMarketStatus(statusResponse);
+        // Ensure market status is fetched at least once
+        let statusResolved = statusResponse;
+        if (!statusResolved || !statusResolved?.market) {
+          try {
+            const r = await fetch(`${API_ROOT}/market/market-status`, { credentials: 'include' });
+            const jd = await r.json();
+            statusResolved = jd;
+          } catch {}
+        }
+        setMarketStatus(statusResolved);
         setSectorPerformance(sectorResponse?.slice(0, 6) || []);
 
         // Use real historical data from backend or create realistic trends
