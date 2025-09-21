@@ -2,7 +2,7 @@ import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
 // Use REACT_APP_BACKEND_URL exclusively from environment, with production fallback
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtreadescanner.com";
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com";
 
 if (!BASE_URL) {
   console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
