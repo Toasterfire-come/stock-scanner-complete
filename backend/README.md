@@ -1,3 +1,60 @@
+### Production env template (paste into your environment)
+
+```
+# =============================================================================
+# STOCK SCANNER ENVIRONMENT CONFIGURATION (PRODUCTION)
+# =============================================================================
+DJANGO_SETTINGS_MODULE=stockscanner_django.settings
+DJANGO_DEBUG=False
+ENVIRONMENT=production
+
+# Hosts / Frontend
+DJANGO_SECRET_KEY="((#cx+mb@f-(8x*p@9mfnanqe%ha1@6-b%w)q##v@)lanop"
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,retailtradescanner.com,api.retailtradescanner.com,tradescanpro.com,www.tradescanpro.com
+FRONTEND_URL=https://tradescanpro.com
+WORDPRESS_URL=https://retailtradescanner.com
+CSRF_TRUSTED_ORIGINS=https://api.retailtradescanner.com,https://tradescanpro.com,https://www.tradescanpro.com
+PRIMARY_ORIGIN=https://tradescanpro.com
+
+# Database
+DB_ENGINE=django.db.backends.mysql
+DB_HOST=127.0.0.1
+DB_NAME=stockscanner
+DB_USER=root
+DB_PASSWORD=
+DB_PORT=3306
+CONN_MAX_AGE=0
+
+# Cache (no Redis)
+CACHE_BACKEND=locmem
+
+# Celery (optional)
+CELERY_ENABLED=false
+
+# Security / throttling
+LOG_FORMAT=default
+LOG_LEVEL=INFO
+SESSION_COOKIE_SECURE=True
+SESSION_COOKIE_HTTPONLY=True
+SESSION_COOKIE_SAMESITE=None
+CSRF_COOKIE_SECURE=True
+CSRF_COOKIE_HTTPONLY=True
+CSRF_COOKIE_SAMESITE=None
+SECURE_SSL_REDIRECT=True
+SECURE_HSTS_SECONDS=31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+SECURE_HSTS_PRELOAD=True
+SECURE_CONTENT_TYPE_NOSNIFF=True
+X_FRAME_OPTIONS=DENY
+RATE_LIMIT_FREE_USERS=100
+RATE_LIMIT_AUTHENTICATED_USERS=1000
+RATE_LIMIT_WINDOW=3600
+
+# Observability (optional)
+SENTRY_DSN=
+SENTRY_TRACES_SAMPLE_RATE=0
+```
+
 ## Backend (Django) Setup
 
 ### 1) Environment

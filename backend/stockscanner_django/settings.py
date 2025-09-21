@@ -35,7 +35,10 @@ else:
     ALLOWED_HOSTS = [
         "127.0.0.1",
         "localhost",
-        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescannet.com'),
+        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+        "api.retailtradescanner.com",
+        "tradescanpro.com",
+        "www.tradescanpro.com",
     ]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
@@ -195,8 +198,8 @@ else:
         os.environ.get('WORDPRESS_URL'),
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
-        'https://retailtradescannet.com',
-        'https://www.retailtradescannet.com',
+        'https://retailtradescanner.com',
+        'https://www.retailtradescanner.com',
         # Deployed static hosting domain(s)
         'https://access-5018544625.webspace-host.com',
     ] + _extra_cors))
@@ -343,6 +346,7 @@ else:
         os.environ.get('PRIMARY_ORIGIN', 'https://tradescanpro.com'),
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
+        'https://api.retailtradescanner.com',
         # Deployed static hosting domain(s)
         'https://access-5018544625.webspace-host.com',
     ] + [o.strip() for o in os.environ.get('EXTRA_CSRF_ORIGINS', '').split(',') if o.strip()]))

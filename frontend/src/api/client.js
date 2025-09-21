@@ -353,12 +353,12 @@ export async function pingHealth() {
     } catch (e2) {
       try {
         // Fallback: no-credentials request to reduce CORS friction
-        const axiosNoCreds = require('axios').create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
+        const axiosNoCreds = axios.create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
         const { data } = await axiosNoCreds.get('/api/health/', { timeout: 5000 });
         return data;
       } catch (e3) {
         // Final fallback: root /health without credentials
-        const axiosNoCreds = require('axios').create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
+        const axiosNoCreds = axios.create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
         const { data } = await axiosNoCreds.get('/health/', { timeout: 5000 });
         return data;
       }
