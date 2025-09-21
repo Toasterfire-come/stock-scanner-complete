@@ -12,7 +12,7 @@ import {
   Calendar,
   Bell
 } from 'lucide-react';
-import { getMarketStatus, getMarketStats } from '../api/client';
+import { getMarketStatus, getMarketStatsSafe } from '../api/client';
 
 const MarketStatusIndicator = ({ compact = false }) => {
   const [marketStatus, setMarketStatus] = useState(null);
@@ -32,14 +32,15 @@ const MarketStatusIndicator = ({ compact = false }) => {
     try {
       const [statusRes, statsRes] = await Promise.all([
         getMarketStatus().catch(() => null),
-        getMarketStats().catch(() => null)
+        getMarketStatsSafe().catch(() => ({ success: false }))
       ]);
 
-      if (statusRes?.success) {
-        setMarketStatus(statusRes.market);
+      // Accept both {success:true, market:{...}} and {market:{...}}
+      if (statusRes?.market || statusRes?.success) {
+        setMarketStatus(statusRes.market || statusRes?.data?.market || statusRes);
       }
       
-      if (statsRes?.success) {
+      if (statsRes?.success && statsRes?.data) {
         setMarketStats(statsRes.data);
       }
       
