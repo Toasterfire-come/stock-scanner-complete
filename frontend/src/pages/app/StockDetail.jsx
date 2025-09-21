@@ -285,9 +285,11 @@ const StockDetail = () => {
                   <Star className="h-4 w-4 mr-2" />
                   Watch
                 </Button>
-                <Button onClick={handleCreateAlert} variant="outline">
+                <Button asChild variant="outline">
+                  <Link to={`/app/alerts?ticker=${encodeURIComponent(symbol)}`}>
                   <Bell className="h-4 w-4 mr-2" />
                   Alert
+                  </Link>
                 </Button>
               </div>
             </div>
