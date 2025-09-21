@@ -237,8 +237,19 @@ const StockDetail = () => {
     return `${pct >= 0 ? '' : ''}${pct.toFixed(2)}%`;
   };
 
+  const safeDisplay = (value) => {
+    if (Array.isArray(value)) {
+      return value.length ? value.join(', ') : null;
+    }
+    if (typeof value === 'object') {
+      return null; // skip objects to avoid React rendering errors
+    }
+    return value;
+  };
+
   const pushIf = (rows, key, label, value) => {
-    if (!isMissing(value)) rows.push({ key, label, value });
+    const display = safeDisplay(value);
+    if (!isMissing(display)) rows.push({ key, label, value: display });
   };
 
   const detailsRows = (() => {
@@ -315,7 +326,7 @@ const StockDetail = () => {
       const v = currentData[k];
       if (isMissing(v)) return;
       const label = k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      let display = v;
+      let display = safeDisplay(v);
       if (typeof v === 'number' && Number.isFinite(v)) {
         // If looks like big integer, format with commas; if between 0 and 1, maybe percent
         if (Math.abs(v) >= 1e6) display = v.toLocaleString();

@@ -41,27 +41,8 @@ const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
         setLastUpdated(new Date());
         return;
       }
-      // Fallback: fetch from Yahoo Finance in-browser
-      try {
-        const html = await fetch(`https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/news/`, { mode: 'cors' }).then(r => r.text());
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const cards = Array.from(doc.querySelectorAll('h3 a, a[href*="/news/"]')).slice(0, 12);
-        const items = [];
-        const seen = new Set();
-        for (const a of cards) {
-          const href = a.getAttribute('href') || '';
-          const title = (a.textContent || '').trim();
-          if (!title || seen.has(title)) continue;
-          seen.add(title);
-          const url = href.startsWith('http') ? href : `https://finance.yahoo.com${href}`;
-          items.push({ id: url, title, url, source: 'Yahoo Finance', published_at: new Date().toISOString() });
-          if (items.length >= maxItems) break;
-        }
-        setNews(items);
-        setLastUpdated(new Date());
-      } catch (_) {
-        setNews([]);
-      }
+      // No items and backend will provide Yahoo fallback when available; do not fetch client-side due to CSP
+      setNews([]);
     } catch (err) {
       setError(`Failed to load news for ${symbol}`);
       console.error('Stock news error:', err);
