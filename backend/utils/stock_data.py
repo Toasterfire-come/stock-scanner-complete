@@ -230,3 +230,24 @@ def calculate_volume_ratio(volume, avg_volume):
         return safe_decimal_conversion(ratio)
     except (ZeroDivisionError, TypeError, ValueError):
         return None
+
+def compute_market_cap_fallback(current_price, shares_outstanding):
+    """Compute market cap from price and shares when API field is missing.
+    Returns Decimal or None.
+    """
+    try:
+        if current_price is None or shares_outstanding is None:
+            return None
+        # Guard against zeros and NaNs
+        if pd.isna(current_price) or pd.isna(shares_outstanding):
+            return None
+        # Convert to Decimal safely
+        price_dec = safe_decimal_conversion(current_price)
+        shares_dec = safe_decimal_conversion(shares_outstanding)
+        if price_dec is None or shares_dec is None:
+            return None
+        if price_dec <= 0 or shares_dec <= 0:
+            return None
+        return safe_decimal_conversion(price_dec * shares_dec)
+    except Exception:
+        return None

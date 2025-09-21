@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+from utils.stock_data import compute_market_cap_fallback
 
 def format_decimal_safe(value):
     """Safely format decimal values for WordPress"""
@@ -106,8 +107,23 @@ def wordpress_stocks_api(request):
                 elif stock.change_percent < 0:
                     price_trend = 'down'
             
-            # Format market cap for display
-            market_cap_formatted = stock.formatted_market_cap if hasattr(stock, 'formatted_market_cap') else 'N/A'
+            # Compute market cap fallback and format
+            derived_market_cap = None
+            try:
+                derived_market_cap = compute_market_cap_fallback(stock.current_price, getattr(stock, 'shares_available', None))
+            except Exception:
+                derived_market_cap = None
+            mc_val = int(stock.market_cap or (derived_market_cap or 0)) if (stock.market_cap or derived_market_cap) else 0
+            if mc_val >= 1_000_000_000_000:
+                market_cap_formatted = f"${mc_val/1e12:.2f}T"
+            elif mc_val >= 1_000_000_000:
+                market_cap_formatted = f"${mc_val/1e9:.2f}B"
+            elif mc_val >= 1_000_000:
+                market_cap_formatted = f"${mc_val/1e6:.2f}M"
+            elif mc_val > 0:
+                market_cap_formatted = f"${mc_val:,}"
+            else:
+                market_cap_formatted = 'N/A'
             
             stock_data = {
                 'ticker': stock.ticker,
@@ -123,7 +139,7 @@ def wordpress_stocks_api(request):
                 # Volume and market data
                 'volume': int(stock.volume) if stock.volume else 0,
                 'volume_today': int(stock.volume_today or stock.volume or 0),
-                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'market_cap': mc_val,
                 'market_cap_formatted': market_cap_formatted,
                 
                 # Financial ratios

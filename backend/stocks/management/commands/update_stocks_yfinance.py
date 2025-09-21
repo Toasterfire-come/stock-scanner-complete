@@ -26,6 +26,7 @@ import random
 import requests
 import csv
 import signal
+from utils.stock_data import compute_market_cap_fallback
 
 # Add XAMPP MySQL to PATH if it exists
 XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
@@ -577,6 +578,23 @@ class Command(BaseCommand):
                 'last_updated': timezone.now(),
                 'created_at': timezone.now()
             }
+
+            # Compute market cap fallback if absent
+            try:
+                mc_val = stock_data.get('market_cap')
+                if mc_val is None or mc_val == 0:
+                    # Derive shares outstanding for fallback
+                    shares_outstanding = None
+                    try:
+                        if info:
+                            shares_outstanding = info.get('sharesOutstanding')
+                    except Exception:
+                        shares_outstanding = None
+                    mc_fb = compute_market_cap_fallback(current_price, shares_outstanding)
+                    if mc_fb:
+                        stock_data['market_cap'] = mc_fb
+            except Exception:
+                pass
             
             # Calculate price changes if historical data available
             if has_data and len(hist) > 1:
