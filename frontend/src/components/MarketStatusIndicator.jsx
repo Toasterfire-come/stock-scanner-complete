@@ -12,7 +12,7 @@ import {
   Calendar,
   Bell
 } from 'lucide-react';
-import { getMarketStatus, getMarketStatsSafe } from '../api/client';
+import { getMarketStatus, getMarketStatsSafe, API_ROOT } from '../api/client';
 
 const MarketStatusIndicator = ({ compact = false }) => {
   const [marketStatus, setMarketStatus] = useState(null);
@@ -36,9 +36,27 @@ const MarketStatusIndicator = ({ compact = false }) => {
       ]);
 
       // Accept both {success:true, market:{...}} and {market:{...}}
+      let resolvedStatus = null;
       if (statusRes?.market || statusRes?.success) {
-        setMarketStatus(statusRes.market || statusRes?.data?.market || statusRes);
+        resolvedStatus = statusRes.market || statusRes?.data?.market || statusRes;
       }
+      // Fallback: hit the documented endpoint directly if wrapper didn't return
+      if (!resolvedStatus) {
+        try {
+          const r1 = await fetch(`${API_ROOT}/market/market-status`, { credentials: 'include' });
+          if (r1.ok) {
+            const jd = await r1.json();
+            resolvedStatus = jd.market || jd;
+          } else {
+            const r2 = await fetch(`${API_ROOT}/market/market-status/`, { credentials: 'include' });
+            if (r2.ok) {
+              const jd2 = await r2.json();
+              resolvedStatus = jd2.market || jd2;
+            }
+          }
+        } catch {}
+      }
+      if (resolvedStatus) setMarketStatus(resolvedStatus);
       
       if (statsRes?.success && statsRes?.data) {
         setMarketStats(statsRes.data);
