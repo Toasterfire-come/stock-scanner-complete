@@ -17,14 +17,14 @@ import {
   Target,
   Clock
 } from "lucide-react";
-import { getMarketStatsSafe, getTrendingSafe, getStatisticsSafe } from "../../api/client";
+import { getMarketStatsSafe, getStatisticsSafe } from "../../api/client";
 import { toast } from "sonner";
 
 const Markets = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [marketStats, setMarketStats] = useState(null);
-  const [trending, setTrending] = useState(null);
+  // Trending lists now come from marketStats (single endpoint)
   const [statistics, setStatistics] = useState(null);
   const [error, setError] = useState("");
 
@@ -32,9 +32,8 @@ const Markets = () => {
     const fetchMarketData = async () => {
       setError("");
       try {
-        const [statsResponse, trendingResponse, statisticsResponse] = await Promise.all([
+        const [statsResponse, statisticsResponse] = await Promise.all([
           getMarketStatsSafe(),
-          getTrendingSafe(),
           getStatisticsSafe(),
         ]);
 
@@ -42,16 +41,12 @@ const Markets = () => {
           setError((e) => e || statsResponse.error);
           toast.error(statsResponse.error);
         }
-        if (!trendingResponse.success) {
-          setError((e) => e || trendingResponse.error);
-          toast.error(trendingResponse.error);
-        }
+        
         if (!statisticsResponse.success) {
           // statistics is optional informational block
         }
 
         setMarketStats(statsResponse.data);
-        setTrending(trendingResponse.data);
         setStatistics(statisticsResponse.data);
       } catch (err) {
         const msg = "Failed to fetch market data";
@@ -73,14 +68,9 @@ const Markets = () => {
     setIsRefreshing(true);
     setError("");
     try {
-      const [statsResponse, trendingResponse] = await Promise.all([
-        getMarketStatsSafe(),
-        getTrendingSafe(),
-      ]);
+      const statsResponse = await getMarketStatsSafe();
       if (!statsResponse.success) toast.error(statsResponse.error);
-      if (!trendingResponse.success) toast.error(trendingResponse.error);
       setMarketStats(statsResponse.data);
-      setTrending(trendingResponse.data);
     } catch (err) {
       toast.error("Refresh failed");
     } finally {
@@ -265,9 +255,9 @@ const Markets = () => {
                   <CardDescription>Stocks with the highest percentage gains today</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {trending?.top_gainers?.length ? (
+                  {marketStats?.top_gainers?.length ? (
                     <div className="space-y-4">
-                      {trending.top_gainers.slice(0, 10).map((stock, index) => (
+                      {marketStats.top_gainers.slice(0, 10).map((stock, index) => (
                         <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                           <div className="flex items-center space-x-4">
                             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -311,9 +301,9 @@ const Markets = () => {
                   <CardDescription>Stocks with the highest percentage losses today</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {trending?.top_losers?.length ? (
+                  {marketStats?.top_losers?.length ? (
                     <div className="space-y-4">
-                      {trending.top_losers.slice(0, 10).map((stock, index) => (
+                      {marketStats.top_losers.slice(0, 10).map((stock, index) => (
                         <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                           <div className="flex items-center space-x-4">
                             <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -357,9 +347,9 @@ const Markets = () => {
                   <CardDescription>Stocks with the highest trading volume today</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {trending?.most_active?.length ? (
+                  {marketStats?.most_active?.length ? (
                     <div className="space-y-4">
-                      {trending.most_active.slice(0, 10).map((stock, index) => (
+                      {marketStats.most_active.slice(0, 10).map((stock, index) => (
                         <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                           <div className="flex items-center space-x-4">
                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
