@@ -341,7 +341,30 @@ export async function getStatisticsSafe() {
 // ====================
 // HEALTH & STATUS
 // ====================
-export async function pingHealth() { const { data } = await api.get('/health/'); return data; }
+export async function pingHealth() {
+  // Try multiple health endpoints and strategies to avoid false negatives (CORS/credentials issues)
+  try {
+    const { data } = await api.get('/health/', { timeout: 5000 });
+    return data;
+  } catch (e1) {
+    try {
+      const { data } = await api.get('/endpoint-status/', { timeout: 5000 });
+      return data;
+    } catch (e2) {
+      try {
+        // Fallback: no-credentials request to reduce CORS friction
+        const axiosNoCreds = require('axios').create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
+        const { data } = await axiosNoCreds.get('/api/health/', { timeout: 5000 });
+        return data;
+      } catch (e3) {
+        // Final fallback: root /health without credentials
+        const axiosNoCreds = require('axios').create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
+        const { data } = await axiosNoCreds.get('/health/', { timeout: 5000 });
+        return data;
+      }
+    }
+  }
+}
 export async function getEndpointStatus() { const { data } = await api.get('/endpoint-status/'); return data; }
 
 // ====================
