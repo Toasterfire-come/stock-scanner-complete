@@ -92,8 +92,10 @@ import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/Documentation";
 import CreateAccount from "./pages/docs/getting-started/CreateAccount";
-import Dashboard from "./pages/app/EnhancedDashboard.jsx";
+import Dashboard from "./pages/docs/getting-started/Dashboard";
 import FirstScreener from "./pages/docs/getting-started/FirstScreener";
+import DocsCategory from "./pages/docs/DocsCategory";
+import DocArticle from "./pages/docs/DocArticle";
 import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
 import Help from "./pages/Help";
 
@@ -417,6 +419,8 @@ function App() {
                   <Route path="/docs/getting-started/create-account" element={<CreateAccount />} />
                   <Route path="/docs/getting-started/dashboard" element={<Dashboard />} />
                   <Route path="/docs/getting-started/first-screener" element={<FirstScreener />} />
+                  <Route path="/docs/:category" element={<DocsCategory />} />
+                  <Route path="/docs/:category/:slug" element={<DocArticle />} />
 
                   {/* Legal */}
                   <Route path="/legal/terms" element={<LegalTerms />} />
