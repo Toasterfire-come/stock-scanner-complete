@@ -125,17 +125,36 @@ const Watchlists = () => {
     return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
   };
 
-  const allItems = (watchlist?.data?.watchlists || []).flatMap(w => (w.items || w.stocks || []).map(s => ({
-    id: s.item_id || s.id,
-    symbol: s.stock_ticker || s.symbol,
-    company_name: s.company_name || s.name,
-    current_price: s.current_price,
-    price_change: s.price_change_today || s.price_change,
-    price_change_percent: s.change_percent || s.price_change_percent,
-    volume: s.volume,
-    alert_price: s.alert_price,
-    notes: s.notes,
-  })));
+  // Normalize watchlist items from API response supporting both legacy and RESTful formats
+  const allItems = (() => {
+    const data = watchlist?.data;
+    if (Array.isArray(data)) {
+      // RESTful: data is a flat array of items
+      return data.map((s) => ({
+        id: s.item_id || s.id,
+        symbol: s.stock_ticker || s.symbol,
+        company_name: s.company_name || s.name,
+        current_price: s.current_price,
+        price_change: s.price_change_today || s.price_change,
+        price_change_percent: s.change_percent || s.price_change_percent,
+        volume: s.volume,
+        alert_price: s.alert_price,
+        notes: s.notes,
+      }));
+    }
+    // Legacy: data.watchlists -> each with items/stocks
+    return (data?.watchlists || []).flatMap((w) => (w.items || w.stocks || []).map((s) => ({
+      id: s.item_id || s.id,
+      symbol: s.stock_ticker || s.symbol,
+      company_name: s.company_name || s.name,
+      current_price: s.current_price,
+      price_change: s.price_change_today || s.price_change,
+      price_change_percent: s.change_percent || s.price_change_percent,
+      volume: s.volume,
+      alert_price: s.alert_price,
+      notes: s.notes,
+    })));
+  })();
   const filteredWatchlist = allItems.filter(item =>
     (item.symbol || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (item.company_name || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -279,7 +298,7 @@ const Watchlists = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">With Alerts</p>
-                    <p className="text-2xl font-bold">{watchlist.data?.filter(item => item.alert_price).length || 0}</p>
+                    <p className="text-2xl font-bold">{allItems.filter(item => item.alert_price).length || 0}</p>
                   </div>
                   <Bell className="h-8 w-8 text-purple-500" />
                 </div>

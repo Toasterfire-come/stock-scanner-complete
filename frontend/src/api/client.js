@@ -511,23 +511,22 @@ export async function deletePortfolio(id) {
 // ====================
 // Watchlists (use documented endpoints)
 export async function listWatchlists() {
-  // Try primary endpoint, then fallbacks to handle server variations
-  try {
-    const { data } = await api.get('/watchlist/list/');
-    return data;
-  } catch (e1) {
+  // Prefer RESTful list: GET /api/watchlist/; then try legacy variants
+  const attempts = [
+    () => api.get('/watchlist/'),
+    () => api.get('/watchlist/list/'),
+    () => api.get('/watchlists/'),
+  ];
+  let lastErr;
+  for (const attempt of attempts) {
     try {
-      const { data } = await api.get('/watchlists/');
+      const { data } = await attempt();
       return data;
-    } catch (e2) {
-      try {
-        const { data } = await api.get('/watchlist/');
-        return data;
-      } catch (e3) {
-        throw e1;
-      }
+    } catch (e) {
+      lastErr = e;
     }
   }
+  throw lastErr;
 }
 export async function createWatchlist(payload) {
   // Try a few common endpoints/methods
