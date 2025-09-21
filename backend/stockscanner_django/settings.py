@@ -68,6 +68,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # Ensure request.user exists before rate limiting
+    'stocks.plan_middleware.PlanLimitMiddleware',  # Plan limits and API call tracking
+    'stocks.plan_middleware.PlanFeatureMiddleware',  # Feature access control
     'stocks.rate_limit_middleware.APIKeyAuthenticationMiddleware',  # API key auth for backend services
     'stocks.rate_limit_middleware.RateLimitMiddleware',  # Rate limiting with free endpoint whitelist
     'django.contrib.messages.middleware.MessageMiddleware',
