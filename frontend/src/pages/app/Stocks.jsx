@@ -68,11 +68,11 @@ const Stocks = () => {
           setIsSearching(false);
         } else {
           const params = {
+            page: currentPage,
             limit: stocksPerPage,
             category: category === "all" ? undefined : category,
             sort_by: sortBy,
             sort_order: sortOrder,
-            offset: (currentPage - 1) * stocksPerPage,
           };
           response = await listStocks(params);
           const items = Array.isArray(response)
@@ -80,7 +80,7 @@ const Stocks = () => {
             : (response?.data || response?.results || []);
           setStocks(Array.isArray(items) ? items : []);
           setTotalStocks(
-            Number(response?.total_available || response?.count || (Array.isArray(items) ? items.length : 0))
+            Number(response?.total_available || response?.total_count || response?.count || (Array.isArray(items) ? items.length : 0))
           );
         }
       } catch (error) {
