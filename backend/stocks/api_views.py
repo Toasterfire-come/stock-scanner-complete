@@ -112,7 +112,7 @@ def stock_list_api(request):
         )
         
         # Add intelligent caching to reduce database load
-        cache_key = f"stocks_api_{category}_{sort_by}_{sort_order}_{limit}_{min_price}_{max_price}_{min_market_cap}_{max_market_cap}_{min_pe}_{max_pe}_{search}_{exchange or 'all'}"
+        cache_key = f"stocks_api_{category}_{sort_by}_{sort_order}_{limit}_{min_price}_{max_price}_{min_market_cap}_{max_market_cap}_{min_pe}_{max_pe}_{search}_{exchange or 'all'}_{page}_{offset}"
         cached_result = cache.get(cache_key)
         
         if cached_result:

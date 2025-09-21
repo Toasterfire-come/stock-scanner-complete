@@ -123,9 +123,7 @@ const Stocks = () => {
   const PaginationControls = ({ className = "" }) => (
     totalPages > 1 ? (
       <div className={`flex items-center justify-between ${className}`}>
-        <div className="text-sm text-gray-600">
-          Showing {((currentPage - 1) * stocksPerPage) + 1} to {Math.min(currentPage * stocksPerPage, Number(totalStocks||0))} of {Number(totalStocks||0).toLocaleString()} stocks
-        </div>
+        <div />
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
           <div className="flex space-x-1">
@@ -239,8 +237,7 @@ const Stocks = () => {
         {/* Results */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center"><BarChart3 className="h-5 w-5 mr-2" />Stock List {searchTerm && (<Badge variant="secondary" className="ml-2">Search: "{searchTerm}"</Badge>)}</CardTitle>
-            <CardDescription>{searchTerm ? `Showing ${dataForRender.length} of ${Number(totalStocks||0)} results` : `Showing ${dataForRender.length} of ${Number(totalStocks||0).toLocaleString()} stocks`}</CardDescription>
+            {/* Simplified header: remove title/count */}
           </CardHeader>
           <CardContent>
             {dataForRender.length === 0 ? (
