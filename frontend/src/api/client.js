@@ -510,7 +510,25 @@ export async function deletePortfolio(id) {
 // WATCHLISTS
 // ====================
 // Watchlists (use documented endpoints)
-export async function listWatchlists() { const { data } = await api.get('/watchlist/list/'); return data; }
+export async function listWatchlists() {
+  // Try primary endpoint, then fallbacks to handle server variations
+  try {
+    const { data } = await api.get('/watchlist/list/');
+    return data;
+  } catch (e1) {
+    try {
+      const { data } = await api.get('/watchlists/');
+      return data;
+    } catch (e2) {
+      try {
+        const { data } = await api.get('/watchlist/');
+        return data;
+      } catch (e3) {
+        throw e1;
+      }
+    }
+  }
+}
 export async function createWatchlist(payload) { const { data } = await api.post('/watchlist/create/', payload); return data; }
 export async function addWatchlistStock(payload) { const { data } = await api.post('/watchlist/add-stock/', payload); return data; }
 export async function removeWatchlistStock(payload) { const { data } = await api.delete('/watchlist/remove-stock/', { data: payload }); return data; }
