@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
@@ -22,6 +22,7 @@ import { listWatchlists, addWatchlist, deleteWatchlist } from "../../api/client"
 
 const Watchlists = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [searchParams] = useSearchParams();
   const [watchlist, setWatchlist] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,6 +36,14 @@ const Watchlists = () => {
   useEffect(() => {
     fetchWatchlist();
   }, []);
+
+  useEffect(() => {
+    const sym = (searchParams.get('symbol') || '').toUpperCase();
+    if (sym) {
+      setIsAddModalOpen(true);
+      setNewWatchItem((prev) => ({ ...prev, symbol: sym }));
+    }
+  }, [searchParams]);
 
   const fetchWatchlist = async () => {
     try {

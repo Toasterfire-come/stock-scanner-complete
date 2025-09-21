@@ -281,9 +281,11 @@ const StockDetail = () => {
               </div>
               
               <div className="flex items-center space-x-2">
-                <Button onClick={handleAddToWatchlist} variant="outline">
-                  <Star className="h-4 w-4 mr-2" />
-                  Watch
+                <Button asChild variant="outline">
+                  <Link to={`/app/watchlists?symbol=${encodeURIComponent(symbol)}`}>
+                    <Star className="h-4 w-4 mr-2" />
+                    Watch
+                  </Link>
                 </Button>
                 <Button asChild variant="outline">
                   <Link to={`/app/alerts?ticker=${encodeURIComponent(symbol)}`}>
