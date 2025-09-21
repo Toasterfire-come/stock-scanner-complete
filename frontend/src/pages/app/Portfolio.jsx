@@ -7,7 +7,6 @@ import { Label } from "../../components/ui/label";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { toast } from "sonner";
 import { 
   Plus, 
@@ -31,7 +30,9 @@ import {
   getPortfolioAnalytics,
   getPortfolioSectorAllocation,
   getPortfolioDividendTracking,
-  exportPortfolioCSV
+  exportPortfolioCSV,
+  searchStocks,
+  getStock
 } from "../../api/client";
 
 const Portfolio = () => {
@@ -47,6 +48,11 @@ const Portfolio = () => {
     avg_cost: "",
     portfolio_name: "My Portfolio"
   });
+  const [amountToInvest, setAmountToInvest] = useState("");
+  const [currentPrice, setCurrentPrice] = useState(null);
+  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
+  const [tickerSuggestions, setTickerSuggestions] = useState([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   useEffect(() => {
     fetchAllPortfolioData();
@@ -150,7 +156,41 @@ const Portfolio = () => {
       toast.success("Portfolio exported successfully");
     } catch (error) {
       console.error("Failed to export portfolio:", error);
-      toast.error("Failed to export portfolio");
+      // Fallback CSV from current state
+      try {
+        const rows = [["Symbol","Company","Shares","Avg Cost","Current Price","Current Value","Gain/Loss","Gain/Loss %"]];
+        (portfolio?.data || []).forEach(h => {
+          const shares = Number(h.shares || 0);
+          const curPrice = Number((h.current_value && shares) ? (h.current_value / shares) : 0);
+          const curVal = Number(h.current_value || (curPrice * shares));
+          const cost = Number(h.avg_cost || 0);
+          const gain = curVal - (shares * cost);
+          const gainPct = shares * cost > 0 ? (gain / (shares * cost)) * 100 : 0;
+          rows.push([
+            h.symbol,
+            String(h.name || '').replace(/,/g,' '),
+            shares,
+            cost.toFixed(2),
+            curPrice.toFixed(2),
+            curVal.toFixed(2),
+            gain.toFixed(2),
+            gainPct.toFixed(2)
+          ]);
+        });
+        const content = rows.map(r => r.join(',')).join('\n');
+        const blob2 = new Blob([content], { type: 'text/csv' });
+        const url2 = window.URL.createObjectURL(blob2);
+        const a2 = document.createElement('a');
+        a2.style.display = 'none';
+        a2.href = url2;
+        a2.download = `portfolio_local_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a2);
+        a2.click();
+        window.URL.revokeObjectURL(url2);
+        toast.success("Portfolio exported (local)");
+      } catch (e2) {
+        toast.error("Failed to export portfolio");
+      }
     }
   };
 
@@ -204,6 +244,47 @@ const Portfolio = () => {
 
   const holdings = portfolio?.data || [];
 
+  // Autocomplete and price fetching
+  useEffect(() => {
+    const q = (newHolding.symbol || '').trim();
+    if (!q) { setTickerSuggestions([]); return; }
+    setIsSuggesting(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await searchStocks(q).catch(() => null);
+        const results = Array.isArray(res) ? res : (res?.results || res?.data || []);
+        setTickerSuggestions((results || []).slice(0, 6));
+      } finally {
+        setIsSuggesting(false);
+      }
+    }, 200);
+    return () => clearTimeout(t);
+  }, [newHolding.symbol]);
+
+  useEffect(() => {
+    const sym = (newHolding.symbol || '').trim();
+    if (!sym) { setCurrentPrice(null); return; }
+    let mounted = true;
+    (async () => {
+      try {
+        setIsFetchingPrice(true);
+        const res = await getStock(sym).catch(() => null);
+        const price = Number(res?.data?.current_price || res?.current_price || 0) || null;
+        if (mounted) setCurrentPrice(price);
+      } finally {
+        if (mounted) setIsFetchingPrice(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [newHolding.symbol]);
+
+  useEffect(() => {
+    const amt = Number(amountToInvest);
+    if (!amt || !currentPrice || currentPrice <= 0) return;
+    const shares = amt / currentPrice;
+    setNewHolding((prev) => ({ ...prev, shares: shares.toFixed(6), avg_cost: currentPrice.toFixed(2) }));
+  }, [amountToInvest, currentPrice]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -237,10 +318,45 @@ const Portfolio = () => {
                   <Input
                     id="symbol"
                     value={newHolding.symbol}
-                    onChange={(e) => setNewHolding({...newHolding, symbol: e.target.value})}
+                    onChange={(e) => setNewHolding({...newHolding, symbol: e.target.value.toUpperCase()})}
                     placeholder="AAPL"
                     required
                   />
+                  {isSuggesting && <div className="text-xs text-gray-500 mt-1">Searching...</div>}
+                  {tickerSuggestions.length > 0 && (
+                    <div className="mt-2 border rounded-md bg-white max-h-48 overflow-auto">
+                      {tickerSuggestions.map((s, idx) => (
+                        <button
+                          key={`${s.ticker || s.symbol}-${idx}`}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                          onClick={() => {
+                            setNewHolding({ ...newHolding, symbol: (s.ticker || s.symbol || '').toUpperCase() });
+                            setTickerSuggestions([]);
+                          }}
+                        >
+                          <span className="font-medium mr-2">{(s.ticker || s.symbol || '').toUpperCase()}</span>
+                          <span className="text-gray-600 text-sm">{s.company_name || s.name || ''}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="amount">Amount to Invest (optional)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={amountToInvest}
+                    onChange={(e) => setAmountToInvest(e.target.value)}
+                    placeholder="1000.00"
+                  />
+                  {currentPrice ? (
+                    <div className="text-xs text-gray-600 mt-1">Current price ~ {formatCurrency(currentPrice)}{isFetchingPrice ? ' (updating...)' : ''}</div>
+                  ) : (
+                    <div className="text-xs text-gray-500 mt-1">Enter a valid symbol to load current price</div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="shares">Number of Shares *</Label>
@@ -351,17 +467,7 @@ const Portfolio = () => {
         </Card>
       </div>
 
-      {/* Tabs for different views */}
-      <Tabs defaultValue="holdings" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="holdings">Holdings</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="sectors">Sectors</TabsTrigger>
-          <TabsTrigger value="dividends">Dividends</TabsTrigger>
-        </TabsList>
-
-        {/* Holdings Tab */}
-        <TabsContent value="holdings">
+      {/* Holdings Only (tabs removed) */}
           <Card>
             <CardHeader>
               <CardTitle>Your Holdings</CardTitle>
@@ -392,7 +498,7 @@ const Portfolio = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-medium">{holding.shares} shares</p>
-                            <p className="text-sm text-gray-600">@ {formatCurrency(holding.avg_cost)}</p>
+                          <p className="text-sm text-gray-600">@ {formatCurrency((holding.current_value && holding.shares) ? (holding.current_value / holding.shares) : 0)}</p>
                           </div>
                         </div>
                       </div>
@@ -413,11 +519,8 @@ const Portfolio = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Analytics Tab */}
-        <TabsContent value="analytics">
-          <div className="grid gap-6">
+        {/* Analytics */}
+        <div className="grid gap-6 mt-6">
             <Card>
               <CardHeader>
                 <CardTitle>Performance Analytics</CardTitle>
@@ -476,11 +579,8 @@ const Portfolio = () => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Sectors Tab */}
-        <TabsContent value="sectors">
-          <Card>
+        {/* Sectors */}
+          <Card className="mt-6">
             <CardHeader>
               <CardTitle>Sector Allocation</CardTitle>
               <CardDescription>Your portfolio diversification across sectors</CardDescription>
@@ -509,11 +609,9 @@ const Portfolio = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Dividends Tab */}
-        <TabsContent value="dividends">
-          <Card>
+        {/* Dividends */}
+          <Card className="mt-6">
             <CardHeader>
               <CardTitle>Dividend Tracking</CardTitle>
               <CardDescription>Monitor your dividend income and projections</CardDescription>
@@ -559,8 +657,7 @@ const Portfolio = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+      {/* End holdings only */}
     </div>
   );
 };
