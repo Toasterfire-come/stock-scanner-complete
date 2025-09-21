@@ -222,6 +222,111 @@ const StockDetail = () => {
   const currentData = { ...(stockData || {}), ...(realtimeData || {}) };
   const isPositive = Number(currentData.change_percent || 0) >= 0;
 
+  // Build dynamic details rows from available fields
+  const isMissing = (v) => (
+    v === null || v === undefined ||
+    (typeof v === 'string' && (v.trim() === '' || ['na','n/a','null','undefined'].includes(v.trim().toLowerCase()))) ||
+    (typeof v === 'number' && !Number.isFinite(v))
+  );
+
+  const toPercent = (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return null;
+    // If value looks like 0-1, treat as fraction; if > 1 and < 1000, assume percent already
+    const pct = n > 1 ? n : (n * 100);
+    return `${pct >= 0 ? '' : ''}${pct.toFixed(2)}%`;
+  };
+
+  const pushIf = (rows, key, label, value) => {
+    if (!isMissing(value)) rows.push({ key, label, value });
+  };
+
+  const detailsRows = (() => {
+    const rows = [];
+    // Common, nicely formatted fields first
+    pushIf(rows, 'exchange', 'Exchange', currentData.exchange);
+    pushIf(rows, 'currency', 'Currency', currentData.currency || 'USD');
+    // Market Cap (prefer formatted)
+    const marketCapDisplay = !isMissing(currentData.formatted_market_cap)
+      ? currentData.formatted_market_cap
+      : (!isMissing(currentData.market_cap) ? formatMarketCap(currentData.market_cap) : null);
+    pushIf(rows, 'market_cap', 'Market Cap', marketCapDisplay);
+    // Volume
+    const vol = !isMissing(currentData.volume_today) ? currentData.volume_today : currentData.volume;
+    pushIf(rows, 'volume', 'Volume', Number.isFinite(Number(vol)) ? formatVolume(vol) : vol);
+    pushIf(rows, 'avg_volume_3mon', 'Avg Volume (3m)', Number.isFinite(Number(currentData.avg_volume_3mon)) ? formatVolume(currentData.avg_volume_3mon) : currentData.avg_volume_3mon);
+    pushIf(rows, 'dvav', 'Volume vs Avg', Number.isFinite(Number(currentData.dvav)) ? `${(Number(currentData.dvav) * 100).toFixed(1)}%` : currentData.dvav);
+    // Day range
+    const dayRange = !isMissing(currentData.days_range)
+      ? currentData.days_range
+      : (!isMissing(currentData.days_low) && !isMissing(currentData.days_high)
+          ? `${formatCurrency(currentData.days_low)} - ${formatCurrency(currentData.days_high)}`
+          : null);
+    pushIf(rows, 'days_range', 'Day Range', dayRange);
+    // Bid/Ask
+    pushIf(rows, 'bid_price', 'Bid', Number.isFinite(Number(currentData.bid_price)) ? formatCurrency(currentData.bid_price) : currentData.bid_price);
+    pushIf(rows, 'ask_price', 'Ask', Number.isFinite(Number(currentData.ask_price)) ? formatCurrency(currentData.ask_price) : currentData.ask_price);
+    pushIf(rows, 'bid_ask_spread', 'Bid-Ask Spread', currentData.bid_ask_spread);
+    // Ratios & yields
+    if (Number.isFinite(Number(currentData.pe_ratio))) {
+      pushIf(rows, 'pe_ratio', 'P/E Ratio', Number(currentData.pe_ratio).toFixed(2));
+    }
+    if (!isMissing(currentData.dividend_yield)) {
+      const dy = Number(currentData.dividend_yield);
+      const dyDisplay = Number.isFinite(dy) ? (dy > 1 ? `${dy.toFixed(2)}%` : `${(dy * 100).toFixed(2)}%`) : currentData.dividend_yield;
+      pushIf(rows, 'dividend_yield', 'Dividend Yield', dyDisplay);
+    }
+    if (Number.isFinite(Number(currentData.earnings_per_share))) {
+      pushIf(rows, 'earnings_per_share', 'EPS', Number(currentData.earnings_per_share).toFixed(2));
+    }
+    if (Number.isFinite(Number(currentData.book_value))) {
+      pushIf(rows, 'book_value', 'Book Value', formatCurrency(currentData.book_value));
+    }
+    if (Number.isFinite(Number(currentData.price_to_book))) {
+      pushIf(rows, 'price_to_book', 'Price/Book', Number(currentData.price_to_book).toFixed(2));
+    }
+
+    // Price change summaries if available
+    if (!isMissing(currentData.change_percent)) {
+      const cp = toPercent(currentData.change_percent);
+      if (cp) pushIf(rows, 'change_percent', 'Change (Today)', cp);
+    }
+    if (!isMissing(currentData.price_change_week)) {
+      const val = toPercent(currentData.price_change_week);
+      if (val) pushIf(rows, 'price_change_week', 'Change (Week)', val);
+    }
+    if (!isMissing(currentData.price_change_month)) {
+      const val = toPercent(currentData.price_change_month);
+      if (val) pushIf(rows, 'price_change_month', 'Change (Month)', val);
+    }
+    if (!isMissing(currentData.price_change_year)) {
+      const val = toPercent(currentData.price_change_year);
+      if (val) pushIf(rows, 'price_change_year', 'Change (Year)', val);
+    }
+
+    // Append any other non-null fields generically (avoid duplicates and noisy keys)
+    const handledKeys = new Set(rows.map(r => r.key));
+    const excludeKeys = new Set([
+      'ticker','symbol','company_name','name','current_price','price_change_today',
+      'last_updated','market_cap_change_3mon','pe_change_3mon'
+    ]);
+    Object.keys(currentData).forEach((k) => {
+      if (handledKeys.has(k) || excludeKeys.has(k)) return;
+      const v = currentData[k];
+      if (isMissing(v)) return;
+      const label = k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      let display = v;
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        // If looks like big integer, format with commas; if between 0 and 1, maybe percent
+        if (Math.abs(v) >= 1e6) display = v.toLocaleString();
+        else display = v.toString();
+      }
+      rows.push({ key: k, label, value: display });
+    });
+
+    return rows;
+  })();
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="space-y-6">
@@ -286,34 +391,16 @@ const StockDetail = () => {
               Last updated: {currentData.last_updated ? new Date(currentData.last_updated).toLocaleString() : 'N/A'}
             </div>
 
-            {/* Striped details table */}
+            {/* Striped details table (dynamic) */}
             <div className="mt-6 overflow-hidden border rounded-lg">
               <table className="min-w-full text-sm">
                 <tbody className="divide-y">
-                  <tr className="odd:bg-gray-50">
-                    <td className="p-3 text-gray-600">Exchange</td>
-                    <td className="p-3 font-medium">{stockData.exchange}</td>
-                  </tr>
-                  <tr className="odd:bg-gray-50">
-                    <td className="p-3 text-gray-600">Currency</td>
-                    <td className="p-3 font-medium">{stockData.currency || 'USD'}</td>
-                  </tr>
-                  <tr className="odd:bg-gray-50">
-                    <td className="p-3 text-gray-600">Market Cap</td>
-                    <td className="p-3 font-medium">{currentData.formatted_market_cap || formatMarketCap(currentData.market_cap)}</td>
-                  </tr>
-                  <tr className="odd:bg-gray-50">
-                    <td className="p-3 text-gray-600">Volume</td>
-                    <td className="p-3 font-medium">{formatVolume(currentData.volume_today || currentData.volume)}</td>
-                  </tr>
-                  <tr className="odd:bg-gray-50">
-                    <td className="p-3 text-gray-600">P/E Ratio</td>
-                    <td className="p-3 font-medium">{Number.isFinite(Number(currentData.pe_ratio)) ? Number(currentData.pe_ratio).toFixed(2) : 'N/A'}</td>
-                  </tr>
-                  <tr className="odd:bg-gray-50">
-                    <td className="p-3 text-gray-600">Dividend Yield</td>
-                    <td className="p-3 font-medium">{Number.isFinite(Number(currentData.dividend_yield)) ? `${(Number(currentData.dividend_yield) * (Number(currentData.dividend_yield) > 1 ? 1 : 100)).toFixed(2)}%` : 'N/A'}</td>
-                  </tr>
+                  {detailsRows.map((row) => (
+                    <tr key={row.key} className="odd:bg-gray-50">
+                      <td className="p-3 text-gray-600">{row.label}</td>
+                      <td className="p-3 font-medium">{row.value}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
