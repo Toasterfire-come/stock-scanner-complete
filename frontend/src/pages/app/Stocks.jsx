@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
@@ -30,6 +30,7 @@ const Stocks = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalStocks, setTotalStocks] = useState(0);
+  const latestRequestIdRef = useRef(0);
 
   const stocksPerPage = 50; // slightly larger for fewer page jumps
   const toggleSort = (field) => {
@@ -54,18 +55,25 @@ const Stocks = () => {
   );
 
   useEffect(() => {
+    const controller = new AbortController();
+    const requestId = Date.now() + Math.random();
+    const latestIdRef = latestRequestIdRef;
+    latestIdRef.current = requestId;
+
     const fetchStocks = async () => {
       try {
         let response;
         const q = searchTerm.trim();
         if (q) {
           setIsSearching(true);
-          response = await searchStocks(q);
+          response = await searchStocks(q, { signal: controller.signal });
           const results = Array.isArray(response)
             ? response
             : (response?.results || response?.data || []);
-          setStocks(Array.isArray(results) ? results : []);
-          setTotalStocks(Array.isArray(results) ? results.length : 0);
+          if (latestIdRef.current === requestId && !controller.signal.aborted) {
+            setStocks(Array.isArray(results) ? results : []);
+            setTotalStocks(Array.isArray(results) ? results.length : 0);
+          }
           setIsSearching(false);
         } else {
           const params = {
@@ -75,23 +83,31 @@ const Stocks = () => {
             sort_by: sortBy,
             sort_order: sortOrder,
           };
-          response = await listStocks(params);
+          response = await listStocks(params, { signal: controller.signal });
           const items = Array.isArray(response)
             ? response
             : (response?.data || response?.results || []);
-          setStocks(Array.isArray(items) ? items : []);
-          setTotalStocks(
-            Number(response?.total_available || response?.total_count || response?.count || (Array.isArray(items) ? items.length : 0))
-          );
+          // Accept only if this is the latest request and not aborted
+          const respPage = Number(response?.page || params.page);
+          if (latestIdRef.current === requestId && !controller.signal.aborted && respPage === currentPage) {
+            setStocks(Array.isArray(items) ? items : []);
+            setTotalStocks(
+              Number(response?.total_available || response?.total_count || response?.count || (Array.isArray(items) ? items.length : 0))
+            );
+          }
         }
       } catch (error) {
-        toast.error("Failed to load stocks");
+        if (!controller.signal.aborted) {
+          toast.error("Failed to load stocks");
+        }
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted && latestIdRef.current === requestId) {
+          setIsLoading(false);
+        }
       }
     };
     const t = setTimeout(fetchStocks, searchTerm ? 300 : 0);
-    return () => clearTimeout(t);
+    return () => { controller.abort(); clearTimeout(t); };
   }, [searchTerm, category, sortBy, sortOrder, currentPage]);
 
   const handleAddToWatchlist = async (ticker, name) => {

@@ -368,10 +368,10 @@ export async function getEndpointStatus() {
 // ====================
 // STOCKS & MARKET DATA
 // ====================
-export async function listStocks(params = {}) { 
+export async function listStocks(params = {}, options = {}) { 
   try {
     ensureApiQuotaAndIncrement('listStocks');
-    const { data } = await api.get('/stocks/', { params });
+    const { data } = await api.get('/stocks/', { params, signal: options.signal });
     return data;
   } catch (error) {
     console.error('Failed to fetch stocks:', error);
@@ -383,9 +383,9 @@ export async function getStock(ticker) {
   const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/`); 
   return data; 
 }
-export async function searchStocks(q) { 
+export async function searchStocks(q, options = {}) { 
   ensureApiQuotaAndIncrement('searchStocks');
-  const { data } = await api.get('/stocks/search/', { params: { q } }); 
+  const { data } = await api.get('/stocks/search/', { params: { q }, signal: options.signal }); 
   return data; 
 }
 export async function getTrending() { 
