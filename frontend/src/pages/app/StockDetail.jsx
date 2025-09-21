@@ -239,7 +239,9 @@ const StockDetail = () => {
 
   const safeDisplay = (value) => {
     if (Array.isArray(value)) {
-      return value.length ? value.join(', ') : null;
+      if (!value.length) return null;
+      const allPrimitive = value.every(v => (['string','number','boolean'].includes(typeof v)));
+      return allPrimitive ? value.join(', ') : null; // skip arrays of objects
     }
     if (typeof value === 'object') {
       return null; // skip objects to avoid React rendering errors
@@ -319,7 +321,7 @@ const StockDetail = () => {
     const handledKeys = new Set(rows.map(r => r.key));
     const excludeKeys = new Set([
       'ticker','symbol','company_name','name','current_price','price_change_today',
-      'last_updated','market_cap_change_3mon','pe_change_3mon'
+      'last_updated','market_cap_change_3mon','pe_change_3mon','recent_prices'
     ]);
     Object.keys(currentData).forEach((k) => {
       if (handledKeys.has(k) || excludeKeys.has(k)) return;
