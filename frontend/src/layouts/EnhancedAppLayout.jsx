@@ -59,36 +59,31 @@ const EnhancedAppLayout = () => {
 
   // Enhanced navigation structure with better grouping
   const navigationGroups = {
-    solutions: {
-      label: "Solutions",
-      items: [
-        { name: "Features", href: "/features", icon: Activity, description: "Powerful trading tools" },
-        { name: "Pricing", href: "/pricing", icon: Crown, description: "Plans for every trader" },
-        { name: "Enterprise", href: "/enterprise", icon: Building, description: "Solutions for institutions" }
-      ]
-    },
-    trading: {
-      label: "Trading Tools",
+    user: {
+      label: "User Pages",
+      requiresAuth: true,
       items: [
         { name: "Dashboard", href: "/app/dashboard", icon: BarChart3, description: "Overview & insights" },
-        { name: "Screeners", href: "/app/screeners", icon: Search, description: "Find trading opportunities" },
-        { name: "Markets", href: "/app/markets", icon: TrendingUp, description: "Market overview" },
-        { name: "Alerts", href: "/app/alerts", icon: AlertCircle, description: "Price & volume alerts" }
-      ]
-    },
-    portfolio: {
-      label: "Portfolio",
-      items: [
         { name: "Stocks", href: "/app/stocks", icon: Activity, description: "Stock analysis" },
+        { name: "Markets", href: "/app/markets", icon: TrendingUp, description: "Market overview" },
+        { name: "Screeners", href: "/app/screeners", icon: Search, description: "Find trading opportunities" },
+        { name: "Watchlists", href: "/app/watchlists", icon: Eye, description: "Monitor favorites" },
         { name: "Portfolio", href: "/app/portfolio", icon: Target, description: "Track performance" },
-        { name: "Watchlists", href: "/app/watchlists", icon: Eye, description: "Monitor favorites" }
+        { name: "Alerts", href: "/app/alerts", icon: AlertCircle, description: "Price & volume alerts" },
+        { name: "News", href: "/app/news", icon: Activity, description: "Latest market news" },
+        { name: "Exports", href: "/app/exports", icon: FileText, description: "Data exports" },
+        { name: "Developer", href: "/app/developer", icon: Zap, description: "API & developer tools" },
+        { name: "Account", href: "/account/profile", icon: User, description: "Profile & settings" },
       ]
     },
     resources: {
       label: "Resources",
       items: [
-        { name: "Help Center", href: "/help", icon: HelpCircle, description: "Get support" },
+        { name: "Features", href: "/features", icon: Activity, description: "Powerful trading tools" },
+        { name: "Pricing", href: "/pricing", icon: Crown, description: "Plans for every trader" },
         { name: "Documentation", href: "/docs", icon: FileText, description: "Learn the platform" },
+        { name: "Help Center", href: "/help", icon: HelpCircle, description: "Get support" },
+        { name: "Enterprise", href: "/enterprise", icon: Building, description: "Solutions for institutions" },
         { name: "About", href: "/about", icon: Building, description: "Our story" },
         { name: "Contact", href: "/contact", icon: Phone, description: "Get in touch" }
       ]
@@ -123,12 +118,7 @@ const EnhancedAppLayout = () => {
 
             {/* Remove desktop dropdowns; rely on hamburger menu only */}
 
-            {/* Quick Actions for authenticated users */}
-            {isAuthenticated && (
-              <div className="hidden md:block">
-                <QuickActions variant="horizontal" className="mr-4" />
-              </div>
-            )}
+            {/* Removed header quick-action buttons to rely on the hamburger menu */}
 
             {/* Right side */}
             <div className="flex items-center space-x-3">
@@ -141,7 +131,7 @@ const EnhancedAppLayout = () => {
                 <>
                   {/* User Plan Badge */}
                   <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
-                    {user.plan || 'Free'} Plan
+                    {((user.plan || 'free').charAt(0).toUpperCase() + (user.plan || 'free').slice(1))} Plan
                   </Badge>
 
                   {/* User Menu */}
@@ -199,7 +189,7 @@ const EnhancedAppLayout = () => {
               {/* Enhanced Mobile menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="lg:hidden h-9 w-9 p-0">
+                  <Button variant="ghost" className="h-9 w-9 p-0">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -217,11 +207,7 @@ const EnhancedAppLayout = () => {
                     {/* Mobile Navigation */}
                     <nav className="space-y-6">
                       {Object.entries(navigationGroups).map(([key, group]) => {
-                        // Filter trading tools if not authenticated
-                        if ((key === 'trading' || key === 'portfolio') && !isAuthenticated) {
-                          return null;
-                        }
-                        
+                        if (group.requiresAuth && !isAuthenticated) return null;
                         return (
                           <div key={key}>
                             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
