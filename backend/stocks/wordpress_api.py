@@ -19,6 +19,7 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 from utils.stock_data import compute_market_cap_fallback
+from utils.instrument_classifier import classify_instrument, filter_fields_by_instrument
 
 def format_decimal_safe(value):
     """Safely format decimal values for WordPress"""
@@ -125,11 +126,18 @@ def wordpress_stocks_api(request):
             else:
                 market_cap_formatted = 'N/A'
             
+            instrument_type = classify_instrument(
+                stock.ticker,
+                stock.company_name or stock.name,
+                getattr(stock, 'name', None)
+            )
+
             stock_data = {
                 'ticker': stock.ticker,
                 'symbol': stock.symbol or stock.ticker,
                 'company_name': stock.company_name or stock.name or stock.ticker,
                 'exchange': stock.exchange or 'N/A',
+                'instrument_type': instrument_type,
                 
                 # Price data (with better fallbacks)
                 'current_price': format_decimal_safe(stock.current_price) or 0.0,
@@ -171,7 +179,8 @@ def wordpress_stocks_api(request):
                 'api_url': f"/api/stocks/{stock.ticker}/"
             }
             
-            stocks_data.append(stock_data)
+            # Omit non-applicable fields for instrument type
+            stocks_data.append(filter_fields_by_instrument(stock_data, instrument_type))
 
         return JsonResponse({
             'success': True,

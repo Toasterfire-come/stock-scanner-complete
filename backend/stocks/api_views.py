@@ -20,6 +20,7 @@ import logging
 from decimal import Decimal
 from django.contrib.auth.models import User
 from utils.stock_data import compute_market_cap_fallback
+from utils.instrument_classifier import classify_instrument, filter_fields_by_instrument
 
 from .models import Stock, StockAlert, StockPrice, Screener
 from emails.models import EmailSubscription
@@ -337,6 +338,14 @@ def stock_list_api(request):
             except Exception:
                 derived_market_cap = None
 
+            instrument_type = classify_instrument(
+                stock.ticker,
+                stock.company_name or stock.name,
+                getattr(stock, 'name', None),
+                None,
+                None
+            )
+
             record = {
                 # Basic info
                 'ticker': stock.ticker,
@@ -344,6 +353,7 @@ def stock_list_api(request):
                 'company_name': stock.company_name or stock.name or stock.ticker,
                 'name': stock.name or stock.company_name or stock.ticker,
                 'exchange': stock.exchange,
+                'instrument_type': instrument_type,
                 
                 # Price data (with better fallbacks)
                 'current_price': format_decimal_safe(stock.current_price) or 0.0,
@@ -408,6 +418,8 @@ def stock_list_api(request):
             
             # Remove None-valued fields for a cleaner payload
             cleaned_record = {k: v for k, v in record.items() if v is not None}
+            # Omit non-applicable fields for instrument type
+            cleaned_record = filter_fields_by_instrument(cleaned_record, instrument_type)
             stock_data.append(cleaned_record)
 
         # Ensure we always have a meaningful response
