@@ -42,7 +42,7 @@ const EnterpriseContact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtreadescanner.com'}/api/enterprise/contact/`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.com'}/api/enterprise/contact/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
