@@ -226,7 +226,12 @@ const SignUp = () => {
         </Button>
       </form>
 
-      {/* Social auth removed until enabled */}
+      <div className="text-center text-sm text-gray-600">
+        Already have an account?{' '}
+        <Link to="/auth/sign-in" className="text-blue-600 hover:text-blue-500 font-medium">
+          Sign in
+        </Link>
+      </div>
     </div>
   );
 };
