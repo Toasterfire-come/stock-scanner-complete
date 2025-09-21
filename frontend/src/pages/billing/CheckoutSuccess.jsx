@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../components/ui/badge";
 import { CheckCircle, ArrowRight, Download, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { recordPayment } from "../../api/client";
+// Removed recordPayment; relying on backend capture
 import { useAuth } from "../../context/SecureAuthContext";
 
 const CheckoutSuccess = () => {
@@ -16,31 +16,11 @@ const CheckoutSuccess = () => {
   const { planId, amount, originalAmount, discount } = location.state || {};
 
   useEffect(() => {
-    // Record the payment
-    const recordSuccessfulPayment = async () => {
-      if (!planId || !amount) return;
-      
-      try {
-        await recordPayment({
-          user_id: 1, // In real app, get from auth context
-          amount: originalAmount || amount,
-          discount_code: discount?.code || null,
-          payment_date: new Date().toISOString(),
-        });
-        // Sync plan locally so UI reflects upgrade immediately
-        if (planId && planId !== 'free') {
-          updateUser({ plan: planId });
-        }
-      } catch (error) {
-        console.error("Failed to record payment:", error);
-      }
-    };
-
-    recordSuccessfulPayment();
-    
-    // Show success toast
+    if (planId && planId !== 'free') {
+      updateUser({ plan: planId });
+    }
     toast.success("Payment successful! Welcome to your new plan.");
-  }, [planId, amount, originalAmount, discount]);
+  }, [planId]);
 
   // Redirect if no payment data
   useEffect(() => {
