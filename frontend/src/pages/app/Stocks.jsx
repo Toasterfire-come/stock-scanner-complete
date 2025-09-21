@@ -121,6 +121,14 @@ const Stocks = () => {
   const formatMarketCap = (v) => { const n = Number(v||0); if (!Number.isFinite(n)) return '$0'; if (n>=1e12) return `$${(n/1e12).toFixed(1)}T`; if (n>=1e9) return `$${(n/1e9).toFixed(1)}B`; if (n>=1e6) return `$${(n/1e6).toFixed(1)}M`; return `$${n.toLocaleString()}`; };
   const formatPercentage = (v) => `${(Number(v)||0) > 0 ? '+' : ''}${(Number(v)||0).toFixed(2)}%`;
 
+  const isNonEquity = (it) => ['etf','warrant','right','unit','etn'].includes((it||'').toLowerCase());
+  const instrumentBadge = (it) => {
+    const t = (it||'').toUpperCase();
+    if (!t) return null;
+    const variant = t === 'EQUITY' ? 'default' : 'secondary';
+    return <Badge variant={variant} className="ml-2">{t}</Badge>;
+  };
+
   if (isLoading && dataForRender.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -232,15 +240,15 @@ const Stocks = () => {
                               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><span className="font-bold text-blue-600 text-sm">{stock.ticker?.substring(0,2)}</span></div>
                               <div>
                                 <Link to={`/app/stocks/${stock.ticker}`} className="font-semibold text-blue-600 hover:underline">{stock.ticker}</Link>
-                                <div className="text-xs text-gray-500">{stock.exchange}</div>
+                                <div className="text-xs text-gray-500 flex items-center">{stock.exchange}{instrumentBadge(stock.instrument_type)}</div>
                               </div>
                             </div>
                             <div className="p-4 font-medium text-gray-900">{stock.company_name}</div>
                             <div className="p-4 text-right font-medium">{stock.formatted_price || formatCurrency(stock.current_price)}</div>
-                            <div className={`p-4 text-right ${(stock.is_gaining ?? (Number(stock.price_change_today)>=0)) ? 'text-green-600':'text-red-600'}`}>{(stock.price_change_today ?? 0) >= 0 ? '+' : ''}{Number(stock.price_change_today||0).toFixed(2)}</div>
+                            <div className={`${(stock.is_gaining ?? (Number(stock.price_change_today)>=0)) ? 'text-green-600':'text-red-600'} p-4 text-right`}>{(stock.price_change_today ?? 0) >= 0 ? '+' : ''}{Number(stock.price_change_today||0).toFixed(2)}</div>
                             <div className={`p-4 text-right font-medium ${(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? 'text-green-600':'text-red-600'}`}>{stock.formatted_change || formatPercentage(stock.change_percent)}</div>
                             <div className="p-4 text-right text-gray-600">{stock.formatted_volume || formatVolume(stock.volume)}</div>
-                            <div className="p-4 text-right text-gray-600">{stock.formatted_market_cap || formatMarketCap(stock.market_cap)}</div>
+                            <div className="p-4 text-right text-gray-600">{isNonEquity(stock.instrument_type) ? '-' : (stock.formatted_market_cap || formatMarketCap(stock.market_cap))}</div>
                             <div className="p-4 flex items-center justify-center space-x-2">
                               <Button size="sm" variant="ghost" onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)} title="Add to Watchlist"><Bookmark className="h-4 w-4" /></Button>
                               <Button size="sm" variant="ghost" asChild title="View Details"><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" /></Link></Button>
@@ -260,18 +268,18 @@ const Stocks = () => {
                                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><span className="font-bold text-blue-600 text-sm">{stock.ticker.substring(0, 2)}</span></div>
                                   <div>
                                     <Link to={`/app/stocks/${stock.ticker}`} className="font-semibold text-blue-600 hover:underline">{stock.ticker}</Link>
-                                    <div className="text-xs text-gray-500">{stock.exchange}</div>
+                                    <div className="text-xs text-gray-500 flex items-center">{stock.exchange}{instrumentBadge(stock.instrument_type)}</div>
                                   </div>
                                 </div>
                               </td>
                               <td className="p-4"><div className="font-medium text-gray-900">{stock.company_name}</div></td>
                               <td className="p-4 text-right font-medium">{stock.formatted_price || formatCurrency(stock.current_price)}</td>
-                              <td className={`p-4 text-right ${(stock.is_gaining ?? (Number(stock.price_change_today)>=0)) ? 'text-green-600' : 'text-red-600'}`}>{(stock.price_change_today ?? 0) >= 0 ? '+' : ''}{stock.price_change_today?.toFixed(2)}</td>
+                              <td className={`${(stock.is_gaining ?? (Number(stock.price_change_today)>=0)) ? 'text-green-600' : 'text-red-600'} p-4 text-right`}>{(stock.price_change_today ?? 0) >= 0 ? '+' : ''}{stock.price_change_today?.toFixed(2)}</td>
                               <td className={`p-4 text-right font-medium ${(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? 'text-green-600' : 'text-red-600'}`}>
                                 <div className="flex items-center justify-end">{(stock.is_gaining ?? (Number(stock.change_percent)>=0)) ? (<TrendingUp className="h-3 w-3 mr-1" />) : (<TrendingDown className="h-3 w-3 mr-1" />)}{stock.formatted_change || formatPercentage(stock.change_percent)}</div>
                               </td>
                               <td className="p-4 text-right text-gray-600">{stock.formatted_volume || formatVolume(stock.volume)}</td>
-                              <td className="p-4 text-right text-gray-600">{stock.formatted_market_cap || formatMarketCap(stock.market_cap)}</td>
+                              <td className="p-4 text-right text-gray-600">{isNonEquity(stock.instrument_type) ? '-' : (stock.formatted_market_cap || formatMarketCap(stock.market_cap))}</td>
                               <td className="p-4"><div className="flex items-center justify-center space-x-2"><Button size="sm" variant="ghost" onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)} title="Add to Watchlist"><Bookmark className="h-4 w-4" /></Button><Button size="sm" variant="ghost" asChild title="View Details"><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" /></Link></Button></div></td>
                             </tr>
                           ))}
@@ -291,7 +299,7 @@ const Stocks = () => {
                             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span className="font-bold text-blue-600">{stock.ticker.substring(0, 2)}</span></div>
                             <div>
                               <Link to={`/app/stocks/${stock.ticker}`} className="font-semibold text-blue-600 hover:underline">{stock.ticker}</Link>
-                              <div className="text-sm text-gray-600">{stock.company_name}</div>
+                              <div className="text-sm text-gray-600 flex items-center">{stock.company_name}{instrumentBadge(stock.instrument_type)}</div>
                               <div className="text-xs text-gray-500">{stock.exchange}</div>
                             </div>
                           </div>
@@ -302,7 +310,7 @@ const Stocks = () => {
                           </div>
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                          <div className="text-sm text-gray-600">Market Cap: {stock.formatted_market_cap || formatMarketCap(stock.market_cap)}</div>
+                          <div className="text-sm text-gray-600">{isNonEquity(stock.instrument_type) ? 'Instrument: ' + (stock.instrument_type || 'N/A').toUpperCase() : `Market Cap: ${stock.formatted_market_cap || formatMarketCap(stock.market_cap)}`}</div>
                           <div className="flex space-x-2"><Button size="sm" variant="ghost" onClick={() => handleAddToWatchlist(stock.ticker, stock.company_name)}><Bookmark className="h-4 w-4" /></Button><Button size="sm" variant="ghost" asChild><Link to={`/app/stocks/${stock.ticker}`}><Eye className="h-4 w-4" /></Link></Button></div>
                         </div>
                       </CardContent>
