@@ -588,13 +588,37 @@ export async function removeWatchlistStock(payload) {
 // Backward-compatible wrappers (may return limited data)
 export async function getWatchlist() { try { ensureApiQuotaAndIncrement('getWatchlist'); const res = await listWatchlists(); return res; } catch (e) { throw e; } }
 export async function addWatchlist(symbol, opts = {}) {
-  const payload = { stock_ticker: symbol };
-  if (opts.watchlist_id) payload.watchlist_id = opts.watchlist_id;
-  payload.watchlist_name = opts.watchlist_name || (!opts.watchlist_id ? 'My Watchlist' : undefined);
-  if (opts.notes) payload.notes = opts.notes;
-  return addWatchlistStock(payload);
+  // Prefer the RESTful endpoint that expects { symbol, watchlist_name, notes, alert_price }
+  const payload = {
+    symbol: (symbol || '').toUpperCase(),
+    watchlist_name: opts.watchlist_name || 'My Watchlist',
+    notes: opts.notes || undefined,
+    alert_price: opts.alert_price != null ? opts.alert_price : undefined,
+  };
+  try {
+    const { data } = await api.post('/watchlist/add/', payload);
+    return data;
+  } catch (e) {
+    // Fallback to legacy add if RESTful endpoint is unavailable
+    const legacyPayload = { stock_ticker: payload.symbol };
+    if (opts.watchlist_id) legacyPayload.watchlist_id = opts.watchlist_id;
+    legacyPayload.watchlist_name = opts.watchlist_name || (!opts.watchlist_id ? 'My Watchlist' : undefined);
+    if (opts.notes) legacyPayload.notes = opts.notes;
+    return addWatchlistStock(legacyPayload);
+  }
 }
-export async function deleteWatchlist(idOrPayload) { if (typeof idOrPayload === 'object') { return removeWatchlistStock(idOrPayload); } throw new Error('removeWatchlistStock requires {watchlist_id, stock_ticker}'); }
+export async function deleteWatchlist(idOrPayload) {
+  // Support deleting by item id (RESTful) or via legacy payload
+  if (typeof idOrPayload === 'object') {
+    return removeWatchlistStock(idOrPayload);
+  }
+  const id = String(idOrPayload || '').trim();
+  if (!id) {
+    throw new Error('deleteWatchlist requires item id or {watchlist_id, stock_ticker}');
+  }
+  const { data } = await api.delete(`/watchlist/${encodeURIComponent(id)}/`);
+  return data;
+}
 
 // ====================
 // ALERTS
