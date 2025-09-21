@@ -9,6 +9,7 @@ import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
 import { X, Save, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { getScreener, updateScreener, deleteScreener } from "../../../api/client";
 
 const EditScreener = () => {
   const { id } = useParams();
@@ -33,31 +34,33 @@ const EditScreener = () => {
   ];
 
   useEffect(() => {
-    // Simulate loading existing screener data
-    setTimeout(() => {
-      setScreenerData({
-        name: "High Growth Tech",
-        description: "Technology stocks with >20% revenue growth",
-        isPublic: true
-      });
-      setCriteria([
-        {
-          id: "market_cap",
-          name: "Market Cap",
-          type: "range",
-          min: "1000000000",
-          max: "100000000000"
-        },
-        {
-          id: "change_percent",
-          name: "Price Change %",
-          type: "range",
-          min: "5",
-          max: ""
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getScreener(id);
+        if (res?.data) {
+          const d = res.data;
+          setScreenerData({
+            name: d.name || "",
+            description: d.description || "",
+            isPublic: !!d.is_public
+          });
+          setCriteria((Array.isArray(d.criteria) ? d.criteria : []).map((c) => ({
+            id: c.id,
+            name: availableCriteria.find(a => a.id === c.id)?.name || c.id,
+            type: availableCriteria.find(a => a.id === c.id)?.type || (c.value ? "select" : "range"),
+            min: c.min ?? "",
+            max: c.max ?? "",
+            value: c.value ?? ""
+          })));
         }
-      ]);
-      setIsLoading(false);
-    }, 1000);
+      } catch (e) {
+        toast.error("Failed to load screener");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
   }, [id]);
 
   const addCriterion = (criterionId) => {
@@ -94,10 +97,19 @@ const EditScreener = () => {
 
     setIsSaving(true);
     try {
-      // Simulate API call to update screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener updated successfully");
-      navigate("/app/screeners");
+      const payload = {
+        name: screenerData.name,
+        description: screenerData.description,
+        is_public: screenerData.isPublic,
+        criteria: criteria.map(({ id, min, max, value }) => ({ id, ...(min ? { min: Number(min) } : {}), ...(max ? { max: Number(max) } : {}), ...(value ? { value } : {}) }))
+      };
+      const res = await updateScreener(id, payload);
+      if (res?.success) {
+        toast.success("Screener updated successfully");
+        navigate("/app/screeners");
+      } else {
+        throw new Error(res?.message || 'Failed');
+      }
     } catch (error) {
       toast.error("Failed to update screener");
     } finally {
@@ -110,10 +122,13 @@ const EditScreener = () => {
 
     setIsSaving(true);
     try {
-      // Simulate API call to delete screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener deleted successfully");
-      navigate("/app/screeners");
+      const res = await deleteScreener(id);
+      if (res?.success) {
+        toast.success("Screener deleted successfully");
+        navigate("/app/screeners");
+      } else {
+        throw new Error(res?.message || 'Failed');
+      }
     } catch (error) {
       toast.error("Failed to delete screener");
     } finally {
@@ -213,7 +228,6 @@ const EditScreener = () => {
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    
                     {criterion.type === "range" && (
                       <div className="grid grid-cols-2 gap-3">
                         <div>

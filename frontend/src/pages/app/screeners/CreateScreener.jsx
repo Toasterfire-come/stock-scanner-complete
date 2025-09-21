@@ -10,7 +10,7 @@ import { Separator } from "../../../components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
 import { X, Plus, Save, Play } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks } from "../../../api/client";
+import { filterStocks, createScreener } from "../../../api/client";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
@@ -85,10 +85,14 @@ const CreateScreener = () => {
 
     setIsLoading(true);
     try {
-      // Simulate API call to save screener
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Screener saved successfully");
-      navigate("/app/screeners");
+      const payload = { name: screenerData.name, description: screenerData.description, criteria: criteria.map(({ id, min, max, value }) => ({ id, ...(min ? { min: Number(min) } : {}), ...(max ? { max: Number(max) } : {}), ...(value ? { value } : {}) })), is_public: screenerData.isPublic };
+      const res = await createScreener(payload);
+      if (res?.success) {
+        toast.success("Screener saved successfully");
+        navigate("/app/screeners");
+      } else {
+        throw new Error(res?.message || 'Failed');
+      }
     } catch (error) {
       toast.error("Failed to save screener");
     } finally {
