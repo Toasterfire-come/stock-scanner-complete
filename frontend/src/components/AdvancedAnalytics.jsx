@@ -37,11 +37,10 @@ import {
   Eye,
   Download
 } from "lucide-react";
-import { getRevenueAnalytics, getPortfolio, getMarketStats } from "../api/client";
+import { getPortfolio, getMarketStats } from "../api/client";
 
 const AdvancedAnalytics = ({ userId }) => {
   const [timeframe, setTimeframe] = useState("1M");
-  const [analyticsData, setAnalyticsData] = useState(null);
   const [portfolioData, setPortfolioData] = useState(null);
   const [marketData, setMarketData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,13 +49,10 @@ const AdvancedAnalytics = ({ userId }) => {
     const fetchAnalyticsData = async () => {
       setIsLoading(true);
       try {
-        const [analytics, portfolio, market] = await Promise.all([
-          getRevenueAnalytics(),
-          getPortfolio(),
-          getMarketStats()
+        const [portfolio, market] = await Promise.all([
+          getPortfolio().catch(() => null),
+          getMarketStats().catch(() => null)
         ]);
-        
-        setAnalyticsData(analytics);
         setPortfolioData(portfolio);
         setMarketData(market);
       } catch (error) {

@@ -25,7 +25,6 @@ import {
   Zap
 } from "lucide-react";
 import { toast } from "sonner";
-import { initializeDiscountCodes } from "../api/client";
 
 const ReferralSystem = ({ user }) => {
   const [referralCode, setReferralCode] = useState("");
@@ -46,9 +45,6 @@ const ReferralSystem = ({ user }) => {
         // Generate referral code based on user info
         const code = `REF${user?.id || '123'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
         setReferralCode(code);
-        
-        // Initialize discount codes in backend
-        await initializeDiscountCodes();
         
         // Mock data - replace with real API calls
         setReferralStats({
