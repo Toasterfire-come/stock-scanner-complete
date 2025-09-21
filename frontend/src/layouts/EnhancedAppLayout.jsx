@@ -106,7 +106,7 @@ const EnhancedAppLayout = () => {
           <div className="flex h-16 items-center justify-between">
             {/* Logo with enhanced hover effect */}
             <Link 
-              to="/" 
+              to={isAuthenticated ? "/app/dashboard" : "/"} 
               className="flex items-center space-x-2 flex-shrink-0 group transition-all duration-200 hover:scale-105"
             >
               <div className="relative">
@@ -121,105 +121,7 @@ const EnhancedAppLayout = () => {
               </span>
             </Link>
 
-            {/* Enhanced Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {/* Solutions Dropdown */}
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-sm font-medium">
-                      Solutions
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="grid w-[400px] gap-3 p-4">
-                        {navigationGroups.solutions.items.map((item) => (
-                          <NavigationMenuLink key={item.name} asChild>
-                            <Link
-                              to={item.href}
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <item.icon className="h-4 w-4" />
-                                <div className="text-sm font-medium">{item.name}</div>
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                {item.description}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        ))}
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-
-              {/* Trading Tools - Only show if authenticated */}
-              {isAuthenticated && (
-                <NavigationMenu>
-                  <NavigationMenuList>
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="text-sm font-medium">
-                        Trading
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <div className="grid w-[500px] gap-3 p-4">
-                          <div className="grid grid-cols-2 gap-3">
-                            {navigationGroups.trading.items.concat(navigationGroups.portfolio.items).map((item) => (
-                              <NavigationMenuLink key={item.name} asChild>
-                                <Link
-                                  to={item.href}
-                                  className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <item.icon className="h-4 w-4" />
-                                    <div className="text-sm font-medium">{item.name}</div>
-                                  </div>
-                                  <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                </Link>
-                              </NavigationMenuLink>
-                            ))}
-                          </div>
-                        </div>
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
-              )}
-
-              {/* Resources */}
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-sm font-medium">
-                      Resources
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="grid w-[400px] gap-3 p-4">
-                        {navigationGroups.resources.items.map((item) => (
-                          <NavigationMenuLink key={item.name} asChild>
-                            <Link
-                              to={item.href}
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <item.icon className="h-4 w-4" />
-                                <div className="text-sm font-medium">{item.name}</div>
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                {item.description}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        ))}
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-            </div>
+            {/* Remove desktop dropdowns; rely on hamburger menu only */}
 
             {/* Quick Actions for authenticated users */}
             {isAuthenticated && (
