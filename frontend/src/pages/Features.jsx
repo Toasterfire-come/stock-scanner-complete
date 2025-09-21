@@ -26,7 +26,7 @@ const Features = () => {
   useEffect(() => {
     const fetchPlatformStats = async () => {
       try {
-        const { data } = await api.get('/platform-stats');
+        const { data } = await api.get('/status/');
         setPlatformStats(data);
       } catch (error) {
         console.error("Failed to fetch platform stats:", error);

@@ -4,6 +4,7 @@ import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { AlertTriangle, TrendingUp, Zap, Shield, Crown } from 'lucide-react';
+import { getCurrentPlan } from '../api/client';
 
 const PlanUsage = ({ className = "" }) => {
   const [planData, setPlanData] = useState(null);
@@ -16,17 +17,24 @@ const PlanUsage = ({ className = "" }) => {
 
   const fetchPlanData = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/user/plan/`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPlanData(data);
+      const res = await getCurrentPlan();
+      if (res?.success) {
+        setPlanData({
+          plan: {
+            type: res.data?.plan_type || 'free',
+            name: res.data?.plan_name || 'Free'
+          },
+          usage: {
+            api_calls: { used: 0, limit: res.data?.features?.api_calls_limit === -1 ? -1 : res.data?.features?.api_calls_limit, percentage: 0, unlimited: res.data?.features?.api_calls_limit === -1 },
+            resources: {
+              screeners: { used: 0, limit: res.data?.features?.screeners_limit || 0, percentage: 0, unlimited: false },
+              watchlists: { used: 0, limit: res.data?.features?.watchlists_limit || 0, percentage: 0, unlimited: false },
+              portfolios: { used: 0, limit: res.data?.features?.portfolios_limit || 0, percentage: 0, unlimited: false },
+              alerts: { used: 0, limit: res.data?.features?.alerts_limit || 0, percentage: 0, unlimited: false },
+            }
+          },
+          recommendations: []
+        });
       } else {
         setError('Failed to load plan information');
       }
