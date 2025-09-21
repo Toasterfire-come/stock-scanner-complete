@@ -72,8 +72,11 @@ const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
 
   const handleNewsClick = async (newsItem) => {
     try {
-      // Mark news as clicked for analytics
-      await markNewsClicked(newsItem.id);
+      // Mark news as clicked for analytics (only if ID is numeric from backend DB)
+      const numericId = Number(newsItem.id);
+      if (Number.isFinite(numericId)) {
+        await markNewsClicked(numericId);
+      }
       // Open news article
       window.open(newsItem.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
@@ -85,10 +88,13 @@ const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
 
   const handleMarkAsRead = async (newsId) => {
     try {
-      await markNewsRead(newsId);
-      setNews(prev => prev.map(item => 
-        item.id === newsId ? { ...item, is_read: true } : item
-      ));
+      const numericId = Number(newsId);
+      if (Number.isFinite(numericId)) {
+        await markNewsRead(numericId);
+        setNews(prev => prev.map(item => 
+          item.id === newsId ? { ...item, is_read: true } : item
+        ));
+      }
     } catch (err) {
       console.error('Mark as read error:', err);
     }

@@ -11,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from .security_utils import secure_api_endpoint, validate_user_input
 from django.utils import timezone
 from django.db.models import Q
+import requests
+import re
 
 app_name = 'news'
 
@@ -247,14 +249,51 @@ urlpatterns = [
     # Analytics
     path('analytics/', get_analytics, name='analytics'),
     
-    # Ticker-scoped news endpoint
+    # Ticker-scoped news endpoint with Yahoo fallback (max 10)
     path('ticker/<str:ticker>/', csrf_exempt(secure_api_endpoint(methods=['GET'])(
         lambda request, ticker: (
-            (lambda items: JsonResponse({
-                'success': True,
-                'data': { 'news_items': items, 'count': len(items) },
-                'timestamp': timezone.now().isoformat()
-            }))([
+            (lambda db_items: (
+                JsonResponse({
+                    'success': True,
+                    'data': { 'news_items': db_items, 'count': len(db_items) },
+                    'timestamp': timezone.now().isoformat()
+                }) if db_items else (
+                    # Fallback to Yahoo Finance when no specialized news exists
+                    (lambda fallback_items: JsonResponse({
+                        'success': True,
+                        'data': { 'news_items': fallback_items, 'count': len(fallback_items) },
+                        'timestamp': timezone.now().isoformat(),
+                        'source': 'yahoo_fallback'
+                    }))((lambda: (
+                        (lambda html: (
+                            (lambda matches: (
+                                (lambda items: items[:10])([
+                                    {
+                                        'id': f'https://finance.yahoo.com{m[0]}' if m[0].startswith('/') else m[0],
+                                        'title': re.sub(r'<[^>]+>', '', m[1]).strip(),
+                                        'content': None,
+                                        'url': f'https://finance.yahoo.com{m[0]}' if m[0].startswith('/') else m[0],
+                                        'source': 'Yahoo Finance',
+                                        'sentiment_score': None,
+                                        'sentiment_grade': None,
+                                        'tickers': [ticker.upper()],
+                                        'published_at': timezone.now().isoformat(),
+                                    }
+                                    for m in matches
+                                ])
+                            ))(re.findall(r'<h3[^>]*?>.*?<a[^>]*?href=\"(\/?news[^\"]+)\"[^>]*?>(.*?)<\/a>.*?<\/h3>', html, flags=re.IGNORECASE | re.DOTALL))
+                        ))((lambda resp: resp.text if (resp is not None and getattr(resp, 'status_code', 0) == 200) else '')(
+                            (lambda: (
+                                (lambda url: (
+                                    (lambda r: r)(
+                                        requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; RTSBot/1.0; +https://retailtradescanner.com)'}, timeout=10)
+                                    )
+                                ))(f'https://finance.yahoo.com/quote/{ticker}/news')
+                            ))()
+                        ))
+                    ))()
+                )
+            ))([
                 {
                     'id': a.id,
                     'title': a.title,
