@@ -141,7 +141,7 @@ export function Blog() {
 export function Help() {
   return (
     <Section title="Help center">
-      <p>For support, contact admin@retailtradescanner.com. Visit <a href="/#/docs" className="text-blue-600">Docs</a> for guides.</p>
+      <p>For support, contact admin@retailtradescanner.com</p>
     </Section>
   );
 }
@@ -151,7 +151,6 @@ export function FAQ() {
     <Section title="FAQ">
       <ul>
         <li>Do you offer a trial? Yes, use code "trial" for $1 / 7 days, then auto-renew.</li>
-        <li>Where can I find documentation? See <a href="/#/docs" className="text-blue-600">/#/docs</a>.</li>
       </ul>
     </Section>
   );
@@ -160,7 +159,7 @@ export function FAQ() {
 export function Community() {
   return (
     <Section title="Community">
-      <p>Join the discussion with other traders. Community area coming soon. In the meantime, see <a href="/#/docs" className="text-blue-600">/#/docs</a>.</p>
+      <p>Join the discussion with other traders. Community area coming soon.</p>
     </Section>
   );
 }

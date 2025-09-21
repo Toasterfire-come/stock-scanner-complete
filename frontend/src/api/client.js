@@ -1,16 +1,21 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
-import { mapCriteriaToFilterParams } from "../lib/screeners";
 
-const BASE_URL = (process.env.REACT_APP_BACKEND_URL || "").trim();
-const API_PASSWORD = process.env.REACT_APP_API_PASSWORD || "";
+// Use REACT_APP_BACKEND_URL exclusively from environment
+const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 if (!BASE_URL) {
-  console.warn("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+  console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
-export const REVENUE_ROOT = `${BASE_URL}/revenue`;
+export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
+
+// Secondary axios instance for non-API root endpoints (e.g., Django accounts login view for CSRF cookie)
+const site = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
 
 // Simple network event bus for latency indicator
 (function initNetBus(){
@@ -27,8 +32,131 @@ export const REVENUE_ROOT = `${BASE_URL}/revenue`;
 
 export const api = axios.create({
   baseURL: API_ROOT,
-  withCredentials: false,
+  withCredentials: true,
+  // Ensure axios picks up Django's CSRF cookie/header names when present
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
 });
+
+// ====================
+// Plan limits enforcement (client-side guard; server should enforce as source of truth)
+// ====================
+const PLAN_LIMITS = {
+  free: { 
+    monthlyApi: 30, 
+    alerts: 0, 
+    watchlists: 0, 
+    portfolios: 1,
+    screeners: 1
+  },
+  bronze: { 
+    monthlyApi: 1500, 
+    alerts: 100, 
+    watchlists: 2, 
+    portfolios: 1,
+    screeners: 10
+  },
+  silver: { 
+    monthlyApi: 5000, 
+    alerts: 500, 
+    watchlists: 5, 
+    portfolios: 5,
+    screeners: 20
+  },
+  gold: { 
+    monthlyApi: Infinity, 
+    alerts: Infinity, 
+    watchlists: Infinity, 
+    portfolios: Infinity,
+    screeners: Infinity
+  },
+};
+
+// API Call Cost Mapping according to specifications
+const API_CALL_COSTS = {
+  'listStocks': 5,           // listing all stocks = 5
+  'getStock': 1,             // one stock = 1
+  'runScreener': 2,          // running a screener = 2
+  'addAlert': 2,             // adding an alert = 2
+  'loadMarket': 2,           // loading market page = 2
+  'createWatchlist': 2,      // making a watchlist = 2
+  'default': 1               // everything else = 1
+};
+
+function getStoredUserPlan() {
+  try {
+    const raw = window.localStorage.getItem('rts_user');
+    if (!raw) return 'free';
+    try {
+      const parsed = JSON.parse(raw);
+      return (parsed?.plan || 'free').toLowerCase();
+    } catch {
+      try {
+        const parsed = JSON.parse(atob(raw));
+        return (parsed?.plan || 'free').toLowerCase();
+      } catch {
+        return 'free';
+      }
+    }
+  } catch { return 'free'; }
+}
+
+function getPlanLimits() {
+  const plan = getStoredUserPlan();
+  return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+}
+
+// API call counting with cost-based system
+function getApiCallCost(operationType) {
+  return API_CALL_COSTS[operationType] || API_CALL_COSTS.default;
+}
+
+function trackApiCall(operationType) {
+  try {
+    const cost = getApiCallCost(operationType);
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+    const storageKey = `api_usage_${currentMonth}`;
+    
+    let usage = JSON.parse(localStorage.getItem(storageKey) || '{"calls": 0, "operations": {}}');
+    usage.calls += cost;
+    usage.operations[operationType] = (usage.operations[operationType] || 0) + 1;
+    
+    localStorage.setItem(storageKey, JSON.stringify(usage));
+    return usage.calls;
+  } catch {
+    return 0;
+  }
+}
+
+function getCurrentApiUsage() {
+  try {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const storageKey = `api_usage_${currentMonth}`;
+    const usage = JSON.parse(localStorage.getItem(storageKey) || '{"calls": 0, "operations": {}}');
+    return usage.calls;
+  } catch {
+    return 0;
+  }
+}
+
+function checkApiQuota(operationType) {
+  const limits = getPlanLimits();
+  const cost = getApiCallCost(operationType);
+  const currentUsage = getCurrentApiUsage();
+  
+  if (limits.monthlyApi === Infinity) return true;
+  return (currentUsage + cost) <= limits.monthlyApi;
+}
+
+function ensureApiQuotaAndIncrement(operationType = 'default') {
+  if (!checkApiQuota(operationType)) {
+    const limits = getPlanLimits();
+    const plan = getStoredUserPlan();
+    throw new Error(`API limit exceeded. Your ${plan} plan allows ${limits.monthlyApi} calls per month. Consider upgrading your plan.`);
+  }
+  trackApiCall(operationType);
+  return true;
+}
 
 function getCsrfToken() {
   try {
@@ -37,25 +165,50 @@ function getCsrfToken() {
   } catch { return null; }
 }
 
-// Attach token, API key, CSRF safety and timing
+async function ensureCsrfCookie() {
+  try {
+    // Attempt to fetch CSRF cookie from a dedicated endpoint if available
+    // Fallback to a lightweight GET that may be decorated server-side
+    const hasToken = !!getCsrfToken();
+    if (hasToken) return;
+    // Prefer Django auth HTML endpoints which typically set csrftoken
+    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
+    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
+    // Then try API health/document endpoints which the backend can decorate with ensure_csrf_cookie
+    if (!getCsrfToken()) await api.get('/health/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/').catch(() => {});
+  } catch {}
+}
+
+let __csrfTokenCache = null;
+async function fetchApiCsrfToken() {
+  try {
+    const { data } = await api.get('/auth/csrf/');
+    const token = data?.csrfToken || data?.csrf_token || data?.token || null;
+    if (token) __csrfTokenCache = token;
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+// Attach token, CSRF safety and timing
 api.interceptors.request.use((config) => {
   try {
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
-    const csrf = getCsrfToken();
-    if (csrf) config.headers['X-CSRFToken'] = csrf;
-
-    if (API_PASSWORD) {
-      config.headers['X-API-Key'] = API_PASSWORD;
+    const method = (config.method || 'get').toLowerCase();
+    const csrf = __csrfTokenCache || getCsrfToken();
+    if (csrf && ['post','put','patch','delete'].includes(method)) {
+      config.headers['X-CSRFToken'] = csrf;
     }
 
-    const token = window.localStorage.getItem("rts_token");
-    if (token) {
+    const token = (window.localStorage.getItem("rts_token") || '').trim();
+    if (token && token !== 'undefined' && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
-      // compatibility param for some session endpoints
-      config.params = config.params || {};
-      if (!config.params.authorization) config.params.authorization = `Bearer ${token}`;
     }
   } catch {}
+  
   config.metadata = { start: Date.now(), url: `${config.baseURL || ''}${config.url || ''}` };
   window.__NET?.emit('start', { url: config.metadata.url });
   return config;
@@ -75,11 +228,9 @@ api.interceptors.response.use(
       window.__NET?.emit('end');
     } catch {}
     if (error.response?.status === 401) {
-      localStorage.removeItem("rts_token");
-      // Token rotation UX: prompt re-login
-      if (!window.location.pathname.startsWith('/auth')) {
-        window.location.href = "/auth/sign-in";
-      }
+      // Do not forcibly sign the user out on incidental 401s (e.g., news feed) – let pages handle it gracefully
+      // Keep token/state intact and surface the error to callers
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }
@@ -141,6 +292,10 @@ export function normalizeMarketStats(raw) {
     top_gainers: Array.isArray(d.top_gainers) ? d.top_gainers : [],
     top_losers: Array.isArray(d.top_losers) ? d.top_losers : [],
     most_active: Array.isArray(d.most_active) ? d.most_active : [],
+    // Pass through sector performance if provided by backend under common keys
+    sectors: Array.isArray(d.sectors)
+      ? d.sectors
+      : (Array.isArray(d.sector_performance) ? d.sector_performance : []),
     last_updated: d.last_updated || null,
   };
 }
@@ -155,70 +310,31 @@ async function cachedGet(path, cacheKey, ttlMs = 30000) {
 
 export async function getTrendingSafe() {
   try {
+    ensureApiQuotaAndIncrement('getTrending');
     const res = await cachedGet('/trending/', 'trending', 30000);
-    const payload = res.data || {};
-    const isFallback = Boolean(payload.fallback || payload.demo || payload.is_fallback);
-    return { success: true, data: normalizeTrending(payload), fallback: isFallback };
+    return { success: true, data: normalizeTrending(res.data) };
   } catch (error) {
-    return { success: false, error: 'Service unavailable', data: normalizeTrending({}), fallback: false };
+    return { success: false, error: error.message || 'Service unavailable' };
   }
 }
 
 export async function getMarketStatsSafe() {
   try {
+    ensureApiQuotaAndIncrement('loadMarket');
     const res = await cachedGet('/market-stats/', 'market-stats', 30000);
     return { success: true, data: normalizeMarketStats(res.data) };
   } catch (error) {
-    return { success: false, error: 'Service unavailable', data: normalizeMarketStats({}), fallback: false };
+    return { success: false, error: error.message || 'Service unavailable' };
   }
-}
-
-// ====================
-// RETRY HELPERS
-// ====================
-async function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
-
-async function postWithRetry(path, payload = undefined, tries = 3, backoffMs = 400) {
-  let attempt = 0; let lastError = null;
-  while (attempt < tries) {
-    try {
-      const { data } = await api.post(path, payload);
-      return data;
-    } catch (err) {
-      lastError = err;
-      const status = err?.response?.status;
-      // Retry on network errors and 5xx
-      if (status && status < 500) break;
-      attempt += 1;
-      if (attempt < tries) await delay(backoffMs * attempt);
-    }
-  }
-  throw lastError || new Error('Request failed');
-}
-
-async function deleteWithRetry(path, tries = 3, backoffMs = 400) {
-  let attempt = 0; let lastError = null;
-  while (attempt < tries) {
-    try {
-      const { data } = await api.delete(path);
-      return data;
-    } catch (err) {
-      lastError = err;
-      const status = err?.response?.status;
-      if (status && status < 500) break;
-      attempt += 1;
-      if (attempt < tries) await delay(backoffMs * attempt);
-    }
-  }
-  throw lastError || new Error('Delete failed');
 }
 
 export async function getStatisticsSafe() {
   try {
+    ensureApiQuotaAndIncrement('getStatistics');
     const { data } = await api.get("/statistics/");
     return { success: true, data: data || { market_overview: {}, top_performers: {}, subscriptions: {} } };
   } catch (error) {
-    return { success: false, error: error?.response?.data?.message || 'Failed to load statistics', data: { market_overview: {}, top_performers: {}, subscriptions: {} } };
+    return { success: false, error: error?.response?.data?.message || error.message || 'Failed to load statistics', data: { market_overview: {}, top_performers: {}, subscriptions: {} } };
   }
 }
 
@@ -231,11 +347,9 @@ export async function getEndpointStatus() { const { data } = await api.get('/end
 // ====================
 // STOCKS & MARKET DATA
 // ====================
-// ====================
-// STOCKS & MARKET DATA
-// ====================
 export async function listStocks(params = {}) { 
   try {
+    ensureApiQuotaAndIncrement('listStocks');
     const { data } = await api.get('/stocks/', { params });
     return data;
   } catch (error) {
@@ -243,29 +357,110 @@ export async function listStocks(params = {}) {
     throw error;
   }
 }
-export async function getStock(ticker) { const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`); return data; }
-export async function searchStocks(q) { const { data } = await api.get('/search/', { params: { q } }); return data; }
-export async function getTrending() { const { data } = await api.get('/trending/'); return data; }
-export async function getMarketStats() { const { data } = await api.get('/market-stats/'); return data; }
-export async function getRealTimeQuote(ticker) { const { data } = await api.get(`/realtime/${encodeURIComponent(ticker)}/`); return data; }
-export async function filterStocks(params = {}) { const { data } = await api.get('/filter/', { params }); return data; }
-export async function getStatistics() { const { data } = await api.get('/statistics/'); return data; }
-export async function getMarketData() { const { data } = await api.get('/market-data/'); return data; }
+export async function getStock(ticker) { 
+  ensureApiQuotaAndIncrement('getStock');
+  const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`); 
+  return data; 
+}
+export async function searchStocks(q) { 
+  ensureApiQuotaAndIncrement('searchStocks');
+  const { data } = await api.get('/search/', { params: { q } }); 
+  return data; 
+}
+export async function getTrending() { 
+  ensureApiQuotaAndIncrement('getTrending');
+  const { data } = await api.get('/trending/'); 
+  return data; 
+}
+export async function getMarketStats() { 
+  ensureApiQuotaAndIncrement('loadMarket');
+  const { data } = await api.get('/market-stats/'); 
+  return data; 
+}
+// Align with backend quote endpoint: /stocks/{symbol}/quote
+export async function getRealTimeQuote(ticker) { 
+  ensureApiQuotaAndIncrement('getStock');
+  const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/quote`); 
+  return data; 
+}
+export async function filterStocks(params = {}) { 
+  ensureApiQuotaAndIncrement('runScreener');
+  const { data } = await api.get('/filter/', { params }); 
+  return data; 
+}
+export async function getStatistics() { 
+  ensureApiQuotaAndIncrement('getStatistics');
+  const { data } = await api.get('/statistics/'); 
+  return data; 
+}
+export async function getMarketData() { 
+  ensureApiQuotaAndIncrement('loadMarket');
+  const { data } = await api.get('/market-data/'); 
+  return data; 
+}
 
 // ====================
 // AUTHENTICATION
 // ====================
 export async function login(username, password) {
   try {
+    // Contract: fetch CSRF from API endpoint first, then ensure cookie
+    const token = await fetchApiCsrfToken();
+    if (!token) {
+      await ensureCsrfCookie();
+    }
     const { data } = await api.post('/auth/login/', { username, password });
-    if (data.success && data.token) localStorage.setItem('rts_token', data.token);
-    return data;
+    if (data.success && data.data) {
+      // Store user data if login successful
+      return { success: true, data: data.data, message: data.message };
+    }
+    return { success: false, message: data.message || 'Login failed' };
   } catch (error) {
-    return { success: false, message: error.response?.data?.detail || 'Login failed' };
+    return { success: false, message: error.response?.data?.detail || error.response?.data?.message || 'Login failed' };
   }
 }
-export async function logout() { try { await api.post('/auth/logout/'); } catch {} finally { localStorage.removeItem('rts_token'); } }
-export async function registerUser() { return { success: false, message: 'Registration not available' }; }
+
+export async function logout() { 
+  try { 
+    await api.post('/auth/logout/'); 
+  } catch {} finally { 
+    localStorage.removeItem('rts_token'); 
+  } 
+}
+
+export async function registerUser(userData) {
+  try {
+    // Since there's no explicit registration endpoint in the provided list,
+    // I'll assume it follows Django's standard pattern at /auth/register/
+    const { data } = await api.post('/auth/register/', {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      first_name: userData.first_name,
+      last_name: userData.last_name
+    });
+    
+    if (data.success) {
+      return { 
+        success: true, 
+        data: data.data,
+        message: data.message || 'Registration successful! Please verify your email.'
+      };
+    }
+    return { success: false, message: data.message || 'Registration failed' };
+  } catch (error) {
+    if (error?.response?.status === 409) {
+      return {
+        success: false,
+        message: 'This email is already registered. Please sign in or reset your password.'
+      };
+    }
+    return {
+      success: false,
+      message: error.response?.data?.message || error.response?.data?.detail || 'Registration failed'
+    };
+  }
+}
 export async function getProfile() { const { data } = await api.get('/user/profile/'); return data; }
 export async function updateProfile(profileData) { const { data } = await api.post('/user/profile/', profileData); return data; }
 export async function changePassword(passwordData) { const { data } = await api.post('/user/change-password/', passwordData); return data; }
@@ -275,6 +470,7 @@ export async function changePassword(passwordData) { const { data } = await api.
 // ====================
 export async function getPortfolio() { 
   try {
+    ensureApiQuotaAndIncrement('getPortfolio');
     const { data } = await api.get('/portfolio/');
     return data;
   } catch (error) {
@@ -282,14 +478,23 @@ export async function getPortfolio() {
     throw error;
   }
 }
-export async function addPortfolio(payload) { return await postWithRetry('/portfolio/add/', payload); }
-export async function deletePortfolio(id) { return await deleteWithRetry(`/portfolio/${id}/`); }
+export async function addPortfolio(payload) { 
+  ensureApiQuotaAndIncrement('addPortfolio');
+  const { data } = await api.post('/portfolio/add/', payload); 
+  return data; 
+}
+export async function deletePortfolio(id) { 
+  ensureApiQuotaAndIncrement('deletePortfolio');
+  const { data } = await api.delete(`/portfolio/${id}/`); 
+  return data; 
+}
 
 // ====================
 // WATCHLISTS
 // ====================
 export async function getWatchlist() { 
   try {
+    ensureApiQuotaAndIncrement('getWatchlist');
     const { data } = await api.get('/watchlist/');
     return data;
   } catch (error) {
@@ -297,159 +502,65 @@ export async function getWatchlist() {
     throw error;
   }
 }
-export async function addWatchlist(symbol, opts = {}) { return await postWithRetry('/watchlist/add/', { symbol, ...opts }); }
-export async function deleteWatchlist(id) { return await deleteWithRetry(`/watchlist/${id}/`); }
+export async function addWatchlist(symbol, opts = {}) { 
+  ensureApiQuotaAndIncrement('createWatchlist');
+  const { data } = await api.post('/watchlist/add/', { symbol, ...opts }); 
+  return data; 
+}
+export async function deleteWatchlist(id) { 
+  ensureApiQuotaAndIncrement('deleteWatchlist');
+  const { data } = await api.delete(`/watchlist/${id}/`); 
+  return data; 
+}
 
 // ====================
 // ALERTS
 // ====================
-export async function alertsMeta() { const { data } = await api.get('/alerts/create/'); return data; }
-export async function createAlert(payload) { return await postWithRetry('/alerts/create/', payload); }
-export async function toggleAlert(alertId) { return await postWithRetry(`/alerts/${encodeURIComponent(alertId)}/toggle/`); }
-export async function deleteAlert(alertId) { return await deleteWithRetry(`/alerts/${encodeURIComponent(alertId)}/delete/`); }
-
-// ====================
-// ALERTS - EXTRA HELPERS
-// ====================
-export async function listAlerts(params = {}) {
-  const { data } = await api.get('/alerts/', { params });
-  return data; // { alerts: [...] }
+export async function alertsMeta() { 
+  ensureApiQuotaAndIncrement('default');
+  const { data } = await api.get('/alerts/create/'); 
+  return data; 
 }
-export async function getAlertsUnreadCount() {
-  const { data } = await api.get('/alerts/unread-count/');
-  return data; // { count }
-}
-
-// ====================
-// BILLING
-// ====================
-export async function getBillingHistory(params = {}) { const { data } = await api.get('/billing/history/', { params }); return data; }
-export async function getCurrentPlan() { const { data } = await api.get('/billing/current-plan/'); return data; }
-export async function changePlan(planData) { const { data } = await api.post('/billing/change-plan/', planData); return data; }
-export async function getBillingStats() { const { data } = await api.get('/billing/stats/'); return data; }
-export async function downloadInvoice(invoiceId) { const response = await api.get(`/billing/download/${invoiceId}/`, { responseType: 'blob' }); return response.data; }
-export async function updatePaymentMethod(paymentData) { const { data } = await api.post('/user/update-payment/', paymentData); return data; }
-
-// ====================
-// NOTIFICATIONS
-// ====================
-export async function getNotificationSettings() { const { data } = await api.get('/user/notification-settings/'); return data; }
-export async function updateNotificationSettings(settings) { const { data } = await api.post('/user/notification-settings/', settings); return data; }
-export async function getNotificationHistory(params = {}) { const { data } = await api.get('/notifications/history/', { params }); return data; }
-export async function markNotificationsRead(payload) { const { data } = await api.post('/notifications/mark-read/', payload); return data; }
-
-// ====================
-// NEWS
-// ====================
-export async function getNewsFeed(params = {}) { const { data } = await api.get('/news/feed/', { params }); return data; }
-export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
-export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
-export async function getNewsPreferences() {
-  const { data } = await api.get('/news/preferences/');
-  // Normalize snake_case to camelCase for the app
-  const prefs = data?.data || data || {};
-  return {
-    followedStocks: Array.isArray(prefs.followed_stocks) ? prefs.followed_stocks : (prefs.followedStocks || []),
-    followedSectors: Array.isArray(prefs.followed_sectors) ? prefs.followed_sectors : (prefs.followedSectors || []),
-    preferredCategories: Array.isArray(prefs.preferred_categories) ? prefs.preferred_categories : (prefs.preferredCategories || []),
-    newsFrequency: prefs.news_frequency || prefs.newsFrequency || 'realtime',
-  };
-}
-export async function updateNewsPreferences(preferences) {
-  // Convert camelCase to snake_case expected by backend
-  const payload = {
-    followed_stocks: preferences.followedStocks || [],
-    followed_sectors: preferences.followedSectors || [],
-    preferred_categories: preferences.preferredCategories || [],
-    news_frequency: preferences.newsFrequency || 'realtime',
-  };
-  const { data } = await api.post('/news/preferences/', payload);
-  return data;
-}
-export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
-
-// ====================
-// SCREENERS
-// ====================
-export async function listScreeners(params = {}) { const { data } = await api.get('/screeners/', { params }); return data; }
-export async function getScreener(id) { const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/`); return data; }
-export { mapCriteriaToFilterParams };
-export async function createScreener(screener) { const data = await postWithRetry('/screeners/create/', screener); return data; }
-export async function updateScreener(id, payload) { const data = await postWithRetry(`/screeners/${encodeURIComponent(id)}/update/`, payload); return data; }
-export async function deleteScreener(id) { return await deleteWithRetry(`/screeners/${encodeURIComponent(id)}/`); }
-export async function testScreener(payload) {
-  try {
-    const { data } = await api.post('/filter/', payload);
-    return { success: true, results: data?.stocks || data?.data || [] };
-  } catch (e) {
-    // fallback to GET mapping
-    const params = mapCriteriaToFilterParams(payload?.criteria || []); const { data } = await api.get('/filter/', { params: { ...params, limit: 200 } }); return { results: data?.stocks || [] };
-  }
-}
-export async function runScreener(id, params = {}) {
-  try {
-    const { data } = await api.get(`/screeners/${encodeURIComponent(id)}/results/`, { params });
-    return { success: true, results: data?.stocks || data?.data || [] };
-  } catch (e) {
-    return { success: false, results: [] };
-  }
-}
-export function exportScreenerCsvUrl(id) { return `${API_ROOT}/screeners/${encodeURIComponent(id)}/export.csv`; }
-export async function getScreenerTemplates() { const { data } = await api.get('/screeners/templates/'); return data; }
-
-// ====================
-// ALERTS HISTORY
-// ====================
-export async function getAlertHistory(params = {}) {
-  // Backend does not provide a separate history endpoint; use current alerts list
-  const { data } = await api.get('/alerts/', { params });
-  return Array.isArray(data) ? data : (data?.alerts || []);
-}
-
-// ====================
-// FEATURE FLAGS
-// ====================
-export async function getFeatureFlags() { try { const { data } = await api.get('/feature-flags/'); return data; } catch { return {}; } }
-
-// ====================
-// USAGE & RATE LIMITS
-// ====================
-export async function getUsageSummary() { const { data } = await api.get('/usage/'); return data; }
-export async function getUsageStats() { const { data } = await api.get('/usage-stats/'); return data; }
-export async function getUsageHistory(params = {}) { const { data } = await api.get('/usage/history/', { params }); return data; }
-export async function usageTrack(payload = {}) { const { data } = await api.post('/usage/track/', payload); return data; }
-export async function usageReconcile(payload = {}) { const { data } = await api.post('/usage/reconcile/', payload); return data; }
-
-//====================
-// REVENUE & PAYMENTS (PAYPAL INTEGRATION)
-//====================
-export async function validateDiscountCode(code) { 
-  const { data } = await api.post(`${REVENUE_ROOT}/validate-discount/`, { code }); 
+export async function createAlert(payload) { 
+  ensureApiQuotaAndIncrement('addAlert');
+  const { data } = await api.post('/alerts/create/', payload); 
   return data; 
 }
 
-export async function applyDiscountCode(code, amount) { 
-  const { data } = await api.post(`${REVENUE_ROOT}/apply-discount/`, { code, amount }); 
+// ====================
+// BILLING & PLANS
+// ====================
+export async function getBillingHistory(params = {}) { 
+  const { data } = await api.get('/billing/history/', { params }); 
   return data; 
 }
 
-export async function recordPayment(paymentData) { 
-  const { data } = await api.post(`${REVENUE_ROOT}/record-payment/`, paymentData); 
+export async function getCurrentPlan() { 
+  const { data } = await api.get('/billing/current-plan/'); 
   return data; 
 }
 
-export async function getRevenueAnalytics(monthYear = null) { 
-  const url = monthYear ? `${REVENUE_ROOT}/revenue-analytics/${monthYear}/` : `${REVENUE_ROOT}/revenue-analytics/`; 
-  const { data } = await api.get(url); 
+export async function changePlan(planData) { 
+  const { data } = await api.post('/billing/change-plan/', planData); 
   return data; 
 }
 
-export async function initializeDiscountCodes() { 
-  const { data } = await api.post(`${REVENUE_ROOT}/initialize-codes/`); 
+export async function getBillingStats() { 
+  const { data } = await api.get('/billing/stats/'); 
   return data; 
 }
 
-// PayPal Integration Functions
+export async function downloadInvoice(invoiceId) { 
+  const response = await api.get(`/billing/download/${invoiceId}/`, { responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function updatePaymentMethod(paymentData) { 
+  const { data } = await api.post('/user/update-payment/', paymentData); 
+  return data; 
+}
+
+// PayPal Integration Functions - Updated for Django backend
 export async function createPayPalOrder(planType, billingCycle, discountCode = null) {
   try {
     const orderData = {
@@ -458,7 +569,7 @@ export async function createPayPalOrder(planType, billingCycle, discountCode = n
       discount_code: discountCode
     };
     
-    // This would integrate with your backend PayPal handling
+    // This integrates with your Django backend PayPal handling
     const { data } = await api.post('/billing/create-paypal-order/', orderData);
     return data;
   } catch (error) {
@@ -481,6 +592,56 @@ export async function capturePayPalOrder(orderId, paymentData) {
 }
 
 // ====================
+// NOTIFICATIONS
+// ====================
+export async function getNotificationSettings() { const { data } = await api.get('/user/notification-settings/'); return data; }
+export async function updateNotificationSettings(settings) { const { data } = await api.post('/user/notification-settings/', settings); return data; }
+export async function getNotificationHistory(params = {}) { const { data } = await api.get('/notifications/history/', { params }); return data; }
+export async function markNotificationsRead(payload) { const { data } = await api.post('/notifications/mark-read/', payload); return data; }
+
+// ====================
+// NEWS
+// ====================
+export async function getNewsFeed(params = {}) { 
+  ensureApiQuotaAndIncrement('getNews');
+  const { data } = await api.get('/news/feed/', { params }); 
+  return data; 
+}
+export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
+export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
+export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
+export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
+
+//====================
+// REVENUE & PAYMENTS (PAYPAL INTEGRATION)
+//====================
+export async function validateDiscountCode(code) { 
+  const { data } = await api.post('/revenue/validate-discount/', { code }); 
+  return data; 
+}
+
+export async function applyDiscountCode(code, amount) { 
+  const { data } = await api.post('/revenue/apply-discount/', { code, amount }); 
+  return data; 
+}
+
+export async function recordPayment(paymentData) { 
+  const { data } = await api.post('/revenue/record-payment/', paymentData); 
+  return data; 
+}
+
+export async function getRevenueAnalytics(monthYear = null) { 
+  const url = monthYear ? `/revenue/revenue-analytics/${monthYear}/` : `/revenue/revenue-analytics/`; 
+  const { data } = await api.get(url); 
+  return data; 
+}
+
+export async function initializeDiscountCodes() { 
+  const { data } = await api.post('/revenue/initialize-codes/'); 
+  return data; 
+}
+
+// ====================
 // SUBSCRIPTIONS
 // ====================
 export async function subscribe(email, category = null) { const { data } = await api.post('/subscription/', { email, category }); return data; }
@@ -496,21 +657,177 @@ export async function updateStocks(symbols) { const { data } = await api.post('/
 export async function updateNews() { const { data } = await api.post('/news/update/'); return data; }
 
 // ====================
-// NEWS - EXTRA
+// PORTFOLIO ANALYTICS & ADVANCED FEATURES
 // ====================
-export async function getNewsByTicker(ticker, params = {}) { const { data } = await api.get(`/news/ticker/${encodeURIComponent(ticker)}/`, { params }); return data; }
+
+// Portfolio Analytics
+export async function getPortfolioAnalytics() { 
+  ensureApiQuotaAndIncrement('getPortfolioAnalytics');
+  const { data } = await api.get('/portfolio/analytics/'); 
+  return data; 
+}
+
+export async function getPortfolioSectorAllocation() { 
+  ensureApiQuotaAndIncrement('getPortfolioAnalytics');
+  const { data } = await api.get('/portfolio/sector-allocation/'); 
+  return data; 
+}
+
+export async function getPortfolioDividendTracking() { 
+  ensureApiQuotaAndIncrement('getPortfolioAnalytics');
+  const { data } = await api.get('/portfolio/dividend-tracking/'); 
+  return data; 
+}
+
+// Advanced Screeners
+export async function getScreeners() { 
+  ensureApiQuotaAndIncrement('getScreeners');
+  const { data } = await api.get('/screeners/'); 
+  return data; 
+}
+
+export async function createScreener(screenerData) { 
+  ensureApiQuotaAndIncrement('createScreener');
+  const { data } = await api.post('/screeners/', screenerData); 
+  return data; 
+}
+
+export async function getScreener(id) { 
+  ensureApiQuotaAndIncrement('getScreener');
+  const { data } = await api.get(`/screeners/${id}/`); 
+  return data; 
+}
+
+export async function updateScreener(id, screenerData) { 
+  ensureApiQuotaAndIncrement('updateScreener');
+  const { data } = await api.put(`/screeners/${id}/`, screenerData); 
+  return data; 
+}
+
+export async function deleteScreener(id) { 
+  ensureApiQuotaAndIncrement('deleteScreener');
+  const { data } = await api.delete(`/screeners/${id}/`); 
+  return data; 
+}
+
+export async function getScreenerTemplates() { 
+  ensureApiQuotaAndIncrement('getScreenerTemplates');
+  const { data } = await api.get('/screeners/templates/'); 
+  return data; 
+}
+
+export async function runScreener(id) { 
+  ensureApiQuotaAndIncrement('runScreener');
+  const { data } = await api.post(`/screeners/${id}/run/`); 
+  return data; 
+}
+
+// Data Export
+export async function exportStocksCSV(params = {}) { 
+  const response = await api.get('/export/stocks/csv', { params, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function exportPortfolioCSV(params = {}) { 
+  const response = await api.get('/export/portfolio/csv', { params, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function exportScreenerResultsCSV(screenerId, params = {}) { 
+  const response = await api.get('/export/screener-results/csv', { params: { ...params, screener_id: screenerId }, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function exportWatchlistCSV(params = {}) { 
+  const response = await api.get('/export/watchlist/csv', { params, responseType: 'blob' }); 
+  return response.data; 
+}
+
+export async function generateCustomReport(reportData) { 
+  const { data } = await api.post('/reports/custom/', reportData); 
+  return data; 
+}
+
+export async function downloadReport(id) { 
+  const response = await api.get(`/reports/${id}/download`, { responseType: 'blob' }); 
+  return response.data; 
+}
+
+// Enhanced Market Data
+export async function getSectorPerformance() { 
+  ensureApiQuotaAndIncrement('loadMarket');
+  const { data } = await api.get('/market/sectors/performance'); 
+  return data; 
+}
+
+export async function getMarketStatus() { 
+  ensureApiQuotaAndIncrement('getMarketStatus');
+  const { data } = await api.get('/market/market-status'); 
+  return data; 
+}
+
+export async function getStockNews(symbol) { 
+  ensureApiQuotaAndIncrement('getStockNews');
+  const { data } = await api.get(`/stocks/${encodeURIComponent(symbol)}/news`); 
+  return data; 
+}
+
+// Developer Tools (Gold Plan)
+export async function getApiKeys() { 
+  const { data } = await api.get('/developer/api-keys/'); 
+  return data; 
+}
+
+export async function createApiKey(keyData) { 
+  const { data } = await api.post('/developer/api-keys/', keyData); 
+  return data; 
+}
+
+export async function deleteApiKey(id) { 
+  const { data } = await api.delete(`/developer/api-keys/${id}/`); 
+  return data; 
+}
+
+export async function getUsageStats() { 
+  const { data } = await api.get('/developer/usage-stats/'); 
+  return data; 
+}
+
+export async function getApiDocumentation() { 
+  const { data } = await api.get('/developer/documentation/'); 
+  return data; 
+}
+
+// Enterprise Solutions
+export async function submitEnterpriseContact(contactData) { 
+  const { data } = await api.post('/enterprise/contact/', contactData); 
+  return data; 
+}
+
+export async function getEnterpriseSolutions() { 
+  const { data } = await api.get('/enterprise/solutions/'); 
+  return data; 
+}
+
+export async function submitQuoteRequest(quoteData) { 
+  const { data } = await api.post('/enterprise/quote-request/', quoteData); 
+  return data; 
+}
+
+// User Activity & Analytics
+export async function getUserActivityFeed() { 
+  ensureApiQuotaAndIncrement('getUserActivity');
+  const { data } = await api.get('/user/activity-feed/'); 
+  return data; 
+}
+
+export async function getUserInsights() { 
+  ensureApiQuotaAndIncrement('getUserInsights');
+  const { data } = await api.get('/analytics/user-insights/'); 
+  return data; 
+}
 
 // ====================
-// PORTFOLIO - EXTRA STATS
+// USAGE TRACKING & LIMITS EXPORT
 // ====================
-export async function getPortfolioValue() { const { data } = await api.get('/portfolio/value/'); return data; }
-export async function getPortfolioPnl() { const { data } = await api.get('/portfolio/pnl/'); return data; }
-export async function getPortfolioReturn() { const { data } = await api.get('/portfolio/return/'); return data; }
-export async function getPortfolioHoldingsCount() { const { data } = await api.get('/portfolio/holdings-count/'); return data; }
-
-// ====================
-// STATS
-// ====================
-export async function getTotalTickers() { const { data } = await api.get('/stats/total-tickers/'); return data; }
-export async function getGainersLosersStats() { const { data } = await api.get('/stats/gainers-losers/'); return data; }
-export async function getTotalAlertsCount() { const { data } = await api.get('/stats/total-alerts/'); return data; }
+export { getCurrentApiUsage, getPlanLimits, getStoredUserPlan, API_CALL_COSTS };

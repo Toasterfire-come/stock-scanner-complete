@@ -33,7 +33,11 @@ const CurrentPlan = () => {
     const fetchPlan = async () => {
       try {
         const response = await getCurrentPlan();
-        if (response.success) setPlanData(response.data); else setPlanData(null);
+        if (response.success) {
+          setPlanData(response.data);
+        } else {
+          setPlanData(null);
+        }
       } catch (error) {
         console.error("Failed to load plan data:", error);
         setPlanData(null);
@@ -131,8 +135,8 @@ const CurrentPlan = () => {
     );
   }
 
-  const usagePercentage = planData.features.api_calls_limit 
-    ? Math.min((850 / planData.features.api_calls_limit) * 100, 100)
+  const usagePercentage = planData?.features?.api_calls_limit 
+    ? Math.min((0 / planData.features.api_calls_limit) * 100, 100)
     : 0;
 
   return (
@@ -146,6 +150,7 @@ const CurrentPlan = () => {
           </p>
         </div>
 
+        {planData ? (
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Plan Overview */}
           <Card>
@@ -337,6 +342,17 @@ const CurrentPlan = () => {
             )}
           </div>
         </div>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <h3 className="text-xl font-semibold mb-2">No plan information</h3>
+              <p className="text-gray-600 mb-4">Sign in to view and manage your subscription.</p>
+              <Button asChild>
+                <Link to="/pricing">View Plans</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

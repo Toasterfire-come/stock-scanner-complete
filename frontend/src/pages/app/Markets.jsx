@@ -26,7 +26,6 @@ const Markets = () => {
   const [marketStats, setMarketStats] = useState(null);
   const [trending, setTrending] = useState(null);
   const [statistics, setStatistics] = useState(null);
-  const [isFallback, setIsFallback] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -53,7 +52,6 @@ const Markets = () => {
 
         setMarketStats(statsResponse.data);
         setTrending(trendingResponse.data);
-        setIsFallback(Boolean(trendingResponse.fallback));
         setStatistics(statisticsResponse.data);
       } catch (err) {
         const msg = "Failed to fetch market data";
@@ -83,7 +81,6 @@ const Markets = () => {
       if (!trendingResponse.success) toast.error(trendingResponse.error);
       setMarketStats(statsResponse.data);
       setTrending(trendingResponse.data);
-      setIsFallback(Boolean(trendingResponse.fallback));
     } catch (err) {
       toast.error("Refresh failed");
     } finally {
@@ -124,7 +121,7 @@ const Markets = () => {
 
   if (isLoading) {
     return (
-      <div className="container-enhanced py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-48" />
@@ -179,7 +176,7 @@ const Markets = () => {
   }
 
   return (
-    <div className="container-enhanced py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -204,7 +201,7 @@ const Markets = () => {
 
         {/* Market Summary */}
         {marketStats && (
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -246,28 +243,8 @@ const Markets = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Unchanged</p>
-                    <p className="text-2xl font-bold text-gray-600">{Number(marketStats.market_overview.unchanged || 0).toLocaleString()}</p>
-                    <p className="text-xs text-gray-600">{safePct(marketStats.market_overview.unchanged, marketStats.market_overview.total_stocks).toFixed(1)}%</p>
-                  </div>
-                  <Activity className="h-8 w-8 text-gray-500" />
-                </div>
-              </CardContent>
-            </Card>
+            
           </div>
-        )}
-
-        {/* Demo Data Notice */}
-        {isFallback && (
-          <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
-            <CardContent className="p-4 text-blue-800">
-              You are viewing demo market data while the live API is unavailable.
-            </CardContent>
-          </Card>
         )}
 
         {/* Market Data Tabs */}
@@ -418,44 +395,8 @@ const Markets = () => {
               </Card>
             </TabsContent>
 
-            {/* Sectors tab removed for cleaner professional interface */}
           </div>
         </Tabs>
-
-        {/* Quick Links */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Market Heatmap</h3>
-                  <p className="text-gray-600 text-sm">Visual market overview</p>
-                </div>
-                <Button asChild variant="ghost">
-                  <Link to="/app/market-heatmap">
-                    <BarChart3 className="h-6 w-6" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Stock Screener</h3>
-                  <p className="text-gray-600 text-sm">Find stocks by criteria</p>
-                </div>
-                <Button asChild variant="ghost">
-                  <Link to="/app/screeners">
-                    <Target className="h-6 w-6" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">

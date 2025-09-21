@@ -1,17 +1,21 @@
-<<<<<<< HEAD
 import React from "react";
 import "./App.css";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
+import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+
+// Components
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Layouts
-import AppLayout from "./layouts/AppLayout";
+import EnhancedAppLayout from "./layouts/EnhancedAppLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout";
 
 // Auth Pages
-import SignIn from "./pages/auth/SignIn";
-import SignUp from "./pages/auth/SignUp";
+import SignIn from "./pages/auth/SignIn.jsx";
+import SignUp from "./pages/auth/SignUp.jsx";
+import PlanSelection from "./pages/auth/PlanSelection";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
@@ -33,231 +37,406 @@ import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 
-// App Pages
-const AppDashboard = React.lazy(() => import("./pages/app/AppDashboard"));
-const Markets = React.lazy(() => import("./pages/app/Markets"));
-const StockDetail = React.lazy(() => import("./pages/app/StockDetail"));
-const Stocks = React.lazy(() => import("./pages/app/Stocks"));
-const Portfolio = React.lazy(() => import("./pages/app/Portfolio"));
-const Watchlists = React.lazy(() => import("./pages/app/Watchlists"));
-const WatchlistDetail = React.lazy(() => import("./pages/app/WatchlistDetail"));
+// App Pages (Protected)
+import AppDashboard from "./pages/app/AppDashboard";
+import Markets from "./pages/app/Markets";
+import StockDetail from "./pages/app/StockDetail";
+import Stocks from "./pages/app/Stocks";
+import Portfolio from "./pages/app/Portfolio";
+import Watchlists from "./pages/app/Watchlists";
+import WatchlistDetail from "./pages/app/WatchlistDetail";
 
-// Screener Suite
-const ScreenerLibrary = React.lazy(() => import("./pages/app/screeners/ScreenerLibrary"));
-const CreateScreener = React.lazy(() => import("./pages/app/screeners/CreateScreener"));
-const EditScreener = React.lazy(() => import("./pages/app/screeners/EditScreener"));
-const ScreenerResults = React.lazy(() => import("./pages/app/screeners/ScreenerResults"));
-const Templates = React.lazy(() => import("./pages/app/Templates"));
+// Developer Tools (Gold Plan)
+import DeveloperDashboard from "./pages/app/developer/DeveloperDashboard";
+import ApiKeyManagement from "./pages/app/developer/ApiKeyManagement";
+import UsageStatistics from "./pages/app/developer/UsageStatistics";
+import ApiDocumentation from "./pages/app/developer/ApiDocumentation";
+import DeveloperConsole from "./pages/app/developer/DeveloperConsole";
 
-// Market Overview
-const MarketHeatmap = React.lazy(() => import("./pages/app/MarketHeatmap"));
-const TopMovers = React.lazy(() => import("./pages/app/TopMovers"));
+// Screener Suite (Protected)
+import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
+import CreateScreener from "./pages/app/screeners/CreateScreener";
+import EditScreener from "./pages/app/screeners/EditScreener";
+import ScreenerResults from "./pages/app/screeners/ScreenerResults";
+import Templates from "./pages/app/Templates";
 
-// News
-const NewsFeed = React.lazy(() => import("./pages/app/NewsFeed"));
-const NewsPreferences = React.lazy(() => import("./pages/app/NewsPreferences"));
-const NewsSubscribe = React.lazy(() => import("./pages/app/NewsSubscribe"));
+// Market Overview (Protected)
+import MarketHeatmap from "./pages/app/MarketHeatmap";
+import SectorsIndustries from "./pages/app/SectorsIndustries";
+import TopMovers from "./pages/app/TopMovers";
+import PreAfterMarket from "./pages/app/PreAfterMarket";
+import EconomicCalendar from "./pages/app/EconomicCalendar";
 
-// Alerts & Signals
-const Alerts = React.lazy(() => import("./pages/app/Alerts"));
-const AlertHistory = React.lazy(() => import("./pages/app/AlertHistory"));
+// News (Protected)
+import NewsFeed from "./pages/app/NewsFeed";
+import NewsPreferences from "./pages/app/NewsPreferences";
+import NewsSubscribe from "./pages/app/NewsSubscribe";
 
-// Account Pages
-const Profile = React.lazy(() => import("./pages/account/Profile"));
-const ChangePassword = React.lazy(() => import("./pages/account/ChangePassword"));
-const NotificationSettings = React.lazy(() => import("./pages/account/NotificationSettings"));
-const BillingHistory = React.lazy(() => import("./pages/account/BillingHistory"));
-const CurrentPlan = React.lazy(() => import("./pages/account/CurrentPlan"));
+// Alerts & Signals (Protected)
+import Alerts from "./pages/app/Alerts";
+import AlertHistory from "./pages/app/AlertHistory";
+
+// Account Pages (Protected)
+import Profile from "./pages/account/Profile";
+import ChangePassword from "./pages/account/ChangePassword";
+import NotificationSettings from "./pages/account/NotificationSettings";
+import BillingHistory from "./pages/account/BillingHistory";
+import CurrentPlan from "./pages/account/CurrentPlan";
+import Settings from "./pages/account/Settings";
 
 // System Pages
-const EndpointStatus = React.lazy(() => import("./pages/system/EndpointStatus"));
+import EndpointStatus from "./pages/system/EndpointStatus";
 
 // Content & Docs
 import LegalTerms from "./pages/LegalTerms";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import Documentation from "./pages/docs/Documentation";
-import EnterpriseContact from "./pages/EnterpriseContact";
+import CreateAccount from "./pages/docs/getting-started/CreateAccount";
+import Dashboard from "./pages/docs/getting-started/Dashboard";
+import FirstScreener from "./pages/docs/getting-started/FirstScreener";
+import DocsCategory from "./pages/docs/DocsCategory";
+import DocArticle from "./pages/docs/DocArticle";
+import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
+import Help from "./pages/Help";
 
-// Marketing Pages
-import * as Marketing from "./pages/Marketing";
+// Enterprise Solutions
+import QuoteRequest from "./pages/enterprise/QuoteRequest";
+import SolutionsShowcase from "./pages/enterprise/SolutionsShowcase";
+import WhiteLabelConfig from "./pages/enterprise/WhiteLabelConfig";
 
-// Mobile
-import MobileDashboard from "./pages/mobile/MobileDashboard";
+// Data Export System
+import ExportManager from "./pages/app/exports/ExportManager";
+import CustomReportBuilder from "./pages/app/exports/CustomReportBuilder";
+import ScheduledExports from "./pages/app/exports/ScheduledExports";
+import DownloadHistory from "./pages/app/exports/DownloadHistory";
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
 import LatencyIndicator from "./components/LatencyIndicator";
 
-//
+// Placeholder component for missing pages
+const PlaceholderPage = ({ title }) => (
+  <div className="container mx-auto px-4 py-8">
+    <div className="text-center">
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
+      <p className="text-gray-600">This page is under development.</p>
+    </div>
+  </div>
+);
 
-function App() {
+const OfflineBanner = () => {
+  const { isBackendUp } = useBackendStatus();
+  if (isBackendUp) return null;
   return (
-    <AuthProvider>
-      <HashRouter>
-        <LatencyIndicator />
-        <SystemErrorBoundary>
-          <div className="min-h-screen bg-background">
-            <React.Suspense fallback={<div className="p-8 text-center text-gray-600">Loading…</div>}>
-            <Routes>
-              {/* Auth Routes */}
-              <Route element={<AuthLayout />}>
-                <Route path="/auth/sign-in" element={<SignIn />} />
-                <Route path="/auth/sign-up" element={<SignUp />} />
-                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                <Route path="/auth/reset-password" element={<ResetPassword />} />
-                <Route path="/auth/verify-email" element={<VerifyEmail />} />
-                <Route path="/auth/oauth-callback" element={<OAuthCallback />} />
-                <Route path="/auth/2fa" element={<TwoFactorAuth />} />
-              </Route>
-
-              {/* Onboarding */}
-              <Route path="/onboarding" element={<OnboardingWizard />} />
-
-              {/* Billing Routes */}
-              <Route path="/checkout/success" element={<CheckoutSuccess />} />
-              <Route path="/checkout/failure" element={<CheckoutFailure />} />
-
-              {/* Main App Routes */}
-              <Route element={<AppLayout />}>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/pricing" element={<PricingPro />} />
-                <Route path="/pricing-old" element={<Pricing />} />
-                <Route path="/app/analytics" element={<AdvancedAnalytics />} />
-                <Route path="/app/referrals" element={<ReferralSystem />} />
-
-                {/* Marketing Pages - Now using real components */}
-                <Route path="/product" element={<Marketing.Product />} />
-                <Route path="/data" element={<Marketing.DataCoverage />} />
-                <Route path="/use-cases" element={<Marketing.UseCases />} />
-                <Route path="/changelog" element={<Marketing.Changelog />} />
-                <Route path="/help" element={<Marketing.Help />} />
-                <Route path="/help/faq" element={<Marketing.FAQ />} />
-                <Route path="/enterprise" element={<EnterpriseContact />} />
-
-                {/* App Routes */}
-                <Route path="/app/dashboard" element={<AppDashboard />} />
-                <Route path="/app/markets" element={<Markets />} />
-                <Route path="/app/stocks" element={<Stocks />} />
-                <Route path="/app/stocks/:symbol" element={<StockDetail />} />
-                <Route path="/app/portfolio" element={<Portfolio />} />
-
-                {/* Screener Suite */}
-                <Route path="/app/screeners" element={<ScreenerLibrary />} />
-                <Route path="/app/screeners/new" element={<CreateScreener />} />
-                <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
-                <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
-                <Route path="/app/templates" element={<Templates />} />
-
-                {/* Market Overview */}
-                <Route path="/app/market-heatmap" element={<MarketHeatmap />} />
-                <Route path="/app/top-movers" element={<TopMovers />} />
-
-                {/* News */}
-                <Route path="/app/news" element={<NewsFeed />} />
-                <Route path="/app/news/preferences" element={<NewsPreferences />} />
-                <Route path="/app/news/subscribe" element={<NewsSubscribe />} />
-
-                {/* Alerts & Signals */}
-                <Route path="/app/alerts" element={<Alerts />} />
-                <Route path="/app/alerts/history" element={<AlertHistory />} />
-
-                {/* Watchlists */}
-                <Route path="/app/watchlists" element={<Watchlists />} />
-                <Route path="/app/watchlists/:id" element={<WatchlistDetail />} />
-
-                {/* Account Routes */}
-                <Route path="/account/profile" element={<Profile />} />
-                <Route path="/account/password" element={<ChangePassword />} />
-                <Route path="/account/notifications" element={<NotificationSettings />} />
-                <Route path="/account/billing" element={<BillingHistory />} />
-                <Route path="/account/plan" element={<CurrentPlan />} />
-
-                {/* System Routes */}
-                <Route path="/endpoint-status" element={<EndpointStatus />} />
-
-                {/* Docs & Content */}
-                <Route path="/docs" element={<Documentation />} />
-
-                {/* Legal */}
-                <Route path="/legal/terms" element={<LegalTerms />} />
-                <Route path="/legal/privacy" element={<LegalPrivacy />} />
-              </Route>
-
-              {/* Mobile Routes */}
-              <Route path="/m/dashboard" element={<MobileDashboard />} />
-              <Route path="/m/alerts" element={<Alerts />} />
-              <Route path="/m/quick-scan" element={<TopMovers />} />
-
-              {/* Default redirect */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            </React.Suspense>
-            <Toaster position="top-right" />
-          </div>
-        </SystemErrorBoundary>
-      </HashRouter>
-    </AuthProvider>
-  );
-}
-
-export default App;
-=======
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="w-full bg-red-600 text-white text-center text-sm py-2">
+      Backend temporarily unavailable. Some actions are disabled.
     </div>
   );
 };
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <BackendStatusProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <LatencyIndicator />
+          <SystemErrorBoundary>
+            <div className="min-h-screen bg-background">
+              <OfflineBanner />
+              <Routes>
+                {/* Auth Routes */}
+                <Route element={<AuthLayout />}>
+                  <Route path="/auth/sign-in" element={<SignIn />} />
+                  <Route path="/auth/sign-up" element={<SignUp />} />
+                  <Route path="/auth/plan-selection" element={<PlanSelection />} />
+                  <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/auth/reset-password" element={<ResetPassword />} />
+                  <Route path="/auth/verify-email" element={<VerifyEmail />} />
+                  <Route path="/auth/oauth-callback" element={<OAuthCallback />} />
+                  <Route path="/auth/2fa" element={<TwoFactorAuth />} />
+                </Route>
+
+                {/* Onboarding */}
+                <Route path="/onboarding" element={
+                  <ProtectedRoute>
+                    <OnboardingWizard />
+                  </ProtectedRoute>
+                } />
+
+                {/* Billing Routes */}
+                <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                <Route path="/checkout/failure" element={<CheckoutFailure />} />
+
+                {/* Main App Routes */}
+                <Route element={<EnhancedAppLayout />}>
+                  {/* Public/Marketing Routes - Available to all users */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/pricing" element={<PricingPro />} />
+                  <Route path="/pricing-old" element={<Pricing />} />
+                  
+                  {/* Marketing Pages - Using placeholders */}
+                  <Route path="/product" element={<PlaceholderPage title="Product" />} />
+                  <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />
+                  <Route path="/use-cases" element={<PlaceholderPage title="Use Cases" />} />
+                  <Route path="/changelog" element={<PlaceholderPage title="Changelog" />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/help/faq" element={<Help />} />
+                  <Route path="/enterprise" element={<EnterpriseContact />} />
+                  <Route path="/enterprise/contact" element={<EnterpriseContact />} />
+                  <Route path="/enterprise/quote" element={<QuoteRequest />} />
+                  <Route path="/enterprise/solutions" element={<SolutionsShowcase />} />
+
+                  {/* White-label Configuration - Protected (Gold Plan) */}
+                  <Route path="/enterprise/white-label" element={
+                    <ProtectedRoute>
+                      <WhiteLabelConfig />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Protected Analytics and Referral Routes */}
+                  <Route path="/app/analytics" element={
+                    <ProtectedRoute>
+                      <AdvancedAnalytics />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/referrals" element={
+                    <ProtectedRoute>
+                      <ReferralSystem />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* User Pages - ONLY accessible to signed-in users */}
+                  <Route path="/app/dashboard" element={
+                    <ProtectedRoute>
+                      <AppDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/markets" element={
+                    <ProtectedRoute>
+                      <Markets />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/stocks" element={
+                    <ProtectedRoute>
+                      <Stocks />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/stocks/:symbol" element={
+                    <ProtectedRoute>
+                      <StockDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/portfolio" element={
+                    <ProtectedRoute>
+                      <Portfolio />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Screener Suite - Protected */}
+                  <Route path="/app/screeners" element={
+                    <ProtectedRoute>
+                      <ScreenerLibrary />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/new" element={
+                    <ProtectedRoute>
+                      <CreateScreener />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/:id/edit" element={
+                    <ProtectedRoute>
+                      <EditScreener />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/:id/results" element={
+                    <ProtectedRoute>
+                      <ScreenerResults />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/templates" element={
+                    <ProtectedRoute>
+                      <Templates />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Market Overview - Protected */}
+                  <Route path="/app/market-heatmap" element={
+                    <ProtectedRoute>
+                      <MarketHeatmap />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/sectors" element={
+                    <ProtectedRoute>
+                      <SectorsIndustries />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/top-movers" element={
+                    <ProtectedRoute>
+                      <TopMovers />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/pre-after-market" element={
+                    <ProtectedRoute>
+                      <PreAfterMarket />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/economic-calendar" element={
+                    <ProtectedRoute>
+                      <EconomicCalendar />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* News - Protected */}
+                  <Route path="/app/news" element={
+                    <ProtectedRoute>
+                      <NewsFeed />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/news/preferences" element={
+                    <ProtectedRoute>
+                      <NewsPreferences />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/news/subscribe" element={
+                    <ProtectedRoute>
+                      <NewsSubscribe />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Alerts & Signals - Protected */}
+                  <Route path="/app/alerts" element={
+                    <ProtectedRoute>
+                      <Alerts />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/alerts/history" element={
+                    <ProtectedRoute>
+                      <AlertHistory />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Watchlists - Protected */}
+                  <Route path="/app/watchlists" element={
+                    <ProtectedRoute>
+                      <Watchlists />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/watchlists/:id" element={
+                    <ProtectedRoute>
+                      <WatchlistDetail />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Developer Tools - Protected (Gold Plan) */}
+                  <Route path="/app/developer" element={
+                    <ProtectedRoute>
+                      <DeveloperDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/api-keys" element={
+                    <ProtectedRoute>
+                      <ApiKeyManagement />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/usage-statistics" element={
+                    <ProtectedRoute>
+                      <UsageStatistics />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/api-documentation" element={
+                    <ProtectedRoute>
+                      <ApiDocumentation />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/developer/console" element={
+                    <ProtectedRoute>
+                      <DeveloperConsole />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Data Export System - Protected */}
+                  <Route path="/app/exports" element={
+                    <ProtectedRoute>
+                      <ExportManager />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/exports/custom-report" element={
+                    <ProtectedRoute>
+                      <CustomReportBuilder />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/exports/scheduled" element={
+                    <ProtectedRoute>
+                      <ScheduledExports />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/exports/history" element={
+                    <ProtectedRoute>
+                      <DownloadHistory />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Account Routes - Protected */}
+                  <Route path="/account/profile" element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/password" element={
+                    <ProtectedRoute>
+                      <ChangePassword />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/notifications" element={
+                    <ProtectedRoute>
+                      <NotificationSettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/billing" element={
+                    <ProtectedRoute>
+                      <BillingHistory />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/plan" element={
+                    <ProtectedRoute>
+                      <CurrentPlan />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/account/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* System Routes */}
+                  <Route path="/endpoint-status" element={<EndpointStatus />} />
+
+                  {/* Docs & Content */}
+                  <Route path="/docs" element={<Documentation />} />
+                  <Route path="/docs/getting-started/create-account" element={<CreateAccount />} />
+                  <Route path="/docs/getting-started/dashboard" element={<Dashboard />} />
+                  <Route path="/docs/getting-started/first-screener" element={<FirstScreener />} />
+                  <Route path="/docs/:category" element={<DocsCategory />} />
+                  <Route path="/docs/:category/:slug" element={<DocArticle />} />
+
+                  {/* Legal */}
+                  <Route path="/legal/terms" element={<LegalTerms />} />
+                  <Route path="/legal/privacy" element={<LegalPrivacy />} />
+                </Route>
+
+                {/* Default redirect */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              <Toaster position="top-right" />
+            </div>
+          </SystemErrorBoundary>
+        </BrowserRouter>
+      </AuthProvider>
+    </BackendStatusProvider>
   );
 }
 
 export default App;
->>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)

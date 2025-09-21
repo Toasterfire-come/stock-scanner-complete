@@ -13,7 +13,7 @@ import {
   Activity,
   Clock,
 } from "lucide-react";
-import { getEndpointStatus, api } from "../../api/client";
+import { getEndpointStatus } from "../../api/client";
 
 const EndpointStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -28,31 +28,15 @@ const EndpointStatus = () => {
 
     try {
       const response = await getEndpointStatus();
-      const base = response?.success ? (response.data || {}) : { endpoints: [], total_tested: 0, successful: 0, failed: 0 };
-      // Additional probes for Screeners
-      const probes = [
-        { name: 'Screeners List', url: '/screeners/' },
-        { name: 'Screeners Templates', url: '/screeners/templates/' },
-        { name: 'Filter (GET)', url: '/filter/?limit=1' },
-      ];
-      const results = [];
-      for (const p of probes) {
-        try {
-          const t0 = Date.now();
-          const { status } = await api.get(p.url);
-          results.push({ name: p.name, url: api.defaults.baseURL + p.url, status: 'success', status_code: status, response_time: Date.now()-t0 });
-        } catch (e) {
-          results.push({ name: p.name, url: api.defaults.baseURL + p.url, status: 'error', status_code: e?.response?.status || 0, response_time: null });
-        }
+      // Expect shape: { success, data }
+      if (response?.success) {
+        setStatusData(response.data);
+        setLastUpdated(new Date());
+      } else {
+        setStatusData({ endpoints: [], total_tested: 0, successful: 0, failed: 0 });
+        setError("Endpoint status not available");
+        toast.error("Endpoint status not available");
       }
-      const merged = {
-        endpoints: [...(base.endpoints || []), ...results],
-        total_tested: (base.total_tested || 0) + results.length,
-        successful: (base.successful || 0) + results.filter(r => r.status==='success').length,
-        failed: (base.failed || 0) + results.filter(r => r.status!=='success').length,
-      };
-      setStatusData(merged);
-      setLastUpdated(new Date());
     } catch (e) {
       console.error("Failed to fetch status:", e);
       setStatusData({ endpoints: [], total_tested: 0, successful: 0, failed: 0 });
@@ -127,7 +111,7 @@ const EndpointStatus = () => {
   }
 
   return (
-    <div className="container-enhanced py-8">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

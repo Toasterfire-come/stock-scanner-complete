@@ -44,22 +44,28 @@ const ReferralSystem = ({ user }) => {
     const initializeReferral = async () => {
       try {
         // Generate referral code based on user info
-        const code = `REF${user?.id || 'USER'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+        const code = `REF${user?.id || '123'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
         setReferralCode(code);
         
         // Initialize discount codes in backend
         await initializeDiscountCodes();
         
-        // Use metrics endpoint to retrieve aggregates if available
+        // Mock data - replace with real API calls
         setReferralStats({
-          totalReferrals: 0,
-          activeReferrals: 0,
-          totalEarnings: 0,
-          pendingEarnings: 0,
-          conversionRate: 0,
-          lifetimeValue: 0,
+          totalReferrals: 23,
+          activeReferrals: 18,
+          totalEarnings: 1247.50,
+          pendingEarnings: 385.20,
+          conversionRate: 78.3,
+          lifetimeValue: 2847.30
         });
-        setRecentReferrals([]);
+
+        setRecentReferrals([
+          { name: "John D.", plan: "Silver", status: "active", date: "2024-01-15", earnings: 39.99 },
+          { name: "Sarah M.", plan: "Gold", status: "active", date: "2024-01-12", earnings: 89.99 },
+          { name: "Mike R.", plan: "Bronze", status: "trial", date: "2024-01-10", earnings: 0 },
+          { name: "Lisa K.", plan: "Silver", status: "active", date: "2024-01-08", earnings: 39.99 },
+        ]);
       } catch (error) {
         console.error("Failed to initialize referral system:", error);
       } finally {

@@ -69,23 +69,48 @@ const AdvancedAnalytics = ({ userId }) => {
     fetchAnalyticsData();
   }, [timeframe]);
 
-  const performanceData = Array.isArray(analyticsData?.performance)
-    ? analyticsData.performance
-    : [];
+  // Mock data for demonstration (replace with real data from your API)
+  const performanceData = [
+    { date: "2024-01", portfolio: 95000, benchmark: 90000, returns: 5.5 },
+    { date: "2024-02", portfolio: 102000, benchmark: 93000, returns: 7.3 },
+    { date: "2024-03", portfolio: 98000, benchmark: 91000, returns: -3.9 },
+    { date: "2024-04", portfolio: 106000, benchmark: 95000, returns: 8.2 },
+    { date: "2024-05", portfolio: 112000, benchmark: 98000, returns: 5.7 },
+    { date: "2024-06", portfolio: 118000, benchmark: 101000, returns: 5.4 }
+  ];
 
-  const sectorAllocation = Array.isArray(portfolioData?.sector_allocation)
-    ? portfolioData.sector_allocation
-    : [];
+  const sectorAllocation = [
+    { name: "Technology", value: 35, color: "#0088FE" },
+    { name: "Healthcare", value: 20, color: "#00C49F" },
+    { name: "Finance", value: 15, color: "#FFBB28" },
+    { name: "Consumer", value: 12, color: "#FF8042" },
+    { name: "Energy", value: 10, color: "#8884D8" },
+    { name: "Other", value: 8, color: "#82CA9D" }
+  ];
 
-  const riskMetrics = analyticsData?.risk_metrics || {};
+  const riskMetrics = {
+    sharpeRatio: 1.42,
+    beta: 0.95,
+    volatility: 18.5,
+    maxDrawdown: -12.3,
+    var95: -4.2,
+    tracking_error: 3.1
+  };
 
-  const topHoldings = Array.isArray(portfolioData?.top_holdings)
-    ? portfolioData.top_holdings
-    : [];
+  const topHoldings = [
+    { symbol: "AAPL", weight: 8.5, value: 95400, change: 2.3 },
+    { symbol: "MSFT", weight: 7.2, value: 80640, change: 1.8 },
+    { symbol: "NVDA", weight: 6.8, value: 76160, change: 4.1 },
+    { symbol: "GOOGL", weight: 5.9, value: 66080, change: -0.7 },
+    { symbol: "TSLA", weight: 4.8, value: 53760, change: 3.2 }
+  ];
 
-  const alertsData = Array.isArray(analyticsData?.alerts)
-    ? analyticsData.alerts
-    : [];
+  const alertsData = [
+    { type: "Price Alert", count: 12, triggered: 3, color: "bg-blue-500" },
+    { type: "Volume Alert", count: 8, triggered: 2, color: "bg-green-500" },
+    { type: "News Alert", count: 15, triggered: 7, color: "bg-yellow-500" },
+    { type: "Technical Alert", count: 6, triggered: 1, color: "bg-purple-500" }
+  ];
 
   if (isLoading) {
     return (
@@ -146,7 +171,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Sharpe Ratio</p>
-                <p className="text-2xl font-bold text-blue-600">{riskMetrics.sharpeRatio ?? 'N/A'}</p>
+                <p className="text-2xl font-bold text-blue-600">{riskMetrics.sharpeRatio}</p>
                 <p className="text-xs text-gray-500">Risk-adjusted returns</p>
               </div>
               <Target className="h-8 w-8 text-blue-600" />
@@ -159,7 +184,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Max Drawdown</p>
-                <p className="text-2xl font-bold text-red-600">{riskMetrics.maxDrawdown ?? 'N/A'}%</p>
+                <p className="text-2xl font-bold text-red-600">{riskMetrics.maxDrawdown}%</p>
                 <p className="text-xs text-gray-500">Peak-to-trough decline</p>
               </div>
               <TrendingDown className="h-8 w-8 text-red-600" />
@@ -172,7 +197,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Portfolio Beta</p>
-                <p className="text-2xl font-bold text-purple-600">{riskMetrics.beta ?? 'N/A'}</p>
+                <p className="text-2xl font-bold text-purple-600">{riskMetrics.beta}</p>
                 <p className="text-xs text-gray-500">Market sensitivity</p>
               </div>
               <Activity className="h-8 w-8 text-purple-600" />
@@ -201,7 +226,10 @@ const AdvancedAnalytics = ({ userId }) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
-                  <Tooltip formatter={(value, name) => [`$${value.toLocaleString()}`, name]} />
+                  <Tooltip formatter={(value, name) => {
+                    const v = Number(value||0);
+                    return [`$${Number.isFinite(v)? v.toLocaleString() : '0'}`, name];
+                  }} />
                   <Legend />
                   <Area 
                     type="monotone" 
@@ -237,7 +265,7 @@ const AdvancedAnalytics = ({ userId }) => {
                       <Badge variant="outline">{holding.symbol}</Badge>
                       <div>
                         <p className="font-medium">{holding.weight}% allocation</p>
-                        <p className="text-sm text-gray-600">${holding.value.toLocaleString()}</p>
+                        <p className="text-sm text-gray-600">${Number(holding.value||0).toLocaleString()}</p>
                       </div>
                     </div>
                     <div className={`flex items-center ${holding.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -312,7 +340,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <h3 className="font-semibold text-gray-600">Volatility</h3>
-                <p className="text-3xl font-bold text-orange-600">{riskMetrics.volatility ?? 'N/A'}%</p>
+                <p className="text-3xl font-bold text-orange-600">{riskMetrics.volatility}%</p>
                 <p className="text-sm text-gray-500">Annual standard deviation</p>
               </CardContent>
             </Card>
@@ -320,7 +348,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <h3 className="font-semibold text-gray-600">Value at Risk (95%)</h3>
-                <p className="text-3xl font-bold text-red-600">{riskMetrics.var95 ?? 'N/A'}%</p>
+                <p className="text-3xl font-bold text-red-600">{riskMetrics.var95}%</p>
                 <p className="text-sm text-gray-500">Daily potential loss</p>
               </CardContent>
             </Card>
@@ -328,7 +356,7 @@ const AdvancedAnalytics = ({ userId }) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <h3 className="font-semibold text-gray-600">Tracking Error</h3>
-                <p className="text-3xl font-bold text-purple-600">{riskMetrics.tracking_error ?? 'N/A'}%</p>
+                <p className="text-3xl font-bold text-purple-600">{riskMetrics.tracking_error}%</p>
                 <p className="text-sm text-gray-500">vs benchmark deviation</p>
               </CardContent>
             </Card>

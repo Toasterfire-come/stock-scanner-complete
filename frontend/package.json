@@ -2,12 +2,10 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/",
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
-<<<<<<< HEAD
     "@paypal/react-paypal-js": "^8.5.0",
-=======
->>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)
     "@radix-ui/react-accordion": "^1.2.8",
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-aspect-ratio": "^1.1.4",
@@ -35,21 +33,25 @@
     "@radix-ui/react-toggle": "^1.1.6",
     "@radix-ui/react-toggle-group": "^1.1.7",
     "@radix-ui/react-tooltip": "^1.2.4",
+    "@sentry/react": "^8.27.0",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.2.6",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.23.16",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.507.0",
     "next-themes": "^0.4.6",
+    "puppeteer": "^24.19.0",
     "react": "^19.0.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-day-picker": "8.10.1",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.2",
-<<<<<<< HEAD
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.1",
     "react-router-dom": "^7.5.1",
@@ -58,11 +60,6 @@
     "react-window": "^2.0.2",
     "recharts": "^2.14.1",
     "remark-gfm": "^4.0.1",
-=======
-    "react-resizable-panels": "^3.0.1",
-    "react-router-dom": "^7.5.1",
-    "react-scripts": "5.0.1",
->>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
@@ -72,7 +69,13 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "build:production": "node build-scripts/build-production.js",
+    "deploy:check": "node build-scripts/deploy-check.js",
+    "deploy:sftp": "node scripts/deploy-sftp.js",
+    "test": "craco test",
+    "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
+    "security:audit": "npm audit --audit-level moderate",
+    "security:check": "node -e \"require('./src/lib/security').validateEnvironment() && console.log('✅ Security validation passed')\""
   },
   "browserslist": {
     "production": [
@@ -87,10 +90,7 @@
     ]
   },
   "devDependencies": {
-<<<<<<< HEAD
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-=======
->>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)
     "@craco/craco": "^7.1.0",
     "@eslint/js": "9.23.0",
     "autoprefixer": "^10.4.20",
@@ -100,6 +100,7 @@
     "eslint-plugin-react": "7.37.4",
     "globals": "15.15.0",
     "postcss": "^8.4.49",
+    "ssh2-sftp-client": "^12.0.1",
     "tailwindcss": "^3.4.17"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"

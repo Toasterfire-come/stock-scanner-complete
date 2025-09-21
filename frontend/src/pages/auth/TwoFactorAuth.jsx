@@ -7,8 +7,8 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { api } from "../../api/client";
 import { toast } from "sonner";
+import { api } from "../../api/client";
 import { Shield, RefreshCw } from "lucide-react";
 
 const twoFactorSchema = z.object({
@@ -35,9 +35,13 @@ const TwoFactorAuth = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const { data: res } = await api.post('/auth/2fa/verify/', { code: data.code });
-      if (res?.success) { toast.success("Two-factor authentication successful!"); navigate(from, { replace: true }); }
-      else { toast.error(res?.message || "Invalid verification code."); }
+      const res = await api.post('/auth/verify-2fa/', { code: data.code, email });
+      if (res?.data?.success) {
+        toast.success("Two-factor authentication successful!");
+        navigate(from, { replace: true });
+      } else {
+        toast.error(res?.data?.message || "Invalid verification code. Please try again.");
+      }
     } catch (error) {
       toast.error("Verification failed. Please try again.");
     } finally {
@@ -48,8 +52,12 @@ const TwoFactorAuth = () => {
   const resendCode = async () => {
     setIsResending(true);
     try {
-      await api.post('/auth/2fa/resend/', { email });
-      toast.success("New verification code sent!");
+      const res = await api.post('/auth/resend-2fa/', { email });
+      if (res?.data?.success) {
+        toast.success("New verification code sent!");
+      } else {
+        toast.error(res?.data?.message || "Failed to send verification code.");
+      }
     } catch (error) {
       toast.error("Failed to send verification code. Please try again.");
     } finally {

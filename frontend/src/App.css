@@ -32,25 +32,3 @@
         transform: rotate(360deg);
     }
 }
-<<<<<<< HEAD
-
-/* Global responsive containers and elements */
-.container-enhanced {
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-@media (min-width: 640px) { .container-enhanced { padding-left: 1.25rem; padding-right: 1.25rem; } }
-@media (min-width: 1024px) { .container-enhanced { padding-left: 1.5rem; padding-right: 1.5rem; } }
-
-img, video { max-width: 100%; height: auto; }
-body { overflow-x: hidden; }
-
-/* Generic table responsiveness */
-.table-responsive { overflow-x: auto; }
-.table-responsive table { min-width: 720px; }
-
-=======
->>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)

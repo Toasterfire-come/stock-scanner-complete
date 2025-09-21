@@ -8,7 +8,6 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { Badge } from "../../components/ui/badge";
 import { Mail, Bell, Smartphone, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { subscribe } from "../../api/client";
 
 const NewsSubscribe = () => {
   const navigate = useNavigate();
@@ -104,7 +103,9 @@ const NewsSubscribe = () => {
 
     setIsSubmitting(true);
     try {
-      await subscribe(formData.email, planId);
+      // Simulate API call to subscribe
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       toast.success("Successfully subscribed to news alerts!");
       navigate("/app/news");
     } catch (error) {
@@ -115,8 +116,7 @@ const NewsSubscribe = () => {
   };
 
   return (
-    <div className="container-enhanced py-8">
-      <h1 className="text-3xl font-bold mb-6">Subscribe</h1>
+    <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">

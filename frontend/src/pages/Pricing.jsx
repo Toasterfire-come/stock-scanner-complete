@@ -21,11 +21,9 @@ import {
   BarChart3,
   Bell,
   Shield,
-  Smartphone,
-  Headphones
+  Mail
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { validateDiscountCode as revenueValidate, applyDiscountCode as revenueApply, createPayPalOrder as createPayPalOrderApi } from "../api/client";
+import { useAuth } from "../context/SecureAuthContext";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -38,77 +36,79 @@ const Pricing = () => {
 
   const plans = [
     {
-      id: "free",
-      name: "Free",
-      icon: <Zap className="h-6 w-6" />,
-      description: "Basic stock lookup and filtering",
-      price: { monthly: 0, annual: 0 },
-      features: [
-        "15 stocks per month",
-        "Stock symbol lookup & search",
-        "Basic price filtering"
-      ],
-      limitations: [
-        "No portfolio management",
-        "No email alerts"
-      ],
-      popular: false,
-      color: "gray",
-      cta: "Get Started Free"
-    },
-    {
       id: "bronze",
       name: "Bronze",
       icon: <Award className="h-6 w-6" />,
       description: "Enhanced features for active traders",
-      price: { monthly: 14.99, annual: 149.90 },
+      price: { monthly: 24.99, annual: 249.90 },
       features: [
-        "1,000 stocks per month",
+        "150 API calls per day, 1500/month",
         "Full stock scanner & lookup",
         "Email alerts & notifications",
-        "News sentiment analysis",
+        "Real-time alerts",
         "Basic portfolio tracking"
       ],
       limitations: [],
       popular: true,
       color: "orange",
-      cta: "Start 7-Day Trial for $1"
+      cta: "Try for $1"
     },
     {
       id: "silver",
       name: "Silver",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 29.99, annual: 299.90 },
+      price: { monthly: 39.99, annual: 399.90 },
       features: [
-        "5,000 stocks per month",
+        "500 API calls per day, 5000/month",
         "Advanced filtering & screening",
-        "1-year historical data",
         "Custom watchlists (10)",
-        "Priority support"
+        "Real-time alerts (50 alerts)",
+        "Portfolio tracking (5 portfolios)",
+        "Priority email support"
       ],
       limitations: [],
       popular: false,
       color: "blue",
-      cta: "Start 7-Day Trial for $1"
+      cta: "Try for $1"
     },
     {
       id: "gold",
       name: "Gold",
       icon: <Star className="h-6 w-6" />,
       description: "Ultimate trading experience",
-      price: { monthly: 59.99, annual: 599.90 },
+      price: { monthly: 89.99, annual: 899.90 },
       features: [
-        "10,000 stocks per month",
+        "Unlimited API calls",
         "All premium features",
         "Real-time alerts",
         "Full REST API access",
-        "Priority phone support"
+        "Priority email support"
       ],
       limitations: [],
       popular: false,
       color: "yellow",
-      cta: "Start 7-Day Trial for $1"
+      cta: "Try for $1"
+    },
+    {
+      id: "free",
+      name: "Free",
+      icon: <Zap className="h-6 w-6" />,
+      description: "Basic stock lookup and filtering",
+      price: { monthly: 0, annual: 0 },
+      features: [
+        "15 stock queries per month",
+        "Stock symbol lookup & search",
+        "Basic price filtering"
+      ],
+      limitations: [
+        "No portfolio management",
+        "No email alerts",
+        "No watchlists"
+      ],
+      popular: false,
+      color: "gray",
+      cta: "Get Started Free"
     },
   ];
 
@@ -141,13 +141,21 @@ const Pricing = () => {
   };
 
   const createPayPalOrder = async (planId, amount) => {
-    try {
-      const order = await createPayPalOrderApi(planId, isAnnual ? 'annual' : 'monthly', discountCode || null);
-      // Let backend drive redirection; for now navigate to success page with context
-      navigate("/checkout/success", { state: { planId, amount, order } });
-    } catch (e) {
-      toast.error("Failed to initiate PayPal checkout");
-    }
+    const finalAmount = amount;
+      
+    toast.success(`Redirecting to PayPal for $${finalAmount} payment...`);
+    
+    // Simulate redirect to PayPal
+    setTimeout(() => {
+      navigate("/checkout/success", { 
+        state: { 
+          planId, 
+          amount: finalAmount,
+          originalAmount: plans.find(p => p.id === planId).price.monthly,
+          discount: { code: "TRIAL", description: "7-Day Trial" }
+        } 
+      });
+    }, 2000);
   };
 
   const applyDiscountCode = async () => {
@@ -157,20 +165,21 @@ const Pricing = () => {
     }
 
     try {
-      const valid = await revenueValidate(discountCode);
-      if (valid?.valid) {
-        const plan = plans.find(p => p.id !== 'free');
-        const originalAmount = isAnnual ? plan.price.annual : plan.price.monthly;
-        const applied = await revenueApply(discountCode, originalAmount);
+      // Simulate TRIAL code validation
+      if (discountCode.toUpperCase() === "TRIAL") {
         setAppliedDiscount({
-          code: discountCode.toUpperCase(),
-          description: applied?.description || 'Discount applied',
-          savings_percentage: applied?.discount_percentage || 0,
-          final_amount: applied?.final_amount ?? originalAmount
+          code: "TRIAL",
+          description: "7-Day Trial for $1",
+          savings_percentage: 95,
+          final_amount: 1.00
         });
-        toast.success("Discount code applied");
-      } else { toast.error(valid?.message || "Invalid discount code"); }
-    } catch (error) { toast.error("Failed to apply discount code"); }
+        toast.success("TRIAL code applied! 7 days for just $1");
+      } else {
+        toast.error("Invalid discount code");
+      }
+    } catch (error) {
+      toast.error("Failed to apply discount code");
+    }
   };
 
   const features = [
@@ -178,11 +187,11 @@ const Pricing = () => {
       category: "Stock Analysis",
       icon: <BarChart3 className="h-5 w-5" />,
       items: [
-        { name: "Monthly stock queries", free: "15", bronze: "1,000", silver: "5,000", gold: "10,000" },
+        { name: "Monthly stock queries", free: "15", bronze: "100/day, 1500/month", silver: "500/day, 5000/month", gold: "Unlimited" },
         { name: "Stock symbol lookup", free: true, bronze: true, silver: true, gold: true },
         { name: "Basic price filtering", free: true, bronze: true, silver: true, gold: true },
         { name: "Advanced screening", free: false, bronze: true, silver: true, gold: true },
-        { name: "Historical data", free: false, bronze: "30 days", silver: "1 year", gold: "5 years" }
+        { name: "Real-time data", free: false, bronze: true, silver: true, gold: true }
       ]
     },
     {
@@ -190,8 +199,7 @@ const Pricing = () => {
       icon: <Bell className="h-5 w-5" />,
       items: [
         { name: "Email alerts", free: false, bronze: true, silver: true, gold: true },
-        { name: "SMS notifications", free: false, bronze: false, silver: true, gold: true },
-        { name: "Real-time alerts", free: false, bronze: false, silver: false, gold: true },
+        { name: "Real-time alerts", free: false, bronze: true, silver: "50 alerts", gold: true },
         { name: "Custom alert conditions", free: false, bronze: "Basic", silver: "Advanced", gold: "Unlimited" }
       ]
     },
@@ -199,19 +207,17 @@ const Pricing = () => {
       category: "Portfolio & Tracking",
       icon: <Users className="h-5 w-5" />,
       items: [
-        { name: "Portfolio management", free: false, bronze: "Basic", silver: "Advanced", gold: "Professional" },
+        { name: "Portfolio management", free: false, bronze: "Basic", silver: "5 portfolios", gold: "Professional" },
         { name: "Watchlists", free: false, bronze: "3", silver: "10", gold: "Unlimited" },
-        { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true },
-        { name: "Risk analysis", free: false, bronze: false, silver: false, gold: true }
+        { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true }
       ]
     },
     {
       category: "Support & API",
-      icon: <Headphones className="h-5 w-5" />,
+      icon: <Mail className="h-5 w-5" />,
       items: [
         { name: "Email support", free: false, bronze: true, silver: true, gold: true },
         { name: "Priority support", free: false, bronze: false, silver: true, gold: true },
-        { name: "Phone support", free: false, bronze: false, silver: false, gold: true },
         { name: "API access", free: false, bronze: false, silver: "Limited", gold: "Full" }
       ]
     }
@@ -240,7 +246,7 @@ const Pricing = () => {
         <div className="text-center mb-16">
           <Badge variant="secondary" className="mb-4">
             <Star className="h-4 w-4 mr-1" />
-            Trusted by 50,000+ traders worldwide
+            Trusted by thousands of traders worldwide
           </Badge>
           
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
@@ -248,16 +254,16 @@ const Pricing = () => {
           </h1>
           
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Start with our 7-day trial for just $1. Cancel anytime, no hidden fees.
+            Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
 
-          {/* Special Offer Banner */}
+          {/* Special Offer Banner - Updated messaging */}
           <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 max-w-2xl mx-auto mb-8">
             <div className="flex items-center justify-center mb-3">
               <Zap className="h-6 w-6 mr-2" />
-              <span className="text-lg font-bold">Limited Time Offer</span>
+              <span className="text-lg font-bold">TRIAL</span>
             </div>
-            <p className="text-xl mb-4">Use code "TRIAL" to get 7 days for just $1</p>
+            <p className="text-xl mb-4">Use code TRIAL for a 7‑day 1$ trial on paid plans</p>
             <p className="text-sm opacity-90">Then continue at regular price or cancel anytime</p>
           </div>
 
@@ -481,7 +487,7 @@ const Pricing = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Pay just $1 to access any paid plan for 7 days. You can cancel anytime during the trial. 
+                  Use code TRIAL to access any paid plan for 7 days for just $1. You can cancel anytime during the trial. 
                   After 7 days, you'll be charged the regular monthly price unless you cancel.
                 </p>
               </CardContent>
@@ -506,7 +512,7 @@ const Pricing = () => {
               <CardContent>
                 <p className="text-gray-600">
                   We accept all major credit cards and PayPal. All payments are processed securely 
-                  through our payment partners with bank-level encryption.
+                  with industry-standard encryption.
                 </p>
               </CardContent>
             </Card>

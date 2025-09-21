@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Search, Download, Filter, TrendingUp, TrendingDown, Calendar, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { getAlertHistory } from "../../api/client";
 
 const AlertHistory = () => {
   const [alertHistory, setAlertHistory] = useState([]);
@@ -43,13 +42,78 @@ const AlertHistory = () => {
   const fetchAlertHistory = async () => {
     setIsLoading(true);
     try {
-      const res = await getAlertHistory();
-      const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-      setAlertHistory(items);
+      // Simulate fetching alert history
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockHistory = [
+        {
+          id: 1,
+          ticker: "AAPL",
+          targetPrice: 200.00,
+          triggerPrice: 202.15,
+          condition: "above",
+          status: "triggered",
+          createdAt: "2024-01-10T09:30:00Z",
+          triggeredAt: "2024-01-12T14:25:00Z",
+          email: "user@example.com",
+          gain: 2.15
+        },
+        {
+          id: 2,
+          ticker: "MSFT",
+          targetPrice: 450.00,
+          triggerPrice: 445.80,
+          condition: "below",
+          status: "triggered",
+          createdAt: "2024-01-08T11:15:00Z",
+          triggeredAt: "2024-01-11T10:30:00Z",
+          email: "user@example.com",
+          gain: -4.20
+        },
+        {
+          id: 3,
+          ticker: "GOOGL",
+          targetPrice: 140.00,
+          triggerPrice: null,
+          condition: "above",
+          status: "expired",
+          createdAt: "2024-01-05T16:20:00Z",
+          expiredAt: "2024-01-15T16:20:00Z",
+          email: "user@example.com",
+          gain: null
+        },
+        {
+          id: 4,
+          ticker: "TSLA",
+          targetPrice: 280.00,
+          triggerPrice: null,
+          condition: "above",
+          status: "cancelled",
+          createdAt: "2024-01-07T13:45:00Z",
+          cancelledAt: "2024-01-09T09:15:00Z",
+          email: "user@example.com",
+          gain: null
+        },
+        {
+          id: 5,
+          ticker: "NVDA",
+          targetPrice: 120.00,
+          triggerPrice: 125.30,
+          condition: "above",
+          status: "triggered",
+          createdAt: "2024-01-06T08:00:00Z",
+          triggeredAt: "2024-01-08T11:45:00Z",
+          email: "user@example.com",
+          gain: 5.30
+        }
+      ];
+
+      setAlertHistory(mockHistory);
     } catch (error) {
       toast.error("Failed to fetch alert history");
-      setAlertHistory([]);
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filterHistory = () => {
@@ -172,10 +236,173 @@ const AlertHistory = () => {
   }
 
   return (
-    <div className="container-enhanced py-8">
-      <h1 className="text-3xl font-bold mb-6">Alert History</h1>
-      <div className="table-responsive">
-        {/* history content */}
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Alert History</h1>
+          <p className="text-gray-600 mt-2">Track your past price alerts and their outcomes</p>
+        </div>
+        <Button onClick={exportHistory}>
+          <Download className="h-4 w-4 mr-2" />
+          Export CSV
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <div className="grid md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-sm text-gray-600">Total Alerts</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <div className="text-2xl font-bold text-green-600">{stats.triggered}</div>
+              <div className="text-sm text-gray-600">Triggered</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <div className="text-2xl font-bold text-orange-600">{stats.successRate.toFixed(1)}%</div>
+              <div className="text-sm text-gray-600">Success Rate</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <div className={`text-2xl font-bold ${stats.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatGain(stats.totalGain)}
+              </div>
+              <div className="text-sm text-gray-600">Total Gain/Loss</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Filter & Search</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by ticker..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full lg:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-full lg:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dateOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Alert History ({filteredHistory.length} results)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {filteredHistory.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ticker</TableHead>
+                      <TableHead>Target Price</TableHead>
+                      <TableHead>Trigger Price</TableHead>
+                      <TableHead>Condition</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Completed</TableHead>
+                      <TableHead>Gain/Loss</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredHistory.map((alert) => (
+                      <TableRow key={alert.id}>
+                        <TableCell className="font-semibold">{alert.ticker}</TableCell>
+                        <TableCell>{formatPrice(alert.targetPrice)}</TableCell>
+                        <TableCell>{formatPrice(alert.triggerPrice)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {getConditionIcon(alert.condition)}
+                            {alert.condition}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(alert.status)}>
+                            {alert.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-gray-400" />
+                            {new Date(alert.createdAt).toLocaleDateString()}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {alert.triggeredAt ? (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-gray-400" />
+                              {new Date(alert.triggeredAt).toLocaleDateString()}
+                            </div>
+                          ) : alert.expiredAt ? (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-gray-400" />
+                              {new Date(alert.expiredAt).toLocaleDateString()}
+                            </div>
+                          ) : (
+                            'N/A'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`font-medium ${alert.gain !== null ? (alert.gain >= 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-500'}`}>
+                            {formatGain(alert.gain)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-gray-500 mb-4">No alert history found</div>
+                <Button onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                  setDateFilter("all");
+                }}>
+                  Clear Filters
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { 
@@ -12,27 +12,42 @@ import {
   Eye,
   Clock,
   Users,
-  Smartphone,
   Cloud,
   CheckCircle,
   ArrowRight
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Link } from "react-router-dom";
+import { api } from "../api/client";
 
 const Features = () => {
+  const [platformStats, setPlatformStats] = useState(null);
+
+  useEffect(() => {
+    const fetchPlatformStats = async () => {
+      try {
+        const { data } = await api.get('/platform-stats');
+        setPlatformStats(data);
+      } catch (error) {
+        console.error("Failed to fetch platform stats:", error);
+      }
+    };
+
+    fetchPlatformStats();
+  }, []);
+
   const mainFeatures = [
     {
       icon: <Search className="h-8 w-8" />,
-      title: "Advanced Stock Screening",
-      description: "Filter through 10,000+ stocks with 50+ technical and fundamental criteria.",
+      title: "NYSE Stock Screening",
+      description: `Screen 10,500+ NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
       details: [
-        "Real-time screening across all major exchanges",
+        "Complete NYSE market coverage (10,500+ stocks)",
+        "7 Technical Indicators: RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change", 
+        "7 Fundamental Indicators: Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range",
         "Custom filter combinations with saved presets",
-        "Technical indicators: RSI, MACD, Moving Averages",
-        "Fundamental metrics: P/E, EPS, Revenue Growth",
-        "Sector and industry-specific screening",
-        "Export results to CSV or Excel"
+        "Real-time data processing and updates",
+        "Export results for further analysis"
       ]
     },
     {
@@ -43,35 +58,35 @@ const Features = () => {
         "Price movement alerts (% change or absolute)",
         "Volume spike notifications",
         "Technical indicator breakouts",
-        "News sentiment alerts",
-        "Multiple delivery methods: Email, SMS, Push",
-        "Smart alert clustering to reduce noise"
+        "Email and push notification delivery",
+        "Custom alert conditions",
+        "Alert history and management"
       ]
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
       title: "Portfolio Analytics",
-      description: "Track performance with institutional-grade analytics.",
+      description: "Track performance with professional analytics tools.",
       details: [
         "Real-time portfolio valuation",
-        "Risk metrics and diversification analysis",
-        "Performance attribution by sector/stock",
-        "Tax-loss harvesting opportunities",
-        "Benchmark comparison (S&P 500, NASDAQ)",
-        "Detailed profit/loss reporting"
+        "Performance tracking and analysis",
+        "Position management and monitoring",
+        "Profit/loss calculations",
+        "Portfolio diversification insights",
+        "Historical performance data"
       ]
     },
     {
       icon: <TrendingUp className="h-8 w-8" />,
       title: "Market Intelligence",
-      description: "AI-powered insights from news and social sentiment.",
+      description: "Real-time insights and market trend analysis.",
       details: [
-        "Real-time news sentiment analysis",
-        "Social media trend tracking",
-        "Institutional activity monitoring",
-        "Earnings surprise predictions",
-        "Market correlation analysis",
-        "Custom intelligence feeds"
+        "Market trend identification",
+        "Stock performance analysis",
+        "Volume and price momentum tracking",
+        "Market sector performance",
+        "Top movers and active stocks",
+        "Market condition indicators"
       ]
     }
   ];
@@ -84,40 +99,14 @@ const Features = () => {
     },
     {
       icon: <Eye className="h-6 w-6" />,
-      title: "Market Heatmaps",
+      title: "Market Overview",
       description: "Visual representation of market performance"
-    },
-    {
-      icon: <Clock className="h-6 w-6" />,
-      title: "Historical Data",
-      description: "Access up to 10 years of market history"
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Community Insights",
-      description: "Learn from other successful traders"
-    },
-    {
-      icon: <Smartphone className="h-6 w-6" />,
-      title: "Mobile App",
-      description: "Trade on the go with our mobile platform"
     },
     {
       icon: <Cloud className="h-6 w-6" />,
       title: "Cloud Sync",
       description: "Access your data from anywhere"
     }
-  ];
-
-  const integrations = [
-    "TD Ameritrade",
-    "Interactive Brokers", 
-    "E*TRADE",
-    "Charles Schwab",
-    "Fidelity",
-    "Robinhood",
-    "Webull",
-    "Alpaca"
   ];
 
   return (
@@ -143,7 +132,7 @@ const Features = () => {
             
             <Button asChild size="lg" className="text-xl px-12 py-6 h-auto">
               <Link to="/auth/sign-up">
-                Start 7-Day Free Trial
+                Try Now for Free
                 <ArrowRight className="h-6 w-6 ml-3" />
               </Link>
             </Button>
@@ -194,16 +183,14 @@ const Features = () => {
                   </Card>
                 </div>
                 <div className="lg:w-1/2">
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white">
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                          {React.cloneElement(feature.icon, { className: "h-12 w-12" })}
-                        </div>
-                        <p className="text-xl font-medium">Feature Overview</p>
-                        <p className="text-blue-100 mt-2">Explore this feature in the app and Documentation</p>
-                      </div>
-                    </div>
+                  <div className="rounded-2xl overflow-hidden border bg-white">
+                    <img
+                      src={`/react/screenshots/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.webp`}
+                      alt={`${feature.title} screenshot`}
+                      className="w-full h-64 object-cover"
+                      loading="lazy"
+                      onError={(e)=>{ e.currentTarget.src='/hero.webp'; e.currentTarget.classList.add('object-contain','bg-gray-50'); }}
+                    />
                   </div>
                 </div>
               </div>
@@ -252,7 +239,7 @@ const Features = () => {
               Security & Reliability
             </h2>
             <p className="text-xl text-gray-600">
-              Your data and trading information are protected with bank-level security
+              Your data and trading information are protected with industry-standard security
             </p>
           </div>
           
@@ -260,9 +247,9 @@ const Features = () => {
             <Card className="text-center">
               <CardContent className="p-8">
                 <Shield className="h-16 w-16 text-blue-600 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold mb-4">Bank-Level Encryption</h3>
+                <h3 className="text-2xl font-bold mb-4">Secure Data</h3>
                 <p className="text-gray-600">
-                  All data is encrypted using AES-256 encryption, the same standard used by major financial institutions.
+                  All data is encrypted and protected using industry-standard security practices.
                 </p>
               </CardContent>
             </Card>
@@ -270,9 +257,9 @@ const Features = () => {
             <Card className="text-center">
               <CardContent className="p-8">
                 <Clock className="h-16 w-16 text-green-600 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold mb-4">99.9% Uptime</h3>
+                <h3 className="text-2xl font-bold mb-4">Reliable Service</h3>
                 <p className="text-gray-600">
-                  Our redundant infrastructure ensures your trading platform is always available when you need it.
+                  Our infrastructure is designed for reliability and consistent performance.
                 </p>
               </CardContent>
             </Card>
@@ -282,32 +269,10 @@ const Features = () => {
                 <Cloud className="h-16 w-16 text-purple-600 mx-auto mb-6" />
                 <h3 className="text-2xl font-bold mb-4">Real-Time Data</h3>
                 <p className="text-gray-600">
-                  Direct feeds from major exchanges ensure you always have the most current market information.
+                  Access to current market information to support your trading decisions.
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Broker Integrations */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Broker Integrations
-            </h2>
-            <p className="text-xl text-gray-600">
-              Connect with your existing brokerage accounts
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {integrations.map((broker, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-lg font-semibold text-gray-900">{broker}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -319,13 +284,13 @@ const Features = () => {
             Ready to Experience These Features?
           </h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Start your 7-day free trial and see how Trade Scan Pro can transform your trading strategy.
+            Start your 7-day trial for just $1 and see how Trade Scan Pro can transform your trading strategy.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button asChild size="lg" variant="secondary" className="text-xl px-12 py-6 h-auto">
               <Link to="/auth/sign-up">
-                Start Free Trial
+                Try Now for Free
                 <ArrowRight className="h-6 w-6 ml-3" />
               </Link>
             </Button>

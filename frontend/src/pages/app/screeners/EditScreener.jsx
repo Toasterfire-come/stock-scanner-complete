@@ -7,17 +7,12 @@ import { Label } from "../../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
-import { X, Save, Play, Trash2, Upload, Download } from "lucide-react";
+import { X, Save, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { getScreener, updateScreener, deleteScreener, testScreener } from "../../../api/client";
-import { useAuth } from "../../../context/AuthContext";
-import { Link } from "react-router-dom";
-import { logClientMetric } from "../../../api/client";
 
 const EditScreener = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [screenerData, setScreenerData] = useState({
     name: "",
     description: "",
@@ -26,7 +21,6 @@ const EditScreener = () => {
   const [criteria, setCriteria] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState({});
 
   const availableCriteria = [
     { id: "market_cap", name: "Market Cap", type: "range" },
@@ -38,21 +32,33 @@ const EditScreener = () => {
     { id: "exchange", name: "Exchange", type: "select" }
   ];
 
-  useEffect(() => { (async () => {
-    setIsLoading(true);
-    try {
-      const res = await getScreener(id);
-      const d = res?.data || res || {};
-      setScreenerData({ name: d.name || "", description: d.description || "", isPublic: Boolean(d.is_public) });
-      setCriteria(Array.isArray(d.criteria) ? d.criteria : []);
-    } catch { setScreenerData({ name: "", description: "", isPublic: false }); setCriteria([]); }
-    finally { setIsLoading(false); }
-  })(); }, [id]);
-
-  // Autosave drafts for edit
   useEffect(() => {
-    localStorage.setItem(`draft_screener_${id}`, JSON.stringify({ meta: screenerData, criteria }));
-  }, [id, screenerData, criteria]);
+    // Simulate loading existing screener data
+    setTimeout(() => {
+      setScreenerData({
+        name: "High Growth Tech",
+        description: "Technology stocks with >20% revenue growth",
+        isPublic: true
+      });
+      setCriteria([
+        {
+          id: "market_cap",
+          name: "Market Cap",
+          type: "range",
+          min: "1000000000",
+          max: "100000000000"
+        },
+        {
+          id: "change_percent",
+          name: "Price Change %",
+          type: "range",
+          min: "5",
+          max: ""
+        }
+      ]);
+      setIsLoading(false);
+    }, 1000);
+  }, [id]);
 
   const addCriterion = (criterionId) => {
     const criterionDef = availableCriteria.find(c => c.id === criterionId);
@@ -80,77 +86,39 @@ const EditScreener = () => {
     ));
   };
 
-  const validate = () => {
-    const next = {};
-    for (const c of criteria) {
-      if (c.type === 'range') {
-        const min = c.min === '' ? null : Number(c.min);
-        const max = c.max === '' ? null : Number(c.max);
-        if ((c.min !== '' && Number.isNaN(min)) || (c.max !== '' && Number.isNaN(max))) {
-          next[c.id] = 'Enter numeric values';
-        } else if (min !== null && max !== null && min > max) {
-          next[c.id] = 'Min cannot exceed Max';
-        }
-      }
-    }
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
   const handleSave = async () => {
     if (!screenerData.name.trim()) {
       toast.error("Please enter a screener name");
       return;
     }
 
-    if (!validate()) return;
-
-    if (!isAuthenticated) {
-      toast.error('Please sign in to save changes');
-      return;
-    }
-
     setIsSaving(true);
-    try { await updateScreener(id, { ...screenerData, criteria }); toast.success("Screener updated successfully"); logClientMetric({ event: 'screener_updated' }); navigate(`/app/screeners/${id}/results`); }
-    catch (error) { toast.error("Failed to update screener"); }
-    finally { setIsSaving(false); }
-  };
-
-  const handleImportJson = async (event) => {
     try {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      const importedCriteria = Array.isArray(parsed?.criteria) ? parsed.criteria : [];
-      const name = parsed?.name || screenerData.name;
-      const description = parsed?.description || screenerData.description;
-      setScreenerData({ ...screenerData, name, description });
-      setCriteria(importedCriteria);
-      toast.success("Criteria imported from JSON");
-    } catch {
-      toast.error("Invalid JSON file");
-    } finally { event.target.value = ""; }
-  };
-
-  const handleExportJson = () => {
-    const payload = { ...screenerData, criteria };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(screenerData.name || 'screener').replace(/\s+/g,'-').toLowerCase()}.json`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      // Simulate API call to update screener
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Screener updated successfully");
+      navigate("/app/screeners");
+    } catch (error) {
+      toast.error("Failed to update screener");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this screener?")) return;
 
     setIsSaving(true);
-    try { await deleteScreener(id); toast.success("Screener deleted successfully"); navigate("/app/screeners"); }
-    catch (error) { toast.error("Failed to delete screener"); }
-    finally { setIsSaving(false); }
+    try {
+      // Simulate API call to delete screener
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Screener deleted successfully");
+      navigate("/app/screeners");
+    } catch (error) {
+      toast.error("Failed to delete screener");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -177,30 +145,10 @@ const EditScreener = () => {
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>
-            <Button onClick={handleSave} disabled={isSaving || !isAuthenticated} aria-disabled={!isAuthenticated} title={!isAuthenticated ? 'Sign in to save' : undefined}>
+            <Button onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
               Save Changes
             </Button>
-            {!isAuthenticated && (
-              <Button asChild variant="secondary"><Link to="/auth/sign-in">Sign in</Link></Button>
-            )}
-            <Button type="button" variant="outline" onClick={()=>{ const dup={ ...screenerData, name: `${screenerData.name || 'Screener'} (Copy)`, criteria }; localStorage.setItem('draft_screener_import', JSON.stringify(dup)); navigate('/app/screeners/new'); }}>
-              Duplicate
-            </Button>
-            <Button type="button" variant="outline" title="Coming soon" disabled>
-              Save as Template
-            </Button>
-            <Button type="button" variant="outline" onClick={handleExportJson}>
-              <Download className="h-4 w-4 mr-2" /> Export JSON
-            </Button>
-            <label className="inline-flex items-center">
-              <input type="file" accept="application/json" className="hidden" onChange={handleImportJson} />
-              <Button asChild variant="outline">
-                <span>
-                  <Upload className="h-4 w-4 mr-2" /> Import JSON
-                </span>
-              </Button>
-            </label>
           </div>
         </div>
 
@@ -232,19 +180,19 @@ const EditScreener = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle id="edit-criteria-title">Screening Criteria</CardTitle>
+              <CardTitle>Screening Criteria</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
                 <Select onValueChange={addCriterion}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Add a criterion" aria-label="Add a criterion" />
+                    <SelectValue placeholder="Add a criterion" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableCriteria
                       .filter(c => !criteria.some(existing => existing.id === c.id))
                       .map(criterion => (
-                        <SelectItem key={criterion.id} value={criterion.id} aria-label={criterion.name}>
+                        <SelectItem key={criterion.id} value={criterion.id}>
                           {criterion.name}
                         </SelectItem>
                       ))}
@@ -285,9 +233,6 @@ const EditScreener = () => {
                             onChange={(e) => updateCriterion(criterion.id, "max", e.target.value)}
                             placeholder="Max value"
                           />
-                          {errors[criterion.id] && (
-                            <div className="text-xs text-red-600 mt-1">{errors[criterion.id]}</div>
-                          )}
                         </div>
                       </div>
                     )}

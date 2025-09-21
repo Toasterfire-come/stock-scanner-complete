@@ -150,202 +150,201 @@ const BillingHistory = () => {
   }
 
   return (
-    <div className="container-enhanced py-8">
-      <h1 className="text-3xl font-bold mb-6">Billing History</h1>
-      <div className="space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Billing History</h1>
-            <p className="text-gray-600 mt-2">
-              View your billing history, download invoices, and manage payments
-            </p>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Billing History</h1>
+          <p className="text-gray-600 mt-2">
+            View your billing history, download invoices, and manage payments
+          </p>
+        </div>
+
+        {/* Billing Stats */}
+        {billingStats && (
+          <div className="grid md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <DollarSign className="h-8 w-8 text-green-500" />
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold">${billingStats.total_spent}</div>
+                    <div className="text-sm text-gray-600">Total Spent</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <CreditCard className="h-8 w-8 text-blue-500" />
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold">{billingStats.recent_payments}</div>
+                    <div className="text-sm text-gray-600">Recent Payments</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold capitalize">{billingStats.account_status}</div>
+                    <div className="text-sm text-gray-600">Account Status</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Calendar className="h-8 w-8 text-purple-500" />
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold">
+                      {new Date(billingStats.next_billing_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </div>
+                    <div className="text-sm text-gray-600">Next Billing</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        )}
 
-          {/* Billing Stats */}
-          {billingStats && (
-            <div className="grid md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <DollarSign className="h-8 w-8 text-green-500" />
-                    <div className="ml-4">
-                      <div className="text-2xl font-bold">${billingStats.total_spent}</div>
-                      <div className="text-sm text-gray-600">Total Spent</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <CreditCard className="h-8 w-8 text-blue-500" />
-                    <div className="ml-4">
-                      <div className="text-2xl font-bold">{billingStats.recent_payments}</div>
-                      <div className="text-sm text-gray-600">Recent Payments</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-8 w-8 text-green-500" />
-                    <div className="ml-4">
-                      <div className="text-2xl font-bold capitalize">{billingStats.account_status}</div>
-                      <div className="text-sm text-gray-600">Account Status</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <Calendar className="h-8 w-8 text-purple-500" />
-                    <div className="ml-4">
-                      <div className="text-2xl font-bold">
-                        {new Date(billingStats.next_billing_date).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </div>
-                      <div className="text-sm text-gray-600">Next Billing</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Billing History */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2" />
-                    Payment History
-                  </CardTitle>
-                  <CardDescription>
-                    All your billing transactions and invoices
-                  </CardDescription>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-4 w-4 text-gray-500" />
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="refunded">Refunded</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* Billing History */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Payment History
+                </CardTitle>
+                <CardDescription>
+                  All your billing transactions and invoices
+                </CardDescription>
               </div>
-            </CardHeader>
+              
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="refunded">Refunded</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
 
-            <CardContent>
-              {filteredHistory.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No billing history</h3>
-                  <p className="text-gray-600">
-                    You haven't made any payments yet. Upgrade to a paid plan to get started.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-0 divide-y">
-                  {filteredHistory.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between py-4">
-                      <div className="flex items-center space-x-4">
-                        {getStatusIcon(item.status)}
-                        <div>
-                          <div className="font-medium">{item.description}</div>
-                          <div className="text-sm text-gray-600 flex items-center space-x-2">
-                            <span>{new Date(item.date).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span>{item.method}</span>
-                            <span>•</span>
-                            <span>Invoice #{item.id}</span>
-                          </div>
+          <CardContent>
+            {filteredHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No billing history</h3>
+                <p className="text-gray-600">
+                  You haven't made any payments yet. Upgrade to a paid plan to get started.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-0 divide-y">
+                {filteredHistory.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between py-4">
+                    <div className="flex items-center space-x-4">
+                      {getStatusIcon(item.status)}
+                      <div>
+                        <div className="font-medium">{item.description}</div>
+                        <div className="text-sm text-gray-600 flex items-center space-x-2">
+                          <span>{new Date(item.date).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{item.method}</span>
+                          <span>•</span>
+                          <span>Invoice #{item.id}</span>
                         </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <div className="font-semibold">${item.amount.toFixed(2)}</div>
+                        {getStatusBadge(item.status)}
                       </div>
                       
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                          <div className="font-semibold">${item.amount.toFixed(2)}</div>
-                          {getStatusBadge(item.status)}
-                        </div>
-                        
-                        {item.download_url && item.status === 'paid' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownloadInvoice(item.id)}
-                            disabled={downloadingIds.has(item.id)}
-                          >
-                            {downloadingIds.has(item.id) ? (
-                              "Downloading..."
-                            ) : (
-                              <>
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </>
-                            )}
-                          </Button>
-                        )}
+                      {item.download_url && item.status === 'paid' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadInvoice(item.id)}
+                          disabled={downloadingIds.has(item.id)}
+                        >
+                          {downloadingIds.has(item.id) ? (
+                            "Downloading..."
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </>
+                          )}
+                        </Button>
+                      )}
 
-                        {item.status === 'failed' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toast.info("Retry payment functionality coming soon")}
-                          >
-                            <ArrowUpRight className="h-4 w-4 mr-2" />
-                            Retry
-                          </Button>
-                        )}
-                      </div>
+                      {item.status === 'failed' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toast.info("Retry payment from billing portal")}
+                        >
+                          <ArrowUpRight className="h-4 w-4 mr-2" />
+                          Retry
+                        </Button>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Payment Method */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>
-                Manage your payment methods and billing information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <CreditCard className="h-6 w-6 text-gray-400" />
-                  <div>
-                    <div className="font-medium">•••• •••• •••• 4242</div>
-                    <div className="text-sm text-gray-600">Expires 12/2027</div>
                   </div>
-                </div>
-                <Button variant="outline" size="sm">
-                  Update
-                </Button>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Payment Method */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Methods</CardTitle>
+            <CardDescription>
+              Manage your payment methods and billing information
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="h-6 w-6 text-gray-400" />
+                <div>
+                  <div className="font-medium">•••• •••• •••• 4242</div>
+                  <div className="text-sm text-gray-600">Expires 12/2027</div>
+                </div>
+              </div>
+              <Button variant="outline" size="sm">
+                Update
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      </div>
-    );
+    </div>
+  );
 };
 
 export default BillingHistory;

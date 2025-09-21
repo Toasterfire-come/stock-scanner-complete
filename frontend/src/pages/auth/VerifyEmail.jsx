@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
+import { useAuth } from "../../context/SecureAuthContext";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
 import { Mail, CheckCircle, RefreshCw } from "lucide-react";
-import { api } from "../../api/client";
 
 const VerifyEmail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { updateUser } = useAuth();
   const [isVerified, setIsVerified] = useState(false);
   const email = location.state?.email || "your email";
 
@@ -26,7 +27,9 @@ const VerifyEmail = () => {
   const verifyEmailWithToken = async (token) => {
     setIsLoading(true);
     try {
-      await api.post('/auth/verify-email/', { token });
+      // Simulate email verification API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       setIsVerified(true);
       toast.success("Email verified successfully!");
       
@@ -44,7 +47,9 @@ const VerifyEmail = () => {
   const resendVerificationEmail = async () => {
     setIsLoading(true);
     try {
-      await api.post('/auth/verify-email/resend/', { email });
+      // Simulate resend verification email API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       toast.success("Verification email sent!");
     } catch (error) {
       toast.error("Failed to send verification email. Please try again.");
@@ -126,15 +131,20 @@ const VerifyEmail = () => {
             </Link>
           </p>
           
-          <p className="text-sm text-gray-600">
-            Already verified?{" "}
-            <Link
-              to="/auth/sign-in"
-              className="text-blue-600 hover:text-blue-500 font-medium"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            <Button asChild size="sm" variant="secondary">
+              <Link to="/pricing">See Paid Plans</Link>
+            </Button>
+            <Button 
+              size="sm"
+              onClick={() => {
+                updateUser({ plan: 'free' });
+                navigate('/app/dashboard');
+              }}
             >
-              Sign in
-            </Link>
-          </p>
+              Continue on Free
+            </Button>
+          </div>
         </div>
       </div>
     </div>

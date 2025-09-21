@@ -6,10 +6,12 @@ import { Badge } from "../../components/ui/badge";
 import { CheckCircle, ArrowRight, Download, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { recordPayment } from "../../api/client";
+import { useAuth } from "../../context/SecureAuthContext";
 
 const CheckoutSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   
   const { planId, amount, originalAmount, discount } = location.state || {};
 
@@ -25,6 +27,10 @@ const CheckoutSuccess = () => {
           discount_code: discount?.code || null,
           payment_date: new Date().toISOString(),
         });
+        // Sync plan locally so UI reflects upgrade immediately
+        if (planId && planId !== 'free') {
+          updateUser({ plan: planId });
+        }
       } catch (error) {
         console.error("Failed to record payment:", error);
       }
