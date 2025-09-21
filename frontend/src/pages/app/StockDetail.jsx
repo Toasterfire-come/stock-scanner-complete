@@ -62,11 +62,17 @@ const StockDetail = () => {
 
         if (stockResponse?.success) {
           setStockData(stockResponse.data);
+        } else if (stockResponse?.data) {
+          setStockData(stockResponse.data);
         } else {
           setStockData(null);
         }
 
-        if (realtimeResponse) {
+        if (realtimeResponse?.success) {
+          setRealtimeData(realtimeResponse.data);
+        } else if (realtimeResponse?.data) {
+          setRealtimeData(realtimeResponse.data);
+        } else if (realtimeResponse) {
           setRealtimeData(realtimeResponse);
         }
       } catch (error) {
@@ -227,8 +233,8 @@ const StockDetail = () => {
     );
   }
 
-  const currentData = realtimeData || stockData;
-  const isPositive = currentData.change_percent >= 0;
+  const currentData = { ...(stockData || {}), ...(realtimeData || {}) };
+  const isPositive = Number(currentData.change_percent || 0) >= 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -258,7 +264,7 @@ const StockDetail = () => {
                 
                 <div className="text-right">
                   <div className="text-3xl font-bold">
-                    {formatCurrency(currentData.current_price)}
+                    {Number.isFinite(Number(currentData.current_price)) ? formatCurrency(Number(currentData.current_price)) : '$0.00'}
                   </div>
                   <div className={`flex items-center text-lg font-semibold ${
                     isPositive ? 'text-green-600' : 'text-red-600'
@@ -268,8 +274,8 @@ const StockDetail = () => {
                     ) : (
                       <TrendingDown className="h-5 w-5 mr-1" />
                     )}
-                    {isPositive ? '+' : ''}{currentData.price_change_today?.toFixed(2)} 
-                    ({isPositive ? '+' : ''}{currentData.change_percent?.toFixed(2)}%)
+                    {isPositive ? '+' : ''}{Number.isFinite(Number(currentData.price_change_today)) ? Number(currentData.price_change_today).toFixed(2) : '0.00'} 
+                    ({isPositive ? '+' : ''}{Number.isFinite(Number(currentData.change_percent)) ? Number(currentData.change_percent).toFixed(2) : '0.00'}%)
                   </div>
                 </div>
               </div>
@@ -287,7 +293,7 @@ const StockDetail = () => {
             </div>
             
             <div className="mt-4 text-sm text-gray-500">
-              Last updated: {new Date(currentData.last_updated).toLocaleString()}
+              Last updated: {currentData.last_updated ? new Date(currentData.last_updated).toLocaleString() : 'N/A'}
             </div>
 
             {/* Striped details table */}
@@ -304,19 +310,19 @@ const StockDetail = () => {
                   </tr>
                   <tr className="odd:bg-gray-50">
                     <td className="p-3 text-gray-600">Market Cap</td>
-                    <td className="p-3 font-medium">{formatMarketCap(currentData.market_cap)}</td>
+                    <td className="p-3 font-medium">{currentData.formatted_market_cap || formatMarketCap(currentData.market_cap)}</td>
                   </tr>
                   <tr className="odd:bg-gray-50">
                     <td className="p-3 text-gray-600">Volume</td>
-                    <td className="p-3 font-medium">{formatVolume(currentData.volume)}</td>
+                    <td className="p-3 font-medium">{formatVolume(currentData.volume_today || currentData.volume)}</td>
                   </tr>
                   <tr className="odd:bg-gray-50">
                     <td className="p-3 text-gray-600">P/E Ratio</td>
-                    <td className="p-3 font-medium">{Number.isFinite(currentData.pe_ratio) ? currentData.pe_ratio.toFixed(2) : 'N/A'}</td>
+                    <td className="p-3 font-medium">{Number.isFinite(Number(currentData.pe_ratio)) ? Number(currentData.pe_ratio).toFixed(2) : 'N/A'}</td>
                   </tr>
                   <tr className="odd:bg-gray-50">
                     <td className="p-3 text-gray-600">Dividend Yield</td>
-                    <td className="p-3 font-medium">{Number.isFinite(currentData.dividend_yield) ? `${currentData.dividend_yield.toFixed(2)}%` : 'N/A'}</td>
+                    <td className="p-3 font-medium">{Number.isFinite(Number(currentData.dividend_yield)) ? `${(Number(currentData.dividend_yield) * (Number(currentData.dividend_yield) > 1 ? 1 : 100)).toFixed(2)}%` : 'N/A'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -328,9 +334,8 @@ const StockDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="chart">Chart</TabsTrigger>
                 <TabsTrigger value="news">News</TabsTrigger>
               </TabsList>
 
@@ -382,20 +387,13 @@ const StockDetail = () => {
                     <CardDescription>Recent price movements</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 flex items-center justify-center text-gray-500">
-                      <BarChart3 className="h-12 w-12 mb-4" />
-                      <p>Chart integration coming soon</p>
-                    </div>
+                    <GoogleFinanceChart 
+                      symbol={symbol} 
+                      height={400}
+                      showControls={true}
+                    />
                   </CardContent>
                 </Card>
-              </TabsContent>
-
-              <TabsContent value="chart" className="space-y-4">
-                <GoogleFinanceChart 
-                  symbol={symbol} 
-                  height={500}
-                  showControls={true}
-                />
               </TabsContent>
 
               <TabsContent value="news" className="space-y-4">
