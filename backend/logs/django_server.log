@@ -6867,3 +6867,19 @@ Traceback (most recent call last):
     ...<2 lines>...
     ) from err
 django.core.exceptions.ImproperlyConfigured: WSGI application 'stockscanner_django.wsgi.application' could not be loaded; Error importing module.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+[2025-09-20 18:43:35,036] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+September 20, 2025 - 18:43:37
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[20/Sep/2025 18:43:56] "GET /health/ HTTP/1.1" 200 396
