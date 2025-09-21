@@ -40,8 +40,7 @@ import MiniSparkline from "../../components/MiniSparkline";
 import RealTrendingSparkline from "../../components/RealTrendingSparkline";
 import UsageTracker from "../../components/UsageTracker";
 import PlanUsage from "../../components/PlanUsage";
-import EnhancedPortfolioAnalytics from "../../components/EnhancedPortfolioAnalytics";
-import RealUserActivityFeed from "../../components/RealUserActivityFeed";
+// Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
 import MarketStatusIndicator from "../../components/MarketStatusIndicator";
 
 const AppDashboard = () => {
@@ -370,22 +369,9 @@ const AppDashboard = () => {
           </Card>
         </div>
 
-        {/* Bottom Grid - Enhanced Portfolio & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Enhanced Portfolio Analytics */}
-          <div className="lg:col-span-2">
-            <EnhancedPortfolioAnalytics />
-          </div>
-        </div>
-
         {/* Activity & Market Status Grid */}  
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          {/* Real User Activity Feed */}
-          <div className="lg:col-span-2">
-            <RealUserActivityFeed maxItems={8} />
-          </div>
-
-          {/* Market Status */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mt-6">
+          {/* Market Status only */}
           <div>
             <MarketStatusIndicator />
           </div>
