@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/SecureAuthContext";
-import { alertsMeta, createAlert, api } from "../../api/client";
+import { createAlert, api } from "../../api/client";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
@@ -37,7 +37,7 @@ const Alerts = () => {
     setIsLoading(true);
     try {
       // Use the proper API client function with quota tracking
-      const data = await api.get('/alerts/');
+      const { data } = await api.get('/alerts/');
       const rows = Array.isArray(data?.data?.alerts) ? data.data.alerts : (Array.isArray(data?.data) ? data.data : []);
       setAlerts(rows);
     } catch (error) {
@@ -88,7 +88,7 @@ const Alerts = () => {
     
     try {
       // Use the proper API client function
-      await api.post(`/alerts/${encodeURIComponent(alertId)}/delete/`);
+      await api.delete(`/alerts/${encodeURIComponent(alertId)}/delete/`);
       setAlerts((prev) => prev.filter(alert => alert.id !== alertId));
       toast.success("Alert deleted successfully");
     } catch (error) {

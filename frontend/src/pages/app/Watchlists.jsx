@@ -18,7 +18,7 @@ import {
   Bell,
   Search
 } from "lucide-react";
-import { getWatchlist, addWatchlist, deleteWatchlist } from "../../api/client";
+import { listWatchlists, addWatchlist, deleteWatchlist } from "../../api/client";
 
 const Watchlists = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,11 +38,11 @@ const Watchlists = () => {
 
   const fetchWatchlist = async () => {
     try {
-      const response = await getWatchlist();
+      const response = await listWatchlists();
       if (response && response.success) {
         setWatchlist(response);
       } else {
-        setWatchlist({ success: true, data: [], summary: { total_items: 0, gainers: 0, losers: 0, unchanged: 0 } });
+        setWatchlist({ success: true, data: { watchlists: [] }, summary: { total_items: 0, gainers: 0, losers: 0, unchanged: 0 } });
       }
     } catch (error) {
       toast.error("Failed to load watchlist");
@@ -116,10 +116,21 @@ const Watchlists = () => {
     return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
   };
 
-  const filteredWatchlist = watchlist?.data?.filter(item =>
-    item.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.company_name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const allItems = (watchlist?.data?.watchlists || []).flatMap(w => (w.items || w.stocks || []).map(s => ({
+    id: s.item_id || s.id,
+    symbol: s.stock_ticker || s.symbol,
+    company_name: s.company_name || s.name,
+    current_price: s.current_price,
+    price_change: s.price_change_today || s.price_change,
+    price_change_percent: s.change_percent || s.price_change_percent,
+    volume: s.volume,
+    alert_price: s.alert_price,
+    notes: s.notes,
+  })));
+  const filteredWatchlist = allItems.filter(item =>
+    (item.symbol || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.company_name || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return (

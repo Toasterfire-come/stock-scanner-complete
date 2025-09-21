@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { validateDiscountCode, applyDiscountCode, recordPayment } from "../api/client";
+import { createPayPalOrder, capturePayPalOrder } from "../api/client";
 
 const PayPalCheckout = ({ 
   planType = "bronze", 
@@ -15,10 +15,7 @@ const PayPalCheckout = ({
   onCancel 
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [discountCode, setDiscountCode] = useState("");
-  const [discount, setDiscount] = useState(null);
   const [error, setError] = useState("");
-  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
 
   const planPrices = {
     bronze: { monthly: 24.99, annual: 249.99 },
@@ -33,78 +30,29 @@ const PayPalCheckout = ({
   };
 
   const basePrice = planPrices[planType]?.[billingCycle] || 24.99;
-  const finalPrice = discount ? basePrice - (basePrice * discount.discount_percentage / 100) : basePrice;
-  const savings = discount ? basePrice - finalPrice : 0;
+  const finalPrice = basePrice;
+  const savings = 0;
 
-  const validateDiscount = async () => {
-    if (!discountCode.trim()) return;
-    
-    setIsValidatingDiscount(true);
-    setError("");
-    
+  // No discount handling in current API contract
+
+  const createOrder = async () => {
+    setIsLoading(true);
     try {
-      const result = await validateDiscountCode(discountCode);
-      if (result.valid && result.applies_discount) {
-        setDiscount(result);
-      } else {
-        setError(result.message || "Invalid discount code");
-        setDiscount(null);
-      }
-    } catch (err) {
-      setError("Failed to validate discount code");
-      setDiscount(null);
-    } finally {
-      setIsValidatingDiscount(false);
+      const res = await createPayPalOrder(planType, billingCycle);
+      setIsLoading(false);
+      return res?.id || res?.order_id;
+    } catch (e) {
+      setIsLoading(false);
+      setError("Failed to create PayPal order");
+      throw e;
     }
   };
 
-  const createOrder = (data, actions) => {
-    return actions.order.create({
-      purchase_units: [{
-        amount: {
-          value: finalPrice.toFixed(2),
-          currency_code: "USD"
-        },
-        description: `Trade Scan Pro ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan - ${billingCycle}`,
-        custom_id: `${planType}_${billingCycle}_${Date.now()}`
-      }],
-      application_context: {
-        brand_name: "Trade Scan Pro",
-        user_action: "PAY_NOW"
-      }
-    });
-  };
-
-  const onApprove = async (data, actions) => {
+  const onApprove = async (data) => {
     setIsLoading(true);
     try {
-      const details = await actions.order.capture();
-      
-      // Apply discount if present
-      let discountData = null;
-      if (discount) {
-        discountData = await applyDiscountCode(discountCode, basePrice);
-      }
-      
-      // Record payment in your backend
-      const paymentRecord = await recordPayment({
-        user_id: 1, // This should come from auth context
-        amount: finalPrice,
-        discount_code: discountCode || null,
-        payment_date: new Date().toISOString(),
-        paypal_transaction_id: details.id,
-        plan_type: planType,
-        billing_cycle: billingCycle
-      });
-
-      onSuccess?.({
-        paymentDetails: details,
-        discountApplied: discountData,
-        paymentRecord: paymentRecord,
-        planType,
-        billingCycle,
-        finalAmount: finalPrice
-      });
+      const res = await capturePayPalOrder(data.orderID, {});
+      onSuccess?.({ paymentDetails: res, planType, billingCycle, finalAmount: finalPrice });
     } catch (err) {
       console.error("Payment processing error:", err);
       onError?.(err);
@@ -142,48 +90,13 @@ const PayPalCheckout = ({
           </ul>
         </div>
 
-        {/* Discount Code Section */}
-        <div className="space-y-3">
-          <h4 className="font-semibold">Discount Code (Optional):</h4>
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-              placeholder="Enter code (e.g., REF50)"
-              className="flex-1 px-3 py-2 border rounded-md text-sm"
-              disabled={isValidatingDiscount}
-            />
-            <Button 
-              onClick={validateDiscount}
-              disabled={!discountCode.trim() || isValidatingDiscount}
-              size="sm"
-              variant="outline"
-            >
-              {isValidatingDiscount ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Apply"
-              )}
-            </Button>
-          </div>
-          
-          {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          {discount && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>{discount.code}</strong> applied! {discount.discount_percentage}% off
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
+        {/* Error Section */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Pricing Summary */}
         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
@@ -191,12 +104,7 @@ const PayPalCheckout = ({
             <span>Base Price:</span>
             <span>${basePrice.toFixed(2)}</span>
           </div>
-          {savings > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Discount:</span>
-              <span>-${savings.toFixed(2)}</span>
-            </div>
-          )}
+          {/* No discount lines in current contract */}
           <hr />
           <div className="flex justify-between font-bold text-lg">
             <span>Total:</span>
@@ -220,7 +128,7 @@ const PayPalCheckout = ({
           
           <PayPalScriptProvider options={paypalOptions}>
             <PayPalButtons
-              createOrder={createOrder}
+              createOrder={() => createOrder()}
               onApprove={onApprove}
               onError={(err) => {
                 console.error("PayPal error:", err);

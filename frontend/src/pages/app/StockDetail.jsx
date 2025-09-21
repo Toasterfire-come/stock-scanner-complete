@@ -103,17 +103,7 @@ const StockDetail = () => {
     };
     loadChart();
 
-    // Load news from backend proxy
-    const loadNews = async () => {
-      try {
-        const r = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/news/${encodeURIComponent(symbol)}/`);
-        const data = await r.json().catch(() => ({ news: [] }));
-        setNewsItems(Array.isArray(data?.news) ? data.news : []);
-      } catch (_) {
-        setNewsItems([]);
-      }
-    };
-    loadNews();
+    // Load news via stock news endpoint if needed (handled by StockNewsIntegration component)
 
     // Set up real-time updates every 30 seconds
     const interval = setInterval(async () => {

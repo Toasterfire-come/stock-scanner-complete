@@ -28,7 +28,6 @@ const EndpointStatus = () => {
 
     try {
       const response = await getEndpointStatus();
-      // Expect shape: { success, data }
       if (response?.success) {
         setStatusData(response.data);
         setLastUpdated(new Date());

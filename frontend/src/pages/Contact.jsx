@@ -38,19 +38,16 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Call the backend API to submit contact form
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/enterprise/contact/`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtreadescanner.com'}/api/enterprise/contact/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contact_name: formData.name,
-          contact_email: formData.email,
           company_name: formData.company || 'Individual',
-          message: formData.message,
-          solution_type: formData.inquiryType,
-          subject: formData.subject
+          contact_email: formData.email,
+          contact_name: formData.name,
+          phone: '',
+          message: `${formData.subject}\n\n${formData.message}`,
+          solution_type: formData.inquiryType
         })
       });
 
