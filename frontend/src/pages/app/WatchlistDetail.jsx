@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { getWatchlist, createAlert } from '../../api/client';
+import { listWatchlists, createAlert } from '../../api/client';
 import { TrendingUp, TrendingDown, Bell, Save, ArrowLeft } from 'lucide-react';
 
 export default function WatchlistDetail() {
@@ -19,9 +19,19 @@ export default function WatchlistDetail() {
     const load = async () => {
       setLoading(true); setError('');
       try {
-        const res = await getWatchlist();
+        const res = await listWatchlists();
         if (res?.success) {
-          setItems((res.data || []).filter((i) => i.watchlist_name?.toLowerCase() === (id || '').toLowerCase()));
+          // Flatten by matching selected watchlist id or name
+          const chosen = (res.data?.watchlists || []).find((w) => `${w.id}` === `${id}` || w.name?.toLowerCase() === (id || '').toLowerCase());
+          setItems((chosen?.items || chosen?.stocks || []).map((s) => ({
+            id: s.item_id || s.id,
+            symbol: s.stock_ticker || s.symbol,
+            company_name: s.company_name || s.name,
+            current_price: s.current_price,
+            price_change_percent: s.price_change_percent,
+            alert_price: s.alert_price,
+            notes: s.notes,
+          })));
         } else {
           setItems([]);
           setError('Watchlist not available');
