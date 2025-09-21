@@ -84,24 +84,10 @@ const StockDetail = () => {
 
     fetchStockData();
 
-    // Load chart data from Yahoo Finance chart API
+    // Disable direct Yahoo Finance fetch to avoid CORS; rely on chart component fallbacks
     const loadChart = async () => {
       try {
         setIsChartLoading(true);
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
-        const r = await fetch(url, { mode: 'cors' });
-        const json = await r.json();
-        const result = ((((json || {}).chart || {}).result || [])[0]) || {};
-        const ts = (result.timestamp || []);
-        const closes = (((result.indicators || {}).quote || [])[0] || {}).close || [];
-        const volumes = (((result.indicators || {}).quote || [])[0] || {}).volume || [];
-        const points = ts.map((t, i) => ({
-          date: new Date(t * 1000),
-          close: Number(closes[i] ?? 0),
-          volume: Number(volumes[i] ?? 0)
-        })).filter(p => Number.isFinite(p.close) && p.close > 0);
-        setChartData(points);
-      } catch (_) {
         setChartData([]);
       } finally {
         setIsChartLoading(false);

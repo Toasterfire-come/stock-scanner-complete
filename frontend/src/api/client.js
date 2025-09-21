@@ -838,7 +838,7 @@ export async function getMarketStatus() {
 
 export async function getStockNews(symbol) { 
   ensureApiQuotaAndIncrement('getStockNews');
-  const { data } = await api.get(`/stocks/${encodeURIComponent(symbol)}/news`); 
+  const { data } = await api.get(`/news/ticker/${encodeURIComponent(symbol)}/`); 
   return data; 
 }
 
