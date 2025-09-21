@@ -57,9 +57,10 @@ const Stocks = () => {
     const fetchStocks = async () => {
       try {
         let response;
-        if (searchTerm.trim()) {
+        const q = searchTerm.trim();
+        if (q) {
           setIsSearching(true);
-          response = await searchStocks(searchTerm);
+          response = await searchStocks(q);
           const results = Array.isArray(response)
             ? response
             : (response?.results || response?.data || []);
@@ -102,18 +103,24 @@ const Stocks = () => {
     }
   };
 
-  const handlePageChange = (newPage) => { setCurrentPage(newPage); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > Math.max(1, Math.ceil(totalStocks / stocksPerPage))) return;
+    setIsLoading(true); // force loading state to indicate server fetch
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const totalPages = Math.max(1, Math.ceil(totalStocks / stocksPerPage));
 
+  const hasSearch = searchTerm.trim().length > 0;
   // client-side pagination when searching
   const pagedSearchStocks = useMemo(() => {
-    if (!searchTerm) return stocks;
+    if (!hasSearch) return stocks;
     const start = (currentPage - 1) * stocksPerPage;
     return stocks.slice(start, start + stocksPerPage);
-  }, [stocks, searchTerm, currentPage]);
+  }, [stocks, hasSearch, currentPage]);
 
-  const dataForRender = searchTerm ? pagedSearchStocks : stocks;
+  const dataForRender = hasSearch ? pagedSearchStocks : stocks;
   const isVirtualDesktop = dataForRender.length > 200;
 
   const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
