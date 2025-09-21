@@ -529,12 +529,71 @@ export async function listWatchlists() {
     }
   }
 }
-export async function createWatchlist(payload) { const { data } = await api.post('/watchlist/create/', payload); return data; }
-export async function addWatchlistStock(payload) { const { data } = await api.post('/watchlist/add-stock/', payload); return data; }
-export async function removeWatchlistStock(payload) { const { data } = await api.delete('/watchlist/remove-stock/', { data: payload }); return data; }
+export async function createWatchlist(payload) {
+  // Try a few common endpoints/methods
+  const attempts = [
+    () => api.post('/watchlist/create/', payload),
+    () => api.post('/watchlist/', payload),
+    () => api.put('/watchlist/', payload),
+  ];
+  let lastErr;
+  for (const attempt of attempts) {
+    try { const { data } = await attempt(); return data; } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+export async function addWatchlistStock(payload) {
+  // Normalize payload: prefer watchlist_id if numeric, otherwise send watchlist_name
+  const norm = { stock_ticker: payload.stock_ticker };
+  if (Number.isFinite(Number(payload.watchlist_id))) norm.watchlist_id = Number(payload.watchlist_id);
+  if (payload.watchlist_name && !norm.watchlist_id) norm.watchlist_name = payload.watchlist_name;
+  if (payload.notes) norm.notes = payload.notes;
+
+  const attempts = [
+    () => api.post('/watchlist/add-stock/', norm),
+    () => api.put('/watchlist/add-stock/', norm),
+    () => api.post('/watchlist/add/', norm),
+    () => api.post('/watchlists/add-stock/', norm),
+  ];
+  let lastErr;
+  for (const attempt of attempts) {
+    try { const { data } = await attempt(); return data; } catch (e) {
+      if (e?.response?.status && ![404, 405, 400].includes(e.response.status)) { lastErr = e; break; }
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
+export async function removeWatchlistStock(payload) {
+  const norm = { stock_ticker: payload.stock_ticker };
+  if (Number.isFinite(Number(payload.watchlist_id))) norm.watchlist_id = Number(payload.watchlist_id);
+  if (payload.watchlist_name && !norm.watchlist_id) norm.watchlist_name = payload.watchlist_name;
+
+  const attempts = [
+    () => api.delete('/watchlist/remove-stock/', { data: norm }),
+    () => api.post('/watchlist/remove-stock/', norm),
+    () => api.post('/watchlist/remove/', norm),
+  ];
+  let lastErr;
+  for (const attempt of attempts) {
+    try { const { data } = await attempt(); return data; } catch (e) {
+      if (e?.response?.status && ![404, 405, 400].includes(e.response.status)) { lastErr = e; break; }
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
 // Backward-compatible wrappers (may return limited data)
 export async function getWatchlist() { try { ensureApiQuotaAndIncrement('getWatchlist'); const res = await listWatchlists(); return res; } catch (e) { throw e; } }
-export async function addWatchlist(symbol, opts = {}) { return addWatchlistStock({ watchlist_id: opts.watchlist_id || opts.watchlist_name || 'My Watchlist', stock_ticker: symbol, ...opts }); }
+export async function addWatchlist(symbol, opts = {}) {
+  const payload = { stock_ticker: symbol };
+  if (opts.watchlist_id) payload.watchlist_id = opts.watchlist_id;
+  payload.watchlist_name = opts.watchlist_name || (!opts.watchlist_id ? 'My Watchlist' : undefined);
+  if (opts.notes) payload.notes = opts.notes;
+  return addWatchlistStock(payload);
+}
 export async function deleteWatchlist(idOrPayload) { if (typeof idOrPayload === 'object') { return removeWatchlistStock(idOrPayload); } throw new Error('removeWatchlistStock requires {watchlist_id, stock_ticker}'); }
 
 // ====================
