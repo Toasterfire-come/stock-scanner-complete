@@ -19,6 +19,8 @@ import json
 import logging
 from decimal import Decimal
 from django.contrib.auth.models import User
+from utils.stock_data import compute_market_cap_fallback
+from utils.instrument_classifier import classify_instrument, filter_fields_by_instrument
 
 from .models import Stock, StockAlert, StockPrice, Screener
 from emails.models import EmailSubscription
@@ -325,6 +327,25 @@ def stock_list_api(request):
         for stock in stocks:
             change_percent = calculate_change_percent(stock.current_price, stock.price_change_today)
             
+            # Compute derived market cap when missing
+            derived_market_cap = None
+            try:
+                # Use current_price and shares_available if available
+                derived_market_cap = compute_market_cap_fallback(
+                    stock.current_price,
+                    stock.shares_available
+                )
+            except Exception:
+                derived_market_cap = None
+
+            instrument_type = classify_instrument(
+                stock.ticker,
+                stock.company_name or stock.name,
+                getattr(stock, 'name', None),
+                None,
+                None
+            )
+
             record = {
                 # Basic info
                 'ticker': stock.ticker,
@@ -332,6 +353,7 @@ def stock_list_api(request):
                 'company_name': stock.company_name or stock.name or stock.ticker,
                 'name': stock.name or stock.company_name or stock.ticker,
                 'exchange': stock.exchange,
+                'instrument_type': instrument_type,
                 
                 # Price data (with better fallbacks)
                 'current_price': format_decimal_safe(stock.current_price) or 0.0,
@@ -357,9 +379,9 @@ def stock_list_api(request):
                 'shares_available': int(stock.shares_available) if stock.shares_available else 0,
                 
                 # Market data
-                'market_cap': int(stock.market_cap) if stock.market_cap else 0,
+                'market_cap': int(stock.market_cap or derived_market_cap) if (stock.market_cap or derived_market_cap) else 0,
                 'market_cap_change_3mon': format_decimal_safe(stock.market_cap_change_3mon) or 0.0,
-                'formatted_market_cap': getattr(stock, 'formatted_market_cap', '') or '',
+                'formatted_market_cap': (getattr(stock, 'formatted_market_cap', '') or (f"${(int(stock.market_cap or derived_market_cap)/1e12):.2f}T" if (stock.market_cap or derived_market_cap) and int(stock.market_cap or derived_market_cap) >= 1e12 else (f"${(int(stock.market_cap or derived_market_cap)/1e9):.2f}B" if (stock.market_cap or derived_market_cap) and int(stock.market_cap or derived_market_cap) >= 1e9 else (f"${(int(stock.market_cap or derived_market_cap)/1e6):.2f}M" if (stock.market_cap or derived_market_cap) and int(stock.market_cap or derived_market_cap) >= 1e6 else (f"${int(stock.market_cap or derived_market_cap):,}" if (stock.market_cap or derived_market_cap) else ''))))) ,
                 
                 # Financial ratios
                 'pe_ratio': format_decimal_safe(stock.pe_ratio),
@@ -396,6 +418,8 @@ def stock_list_api(request):
             
             # Remove None-valued fields for a cleaner payload
             cleaned_record = {k: v for k, v in record.items() if v is not None}
+            # Omit non-applicable fields for instrument type
+            cleaned_record = filter_fields_by_instrument(cleaned_record, instrument_type)
             stock_data.append(cleaned_record)
 
         # Ensure we always have a meaningful response

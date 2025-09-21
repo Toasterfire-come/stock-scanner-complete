@@ -48,7 +48,8 @@ from utils.stock_data import (
     calculate_change_percent_from_history,
     extract_stock_data_from_info,
     extract_stock_data_from_fast_info,
-    calculate_volume_ratio
+    calculate_volume_ratio,
+    compute_market_cap_fallback
 )
 
 # Setup logging with rotation
@@ -561,6 +562,16 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     except (IndexError, KeyError, TypeError):
         pass
 
+    # Compute market cap fallback if missing
+    mc_value = base_data.get('market_cap')
+    try:
+        if mc_value is None or mc_value == 0:
+            mc_fb = compute_market_cap_fallback(current_price, shares_available)
+            if mc_fb:
+                mc_value = mc_fb
+    except Exception:
+        pass
+
     # Build comprehensive stock data
     stock_data = {
         **base_data,  # Start with extracted data from utility functions
@@ -575,6 +586,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'days_range': days_range,
         'dvav': dvav,
         'shares_available': shares_available,
+        'market_cap': mc_value if mc_value is not None else base_data.get('market_cap'),
         'market_cap_change_3mon': None,  # Would need 3-month historical market cap data
         'pe_change_3mon': None,  # Would need 3-month historical PE data
         'last_updated': timezone.now(),
