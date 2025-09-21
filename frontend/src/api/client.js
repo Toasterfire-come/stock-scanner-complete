@@ -1,15 +1,14 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 
-// Use REACT_APP_BACKEND_URL exclusively from environment
-const BASE_URL = process.env.REACT_APP_BACKEND_URL;
+// Use REACT_APP_BACKEND_URL exclusively from environment, with production fallback
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtreadescanner.com";
 
 if (!BASE_URL) {
   console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
-export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 
 // Secondary axios instance for non-API root endpoints (e.g., Django accounts login view for CSRF cookie)
 const site = axios.create({
@@ -168,16 +167,14 @@ function getCsrfToken() {
 async function ensureCsrfCookie() {
   try {
     // Attempt to fetch CSRF cookie from a dedicated endpoint if available
-    // Fallback to a lightweight GET that may be decorated server-side
     const hasToken = !!getCsrfToken();
     if (hasToken) return;
-    // Prefer Django auth HTML endpoints which typically set csrftoken
-    if (!getCsrfToken()) await site.get('/accounts/login/').catch(() => {});
-    if (!getCsrfToken()) await site.get('/admin/login/').catch(() => {});
-    // Then try API health/document endpoints which the backend can decorate with ensure_csrf_cookie
+    // Use only documented API endpoints for CSRF and health
+    if (!getCsrfToken()) await api.get('/auth/csrf/').catch(() => {});
     if (!getCsrfToken()) await api.get('/health/').catch(() => {});
     if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/health/ready/').catch(() => {});
+    if (!getCsrfToken()) await api.get('/health/live/').catch(() => {});
   } catch {}
 }
 
@@ -331,10 +328,10 @@ export async function getMarketStatsSafe() {
 export async function getStatisticsSafe() {
   try {
     ensureApiQuotaAndIncrement('getStatistics');
-    const { data } = await api.get("/statistics/");
-    return { success: true, data: data || { market_overview: {}, top_performers: {}, subscriptions: {} } };
+    const { data } = await api.get('/status/');
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: error?.response?.data?.message || error.message || 'Failed to load statistics', data: { market_overview: {}, top_performers: {}, subscriptions: {} } };
+    return { success: false, error: error?.response?.data?.message || error.message || 'Failed to load system status', data: {} };
   }
 }
 
@@ -342,30 +339,31 @@ export async function getStatisticsSafe() {
 // HEALTH & STATUS
 // ====================
 export async function pingHealth() {
-  // Try multiple health endpoints and strategies to avoid false negatives (CORS/credentials issues)
+  // Use documented health endpoints only
   try {
     const { data } = await api.get('/health/', { timeout: 5000 });
     return data;
   } catch (e1) {
-    try {
-      const { data } = await api.get('/endpoint-status/', { timeout: 5000 });
-      return data;
-    } catch (e2) {
-      try {
-        // Fallback: no-credentials request to reduce CORS friction
-        const axiosNoCreds = axios.create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
-        const { data } = await axiosNoCreds.get('/api/health/', { timeout: 5000 });
-        return data;
-      } catch (e3) {
-        // Final fallback: root /health without credentials
-        const axiosNoCreds = axios.create({ baseURL: process.env.REACT_APP_BACKEND_URL, withCredentials: false });
-        const { data } = await axiosNoCreds.get('/health/', { timeout: 5000 });
-        return data;
-      }
-    }
+    try { const { data } = await api.get('/health/detailed/', { timeout: 5000 }); return data; } catch (e2) {}
+    try { const { data } = await api.get('/health/ready/', { timeout: 5000 }); return data; } catch (e3) {}
+    const { data } = await api.get('/health/live/', { timeout: 5000 });
+    return data;
   }
 }
-export async function getEndpointStatus() { const { data } = await api.get('/endpoint-status/'); return data; }
+export async function getEndpointStatus() {
+  // Normalize system status to an object used by EndpointStatus page
+  const { data } = await api.get('/status/');
+  const ok = (data?.status || '').toLowerCase() === 'ok';
+  return {
+    success: true,
+    data: {
+      endpoints: [],
+      total_tested: 1,
+      successful: ok ? 1 : 0,
+      failed: ok ? 0 : 1,
+    }
+  };
+}
 
 // ====================
 // STOCKS & MARKET DATA
@@ -382,12 +380,12 @@ export async function listStocks(params = {}) {
 }
 export async function getStock(ticker) { 
   ensureApiQuotaAndIncrement('getStock');
-  const { data } = await api.get(`/stock/${encodeURIComponent(ticker)}/`); 
+  const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/`); 
   return data; 
 }
 export async function searchStocks(q) { 
   ensureApiQuotaAndIncrement('searchStocks');
-  const { data } = await api.get('/search/', { params: { q } }); 
+  const { data } = await api.get('/stocks/search/', { params: { q } }); 
   return data; 
 }
 export async function getTrending() { 
@@ -400,25 +398,15 @@ export async function getMarketStats() {
   const { data } = await api.get('/market-stats/'); 
   return data; 
 }
-// Align with backend quote endpoint: /stocks/{symbol}/quote
 export async function getRealTimeQuote(ticker) { 
   ensureApiQuotaAndIncrement('getStock');
-  const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/quote`); 
+  // Use the stock detail endpoint as the source of truth for current price
+  const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/`); 
   return data; 
 }
 export async function filterStocks(params = {}) { 
   ensureApiQuotaAndIncrement('runScreener');
   const { data } = await api.get('/filter/', { params }); 
-  return data; 
-}
-export async function getStatistics() { 
-  ensureApiQuotaAndIncrement('getStatistics');
-  const { data } = await api.get('/statistics/'); 
-  return data; 
-}
-export async function getMarketData() { 
-  ensureApiQuotaAndIncrement('loadMarket');
-  const { data } = await api.get('/market-data/'); 
   return data; 
 }
 
@@ -433,9 +421,10 @@ export async function login(username, password) {
       await ensureCsrfCookie();
     }
     const { data } = await api.post('/auth/login/', { username, password });
-    if (data.success && data.data) {
-      // Store user data if login successful
-      return { success: true, data: data.data, message: data.message };
+    if (data.success && (data.user || data.data)) {
+      // Normalize response to { success, data: user }
+      const user = data.user || data.data;
+      return { success: true, data: user, message: data.message };
     }
     return { success: false, message: data.message || 'Login failed' };
   } catch (error) {
@@ -453,8 +442,6 @@ export async function logout() {
 
 export async function registerUser(userData) {
   try {
-    // Since there's no explicit registration endpoint in the provided list,
-    // I'll assume it follows Django's standard pattern at /auth/register/
     const { data } = await api.post('/auth/register/', {
       username: userData.username,
       email: userData.email,
@@ -485,8 +472,15 @@ export async function registerUser(userData) {
   }
 }
 export async function getProfile() { const { data } = await api.get('/user/profile/'); return data; }
-export async function updateProfile(profileData) { const { data } = await api.post('/user/profile/', profileData); return data; }
-export async function changePassword(passwordData) { const { data } = await api.post('/user/change-password/', passwordData); return data; }
+// Profile update endpoint is not available in the allowed API list
+export async function updateProfile(profileData) { return { success: false, message: 'Profile update is not supported.' }; }
+export async function changePassword(passwordData) {
+  const payload = {
+    old_password: passwordData.old_password || passwordData.current_password,
+    new_password: passwordData.new_password,
+  };
+  const { data } = await api.post('/user/change-password/', payload); return data; 
+}
 
 // ====================
 // PORTFOLIO
@@ -515,26 +509,15 @@ export async function deletePortfolio(id) {
 // ====================
 // WATCHLISTS
 // ====================
-export async function getWatchlist() { 
-  try {
-    ensureApiQuotaAndIncrement('getWatchlist');
-    const { data } = await api.get('/watchlist/');
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch watchlist:', error);
-    throw error;
-  }
-}
-export async function addWatchlist(symbol, opts = {}) { 
-  ensureApiQuotaAndIncrement('createWatchlist');
-  const { data } = await api.post('/watchlist/add/', { symbol, ...opts }); 
-  return data; 
-}
-export async function deleteWatchlist(id) { 
-  ensureApiQuotaAndIncrement('deleteWatchlist');
-  const { data } = await api.delete(`/watchlist/${id}/`); 
-  return data; 
-}
+// Watchlists (use documented endpoints)
+export async function listWatchlists() { const { data } = await api.get('/watchlist/list/'); return data; }
+export async function createWatchlist(payload) { const { data } = await api.post('/watchlist/create/', payload); return data; }
+export async function addWatchlistStock(payload) { const { data } = await api.post('/watchlist/add-stock/', payload); return data; }
+export async function removeWatchlistStock(payload) { const { data } = await api.delete('/watchlist/remove-stock/', { data: payload }); return data; }
+// Backward-compatible wrappers (may return limited data)
+export async function getWatchlist() { try { ensureApiQuotaAndIncrement('getWatchlist'); const res = await listWatchlists(); return res; } catch (e) { throw e; } }
+export async function addWatchlist(symbol, opts = {}) { return addWatchlistStock({ watchlist_id: opts.watchlist_id || opts.watchlist_name || 'My Watchlist', stock_ticker: symbol, ...opts }); }
+export async function deleteWatchlist(idOrPayload) { if (typeof idOrPayload === 'object') { return removeWatchlistStock(idOrPayload); } throw new Error('removeWatchlistStock requires {watchlist_id, stock_ticker}'); }
 
 // ====================
 // ALERTS
@@ -586,13 +569,7 @@ export async function updatePaymentMethod(paymentData) {
 // PayPal Integration Functions - Updated for Django backend
 export async function createPayPalOrder(planType, billingCycle, discountCode = null) {
   try {
-    const orderData = {
-      plan_type: planType,
-      billing_cycle: billingCycle,
-      discount_code: discountCode
-    };
-    
-    // This integrates with your Django backend PayPal handling
+    const orderData = { plan_type: planType, billing_cycle: billingCycle, discount_code: discountCode };
     const { data } = await api.post('/billing/create-paypal-order/', orderData);
     return data;
   } catch (error) {
@@ -635,39 +612,11 @@ export async function markNewsClicked(newsId) { const { data } = await api.post(
 export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
 
-//====================
-// REVENUE & PAYMENTS (PAYPAL INTEGRATION)
-//====================
-export async function validateDiscountCode(code) { 
-  const { data } = await api.post('/revenue/validate-discount/', { code }); 
-  return data; 
-}
-
-export async function applyDiscountCode(code, amount) { 
-  const { data } = await api.post('/revenue/apply-discount/', { code, amount }); 
-  return data; 
-}
-
-export async function recordPayment(paymentData) { 
-  const { data } = await api.post('/revenue/record-payment/', paymentData); 
-  return data; 
-}
-
-export async function getRevenueAnalytics(monthYear = null) { 
-  const url = monthYear ? `/revenue/revenue-analytics/${monthYear}/` : `/revenue/revenue-analytics/`; 
-  const { data } = await api.get(url); 
-  return data; 
-}
-
-export async function initializeDiscountCodes() { 
-  const { data } = await api.post('/revenue/initialize-codes/'); 
-  return data; 
-}
+// (Removed unsupported /revenue/* helper functions)
 
 // ====================
 // SUBSCRIPTIONS
 // ====================
-export async function subscribe(email, category = null) { const { data } = await api.post('/subscription/', { email, category }); return data; }
 export async function wordpressSubscribe(email, category = null) { const { data } = await api.post('/wordpress/subscribe/', { email, category }); return data; }
 
 // ====================
@@ -676,8 +625,6 @@ export async function wordpressSubscribe(email, category = null) { const { data 
 export async function getWordPressStocks(params = {}) { const { data } = await api.get('/wordpress/stocks/', { params }); return data; }
 export async function getWordPressNews(params = {}) { const { data } = await api.get('/wordpress/news/', { params }); return data; }
 export async function getWordPressAlerts(params = {}) { const { data } = await api.get('/wordpress/alerts/', { params }); return data; }
-export async function updateStocks(symbols) { const { data } = await api.post('/stocks/update/', { symbols }); return data; }
-export async function updateNews() { const { data } = await api.post('/news/update/'); return data; }
 
 // ====================
 // PORTFOLIO ANALYTICS & ADVANCED FEATURES
