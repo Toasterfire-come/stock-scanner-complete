@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -14,6 +15,7 @@ import { createAlert, api } from "../../api/client";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
   const [alerts, setAlerts] = useState([]);
   const [newAlert, setNewAlert] = useState({
     ticker: "",
@@ -32,6 +34,11 @@ const Alerts = () => {
     }
     fetchAlerts();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const t = (searchParams.get('ticker') || '').toUpperCase();
+    if (t) setNewAlert((prev) => ({ ...prev, ticker: t }));
+  }, [searchParams]);
 
   const fetchAlerts = async () => {
     setIsLoading(true);
