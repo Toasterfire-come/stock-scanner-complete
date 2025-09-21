@@ -112,6 +112,33 @@ const Stocks = () => {
 
   const totalPages = Math.max(1, Math.ceil(totalStocks / stocksPerPage));
 
+  // Pagination helpers
+  const getPageWindow = () => {
+    if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (currentPage <= 2) return [1, 2, 3];
+    if (currentPage >= totalPages - 1) return [totalPages - 2, totalPages - 1, totalPages];
+    return [currentPage - 1, currentPage, currentPage + 1];
+  };
+
+  const PaginationControls = ({ className = "" }) => (
+    totalPages > 1 ? (
+      <div className={`flex items-center justify-between ${className}`}>
+        <div className="text-sm text-gray-600">
+          Showing {((currentPage - 1) * stocksPerPage) + 1} to {Math.min(currentPage * stocksPerPage, Number(totalStocks||0))} of {Number(totalStocks||0).toLocaleString()} stocks
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
+          <div className="flex space-x-1">
+            {getPageWindow().map((page) => (
+              <Button key={page} variant={page === currentPage ? "default" : "outline"} size="sm" onClick={() => handlePageChange(page)}>{page}</Button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</Button>
+        </div>
+      </div>
+    ) : null
+  );
+
   const hasSearch = searchTerm.trim().length > 0;
   // client-side pagination when searching
   const pagedSearchStocks = useMemo(() => {
@@ -205,6 +232,9 @@ const Stocks = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Top Pagination */}
+        <PaginationControls />
 
         {/* Results */}
         <Card>
@@ -325,19 +355,8 @@ const Stocks = () => {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6">
-                    <div className="text-sm text-gray-600">Showing {((currentPage - 1) * stocksPerPage) + 1} to {Math.min(currentPage * stocksPerPage, Number(totalStocks||0))} of {Number(totalStocks||0).toLocaleString()} stocks</div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
-                      <div className="flex space-x-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => { const page = Math.max(1, currentPage - 2) + i; if (page > totalPages) return null; return (<Button key={page} variant={page === currentPage ? "default" : "outline"} size="sm" onClick={() => handlePageChange(page)}>{page}</Button>); })}
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</Button>
-                    </div>
-                  </div>
-                )}
+                {/* Bottom Pagination */}
+                <PaginationControls className="mt-6" />
               </>
             )}
           </CardContent>
