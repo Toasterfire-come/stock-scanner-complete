@@ -37,6 +37,8 @@ else:
         "localhost",
         os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
         "api.retailtradescanner.com",
+        "retailtradescanner.com",
+        "www.retailtradescanner.com",
         "tradescanpro.com",
         "www.tradescanpro.com",
     ]
@@ -347,6 +349,8 @@ else:
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
         'https://api.retailtradescanner.com',
+        'https://retailtradescanner.com',
+        'https://www.retailtradescanner.com',
         # Deployed static hosting domain(s)
         'https://access-5018544625.webspace-host.com',
     ] + [o.strip() for o in os.environ.get('EXTRA_CSRF_ORIGINS', '').split(',') if o.strip()]))
