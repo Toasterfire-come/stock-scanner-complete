@@ -18,7 +18,7 @@ app_name = 'news'
 
 # News API endpoints
 @csrf_exempt
-@secure_api_endpoint(methods=['GET'])
+@secure_api_endpoint(methods=['GET'], require_auth=False)
 def get_personalized_feed(request):
     """Get news feed. If no personalized items, return all available news."""
     try:
@@ -274,7 +274,7 @@ def sync_portfolio_stocks(request):
         }, status=500)
 
 @csrf_exempt
-@secure_api_endpoint(methods=['GET'])
+@secure_api_endpoint(methods=['GET'], require_auth=False)
 def ticker_news(request, ticker):
     """Return news for a specific ticker. Fallback to Yahoo when DB has none."""
     try:

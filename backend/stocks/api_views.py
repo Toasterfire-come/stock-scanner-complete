@@ -1258,6 +1258,7 @@ def screeners_detail_api(request, screener_id: str):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def screeners_create_api(request):
     try:
         body = getattr(request, 'data', None) or json.loads(request.body or '{}')
@@ -1274,6 +1275,7 @@ def screeners_create_api(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def screeners_update_api(request, screener_id: str):
     try:
         s = Screener.objects.get(id=screener_id)
@@ -1302,6 +1304,7 @@ def screeners_delete_api(request, screener_id: str):
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def screeners_results_api(request, screener_id: str):
     try:
         s = Screener.objects.get(id=screener_id)
