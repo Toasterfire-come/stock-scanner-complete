@@ -26,7 +26,13 @@ const ScreenerResults = () => {
       const stored = window.localStorage.getItem('screener:lastParams');
       const params = stored ? JSON.parse(stored) : {};
       const data = await filterStocks(params);
-      const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+      const rows = Array.isArray(data?.stocks)
+        ? data.stocks
+        : (Array.isArray(data?.results)
+          ? data.results
+          : (Array.isArray(data?.data?.results)
+            ? data.data.results
+            : (Array.isArray(data) ? data : [])));
 
       // Basic info
       setScreenerInfo({
@@ -39,10 +45,12 @@ const ScreenerResults = () => {
       setResults(rows.map((s) => ({
         ticker: s.ticker || s.symbol,
         company_name: s.company_name || s.name || '-',
-        current_price: Number(s.current_price || s.price || 0),
-        change_percent: Number(s.change_percent || s.change || 0),
-        volume: Number(s.volume || 0),
-        market_cap: Number(s.market_cap || 0),
+        current_price: Number(s.current_price ?? s.price ?? 0),
+        change_percent: Number(
+          s.change_percent ?? s.price_change_percent ?? s.change ?? s.price_change ?? 0
+        ),
+        volume: Number(s.volume ?? 0),
+        market_cap: Number(s.market_cap ?? 0),
         exchange: s.exchange || '-'
       })));
     } catch (error) {
@@ -138,7 +146,9 @@ const ScreenerResults = () => {
               <div>
                 <div className="text-sm text-gray-500">Avg. Price Change</div>
                 <div className="text-2xl font-bold text-green-600">
-                  +{(results.reduce((sum, stock) => sum + stock.change_percent, 0) / results.length).toFixed(2)}%
+                  {results.length > 0
+                    ? `${((results.reduce((sum, stock) => sum + (Number(stock.change_percent)||0), 0) / results.length).toFixed(2))}%`
+                    : '0.00%'}
                 </div>
               </div>
             </div>
