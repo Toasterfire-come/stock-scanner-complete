@@ -75,7 +75,6 @@ const MarketStatusIndicator = ({ compact = false }) => {
   const getMarketStatusInfo = () => {
     if (!marketStatus) return { status: 'unknown', color: 'gray', text: 'Unknown' };
     
-    const now = new Date();
     const marketOpen = new Date(marketStatus.open);
     const marketClose = new Date(marketStatus.close);
     
@@ -83,29 +82,30 @@ const MarketStatusIndicator = ({ compact = false }) => {
       return { 
         status: 'open', 
         color: 'green', 
-        text: 'Market Open',
-        timeInfo: `Closes at ${marketClose.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        text: 'Market Open (ET)',
+        timeInfo: 'Market closes at 5:00 PM ET'
       };
     } else {
-      const nextOpen = new Date(marketOpen);
-      nextOpen.setDate(nextOpen.getDate() + 1);
-      
       return { 
         status: 'closed', 
         color: 'red', 
-        text: 'Market Closed',
-        timeInfo: `Opens at ${marketOpen.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        text: 'Market Closed (ET)',
+        timeInfo: 'Market opens at 9:30 AM ET'
       };
     }
   };
 
   const formatTime = (timeString) => {
     if (!timeString) return 'N/A';
-    return new Date(timeString).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
+    try {
+      return new Date(timeString).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'America/New_York'
+      }) + ' ET';
+    } catch {
+      return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ET';
+    }
   };
 
   const statusInfo = getMarketStatusInfo();
