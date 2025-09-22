@@ -7,6 +7,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { filterStocks } from "../../../api/client";
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis
+} from "../../../components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -14,18 +24,28 @@ const ScreenerResults = () => {
   const [screenerInfo, setScreenerInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     fetchResults();
-  }, [id]);
+  }, [id, page, pageSize]);
 
   const fetchResults = async () => {
     setIsLoading(true);
     try {
       // Pull last-used params from localStorage (ad-hoc) or use params derived from screener id in future
       const stored = window.localStorage.getItem('screener:lastParams');
-      const params = stored ? JSON.parse(stored) : {};
-      const data = await filterStocks(params);
+      const baseParams = stored ? JSON.parse(stored) : {};
+      const requestParams = { ...baseParams };
+      // Provide both styles for backend compatibility
+      requestParams.limit = pageSize;
+      requestParams.offset = (page - 1) * pageSize;
+      requestParams.page = page;
+      requestParams.page_size = pageSize;
+
+      const data = await filterStocks(requestParams);
       const rows = Array.isArray(data?.stocks)
         ? data.stocks
         : (Array.isArray(data?.results)
@@ -34,12 +54,17 @@ const ScreenerResults = () => {
             ? data.data.results
             : (Array.isArray(data) ? data : [])));
 
+      const total = Number(
+        data?.total_count ?? data?.totalCount ?? data?.count ?? data?.data?.total_count ?? rows.length
+      );
+      setTotalCount(Number.isFinite(total) ? total : rows.length);
+
       // Basic info
       setScreenerInfo({
         name: id === 'adhoc' ? 'Ad-hoc Screener' : `Screener ${id}`,
         description: 'Results from backend filter',
         lastRun: new Date().toISOString(),
-        criteria: Object.keys(params || {}).map(k => `${k}=${params[k]}`)
+        criteria: Object.keys(baseParams || {}).map(k => `${k}=${baseParams[k]}`)
       });
 
       setResults(rows.map((s) => ({
@@ -131,7 +156,7 @@ const ScreenerResults = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <div className="text-sm text-gray-500">Total Results</div>
-                <div className="text-2xl font-bold text-blue-600">{results.length}</div>
+                <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Last Updated</div>
@@ -233,6 +258,41 @@ const ScreenerResults = () => {
             )}
           </CardContent>
         </Card>
+
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600">Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}</div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Rows per page</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder={String(pageSize)} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[25, 50, 100, 250].map(sz => (
+                    <SelectItem key={sz} value={String(sz)}>{sz}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }} href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink isActive href="#">{page}</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext onClick={(e) => { e.preventDefault(); const maxPage = Math.max(1, Math.ceil(totalCount / pageSize)); if (page < maxPage) setPage(page + 1); }} href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </div>
       </div>
     </div>
   );
