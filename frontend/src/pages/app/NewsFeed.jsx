@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Newspaper, RefreshCw, Search, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
-import { getNewsFeed } from '../../api/client';
+import { getAllNews } from '../../api/client';
 
 const NewsFeed = () => {
   const [items, setItems] = useState([]);
@@ -25,7 +25,7 @@ const NewsFeed = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await getNewsFeed({ page, limit: pageSize, mode: 'all', sort });
+        const res = await getAllNews({ page, limit: pageSize, sort });
         const raws = res?.data?.news_items || [];
         const totalCount = Number(res?.total_count || raws.length);
         if (mounted) {

@@ -141,6 +141,93 @@ def get_personalized_feed(request):
             'message': 'No news available'
         }, status=200)
 
+# New explicit all-news endpoint (non-personalized), paginated
+@csrf_exempt
+@secure_api_endpoint(methods=['GET'], require_auth=False)
+def get_all_news(request):
+    try:
+        raw_limit = request.GET.get('limit')
+        raw_page = request.GET.get('page')
+        sort = (request.GET.get('sort') or 'recent').strip().lower()
+        category = request.GET.get('category', None)
+
+        # Default to 20 per page
+        try:
+            limit = max(1, int(raw_limit or '20'))
+        except Exception:
+            limit = 20
+        try:
+            page = max(1, int(raw_page or '1'))
+        except Exception:
+            page = 1
+        offset = (page - 1) * limit
+
+        qs = NewsArticle.objects.exclude(Q(url__isnull=True) | Q(url__exact=''))
+        if sort in ('sentiment_desc', 'bullish', 'most_bullish'):
+            try:
+                qs = qs.order_by(F('sentiment_score').desc(nulls_last=True), '-published_date')
+            except Exception:
+                qs = qs.order_by('-sentiment_score', '-published_date')
+        elif sort in ('sentiment_asc', 'bearish', 'most_bearish'):
+            try:
+                qs = qs.order_by(F('sentiment_score').asc(nulls_last=True), '-published_date')
+            except Exception:
+                qs = qs.order_by('sentiment_score', '-published_date')
+        else:
+            qs = qs.order_by('-published_date')
+        if category:
+            qs = qs.filter(sentiment_grade__iexact=category[:1])
+
+        total_qs_count = qs.count()
+        articles = list(qs[offset: offset + limit])
+
+        def parse_tickers(s: str):
+            if not s:
+                return []
+            return [t.strip().upper() for t in s.split(',') if t.strip()]
+
+        seen = set()
+        items = []
+        for a in articles:
+            if a.url and a.url in seen:
+                continue
+            if a.url:
+                seen.add(a.url)
+            items.append({
+                'id': a.id,
+                'title': a.title,
+                'content': a.summary,
+                'url': a.url,
+                'source': a.source or (a.news_source.name if a.news_source else 'Unknown'),
+                'sentiment_score': float(a.sentiment_score) if a.sentiment_score is not None else None,
+                'sentiment_grade': a.sentiment_grade,
+                'tickers': parse_tickers(a.mentioned_tickers),
+                'mentioned_tickers': a.mentioned_tickers,
+                'published_at': a.published_date.isoformat() if a.published_date else None,
+                'created_at': a.created_at.isoformat() if a.created_at else None,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'news_items': items,
+                'count': len(items)
+            },
+            'page': page,
+            'limit': limit,
+            'total_count': total_qs_count,
+            'message': 'All news retrieved successfully' if items else 'No news available'
+        })
+    except Exception:
+        return JsonResponse({
+            'success': True,
+            'data': { 'news_items': [], 'count': 0 },
+            'page': 1,
+            'limit': 20,
+            'total_count': 0,
+            'message': 'No news available'
+        }, status=200)
+
 @csrf_exempt
 @secure_api_endpoint(methods=['POST'])
 def mark_news_read(request):
@@ -348,6 +435,7 @@ def ticker_news(request, ticker):
 urlpatterns = [
     # News feed management
     path('feed/', get_personalized_feed, name='feed'),
+    path('all/', get_all_news, name='all_news'),
     path('mark-read/', mark_news_read, name='mark_read'),
     path('mark-clicked/', mark_news_clicked, name='mark_clicked'),
     

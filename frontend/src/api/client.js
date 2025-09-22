@@ -707,6 +707,11 @@ export async function getNewsFeed(params = {}) {
   const { data } = await api.get('/news/feed/', { params }); 
   return data; 
 }
+export async function getAllNews(params = {}) {
+  ensureApiQuotaAndIncrement('getNews');
+  const { data } = await api.get('/news/all/', { params });
+  return data;
+}
 export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
 export async function markNewsClicked(newsId) { const { data } = await api.post('/news/mark-clicked/', { news_id: newsId }); return data; }
 export async function updateNewsPreferences(preferences) { const { data } = await api.post('/news/preferences/', preferences); return data; }
