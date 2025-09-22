@@ -453,6 +453,13 @@
   border-color: rgba(59, 130, 246, 0.3);
 }
 
+/* Utility: Vertical scroll container */
+.vertical-menu {
+  width: 200px;
+  height: 150px;
+  overflow-y: auto;
+}
+
 .card-interactive {
   cursor: pointer;
 }
