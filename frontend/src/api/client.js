@@ -758,7 +758,7 @@ export async function getScreeners() {
 
 export async function createScreener(screenerData) { 
   ensureApiQuotaAndIncrement('createScreener');
-  const { data } = await api.post('/screeners/', screenerData); 
+  const { data } = await api.post('/screeners/create/', screenerData); 
   return data; 
 }
 
@@ -770,13 +770,13 @@ export async function getScreener(id) {
 
 export async function updateScreener(id, screenerData) { 
   ensureApiQuotaAndIncrement('updateScreener');
-  const { data } = await api.put(`/screeners/${id}/`, screenerData); 
+  const { data } = await api.post(`/screeners/${id}/update/`, screenerData); 
   return data; 
 }
 
 export async function deleteScreener(id) { 
   ensureApiQuotaAndIncrement('deleteScreener');
-  const { data } = await api.delete(`/screeners/${id}/`); 
+  const { data } = await api.delete(`/screeners/${id}/delete/`); 
   return data; 
 }
 
@@ -788,7 +788,7 @@ export async function getScreenerTemplates() {
 
 export async function runScreener(id) { 
   ensureApiQuotaAndIncrement('runScreener');
-  const { data } = await api.post(`/screeners/${id}/run/`); 
+  const { data } = await api.post(`/screeners/${id}/results/`); 
   return data; 
 }
 
