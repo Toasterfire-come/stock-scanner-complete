@@ -52,6 +52,7 @@ const ScreenerLibrary = lazy(() => import(/* webpackChunkName: "screeners" */ ".
 const CreateScreener = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/CreateScreener"));
 const EditScreener = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/EditScreener"));
 const ScreenerResults = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/ScreenerResults"));
+const ScreenerDetail = lazy(() => import(/* webpackChunkName: "screeners" */ "./pages/app/screeners/ScreenerDetail"));
 const Templates = lazy(() => import("./pages/app/Templates"));
 
 // Market Overview
@@ -213,6 +214,7 @@ function SecureApp() {
                     <Route path="/app/screeners/new" element={<CreateScreener />} />
                     <Route path="/app/screeners/:id/edit" element={<EditScreener />} />
                     <Route path="/app/screeners/:id/results" element={<ScreenerResults />} />
+                    <Route path="/app/screeners/:id" element={<ScreenerDetail />} />
                     <Route path="/app/templates" element={<Templates />} />
 
                     {/* Market Overview */}

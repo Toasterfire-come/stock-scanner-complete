@@ -94,10 +94,9 @@ const AdvancedScreenerInterface = () => {
 
   const handleRunScreener = async (screenerId) => {
     try {
-      const result = await runScreener(screenerId);
-      if (result.success) {
-        navigate(`/app/screeners/${screenerId}/results`);
-      }
+      // Kick off run in background, then navigate to detail which auto-runs
+      runScreener(screenerId).catch(() => {});
+      navigate(`/app/screeners/${screenerId}`);
     } catch (err) {
       setError('Failed to run screener');
       console.error('Run screener error:', err);
