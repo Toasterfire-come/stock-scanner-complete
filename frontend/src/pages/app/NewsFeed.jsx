@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Newspaper, RefreshCw, Search, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { getNewsFeed } from '../../api/client';
 
 const NewsFeed = () => {
@@ -15,6 +16,7 @@ const NewsFeed = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sort, setSort] = useState('recent');
   const pageSize = 20;
 
   useEffect(() => {
@@ -23,7 +25,7 @@ const NewsFeed = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await getNewsFeed({ page, limit: pageSize, mode: 'all' });
+        const res = await getNewsFeed({ page, limit: pageSize, mode: 'all', sort });
         const raws = res?.data?.news_items || [];
         const totalCount = Number(res?.total_count || raws.length);
         if (mounted) {
@@ -37,7 +39,7 @@ const NewsFeed = () => {
       }
     })();
     return () => { mounted = false; };
-  }, [page]);
+  }, [page, sort]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const getPageWindow = () => {
@@ -104,6 +106,18 @@ const NewsFeed = () => {
                     className="pr-8"
                   />
                   <Search className="h-4 w-4 text-gray-400 absolute right-2 top-2.5" />
+                </div>
+                <div className="w-48">
+                  <Select value={sort} onValueChange={(v) => { setPage(1); setSort(v); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Most Recent</SelectItem>
+                      <SelectItem value="sentiment_desc">Most Bullish</SelectItem>
+                      <SelectItem value="sentiment_asc">Most Bearish</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => { setIsLoading(true); setPage(1); }} disabled={isLoading}>
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />

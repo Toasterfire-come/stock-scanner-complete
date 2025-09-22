@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .security_utils import secure_api_endpoint, validate_user_input
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, F
 import requests
 import re
 
@@ -25,6 +25,7 @@ def get_personalized_feed(request):
         raw_limit = request.GET.get('limit')
         raw_page = request.GET.get('page')
         mode = (request.GET.get('mode') or '').strip().lower()
+        sort = (request.GET.get('sort') or 'recent').strip().lower()
         category = request.GET.get('category', None)
 
         # Interpret limit: 'all' or missing => no cap; else int
@@ -69,7 +70,20 @@ def get_personalized_feed(request):
                 })
 
         # Fallback: return all news articles available (dedupe by URL)
-        qs = NewsArticle.objects.exclude(Q(url__isnull=True) | Q(url__exact='')).order_by('-published_date')
+        qs = NewsArticle.objects.exclude(Q(url__isnull=True) | Q(url__exact=''))
+        # Sorting
+        if sort in ('sentiment_desc', 'bullish', 'most_bullish'):
+            try:
+                qs = qs.order_by(F('sentiment_score').desc(nulls_last=True), '-published_date')
+            except Exception:
+                qs = qs.order_by('-sentiment_score', '-published_date')
+        elif sort in ('sentiment_asc', 'bearish', 'most_bearish'):
+            try:
+                qs = qs.order_by(F('sentiment_score').asc(nulls_last=True), '-published_date')
+            except Exception:
+                qs = qs.order_by('sentiment_score', '-published_date')
+        else:
+            qs = qs.order_by('-published_date')
         if category:
             qs = qs.filter(sentiment_grade__iexact=category[:1])  # optional mapping
         total_qs_count = qs.count()
