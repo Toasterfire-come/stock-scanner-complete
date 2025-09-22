@@ -1313,8 +1313,22 @@ def screeners_results_api(request, screener_id: str):
     # Proxy to filter_stocks_api using criteria as JSON
     request._dont_enforce_csrf_checks = True
     try:
-        request.body = json.dumps({ 'criteria': s.criteria }).encode('utf-8')
-        resp = filter_stocks_api(request)
+        # Ensure we pass a Django HttpRequest into the @api_view-wrapped filter_stocks_api
+        django_request = getattr(request, '_request', request)
+        try:
+            django_request.method = 'POST'
+        except Exception:
+            pass
+        try:
+            django_request._body = json.dumps({ 'criteria': s.criteria }).encode('utf-8')
+        except Exception:
+            pass
+        try:
+            if hasattr(django_request, 'META'):
+                django_request.META['CONTENT_TYPE'] = 'application/json'
+        except Exception:
+            pass
+        resp = filter_stocks_api(django_request)
         if hasattr(resp, 'data'):
             s.last_run = timezone.now(); s.save(update_fields=['last_run'])
         return resp
