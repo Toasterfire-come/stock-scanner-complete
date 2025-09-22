@@ -287,62 +287,81 @@ urlpatterns = [
     path('analytics/', get_analytics, name='analytics'),
     
     # Ticker-scoped news endpoint with Yahoo fallback (max 10)
-    path('ticker/<str:ticker>/', csrf_exempt(secure_api_endpoint(methods=['GET'])(
-        lambda request, ticker: (
-            (lambda db_items: (
-                JsonResponse({
-                    'success': True,
-                    'data': { 'news_items': db_items, 'count': len(db_items) },
-                    'timestamp': timezone.now().isoformat()
-                }) if db_items else (
-                    # Fallback to Yahoo Finance when no specialized news exists
-                    (lambda fallback_items: JsonResponse({
-                        'success': True,
-                        'data': { 'news_items': fallback_items, 'count': len(fallback_items) },
-                        'timestamp': timezone.now().isoformat(),
-                        'source': 'yahoo_fallback'
-                    }))((lambda: (
-                        (lambda html: (
-                            (lambda matches: (
-                                (lambda items: items[:10])([
-                                    {
-                                        'id': f'https://finance.yahoo.com{m[0]}' if m[0].startswith('/') else m[0],
-                                        'title': re.sub(r'<[^>]+>', '', m[1]).strip(),
-                                        'content': None,
-                                        'url': f'https://finance.yahoo.com{m[0]}' if m[0].startswith('/') else m[0],
-                                        'source': 'Yahoo Finance',
-                                        'sentiment_score': None,
-                                        'sentiment_grade': None,
-                                        'tickers': [ticker.upper()],
-                                        'published_at': timezone.now().isoformat(),
-                                    }
-                                    for m in matches
-                                ])
-                            ))(re.findall(r'<h3[^>]*?>.*?<a[^>]*?href=\"(\/?news[^\"]+)\"[^>]*?>(.*?)<\/a>.*?<\/h3>', html, flags=re.IGNORECASE | re.DOTALL))
-                        ))((lambda resp: resp.text if (resp is not None and getattr(resp, 'status_code', 0) == 200) else '')(
-                            (lambda: (
-                                (lambda url: (
-                                    (lambda r: r)(
-                                        requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; RTSBot/1.0; +https://retailtradescanner.com)'}, timeout=10)
-                                    )
-                                ))(f'https://finance.yahoo.com/quote/{ticker}/news')
-                            ))()
-                        ))
-                    ))()
-                )
-            ))([
-                {
-                    'id': a.id,
-                    'title': a.title,
-                    'content': a.summary,
-                    'url': a.url,
-                    'source': a.source or (a.news_source.name if a.news_source else 'Unknown'),
-                    'sentiment_score': float(a.sentiment_score) if a.sentiment_score is not None else None,
-                    'sentiment_grade': a.sentiment_grade,
-                    'tickers': [t.strip() for t in (a.mentioned_tickers or '').split(',') if t.strip()],
-                    'published_at': a.published_date.isoformat() if a.published_date else None,
-                } for a in NewsArticle.objects.filter(mentioned_tickers__icontains=ticker.upper()).order_by('-published_date')[:500]
-            ])
-        )
-    )), name='ticker_news'),
+    path('ticker/<str:ticker>/', None, name='ticker_news'),  # placeholder replaced below
 ]
+
+# Replace placeholder with a clear function-based view to avoid syntax issues
+@csrf_exempt
+@secure_api_endpoint(methods=['GET'])
+def ticker_news(request, ticker):
+    """Return news for a specific ticker. Fallback to Yahoo when DB has none."""
+    try:
+        qs = (
+            NewsArticle.objects
+            .filter(mentioned_tickers__icontains=ticker.upper())
+            .exclude(Q(url__isnull=True) | Q(url__exact=''))
+            .order_by('-published_date')[:500]
+        )
+        db_items = [
+            {
+                'id': a.id,
+                'title': a.title,
+                'content': a.summary,
+                'url': a.url,
+                'source': a.source or (a.news_source.name if a.news_source else 'Unknown'),
+                'sentiment_score': float(a.sentiment_score) if a.sentiment_score is not None else None,
+                'sentiment_grade': a.sentiment_grade,
+                'tickers': [t.strip() for t in (a.mentioned_tickers or '').split(',') if t.strip()],
+                'published_at': a.published_date.isoformat() if a.published_date else None,
+            }
+            for a in qs
+        ]
+        if db_items:
+            return JsonResponse({
+                'success': True,
+                'data': { 'news_items': db_items, 'count': len(db_items) },
+                'timestamp': timezone.now().isoformat()
+            })
+
+        # Yahoo fallback (best-effort)
+        link = f'https://finance.yahoo.com/quote/{ticker}/news'
+        try:
+            resp = requests.get(link, headers={'User-Agent': 'Mozilla/5.0 (compatible; RTSBot/1.0; +https://retailtradescanner.com)'}, timeout=10)
+            html = resp.text if (resp is not None and getattr(resp, 'status_code', 0) == 200) else ''
+        except Exception:
+            html = ''
+
+        matches = re.findall(r'<h3[^>]*?>.*?<a[^>]*?href=\"(\/?news[^\"]+)\"[^>]*?>(.*?)<\/a>.*?<\/h3>', html, flags=re.IGNORECASE | re.DOTALL)
+        fallback_items = []
+        for href, title_html in matches:
+            title = re.sub(r'<[^>]+>', '', title_html).strip()
+            url = f'https://finance.yahoo.com{href}' if href.startswith('/') else href
+            fallback_items.append({
+                'id': url,
+                'title': title,
+                'content': None,
+                'url': url,
+                'source': 'Yahoo Finance',
+                'sentiment_score': None,
+                'sentiment_grade': None,
+                'tickers': [ticker.upper()],
+                'published_at': timezone.now().isoformat(),
+            })
+            if len(fallback_items) >= 10:
+                break
+
+        return JsonResponse({
+            'success': True,
+            'data': { 'news_items': fallback_items, 'count': len(fallback_items) },
+            'timestamp': timezone.now().isoformat(),
+            'source': 'yahoo_fallback'
+        })
+    except Exception:
+        return JsonResponse({
+            'success': True,
+            'data': { 'news_items': [], 'count': 0 },
+            'message': 'No news available'
+        }, status=200)
+
+# Patch the placeholder path to point to the function-based view (keeps ordering above)
+urlpatterns[-1] = path('ticker/<str:ticker>/', ticker_news, name='ticker_news')
