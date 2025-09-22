@@ -75,11 +75,17 @@ const NewsFeed = () => {
   };
 
   const getSentimentInfo = (grade, score) => {
+    const scoreNum = Number(score);
+    if (Number.isFinite(scoreNum) && Math.abs(scoreNum) > 0) {
+      return scoreNum > 0
+        ? { label: 'Bullish', className: 'bg-green-50 text-green-700 border-green-200' }
+        : { label: 'Bearish', className: 'bg-red-50 text-red-700 border-red-200' };
+    }
     const g = (grade || '').toString().toLowerCase();
     if (g.includes('bull') || g.startsWith('p') || g.startsWith('pos')) {
       return { label: 'Bullish', className: 'bg-green-50 text-green-700 border-green-200' };
     }
-    if (g.includes('bear') || g.startsWith('neg')) {
+    if (g.includes('bear') || g.startsWith('n') || g.startsWith('neg')) {
       return { label: 'Bearish', className: 'bg-red-50 text-red-700 border-red-200' };
     }
     return { label: 'Neutral', className: 'bg-gray-50 text-gray-700 border-gray-200' };
@@ -146,7 +152,7 @@ const NewsFeed = () => {
                         Open <ExternalLink className="h-3 w-3 ml-1" />
                       </a>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{n.title}</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">{n.title}</h3>
                     <div className="mt-2 flex items-center flex-wrap gap-2">
                       {(() => { const info = getSentimentInfo(n.sentiment_grade, n.sentiment_score); return (
                         <Badge variant="outline" className={info.className}>
@@ -162,7 +168,7 @@ const NewsFeed = () => {
                         <span className="text-xs text-gray-500">+{n.tickers.length - 6} more</span>
                       )}
                     </div>
-                    {n.content && <p className="text-sm text-gray-700 line-clamp-3">{n.content}</p>}
+                    {n.content && <p className="text-sm text-gray-700">{n.content}</p>}
                   </div>
                 ))}
 
