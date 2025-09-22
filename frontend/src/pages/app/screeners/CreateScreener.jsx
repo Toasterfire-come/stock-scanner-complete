@@ -133,7 +133,7 @@ const CreateScreener = () => {
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleTest} disabled={isLoading}>
               <Play className="h-4 w-4 mr-2" />
-              Test Run
+              Filter
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
               <Save className="h-4 w-4 mr-2" />

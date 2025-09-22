@@ -175,7 +175,7 @@ const ScreenerResults = () => {
                 </TableHeader>
                 <TableBody>
                   {results.map((stock) => (
-                    <TableRow key={stock.ticker}>
+                    <TableRow key={stock.ticker} className="odd:bg-white even:bg-gray-50">
                       <TableCell>
                         <Link 
                           to={`/app/stocks/${stock.ticker}`}

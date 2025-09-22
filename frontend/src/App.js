@@ -58,6 +58,7 @@ import ScreenerLibrary from "./pages/app/screeners/ScreenerLibrary";
 import CreateScreener from "./pages/app/screeners/CreateScreener";
 import EditScreener from "./pages/app/screeners/EditScreener";
 import ScreenerResults from "./pages/app/screeners/ScreenerResults";
+import ScreenerDetail from "./pages/app/screeners/ScreenerDetail";
 import Templates from "./pages/app/Templates";
 
 // Market Overview (Protected)
@@ -239,6 +240,11 @@ function App() {
                   <Route path="/app/screeners" element={
                     <ProtectedRoute>
                       <ScreenerLibrary />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/:id" element={
+                    <ProtectedRoute>
+                      <ScreenerDetail />
                     </ProtectedRoute>
                   } />
                   <Route path="/app/screeners/new" element={

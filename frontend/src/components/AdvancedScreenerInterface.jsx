@@ -378,96 +378,16 @@ const AdvancedScreenerInterface = () => {
       {/* Screeners List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredScreeners.map((screener) => (
-          <Card key={screener.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">{screener.name}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {screener.description || 'No description provided'}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-1">
-                  {screener.is_public && (
-                    <Badge variant="secondary">Public</Badge>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="space-y-3">
-                {/* Criteria Preview */}
-                {screener.criteria && screener.criteria.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Criteria:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {screener.criteria.slice(0, 3).map((criterion, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {criteriaOptions.find(opt => opt.value === criterion.id)?.label || criterion.id}
-                        </Badge>
-                      ))}
-                      {screener.criteria.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{screener.criteria.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Last Run Info */}
-                {screener.last_run && (
-                  <div className="text-xs text-gray-500">
-                    Last run: {new Date(screener.last_run).toLocaleDateString()}
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleRunScreener(screener.id)}
-                    className="flex-1"
-                  >
-                    <Play className="h-4 w-4 mr-1" />
-                    Run
-                  </Button>
-                  
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/app/screeners/${screener.id}/edit`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDuplicateScreener(screener)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleExportResults(screener.id)}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDeleteScreener(screener.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <Link key={screener.id} to={`/app/screeners/${screener.id}`} className="block group">
+            <Card className="transition-shadow group-hover:shadow-md cursor-pointer">
+              <CardHeader>
+                <CardTitle className="text-lg">{screener.name}</CardTitle>
+                <CardDescription className="mt-1">
+                  {screener.description || 'No description provided'}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
         ))}
       </div>
 
