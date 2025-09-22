@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks } from "../../../api/client";
+import { getScreener, runScreener } from "../../../api/client";
 
 const ScreenerResults = () => {
   const { id } = useParams();
@@ -22,25 +22,30 @@ const ScreenerResults = () => {
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      // Pull last-used params from localStorage (ad-hoc) or use params derived from screener id in future
-      const stored = window.localStorage.getItem('screener:lastParams');
-      const params = stored ? JSON.parse(stored) : {};
-      const data = await filterStocks(params);
-      const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+      // Fetch screener details and server-side results
+      const [info, res] = await Promise.all([
+        id && id !== 'adhoc' ? getScreener(id).catch(() => null) : Promise.resolve(null),
+        id && id !== 'adhoc' ? runScreener(id).catch(() => ({ stocks: [], total_count: 0 })) : Promise.resolve({ stocks: [], total_count: 0 })
+      ]);
 
-      // Basic info
+      const screenerName = info?.data?.name || (id === 'adhoc' ? 'Ad-hoc Screener' : `Screener ${id}`);
+      const criteriaArr = Array.isArray(info?.data?.criteria)
+        ? info.data.criteria.map((c) => typeof c === 'string' ? c : JSON.stringify(c))
+        : [];
+
       setScreenerInfo({
-        name: id === 'adhoc' ? 'Ad-hoc Screener' : `Screener ${id}`,
-        description: 'Results from backend filter',
+        name: screenerName,
+        description: info?.data?.description || 'Results from backend filter',
         lastRun: new Date().toISOString(),
-        criteria: Object.keys(params || {}).map(k => `${k}=${params[k]}`)
+        criteria: criteriaArr,
       });
 
+      const rows = Array.isArray(res?.stocks) ? res.stocks : [];
       setResults(rows.map((s) => ({
         ticker: s.ticker || s.symbol,
         company_name: s.company_name || s.name || '-',
         current_price: Number(s.current_price || s.price || 0),
-        change_percent: Number(s.change_percent || s.change || 0),
+        change_percent: Number(s.price_change_percent || s.change_percent || s.change || 0),
         volume: Number(s.volume || 0),
         market_cap: Number(s.market_cap || 0),
         exchange: s.exchange || '-'
@@ -174,8 +179,8 @@ const ScreenerResults = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {results.map((stock) => (
-                    <TableRow key={stock.ticker}>
+                  {results.map((stock, idx) => (
+                    <TableRow key={stock.ticker} className="odd:bg-gray-50">
                       <TableCell>
                         <Link 
                           to={`/app/stocks/${stock.ticker}`}
