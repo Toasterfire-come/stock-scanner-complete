@@ -23,6 +23,8 @@ def get_personalized_feed(request):
     """Get news feed. If no personalized items, return all available news."""
     try:
         raw_limit = request.GET.get('limit')
+        raw_page = request.GET.get('page')
+        mode = (request.GET.get('mode') or '').strip().lower()
         category = request.GET.get('category', None)
 
         # Interpret limit: 'all' or missing => no cap; else int
@@ -34,29 +36,47 @@ def get_personalized_feed(request):
             except Exception:
                 limit = 20
 
-        # Try personalized feed first
-        pf_limit = limit if limit is not None else 1000
-        feed = news_personalization_service.NewsPersonalizationService.get_personalized_feed(
-            user=request.user,
-            limit=pf_limit,
-            category=category
-        )
+        # Page defaults to 1; used only when limit is set
+        try:
+            page = max(1, int(raw_page or '1'))
+        except Exception:
+            page = 1
+        offset = 0 if (limit is None) else (page - 1) * limit
 
-        if feed:
-            return JsonResponse({
-                'success': True,
-                'data': {
-                    'news_items': feed if limit is None else feed[:limit],
-                    'count': len(feed) if limit is None else min(len(feed), limit)
-                },
-                'message': 'News feed retrieved successfully'
-            })
+        # Try personalized feed first unless mode forces all
+        feed = []
+        total_count = 0
+        if mode != 'all':
+            pf_limit = (limit if limit is not None else 1000)
+            feed = news_personalization_service.NewsPersonalizationService.get_personalized_feed(
+                user=request.user,
+                limit=pf_limit,
+                category=category
+            ) or []
+            total_count = len(feed)
+            if feed:
+                sliced = feed if limit is None else feed[offset: offset + limit]
+                return JsonResponse({
+                    'success': True,
+                    'data': {
+                        'news_items': sliced,
+                        'count': len(sliced)
+                    },
+                    'page': page,
+                    'limit': limit or total_count,
+                    'total_count': total_count,
+                    'message': 'News feed retrieved successfully'
+                })
 
         # Fallback: return all news articles available (dedupe by URL)
         qs = NewsArticle.objects.exclude(Q(url__isnull=True) | Q(url__exact='')).order_by('-published_date')
         if category:
             qs = qs.filter(sentiment_grade__iexact=category[:1])  # optional mapping
-        articles = list(qs if limit is None else qs[:limit])
+        total_qs_count = qs.count()
+        if limit is None:
+            articles = list(qs)
+        else:
+            articles = list(qs[offset: offset + limit])
 
         def parse_tickers(s: str):
             if not s:
@@ -90,6 +110,9 @@ def get_personalized_feed(request):
                 'news_items': items,
                 'count': len(items)
             },
+            'page': page,
+            'limit': limit or total_qs_count,
+            'total_count': total_qs_count,
             'message': 'All news retrieved successfully' if items else 'No news available'
         })
 
