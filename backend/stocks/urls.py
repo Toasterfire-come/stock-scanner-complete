@@ -35,16 +35,16 @@ urlpatterns = [
     path('stocks/top-losers/', api_views.top_losers_api, name='top_losers'),
     path('stocks/most-active/', api_views.most_active_api, name='most_active'),
     
-    # Screener endpoints (backed by filter API)
+    # Screener endpoints (static routes MUST come before dynamic <screener_id> routes)
     path('screeners/', api_views.screeners_list_api, name='screeners_list'),
     path('screeners/create/', api_views.screeners_create_api, name='screeners_create'),
-    path('screeners/<str:screener_id>/', api_views.screeners_detail_api, name='screeners_detail'),
+    path('screeners/templates/', api_views.screeners_templates_api, name='screeners_templates'),
     path('screeners/<str:screener_id>/update/', api_views.screeners_update_api, name='screeners_update'),
     path('screeners/<str:screener_id>/results/', api_views.screeners_results_api, name='screeners_results'),
     path('screeners/<str:screener_id>/export.csv', api_views.screeners_export_csv_api, name='screeners_export_csv'),
     # delete alias to support client flexibility
     path('screeners/<str:screener_id>/delete/', api_views.screeners_delete_api, name='screeners_delete_alias'),
-    path('screeners/templates/', api_views.screeners_templates_api, name='screeners_templates'),
+    path('screeners/<str:screener_id>/', api_views.screeners_detail_api, name='screeners_detail'),
 
     # Generic stock endpoints (after specific routes)
     path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
