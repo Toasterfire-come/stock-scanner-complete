@@ -114,7 +114,7 @@ const CreateScreener = () => {
       const count = rows.length || 0;
       window.localStorage.setItem('screener:lastParams', JSON.stringify(params));
       toast.success(`Found ${count} matching stocks`);
-      navigate(`/app/screeners/adhoc/results`);
+      navigate(`/app/screeners/adhoc`);
     } catch (error) {
       toast.error("Failed to test screener");
     } finally {
