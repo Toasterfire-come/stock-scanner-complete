@@ -273,24 +273,6 @@ def sync_portfolio_stocks(request):
             'error_code': 'NEWS_ERROR'
         }, status=500)
 
-urlpatterns = [
-    # News feed management
-    path('feed/', get_personalized_feed, name='feed'),
-    path('mark-read/', mark_news_read, name='mark_read'),
-    path('mark-clicked/', mark_news_clicked, name='mark_clicked'),
-    
-    # News preferences
-    path('preferences/', update_preferences, name='preferences'),
-    path('sync-portfolio/', sync_portfolio_stocks, name='sync_portfolio'),
-    
-    # Analytics
-    path('analytics/', get_analytics, name='analytics'),
-    
-    # Ticker-scoped news endpoint with Yahoo fallback (max 10)
-    path('ticker/<str:ticker>/', None, name='ticker_news'),  # placeholder replaced below
-]
-
-# Replace placeholder with a clear function-based view to avoid syntax issues
 @csrf_exempt
 @secure_api_endpoint(methods=['GET'])
 def ticker_news(request, ticker):
@@ -363,5 +345,19 @@ def ticker_news(request, ticker):
             'message': 'No news available'
         }, status=200)
 
-# Patch the placeholder path to point to the function-based view (keeps ordering above)
-urlpatterns[-1] = path('ticker/<str:ticker>/', ticker_news, name='ticker_news')
+urlpatterns = [
+    # News feed management
+    path('feed/', get_personalized_feed, name='feed'),
+    path('mark-read/', mark_news_read, name='mark_read'),
+    path('mark-clicked/', mark_news_clicked, name='mark_clicked'),
+    
+    # News preferences
+    path('preferences/', update_preferences, name='preferences'),
+    path('sync-portfolio/', sync_portfolio_stocks, name='sync_portfolio'),
+    
+    # Analytics
+    path('analytics/', get_analytics, name='analytics'),
+    
+    # Ticker-scoped news endpoint with Yahoo fallback (max 10)
+    path('ticker/<str:ticker>/', ticker_news, name='ticker_news'),
+]
