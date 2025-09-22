@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Newspaper, RefreshCw, Search, ExternalLink, Clock } from 'lucide-react';
+import { Newspaper, RefreshCw, Search, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getNewsFeed } from '../../api/client';
 
 const NewsFeed = () => {
@@ -71,6 +72,17 @@ const NewsFeed = () => {
     return date.toLocaleDateString();
   };
 
+  const getSentimentInfo = (grade, score) => {
+    const g = (grade || '').toString().toLowerCase();
+    if (g.includes('bull') || g.startsWith('p') || g.startsWith('pos')) {
+      return { label: 'Bullish', className: 'bg-green-50 text-green-700 border-green-200' };
+    }
+    if (g.includes('bear') || g.startsWith('neg')) {
+      return { label: 'Bearish', className: 'bg-red-50 text-red-700 border-red-200' };
+    }
+    return { label: 'Neutral', className: 'bg-gray-50 text-gray-700 border-gray-200' };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -121,6 +133,21 @@ const NewsFeed = () => {
                       </a>
                     </div>
                     <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{n.title}</h3>
+                    <div className="mt-2 flex items-center flex-wrap gap-2">
+                      {(() => { const info = getSentimentInfo(n.sentiment_grade, n.sentiment_score); return (
+                        <Badge variant="outline" className={info.className}>
+                          {info.label}{Number.isFinite(Number(n.sentiment_score)) ? ` ${Number(n.sentiment_score).toFixed(2)}` : ''}
+                        </Badge>
+                      ); })()}
+                      {(Array.isArray(n.tickers) ? n.tickers : []).slice(0, 6).map((t, idx) => (
+                        <Link key={`${t}-${idx}`} to={`/app/stocks/${encodeURIComponent(t)}`}>
+                          <Badge variant="secondary" className="cursor-pointer">{(t || '').toUpperCase()}</Badge>
+                        </Link>
+                      ))}
+                      {Array.isArray(n.tickers) && n.tickers.length > 6 && (
+                        <span className="text-xs text-gray-500">+{n.tickers.length - 6} more</span>
+                      )}
+                    </div>
                     {n.content && <p className="text-sm text-gray-700 line-clamp-3">{n.content}</p>}
                   </div>
                 ))}
