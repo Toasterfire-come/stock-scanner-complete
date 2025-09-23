@@ -5,17 +5,16 @@ import { Button } from "../../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Clock, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
+import MarketStatus from "../../components/MarketStatus";
 import { toast } from "sonner";
 
 const PreAfterMarket = () => {
   const [marketData, setMarketData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  
 
   useEffect(() => {
     fetchMarketData();
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
   }, []);
 
   const fetchMarketData = async () => {
@@ -91,24 +90,7 @@ const PreAfterMarket = () => {
     }
   };
 
-  const getMarketStatus = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const currentTime = hours * 60 + minutes;
-    
-    // Market hours: 9:30 AM - 4:00 PM ET (9.5 hours * 60 = 570 minutes to 16*60 = 960 minutes)
-    const marketOpen = 9 * 60 + 30; // 9:30 AM
-    const marketClose = 16 * 60; // 4:00 PM
-    
-    if (currentTime >= marketOpen && currentTime < marketClose) {
-      return { status: "open", label: "Market Open", color: "bg-green-100 text-green-800" };
-    } else if (currentTime < marketOpen) {
-      return { status: "premarket", label: "Pre-Market", color: "bg-blue-100 text-blue-800" };
-    } else {
-      return { status: "afterhours", label: "After Hours", color: "bg-orange-100 text-orange-800" };
-    }
-  };
+  
 
   const formatPrice = (price) => `$${price.toFixed(2)}`;
   const formatChange = (change) => `${change >= 0 ? '+' : ''}${change.toFixed(2)}`;
@@ -160,8 +142,6 @@ const PreAfterMarket = () => {
     </Table>
   );
 
-  const marketStatus = getMarketStatus();
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -182,51 +162,17 @@ const PreAfterMarket = () => {
           <p className="text-gray-600 mt-2">Trading activity outside regular market hours</p>
         </div>
         <div className="flex items-center gap-4">
-          <Badge className={marketStatus.color}>
-            <Clock className="h-3 w-3 mr-1" />
-            {marketStatus.label}
-          </Badge>
-          <Button onClick={fetchMarketData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <MarketStatus />
         </div>
       </div>
 
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Market Status
-              <Badge variant="outline">
-                {currentTime.toLocaleString()}
-              </Badge>
-            </CardTitle>
+            <CardTitle>Market Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-sm text-blue-600 mb-1">Pre-Market</div>
-                <div className="text-lg font-bold text-blue-700">4:00 - 9:30 AM ET</div>
-                <div className="text-xs text-blue-600">
-                  {marketData?.preMarket?.length || 0} active stocks
-                </div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-sm text-green-600 mb-1">Regular Hours</div>
-                <div className="text-lg font-bold text-green-700">9:30 AM - 4:00 PM ET</div>
-                <div className="text-xs text-green-600">
-                  {marketStatus.status === 'open' ? 'Currently Open' : 'Closed'}
-                </div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-sm text-orange-600 mb-1">After Hours</div>
-                <div className="text-lg font-bold text-orange-700">4:00 - 8:00 PM ET</div>
-                <div className="text-xs text-orange-600">
-                  {marketData?.afterHours?.length || 0} active stocks
-                </div>
-              </div>
-            </div>
+            <MarketStatus />
           </CardContent>
         </Card>
 

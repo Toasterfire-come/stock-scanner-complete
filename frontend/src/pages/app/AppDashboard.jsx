@@ -41,7 +41,7 @@ import RealTrendingSparkline from "../../components/RealTrendingSparkline";
 import UsageTracker from "../../components/UsageTracker";
 import PlanUsage from "../../components/PlanUsage";
 // Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
-import MarketStatusIndicator from "../../components/MarketStatusIndicator";
+import MarketStatus from "../../components/MarketStatus";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -49,7 +49,7 @@ const AppDashboard = () => {
   const [trendingStocks, setTrendingStocks] = useState(null);
   const [portfolioAnalytics, setPortfolioAnalytics] = useState(null);
   const [userActivity, setUserActivity] = useState([]);
-  const [marketStatus, setMarketStatus] = useState(null);
+  
   const [sectorPerformance, setSectorPerformance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
@@ -66,7 +66,6 @@ const AppDashboard = () => {
           stats,
           portfolioResponse,
           activityResponse,
-          statusResponse,
           sectorResponse
         ] = await Promise.all([
           getMarketStatsSafe(),
@@ -74,7 +73,6 @@ const AppDashboard = () => {
           getStatisticsSafe().catch(() => ({ success: false })),
           getPortfolioAnalytics().catch(() => null),
           getUserActivityFeed().catch(() => []),
-          getMarketStatus().catch(() => null),
           getSectorPerformance().catch(() => [])
         ]);
 
@@ -102,16 +100,6 @@ const AppDashboard = () => {
         setUsage(stats?.data || null);
         setPortfolioAnalytics(portfolioResponse);
         setUserActivity(activityResponse?.slice(0, 5) || []);
-        // Ensure market status is fetched at least once
-        let statusResolved = statusResponse;
-        if (!statusResolved || !statusResolved?.market) {
-          try {
-            const r = await fetch(`${API_ROOT}/market/market-status`, { credentials: 'include' });
-            const jd = await r.json();
-            statusResolved = jd;
-          } catch {}
-        }
-        setMarketStatus(statusResolved);
         setSectorPerformance(sectorResponse?.slice(0, 6) || []);
 
         // Use real historical data from backend or create realistic trends
@@ -171,7 +159,7 @@ const AppDashboard = () => {
             <Badge variant="secondary" className="text-sm">
               {user?.plan || 'Bronze'} Plan
             </Badge>
-            <MarketStatusIndicator compact={true} />
+            <MarketStatus />
           </div>
         </div>
 
@@ -373,7 +361,7 @@ const AppDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mt-6">
           {/* Market Status only */}
           <div>
-            <MarketStatusIndicator />
+            <MarketStatus />
           </div>
         </div>
       </div>

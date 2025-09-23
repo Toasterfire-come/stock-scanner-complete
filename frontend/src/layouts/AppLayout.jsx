@@ -106,7 +106,7 @@ const AppLayout = () => {
                         <Menu className="h-4 w-4 ml-2" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 vertical-menu" align="start">
+                    <DropdownMenuContent className="w-48 vertical-menu max-h-[70vh] overflow-y-auto" align="start">
                       {userNavigation.map((item) => (
                         <DropdownMenuItem key={item.name} asChild>
                           <Link
@@ -133,7 +133,7 @@ const AppLayout = () => {
                         <Menu className="h-4 w-4 ml-2" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 vertical-menu" align="start">
+                    <DropdownMenuContent className="w-48 vertical-menu max-h-[70vh] overflow-y-auto" align="start">
                       {marketingNavigation.map((item) => (
                         <DropdownMenuItem key={item.name} asChild>
                           <Link
@@ -161,7 +161,7 @@ const AppLayout = () => {
                       <Menu className="h-4 w-4 ml-2" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48 vertical-menu" align="start">
+                  <DropdownMenuContent className="w-48 vertical-menu max-h-[70vh] overflow-y-auto" align="start">
                     {marketingNavigation.map((item) => (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
@@ -206,7 +206,7 @@ const AppLayout = () => {
                         <User className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 vertical-menu" align="end" forceMount>
+                    <DropdownMenuContent className="w-56 vertical-menu max-h-[70vh] overflow-y-auto" align="end" forceMount>
                       <div className="flex items-center justify-start gap-2 p-2">
                         <div className="flex flex-col space-y-1 leading-none">
                           <p className="font-medium">{user.name || user.username}</p>

@@ -141,7 +141,7 @@ const EnhancedAppLayout = () => {
                         <User className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 vertical-menu" align="end" forceMount>
+                    <DropdownMenuContent className="w-56 vertical-menu max-h-[70vh] overflow-y-auto" align="end" forceMount>
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-medium leading-none">{user.name || user.username}</p>

@@ -455,9 +455,11 @@
 
 /* Utility: Vertical scroll container */
 .vertical-menu {
-  width: 200px;
-  height: 150px;
+  /* Allow dropdowns to grow but stay within viewport and scroll smoothly */
+  max-height: min(calc(100vh - 6rem), 420px);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .card-interactive {
