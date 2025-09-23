@@ -55,6 +55,18 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
         <title>Trade Scan Pro | Professional Stock Market Scanner</title>
+        <script>
+          // SPA 404 redirect support for static hosting
+          (function(){
+            try {
+              var l = window.location;
+              if (l.search && l.search.indexOf('redirect=') > -1) {
+                var to = new URLSearchParams(l.search).get('redirect');
+                if (to) { l.replace(to); }
+              }
+            } catch(e) {}
+          })();
+        </script>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
