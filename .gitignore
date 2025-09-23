@@ -78,3 +78,5 @@ agenthub/agents/youtube/db
 
 # Mobile development
 android-sdk/ stock-scanner-complete/.git/objects/pack/pack-b8a1a1d81e002c57a9dd6b16b04e3e597c20cad2.pack
+stock-scanner-complete/.git/objects/pack/pack-b8a1a1d81e002c57a9dd6b16b04e3e597c20cad2.pack
+stock-scanner-complete/frontend/node_modules/.cache/default-development/0.pack
