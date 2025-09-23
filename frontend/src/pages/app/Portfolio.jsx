@@ -58,6 +58,47 @@ const Portfolio = () => {
     fetchAllPortfolioData();
   }, []);
 
+  // Autocomplete and price fetching
+  useEffect(() => {
+    const q = (newHolding.symbol || '').trim();
+    if (!q) { setTickerSuggestions([]); return; }
+    setIsSuggesting(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await searchStocks(q).catch(() => null);
+        const results = Array.isArray(res) ? res : (res?.results || res?.data || []);
+        setTickerSuggestions((results || []).slice(0, 6));
+      } finally {
+        setIsSuggesting(false);
+      }
+    }, 200);
+    return () => clearTimeout(t);
+  }, [newHolding.symbol]);
+
+  useEffect(() => {
+    const sym = (newHolding.symbol || '').trim();
+    if (!sym) { setCurrentPrice(null); return; }
+    let mounted = true;
+    (async () => {
+      try {
+        setIsFetchingPrice(true);
+        const res = await getStock(sym).catch(() => null);
+        const price = Number(res?.data?.current_price || res?.current_price || 0) || null;
+        if (mounted) setCurrentPrice(price);
+      } finally {
+        if (mounted) setIsFetchingPrice(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [newHolding.symbol]);
+
+  useEffect(() => {
+    const amt = Number(amountToInvest);
+    if (!amt || !currentPrice || currentPrice <= 0) return;
+    const shares = amt / currentPrice;
+    setNewHolding((prev) => ({ ...prev, shares: shares.toFixed(6), avg_cost: currentPrice.toFixed(2) }));
+  }, [amountToInvest, currentPrice]);
+
   const fetchAllPortfolioData = async () => {
     setIsLoading(true);
     try {
@@ -257,46 +298,7 @@ const Portfolio = () => {
 
   const holdings = Array.isArray(portfolio?.data) ? portfolio.data : [];
 
-  // Autocomplete and price fetching
-  useEffect(() => {
-    const q = (newHolding.symbol || '').trim();
-    if (!q) { setTickerSuggestions([]); return; }
-    setIsSuggesting(true);
-    const t = setTimeout(async () => {
-      try {
-        const res = await searchStocks(q).catch(() => null);
-        const results = Array.isArray(res) ? res : (res?.results || res?.data || []);
-        setTickerSuggestions((results || []).slice(0, 6));
-      } finally {
-        setIsSuggesting(false);
-      }
-    }, 200);
-    return () => clearTimeout(t);
-  }, [newHolding.symbol]);
-
-  useEffect(() => {
-    const sym = (newHolding.symbol || '').trim();
-    if (!sym) { setCurrentPrice(null); return; }
-    let mounted = true;
-    (async () => {
-      try {
-        setIsFetchingPrice(true);
-        const res = await getStock(sym).catch(() => null);
-        const price = Number(res?.data?.current_price || res?.current_price || 0) || null;
-        if (mounted) setCurrentPrice(price);
-      } finally {
-        if (mounted) setIsFetchingPrice(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [newHolding.symbol]);
-
-  useEffect(() => {
-    const amt = Number(amountToInvest);
-    if (!amt || !currentPrice || currentPrice <= 0) return;
-    const shares = amt / currentPrice;
-    setNewHolding((prev) => ({ ...prev, shares: shares.toFixed(6), avg_cost: currentPrice.toFixed(2) }));
-  }, [amountToInvest, currentPrice]);
+  
 
   return (
     <div className="container mx-auto px-4 py-8">
