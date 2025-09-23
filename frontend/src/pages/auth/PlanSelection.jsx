@@ -126,7 +126,7 @@ export default function PlanSelection() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (
             <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-2">
@@ -151,7 +151,7 @@ export default function PlanSelection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-8 lg:gap-12 xl:gap-16 2xl:gap-20">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
@@ -170,7 +170,7 @@ export default function PlanSelection() {
                   </Badge>
                 )}
                 
-                <CardHeader className="text-center pb-4">
+                <CardHeader className="text-center pb-4 lg:pb-6">
                   <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
                     plan.color === "gray" ? "bg-gray-100" :
                     plan.color === "orange" ? "bg-orange-100" :
@@ -202,7 +202,7 @@ export default function PlanSelection() {
                   <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
                 </CardHeader>
                 
-                <CardContent className="space-y-4 flex-grow">
+                <CardContent className="space-y-4 lg:space-y-6 flex-grow">
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className={`flex items-start ${index > 2 ? 'hidden sm:flex' : ''}`}>
