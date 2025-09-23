@@ -4,14 +4,15 @@ import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Switch } from "../../components/ui/switch";
+import { Label } from "../../components/ui/label";
 import { Check, Crown, Zap, Star, Gift, ArrowRight } from "lucide-react";
 
 const plans = [
   {
     id: "bronze",
     name: "Bronze",
-    price: "$24.99",
-    period: "month",
+    price: { monthly: 24.99, annual: 249.90 },
     trialPrice: "$1",
     description: "Great for individual traders",
     features: [
@@ -29,8 +30,7 @@ const plans = [
   {
     id: "silver",
     name: "Silver",
-    price: "$39.99",
-    period: "month",
+    price: { monthly: 39.99, annual: 399.90 },
     trialPrice: "$1",
     description: "Perfect for professional traders",
     features: [
@@ -48,8 +48,7 @@ const plans = [
   {
     id: "gold",
     name: "Gold",
-    price: "$89.99",
-    period: "month",
+    price: { monthly: 89.99, annual: 899.90 },
     trialPrice: "$1",
     description: "For trading teams and institutions",
     features: [
@@ -67,7 +66,7 @@ const plans = [
   {
     id: "free",
     name: "Free",
-    price: "$0",
+    price: { monthly: 0, annual: 0 },
     period: "forever",
     description: "Perfect for getting started",
     features: [
@@ -93,6 +92,7 @@ export default function PlanSelection() {
   const { user, updateUser } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("bronze");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   // Check if this is from the signup flow
   const isNewUser = location.state?.newUser;
@@ -141,6 +141,21 @@ export default function PlanSelection() {
           <p className="mt-3 text-base sm:text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
             Select the perfect plan for your trading needs. All paid plans include a 7-day trial for just $1.
           </p>
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center space-x-4 mt-6">
+            <Label htmlFor="billing-toggle" className={!isAnnual ? "font-semibold" : ""}>
+              Monthly
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={isAnnual}
+              onCheckedChange={setIsAnnual}
+            />
+            <Label htmlFor="billing-toggle" className={isAnnual ? "font-semibold" : ""}>
+              Annual
+              <Badge variant="secondary" className="ml-2">Save 17%</Badge>
+            </Label>
+          </div>
         </div>
 
         {/* Updated TRIAL Banner */}
@@ -192,11 +207,18 @@ export default function PlanSelection() {
                       </div>
                     )}
                     <div className="mt-2 text-3xl sm:text-4xl font-bold text-gray-900">
-                      {plan.price}
-                      <span className="ml-1 text-sm font-normal text-gray-500">
-                        /{plan.period}
-                      </span>
+                      ${isAnnual ? plan.price.annual : plan.price.monthly}
+                      {plan.price.monthly > 0 && (
+                        <span className="ml-1 text-sm font-normal text-gray-500">
+                          /{isAnnual ? 'year' : 'month'}
+                        </span>
+                      )}
                     </div>
+                    {isAnnual && plan.price.monthly > 0 && (
+                      <div className="text-sm text-green-600 mt-1">
+                        Save ${(plan.price.monthly * 12 - plan.price.annual).toFixed(2)} per year
+                      </div>
+                    )}
                   </div>
                   
                   <CardDescription className="text-sm sm:text-base leading-relaxed">{plan.description}</CardDescription>
