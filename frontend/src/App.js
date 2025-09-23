@@ -196,6 +196,8 @@ function App() {
                       <WhiteLabelConfig />
                     </ProtectedRoute>
                   } />
+                  {/* Redirect marketing /portfolio to app route for SPA */}
+                  <Route path="/portfolio" element={<Navigate to="/app/portfolio" replace />} />
 
                   {/* Protected Analytics and Referral Routes */}
                   <Route path="/app/analytics" element={
