@@ -23,6 +23,7 @@ import {
   Target,
   AlertCircle
 } from "lucide-react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, AreaChart, Area } from 'recharts';
 import { 
   getPortfolio, 
   addPortfolio, 
@@ -329,6 +330,67 @@ const Portfolio = () => {
   }, { currentValue: 0, costBasis: 0, profit: 0 });
   const totalsPercent = totals.costBasis > 0 ? ((totals.currentValue - totals.costBasis) / totals.costBasis) * 100 : 0;
 
+  // CSV time series handling (browser-side cached via localStorage)
+  const VALUE_CSV_KEY = 'portfolio_value_timeseries_csv';
+  const PROFIT_CSV_KEY = 'portfolio_profit_timeseries_csv';
+
+  const parseCsv = (csvText) => {
+    try {
+      if (!csvText || typeof csvText !== 'string') return [];
+      const rows = csvText.trim().split(/\r?\n/);
+      if (rows.length <= 1) return [];
+      const dataRows = rows.slice(1);
+      return dataRows
+        .map((r) => r.split(','))
+        .filter((cols) => cols.length >= 2)
+        .map((cols) => ({ ts: Number(cols[0]), value: Number(cols[1]) }))
+        .filter((p) => Number.isFinite(p.ts) && Number.isFinite(p.value));
+    } catch { return []; }
+  };
+
+  const toCsv = (rows) => {
+    const header = 'timestamp,value';
+    const body = (rows || []).map((r) => `${r.ts},${r.value}`).join('\n');
+    return `${header}\n${body}`;
+  };
+
+  const loadSeries = (key) => parseCsv(localStorage.getItem(key) || '');
+  const saveSeries = (key, rows) => localStorage.setItem(key, toCsv(rows));
+
+  const upsertSnapshot = (key, value) => {
+    const now = Date.now();
+    const rows = loadSeries(key);
+    const last = rows[rows.length - 1];
+    // Update if last within 10 minutes, else append
+    if (last && now - last.ts < 10 * 60 * 1000) {
+      last.ts = now;
+      last.value = value;
+      saveSeries(key, rows);
+    } else {
+      const next = [...rows, { ts: now, value }];
+      // Keep last 500 points max
+      const trimmed = next.slice(-500);
+      saveSeries(key, trimmed);
+    }
+  };
+
+  // Update snapshots whenever totals recalc
+  useEffect(() => {
+    try {
+      upsertSnapshot(VALUE_CSV_KEY, totals.currentValue);
+      upsertSnapshot(PROFIT_CSV_KEY, totals.profit);
+    } catch {}
+  }, [totals.currentValue, totals.profit]);
+
+  const valueSeries = loadSeries(VALUE_CSV_KEY);
+  const profitSeries = loadSeries(PROFIT_CSV_KEY);
+  const toChartData = (rows) => rows.map((r) => ({
+    x: new Date(r.ts).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: '2-digit' }),
+    y: r.value
+  }));
+  const valueChartData = toChartData(valueSeries);
+  const profitChartData = toChartData(profitSeries);
+
   
 
   return (
@@ -617,144 +679,62 @@ const Portfolio = () => {
               )}
             </CardContent>
           </Card>
-        {/* Analytics */}
+        {/* Performance Charts */}
         <div className="grid gap-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Analytics</CardTitle>
-                <CardDescription>Detailed analysis of your portfolio performance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {analytics ? (
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-semibold mb-3">Risk Metrics</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Beta:</span>
-                          <span className="font-medium">{analytics.beta?.toFixed(2) || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Sharpe Ratio:</span>
-                          <span className="font-medium">{analytics.sharpe_ratio?.toFixed(2) || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Volatility:</span>
-                          <span className="font-medium">{analytics.volatility ? `${(analytics.volatility * 100).toFixed(1)}%` : 'N/A'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-3">Returns</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">1 Month:</span>
-                          <span className={`font-medium ${(analytics.returns_1m || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {formatPercent(analytics.returns_1m || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">3 Months:</span>
-                          <span className={`font-medium ${(analytics.returns_3m || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {formatPercent(analytics.returns_3m || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">YTD:</span>
-                          <span className={`font-medium ${(analytics.returns_ytd || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {formatPercent(analytics.returns_ytd || 0)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Add some holdings to see detailed analytics</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        {/* Sectors */}
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
-              <CardTitle>Sector Allocation</CardTitle>
-              <CardDescription>Your portfolio diversification across sectors</CardDescription>
+              <CardTitle>Total Value Over Time</CardTitle>
+              <CardDescription>Browser-cached time series (no server required)</CardDescription>
             </CardHeader>
             <CardContent>
-              {sectorAllocation.length > 0 ? (
-                <div className="space-y-4">
-                  {sectorAllocation.map((sector, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-medium">{sector.sector_name}</h4>
-                        <p className="text-sm text-gray-600">{sector.stocks_count} stocks</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(toNumber(sector.value, 0))}</p>
-                        <p className="text-sm text-gray-600">{toNumber(sector.percentage, 0).toFixed(1)}%</p>
-                      </div>
-                    </div>
-                  ))}
+              {valueChartData.length ? (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={valueChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="valueFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35}/>
+                          <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="x" hide={false} tick={{ fontSize: 12 }} />
+                      <YAxis tickFormatter={(v) => formatCurrency(v)} width={80} tick={{ fontSize: 12 }} />
+                      <Tooltip formatter={(v) => formatCurrency(v)} />
+                      <Area type="monotone" dataKey="y" stroke="#2563eb" fillOpacity={1} fill="url(#valueFill)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Add holdings to see sector allocation</p>
-                </div>
+                <div className="text-center py-8 text-gray-600">No data yet. This will populate as you view your portfolio.</div>
               )}
             </CardContent>
           </Card>
 
-        {/* Dividends */}
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
-              <CardTitle>Dividend Tracking</CardTitle>
-              <CardDescription>Monitor your dividend income and projections</CardDescription>
+              <CardTitle>Profit Over Time</CardTitle>
+              <CardDescription>Browser-cached time series (no server required)</CardDescription>
             </CardHeader>
             <CardContent>
-              {dividendData ? (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold mb-3">Income Summary</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Annual Income:</span>
-                        <span className="font-medium text-green-600">{formatCurrency(dividendData.annual_income)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Quarterly:</span>
-                        <span className="font-medium">{formatCurrency(dividendData.quarterly_income)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Yield:</span>
-                        <span className="font-medium">{dividendData.average_yield?.toFixed(2)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-3">Next Payments</h4>
-                    {dividendData.upcoming_payments?.slice(0, 3).map((payment, index) => (
-                      <div key={index} className="flex justify-between items-center py-2">
-                        <div>
-                          <span className="font-medium">{payment.symbol}</span>
-                          <span className="text-sm text-gray-600 ml-2">{payment.ex_date}</span>
-                        </div>
-                        <span className="font-medium text-green-600">{formatCurrency(toNumber(payment.amount, 0))}</span>
-                      </div>
-                    ))}
-                  </div>
+              {profitChartData.length ? (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={profitChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="x" hide={false} tick={{ fontSize: 12 }} />
+                      <YAxis tickFormatter={(v) => formatCurrency(v)} width={80} tick={{ fontSize: 12 }} />
+                      <Tooltip formatter={(v) => formatCurrency(v)} />
+                      <Line type="monotone" dataKey="y" stroke="#10b981" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Add dividend-paying stocks to track income</p>
-                </div>
+                <div className="text-center py-8 text-gray-600">No data yet. This will populate as you view your portfolio.</div>
               )}
             </CardContent>
           </Card>
+        </div>
       {/* End holdings only */}
     </div>
   );
