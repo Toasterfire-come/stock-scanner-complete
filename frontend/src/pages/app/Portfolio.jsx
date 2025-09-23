@@ -298,6 +298,35 @@ const Portfolio = () => {
 
   const holdings = Array.isArray(portfolio?.data) ? portfolio.data : [];
 
+  const getHoldingCalculations = (holding) => {
+    const shares = toNumber(holding.shares, 0);
+    const purchasePrice = toNumber(holding.avg_cost, 0);
+    const currentValue = toNumber(holding.current_value, 0);
+    const currentPrice = shares > 0 ? (currentValue / shares) : 0;
+    const costBasis = shares * purchasePrice;
+    const profit = (currentPrice - purchasePrice) * shares;
+    const ratio = purchasePrice > 0 ? (currentPrice / purchasePrice) : 0;
+    const percentChange = purchasePrice > 0 ? ((currentPrice - purchasePrice) / purchasePrice) * 100 : 0;
+    return {
+      shares,
+      purchasePrice,
+      currentPrice,
+      currentValue: currentPrice * shares,
+      costBasis,
+      profit,
+      ratio,
+      percentChange,
+    };
+  };
+
+  const totals = holdings.reduce((acc, h) => {
+    const c = getHoldingCalculations(h);
+    acc.currentValue += c.currentValue;
+    acc.costBasis += c.costBasis;
+    acc.profit += c.profit;
+    return acc;
+  }, { currentValue: 0, costBasis: 0, profit: 0 });
+
   
 
   return (
@@ -481,6 +510,24 @@ const Portfolio = () => {
             </div>
           </CardContent>
         </Card>
+        {/* Combined Totals */}
+        <Card className="bg-gradient-to-r from-indigo-50 to-indigo-100">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Combined Totals</p>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Current Value</p>
+                  <p className="text-lg font-semibold">{formatCurrency(totals.currentValue)}</p>
+                  <p className="text-sm text-gray-600">Cost Basis</p>
+                  <p className="text-lg font-semibold">{formatCurrency(totals.costBasis)}</p>
+                  <p className={`text-sm ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>Profit</p>
+                  <p className={`text-lg font-semibold ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(totals.profit)}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Holdings Only (tabs removed) */}
@@ -504,33 +551,42 @@ const Portfolio = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {holdings.map((holding, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-4">
-                          <div>
+                  {holdings.map((holding, index) => {
+                    const c = getHoldingCalculations(holding);
+                    return (
+                      <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
                             <h3 className="font-semibold text-lg">{holding.symbol}</h3>
                             <p className="text-sm text-gray-600">{holding.name || 'Company Name'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium">{toNumber(holding.shares, 0)} shares</p>
-                          <p className="text-sm text-gray-600">@ {formatCurrency((toNumber(holding.current_value, 0) && toNumber(holding.shares, 0)) ? (toNumber(holding.current_value, 0) / Math.max(1, toNumber(holding.shares, 0))) : 0)}</p>
+                            <p className="font-medium">{c.shares} shares</p>
+                            <p className="text-sm text-gray-600">@ {formatCurrency(c.currentPrice)}</p>
                           </div>
                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                          <div className="text-sm">
+                            <div className="text-gray-600">Current Value</div>
+                            <div className="font-semibold">{formatCurrency(c.currentValue)}</div>
+                          </div>
+                          <div className="text-sm">
+                            <div className="text-gray-600">Cost Basis</div>
+                            <div className="font-semibold">{formatCurrency(c.costBasis)}</div>
+                          </div>
+                          <div className="text-sm">
+                            <div className={`${c.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>Profit</div>
+                            <div className={`font-semibold ${c.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(c.profit)} ({formatPercent(c.percentChange)})</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end mt-3">
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteStock(holding.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="text-right mr-4">
-                        <p className="font-semibold">{formatCurrency(toNumber(holding.current_value, 0))}</p>
-                        <p className={`text-sm ${toNumber(holding.gain_loss, 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(toNumber(holding.gain_loss, 0))} ({formatPercent(toNumber(holding.gain_loss_percent, 0))})
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteStock(holding.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
