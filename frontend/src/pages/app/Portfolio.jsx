@@ -28,9 +28,6 @@ import {
   getPortfolio, 
   addPortfolio, 
   deletePortfolio,
-  getPortfolioAnalytics,
-  getPortfolioSectorAllocation,
-  getPortfolioDividendTracking,
   exportPortfolioCSV,
   searchStocks,
   getStock
@@ -40,8 +37,6 @@ const Portfolio = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [portfolio, setPortfolio] = useState(null);
   const [analytics, setAnalytics] = useState(null);
-  const [sectorAllocation, setSectorAllocation] = useState([]);
-  const [dividendData, setDividendData] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newHolding, setNewHolding] = useState({
     symbol: "",
@@ -106,21 +101,13 @@ const Portfolio = () => {
     try {
       // Fetch all portfolio data in parallel
       const [
-        portfolioResponse,
-        analyticsResponse,
-        sectorResponse,
-        dividendResponse
+        portfolioResponse
       ] = await Promise.all([
-        getPortfolio().catch(() => ({ success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } })),
-        getPortfolioAnalytics().catch(() => null),
-        getPortfolioSectorAllocation().catch(() => []),
-        getPortfolioDividendTracking().catch(() => null)
+        getPortfolio().catch(() => ({ success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } }))
       ]);
 
       setPortfolio(portfolioResponse);
-      setAnalytics(analyticsResponse);
-      setSectorAllocation(sectorResponse);
-      setDividendData(dividendResponse);
+      setAnalytics(null);
     } catch (error) {
       console.error("Failed to load portfolio data:", error);
       toast.error("Failed to load portfolio data");
@@ -566,9 +553,7 @@ const Portfolio = () => {
               <div>
                 <p className="text-sm text-gray-600">Holdings</p>
                 <p className="text-2xl font-bold">{holdings.length}</p>
-                <p className="text-sm text-gray-600">
-                  {dividendData?.annual_income ? `${formatCurrency(toNumber(dividendData.annual_income, 0))} dividends` : 'Stocks tracked'}
-                </p>
+                <p className="text-sm text-gray-600">Stocks tracked</p>
               </div>
               <PieChart className="h-8 w-8 text-purple-600" />
             </div>
