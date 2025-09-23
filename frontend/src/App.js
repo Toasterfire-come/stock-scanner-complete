@@ -113,7 +113,7 @@ import DownloadHistory from "./pages/app/exports/DownloadHistory";
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
-import LatencyIndicator from "./components/LatencyIndicator";
+// import LatencyIndicator from "./components/LatencyIndicator";
 
 // Placeholder component for missing pages
 const PlaceholderPage = ({ title }) => (
@@ -140,7 +140,7 @@ function App() {
     <BackendStatusProvider>
       <AuthProvider>
         <BrowserRouter>
-          <LatencyIndicator />
+          {/* LatencyIndicator removed per request */}
           <SystemErrorBoundary>
             <div className="min-h-screen bg-background">
               <OfflineBanner />
