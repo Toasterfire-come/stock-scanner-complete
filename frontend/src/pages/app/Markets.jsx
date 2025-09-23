@@ -111,13 +111,13 @@ const Markets = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-10 w-32" />
           </div>
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-4 gap-4 sm:gap-6">
             {[1, 2, 3, 4].map((i) => (
               <Card key={i}>
                 <CardContent className="p-6">
@@ -128,7 +128,7 @@ const Markets = () => {
               </Card>
             ))}
           </div>
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
               <CardHeader>
                 <Skeleton className="h-6 w-32" />
@@ -166,10 +166,10 @@ const Markets = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Market Overview</h1>
             <p className="text-gray-600 mt-2">Real-time market data and trending stocks</p>
@@ -191,7 +191,7 @@ const Markets = () => {
 
         {/* Market Summary */}
         {marketStats && (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -245,7 +245,7 @@ const Markets = () => {
             <TabsTrigger value="active">Most Active</TabsTrigger>
           </TabsList>
 
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <TabsContent value="gainers">
               <Card>
                 <CardHeader>

@@ -147,10 +147,10 @@ const AppDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back, {user?.name || 'Trader'}!
           </h1>
@@ -165,7 +165,7 @@ const AppDashboard = () => {
 
         {/* Portfolio Summary (if user has portfolio data) */}
         {portfolioAnalytics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <Card className="bg-gradient-to-r from-blue-50 to-blue-100">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
@@ -222,7 +222,7 @@ const AppDashboard = () => {
         )}
 
         {/* Market Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Stocks</CardTitle>
@@ -273,7 +273,7 @@ const AppDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Top Gainers */}
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -358,7 +358,7 @@ const AppDashboard = () => {
         </div>
 
         {/* Activity & Market Status Grid */}  
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6">
           {/* Market Status only */}
           <div>
             <MarketStatus />
