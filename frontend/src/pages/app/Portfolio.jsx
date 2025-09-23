@@ -53,6 +53,7 @@ const Portfolio = () => {
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
   const [tickerSuggestions, setTickerSuggestions] = useState([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [investInput, setInvestInput] = useState({});
 
   useEffect(() => {
     fetchAllPortfolioData();
@@ -326,6 +327,7 @@ const Portfolio = () => {
     acc.profit += c.profit;
     return acc;
   }, { currentValue: 0, costBasis: 0, profit: 0 });
+  const totalsPercent = totals.costBasis > 0 ? ((totals.currentValue - totals.costBasis) / totals.costBasis) * 100 : 0;
 
   
 
@@ -522,7 +524,7 @@ const Portfolio = () => {
                   <p className="text-sm text-gray-600">Cost Basis</p>
                   <p className="text-lg font-semibold">{formatCurrency(totals.costBasis)}</p>
                   <p className={`text-sm ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>Profit</p>
-                  <p className={`text-lg font-semibold ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(totals.profit)}</p>
+                  <p className={`text-lg font-semibold ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(totals.profit)} ({formatPercent(totalsPercent)})</p>
                 </div>
               </div>
             </div>
@@ -577,6 +579,30 @@ const Portfolio = () => {
                           <div className="text-sm">
                             <div className={`${c.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>Profit</div>
                             <div className={`font-semibold ${c.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(c.profit)} ({formatPercent(c.percentChange)})</div>
+                          </div>
+                        </div>
+                        {/* Per-holding quick calculator */}
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="text-sm">
+                            <label className="text-gray-600">Amount to Invest</label>
+                            <Input
+                              type="number"
+                              className="mt-1"
+                              placeholder="1000.00"
+                              value={investInput[holding.symbol] || ''}
+                              onChange={(e) => setInvestInput((prev) => ({ ...prev, [holding.symbol]: e.target.value }))}
+                            />
+                          </div>
+                          <div className="text-sm flex items-end">
+                            <div>
+                              <div className="text-gray-600">Estimated Shares</div>
+                              <div className="font-semibold">
+                                {(() => {
+                                  const amt = toNumber(investInput[holding.symbol], 0);
+                                  return c.currentPrice > 0 && amt > 0 ? (amt / c.currentPrice).toFixed(6) : '—';
+                                })()}
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center justify-end mt-3">
