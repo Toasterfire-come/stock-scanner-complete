@@ -235,8 +235,6 @@ function App() {
                       <Portfolio />
                     </ProtectedRoute>
                   } />
-                  {/* Redirect marketing /portfolio to app route for SPA */}
-                  <Route path="/portfolio" element={<Navigate to="/app/portfolio" replace />} />
 
                   {/* Screener Suite - Protected */}
                   <Route path="/app/screeners" element={

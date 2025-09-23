@@ -194,18 +194,24 @@ const Portfolio = () => {
     }
   };
 
+  const toNumber = (v, d = 0) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : d;
+  };
+
   const formatCurrency = (value) => {
-    if (!value) return '$0.00';
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
+    const n = toNumber(value, 0);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2
-    }).format(value);
+    }).format(n);
   };
 
   const formatPercent = (value) => {
-    if (!value && value !== 0) return '0.00%';
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+    const n = toNumber(value, 0);
+    const sign = n >= 0 ? '+' : '';
+    return `${sign}${n.toFixed(2)}%`;
   };
 
   if (isLoading) {
@@ -234,15 +240,22 @@ const Portfolio = () => {
     );
   }
 
-  const portfolioSummary = analytics || portfolio?.summary || {
+  const portfolioSummaryRaw = analytics || portfolio?.summary || {
     total_value: 0,
     total_gain_loss: 0,
     total_gain_loss_percent: 0,
     day_change: 0,
     day_change_percent: 0
   };
+  const portfolioSummary = {
+    total_value: toNumber(portfolioSummaryRaw.total_value, 0),
+    total_gain_loss: toNumber(portfolioSummaryRaw.total_gain_loss, 0),
+    total_gain_loss_percent: toNumber(portfolioSummaryRaw.total_gain_loss_percent, 0),
+    day_change: toNumber(portfolioSummaryRaw.day_change, 0),
+    day_change_percent: toNumber(portfolioSummaryRaw.day_change_percent, 0),
+  };
 
-  const holdings = portfolio?.data || [];
+  const holdings = Array.isArray(portfolio?.data) ? portfolio.data : [];
 
   // Autocomplete and price fetching
   useEffect(() => {
@@ -325,18 +338,19 @@ const Portfolio = () => {
                   {isSuggesting && <div className="text-xs text-gray-500 mt-1">Searching...</div>}
                   {tickerSuggestions.length > 0 && (
                     <div className="mt-2 border rounded-md bg-white max-h-48 overflow-auto">
-                      {tickerSuggestions.map((s, idx) => (
+                  {tickerSuggestions.map((s, idx) => (
                         <button
                           key={`${s.ticker || s.symbol}-${idx}`}
                           type="button"
                           className="w-full text-left px-3 py-2 hover:bg-gray-50"
                           onClick={() => {
-                            setNewHolding({ ...newHolding, symbol: (s.ticker || s.symbol || '').toUpperCase() });
+                            const sym = String(s.ticker || s.symbol || '').toUpperCase();
+                            setNewHolding({ ...newHolding, symbol: sym });
                             setTickerSuggestions([]);
                           }}
                         >
-                          <span className="font-medium mr-2">{(s.ticker || s.symbol || '').toUpperCase()}</span>
-                          <span className="text-gray-600 text-sm">{s.company_name || s.name || ''}</span>
+                          <span className="font-medium mr-2">{String(s.ticker || s.symbol || '').toUpperCase()}</span>
+                          <span className="text-gray-600 text-sm">{String(s.company_name || s.name || '')}</span>
                         </button>
                       ))}
                     </div>
@@ -458,7 +472,7 @@ const Portfolio = () => {
                 <p className="text-sm text-gray-600">Holdings</p>
                 <p className="text-2xl font-bold">{holdings.length}</p>
                 <p className="text-sm text-gray-600">
-                  {dividendData?.annual_income ? formatCurrency(dividendData.annual_income) + ' dividends' : 'Stocks tracked'}
+                  {dividendData?.annual_income ? `${formatCurrency(toNumber(dividendData.annual_income, 0))} dividends` : 'Stocks tracked'}
                 </p>
               </div>
               <PieChart className="h-8 w-8 text-purple-600" />
@@ -497,15 +511,15 @@ const Portfolio = () => {
                             <p className="text-sm text-gray-600">{holding.name || 'Company Name'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium">{holding.shares} shares</p>
-                          <p className="text-sm text-gray-600">@ {formatCurrency((holding.current_value && holding.shares) ? (holding.current_value / holding.shares) : 0)}</p>
+                            <p className="font-medium">{toNumber(holding.shares, 0)} shares</p>
+                          <p className="text-sm text-gray-600">@ {formatCurrency((toNumber(holding.current_value, 0) && toNumber(holding.shares, 0)) ? (toNumber(holding.current_value, 0) / Math.max(1, toNumber(holding.shares, 0))) : 0)}</p>
                           </div>
                         </div>
                       </div>
                       <div className="text-right mr-4">
-                        <p className="font-semibold">{formatCurrency(holding.current_value || 0)}</p>
-                        <p className={`text-sm ${(holding.gain_loss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(holding.gain_loss || 0)} ({formatPercent(holding.gain_loss_percent || 0)})
+                        <p className="font-semibold">{formatCurrency(toNumber(holding.current_value, 0))}</p>
+                        <p className={`text-sm ${toNumber(holding.gain_loss, 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(toNumber(holding.gain_loss, 0))} ({formatPercent(toNumber(holding.gain_loss_percent, 0))})
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -595,8 +609,8 @@ const Portfolio = () => {
                         <p className="text-sm text-gray-600">{sector.stocks_count} stocks</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(sector.value)}</p>
-                        <p className="text-sm text-gray-600">{sector.percentage?.toFixed(1)}%</p>
+                        <p className="font-semibold">{formatCurrency(toNumber(sector.value, 0))}</p>
+                        <p className="text-sm text-gray-600">{toNumber(sector.percentage, 0).toFixed(1)}%</p>
                       </div>
                     </div>
                   ))}
@@ -644,7 +658,7 @@ const Portfolio = () => {
                           <span className="font-medium">{payment.symbol}</span>
                           <span className="text-sm text-gray-600 ml-2">{payment.ex_date}</span>
                         </div>
-                        <span className="font-medium text-green-600">{formatCurrency(payment.amount)}</span>
+                        <span className="font-medium text-green-600">{formatCurrency(toNumber(payment.amount, 0))}</span>
                       </div>
                     ))}
                   </div>
