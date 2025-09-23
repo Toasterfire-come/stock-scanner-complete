@@ -10,6 +10,11 @@ async function clearRemoteDir(sftp, remoteDir) {
     if (!name || name === '.' || name === '..') continue;
     const remotePath = path.posix.join(remoteDir, name);
     try {
+      // Preserve .htaccess if present
+      if (name === '.htaccess') {
+        console.log(`Preserving file: ${remotePath}`);
+        continue;
+      }
       if (entry.type === 'd') {
         await sftp.rmdir(remotePath, true);
         console.log(`Removed directory: ${remotePath}`);
