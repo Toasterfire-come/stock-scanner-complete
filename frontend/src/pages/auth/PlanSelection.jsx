@@ -151,7 +151,7 @@ export default function PlanSelection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-10">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
@@ -159,7 +159,7 @@ export default function PlanSelection() {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                className={`relative h-full flex flex-col cursor-pointer transition-all duration-200 hover:shadow-lg ${
                   isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
                 } ${plan.popular ? "border-orange-200 scale-105" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
                 onClick={() => setSelectedPlan(plan.id)}
@@ -202,10 +202,10 @@ export default function PlanSelection() {
                   <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
                 </CardHeader>
                 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 flex-grow">
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
+                      <li key={index} className={`flex items-start ${index > 2 ? 'hidden sm:flex' : ''}`}>
                         <Check className="w-4 h-4 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                         <span className="text-sm text-gray-600">{feature}</span>
                       </li>
