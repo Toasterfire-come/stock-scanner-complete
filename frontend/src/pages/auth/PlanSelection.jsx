@@ -227,7 +227,9 @@ export default function PlanSelection() {
                   )}
                   
                   <Button
-                    className={"w-full mt-8 inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"}
+                    size="lg"
+                    variant={plan.isFree ? "outline" : "default"}
+                    className="w-full mt-8"
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePlanSelect(plan.id);
@@ -253,7 +255,7 @@ export default function PlanSelection() {
           <div className="mb-6">
             <Button 
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+              variant="default"
               onClick={() => handlePlanSelect(selectedPlan)}
               disabled={isLoading}
             >
@@ -263,21 +265,21 @@ export default function PlanSelection() {
           </div>
           
           <p className="text-sm text-gray-500">
-            You can change your plan anytime from your account settings
+            Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
           
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
-              Cancel anytime
+              Trusted by thousands of traders
             </div>
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
-              No setup fees
+              Secure payments via Credit Card & PayPal
             </div>
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
-              Email support
+              Industry‑standard encryption
             </div>
           </div>
         </div>
