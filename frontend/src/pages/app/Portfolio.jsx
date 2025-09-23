@@ -30,7 +30,8 @@ import {
   deletePortfolio,
   exportPortfolioCSV,
   searchStocks,
-  getStock
+  getStock,
+  listStocks
 } from "../../api/client";
 
 const Portfolio = () => {
@@ -50,6 +51,7 @@ const Portfolio = () => {
   const [tickerSuggestions, setTickerSuggestions] = useState([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [investInput, setInvestInput] = useState({});
+  const [priceMap, setPriceMap] = useState({});
 
   useEffect(() => {
     fetchAllPortfolioData();
@@ -101,13 +103,26 @@ const Portfolio = () => {
     try {
       // Fetch all portfolio data in parallel
       const [
-        portfolioResponse
+        portfolioResponse,
+        allStocks
       ] = await Promise.all([
-        getPortfolio().catch(() => ({ success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } }))
+        getPortfolio().catch(() => ({ success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } })),
+        listStocks({}).catch(() => [])
       ]);
 
       setPortfolio(portfolioResponse);
       setAnalytics(null);
+      // Build a symbol -> current_price map from the stock list
+      try {
+        const map = {};
+        const rows = Array.isArray(allStocks?.results) ? allStocks.results : (Array.isArray(allStocks) ? allStocks : []);
+        for (const s of rows) {
+          const sym = String(s?.symbol || s?.ticker || '').toUpperCase();
+          const p = Number(s?.current_price);
+          if (sym && Number.isFinite(p)) map[sym] = p;
+        }
+        setPriceMap(map);
+      } catch { setPriceMap({}); }
     } catch (error) {
       console.error("Failed to load portfolio data:", error);
       toast.error("Failed to load portfolio data");
@@ -266,8 +281,12 @@ const Portfolio = () => {
   const getHoldingCalculations = (holding) => {
     const shares = toNumber(holding.shares, 0);
     const purchasePrice = toNumber(holding.avg_cost, 0);
-    const currentValue = toNumber(holding.current_value, 0);
-    const currentPrice = shares > 0 ? (currentValue / shares) : 0;
+    const sym = String(holding.symbol || holding.ticker || '').toUpperCase();
+    const priceFromMap = toNumber(priceMap[sym], NaN);
+    const fallbackCurrentValue = toNumber(holding.current_value, NaN);
+    const currentPrice = Number.isFinite(priceFromMap)
+      ? priceFromMap
+      : (shares > 0 && Number.isFinite(fallbackCurrentValue) ? (fallbackCurrentValue / shares) : 0);
     const costBasis = shares * purchasePrice;
     const profit = (currentPrice - purchasePrice) * shares;
     const ratio = purchasePrice > 0 ? (currentPrice / purchasePrice) : 0;
