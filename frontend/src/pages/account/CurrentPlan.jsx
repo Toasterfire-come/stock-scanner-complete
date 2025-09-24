@@ -22,12 +22,13 @@ import {
   Users,
   Rocket
 } from "lucide-react";
-import { getCurrentPlan, changePlan } from "../../api/client";
+import { getCurrentPlan, changePlan, getUsageSummary } from "../../api/client";
 
 const CurrentPlan = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [planData, setPlanData] = useState(null);
   const [isChangingPlan, setIsChangingPlan] = useState(false);
+  const [usageSummary, setUsageSummary] = useState(null);
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -38,6 +39,13 @@ const CurrentPlan = () => {
         } else {
           setPlanData(null);
         }
+        // Fetch usage summary in parallel to avoid stale/hardcoded numbers
+        try {
+          const usage = await getUsageSummary();
+          if (usage?.success) {
+            setUsageSummary(usage.data);
+          }
+        } catch (_) {}
       } catch (error) {
         console.error("Failed to load plan data:", error);
         setPlanData(null);
@@ -135,9 +143,10 @@ const CurrentPlan = () => {
     );
   }
 
-  const usagePercentage = planData?.features?.api_calls_limit 
-    ? Math.min((0 / planData.features.api_calls_limit) * 100, 100)
-    : 0;
+  const monthlyUsed = usageSummary?.monthly?.api_calls || 0;
+  const monthlyLimit = planData?.features?.api_calls_limit ?? 0;
+  const unlimited = monthlyLimit === -1 || monthlyLimit === Infinity;
+  const usagePercentage = unlimited ? 0 : (monthlyLimit ? Math.min((monthlyUsed / monthlyLimit) * 100, 100) : 0);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -272,7 +281,7 @@ const CurrentPlan = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">API Calls</span>
                     <span className="text-sm text-gray-600">
-                      850 / {planData.features.api_calls_limit?.toLocaleString() || 'Unlimited'}
+                      {unlimited ? `${monthlyUsed.toLocaleString()} / Unlimited` : `${monthlyUsed.toLocaleString()} / ${monthlyLimit?.toLocaleString?.() || 0}`}
                     </span>
                   </div>
                   <Progress value={usagePercentage} className="h-2" />

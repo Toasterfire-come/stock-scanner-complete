@@ -58,12 +58,12 @@ const Pricing = () => {
       name: "Silver",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 39.99, annual: 399.90 },
+      price: { monthly: 49.99, annual: 509.99 },
       features: [
         "500 API calls per day, 5000/month",
         "Advanced filtering & screening",
-        "Custom watchlists (10)",
-        "Real-time alerts (50 alerts)",
+        "Custom watchlists (1)",
+        "Real-time alerts (100 alerts)",
         "Portfolio tracking (5 portfolios)",
         "Priority email support"
       ],
@@ -199,7 +199,7 @@ const Pricing = () => {
       icon: <Bell className="h-5 w-5" />,
       items: [
         { name: "Email alerts", free: false, bronze: true, silver: true, gold: true },
-        { name: "Real-time alerts", free: false, bronze: true, silver: "50 alerts", gold: true },
+        { name: "Real-time alerts", free: false, bronze: "50 alerts", silver: "100 alerts", gold: true },
         { name: "Custom alert conditions", free: false, bronze: "Basic", silver: "Advanced", gold: "Unlimited" }
       ]
     },
@@ -208,7 +208,7 @@ const Pricing = () => {
       icon: <Users className="h-5 w-5" />,
       items: [
         { name: "Portfolio management", free: false, bronze: "Basic", silver: "5 portfolios", gold: "Professional" },
-        { name: "Watchlists", free: false, bronze: "3", silver: "10", gold: "Unlimited" },
+        { name: "Watchlists", free: false, bronze: "0", silver: "1", gold: "Unlimited" },
         { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true }
       ]
     },

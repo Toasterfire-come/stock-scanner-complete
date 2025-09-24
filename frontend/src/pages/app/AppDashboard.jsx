@@ -157,7 +157,7 @@ const AppDashboard = () => {
           <p className="text-gray-600">Here's your comprehensive trading dashboard</p>
           <div className="flex items-center gap-4 mt-3">
             <Badge variant="secondary" className="text-sm">
-              {user?.plan || 'Bronze'} Plan
+              {(user?.plan || (user?.email?.toLowerCase() === 'carter.kiefer2010@outlook.com' ? 'gold' : 'free'))?.toString()?.replace(/^[a-z]/, (m) => m.toUpperCase())} Plan
             </Badge>
             <MarketStatus />
           </div>

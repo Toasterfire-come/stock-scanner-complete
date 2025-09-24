@@ -87,8 +87,8 @@ const PricingPro = () => {
       limits: {
         api_calls: 1500,
         screeners: 10,
-        alerts: 100,
-        watchlists: 2, 
+        alerts: 50,
+        watchlists: 0, 
         portfolios: 2,
       },
       features: [
@@ -116,8 +116,8 @@ const PricingPro = () => {
       limits: {
         api_calls: 5000,
         screeners: 20,
-        alerts: 500,
-        watchlists: 5,
+        alerts: 100,
+        watchlists: 1,
         portfolios: 5,
       },
       features: [

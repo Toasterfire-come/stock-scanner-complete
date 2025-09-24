@@ -50,15 +50,15 @@ const PLAN_LIMITS = {
   },
   bronze: { 
     monthlyApi: 1500, 
-    alerts: 100, 
-    watchlists: 2, 
+    alerts: 50, 
+    watchlists: 0, 
     portfolios: 1,
     screeners: 10
   },
   silver: { 
     monthlyApi: 5000, 
-    alerts: 500, 
-    watchlists: 5, 
+    alerts: 100, 
+    watchlists: 1, 
     portfolios: 5,
     screeners: 20
   },
@@ -906,3 +906,13 @@ export async function getUserInsights() {
 // USAGE TRACKING & LIMITS EXPORT
 // ====================
 export { getCurrentApiUsage, getPlanLimits, getStoredUserPlan, API_CALL_COSTS };
+
+// Public usage summary suitable for Account/Plan usage UI
+export async function getUsageSummary() {
+  try {
+    const { data } = await api.get('/usage/');
+    return data; // expected shape: { success, data: { daily, monthly } }
+  } catch (error) {
+    return { success: false, error: error?.response?.data?.message || 'Failed to load usage summary' };
+  }
+}

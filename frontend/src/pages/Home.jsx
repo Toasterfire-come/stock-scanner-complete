@@ -160,8 +160,8 @@ const Home = () => {
       features: [
         "1500 API calls per month",
         "10 Screeners",
-        "100 Email Alerts per month",
-        "2 Watchlists",
+        "50 Alerts per month",
+        "0 Watchlists",
         "Professional stock data access",
         "Real-time market information",
         "High Quality News and Sentiment Analysis",
@@ -179,8 +179,8 @@ const Home = () => {
       features: [
         "5000 API calls per month",
         "20 Screeners",
-        "500 Alerts per month",
-        "5 Watchlists",
+        "100 Alerts per month",
+        "1 Watchlist",
         "Portfolio Analytics",
         "Advanced Screener Tools (JSON input/output)",
         "Advanced Watchlist Tools",
