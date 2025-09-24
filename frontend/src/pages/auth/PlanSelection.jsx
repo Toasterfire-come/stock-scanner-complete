@@ -281,7 +281,7 @@ export default function PlanSelection() {
                   
                   {!plan.isFree && (
                     <p className="text-xs text-gray-500 text-center">
-                      TRIAL: 7-day trial for $1 then {plan.price}/{plan.period}
+                      {`TRIAL: 7-day trial for $1 then $${isAnnual ? plan.price.annual : plan.price.monthly}/${isAnnual ? 'year' : 'month'}`}
                     </p>
                   )}
                 </CardContent>
