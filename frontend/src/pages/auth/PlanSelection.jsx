@@ -7,6 +7,7 @@ import { Badge } from "../../components/ui/badge";
 import { Switch } from "../../components/ui/switch";
 import { Label } from "../../components/ui/label";
 import { Check, Crown, Zap, Star, Gift, ArrowRight } from "lucide-react";
+import { PLAN_LIMITS } from "../../api/client";
 
 const plans = [
   {
@@ -124,6 +125,22 @@ export default function PlanSelection() {
     }
   };
 
+  const formatLimit = (val, singular, plural) => {
+    if (val === Infinity) return `Unlimited ${plural}`;
+    return `${val} ${val === 1 ? singular : plural}`;
+  };
+
+  const getPlanFeatureLines = (planId) => {
+    const lim = PLAN_LIMITS[planId] || {};
+    const lines = [];
+    if (lim.monthlyApi !== undefined) lines.push(lim.monthlyApi === Infinity ? 'Unlimited API calls' : `${lim.monthlyApi} API calls per month`);
+    if (lim.watchlists !== undefined) lines.push(formatLimit(lim.watchlists, 'Watchlist', 'Watchlists'));
+    if (lim.alerts !== undefined) lines.push(formatLimit(lim.alerts, 'Alert per month', 'Alerts per month'));
+    if (lim.screeners !== undefined) lines.push(formatLimit(lim.screeners, 'Screener', 'Screeners'));
+    if (lim.portfolios !== undefined) lines.push(`Portfolio tracking (${lim.portfolios === Infinity ? 'unlimited' : lim.portfolios})`);
+    return lines;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
@@ -226,7 +243,7 @@ export default function PlanSelection() {
                 
                 <CardContent className="space-y-4 lg:space-y-6 flex-grow">
                   <ul className="mt-6 space-y-3 text-sm text-gray-700">
-                    {plan.features.map((feature, index) => (
+                    {getPlanFeatureLines(plan.id).map((feature, index) => (
                       <li key={index} className={`flex items-start ${index > 2 ? 'hidden sm:flex' : ''}`}>
                         <Check className="w-4 h-4 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                         <span className="text-sm text-gray-700">{feature}</span>
