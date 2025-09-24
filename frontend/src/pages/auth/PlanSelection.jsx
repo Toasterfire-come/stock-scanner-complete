@@ -90,7 +90,7 @@ const plans = [
 export default function PlanSelection() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isAuthenticated } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("bronze");
   const [isLoading, setIsLoading] = useState(false);
   const [isAnnual, setIsAnnual] = useState(false);
@@ -103,6 +103,16 @@ export default function PlanSelection() {
     setIsLoading(true);
     
     try {
+      if (!isAuthenticated) {
+        navigate('/auth/sign-up', {
+          state: {
+            selectedPlan: planId,
+            fromPlanSelection: true,
+            discountCode: 'TRIAL',
+          }
+        });
+        return;
+      }
       if (planId === "free") {
         // Keep user on free plan and go to app
         updateUser({ plan: 'free' });
