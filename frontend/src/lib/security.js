@@ -10,7 +10,8 @@ export const SECURITY_CONFIG = {
   // Token settings
   TOKEN_STORAGE_KEY: 'rts_token',
   USER_STORAGE_KEY: 'rts_user',
-  SESSION_TIMEOUT: parseInt(process.env.REACT_APP_SESSION_TIMEOUT_MINUTES || '30') * 60 * 1000,
+  // Default session timeout: 6 hours (override via REACT_APP_SESSION_TIMEOUT_MINUTES)
+  SESSION_TIMEOUT: parseInt(process.env.REACT_APP_SESSION_TIMEOUT_MINUTES || '360') * 60 * 1000,
   TOKEN_REFRESH_THRESHOLD: parseInt(process.env.REACT_APP_TOKEN_REFRESH_THRESHOLD_MINUTES || '5') * 60 * 1000,
   
   // Rate limiting
