@@ -125,6 +125,15 @@ export default function PlanSelection() {
   const { user, updateUser } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("bronze");
   const [isAnnual, setIsAnnual] = useState(false);
+
+  // 15% annual discount rounded to nearest price ending in 9.99
+  const roundToNearest9_99 = (value) => {
+    if (!value || value <= 0) return 0;
+    const base = Math.floor(value / 10) * 10 + 9.99;
+    const higher = base + 10;
+    return Number((Math.abs(value - base) <= Math.abs(higher - value) ? base : higher).toFixed(2));
+  };
+  const computeAnnual = (monthly) => roundToNearest9_99(parseFloat(String(monthly).replace('$','')) * 12 * 0.85);
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if this is from the signup flow
@@ -241,16 +250,13 @@ export default function PlanSelection() {
                     )}
                     <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                       {(() => {
-                        const monthly = plan.price;
-                        // Precomputed annual mapping aligned with Pricing page
-                        const annualMap = { bronze: "$299.99", silver: "$599.99", gold: "$959.99", free: "$0" };
-                        const display = isAnnual ? (annualMap[plan.id] || monthly) : monthly;
+                        const monthly = parseFloat(String(plan.price).replace('$',''));
+                        const annual = computeAnnual(monthly);
+                        const display = isAnnual ? `$${annual.toFixed(2)}` : plan.price;
                         return (
                           <>
                             {display}
-                            <span className="text-sm font-normal text-gray-500">
-                              /{isAnnual ? 'year' : plan.period}
-                            </span>
+                            <span className="text-sm font-normal text-gray-500">/{isAnnual ? 'year' : plan.period}</span>
                           </>
                         );
                       })()}

@@ -31,7 +31,8 @@ import {
   exportPortfolioCSV,
   searchStocks,
   getStock,
-  listStocks
+  listStocks,
+  getPlanLimits
 } from "../../api/client";
 
 const Portfolio = () => {
@@ -138,6 +139,20 @@ const Portfolio = () => {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    // Enforce plan limit for portfolios
+    try {
+      const limits = getPlanLimits();
+      const currentCount = Array.isArray(holdings) ? holdings.length : 0;
+      if (Number.isFinite(limits.portfolios) && limits.portfolios === 0 && currentCount >= 1) {
+        toast.error("Your plan does not include portfolios");
+        return;
+      }
+      if (Number.isFinite(limits.portfolios) && limits.portfolios > 0 && currentCount >= limits.portfolios) {
+        toast.error("Portfolio limit reached for your plan");
+        return;
+      }
+    } catch {}
 
     try {
       const response = await addPortfolio({

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/SecureAuthContext";
-import { createAlert, api } from "../../api/client";
+import { createAlert, api, getPlanLimits } from "../../api/client";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
@@ -64,6 +64,15 @@ const Alerts = () => {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    // Enforce plan limit for alerts
+    try {
+      const limits = getPlanLimits();
+      if (Number.isFinite(limits.alerts) && alerts.length >= limits.alerts) {
+        toast.error("Alert limit reached for your plan");
+        return;
+      }
+    } catch {}
 
     setIsCreating(true);
     try {

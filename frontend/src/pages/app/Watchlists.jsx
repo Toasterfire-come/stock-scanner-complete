@@ -18,7 +18,7 @@ import {
   Bell,
   Search
 } from "lucide-react";
-import { listWatchlists, addWatchlist, deleteWatchlist } from "../../api/client";
+import { listWatchlists, addWatchlist, deleteWatchlist, getPlanLimits, getCurrentApiUsage } from "../../api/client";
 
 const Watchlists = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +32,7 @@ const Watchlists = () => {
     alert_price: "",
     watchlist_name: "My Watchlist"
   });
+  const [planLimits, setPlanLimits] = useState(getPlanLimits());
 
   useEffect(() => {
     fetchWatchlist();
@@ -66,6 +67,16 @@ const Watchlists = () => {
       toast.error("Please enter a stock symbol");
       return;
     }
+
+    // Enforce plan limit for watchlists
+    try {
+      const limits = getPlanLimits();
+      const currentCount = Array.isArray(allItems) ? allItems.length : 0;
+      if (Number.isFinite(limits.watchlists) && currentCount >= limits.watchlists) {
+        toast.error("Watchlist limit reached for your plan");
+        return;
+      }
+    } catch {}
 
     try {
       const payload = {

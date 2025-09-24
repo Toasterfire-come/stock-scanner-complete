@@ -40,13 +40,14 @@ const Pricing = () => {
       name: "Bronze",
       icon: <Award className="h-6 w-6" />,
       description: "Enhanced features for active traders",
-      price: { monthly: 24.99, annual: 249.90 },
+      price: { monthly: 24.99, annual: null },
       features: [
         "150 API calls per day, 1500/month",
         "Full stock scanner & lookup",
         "Email alerts & notifications",
-        "Real-time alerts",
-        "Basic portfolio tracking"
+        "Real-time alerts (50 alerts/mo)",
+        "2 Watchlists",
+        "No portfolios"
       ],
       limitations: [],
       popular: true,
@@ -58,13 +59,13 @@ const Pricing = () => {
       name: "Silver",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 49.99, annual: 509.99 },
+      price: { monthly: 49.99, annual: null },
       features: [
         "500 API calls per day, 5000/month",
         "Advanced filtering & screening",
-        "Custom watchlists (1)",
-        "Real-time alerts (100 alerts)",
-        "Portfolio tracking (5 portfolios)",
+        "Custom watchlists (10)",
+        "Real-time alerts (100 alerts/mo)",
+        "Portfolio tracking (1 portfolio)",
         "Priority email support"
       ],
       limitations: [],
@@ -77,7 +78,7 @@ const Pricing = () => {
       name: "Gold",
       icon: <Star className="h-6 w-6" />,
       description: "Ultimate trading experience",
-      price: { monthly: 89.99, annual: 899.90 },
+      price: { monthly: 89.99, annual: null },
       features: [
         "Unlimited API calls",
         "All premium features",
@@ -111,6 +112,16 @@ const Pricing = () => {
       cta: "Get Started Free"
     },
   ];
+
+  // Annual pricing: 15% off, rounded to nearest value ending in 9.99
+  const roundToNearest9_99 = (value) => {
+    if (!value || value <= 0) return 0;
+    const base = Math.floor(value / 10) * 10 + 9.99;
+    const higher = base + 10;
+    return Number((Math.abs(value - base) <= Math.abs(higher - value) ? base : higher).toFixed(2));
+  };
+
+  const computeAnnual = (monthly) => roundToNearest9_99(monthly * 12 * 0.85);
 
   const handlePlanSelect = async (planId) => {
     if (!isAuthenticated) {
@@ -227,7 +238,7 @@ const Pricing = () => {
     if (appliedDiscount && plan.id !== "free") {
       return 1.00;
     }
-    return isAnnual ? plan.price.annual : plan.price.monthly;
+    return isAnnual ? computeAnnual(plan.price.monthly) : plan.price.monthly;
   };
 
   const getColorClasses = (color) => {
@@ -279,7 +290,7 @@ const Pricing = () => {
             />
             <Label htmlFor="billing-toggle" className={isAnnual ? "font-semibold" : ""}>
               Annual
-              <Badge variant="secondary" className="ml-2">Save 17%</Badge>
+              <Badge variant="secondary" className="ml-2">Save 15%</Badge>
             </Label>
           </div>
 
@@ -343,13 +354,13 @@ const Pricing = () => {
                   
                   {appliedDiscount && plan.id !== "free" && (
                     <div className="text-sm text-gray-500 line-through mt-1">
-                      Was ${isAnnual ? plan.price.annual : plan.price.monthly}/{isAnnual ? 'year' : 'month'}
+                      Was ${isAnnual ? computeAnnual(plan.price.monthly) : plan.price.monthly}/{isAnnual ? 'year' : 'month'}
                     </div>
                   )}
                   
                   {isAnnual && plan.price.monthly > 0 && !appliedDiscount && (
                     <div className="text-sm text-green-600 mt-1">
-                      Save ${(plan.price.monthly * 12) - plan.price.annual} per year
+                      Save ${((plan.price.monthly * 12) - computeAnnual(plan.price.monthly)).toFixed(2)} per year
                     </div>
                   )}
                 </div>

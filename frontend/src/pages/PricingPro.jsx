@@ -188,12 +188,21 @@ const PricingPro = () => {
     return limit.toLocaleString();
   };
 
-  const getAnnualSavings = (monthly, yearly) => {
-    if (monthly === 0) return 0;
+  // 15% annual discount, rounded to nearest price ending with 9.99
+  const roundToNearest9_99 = (value) => {
+    if (!value || value <= 0) return 0;
+    const base = Math.floor(value / 10) * 10 + 9.99;
+    const higher = base + 10;
+    return Number((Math.abs(value - base) <= Math.abs(higher - value) ? base : higher).toFixed(2));
+  };
+  const computeAnnual = (monthly) => roundToNearest9_99(monthly * 12 * 0.85);
+  const getAnnualSavings = (monthly) => {
+    if (monthly === 0) return { amount: 0, percentage: 0 };
+    const yearly = computeAnnual(monthly);
     const monthlyCost = monthly * 12;
     const savings = monthlyCost - yearly;
     const percentage = Math.round((savings / monthlyCost) * 100);
-    return { amount: savings, percentage };
+    return { amount: savings, percentage, yearly };
   };
 
   const handleSubscribe = async (planKey) => {
@@ -252,7 +261,7 @@ const PricingPro = () => {
       {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
         {Object.entries(plans).map(([planKey, plan]) => {
-          const savings = getAnnualSavings(plan.price, plan.price_yearly);
+          const savings = getAnnualSavings(plan.price);
           
           return (
             <Card key={planKey} className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${getPlanColor(planKey)}`}>
@@ -269,7 +278,7 @@ const PricingPro = () => {
                 <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                 <div className="mt-4">
                   <div className="text-4xl font-bold text-gray-900">
-                    ${isAnnual ? plan.price_yearly : plan.price}
+                    ${isAnnual ? savings.yearly : plan.price}
                     {plan.price > 0 && (
                       <span className="text-lg font-normal text-gray-600">
                         /{isAnnual ? 'year' : 'month'}
@@ -278,9 +287,7 @@ const PricingPro = () => {
                   </div>
                   {isAnnual && plan.price > 0 && (
                     <div className="mt-2">
-                      <p className="text-sm text-gray-600">
-                        ${(plan.price_yearly / 12).toFixed(2)}/month billed annually
-                      </p>
+                      <p className="text-sm text-gray-600">{(savings.yearly / 12).toFixed(2)}/month billed annually</p>
                       <Badge variant="secondary" className="bg-green-100 text-green-800 mt-1">
                         Save ${savings.amount.toFixed(2)} ({savings.percentage}%)
                       </Badge>
