@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SEO from "../components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -247,6 +248,12 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 py-12">
+      <SEO
+        title="Pricing | Trade Scan Pro"
+        description="Simple, transparent pricing for powerful stock screening and alerts. Start with a 7‑day trial."
+        canonical="https://tradescanpro.com/pricing"
+        ogImage="/og-image.png"
+      />
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">

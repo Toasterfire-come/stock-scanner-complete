@@ -1,0 +1,12 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Trade Scan Pro",
+  "url": "https://tradescanpro.com",
+  "logo": "https://tradescanpro.com/og-image.png",
+  "sameAs": [
+    "https://twitter.com/",
+    "https://www.linkedin.com/"
+  ]
+}
+
