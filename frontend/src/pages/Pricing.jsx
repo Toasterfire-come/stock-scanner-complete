@@ -253,6 +253,7 @@ const Pricing = () => {
         description="Simple, transparent pricing for powerful stock screening and alerts. Start with a 7‑day trial."
         canonical="https://tradescanpro.com/pricing"
         ogImage="/og-image.png"
+        jsonLdSrcs={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}
       />
       <div className="container mx-auto px-4">
         {/* Header */}

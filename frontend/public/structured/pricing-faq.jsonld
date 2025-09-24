@@ -1,0 +1,31 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does the 7-day trial work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use code TRIAL to access any paid plan for 7 days for $1. Cancel anytime."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I change plans at any time?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Upgrades/downgrades take effect immediately with prorated billing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What payment methods are accepted?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All major credit cards and PayPal, processed securely."
+      }
+    }
+  ]
+}
+
