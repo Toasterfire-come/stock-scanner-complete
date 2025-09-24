@@ -268,11 +268,7 @@ const EnhancedAppLayout = () => {
           </div>
 
           {/* Breadcrumbs */}
-          {showBreadcrumbs && (
-            <div className="py-3 border-t border-gray-100">
-              <SmartBreadcrumb />
-            </div>
-          )}
+          {/* Breadcrumbs hidden per request */}
         </div>
       </header>
 
