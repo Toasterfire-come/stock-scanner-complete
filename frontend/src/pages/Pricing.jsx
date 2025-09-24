@@ -43,9 +43,9 @@ const Pricing = () => {
       price: { monthly: 24.99, annual: 249.90 },
       features: [
         "150 API calls per day, 1500/month",
-        "Full stock scanner & lookup",
-        "Email alerts & notifications",
-        "Real-time alerts",
+        "0 Watchlists",
+        "50 Alerts per month",
+        "10 Screeners",
         "Basic portfolio tracking"
       ],
       limitations: [],
@@ -58,12 +58,12 @@ const Pricing = () => {
       name: "Silver",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 39.99, annual: 399.90 },
+      price: { monthly: 49.99, annual: 499.90 },
       features: [
         "500 API calls per day, 5000/month",
-        "Advanced filtering & screening",
-        "Custom watchlists (10)",
-        "Real-time alerts (50 alerts)",
+        "1 Watchlist",
+        "100 Alerts per month",
+        "20 Screeners",
         "Portfolio tracking (5 portfolios)",
         "Priority email support"
       ],

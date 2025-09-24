@@ -4,14 +4,15 @@ import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Switch } from "../../components/ui/switch";
+import { Label } from "../../components/ui/label";
 import { Check, Crown, Zap, Star, Gift, ArrowRight } from "lucide-react";
 
 const plans = [
   {
     id: "bronze",
     name: "Bronze",
-    price: "$24.99",
-    period: "month",
+    price: { monthly: 24.99, annual: 249.90 },
     trialPrice: "$1",
     description: "Great for individual traders",
     features: [
@@ -29,8 +30,7 @@ const plans = [
   {
     id: "silver",
     name: "Silver",
-    price: "$39.99",
-    period: "month",
+    price: { monthly: 49.99, annual: 499.90 },
     trialPrice: "$1",
     description: "Perfect for professional traders",
     features: [
@@ -48,8 +48,7 @@ const plans = [
   {
     id: "gold",
     name: "Gold",
-    price: "$89.99",
-    period: "month",
+    price: { monthly: 89.99, annual: 899.90 },
     trialPrice: "$1",
     description: "For trading teams and institutions",
     features: [
@@ -67,7 +66,7 @@ const plans = [
   {
     id: "free",
     name: "Free",
-    price: "$0",
+    price: { monthly: 0, annual: 0 },
     period: "forever",
     description: "Perfect for getting started",
     features: [
@@ -93,6 +92,7 @@ export default function PlanSelection() {
   const { user, updateUser } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("bronze");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   // Check if this is from the signup flow
   const isNewUser = location.state?.newUser;
@@ -125,8 +125,8 @@ export default function PlanSelection() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
-      <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (
             <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-2">
@@ -135,12 +135,27 @@ export default function PlanSelection() {
             </Badge>
           )}
           
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-gray-900">
             Choose Your Trading Plan
           </h1>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="mt-3 text-base sm:text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
             Select the perfect plan for your trading needs. All paid plans include a 7-day trial for just $1.
           </p>
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center space-x-4 mt-6">
+            <Label htmlFor="billing-toggle" className={!isAnnual ? "font-semibold" : ""}>
+              Monthly
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={isAnnual}
+              onCheckedChange={setIsAnnual}
+            />
+            <Label htmlFor="billing-toggle" className={isAnnual ? "font-semibold" : ""}>
+              Annual
+              <Badge variant="secondary" className="ml-2">Save 17%</Badge>
+            </Label>
+          </div>
         </div>
 
         {/* Updated TRIAL Banner */}
@@ -151,7 +166,7 @@ export default function PlanSelection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-8 lg:gap-12 xl:gap-16 2xl:gap-20">
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
@@ -159,14 +174,14 @@ export default function PlanSelection() {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative h-full flex flex-col cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                  isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
-                } ${plan.popular ? "border-orange-200 scale-105" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
+                className={`relative h-full flex flex-col cursor-pointer transition-shadow duration-200 hover:shadow-md ${
+                  isSelected ? "ring-2 ring-blue-600 shadow" : ""
+                } ${plan.popular ? "border-blue-200" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-1">
-                    Most Popular
+                  <Badge className="absolute -top-3 right-4 rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold shadow">
+                    Most popular
                   </Badge>
                 )}
                 
@@ -191,23 +206,30 @@ export default function PlanSelection() {
                         TRIAL: {plan.trialPrice} for 7 days
                       </div>
                     )}
-                    <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                      {plan.price}
-                      <span className="text-sm font-normal text-gray-500">
-                        /{plan.period}
-                      </span>
+                    <div className="mt-2 text-3xl sm:text-4xl font-bold text-gray-900">
+                      ${isAnnual ? plan.price.annual : plan.price.monthly}
+                      {plan.price.monthly > 0 && (
+                        <span className="ml-1 text-sm font-normal text-gray-500">
+                          /{isAnnual ? 'year' : 'month'}
+                        </span>
+                      )}
                     </div>
+                    {isAnnual && plan.price.monthly > 0 && (
+                      <div className="text-sm text-green-600 mt-1">
+                        Save ${(plan.price.monthly * 12 - plan.price.annual).toFixed(2)} per year
+                      </div>
+                    )}
                   </div>
                   
-                  <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
+                  <CardDescription className="text-sm sm:text-base leading-relaxed">{plan.description}</CardDescription>
                 </CardHeader>
                 
                 <CardContent className="space-y-4 lg:space-y-6 flex-grow">
-                  <ul className="space-y-3">
+                  <ul className="mt-6 space-y-3 text-sm text-gray-700">
                     {plan.features.map((feature, index) => (
                       <li key={index} className={`flex items-start ${index > 2 ? 'hidden sm:flex' : ''}`}>
                         <Check className="w-4 h-4 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                        <span className="text-sm text-gray-600">{feature}</span>
+                        <span className="text-sm text-gray-700">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -227,11 +249,9 @@ export default function PlanSelection() {
                   )}
                   
                   <Button
-                    className={`w-full mt-6 h-11 sm:h-12 text-base ${
-                      isSelected 
-                        ? "bg-blue-600 hover:bg-blue-700" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    size="lg"
+                    variant={plan.isFree ? "outline" : "default"}
+                    className="w-full mt-8"
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePlanSelect(plan.id);
@@ -257,7 +277,7 @@ export default function PlanSelection() {
           <div className="mb-6">
             <Button 
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+              variant="default"
               onClick={() => handlePlanSelect(selectedPlan)}
               disabled={isLoading}
             >
@@ -267,21 +287,21 @@ export default function PlanSelection() {
           </div>
           
           <p className="text-sm text-gray-500">
-            You can change your plan anytime from your account settings
+            Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
           
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
-              Cancel anytime
+              Trusted by thousands of traders
             </div>
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
-              No setup fees
+              Secure payments via Credit Card & PayPal
             </div>
             <div className="flex items-center">
               <Check className="h-4 w-4 text-green-500 mr-2" />
-              Email support
+              Industry‑standard encryption
             </div>
           </div>
         </div>
