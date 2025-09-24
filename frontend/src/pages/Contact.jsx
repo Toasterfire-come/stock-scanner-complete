@@ -14,6 +14,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import SEO from "../components/SEO";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -86,6 +87,12 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="Contact | Trade Scan Pro"
+        description="Questions about Trade Scan Pro? Contact our team for support, sales, or enterprise."
+        canonical="https://tradescanpro.com/contact"
+        ogImage="/og-image.png"
+      />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">

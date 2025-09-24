@@ -23,6 +23,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
+import SEO from "../components/SEO";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -221,6 +222,13 @@ const PricingPro = () => {
 
   return (
     <div className="container mx-auto px-4 py-16">
+      <SEO
+        title="Pricing (Legacy) | Trade Scan Pro"
+        description="Legacy pricing view. See current pricing plans for stock screening and alerts."
+        canonical="https://tradescanpro.com/pricing-old"
+        ogImage="/og-image.png"
+        jsonLdSrcs={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}
+      />
       {/* Header */}
       <div className="text-center mb-16">
         <Badge variant="secondary" className="mb-4">

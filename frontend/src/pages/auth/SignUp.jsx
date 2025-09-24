@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SEO from "../../components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -81,6 +82,12 @@ const SignUp = () => {
 
   return (
     <div className="space-y-6">
+      <SEO
+        title="Create Account | Trade Scan Pro"
+        description="Create your Trade Scan Pro account."
+        canonical="https://tradescanpro.com/auth/sign-up"
+        robots="noindex, nofollow"
+      />
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
         <p className="text-gray-600 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>

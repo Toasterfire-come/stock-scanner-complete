@@ -117,6 +117,7 @@ const Features = () => {
         description="Advanced stock screening, real-time alerts, portfolio analytics, and market intelligence."
         canonical="https://tradescanpro.com/features"
         ogImage="/og-image.png"
+        jsonLdSrcs={["/structured/features.jsonld"]}
       />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">

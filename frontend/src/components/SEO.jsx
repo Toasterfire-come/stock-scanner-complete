@@ -40,7 +40,8 @@ const SEO = ({
   ogType = 'website',
   ogImage = '/og-image.png',
   twitterCard = 'summary_large_image',
-  jsonLdSrcs = []
+  jsonLdSrcs = [],
+  robots
 }) => {
   useEffect(() => {
     if (title) {
@@ -64,6 +65,10 @@ const SEO = ({
     }
     upsertMetaByName('twitter:card', twitterCard);
 
+    if (robots) {
+      upsertMetaByName('robots', robots);
+    }
+
     // Attach external JSON-LD scripts (to comply with strict CSP)
     jsonLdSrcs.forEach((src) => {
       if (!src) return;
@@ -77,7 +82,7 @@ const SEO = ({
         document.head.appendChild(s);
       }
     });
-  }, [title, description, canonical, ogType, ogImage, twitterCard, jsonLdSrcs]);
+  }, [title, description, canonical, ogType, ogImage, twitterCard, jsonLdSrcs, robots]);
 
   return null;
 };

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SEO from "../../components/SEO";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
@@ -58,6 +59,12 @@ export default function SignIn() {
 
   return (
     <div className="space-y-6">
+      <SEO
+        title="Sign In | Trade Scan Pro"
+        description="Access your Trade Scan Pro account."
+        canonical="https://tradescanpro.com/auth/sign-in"
+        robots="noindex, nofollow"
+      />
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
         <p className="text-gray-600 mt-2 text-sm sm:text-base">

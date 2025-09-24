@@ -14,6 +14,7 @@ import {
   Zap,
   Shield
 } from "lucide-react";
+import SEO from "../components/SEO";
 
 const About = () => {
   const stats = [
@@ -48,6 +49,12 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="About | Trade Scan Pro"
+        description="Learn about Trade Scan Pro's mission to deliver reliable stock screening and analytics tools."
+        canonical="https://tradescanpro.com/about"
+        ogImage="/og-image.png"
+      />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">
