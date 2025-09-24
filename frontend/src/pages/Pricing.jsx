@@ -207,8 +207,8 @@ const Pricing = () => {
       category: "Portfolio & Tracking",
       icon: <Users className="h-5 w-5" />,
       items: [
-        { name: "Portfolio management", free: false, bronze: "Basic", silver: "5 portfolios", gold: "Professional" },
-        { name: "Watchlists", free: false, bronze: "0", silver: "1", gold: "Unlimited" },
+        { name: "Portfolio management", free: false, bronze: "No portfolios", silver: "1 portfolio", gold: "Professional" },
+        { name: "Watchlists", free: false, bronze: "2", silver: "10", gold: "Unlimited" },
         { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true }
       ]
     },

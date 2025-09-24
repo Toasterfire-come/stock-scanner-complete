@@ -88,8 +88,8 @@ const PricingPro = () => {
         api_calls: 1500,
         screeners: 10,
         alerts: 50,
-        watchlists: 0, 
-        portfolios: 2,
+        watchlists: 2, 
+        portfolios: 0,
       },
       features: [
         'Professional stock data access',
@@ -117,8 +117,8 @@ const PricingPro = () => {
         api_calls: 5000,
         screeners: 20,
         alerts: 100,
-        watchlists: 1,
-        portfolios: 5,
+        watchlists: 10,
+        portfolios: 1,
       },
       features: [
         'All Bronze features',

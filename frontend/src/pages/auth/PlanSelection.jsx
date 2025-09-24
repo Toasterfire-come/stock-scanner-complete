@@ -20,8 +20,16 @@ const plans = [
       "Advanced screening tools",
       "Real-time alerts",
       "Email support",
-      "Basic portfolio tracking"
+      "2 Watchlists",
+      "No portfolios"
     ],
+    limits: {
+      api_calls: 1500,
+      screeners: 10,
+      alerts: 50,
+      watchlists: 2,
+      portfolios: 0,
+    },
     icon: Zap,
     color: "orange",
     popular: true,
@@ -29,7 +37,7 @@ const plans = [
   {
     id: "silver",
     name: "Silver",
-    price: "$39.99",
+    price: "$49.99",
     period: "month",
     trialPrice: "$1",
     description: "Perfect for professional traders",
@@ -37,11 +45,19 @@ const plans = [
       "500 API calls per day, 5000/month",
       "Unlimited scanner combinations",
       "All screening tools",
-      "Custom alerts & notifications (50 alerts)",
-      "Portfolio tracking (5 portfolios)",
+      "Custom alerts & notifications (100 alerts)",
+      "10 Watchlists",
+      "1 Portfolio",
       "Priority support",
       "Advanced analytics"
     ],
+    limits: {
+      api_calls: 5000,
+      screeners: 20,
+      alerts: 100,
+      watchlists: 10,
+      portfolios: 1,
+    },
     icon: Crown,
     color: "blue",
   },
@@ -61,6 +77,13 @@ const plans = [
       "Team collaboration",
       "Advanced analytics & reporting"
     ],
+    limits: {
+      api_calls: -1,
+      screeners: -1,
+      alerts: -1,
+      watchlists: -1,
+      portfolios: -1,
+    },
     icon: Crown,
     color: "yellow",
   },
@@ -75,12 +98,21 @@ const plans = [
       "Unlimited scanner combinations",
       "Basic stock screening",
       "Community support",
-      "Basic portfolio tracking"
+      "Basic portfolio tracking",
+      "0 Watchlists",
+      "1 Portfolio"
     ],
     limitations: [
       "No email alerts",
       "No watchlists"
     ],
+    limits: {
+      api_calls: 30,
+      screeners: 1,
+      alerts: 0,
+      watchlists: 0,
+      portfolios: 1,
+    },
     icon: Star,
     color: "gray",
     isFree: true,
@@ -92,6 +124,7 @@ export default function PlanSelection() {
   const location = useLocation();
   const { user, updateUser } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("bronze");
+  const [isAnnual, setIsAnnual] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if this is from the signup flow
@@ -151,6 +184,21 @@ export default function PlanSelection() {
           </div>
         </div>
 
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center space-x-4 mb-8">
+          <span className={!isAnnual ? "font-semibold" : "text-gray-600"}>Monthly</span>
+          <button
+            type="button"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full ${isAnnual ? 'bg-blue-600' : 'bg-gray-200'}`}
+            onClick={() => setIsAnnual((v) => !v)}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${isAnnual ? 'translate-x-6' : 'translate-x-1'}`}
+            />
+          </button>
+          <span className={isAnnual ? "font-semibold" : "text-gray-600"}>Annual</span>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-8 lg:gap-12 xl:gap-16 2xl:gap-20">
           {plans.map((plan) => {
             const Icon = plan.icon;
@@ -192,10 +240,20 @@ export default function PlanSelection() {
                       </div>
                     )}
                     <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                      {plan.price}
-                      <span className="text-sm font-normal text-gray-500">
-                        /{plan.period}
-                      </span>
+                      {(() => {
+                        const monthly = plan.price;
+                        // Precomputed annual mapping aligned with Pricing page
+                        const annualMap = { bronze: "$299.99", silver: "$599.99", gold: "$959.99", free: "$0" };
+                        const display = isAnnual ? (annualMap[plan.id] || monthly) : monthly;
+                        return (
+                          <>
+                            {display}
+                            <span className="text-sm font-normal text-gray-500">
+                              /{isAnnual ? 'year' : plan.period}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   
@@ -211,6 +269,34 @@ export default function PlanSelection() {
                       </li>
                     ))}
                   </ul>
+
+                  {/* Limits Summary */}
+                  {plan.limits && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
+                        <div>
+                          <span className="text-gray-600">API Calls:</span>
+                          <span className="font-medium ml-1">{plan.limits.api_calls === -1 ? 'Unlimited' : plan.limits.api_calls.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Screeners:</span>
+                          <span className="font-medium ml-1">{plan.limits.screeners === -1 ? 'Unlimited' : plan.limits.screeners.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Alerts:</span>
+                          <span className="font-medium ml-1">{plan.limits.alerts === -1 ? 'Unlimited' : plan.limits.alerts.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Watchlists:</span>
+                          <span className="font-medium ml-1">{plan.limits.watchlists === -1 ? 'Unlimited' : plan.limits.watchlists.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Portfolios:</span>
+                          <span className="font-medium ml-1">{plan.limits.portfolios === -1 ? 'Unlimited' : plan.limits.portfolios.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {plan.limitations && plan.limitations.length > 0 && (
                     <div className="border-t pt-3">

@@ -51,15 +51,15 @@ const PLAN_LIMITS = {
   bronze: { 
     monthlyApi: 1500, 
     alerts: 50, 
-    watchlists: 0, 
-    portfolios: 1,
+    watchlists: 2, 
+    portfolios: 0,
     screeners: 10
   },
   silver: { 
     monthlyApi: 5000, 
     alerts: 100, 
-    watchlists: 1, 
-    portfolios: 5,
+    watchlists: 10, 
+    portfolios: 1,
     screeners: 20
   },
   gold: { 
