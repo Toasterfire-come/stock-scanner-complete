@@ -289,16 +289,7 @@ const CurrentPlan = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">12</div>
-                    <div className="text-sm text-blue-600">Active Screeners</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">47</div>
-                    <div className="text-sm text-green-600">Watchlist Items</div>
-                  </div>
-                </div>
+                {/* Removed hardcoded resource tiles; see PlanUsage for dynamic usage */}
               </CardContent>
             </Card>
 
