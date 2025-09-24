@@ -1,0 +1,17 @@
+HTTP/2 200 
+content-type: text/javascript
+content-length: 2028901
+x-ws-ratelimit-limit: 1000
+x-ws-ratelimit-remaining: 999
+date: Wed, 24 Sep 2025 14:25:02 GMT
+server: Apache
+strict-transport-security: max-age=31536000; includeSubDomains
+content-security-policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://*.paypal.com https://o.sentry.io https://ingest.sentry.io https://plausible.io https://events.plausible.io https://fonts.googleapis.com https://fonts.gstatic.com https://query1.finance.yahoo.com https://query2.finance.yahoo.com; script-src 'self' https://www.paypal.com https://www.paypalobjects.com https://plausible.io; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https://www.paypal.com https://*.paypal.com
+last-modified: Wed, 24 Sep 2025 14:14:33 GMT
+etag: "1ef565-63f8cabf5800e"
+accept-ranges: bytes
+x-frame-options: DENY
+x-content-type-options: nosniff
+x-xss-protection: 1; mode=block
+referrer-policy: strict-origin-when-cross-origin
+
