@@ -30,7 +30,7 @@ const plans = [
   {
     id: "silver",
     name: "Silver",
-    price: { monthly: 39.99, annual: 399.90 },
+    price: { monthly: 49.99, annual: 499.90 },
     trialPrice: "$1",
     description: "Perfect for professional traders",
     features: [

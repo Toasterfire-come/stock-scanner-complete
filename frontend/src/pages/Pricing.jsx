@@ -58,7 +58,7 @@ const Pricing = () => {
       name: "Silver",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 39.99, annual: 399.90 },
+      price: { monthly: 49.99, annual: 499.90 },
       features: [
         "500 API calls per day, 5000/month",
         "Advanced filtering & screening",
