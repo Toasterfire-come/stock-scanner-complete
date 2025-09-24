@@ -24,6 +24,7 @@ import {
   Mail
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
+import { PLAN_LIMITS } from "../api/client";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -239,6 +240,22 @@ const Pricing = () => {
     }
   };
 
+  const formatLimit = (val, singular, plural) => {
+    if (val === Infinity) return `Unlimited ${plural}`;
+    return `${val} ${val === 1 ? singular : plural}`;
+  };
+
+  const getPlanFeatureLines = (planId) => {
+    const lim = PLAN_LIMITS[planId] || {};
+    const lines = [];
+    if (lim.monthlyApi !== undefined) lines.push(lim.monthlyApi === Infinity ? 'Unlimited API calls' : `${lim.monthlyApi} API calls per month`);
+    if (lim.watchlists !== undefined) lines.push(formatLimit(lim.watchlists, 'Watchlist', 'Watchlists'));
+    if (lim.alerts !== undefined) lines.push(formatLimit(lim.alerts, 'Alert per month', 'Alerts per month'));
+    if (lim.screeners !== undefined) lines.push(formatLimit(lim.screeners, 'Screener', 'Screeners'));
+    if (lim.portfolios !== undefined) lines.push(`Portfolio tracking (${lim.portfolios === Infinity ? 'unlimited' : lim.portfolios})`);
+    return lines;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 py-12">
       <div className="container mx-auto px-4">
@@ -307,7 +324,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-16">
           {plans.map((plan) => (
             <Card 
               key={plan.id} 
@@ -369,7 +386,7 @@ const Pricing = () => {
                 <div className="space-y-3">
                   <h4 className="font-semibold text-gray-900">Features included:</h4>
                   <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
+                    {getPlanFeatureLines(plan.id).map((feature, index) => (
                       <li key={index} className="flex items-center text-sm">
                         <Check className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                         {feature}
