@@ -149,7 +149,7 @@ function App() {
                 <Route element={<AuthLayout />}>
                   <Route path="/auth/sign-in" element={<SignIn />} />
                   <Route path="/auth/sign-up" element={<SignUp />} />
-                  <Route path="/auth/plan-selection" element={<PlanSelection />} />
+                  {/* Moved plan selection to EnhancedAppLayout for full-width spacing */}
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/verify-email" element={<VerifyEmail />} />
@@ -176,6 +176,7 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<PricingPro />} />
+                  <Route path="/auth/plan-selection" element={<PlanSelection />} />
                   <Route path="/pricing-old" element={<Pricing />} />
                   
                   {/* Marketing Pages - Using placeholders */}
