@@ -466,11 +466,15 @@ const DataGrid = ({
     );
   }
 
+  const gapClass = gap === 6 ? 'gap-6' : gap === 8 ? 'gap-8' : gap === 10 ? 'gap-10' : gap === 5 ? 'gap-5' : 'gap-6';
+  const colsClass = columns === 4 ? 'lg:grid-cols-4' : columns === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
+
   return (
     <div className={cn(
       'grid',
-      `gap-${gap}`,
-      `grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns}`,
+      gapClass,
+      'grid-cols-1 sm:grid-cols-2',
+      colsClass,
       className
     )} {...props}>
       {data.map((item, index) => (

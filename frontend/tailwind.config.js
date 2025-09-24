@@ -89,5 +89,9 @@ module.exports = {
   		}
   	}
   },
+  safelist: [
+    'gap-5', 'gap-10', 'space-y-5', 'space-x-5',
+    'lg:grid-cols-3', 'lg:grid-cols-4', 'sm:grid-cols-2'
+  ],
   plugins: [require("tailwindcss-animate")],
 };
