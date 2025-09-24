@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SEO from "../../components/SEO";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
@@ -153,6 +154,12 @@ export default function PlanSelection() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Choose Plan | Trade Scan Pro"
+        description="Pick the plan that fits your trading. Bronze, Silver, and Gold with real-time screening and alerts. 7‑day $1 trial for paid plans."
+        canonical="https://tradescanpro.com/auth/plan-selection"
+        ogImage="/og-image.png"
+      />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (

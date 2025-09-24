@@ -82,8 +82,9 @@ logger.propagate = False
 # Global flag for graceful shutdown
 shutdown_flag = False
 
+from utils.market_calendar import is_regular_market_open, is_market_holiday, EASTERN as EASTERN_TZ
+
 # Market window configuration (US/Eastern) - ONLY REGULAR MARKET HOURS
-EASTERN_TZ = pytz.timezone('US/Eastern')
 # Only update during regular market hours
 MARKET_OPEN = os.getenv('MARKET_OPEN', "09:30")    # 9:30 AM ET
 MARKET_CLOSE = os.getenv('MARKET_CLOSE', "16:00")  # 4:00 PM ET
@@ -573,20 +574,30 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         pass
 
     # Build comprehensive stock data
+    # Normalize zero-ish values to None when clearly invalid to reduce spurious 0s
+    def _nz(val):
+        try:
+            if val is None:
+                return None
+            f = float(val)
+            return None if f == 0.0 else val
+        except Exception:
+            return val
+
     stock_data = {
         **base_data,  # Start with extracted data from utility functions
-        'price_change_today': price_change_today,
-        'price_change_week': price_change_week,
-        'price_change_month': price_change_month,
-        'price_change_year': price_change_year,
-        'change_percent': change_percent,
-        'bid_price': bid_price,
-        'ask_price': ask_price,
+        'price_change_today': _nz(price_change_today),
+        'price_change_week': _nz(price_change_week),
+        'price_change_month': _nz(price_change_month),
+        'price_change_year': _nz(price_change_year),
+        'change_percent': _nz(change_percent),
+        'bid_price': _nz(bid_price),
+        'ask_price': _nz(ask_price),
         'bid_ask_spread': str(bid_ask_spread) if bid_ask_spread else '',
         'days_range': days_range,
         'dvav': dvav,
         'shares_available': shares_available,
-        'market_cap': mc_value if mc_value is not None else base_data.get('market_cap'),
+        'market_cap': _nz(mc_value if mc_value is not None else base_data.get('market_cap')),
         'market_cap_change_3mon': None,  # Would need 3-month historical market cap data
         'pe_change_3mon': None,  # Would need 3-month historical PE data
         'last_updated': timezone.now(),
@@ -622,7 +633,7 @@ def run_stock_update(args):
     # Hard guard: run ONLY during regular market hours (weekdays 09:30–16:00 ET)
     now_et = datetime.now(EASTERN_TZ)
     current_hhmm = now_et.strftime("%H:%M")
-    if now_et.weekday() >= 5 or not (MARKET_OPEN <= current_hhmm < MARKET_CLOSE):
+    if now_et.weekday() >= 5 or is_market_holiday(now_et.date()) or not is_regular_market_open(now_et, MARKET_OPEN, MARKET_CLOSE):
         logger.info(
             f"Skipping stock update cycle outside regular hours at "
             f"{now_et.strftime('%Y-%m-%d %H:%M:%S %Z')} (allowed {MARKET_OPEN}-{MARKET_CLOSE} ET)"

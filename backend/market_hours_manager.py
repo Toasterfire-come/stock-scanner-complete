@@ -131,6 +131,8 @@ class MarketHoursManager:
     def get_current_market_phase(self):
         """Determine current market phase based on Eastern Time
         ONLY recognizes regular market hours (9:30 AM - 4:00 PM ET)"""
+        from utils.market_calendar import is_regular_market_open, is_market_holiday
+
         now_et = datetime.now(self.eastern_tz)
         current_time = now_et.strftime("%H:%M")
         
@@ -138,11 +140,14 @@ class MarketHoursManager:
         if now_et.weekday() >= 5:  # Saturday or Sunday
             return 'closed'
             
-        # Only check for regular market hours
-        if self.market_open <= current_time < self.market_close:
-            return 'market'  # Regular trading hours
-        else:
-            return 'closed'  # Outside regular hours
+        # Holiday check
+        if is_market_holiday(now_et.date()):
+            return 'closed'
+
+        # Only check for regular market hours (and not a holiday)
+        if is_regular_market_open(now_et, self.market_open, self.market_close):
+            return 'market'
+        return 'closed'
             
     def is_component_active(self, component_name, market_phase):
         """Check if component should be active during current market phase"""
@@ -271,7 +276,7 @@ class MarketHoursManager:
         
         logger.info(f"Current market phase: {current_phase} ({now_et.strftime('%Y-%m-%d %H:%M:%S %Z')})")
         
-        # Handle market closed period specially
+        # Handle market closed period specially (weekends/holidays/outside hours)
         if current_phase == 'closed':
             # Check if we've already handled this closed period
             if not hasattr(self, '_last_closed_handling') or \
