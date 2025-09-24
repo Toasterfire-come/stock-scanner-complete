@@ -36,6 +36,7 @@ import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
+import Checkout from "./pages/billing/Checkout";
 
 // App Pages (Protected)
 import AppDashboard from "./pages/app/AppDashboard";
@@ -165,6 +166,7 @@ function App() {
                 } />
 
                 {/* Billing Routes */}
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 <Route path="/checkout/failure" element={<CheckoutFailure />} />
 

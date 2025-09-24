@@ -126,19 +126,8 @@ const Pricing = () => {
       return;
     }
 
-    setIsLoading(true);
-    
-    try {
-      const plan = plans.find(p => p.id === planId);
-      const amount = isAnnual ? plan.price.annual : plan.price.monthly;
-      
-      // Create PayPal checkout with TRIAL discount
-      await createPayPalOrder(planId, 1.00); // $1 for trial
-    } catch (error) {
-      toast.error("Failed to create checkout session");
-    } finally {
-      setIsLoading(false);
-    }
+    // Redirect to checkout page that hosts PayPal widget
+    navigate("/checkout", { state: { planId, billingCycle: isAnnual ? 'annual' : 'monthly' } });
   };
 
   const createPayPalOrder = async (planId, amount) => {

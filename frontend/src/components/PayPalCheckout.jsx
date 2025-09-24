@@ -18,9 +18,9 @@ const PayPalCheckout = ({
   const [error, setError] = useState("");
 
   const planPrices = {
-    bronze: { monthly: 24.99, annual: 249.99 },
-    silver: { monthly: 39.99, annual: 399.99 },
-    gold: { monthly: 89.99, annual: 899.99 }
+    bronze: { monthly: 24.99, annual: 249.90 },
+    silver: { monthly: 49.99, annual: 499.90 },
+    gold: { monthly: 89.99, annual: 899.90 }
   };
 
   const planFeatures = {

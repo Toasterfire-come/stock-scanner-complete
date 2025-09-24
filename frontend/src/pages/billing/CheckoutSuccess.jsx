@@ -30,6 +30,9 @@ const CheckoutSuccess = () => {
   }, [planId, amount, navigate]);
 
   const planNames = {
+    bronze: "Bronze",
+    silver: "Silver",
+    gold: "Gold",
     pro: "Professional",
     enterprise: "Enterprise",
     free: "Free"
