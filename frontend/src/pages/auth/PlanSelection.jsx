@@ -193,7 +193,12 @@ export default function PlanSelection() {
                 key={plan.id} 
                 className={`relative h-full flex flex-col cursor-pointer transition-shadow duration-200 hover:shadow-md overflow-hidden ${
                   isSelected ? "ring-2 ring-blue-600 shadow" : ""
-                } ${plan.popular ? "border-blue-200" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
+                } ${plan.popular ? "border-blue-200" : ""} ${
+                  plan.id === 'bronze' ? 'lg:order-1' :
+                  plan.id === 'free' ? 'order-last lg:order-2' :
+                  plan.id === 'silver' ? 'lg:order-3' :
+                  plan.id === 'gold' ? 'lg:order-4' : ''
+                }`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
@@ -291,18 +296,6 @@ export default function PlanSelection() {
         </div>
 
         <div className="text-center mt-8 sm:mt-12 space-y-4">
-          <div className="mb-6">
-            <Button 
-              size="lg"
-              variant="default"
-              onClick={() => handlePlanSelect(selectedPlan)}
-              disabled={isLoading}
-            >
-              Continue to Payment
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
-          </div>
-          
           <p className="text-sm text-gray-500">
             Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
