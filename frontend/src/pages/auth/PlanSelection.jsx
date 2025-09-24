@@ -191,18 +191,18 @@ export default function PlanSelection() {
             return (
               <Card 
                 key={plan.id} 
-                className={`relative h-full flex flex-col cursor-pointer transition-shadow duration-200 hover:shadow-md ${
+                className={`relative h-full flex flex-col cursor-pointer transition-shadow duration-200 hover:shadow-md overflow-hidden ${
                   isSelected ? "ring-2 ring-blue-600 shadow" : ""
                 } ${plan.popular ? "border-blue-200" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
-                  <Badge className="absolute -top-3 right-4 rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold shadow">
+                  <Badge className="absolute top-2 right-2 rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold shadow">
                     Most popular
                   </Badge>
                 )}
                 
-                <CardHeader className="text-center pb-4 lg:pb-6">
+                <CardHeader className="text-center pb-4 lg:pb-6 pt-8">
                   <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
                     plan.color === "gray" ? "bg-gray-100" :
                     plan.color === "orange" ? "bg-orange-100" :
@@ -215,7 +215,7 @@ export default function PlanSelection() {
                     }`} />
                   </div>
                   
-                  <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl break-words">{plan.name}</CardTitle>
                   
                   <div className="space-y-2">
                     {!plan.isFree && (
@@ -223,10 +223,10 @@ export default function PlanSelection() {
                         TRIAL: {plan.trialPrice} for 7 days
                       </div>
                     )}
-                    <div className="mt-2 text-3xl sm:text-4xl font-bold text-gray-900">
+                    <div className="mt-2 text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                       ${isAnnual ? plan.price.annual : plan.price.monthly}
                       {plan.price.monthly > 0 && (
-                        <span className="ml-1 text-sm font-normal text-gray-500">
+                        <span className="ml-1 text-sm font-normal text-gray-500 block sm:inline">
                           /{isAnnual ? 'year' : 'month'}
                         </span>
                       )}
@@ -246,7 +246,7 @@ export default function PlanSelection() {
                     {getPlanFeatureLines(plan.id).map((feature, index) => (
                       <li key={index} className={`flex items-start ${index > 2 ? 'hidden sm:flex' : ''}`}>
                         <Check className="w-4 h-4 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{feature}</span>
+                        <span className="text-sm text-gray-700 break-words whitespace-normal">{feature}</span>
                       </li>
                     ))}
                   </ul>
