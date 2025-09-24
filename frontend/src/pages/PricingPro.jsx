@@ -33,12 +33,15 @@ const PricingPro = () => {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    setPlans(getDefaultPlans());
     fetchPlans();
   }, []);
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/plans/comparison/`, {
+      const base = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL : '';
+      const url = `${base}/plans/comparison/`;
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -50,6 +53,8 @@ const PricingPro = () => {
         const data = await response.json();
         setPlans(data.plans);
         setCurrentPlan(data.current_plan);
+      } else {
+        throw new Error('Plans API returned non-OK response');
       }
     } catch (error) {
       console.error('Failed to fetch plans:', error);
@@ -87,16 +92,16 @@ const PricingPro = () => {
       limits: {
         api_calls: 1500,
         screeners: 10,
-        alerts: 100,
-        watchlists: 2, 
-        portfolios: 2,
+        alerts: 50,
+        watchlists: 0, 
+        portfolios: 1,
       },
       features: [
         'Professional stock data access',
         '1,500 API calls per month',
         '10 Screeners',
-        '100 Email Alerts per month',
-        '2 Watchlists',
+        '50 Email Alerts per month',
+        '0 Watchlists',
         'Real-time market information',
         'Basic stock screener',
         'Email alerts & notifications',
@@ -111,21 +116,21 @@ const PricingPro = () => {
     silver: {
       name: 'Silver Plan',
       price: 49.99,
-      price_yearly: 509.99,
+      price_yearly: 499.90,
       popular: true,
       limits: {
         api_calls: 5000,
         screeners: 20,
-        alerts: 500,
-        watchlists: 5,
+        alerts: 100,
+        watchlists: 1,
         portfolios: 5,
       },
       features: [
         'All Bronze features',
         '5,000 API calls per month',
         '20 Screeners',
-        '500 Alerts per month',
-        '5 Watchlists',
+        '100 Alerts per month',
+        '1 Watchlist',
         'Portfolio Analytics',
         'Advanced Screener Tools (JSON input/output)',
         'Advanced Watchlist Tools (JSON input/output)',
