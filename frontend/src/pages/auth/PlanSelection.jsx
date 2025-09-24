@@ -195,10 +195,9 @@ export default function PlanSelection() {
                   isSelected ? "ring-2 ring-blue-600 shadow" : ""
                 } ${plan.popular ? "border-blue-200" : ""} ${
                   plan.id === 'bronze' ? 'lg:order-1' :
-                  plan.id === 'free' ? 'order-last lg:order-2' :
-                  plan.id === 'silver' ? 'lg:order-3' :
-                  plan.id === 'gold' ? 'lg:order-4' : ''
-                }`}
+                  plan.id === 'silver' ? 'lg:order-2' :
+                  plan.id === 'gold' ? 'lg:order-3' : ''
+                } ${plan.id === 'free' ? 'order-last lg:order-4 lg:col-start-2' : ''}`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
