@@ -22,7 +22,7 @@ import {
   Users,
   Rocket
 } from "lucide-react";
-import { getCurrentPlan, changePlan } from "../../api/client";
+import { getCurrentPlan, changePlan, getCurrentApiUsage, PLAN_LIMITS } from "../../api/client";
 
 const CurrentPlan = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -135,8 +135,11 @@ const CurrentPlan = () => {
     );
   }
 
-  const usagePercentage = planData?.features?.api_calls_limit 
-    ? Math.min((0 / planData.features.api_calls_limit) * 100, 100)
+  const currentUsed = getCurrentApiUsage();
+  const planKey = (planData?.plan_type || 'free').toLowerCase();
+  const apiLimit = PLAN_LIMITS[planKey]?.monthlyApi ?? planData?.features?.api_calls_limit ?? 0;
+  const usagePercentage = apiLimit && apiLimit !== Infinity 
+    ? Math.min((currentUsed / apiLimit) * 100, 100)
     : 0;
 
   return (
@@ -272,7 +275,7 @@ const CurrentPlan = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">API Calls</span>
                     <span className="text-sm text-gray-600">
-                      850 / {planData.features.api_calls_limit?.toLocaleString() || 'Unlimited'}
+                      {currentUsed.toLocaleString()} / {apiLimit === Infinity ? 'Unlimited' : apiLimit.toLocaleString()}
                     </span>
                   </div>
                   <Progress value={usagePercentage} className="h-2" />

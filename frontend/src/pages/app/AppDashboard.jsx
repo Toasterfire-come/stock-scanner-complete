@@ -157,7 +157,7 @@ const AppDashboard = () => {
           <p className="text-gray-600">Here's your comprehensive trading dashboard</p>
           <div className="flex items-center gap-4 mt-3">
             <Badge variant="secondary" className="text-sm">
-              {user?.plan || 'Bronze'} Plan
+              {(user?.plan || 'free').toString().charAt(0).toUpperCase() + (user?.plan || 'free').toString().slice(1)} Plan
             </Badge>
             <MarketStatus />
           </div>
