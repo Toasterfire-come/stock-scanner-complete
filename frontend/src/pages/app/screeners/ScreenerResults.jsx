@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks, runScreener } from "../../../api/client";
+import { filterStocks, runScreener, getScreener } from "../../../api/client";
 import { 
   Pagination,
   PaginationContent,
@@ -47,9 +47,39 @@ const ScreenerResults = () => {
         requestParams.page_size = pageSize;
         data = await filterStocks(requestParams);
       } else {
-        // Use backend screener results endpoint for saved screeners
-        const res = await runScreener(id);
+        // Use backend screener results endpoint for saved screeners and fetch screener meta
+        const [res, meta] = await Promise.all([runScreener(id), getScreener(id).catch(() => null)]);
         data = res;
+
+        // Build readable criteria from meta if available
+        if (meta && meta.data) {
+          const labelMap = {
+            market_cap: 'Market Cap',
+            price: 'Price',
+            volume: 'Volume',
+            pe_ratio: 'P/E Ratio',
+            dividend_yield: 'Dividend Yield',
+            change_percent: 'Change %',
+            exchange: 'Exchange'
+          };
+          const crit = Array.isArray(meta.data.criteria)
+            ? meta.data.criteria.map((c) => {
+                const label = labelMap[c.id] || c.id;
+                if (c.id === 'exchange' && c.value) return `${label}: ${c.value}`;
+                const parts = [];
+                if (c.min !== undefined && c.min !== null && String(c.min).trim() !== '') parts.push(`≥ ${c.min}`);
+                if (c.max !== undefined && c.max !== null && String(c.max).trim() !== '') parts.push(`≤ ${c.max}`);
+                return `${label} ${parts.join(' ')}`.trim();
+              })
+            : [];
+
+          setScreenerInfo({
+            name: meta.data.name || `Screener ${id}`,
+            description: meta.data.description || 'Saved screener',
+            lastRun: meta.data.last_run || new Date().toISOString(),
+            criteria: crit
+          });
+        }
       }
       const rows = Array.isArray(data?.stocks)
         ? data.stocks
@@ -65,12 +95,14 @@ const ScreenerResults = () => {
       setTotalCount(Number.isFinite(total) ? total : rows.length);
 
       // Basic info
-      setScreenerInfo({
-        name: id === 'adhoc' ? 'Ad-hoc Screener' : `Screener ${id}`,
-        description: id === 'adhoc' ? 'Results from custom filter' : 'Results from saved screener',
-        lastRun: new Date().toISOString(),
-        criteria: id === 'adhoc' ? Object.keys(baseParams || {}).map(k => `${k}=${baseParams[k]}`) : []
-      });
+      if (id === 'adhoc') {
+        setScreenerInfo({
+          name: 'Ad-hoc Screener',
+          description: 'Results from custom filter',
+          lastRun: new Date().toISOString(),
+          criteria: Object.keys(baseParams || {}).map(k => `${k}=${baseParams[k]}`)
+        });
+      }
 
       setResults(rows.map((s) => ({
         ticker: s.ticker || s.symbol,
