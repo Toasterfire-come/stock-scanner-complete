@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks } from "../../../api/client";
+import { filterStocks, runScreener } from "../../../api/client";
 import { 
   Pagination,
   PaginationContent,
@@ -35,17 +35,22 @@ const ScreenerResults = () => {
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      // Pull last-used params from localStorage (ad-hoc) or use params derived from screener id in future
-      const stored = window.localStorage.getItem('screener:lastParams');
-      const baseParams = stored ? JSON.parse(stored) : {};
-      const requestParams = { ...baseParams };
-      // Provide both styles for backend compatibility
-      requestParams.limit = pageSize;
-      requestParams.offset = (page - 1) * pageSize;
-      requestParams.page = page;
-      requestParams.page_size = pageSize;
-
-      const data = await filterStocks(requestParams);
+      let data;
+      let baseParams = {};
+      if (id === 'adhoc') {
+        const stored = window.localStorage.getItem('screener:lastParams');
+        baseParams = stored ? JSON.parse(stored) : {};
+        const requestParams = { ...baseParams };
+        requestParams.limit = pageSize;
+        requestParams.offset = (page - 1) * pageSize;
+        requestParams.page = page;
+        requestParams.page_size = pageSize;
+        data = await filterStocks(requestParams);
+      } else {
+        // Use backend screener results endpoint for saved screeners
+        const res = await runScreener(id);
+        data = res;
+      }
       const rows = Array.isArray(data?.stocks)
         ? data.stocks
         : (Array.isArray(data?.results)
@@ -62,9 +67,9 @@ const ScreenerResults = () => {
       // Basic info
       setScreenerInfo({
         name: id === 'adhoc' ? 'Ad-hoc Screener' : `Screener ${id}`,
-        description: 'Results from backend filter',
+        description: id === 'adhoc' ? 'Results from custom filter' : 'Results from saved screener',
         lastRun: new Date().toISOString(),
-        criteria: Object.keys(baseParams || {}).map(k => `${k}=${baseParams[k]}`)
+        criteria: id === 'adhoc' ? Object.keys(baseParams || {}).map(k => `${k}=${baseParams[k]}`) : []
       });
 
       setResults(rows.map((s) => ({
