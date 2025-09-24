@@ -27,6 +27,7 @@ const ScreenerResults = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
+  const [activeCriteria, setActiveCriteria] = useState(null);
 
   useEffect(() => {
     fetchResults();
@@ -46,6 +47,17 @@ const ScreenerResults = () => {
         requestParams.page = page;
         requestParams.page_size = pageSize;
         data = await filterStocks(requestParams);
+        // Normalize adhoc criteria to a structured object
+        const ac = {};
+        const num = (v) => (v === undefined || v === null || String(v).trim() === '' ? undefined : Number(v));
+        ac.price = { min: num(baseParams.price_min ?? baseParams.min_price), max: num(baseParams.price_max ?? baseParams.max_price) };
+        ac.market_cap = { min: num(baseParams.market_cap_min ?? baseParams.min_market_cap), max: num(baseParams.market_cap_max ?? baseParams.max_market_cap) };
+        ac.volume = { min: num(baseParams.volume_min ?? baseParams.min_volume), max: num(baseParams.volume_max ?? baseParams.max_volume) };
+        ac.pe_ratio = { min: num(baseParams.pe_ratio_min), max: num(baseParams.pe_ratio_max) };
+        ac.dividend_yield = { min: num(baseParams.dividend_yield_min), max: num(baseParams.dividend_yield_max) };
+        ac.change_percent = { min: num(baseParams.change_percent_min), max: num(baseParams.change_percent_max) };
+        ac.exchange = baseParams.exchange || undefined;
+        setActiveCriteria(ac);
       } else {
         // Use backend screener results endpoint for saved screeners and fetch screener meta
         const [res, meta] = await Promise.all([runScreener(id), getScreener(id).catch(() => null)]);
@@ -79,15 +91,53 @@ const ScreenerResults = () => {
             lastRun: meta.data.last_run || new Date().toISOString(),
             criteria: crit
           });
+          // Build structured criteria for client-side filtering
+          const num = (v) => (v === undefined || v === null || String(v).trim() === '' ? undefined : Number(v));
+          const ac = {};
+          (meta.data.criteria || []).forEach((c) => {
+            if (!ac[c.id]) ac[c.id] = {};
+            if (c.value) ac[c.id].value = c.value;
+            if (c.min !== undefined) ac[c.id].min = num(c.min);
+            if (c.max !== undefined) ac[c.id].max = num(c.max);
+          });
+          setActiveCriteria(ac);
         }
       }
-      const rows = Array.isArray(data?.stocks)
+      let rows = Array.isArray(data?.stocks)
         ? data.stocks
         : (Array.isArray(data?.results)
           ? data.results
           : (Array.isArray(data?.data?.results)
             ? data.data.results
             : (Array.isArray(data) ? data : [])));
+
+      // Apply client-side guard filtering based on activeCriteria (stopgap if backend returns loose results)
+      if (activeCriteria) {
+        const meets = (stock) => {
+          const price = Number(stock.current_price ?? stock.price ?? 0);
+          const vol = Number(stock.volume ?? 0);
+          const mcap = Number(stock.market_cap ?? 0);
+          const pe = Number(stock.pe_ratio ?? stock.pe ?? NaN);
+          const dy = Number(stock.dividend_yield ?? stock.yield ?? NaN);
+          const chg = Number(stock.change_percent ?? stock.price_change_percent ?? stock.change ?? 0);
+          const exch = stock.exchange;
+          const inRange = (val, r) => {
+            if (!r) return true;
+            if (r.min !== undefined && Number.isFinite(r.min) && val < r.min) return false;
+            if (r.max !== undefined && Number.isFinite(r.max) && val > r.max) return false;
+            return true;
+          };
+          if (!inRange(price, activeCriteria.price)) return false;
+          if (!inRange(mcap, activeCriteria.market_cap)) return false;
+          if (!inRange(vol, activeCriteria.volume)) return false;
+          if (activeCriteria.exchange && activeCriteria.exchange.value && exch !== activeCriteria.exchange.value) return false;
+          if (!inRange(pe, activeCriteria.pe_ratio)) return false;
+          if (!inRange(dy, activeCriteria.dividend_yield)) return false;
+          if (!inRange(chg, activeCriteria.change_percent)) return false;
+          return true;
+        };
+        rows = rows.filter(meets);
+      }
 
       const total = Number(
         data?.total_count ?? data?.totalCount ?? data?.count ?? data?.data?.total_count ?? rows.length
