@@ -54,19 +54,25 @@ const SEO = ({
       upsertMetaByProperty('og:description', description);
       upsertMetaByName('twitter:description', description);
     }
-    if (canonical) {
-      upsertLink('canonical', canonical);
-      upsertMetaByProperty('og:url', canonical);
-      upsertMetaByName('twitter:url', canonical);
+    const resolvedCanonical = canonical || (typeof window !== 'undefined' ? window.location.href : undefined);
+    if (resolvedCanonical) {
+      upsertLink('canonical', resolvedCanonical);
+      upsertMetaByProperty('og:url', resolvedCanonical);
+      upsertMetaByName('twitter:url', resolvedCanonical);
       try {
-        const domain = new URL(canonical).hostname;
+        const domain = new URL(resolvedCanonical).hostname;
         upsertMetaByName('twitter:domain', domain);
       } catch {}
     }
     upsertMetaByProperty('og:type', ogType);
     upsertMetaByProperty('og:site_name', 'Trade Scan Pro');
+    upsertMetaByProperty('og:locale', 'en_US');
     if (ogImage) {
       upsertMetaByProperty('og:image', ogImage);
+      if (title) {
+        upsertMetaByProperty('og:image:alt', title);
+        upsertMetaByName('twitter:image:alt', title);
+      }
       upsertMetaByName('twitter:image', ogImage);
     }
     upsertMetaByName('twitter:card', twitterCard);
