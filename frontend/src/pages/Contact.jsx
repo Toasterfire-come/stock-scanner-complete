@@ -89,9 +89,10 @@ const Contact = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
         title="Contact | Trade Scan Pro"
-        description="Questions about Trade Scan Pro? Contact our team for support, sales, or enterprise."
+        description="Contact Trade Scan Pro for help with account setup, billing, enterprise, and using our NYSE screening, real‑time alerts, and portfolio analytics tools."
         canonical="https://tradescanpro.com/contact"
         ogImage="/og-image.png"
+        jsonLdSrcs={["/structured/contact.jsonld"]}
       />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
@@ -108,8 +109,8 @@ const Contact = () => {
             </h1>
             
             <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
-              Have questions about Trade Scan Pro? Need help getting started? 
-              Our team of trading experts is ready to assist you.
+              Get support with account setup, billing, enterprise solutions, and using our screening, alerts, and
+              portfolio tools. Our team responds within 24 hours to help you get the most from Trade Scan Pro.
             </p>
 
             <div className="text-center mb-8">

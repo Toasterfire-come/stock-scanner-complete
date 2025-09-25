@@ -59,6 +59,7 @@ const SEO = ({
       upsertMetaByProperty('og:url', canonical);
     }
     upsertMetaByProperty('og:type', ogType);
+    upsertMetaByProperty('og:site_name', 'Trade Scan Pro');
     if (ogImage) {
       upsertMetaByProperty('og:image', ogImage);
       upsertMetaByName('twitter:image', ogImage);

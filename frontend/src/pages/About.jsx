@@ -70,8 +70,9 @@ const About = () => {
             </h1>
             
             <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
-              We're focused on providing reliable stock screening and analysis tools 
-              to help traders make informed decisions in the market.
+              Trade Scan Pro builds reliable NYSE stock screening, real‑time alerts, and portfolio analytics tools
+              for serious traders. Our mission is to deliver accurate data, practical workflows, and transparent
+              pricing so you can make informed decisions and improve performance.
             </p>
           </div>
         </div>
