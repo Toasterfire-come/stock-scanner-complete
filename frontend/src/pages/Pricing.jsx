@@ -250,7 +250,7 @@ const Pricing = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50 py-12">
       <SEO
         title="Pricing | Trade Scan Pro"
-        description="Simple, transparent pricing for powerful stock screening and alerts. Start with a 7‑day trial."
+        description="Choose the right plan for advanced NYSE stock screening, real‑time alerts, watchlists, and portfolio analytics. Start with a $1 7‑day trial; flexible monthly or annual billing, upgrade anytime."
         canonical="https://tradescanpro.com/pricing"
         ogImage="/og-image.png"
         jsonLdSrcs={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}

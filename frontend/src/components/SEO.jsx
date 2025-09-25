@@ -64,6 +64,9 @@ const SEO = ({
       upsertMetaByName('twitter:image', ogImage);
     }
     upsertMetaByName('twitter:card', twitterCard);
+    // Defaults for X/Twitter card site/creator
+    upsertMetaByName('twitter:site', '@TradeScanProLLC');
+    upsertMetaByName('twitter:creator', '@TradeScanProLLC');
 
     if (robots) {
       upsertMetaByName('robots', robots);

@@ -216,7 +216,7 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
         title="Trade Scan Pro | Stock Market Scanner, Alerts, and Portfolio Tools"
-        description="Professional stock market scanner with real-time alerts, screening, and portfolio analytics. Find trading opportunities and optimize your strategy."
+        description="Trade Scan Pro is a professional stock market scanner for NYSE with AI‑powered screening, real‑time alerts, portfolio analytics, and market intelligence to help traders find opportunities, manage risk, and optimize strategies."
         canonical="https://tradescanpro.com/"
         ogImage="/og-image.png"
       />

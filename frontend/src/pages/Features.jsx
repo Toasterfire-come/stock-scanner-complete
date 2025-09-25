@@ -114,7 +114,7 @@ const Features = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
         title="Features | Trade Scan Pro"
-        description="Advanced stock screening, real-time alerts, portfolio analytics, and market intelligence."
+        description="Explore Trade Scan Pro’s features: advanced NYSE stock screening, AI‑powered market intelligence, real‑time alerts, robust portfolio analytics, and watchlists designed for serious traders."
         canonical="https://tradescanpro.com/features"
         ogImage="/og-image.png"
         jsonLdSrcs={["/structured/features.jsonld"]}

@@ -5,6 +5,18 @@
   "url": "https://tradescanpro.com",
   "potentialAction": {
     "@type": "SearchAction",
+    "target": "https://tradescanpro.com/app/stocks?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Trade Scan Pro",
+  "url": "https://tradescanpro.com",
+  "potentialAction": {
+    "@type": "SearchAction",
     "target": "https://tradescanpro.com/?q={search_term_string}",
     "query-input": "required name=search_term_string"
   }
