@@ -57,6 +57,11 @@ const SEO = ({
     if (canonical) {
       upsertLink('canonical', canonical);
       upsertMetaByProperty('og:url', canonical);
+      upsertMetaByName('twitter:url', canonical);
+      try {
+        const domain = new URL(canonical).hostname;
+        upsertMetaByName('twitter:domain', domain);
+      } catch {}
     }
     upsertMetaByProperty('og:type', ogType);
     upsertMetaByProperty('og:site_name', 'Trade Scan Pro');

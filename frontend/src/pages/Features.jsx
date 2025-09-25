@@ -196,6 +196,7 @@ const Features = () => {
                       src={`/react/screenshots/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.webp`}
                       alt={`${feature.title} screenshot`}
                       className="w-full h-64 object-cover"
+                      decoding="async"
                       loading="lazy"
                       onError={(e)=>{ e.currentTarget.src='/hero.webp'; e.currentTarget.classList.add('object-contain','bg-gray-50'); }}
                     />

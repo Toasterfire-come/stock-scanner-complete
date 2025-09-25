@@ -156,7 +156,7 @@ export default function PlanSelection() {
     <div className="min-h-screen bg-gray-50">
       <SEO
         title="Choose Plan | Trade Scan Pro"
-        description="Pick the plan that fits your trading. Bronze, Silver, and Gold with real-time screening and alerts. 7‑day $1 trial for paid plans."
+        description="Compare plans for advanced NYSE stock screening, real‑time alerts, watchlists, and portfolio analytics. Start with a $1 7‑day trial; upgrade or cancel anytime."
         canonical="https://tradescanpro.com/auth/plan-selection"
         ogImage="/og-image.png"
       />

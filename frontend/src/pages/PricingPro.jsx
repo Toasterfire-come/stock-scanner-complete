@@ -224,6 +224,12 @@ const PricingPro = () => {
     <div className="container mx-auto px-4 py-16">
       <SEO
         title="Pricing (Legacy) | Trade Scan Pro"
+        description="Legacy pricing view for Trade Scan Pro. Explore monthly or annual plans for advanced NYSE screening, real‑time alerts, watchlists, and portfolio analytics."
+        canonical="https://tradescanpro.com/pricing-old"
+        ogImage="/og-image.png"
+      />
+      <SEO
+        title="Pricing (Legacy) | Trade Scan Pro"
         description="Legacy pricing view. See current pricing plans for stock screening and alerts."
         canonical="https://tradescanpro.com/pricing-old"
         ogImage="/og-image.png"
