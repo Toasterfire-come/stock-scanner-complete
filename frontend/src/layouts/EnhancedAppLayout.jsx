@@ -332,9 +332,9 @@ const EnhancedAppLayout = () => {
           
           <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
             <div className="flex items-center justify-center gap-4 mb-3">
-              <a href="https://x.com/TradeScanProLLC" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600">X (Twitter)</a>
+              <a href="https://x.com/TradeScanProLLC" target="_blank" rel="me noopener noreferrer" className="text-gray-600 hover:text-blue-600">X (Twitter)</a>
               <span>•</span>
-              <a href="https://www.linkedin.com/in/trade-scan-pro-llc-62903a387" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600">LinkedIn</a>
+              <a href="https://www.linkedin.com/in/trade-scan-pro-llc-62903a387" target="_blank" rel="me noopener noreferrer" className="text-gray-600 hover:text-blue-600">LinkedIn</a>
             </div>
             <p>&copy; 2025 Trade Scan Pro. All rights reserved. Built for serious traders.</p>
           </div>

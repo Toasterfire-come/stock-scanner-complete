@@ -27,11 +27,11 @@ import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
 
 // Public Pages
 import Home from "./pages/Home";
-import Features from "./pages/Features";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import PricingPro from "./pages/PricingPro";
-import Pricing from "./pages/Pricing";
+const Features = React.lazy(() => import(/* webpackChunkName: "features" */ "./pages/Features"));
+const About = React.lazy(() => import(/* webpackChunkName: "about" */ "./pages/About"));
+const Contact = React.lazy(() => import(/* webpackChunkName: "contact" */ "./pages/Contact"));
+const PricingPro = React.lazy(() => import(/* webpackChunkName: "pricing-pro" */ "./pages/PricingPro"));
+const Pricing = React.lazy(() => import(/* webpackChunkName: "pricing" */ "./pages/Pricing"));
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
@@ -174,10 +174,10 @@ function App() {
                 <Route element={<EnhancedAppLayout />}>
                   {/* Public/Marketing Routes - Available to all users */}
                   <Route path="/" element={<Home />} />
-                  <Route path="/features" element={<Features />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/pricing" element={<PricingPro />} />
+                  <Route path="/features" element={<React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading…</div>}><Features /></React.Suspense>} />
+                  <Route path="/about" element={<React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading…</div>}><About /></React.Suspense>} />
+                  <Route path="/contact" element={<React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading…</div>}><Contact /></React.Suspense>} />
+                  <Route path="/pricing" element={<React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading…</div>}><PricingPro /></React.Suspense>} />
                   <Route path="/auth/plan-selection" element={<PlanSelection />} />
                   <Route path="/pricing-old" element={<Pricing />} />
                   
