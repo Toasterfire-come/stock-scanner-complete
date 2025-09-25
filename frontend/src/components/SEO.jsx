@@ -80,6 +80,14 @@ const SEO = ({
     upsertMetaByName('twitter:site', '@TradeScanProLLC');
     upsertMetaByName('twitter:creator', '@TradeScanProLLC');
 
+    // Optional search engine site verification tokens (set via env at build time)
+    const gscToken = process.env.REACT_APP_GSC_VERIFICATION;
+    if (gscToken) upsertMetaByName('google-site-verification', gscToken);
+    const bingToken = process.env.REACT_APP_BING_VERIFICATION;
+    if (bingToken) upsertMetaByName('msvalidate.01', bingToken);
+    const yandexToken = process.env.REACT_APP_YANDEX_VERIFICATION;
+    if (yandexToken) upsertMetaByName('yandex-verification', yandexToken);
+
     if (robots) {
       upsertMetaByName('robots', robots);
     }
