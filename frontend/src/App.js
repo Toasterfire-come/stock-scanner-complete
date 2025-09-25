@@ -27,11 +27,11 @@ import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
 
 // Public Pages
 import Home from "./pages/Home";
-const Features = React.lazy(() => import(/* webpackChunkName: "features" */ "./pages/Features"));
-const About = React.lazy(() => import(/* webpackChunkName: "about" */ "./pages/About"));
-const Contact = React.lazy(() => import(/* webpackChunkName: "contact" */ "./pages/Contact"));
-const PricingPro = React.lazy(() => import(/* webpackChunkName: "pricing-pro" */ "./pages/PricingPro"));
-const Pricing = React.lazy(() => import(/* webpackChunkName: "pricing" */ "./pages/Pricing"));
+const Features = React.lazy(() => import(/* webpackChunkName: "features", webpackPrefetch: true */ "./pages/Features"));
+const About = React.lazy(() => import(/* webpackChunkName: "about", webpackPrefetch: true */ "./pages/About"));
+const Contact = React.lazy(() => import(/* webpackChunkName: "contact", webpackPrefetch: true */ "./pages/Contact"));
+const PricingPro = React.lazy(() => import(/* webpackChunkName: "pricing-pro", webpackPrefetch: true */ "./pages/PricingPro"));
+const Pricing = React.lazy(() => import(/* webpackChunkName: "pricing", webpackPrefetch: true */ "./pages/Pricing"));
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
