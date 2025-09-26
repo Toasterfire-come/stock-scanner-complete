@@ -199,6 +199,7 @@ const Features = () => {
                       decoding="async"
                       width="1024"
                       height="512"
+                      sizes="(max-width: 1024px) 100vw, 1024px"
                       onError={(e)=>{ e.currentTarget.src='/hero.webp'; e.currentTarget.classList.add('object-contain','bg-gray-50'); }}
                     />
                   </div>

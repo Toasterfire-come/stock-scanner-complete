@@ -39,12 +39,12 @@ import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 
 // App Pages (Protected)
-import AppDashboard from "./pages/app/AppDashboard";
-import Markets from "./pages/app/Markets";
-import StockDetail from "./pages/app/StockDetail";
-import Stocks from "./pages/app/Stocks";
-import Portfolio from "./pages/app/Portfolio";
-import Watchlists from "./pages/app/Watchlists";
+const AppDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/AppDashboard"));
+const Markets = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Markets"));
+const StockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StockDetail"));
+const Stocks = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Stocks"));
+const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Portfolio"));
+const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
 // Developer Tools (Gold Plan)

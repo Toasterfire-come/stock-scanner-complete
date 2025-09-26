@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/SecureAuthContext";
 import { Button } from "../components/ui/button";
@@ -91,6 +91,8 @@ const EnhancedAppLayout = () => {
   };
 
   const isUserPage = location.pathname.startsWith("/app");
+  const isOnPublicPage = !isUserPage;
+  const bottomNavVisible = isUserPage;
   const showBreadcrumbs = isUserPage || location.pathname.startsWith("/docs");
 
   return (
@@ -337,13 +339,42 @@ const EnhancedAppLayout = () => {
           <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
             <p className="mb-3">&copy; 2025 Trade Scan Pro. All rights reserved. Built for serious traders.</p>
             <p>
-              <a href="https://x.com/TradeScanPro" rel="me noopener" target="_blank" className="hover:text-blue-600">X</a>
+              <a href="https://x.com/TradeScanPro" rel="me noopener" target="_blank" className="hover:text-blue-600" aria-label="Trade Scan Pro on X (Twitter)">X</a>
               <span className="mx-2">•</span>
-              <a href="https://www.linkedin.com/company/tradescanpro/" rel="me noopener" target="_blank" className="hover:text-blue-600">LinkedIn</a>
+              <a href="https://www.linkedin.com/company/tradescanpro/" rel="me noopener" target="_blank" className="hover:text-blue-600" aria-label="Trade Scan Pro on LinkedIn">LinkedIn</a>
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Mobile Bottom Navigation */}
+      {bottomNavVisible && (
+        <nav aria-label="Primary" className="fixed bottom-0 inset-x-0 z-50 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 md:hidden">
+          <div className="grid grid-cols-5 text-xs">
+            <Link to="/app/dashboard" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/dashboard') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Dashboard">
+              <BarChart3 className="h-5 w-5" />
+              <span>Dashboard</span>
+            </Link>
+            <Link to="/app/markets" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/markets') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Markets">
+              <TrendingUp className="h-5 w-5" />
+              <span>Markets</span>
+            </Link>
+            <Link to="/app/screeners" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/screeners') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Screeners">
+              <Search className="h-5 w-5" />
+              <span>Screeners</span>
+            </Link>
+            <Link to="/app/watchlists" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/watchlists') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Watchlists">
+              <Eye className="h-5 w-5" />
+              <span>Watchlists</span>
+            </Link>
+            <Link to="/app/portfolio" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/portfolio') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Portfolio">
+              <Target className="h-5 w-5" />
+              <span>Portfolio</span>
+            </Link>
+          </div>
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </nav>
+      )}
     </div>
   );
 };

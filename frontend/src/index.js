@@ -133,4 +133,23 @@ if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
         console.log('SW registration failed: ', registrationError);
       });
   });
+
+  // Prompt for PWA install (beforeinstallprompt)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    const deferredPrompt = e;
+    // Show non-intrusive toast to install
+    try {
+      toast.info('Install Trade Scan Pro?', {
+        description: 'Get fast access from your home screen',
+        action: {
+          label: 'Install',
+          onClick: async () => {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+          }
+        }
+      });
+    } catch {}
+  });
 }
