@@ -139,6 +139,7 @@ export default function PlanSelection() {
   // Check if this is from the signup flow
   const isNewUser = location.state?.newUser;
   const userEmail = location.state?.email;
+  const referral = location.state?.ref;
 
   const handlePlanSelect = async (planId) => {
     setIsLoading(true);
@@ -156,7 +157,8 @@ export default function PlanSelection() {
         state: { 
           fromSignup: true, 
           selectedPlan: planId,
-          userEmail: userEmail
+          userEmail: userEmail,
+          discount_code: referral ? `REF_${String(referral).toUpperCase()}` : undefined
         } 
       });
     } catch (error) {
