@@ -20,6 +20,7 @@ import uuid
 from .models import UserPortfolio, PortfolioHolding, Stock
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
+from .plan_limits import get_limits_for_user, is_within_limit
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +69,18 @@ def portfolio_api(request):
                 }, status=401)
         user = _effective_user(request)
         
-        # Get all portfolio holdings for the user
-        holdings = PortfolioHolding.objects.filter(
+        # Optional filter by portfolio_id
+        try:
+            pid_raw = request.GET.get('portfolio_id')
+            pid = int(pid_raw) if pid_raw is not None else None
+        except Exception:
+            pid = None
+
+        # Get portfolio holdings for the user, optionally filtered
+        base_qs = PortfolioHolding.objects.filter(
             portfolio__user=user
         ).select_related('stock', 'portfolio')
+        holdings = base_qs.filter(portfolio__id=pid) if pid else base_qs
         
         portfolio_data = []
         for holding in holdings:
@@ -184,12 +193,25 @@ def portfolio_add_api(request):
                 'error_code': 'STOCK_NOT_FOUND'
             }, status=404)
         
-        # Get or create user's portfolio
-        portfolio, created = UserPortfolio.objects.get_or_create(
-            user=user,
-            name=portfolio_name,
-            defaults={'description': f'Portfolio for {user.username}', 'is_public': False}
-        )
+        # Get or create user's portfolio with limit enforcement
+        portfolio = UserPortfolio.objects.filter(user=user, name=portfolio_name).first()
+        if not portfolio:
+            # Enforce plan portfolio count limit when creating a new portfolio name
+            from .plan_limits import get_limits_for_user, is_within_limit
+            limits = get_limits_for_user(user)
+            existing = UserPortfolio.objects.filter(user=user).count()
+            if not is_within_limit(user, 'portfolios', existing):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Portfolio limit reached for your plan',
+                    'error_code': 'PORTFOLIO_LIMIT'
+                }, status=429)
+            portfolio = UserPortfolio.objects.create(
+                user=user,
+                name=portfolio_name,
+                description=f'Portfolio for {user.username}',
+                is_public=False
+            )
         
         # Check if holding already exists
         existing_holding = PortfolioHolding.objects.filter(

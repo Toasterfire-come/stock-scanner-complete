@@ -17,6 +17,7 @@ from .security_utils import (
     PORTFOLIO_SCHEMA, HOLDING_SCHEMA, TRANSACTION_SCHEMA
 )
 from .portfolio_service import PortfolioService
+from .plan_limits import get_limits_for_user, is_within_limit
 from .models import UserPortfolio, PortfolioHolding, Stock, StockAlert
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,16 @@ def create_portfolio(request):
         # Validate input
         validated_data = validate_user_input(request.validated_data, PORTFOLIO_SCHEMA)
         
+        # Enforce plan limits
+        limits = get_limits_for_user(request.user)
+        existing = UserPortfolio.objects.filter(user=request.user).count()
+        if not is_within_limit(request.user, 'portfolios', existing):
+            return JsonResponse({
+                'success': False,
+                'error': 'Portfolio limit reached for your plan',
+                'error_code': 'PORTFOLIO_LIMIT'
+            }, status=429)
+
         # Create portfolio
         portfolio = PortfolioService.create_portfolio(
             user=request.user,

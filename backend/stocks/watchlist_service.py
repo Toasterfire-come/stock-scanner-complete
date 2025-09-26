@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from .models import Stock, UserWatchlist, WatchlistItem
+from .plan_limits import get_limits_for_user, is_within_limit
 from .portfolio_service import PortfolioService
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,11 @@ class WatchlistService:
             UserWatchlist: Created watchlist instance
         """
         try:
+            # Enforce per-plan watchlists count limit
+            limits = get_limits_for_user(user)
+            existing = UserWatchlist.objects.filter(user=user).count()
+            if not is_within_limit(user, "watchlists", existing):
+                raise ValidationError("Watchlist limit reached for your plan")
             with transaction.atomic():
                 watchlist = UserWatchlist.objects.create(
                     user=user,
@@ -439,8 +445,14 @@ class WatchlistService:
                 
                 imported_count = 0
                 errors = []
+                # Enforce per-plan import size limits
+                limits = get_limits_for_user(user)
+                max_rows = int(limits.get("import_rows_max", 1000) or 1000)
                 
                 for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 for header row
+                    if imported_count >= max_rows:
+                        errors.append(f"Row {row_num}: import limit reached ({max_rows}) for your plan")
+                        break
                     try:
                         ticker = row.get('ticker', '').strip().upper()
                         added_price = row.get('added_price', '').strip()
@@ -524,6 +536,11 @@ class WatchlistService:
                 errors = []
                 
                 items = data.get('items', [])
+                # Enforce per-plan json import items limit
+                limits = get_limits_for_user(user)
+                max_items = int(limits.get("json_import_items_max", 1000) or 1000)
+                if len(items) > max_items:
+                    items = items[:max_items]
                 
                 for item_num, item_data in enumerate(items, start=1):
                     try:

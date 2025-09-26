@@ -32,12 +32,18 @@ import {
   searchStocks,
   getStock,
   listStocks,
-  getPlanLimits
+  getPlanLimits,
+  listPortfolios,
+  createPortfolio
 } from "../../api/client";
 
 const Portfolio = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [portfolio, setPortfolio] = useState(null);
+  const [portfolios, setPortfolios] = useState([]);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
+  const [isCreatePortfolioOpen, setIsCreatePortfolioOpen] = useState(false);
+  const [newPortfolioName, setNewPortfolioName] = useState("My Portfolio");
   const [analytics, setAnalytics] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newHolding, setNewHolding] = useState({
@@ -102,15 +108,22 @@ const Portfolio = () => {
   const fetchAllPortfolioData = async () => {
     setIsLoading(true);
     try {
-      // Fetch all portfolio data in parallel
+      // Fetch list of portfolios and current holdings (optionally filtered) in parallel
       const [
+        listRes,
         portfolioResponse,
         allStocks
       ] = await Promise.all([
-        getPortfolio().catch(() => ({ success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } })),
+        listPortfolios().catch(() => ({ success: true, data: { portfolios: [], count: 0 } })),
+        getPortfolio(selectedPortfolioId ? { portfolio_id: selectedPortfolioId } : {}).catch(() => ({ success: true, data: [], summary: { total_value: 0, total_gain_loss: 0, total_gain_loss_percent: 0, total_holdings: 0 } })),
         listStocks({}).catch(() => [])
       ]);
 
+      const pList = Array.isArray(listRes?.data?.portfolios) ? listRes.data.portfolios : [];
+      setPortfolios(pList);
+      if (!selectedPortfolioId && pList.length > 0) {
+        setSelectedPortfolioId(pList[0].id);
+      }
       setPortfolio(portfolioResponse);
       setAnalytics(null);
       // Build a symbol -> current_price map from the stock list
@@ -179,6 +192,26 @@ const Portfolio = () => {
     } catch (error) {
       console.error("Failed to add stock:", error);
       toast.error(error.message || "Failed to add stock to portfolio");
+    }
+  };
+
+  const handleCreatePortfolio = async (e) => {
+    e.preventDefault();
+    const name = (newPortfolioName || "").trim();
+    if (!name) { toast.error("Enter a portfolio name"); return; }
+    try {
+      const res = await createPortfolio({ name });
+      if (res?.success) {
+        toast.success("Portfolio created");
+        setIsCreatePortfolioOpen(false);
+        setNewPortfolioName("My Portfolio");
+        await fetchAllPortfolioData();
+        if (res.data?.portfolio_id) setSelectedPortfolioId(res.data.portfolio_id);
+      } else {
+        toast.error(res?.error || "Failed to create portfolio");
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.error || err?.message || "Failed to create portfolio");
     }
   };
 
@@ -418,9 +451,27 @@ const Portfolio = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Portfolio</h1>
-          <p className="text-gray-600">Track and analyze your investments</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Portfolio</h1>
+            <p className="text-gray-600">Track and analyze your investments</p>
+          </div>
+          {/* Portfolio selector */}
+          <div className="ml-4">
+            <label htmlFor="portfolio-select" className="sr-only">Select Portfolio</label>
+            <select
+              id="portfolio-select"
+              className="border rounded-md px-2 py-2 text-sm"
+              value={selectedPortfolioId || ''}
+              onChange={(e) => setSelectedPortfolioId(e.target.value ? Number(e.target.value) : null)}
+            >
+              {portfolios.length === 0 && <option value="">No portfolios</option>}
+              {portfolios.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+          <Button variant="outline" onClick={() => setIsCreatePortfolioOpen(true)}>New Portfolio</Button>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExportPortfolio} variant="outline">
@@ -529,6 +580,28 @@ const Portfolio = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* Create portfolio dialog */}
+      <Dialog open={isCreatePortfolioOpen} onOpenChange={setIsCreatePortfolioOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Portfolio</DialogTitle>
+            <DialogDescription>
+              Name your new portfolio. Limits are enforced per your plan.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreatePortfolio} className="space-y-4">
+            <div>
+              <Label htmlFor="np-name">Portfolio Name</Label>
+              <Input id="np-name" value={newPortfolioName} onChange={(e) => setNewPortfolioName(e.target.value)} placeholder="My Portfolio" />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">Create</Button>
+              <Button type="button" variant="outline" onClick={() => setIsCreatePortfolioOpen(false)}>Cancel</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Portfolio Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

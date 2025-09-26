@@ -20,6 +20,7 @@ from .models import (
     Stock, UserPortfolio, PortfolioHolding, TradeTransaction, 
     StockAlert, UserProfile
 )
+from .plan_limits import get_limits_for_user, is_within_limit
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,11 @@ class PortfolioService:
             UserPortfolio: Created portfolio instance
         """
         try:
+            # Enforce per-plan portfolio count limit
+            limits = get_limits_for_user(user)
+            existing_count = UserPortfolio.objects.filter(user=user).count()
+            if not is_within_limit(user, "portfolios", existing_count):
+                raise ValidationError("Portfolio limit reached for your plan")
             with transaction.atomic():
                 portfolio = UserPortfolio.objects.create(
                     user=user,
@@ -528,8 +534,14 @@ class PortfolioService:
                 
                 imported_count = 0
                 errors = []
+                # Enforce per-plan import size limits
+                limits = get_limits_for_user(user)
+                max_rows = int(limits.get("import_rows_max", 1000) or 1000)
                 
                 for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 for header row
+                    if imported_count >= max_rows:
+                        errors.append(f"Row {row_num}: import limit reached ({max_rows}) for your plan")
+                        break
                     try:
                         ticker = row.get('ticker', '').strip().upper()
                         shares = Decimal(row.get('shares', '0'))

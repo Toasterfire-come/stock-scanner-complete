@@ -4,7 +4,7 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { AlertTriangle, Zap, TrendingUp } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
-import { getCurrentApiUsage, getPlanLimits, getStoredUserPlan } from "../api/client";
+import { getCurrentApiUsage, getPlanLimits, getStoredUserPlan, getUsageSummary } from "../api/client";
 
 const UsageTracker = () => {
   const { user, isAuthenticated } = useAuth();
@@ -13,15 +13,27 @@ const UsageTracker = () => {
   const [plan, setPlan] = useState('free');
 
   useEffect(() => {
-    if (isAuthenticated) {
+    let mounted = true;
+    (async () => {
+      if (!isAuthenticated) return;
       const currentUsage = getCurrentApiUsage();
       const planLimits = getPlanLimits();
       const userPlan = getStoredUserPlan();
-      
+      try {
+        const res = await getUsageSummary();
+        // If server returns category counts/limits, prefer them
+        const cats = res?.data?.categories;
+        if (mounted && cats) {
+          // Attach to limits for UI elsewhere if needed
+          planLimits._serverCategories = cats;
+        }
+      } catch {}
+      if (!mounted) return;
       setUsage(currentUsage);
       setLimits(planLimits);
       setPlan(userPlan);
-    }
+    })();
+    return () => { mounted = false; };
   }, [isAuthenticated, user]);
 
   if (!isAuthenticated || !limits) {

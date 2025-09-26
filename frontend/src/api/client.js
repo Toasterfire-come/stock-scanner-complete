@@ -485,10 +485,10 @@ export async function changePassword(passwordData) {
 // ====================
 // PORTFOLIO
 // ====================
-export async function getPortfolio() { 
+export async function getPortfolio(params = {}) { 
   try {
     ensureApiQuotaAndIncrement('getPortfolio');
-    const { data } = await api.get('/portfolio/');
+    const { data } = await api.get('/portfolio/', { params });
     return data;
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
@@ -504,6 +504,25 @@ export async function deletePortfolio(id) {
   ensureApiQuotaAndIncrement('deletePortfolio');
   const { data } = await api.delete(`/portfolio/${id}/`); 
   return data; 
+}
+
+// Multi-portfolio helpers
+export async function listPortfolios() {
+  ensureApiQuotaAndIncrement('getPortfolio');
+  const { data } = await api.get('/portfolio/list/');
+  return data;
+}
+
+export async function createPortfolio(payload) {
+  ensureApiQuotaAndIncrement('addPortfolio');
+  const { data } = await api.post('/portfolio/create/', payload);
+  return data;
+}
+
+export async function deletePortfolioById(portfolioId) {
+  ensureApiQuotaAndIncrement('deletePortfolio');
+  const { data } = await api.delete(`/portfolio/${encodeURIComponent(portfolioId)}/delete/`);
+  return data;
 }
 
 // ====================
@@ -911,7 +930,7 @@ export { getCurrentApiUsage, getPlanLimits, getStoredUserPlan, API_CALL_COSTS };
 export async function getUsageSummary() {
   try {
     const { data } = await api.get('/usage/');
-    return data; // expected shape: { success, data: { daily, monthly } }
+    return data; // expected shape now includes categories with counts and limits
   } catch (error) {
     return { success: false, error: error?.response?.data?.message || 'Failed to load usage summary' };
   }

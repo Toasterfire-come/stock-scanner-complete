@@ -26,8 +26,9 @@ import json
 import re
 import time
 
-from .models import Stock, StockAlert
+from .models import Stock, StockAlert, UsageStats
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
+from .plan_limits import get_limits_for_user, is_within_limit
 
 
 logger = logging.getLogger(__name__)
@@ -186,6 +187,12 @@ def alerts_create_api(request):
         if exists:
             return Response({'message': 'duplicate alert'}, status=status.HTTP_409_CONFLICT)
 
+        # Enforce per-plan alert count
+        limits = get_limits_for_user(request.user)
+        existing = StockAlert.objects.filter(user=request.user).count()
+        if not is_within_limit(request.user, 'alerts', existing):
+            return Response({'message': 'alert limit reached for your plan'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
         alert = StockAlert.objects.create(
             user=request.user,
             stock=stock,
@@ -199,6 +206,16 @@ def alerts_create_api(request):
             'alert_id': alert.id,
             'alert': _serialize_alert(alert, email),
         }
+        # Increment usage counters for alerts creation
+        try:
+            today = timezone.now().date()
+            stats, _ = UsageStats.objects.get_or_create(user=request.user, date=today)
+            stats.api_calls = (stats.api_calls or 0) + 1
+            stats.requests = (stats.requests or 0) + 1
+            stats.save()
+        except Exception:
+            pass
+
         resp = Response(payload, status=status.HTTP_201_CREATED)
         _attach_rate_limit_headers(request, resp)
         return resp

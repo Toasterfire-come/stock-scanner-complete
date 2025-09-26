@@ -22,7 +22,8 @@ from django.contrib.auth.models import User
 from utils.stock_data import compute_market_cap_fallback
 from utils.instrument_classifier import classify_instrument, filter_fields_by_instrument
 
-from .models import Stock, StockAlert, StockPrice, Screener
+from .models import Stock, StockAlert, StockPrice, Screener, UserPortfolio, PortfolioHolding, UserWatchlist
+from .plan_limits import get_limits_for_user
 from emails.models import EmailSubscription
 # import yfinance as yf  # Disabled: DB-only mode
 # import requests  # Disabled: DB-only mode
@@ -1265,8 +1266,27 @@ def screeners_create_api(request):
         name = (body.get('name') or 'Untitled').strip()
         description = body.get('description') or ''
         criteria = body.get('criteria') or []
+        # Enforce plan limit for screener criteria
+        try:
+            if getattr(request, 'user', None) and request.user.is_authenticated:
+                limits = get_limits_for_user(request.user)
+                max_criteria = int(limits.get('max_screener_criteria', 50) or 50)
+                if isinstance(criteria, list) and len(criteria) > max_criteria:
+                    criteria = criteria[:max_criteria]
+        except Exception:
+            pass
         is_public = bool(body.get('isPublic') or body.get('is_public') or False)
         user = request.user if getattr(request, 'user', None) and request.user.is_authenticated else None
+        # Enforce per-plan screener count limit for authenticated users
+        try:
+            if user is not None:
+                limits = get_limits_for_user(user)
+                existing = Screener.objects.filter(user=user).count()
+                cap = limits.get('screeners')
+                if cap not in (None, float('inf')) and existing >= int(cap):
+                    return Response({ 'success': False, 'error': 'Screener limit reached for your plan' }, status=429)
+        except Exception:
+            pass
         s = Screener.objects.create(user=user, name=name, description=description, criteria=criteria, is_public=is_public)
         return Response({ 'success': True, 'id': s.id })
     except Exception as e:
@@ -1760,11 +1780,16 @@ def portfolio_value_api(request):
         
         total_value = sum(portfolio.total_value for portfolio in portfolios)
         portfolio_count = portfolios.count()
+        # Limits for display
+        limits = get_limits_for_user(request.user)
         
         return Response({
             'success': True,
             'total_value': float(total_value),
             'portfolio_count': portfolio_count,
+            'limits': {
+                'portfolios': limits.get('portfolios'),
+            },
             'portfolios': [
                 {
                     'id': p.id,
@@ -1908,10 +1933,14 @@ def portfolio_holdings_count_api(request):
                 'holdings_count': holdings_count
             })
         
+        limits = get_limits_for_user(request.user)
         return Response({
             'success': True,
             'total_holdings': total_holdings,
             'portfolio_count': portfolios.count(),
+            'limits': {
+                'portfolios': limits.get('portfolios'),
+            },
             'portfolios': portfolio_details,
             'timestamp': timezone.now().isoformat()
         })

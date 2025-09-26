@@ -17,6 +17,7 @@ from .security_utils import (
     WATCHLIST_SCHEMA
 )
 from .watchlist_service import WatchlistService
+from .plan_limits import get_limits_for_user, is_within_limit
 from .models import UserWatchlist, WatchlistItem, Stock
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,15 @@ def create_watchlist(request):
         # Validate input
         validated_data = validate_user_input(request.validated_data, WATCHLIST_SCHEMA)
         
+        # Enforce per-plan watchlists
+        limits = get_limits_for_user(request.user)
+        existing = UserWatchlist.objects.filter(user=request.user).count()
+        if not is_within_limit(request.user, 'watchlists', existing):
+            return JsonResponse({
+                'success': False,
+                'error': 'Watchlist limit reached for your plan',
+                'error_code': 'WATCHLIST_LIMIT'
+            }, status=429)
         # Create watchlist
         watchlist = WatchlistService.create_watchlist(
             user=request.user,

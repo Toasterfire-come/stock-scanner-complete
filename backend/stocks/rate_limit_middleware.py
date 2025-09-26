@@ -68,6 +68,11 @@ class RateLimitMiddleware(MiddlewareMixin):
         '/api/realtime/',
         '/api/filter/',
         '/api/market-stats/',
+        # Include additional product endpoints in rate limiting
+        '/api/alerts/',
+        '/api/portfolio/',
+        '/api/watchlist/',
+        '/api/screeners/',
     ])
     
     def __init__(self, get_response):

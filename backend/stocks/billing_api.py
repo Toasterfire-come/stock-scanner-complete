@@ -22,7 +22,8 @@ from datetime import datetime, timedelta
 import os
 from decimal import Decimal
 
-from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats
+from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats, UserPortfolio, UserWatchlist, Screener, StockAlert
+from .plan_limits import get_limits_for_user
 from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
@@ -1138,6 +1139,14 @@ def usage_summary_api(request):
         total_requests = monthly_qs.aggregate(total=Sum('requests'))['total'] or 0
 
         profile, _ = UserProfile.objects.get_or_create(user=user)
+        # Category counts and plan caps
+        counts = {
+            'alerts': StockAlert.objects.filter(user=user).count(),
+            'watchlists': UserWatchlist.objects.filter(user=user).count(),
+            'portfolios': UserPortfolio.objects.filter(user=user).count(),
+            'screeners': Screener.objects.filter(user=user).count(),
+        }
+        limits = get_limits_for_user(user)
 
         return JsonResponse({
             'success': True,
@@ -1152,6 +1161,24 @@ def usage_summary_api(request):
                     'requests': total_requests,
                     'limit': getattr(profile, 'api_calls_limit', 100),
                     'remaining': max(0, getattr(profile, 'api_calls_limit', 100) - total_api_calls)
+                },
+                'categories': {
+                    'alerts': {
+                        'count': counts['alerts'],
+                        'limit': limits.get('alerts')
+                    },
+                    'watchlists': {
+                        'count': counts['watchlists'],
+                        'limit': limits.get('watchlists')
+                    },
+                    'portfolios': {
+                        'count': counts['portfolios'],
+                        'limit': limits.get('portfolios')
+                    },
+                    'screeners': {
+                        'count': counts['screeners'],
+                        'limit': limits.get('screeners')
+                    }
                 }
             }
         })
