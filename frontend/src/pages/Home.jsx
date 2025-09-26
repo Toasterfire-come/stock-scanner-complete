@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { getMarketStatsSafe } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
+import { toast } from "sonner";
 
 const Home = () => {
   const [marketStats, setMarketStats] = useState(null);
@@ -54,10 +55,10 @@ const Home = () => {
       const seen = localStorage.getItem('onboarding-tooltips-v1') === '1';
       if (!seen) {
         setTimeout(() => {
-          try { window.toast?.info?.('Tip: Create your first screener', { description: 'Go to Screeners > New to find trade setups.' }); } catch {}
+          try { toast.info('Tip: Create your first screener', { description: 'Go to Screeners > New to find trade setups.' }); } catch {}
         }, 800);
         setTimeout(() => {
-          try { window.toast?.info?.('Tip: Add to watchlist', { description: 'Use the star/bookmark buttons across the app.' }); } catch {}
+          try { toast.info('Tip: Add to watchlist', { description: 'Use the star/bookmark buttons across the app.' }); } catch {}
         }, 2000);
         localStorage.setItem('onboarding-tooltips-v1', '1');
       }

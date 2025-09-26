@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
@@ -438,28 +439,38 @@ const PricingPro = () => {
         <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">
           Frequently Asked Questions
         </h3>
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border p-6">
-            <h4 className="font-semibold mb-2">What happens if I exceed my API limit?</h4>
-            <p className="text-gray-600">Once you reach your monthly API limit, you'll need to upgrade to continue using the service. We'll notify you when you're approaching your limit.</p>
-          </div>
-          <div className="bg-white rounded-lg border p-6">
-            <h4 className="font-semibold mb-2">Can I change plans anytime?</h4>
-            <p className="text-gray-600">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and billing is prorated.</p>
-          </div>
-          <div className="bg-white rounded-lg border p-6">
-            <h4 className="font-semibold mb-2">What's included in the free plan?</h4>
-            <p className="text-gray-600">The free plan includes stock data access, 30 API calls per month, basic stock screener (30 calls, 1 screener, 1 portfolio).</p>
-          </div>
-          <div className="bg-white rounded-lg border p-6">
-            <h4 className="font-semibold mb-2">How much do I save with annual billing?</h4>
-            <p className="text-gray-600">Annual plans save you 15% compared to monthly billing. For example, Bronze saves $44.89/year, Silver saves $89.89/year, and Gold saves $144.89/year.</p>
-          </div>
-          <div className="bg-white rounded-lg border p-6">
-            <h4 className="font-semibold mb-2">Do you offer refunds?</h4>
-            <p className="text-gray-600">We offer a 30-day money-back guarantee for all paid plans. Contact {process.env.REACT_APP_SUPPORT_EMAIL || 'noreply.retailtradescanner@gmail.com'} if you're not satisfied.</p>
-          </div>
-        </div>
+        <Accordion type="single" collapsible className="bg-white rounded-lg border">
+          <AccordionItem value="item-1">
+            <AccordionTrigger>What happens if I exceed my API limit?</AccordionTrigger>
+            <AccordionContent>
+              Once you reach your monthly API limit, you'll need to upgrade to continue using the service. We'll notify you when you're approaching your limit.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-2">
+            <AccordionTrigger>Can I change plans anytime?</AccordionTrigger>
+            <AccordionContent>
+              Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and billing is prorated.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-3">
+            <AccordionTrigger>What's included in the free plan?</AccordionTrigger>
+            <AccordionContent>
+              The free plan includes stock data access, 30 API calls per month, basic stock screener (30 calls, 1 screener, 1 portfolio).
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-4">
+            <AccordionTrigger>How much do I save with annual billing?</AccordionTrigger>
+            <AccordionContent>
+              Annual plans save you 15% compared to monthly billing. For example, Bronze saves $44.89/year, Silver saves $89.89/year, and Gold saves $144.89/year.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-5">
+            <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
+            <AccordionContent>
+              We offer a 30-day money-back guarantee for all paid plans. Contact {process.env.REACT_APP_SUPPORT_EMAIL || 'noreply.retailtradescanner@gmail.com'} if you're not satisfied.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
 
       {/* Contact Support */}
