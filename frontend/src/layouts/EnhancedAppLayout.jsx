@@ -349,25 +349,25 @@ const EnhancedAppLayout = () => {
 
       {/* Mobile Bottom Navigation */}
       {bottomNavVisible && (
-        <nav aria-label="Primary" className="fixed bottom-0 inset-x-0 z-50 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 md:hidden">
+        <nav aria-label="Primary" className="fixed bottom-0 inset-x-0 z-50 border-t bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 dark:supports-[backdrop-filter]:bg-gray-900/75 md:hidden">
           <div className="grid grid-cols-5 text-xs">
-            <Link to="/app/dashboard" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/dashboard') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Dashboard">
+            <Link to="/app/dashboard" className={`flex flex-col items-center py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${location.pathname.startsWith('/app/dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`} aria-label="Dashboard" aria-current={location.pathname.startsWith('/app/dashboard') ? 'page' : undefined}>
               <BarChart3 className="h-5 w-5" />
               <span>Dashboard</span>
             </Link>
-            <Link to="/app/markets" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/markets') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Markets">
+            <Link to="/app/markets" className={`flex flex-col items-center py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${location.pathname.startsWith('/app/markets') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`} aria-label="Markets" aria-current={location.pathname.startsWith('/app/markets') ? 'page' : undefined}>
               <TrendingUp className="h-5 w-5" />
               <span>Markets</span>
             </Link>
-            <Link to="/app/screeners" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/screeners') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Screeners">
+            <Link to="/app/screeners" className={`flex flex-col items-center py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${location.pathname.startsWith('/app/screeners') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`} aria-label="Screeners" aria-current={location.pathname.startsWith('/app/screeners') ? 'page' : undefined}>
               <Search className="h-5 w-5" />
               <span>Screeners</span>
             </Link>
-            <Link to="/app/watchlists" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/watchlists') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Watchlists">
+            <Link to="/app/watchlists" className={`flex flex-col items-center py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${location.pathname.startsWith('/app/watchlists') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`} aria-label="Watchlists" aria-current={location.pathname.startsWith('/app/watchlists') ? 'page' : undefined}>
               <Eye className="h-5 w-5" />
               <span>Watchlists</span>
             </Link>
-            <Link to="/app/portfolio" className={`flex flex-col items-center py-2 ${location.pathname.startsWith('/app/portfolio') ? 'text-blue-600' : 'text-gray-600'}`} aria-label="Portfolio">
+            <Link to="/app/portfolio" className={`flex flex-col items-center py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${location.pathname.startsWith('/app/portfolio') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`} aria-label="Portfolio" aria-current={location.pathname.startsWith('/app/portfolio') ? 'page' : undefined}>
               <Target className="h-5 w-5" />
               <span>Portfolio</span>
             </Link>

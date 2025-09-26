@@ -276,14 +276,14 @@ const Pricing = () => {
             Start with our 7-day trial. Cancel anytime, no hidden fees.
           </p>
 
-          {/* Special Offer Banner - Updated messaging */}
+          {/* Trust & Guarantee Banner */}
           <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 max-w-2xl mx-auto mb-8">
             <div className="flex items-center justify-center mb-3">
               <Zap className="h-6 w-6 mr-2" />
               <span className="text-lg font-bold">TRIAL</span>
             </div>
             <p className="text-xl mb-4">Use code TRIAL for a 7‑day 1$ trial on paid plans</p>
-            <p className="text-sm opacity-90">Then continue at regular price or cancel anytime</p>
+            <p className="text-sm opacity-90">Then continue at regular price or cancel anytime. 30‑day money‑back guarantee.</p>
           </div>
 
           {/* Billing Toggle */}
