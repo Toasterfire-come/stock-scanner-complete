@@ -629,8 +629,16 @@ def run_stock_update(args):
         )
         return
     
-    # Load symbols (combined preferred when requested)
+    # Load symbols (prefer combined tickers when available)
     use_combined = bool(getattr(args, 'combined', False) or os.environ.get('USE_COMBINED_TICKERS', '').lower() == 'true')
+    if not use_combined:
+        try:
+            combined_dir = Path(__file__).resolve().parent / 'data' / 'combined'
+            if combined_dir.exists() and any(combined_dir.glob('combined_tickers_*.py')):
+                logger.info("Detected combined tickers file. Defaulting to combined (NASDAQ + NYSE/AMEX).")
+                use_combined = True
+        except Exception:
+            pass
     if use_combined:
         logger.info("Loading combined tickers list (NASDAQ + NYSE/AMEX)...")
         symbols = load_combined_symbols(getattr(args, 'combined_file', None), args.test, args.max_symbols)

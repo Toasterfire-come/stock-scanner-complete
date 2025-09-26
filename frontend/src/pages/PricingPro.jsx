@@ -49,8 +49,13 @@ const PricingPro = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setPlans(data.plans);
-        setCurrentPlan(data.current_plan);
+        const normalizedPlans = data?.plans && Object.keys(data.plans).length > 0 ? data.plans : getDefaultPlans();
+        setPlans(normalizedPlans);
+        setCurrentPlan(data.current_plan || 'free');
+      } else {
+        // Fallback when API returns non-OK response
+        setPlans(getDefaultPlans());
+        setCurrentPlan('free');
       }
     } catch (error) {
       console.error('Failed to fetch plans:', error);

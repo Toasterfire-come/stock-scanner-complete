@@ -39,7 +39,6 @@ import {
 import MiniSparkline from "../../components/MiniSparkline";
 import RealTrendingSparkline from "../../components/RealTrendingSparkline";
 import UsageTracker from "../../components/UsageTracker";
-import PlanUsage from "../../components/PlanUsage";
 // Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
 import MarketStatus from "../../components/MarketStatus";
 
@@ -268,8 +267,6 @@ const AppDashboard = () => {
               </div>
             </CardContent>
           </Card>
-
-          <PlanUsage />
         </div>
 
         {/* Main Content Grid */}
