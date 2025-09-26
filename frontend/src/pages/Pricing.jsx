@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SEO from "../components/SEO";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -33,7 +33,18 @@ const Pricing = () => {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [openComparison, setOpenComparison] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    // Auto-apply discount_code from navigation state (e.g., referral from plan selection)
+    try {
+      const state = location.state || {};
+      if (state.discount_code && typeof state.discount_code === 'string') {
+        setDiscountCode(state.discount_code);
+        setAppliedDiscount({ code: state.discount_code, description: 'Referral discount (first month 50%)', savings_percentage: 50, final_amount: null });
+      }
+    } catch {}
+  }, [location.state]);
 
   const plans = [
     {
