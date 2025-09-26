@@ -49,6 +49,19 @@ const Home = () => {
     };
 
     fetchData();
+    // First-time onboarding tooltips (simple toasts)
+    try {
+      const seen = localStorage.getItem('onboarding-tooltips-v1') === '1';
+      if (!seen) {
+        setTimeout(() => {
+          try { window.toast?.info?.('Tip: Create your first screener', { description: 'Go to Screeners > New to find trade setups.' }); } catch {}
+        }, 800);
+        setTimeout(() => {
+          try { window.toast?.info?.('Tip: Add to watchlist', { description: 'Use the star/bookmark buttons across the app.' }); } catch {}
+        }, 2000);
+        localStorage.setItem('onboarding-tooltips-v1', '1');
+      }
+    } catch {}
   }, []);
 
   const features = [

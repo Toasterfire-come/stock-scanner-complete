@@ -332,6 +332,7 @@ const EnhancedAppLayout = () => {
                 <li><Link to="/help" className="hover:text-blue-600 transition-colors">Help Center</Link></li>
                 <li><Link to="/legal/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
                 <li><Link to="/legal/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link></li>
+                <li><Link to="/status" className="hover:text-blue-600 transition-colors">Status & Uptime</Link></li>
               </ul>
             </div>
           </div>
