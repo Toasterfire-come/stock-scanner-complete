@@ -112,6 +112,9 @@ logger.propagate = False
 
 # Global flag for graceful shutdown
 shutdown_flag = False
+# DB write serialization lock (prevents SQLite 'database is locked' errors)
+db_write_lock = threading.Lock()
+
 
 # Market window configuration (US/Eastern) - ONLY REGULAR MARKET HOURS
 EASTERN_TZ = pytz.timezone('US/Eastern')
@@ -491,7 +494,9 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         return None
 
     # Try multiple approaches to get data letting yfinance manage its own session
-    ticker_obj = yf.Ticker(symbol)
+    # Normalize special share classes: replace '.' with '-' (e.g., BRK.B -> BRK-B)
+    norm_symbol = symbol.replace('.', '-')
+    ticker_obj = yf.Ticker(norm_symbol)
     info = None
     hist = None
     current_price = None
@@ -527,6 +532,15 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     if current_price is None and info:
         try:
             current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
+        except Exception:
+            pass
+
+    # As last resort, attempt '1d' with interval to get a recent close
+    if current_price is None:
+        try:
+            intraday = yfinance_retry_wrapper(lambda: ticker_obj.history(period="1d", interval="1m", timeout=timeout))
+            if intraday is not None and not intraday.empty:
+                current_price = intraday['Close'].dropna().iloc[-1]
         except Exception:
             pass
 
@@ -659,15 +673,17 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
             if not DJANGO_READY:
                 logger.error("Skipping DB save: Django not initialized")
                 return stock_data
-            stock, created = Stock.objects.update_or_create(
-                ticker=symbol,
-                defaults=stock_data
-            )
-            if stock_data.get('current_price'):
-                try:
-                    StockPrice.objects.create(stock=stock, price=stock_data['current_price'])
-                except Exception as e:
-                    logger.debug(f"Failed to create StockPrice for {symbol}: {e}")
+            # Serialize DB writes to avoid SQLite lock errors
+            with db_write_lock:
+                stock, created = Stock.objects.update_or_create(
+                    ticker=symbol,
+                    defaults=stock_data
+                )
+                if stock_data.get('current_price'):
+                    try:
+                        StockPrice.objects.create(stock=stock, price=stock_data['current_price'])
+                    except Exception as e:
+                        logger.debug(f"Failed to create StockPrice for {symbol}: {e}")
         return stock_data if not save_to_db or test_mode else stock_data
     except Exception as e:
         logger.error(f"DB ERROR {symbol}: {e}")
