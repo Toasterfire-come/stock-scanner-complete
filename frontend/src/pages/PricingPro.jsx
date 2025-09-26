@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import SEO from "../components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -225,6 +226,12 @@ const PricingPro = () => {
 
   return (
     <div className="container mx-auto px-4 py-16">
+      <SEO
+        title="Pricing | Trade Scan Pro"
+        description="Choose from Free, Bronze, Silver, and Gold plans. Longer description: real-time alerts, advanced screeners, portfolio analytics, API access, and professional trading tools for serious traders."
+        url="https://tradescanpro.com/pricing"
+        jsonLdUrls={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}
+      />
       {/* Header */}
       <div className="text-center mb-16">
         <Badge variant="secondary" className="mb-4">

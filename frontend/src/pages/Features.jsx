@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import SEO from "../components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { 
@@ -111,6 +112,12 @@ const Features = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="Features | Trade Scan Pro"
+        description="Explore advanced stock screening, real-time alerts, portfolio analytics, and market intelligence tools built for serious traders."
+        url="https://tradescanpro.com/features"
+        jsonLdUrls={["/structured/features.jsonld"]}
+      />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">
@@ -189,6 +196,9 @@ const Features = () => {
                       alt={`${feature.title} screenshot`}
                       className="w-full h-64 object-cover"
                       loading="lazy"
+                      decoding="async"
+                      width="1024"
+                      height="512"
                       onError={(e)=>{ e.currentTarget.src='/hero.webp'; e.currentTarget.classList.add('object-contain','bg-gray-50'); }}
                     />
                   </div>

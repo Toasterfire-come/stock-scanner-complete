@@ -335,7 +335,12 @@ const EnhancedAppLayout = () => {
           </div>
           
           <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
-            <p>&copy; 2025 Trade Scan Pro. All rights reserved. Built for serious traders.</p>
+            <p className="mb-3">&copy; 2025 Trade Scan Pro. All rights reserved. Built for serious traders.</p>
+            <p>
+              <a href="https://x.com/TradeScanPro" rel="me noopener" target="_blank" className="hover:text-blue-600">X</a>
+              <span className="mx-2">•</span>
+              <a href="https://www.linkedin.com/company/tradescanpro/" rel="me noopener" target="_blank" className="hover:text-blue-600">LinkedIn</a>
+            </p>
           </div>
         </div>
       </footer>

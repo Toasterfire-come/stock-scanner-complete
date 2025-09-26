@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import SEO from "../components/SEO";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -215,6 +216,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="Trade Scan Pro | Professional Stock Market Scanner"
+        description="Advanced stock screening, real-time alerts, portfolio analytics, and market intelligence for serious traders."
+        url="https://tradescanpro.com/"
+        jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
+      />
       {/* Hero Section - Conversion Focused */}
       <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
         <div className="container mx-auto px-4">

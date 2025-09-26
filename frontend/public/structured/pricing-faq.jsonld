@@ -1,0 +1,17 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does the 7-day trial work?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Use code TRIAL to access any paid plan for 7 days for $1. Cancel anytime during the trial."}
+    },
+    {
+      "@type": "Question",
+      "name": "Can I change plans at any time?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Yes, you can upgrade or downgrade at any time. Changes take effect immediately and are prorated."}
+    }
+  ]
+}
+

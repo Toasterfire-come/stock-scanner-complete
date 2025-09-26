@@ -346,17 +346,7 @@ export default function PlanSelection() {
         </div>
 
         <div className="text-center mt-8 sm:mt-12 space-y-4">
-          <div className="mb-6">
-            <Button 
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
-              onClick={() => handlePlanSelect(selectedPlan)}
-              disabled={isLoading}
-            >
-              Continue to Payment
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
-          </div>
+          {/* Removed extra payment button for simplified flow */}
           
           <p className="text-sm text-gray-500">
             You can change your plan anytime from your account settings

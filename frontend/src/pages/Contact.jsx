@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SEO from "../components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -86,6 +87,12 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="Contact Us | Trade Scan Pro"
+        description="Contact Trade Scan Pro for support, sales, enterprise solutions, and API access. We typically respond within 24 hours."
+        url="https://tradescanpro.com/contact"
+        jsonLdUrls={["/structured/contact.jsonld"]}
+      />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">

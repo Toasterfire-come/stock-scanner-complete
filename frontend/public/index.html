@@ -33,7 +33,11 @@
         <link rel="preconnect" href="https://o.sentry.io" crossorigin>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="preload" href="/fonts.css" as="style" crossorigin>
+        <link rel="preload" href="/hero.webp" as="image" imagesrcset="/hero.avif 1x, /hero.webp 2x" imagesizes="100vw">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap">
+        <link rel="stylesheet" href="/fonts.css">
         
         <link rel="dns-prefetch" href="//api.retailtradescanner.com">
         <link rel="dns-prefetch" href="//www.paypal.com">
@@ -55,6 +59,17 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
         <title>Trade Scan Pro | Professional Stock Market Scanner</title>
+
+        <!-- Structured Data Base (Organization, Website, Software) -->
+        <script type="application/ld+json" id="jsonld-base-organization">
+        {"@context":"https://schema.org","@type":"Organization","name":"Trade Scan Pro","url":"https://tradescanpro.com","logo":"https://tradescanpro.com/og-image.png","sameAs":["https://x.com/TradeScanPro","https://www.linkedin.com/company/tradescanpro/"]}
+        </script>
+        <script type="application/ld+json" id="jsonld-base-website">
+        {"@context":"https://schema.org","@type":"WebSite","name":"Trade Scan Pro","url":"https://tradescanpro.com","potentialAction":{"@type":"SearchAction","target":"https://tradescanpro.com/search?q={query}","query-input":"required name=query"}}
+        </script>
+        <script type="application/ld+json" id="jsonld-base-software">
+        {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Trade Scan Pro","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+        </script>
         
     </head>
     <body>

@@ -26,12 +26,13 @@ import TwoFactorAuth from "./pages/auth/TwoFactorAuth";
 import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
 
 // Public Pages
-import Home from "./pages/Home";
-import Features from "./pages/Features";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import PricingPro from "./pages/PricingPro";
-import Pricing from "./pages/Pricing";
+import { Suspense, lazy } from "react";
+const Home = lazy(() => import(/* webpackPrefetch: true */ "./pages/Home"));
+const Features = lazy(() => import(/* webpackPrefetch: true */ "./pages/Features"));
+const About = lazy(() => import(/* webpackPrefetch: true */ "./pages/About"));
+const Contact = lazy(() => import(/* webpackPrefetch: true */ "./pages/Contact"));
+const PricingPro = lazy(() => import(/* webpackPrefetch: true */ "./pages/PricingPro"));
+const Pricing = lazy(() => import(/* webpackPrefetch: true */ "./pages/Pricing"));
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
@@ -144,6 +145,7 @@ function App() {
           <SystemErrorBoundary>
             <div className="min-h-screen bg-background">
               <OfflineBanner />
+              <Suspense fallback={<div className="p-8 text-center">Loading…</div>}>
               <Routes>
                 {/* Auth Routes */}
                 <Route element={<AuthLayout />}>
@@ -436,6 +438,7 @@ function App() {
                 {/* Default redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </Suspense>
               <Toaster position="top-right" />
             </div>
           </SystemErrorBoundary>
