@@ -23,7 +23,8 @@ import logging
 from datetime import datetime, timedelta
 from django.db import transaction, IntegrityError
 
-from .models import UserProfile, BillingHistory, NotificationSettings
+from .models import UserProfile, BillingHistory, NotificationSettings, DiscountCode, UserDiscountUsage
+from .services.discount_service import DiscountService
 from .security_utils import secure_api_endpoint, validate_user_input
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,24 @@ def register_api(request):
                 )
                 # Ensure a profile exists
                 profile, _ = UserProfile.objects.get_or_create(user=user)
+                # Optional referral: apply 50% off first month and attach usage record
+                ref = (data.get('ref') or '').strip()
+                if ref and len(ref) == 5 and ref.isalnum():
+                    # Create or fetch a dynamic discount code REF_<ref> at 50% first payment only
+                    code_str = f"REF_{ref.upper()}"
+                    disc, _ = DiscountCode.objects.get_or_create(
+                        code=code_str,
+                        defaults={
+                            'discount_percentage': 50,
+                            'is_active': True,
+                            'applies_to_first_payment_only': True,
+                        }
+                    )
+                    # Track that this user is associated with this referral code (for lifetime attribution)
+                    try:
+                        UserDiscountUsage.objects.get_or_create(user=user, discount_code=disc)
+                    except Exception:
+                        pass
         except IntegrityError:
             # Handle rare race conditions where another request created the same user concurrently
             return JsonResponse({

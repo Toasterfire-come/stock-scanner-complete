@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -37,6 +37,7 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     register,
@@ -53,12 +54,24 @@ const SignUp = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
+      // Capture referral from URL path or query: /auth/sign-up/ref-abc12 or ?ref=abc12
+      let refCode = null;
+      try {
+        const path = location.pathname || '';
+        const m = path.match(/\/auth\/sign-up\/ref-([a-zA-Z0-9]{5})/);
+        if (m && m[1]) refCode = m[1];
+        const params = new URLSearchParams(location.search || '');
+        const qRef = params.get('ref');
+        if (!refCode && qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) refCode = qRef;
+      } catch {}
+
       const result = await registerUser({
         username: data.username,
         email: data.email,
         password: data.password,
         first_name: data.firstName,
         last_name: data.lastName,
+        ref: refCode || undefined,
       });
 
       if (result.success) {
@@ -66,7 +79,8 @@ const SignUp = () => {
         navigate("/auth/plan-selection", { 
           state: { 
             email: data.email,
-            newUser: true 
+            newUser: true,
+            ref: refCode || undefined
           } 
         });
       } else {
