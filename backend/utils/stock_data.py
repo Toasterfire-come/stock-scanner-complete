@@ -142,6 +142,20 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
     if not info:
         return {}
     
+    # Try robust extraction of shares outstanding for market cap fallback
+    shares_outstanding = (info.get('sharesOutstanding') or
+                           info.get('impliedSharesOutstanding') or
+                           info.get('floatShares'))
+
+    # Try robust extraction of average volume 3 months
+    avg_vol_candidates = [
+        info.get('averageVolume'),
+        info.get('averageVolume10days'),
+        info.get('averageDailyVolume10Day'),
+        info.get('averageVolume3Months'),
+    ]
+    avg_vol_value = next((v for v in avg_vol_candidates if v not in (None, 0)), None)
+
     return {
         'ticker': symbol,
         'symbol': symbol,
@@ -156,10 +170,11 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
         # Volume data - try multiple fields
         'volume': safe_decimal_conversion(info.get('volume') or info.get('regularMarketVolume')),
         'volume_today': safe_decimal_conversion(info.get('volume') or info.get('regularMarketVolume')),
-        'avg_volume_3mon': safe_decimal_conversion(info.get('averageVolume') or info.get('averageVolume10days')),
+        'avg_volume_3mon': safe_decimal_conversion(avg_vol_value),
         
         # Market data
         'market_cap': safe_decimal_conversion(info.get('marketCap')),
+        'shares_outstanding': safe_decimal_conversion(shares_outstanding),
         
         # Financial ratios
         'pe_ratio': extract_pe_ratio(info),
@@ -192,6 +207,7 @@ def extract_stock_data_from_fast_info(fast_info, symbol, current_price=None):
     volume = get(['last_volume', 'volume'])
     avg_vol_3m = get(['three_month_average_volume', 'ten_day_average_volume'])
     market_cap = get(['market_cap'])
+    shares_outstanding = get(['shares_outstanding', 'shares'])
     wk52_low = get(['fifty_two_week_low', 'year_low'])
     wk52_high = get(['fifty_two_week_high', 'year_high'])
     exch = get(['exchange']) or 'NYSE'
@@ -209,6 +225,7 @@ def extract_stock_data_from_fast_info(fast_info, symbol, current_price=None):
         'volume_today': safe_decimal_conversion(volume),
         'avg_volume_3mon': safe_decimal_conversion(avg_vol_3m),
         'market_cap': safe_decimal_conversion(market_cap),
+        'shares_outstanding': safe_decimal_conversion(shares_outstanding),
         'pe_ratio': None,
         'dividend_yield': None,
         'one_year_target': None,

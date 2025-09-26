@@ -485,6 +485,11 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
 
     patch_yfinance_proxy(proxy)
 
+    # Filter out symbols with obvious invalid characters that yfinance rejects
+    if any(ch in symbol for ch in ['$', '^', ' ', '/']):
+        logger.warning(f"{symbol}: Skipping invalid or preferred share ticker format")
+        return None
+
     # Try multiple approaches to get data letting yfinance manage its own session
     ticker_obj = yf.Ticker(symbol)
     info = None
@@ -549,6 +554,17 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     
     # Calculate price changes from historical data
     price_change_today, change_percent = calculate_change_percent_from_history(hist, symbol) if hist is not None and not hist.empty else (None, None)
+    # Fallback to info-provided change metrics if history unavailable
+    if (price_change_today is None or change_percent is None) and info:
+        try:
+            if price_change_today is None:
+                price_change_today = safe_decimal_conversion(info.get('regularMarketChange') or info.get('priceHint'))
+            if change_percent is None:
+                cp = info.get('regularMarketChangePercent')
+                if cp is not None:
+                    change_percent = safe_decimal_conversion(cp)
+        except Exception:
+            pass
     
     # Calculate additional metrics
     dvav = calculate_volume_ratio(base_data.get('volume'), base_data.get('avg_volume_3mon'))
@@ -564,7 +580,10 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     days_range = f"{days_low} - {days_high}" if days_low and days_high else ""
     
     # Extract shares outstanding
-    shares_available = safe_decimal_conversion(info.get('sharesOutstanding')) if info else None
+    # Prefer extracted shares_outstanding from base_data; otherwise fallback to info
+    shares_available = base_data.get('shares_outstanding')
+    if shares_available is None and info:
+        shares_available = safe_decimal_conversion(info.get('sharesOutstanding'))
     
     # Try to get year-over-year price change from 1-year historical data
     price_change_year = None
@@ -626,6 +645,13 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'last_updated': now_ts(),
         'created_at': now_ts()
     }
+
+    # Remove transient fields not present in DB schema
+    stock_data.pop('shares_outstanding', None)
+
+    # Best-effort fill avg_volume_3mon when missing using volume_today/volume
+    if not stock_data.get('avg_volume_3mon') and stock_data.get('volume'):
+        stock_data['avg_volume_3mon'] = stock_data['volume']
 
     try:
         if save_to_db and not test_mode:
