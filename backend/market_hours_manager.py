@@ -70,7 +70,7 @@ class MarketHoursManager:
         self.components = {
             'enhanced_stock_retrieval': {
                 'script': 'enhanced_stock_retrieval_working.py',
-                'args': ['-save-to-db'],  # Single run, no schedule
+                'args': ['-save-to-db', '-combined'],  # Prefer combined tickers (NASDAQ + NYSE/AMEX)
                 'active_during': ['market'],
                 'restart_interval': 180,  # 3 minutes
                 'process': None,

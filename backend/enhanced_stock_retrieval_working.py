@@ -32,12 +32,43 @@ from pathlib import Path
 import importlib.util
 
 # Django imports for database integration
-import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'))
-django.setup()
+# Lazy Django initialization: only import when saving to DB
+DJANGO_READY = False
+Stock = None
+StockPrice = None
+try:
+    from django.utils import timezone as django_timezone  # Optional, used if Django is available
+except Exception:  # pragma: no cover
+    django_timezone = None
 
-from django.utils import timezone
-from stocks.models import Stock, StockPrice
+def ensure_django_initialized():
+    """Initialize Django and import models only when needed."""
+    global DJANGO_READY, Stock, StockPrice, django_timezone
+    if DJANGO_READY:
+        return
+    try:
+        import django  # type: ignore
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings'))
+        django.setup()
+        from django.utils import timezone as tz  # type: ignore
+        from stocks.models import Stock as StockModel, StockPrice as StockPriceModel  # type: ignore
+        django_timezone = tz
+        Stock = StockModel
+        StockPrice = StockPriceModel
+        DJANGO_READY = True
+        logger.info("Django initialized for DB operations")
+    except Exception as e:  # pragma: no cover
+        logger.error(f"Failed to initialize Django: {e}")
+        DJANGO_READY = False
+
+def now_ts():
+    """Return a timezone-aware timestamp if Django is available; otherwise UTC now."""
+    try:
+        if django_timezone is not None:
+            return django_timezone.now()
+    except Exception:
+        pass
+    return datetime.now(pytz.UTC)
 
 # Import shared utilities
 from utils.stock_data import (
@@ -589,18 +620,28 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'market_cap': mc_value if mc_value is not None else base_data.get('market_cap'),
         'market_cap_change_3mon': None,  # Would need 3-month historical market cap data
         'pe_change_3mon': None,  # Would need 3-month historical PE data
-        'last_updated': timezone.now(),
-        'created_at': timezone.now()
+        # Calculate basic price_change and price_change_percent for model compatibility
+        'price_change': price_change_today,
+        'price_change_percent': change_percent,
+        'last_updated': now_ts(),
+        'created_at': now_ts()
     }
 
     try:
         if save_to_db and not test_mode:
+            ensure_django_initialized()
+            if not DJANGO_READY:
+                logger.error("Skipping DB save: Django not initialized")
+                return stock_data
             stock, created = Stock.objects.update_or_create(
                 ticker=symbol,
                 defaults=stock_data
             )
             if stock_data.get('current_price'):
-                StockPrice.objects.create(stock=stock, price=stock_data['current_price'])
+                try:
+                    StockPrice.objects.create(stock=stock, price=stock_data['current_price'])
+                except Exception as e:
+                    logger.debug(f"Failed to create StockPrice for {symbol}: {e}")
         return stock_data if not save_to_db or test_mode else stock_data
     except Exception as e:
         logger.error(f"DB ERROR {symbol}: {e}")
