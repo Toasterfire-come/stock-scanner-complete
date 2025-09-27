@@ -48,7 +48,25 @@ async function main() {
   const sftp = new SftpClient();
   try {
     console.log(`Connecting to ${host}:${port} as ${username} ...`);
-    await sftp.connect({ host, port, username, password, readyTimeout: 20000 });
+    await sftp.connect({
+      host,
+      port,
+      username,
+      password,
+      readyTimeout: 20000,
+      tryKeyboard: true,
+      onKeyboardInteractive: (_name, _instructions, _lang, prompts, finish) => {
+        try {
+          if (Array.isArray(prompts) && prompts.length > 0) {
+            finish([password]);
+          } else {
+            finish([]);
+          }
+        } catch (_) {
+          try { finish([]); } catch {}
+        }
+      }
+    });
 
     // Ensure target directory exists and is accessible
     try {
