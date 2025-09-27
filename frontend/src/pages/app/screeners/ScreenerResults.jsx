@@ -36,8 +36,8 @@ const ScreenerResults = () => {
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      // Pull last-used params from localStorage (ad-hoc) or use params derived from screener id in future
-      const stored = window.localStorage.getItem('screener:lastParams');
+      // Pull last-used params from localStorage for adhoc only; saved screeners should not be affected
+      const stored = id === 'adhoc' ? window.localStorage.getItem('screener:lastParams:adhoc') : null;
       const baseParams = stored ? JSON.parse(stored) : {};
       const requestParams = { ...baseParams };
       // Provide both styles for backend compatibility

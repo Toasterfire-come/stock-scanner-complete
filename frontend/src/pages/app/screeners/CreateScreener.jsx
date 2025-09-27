@@ -133,7 +133,8 @@ const CreateScreener = () => {
       const data = await filterStocks(params);
       const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
       const count = rows.length || 0;
-      window.localStorage.setItem('screener:lastParams', JSON.stringify(params));
+      // Store only for adhoc runs to avoid affecting saved screeners
+      window.localStorage.setItem('screener:lastParams:adhoc', JSON.stringify(params));
       toast.success(`Found ${count} matching stocks`);
       try {
         const coach = (location.state && location.state.coach) || null;
