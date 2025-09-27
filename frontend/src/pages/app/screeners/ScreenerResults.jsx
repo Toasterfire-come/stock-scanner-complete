@@ -4,7 +4,7 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { TrendingUp, TrendingDown, Eye, Download, RefreshCw } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, Download, RefreshCw, Save as SaveIcon, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { filterStocks } from "../../../api/client";
 import { 
@@ -27,6 +27,7 @@ const ScreenerResults = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
+  const [topInsights, setTopInsights] = useState([]);
 
   useEffect(() => {
     fetchResults();
@@ -78,6 +79,25 @@ const ScreenerResults = () => {
         market_cap: Number(s.market_cap ?? 0),
         exchange: s.exchange || '-'
       })));
+
+      // Compute simple insights
+      try {
+        const topGainers = [...rows]
+          .filter(s => Number(s.change_percent ?? s.price_change_percent ?? s.change ?? 0) > 0)
+          .sort((a,b) => Number(b.change_percent ?? b.price_change_percent ?? 0) - Number(a.change_percent ?? a.price_change_percent ?? 0))
+          .slice(0, 3)
+          .map(s => (s.ticker || s.symbol));
+        const mostLiquid = [...rows]
+          .sort((a,b) => Number(b.volume ?? 0) - Number(a.volume ?? 0))
+          .slice(0, 3)
+          .map(s => (s.ticker || s.symbol));
+        const under50 = rows.filter(s => Number(s.price ?? s.current_price ?? 0) < 50).length;
+        setTopInsights([
+          topGainers.length ? `Top gainers: ${topGainers.join(', ')}` : null,
+          mostLiquid.length ? `Most liquid: ${mostLiquid.join(', ')}` : null,
+          `Under $50: ${under50}`,
+        ].filter(Boolean));
+      } catch {}
     } catch (error) {
       toast.error("Failed to fetch results");
       setResults([]);
@@ -185,6 +205,14 @@ const ScreenerResults = () => {
                   <Badge key={index} variant="outline">{criterion}</Badge>
                 ))}
               </div>
+              {topInsights.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-sm text-gray-500 mb-2">Insights:</div>
+                  <ul className="list-disc pl-6 text-sm text-gray-700">
+                    {topInsights.map((t, i) => <li key={i}>{t}</li>)}
+                  </ul>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -259,9 +287,22 @@ const ScreenerResults = () => {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-between">
+        {/* Save/Alert prompts */}
+        <div className="flex items-center justify-between mt-2">
           <div className="text-sm text-gray-600">Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}</div>
           <div className="flex items-center gap-4">
+            <Button asChild variant="outline">
+              <Link to="/app/screeners/new">
+                <SaveIcon className="h-4 w-4 mr-2" />
+                Save as Screener
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/app/alerts">
+                <Bell className="h-4 w-4 mr-2" />
+                Set Alert
+              </Link>
+            </Button>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Rows per page</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>

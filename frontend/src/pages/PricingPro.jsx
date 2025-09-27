@@ -250,6 +250,8 @@ const PricingPro = () => {
     }
   };
 
+  const ctaLabel = (process.env.REACT_APP_CTA_LABEL || 'Try Free').trim();
+
   return (
       <div className="container mx-auto px-4 py-16">
       <SEO
@@ -302,6 +304,15 @@ const PricingPro = () => {
           <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2">
             Save 15%
           </Badge>
+        </div>
+      </div>
+
+      {/* Sticky Desktop CTA on Pricing */}
+      <div className="hidden md:block">
+        <div className="fixed bottom-6 right-6 z-40">
+          <Button asChild size="lg" className="shadow-lg bg-blue-600 hover:bg-blue-700">
+            <Link to="/auth/sign-up">{ctaLabel}</Link>
+          </Button>
         </div>
       </div>
 
@@ -404,7 +415,7 @@ const PricingPro = () => {
                     ) : planKey === 'free' ? (
                       'Get Started Free'
                     ) : (
-                      `Upgrade to ${plan.name}`
+                      planKey === 'free' ? ctaLabel : `Upgrade to ${plan.name}`
                     )}
                   </Button>
                   {/* Trial / Referral note under CTAs */}
