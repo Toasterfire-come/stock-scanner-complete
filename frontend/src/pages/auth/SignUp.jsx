@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
 import OneTapGoogle from "../../components/OneTapGoogle";
-import AppleSignInButton from "../../components/AppleSignInButton";
 
 const signUpSchema = z.object({
   username: z
@@ -300,9 +299,6 @@ const SignUp = () => {
             </span>
           </a>
         </Button>
-        <div className="mt-2">
-          <AppleSignInButton />
-        </div>
       </div>
 
       <div className="text-center text-sm text-gray-600">
