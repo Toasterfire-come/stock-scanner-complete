@@ -246,8 +246,8 @@ const Home = () => {
             </Badge>
             
             <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
-              Turn Market Data Into 
-              <span className="text-blue-600 block"> Profitable Trades</span>
+              Find NYSE & NASDAQ Winners in Minutes
+              <span className="text-blue-600 block"> with Real‑Time Screeners</span>
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
@@ -260,15 +260,39 @@ const Home = () => {
               <MarketStatus showNotice={true} />
             </div>
 
-            {/* Primary CTA */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
-              <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                <Link to="/auth/sign-up">
-                  <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-                  Try Now for Free
-                  <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
-                </Link>
-              </Button>
+            {/* Primary CTA + Secondary CTA + Inline Email Capture */}
+            <div className="flex flex-col items-center gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                  <Link to="/auth/sign-up">
+                    <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                    Try Free
+                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto">
+                  <Link to="/pricing">See Pricing</Link>
+                </Button>
+              </div>
+              <form
+                className="w-full max-w-md flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const email = (e.currentTarget.elements.namedItem('hero_email')?.value || '').toString();
+                  if (!email) return;
+                  window.location.assign('/auth/sign-up');
+                }}
+              >
+                <input
+                  type="email"
+                  name="hero_email"
+                  required
+                  placeholder="Enter your email"
+                  className="flex-1 px-4 py-3 rounded-md border border-gray-300"
+                />
+                <Button type="submit" className="px-5">Start</Button>
+              </form>
+              <div className="text-xs text-gray-500">Cancel anytime • 7‑day trial for $1 • No credit card for free plan</div>
             </div>
 
             {/* Trust Indicators */}

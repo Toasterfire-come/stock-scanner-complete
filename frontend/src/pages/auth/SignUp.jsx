@@ -51,6 +51,19 @@ const SignUp = () => {
 
   const agreeToTerms = watch("agreeToTerms");
 
+  // Prefill email/username from navigation state (inline capture flow)
+  React.useEffect(() => {
+    try {
+      const st = location.state || {};
+      if (st.emailPrefill && typeof st.emailPrefill === 'string') {
+        setValue('email', st.emailPrefill);
+        // Suggest username from email local-part if empty
+        const local = st.emailPrefill.split('@')[0] || '';
+        if (local && !watch('username')) setValue('username', local.replace(/[^a-zA-Z0-9_]/g, ''));
+      }
+    } catch {}
+  }, [location.state]);
+
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
