@@ -135,6 +135,17 @@ const CreateScreener = () => {
       const count = rows.length || 0;
       window.localStorage.setItem('screener:lastParams', JSON.stringify(params));
       toast.success(`Found ${count} matching stocks`);
+      try {
+        const coach = (location.state && location.state.coach) || null;
+        if (coach === 'run_save_alert') {
+          setTimeout(() => {
+            toast.info('Next: Save your screener', { description: 'Click Save Screener to reuse later.' });
+          }, 500);
+          setTimeout(() => {
+            toast.info('Then: Set an alert', { description: 'Create an alert to be notified when new stocks match.' });
+          }, 2000);
+        }
+      } catch {}
       navigate(`/app/screeners/adhoc/results`);
     } catch (error) {
       toast.error("Failed to test screener");

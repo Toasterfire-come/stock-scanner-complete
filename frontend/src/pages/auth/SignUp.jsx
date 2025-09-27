@@ -11,6 +11,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
+import { GoogleIcon } from "../../components/ReferralSystem";
 
 const signUpSchema = z.object({
   username: z
@@ -252,6 +253,26 @@ const SignUp = () => {
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>
+
+      {/* Social Sign-In */}
+      <div className="relative py-2">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-gray-500">Or continue with</span>
+        </div>
+      </div>
+      <div className="grid">
+        <Button variant="outline" className="w-full h-11 sm:h-12 text-base" asChild>
+          <a href={`${process.env.REACT_APP_BACKEND_URL || ''}/auth/google/login`} rel="noopener noreferrer">
+            <span className="inline-flex items-center">
+              <span className="mr-2">G</span>
+              Sign up with Google
+            </span>
+          </a>
+        </Button>
+      </div>
 
       <div className="text-center text-sm text-gray-600">
         Already have an account?{' '}

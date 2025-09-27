@@ -251,6 +251,15 @@ const PricingPro = () => {
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Professional stock scanning tools with real-time alerts and market intelligence
         </p>
+        {/* Referral / Trial Messaging */}
+        <div className="max-w-3xl mx-auto grid gap-3">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-lg p-3 text-sm">
+            7‑day trial for $1 on paid plans. Cancel anytime before renewal.
+          </div>
+          <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3 text-sm">
+            Have a referral? First month 50% off with your code at checkout.
+          </div>
+        </div>
         
         {/* Billing Toggle */}
         <div className="flex items-center justify-center space-x-4 mb-8">
@@ -373,6 +382,12 @@ const PricingPro = () => {
                       `Upgrade to ${plan.name}`
                     )}
                   </Button>
+                  {/* Trial / Referral note under CTAs */}
+                  {planKey !== 'free' && (
+                    <p className="text-xs text-gray-500 text-center">
+                      $1 for 7 days • 50% off 1st month with referral code
+                    </p>
+                  )}
                   
                   {planKey === 'free' && !isAuthenticated && (
                     <Button
