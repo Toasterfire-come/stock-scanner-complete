@@ -94,7 +94,7 @@ const EnhancedAppLayout = () => {
   const isOnPublicPage = !isUserPage;
   const isHome = isOnPublicPage && (location.pathname === "/" || location.pathname === "/home");
   const bottomNavVisible = isUserPage;
-  const showBreadcrumbs = isUserPage || location.pathname.startsWith("/docs");
+  const showBreadcrumbs = location.pathname.startsWith("/docs");
 
   return (
     <div className="min-h-screen bg-background">
