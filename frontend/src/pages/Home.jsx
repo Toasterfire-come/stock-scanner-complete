@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import SEO from "../components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -27,6 +27,9 @@ import {
 import { getMarketStatsSafe } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
 import { toast } from "sonner";
+const QuickMiniFAQ = lazy(() => import("../components/home/QuickMiniFAQ"));
+const ScreenerDemo = lazy(() => import("../components/home/ScreenerDemo"));
+const TestimonialsSection = lazy(() => import("../components/home/TestimonialsSection"));
 
 const Home = () => {
   const [marketStats, setMarketStats] = useState(null);
@@ -307,6 +310,11 @@ const Home = () => {
               <a href="/status" className="underline hover:no-underline">Status & Uptime</a>
             </div>
 
+            {/* Quick FAQ near hero */}
+            <Suspense fallback={null}>
+              <QuickMiniFAQ />
+            </Suspense>
+
             {/* Trust Indicators */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm sm:text-lg text-gray-600">
               <div className="flex items-center">
@@ -371,6 +379,11 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Screener Demo */}
+      <Suspense fallback={null}>
+        <ScreenerDemo />
+      </Suspense>
 
       {/* Social Proof Stats */}
       {marketStats && marketStats.market_overview && (
