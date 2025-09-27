@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import QuickActions from "../components/QuickActions";
+import LiveChat from "../components/LiveChat";
 
 const EnhancedAppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -98,6 +99,7 @@ const EnhancedAppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <LiveChat />
       {/* Enhanced Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

@@ -53,6 +53,7 @@ const AppDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
   const [realTrendSeries, setRealTrendSeries] = useState({ gainers: [], losers: [], total: [] });
+  const [checklist, setChecklist] = useState({ run: false, save: false, alert: false });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -148,6 +149,25 @@ const AppDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Onboarding Checklist */}
+        <div className="mb-4 sm:mb-6">
+          <div className="bg-white border rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-gray-900">Getting Started</div>
+                <div className="text-sm text-gray-600">Complete these steps to unlock faster success</div>
+              </div>
+              <div className="text-sm text-gray-700">
+                {Object.values(checklist).filter(Boolean).length}/3
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 mt-3 text-sm">
+              <button onClick={() => setChecklist(c => ({ ...c, run: true }))} className={`text-left border rounded p-3 ${checklist.run ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Run a screener</button>
+              <button onClick={() => setChecklist(c => ({ ...c, save: true }))} className={`text-left border rounded p-3 ${checklist.save ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Save a screener</button>
+              <button onClick={() => setChecklist(c => ({ ...c, alert: true }))} className={`text-left border rounded p-3 ${checklist.alert ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Set an alert</button>
+            </div>
+          </div>
+        </div>
         {/* Welcome Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">

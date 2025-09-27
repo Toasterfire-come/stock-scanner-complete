@@ -365,6 +365,14 @@ const Home = () => {
           </Button>
         </div>
       </div>
+      {/* Sticky Desktop CTA */}
+      <div className="hidden sm:block">
+        <div className="fixed bottom-6 right-6 z-40">
+          <Button asChild size="lg" className="shadow-lg bg-blue-600 hover:bg-blue-700">
+            <Link to="/auth/sign-up">Try Free</Link>
+          </Button>
+        </div>
+      </div>
       {/* Testimonial Snippet */}
       <section className="py-6 sm:py-8 bg-white">
         <div className="container mx-auto px-4">
@@ -627,7 +635,7 @@ const Home = () => {
                 ×
               </button>
             </div>
-            <p className="text-gray-600 mb-4">Join 50,000+ traders. Get a free screener template and weekly insights.</p>
+            <p className="text-gray-600 mb-4">Join 50,000+ traders. Get a free screener template, $1 trial instructions, and referral 50% off tips.</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();

@@ -11,7 +11,8 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
-import { GoogleIcon } from "../../components/ReferralSystem";
+import OneTapGoogle from "../../components/OneTapGoogle";
+import AppleSignInButton from "../../components/AppleSignInButton";
 
 const signUpSchema = z.object({
   username: z
@@ -131,6 +132,11 @@ const SignUp = () => {
 
   return (
     <div className="space-y-6">
+      <OneTapGoogle onCredential={(cred) => {
+        try {
+          window.location.assign(`${process.env.REACT_APP_BACKEND_URL || ''}/auth/google/onetap?credential=${encodeURIComponent(cred)}`);
+        } catch {}
+      }} />
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
         <p className="text-gray-600 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>
@@ -294,6 +300,9 @@ const SignUp = () => {
             </span>
           </a>
         </Button>
+        <div className="mt-2">
+          <AppleSignInButton />
+        </div>
       </div>
 
       <div className="text-center text-sm text-gray-600">
