@@ -50,8 +50,8 @@ const Home = () => {
   const features = [
     {
       icon: <Search className="h-6 w-6" />,
-      title: "NYSE Stock Screening",
-      description: `Screen 3,200 NYSE stocks with 14 technical and fundamental criteria including real-time data analysis.`,
+      title: "NYSE & NASDAQ Stock Screening",
+      description: `Screen 10,500 NYSE and NASDAQ stocks with 14 technical and fundamental criteria including real-time data analysis.`,
       details: "Access comprehensive screening across all NYSE-listed companies with 7 technical indicators (RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change) and 7 fundamental indicators (Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range)."
     },
     {
@@ -243,9 +243,9 @@ const Home = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
-                  {Number(platformStats?.nyse_stocks || 3200).toLocaleString()}
+                  {Number(platformStats?.nyse_stocks || 10500).toLocaleString()}
                 </div>
-                <div className="text-gray-600">NYSE Stocks Covered</div>
+                <div className="text-gray-600">NYSE and NASDAQ Stocks Covered</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">
