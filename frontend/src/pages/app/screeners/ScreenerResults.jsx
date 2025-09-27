@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw, Save as SaveIcon, Bell } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks, runScreener, api } from "../../../api/client";
+import { runScreener, api } from "../../../api/client";
 import { 
   Pagination,
   PaginationContent,
@@ -38,29 +38,7 @@ const ScreenerResults = () => {
     try {
       let rows = [];
       let total = 0;
-      if (id === 'adhoc') {
-        // Adhoc: use filter endpoint with last stored params
-        const stored = window.localStorage.getItem('screener:lastParams:adhoc');
-        const baseParams = stored ? JSON.parse(stored) : {};
-        const requestParams = {
-          ...baseParams,
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
-          page,
-          page_size: pageSize,
-        };
-        const data = await filterStocks(requestParams);
-        rows = Array.isArray(data?.stocks)
-          ? data.stocks
-          : (Array.isArray(data?.results)
-            ? data.results
-            : (Array.isArray(data?.data?.results)
-              ? data.data.results
-              : (Array.isArray(data) ? data : [])));
-        total = Number(
-          data?.total_count ?? data?.totalCount ?? data?.count ?? data?.data?.total_count ?? rows.length
-        );
-      } else {
+      {
         // Saved screener: prefer results endpoint; fallback to runScreener
         let data;
         try {

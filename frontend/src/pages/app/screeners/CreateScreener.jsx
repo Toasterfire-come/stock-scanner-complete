@@ -10,7 +10,7 @@ import { Separator } from "../../../components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
 import { X, Plus, Save, Play } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks, createScreener } from "../../../api/client";
+import { createScreener, runScreener } from "../../../api/client";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
@@ -129,13 +129,14 @@ const CreateScreener = () => {
 
     setIsLoading(true);
     try {
-      const params = buildFilterParams(criteria);
-      const data = await filterStocks(params);
-      const rows = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
-      const count = rows.length || 0;
-      // Store only for adhoc runs to avoid affecting saved screeners
-      window.localStorage.setItem('screener:lastParams:adhoc', JSON.stringify(params));
-      toast.success(`Found ${count} matching stocks`);
+      // Create a temporary saved screener and run it, then navigate to its results
+      const tmpName = screenerData.name?.trim() || `Adhoc Screener ${new Date().toLocaleString()}`;
+      const payload = { name: tmpName, description: screenerData.description, criteria: criteria.map(({ id, min, max, value }) => ({ id, ...(min ? { min: Number(min) } : {}), ...(max ? { max: Number(max) } : {}), ...(value ? { value } : {}) })), is_public: false };
+      const res = await createScreener(payload);
+      const newId = res?.data?.id || res?.id;
+      if (!newId) throw new Error('Failed to create temporary screener');
+      await runScreener(newId);
+      toast.success("Screener ran successfully");
       try {
         const coach = (location.state && location.state.coach) || null;
         if (coach === 'run_save_alert') {
@@ -147,7 +148,7 @@ const CreateScreener = () => {
           }, 2000);
         }
       } catch {}
-      navigate(`/app/screeners/adhoc/results`);
+      navigate(`/app/screeners/${newId}/results`);
     } catch (error) {
       toast.error("Failed to test screener");
     } finally {
