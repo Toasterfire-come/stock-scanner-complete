@@ -25,6 +25,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
+import { createPayPalOrder } from "../api/client";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -240,12 +241,24 @@ const PricingPro = () => {
 
     setIsLoading(true);
     try {
-      // Here you would integrate with your payment system
-      toast.success(`Redirecting to checkout for ${plans[planKey]?.name}...`);
-      // Simulate API call
-      setTimeout(() => setIsLoading(false), 2000);
+      const cycle = isAnnual ? 'annual' : 'monthly';
+      const discount = referralCode || null;
+      const order = await createPayPalOrder(planKey, cycle, discount);
+      const approvalUrl = order?.approval_url || order?.links?.find(l => l.rel === 'approve')?.href || order?.approve_link || order?.url;
+      if (approvalUrl) {
+        window.location.assign(approvalUrl);
+        return;
+      }
+      if (order?.id) {
+        // Fallback: if server returns a checkout session id, attempt PayPal web checkout URL format
+        window.location.assign(`https://www.paypal.com/checkoutnow?token=${encodeURIComponent(order.id)}`);
+        return;
+      }
+      throw new Error('Missing PayPal approval URL');
     } catch (error) {
-      toast.error('Failed to start subscription process');
+      console.error('Checkout init failed:', error);
+      toast.error('Failed to start subscription. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
