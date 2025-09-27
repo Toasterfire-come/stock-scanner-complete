@@ -14,6 +14,11 @@ urlpatterns = [
     path('auth/login/', auth_api.login_api, name='login'),
     path('auth/register/', auth_api.register_api, name='register'),
     path('auth/logout/', auth_api.logout_api, name='logout'),
+    # OAuth / Social
+    path('auth/google/login', auth_api.google_login_redirect, name='google_login_redirect'),
+    path('auth/google/onetap', auth_api.google_onetap_exchange, name='google_onetap'),
+    path('auth/apple/login', auth_api.apple_login_redirect, name='apple_login_redirect'),
+    path('auth/apple/callback', auth_api.apple_callback, name='apple_callback'),
     # Compatibility alias expected by some clients
     path('auth/user/', auth_api.user_profile_api, name='auth_user_alias'),
     

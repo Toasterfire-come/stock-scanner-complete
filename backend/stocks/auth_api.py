@@ -23,6 +23,9 @@ import logging
 from datetime import datetime, timedelta
 import os
 from django.db import transaction, IntegrityError
+from urllib.parse import urlencode
+import base64
+import requests
 
 from .models import UserProfile, BillingHistory, NotificationSettings, DiscountCode, UserDiscountUsage
 from .services.discount_service import DiscountService
@@ -41,6 +44,157 @@ def _active_ref_codes():
         raw = ''
     codes = {c.strip().upper() for c in raw.split(',') if c and c.strip()}
     return codes
+
+def _login_user_and_response(request, user: User):
+    login(request, user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    try:
+        if not request.session.session_key:
+            request.session.save()
+    except Exception:
+        pass
+    resp = JsonResponse({
+        'success': True,
+        'data': {
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'is_premium': getattr(profile, 'is_premium', False),
+            'api_token': request.session.session_key,
+        }
+    })
+    try:
+        csrf_token = get_token(request)
+        resp.set_cookie(
+            key=getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken'),
+            value=csrf_token,
+            secure=getattr(settings, 'CSRF_COOKIE_SECURE', True),
+            samesite=getattr(settings, 'CSRF_COOKIE_SAMESITE', 'None'),
+            httponly=False,
+        )
+    except Exception:
+        pass
+    return resp
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def google_login_redirect(request):
+    """Redirect user to Google OAuth login (server-side flow)."""
+    try:
+        client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', None)
+        redirect_uri = getattr(settings, 'GOOGLE_OAUTH_REDIRECT_URI', None)
+        scope = 'openid email profile'
+        if not client_id or not redirect_uri:
+            return JsonResponse({'success': False, 'error': 'Google OAuth not configured'}, status=400)
+        params = {
+            'client_id': client_id,
+            'redirect_uri': redirect_uri,
+            'response_type': 'code',
+            'scope': scope,
+            'prompt': 'select_account',
+        }
+        return Response({'url': f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"})
+    except Exception as e:
+        logger.error(f"google_login_redirect error: {e}")
+        return JsonResponse({'success': False}, status=500)
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def google_onetap_exchange(request):
+    """Exchange Google One Tap credential JWT for user login.
+    GET /api/auth/google/onetap?credential=...
+    """
+    try:
+        credential = request.GET.get('credential')
+        if not credential:
+            return JsonResponse({'success': False, 'error': 'Missing credential'}, status=400)
+        # Verify via Google tokeninfo (simple server-side verification). For production, verify signature with google-auth lib.
+        r = requests.get('https://oauth2.googleapis.com/tokeninfo', params={'id_token': credential}, timeout=10)
+        if r.status_code != 200:
+            return JsonResponse({'success': False, 'error': 'Invalid Google credential'}, status=401)
+        payload = r.json()
+        email = (payload.get('email') or '').lower().strip()
+        sub = payload.get('sub')
+        if not email or not sub:
+            return JsonResponse({'success': False, 'error': 'Incomplete Google profile'}, status=400)
+        # Find or create user
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            base_username = email.split('@')[0][:20]
+            candidate = base_username
+            idx = 1
+            while User.objects.filter(username__iexact=candidate).exists():
+                candidate = f"{base_username[:18]}{idx:02d}"
+                idx += 1
+            user = User.objects.create_user(username=candidate, email=email, password=User.objects.make_random_password())
+        return _login_user_and_response(request, user)
+    except Exception as e:
+        logger.error(f"google_onetap_exchange error: {e}")
+        return JsonResponse({'success': False, 'error': 'Google login failed'}, status=500)
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def apple_login_redirect(request):
+    """Redirect to Sign in with Apple. Assumes configured service."""
+    try:
+        redirect_uri = getattr(settings, 'APPLE_REDIRECT_URI', None)
+        client_id = getattr(settings, 'APPLE_CLIENT_ID', None)
+        if not redirect_uri or not client_id:
+            return JsonResponse({'success': False, 'error': 'Apple OAuth not configured'}, status=400)
+        params = {
+            'response_type': 'code id_token',
+            'response_mode': 'form_post',
+            'client_id': client_id,
+            'redirect_uri': redirect_uri,
+            'scope': 'name email',
+        }
+        return Response({'url': f"https://appleid.apple.com/auth/authorize?{urlencode(params)}"})
+    except Exception as e:
+        logger.error(f"apple_login_redirect error: {e}")
+        return JsonResponse({'success': False}, status=500)
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def apple_callback(request):
+    """Handle Apple callback (form_post). Extract email if present, create/login user."""
+    try:
+        data = request.data or {}
+        email = (data.get('email') or '').lower().strip()
+        # If email absent (often for returning users), derive from id_token
+        if not email:
+            id_token = data.get('id_token')
+            if id_token and '.' in id_token:
+                try:
+                    payload_b64 = id_token.split('.')[1] + '=='
+                    payload_json = base64.urlsafe_b64decode(payload_b64)
+                    email = json.loads(payload_json).get('email', '').lower().strip()
+                except Exception:
+                    pass
+        if not email:
+            return JsonResponse({'success': False, 'error': 'No email from Apple'}, status=400)
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            base_username = email.split('@')[0][:20]
+            candidate = base_username
+            idx = 1
+            while User.objects.filter(username__iexact=candidate).exists():
+                candidate = f"{base_username[:18]}{idx:02d}"
+                idx += 1
+            user = User.objects.create_user(username=candidate, email=email, password=User.objects.make_random_password())
+        return _login_user_and_response(request, user)
+    except Exception as e:
+        logger.error(f"apple_callback error: {e}")
+        return JsonResponse({'success': False, 'error': 'Apple login failed'}, status=500)
 
 # CSRF token endpoint
 @ensure_csrf_cookie
