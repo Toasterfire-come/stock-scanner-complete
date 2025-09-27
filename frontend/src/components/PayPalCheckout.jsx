@@ -10,6 +10,7 @@ import { createPayPalOrder, capturePayPalOrder } from "../api/client";
 const PayPalCheckout = ({ 
   planType = "bronze", 
   billingCycle = "monthly", 
+  discountCode = null,
   onSuccess, 
   onError,
   onCancel 
@@ -38,7 +39,7 @@ const PayPalCheckout = ({
   const createOrder = async () => {
     setIsLoading(true);
     try {
-      const res = await createPayPalOrder(planType, billingCycle);
+      const res = await createPayPalOrder(planType, billingCycle, discountCode || null);
       setIsLoading(false);
       return res?.id || res?.order_id;
     } catch (e) {

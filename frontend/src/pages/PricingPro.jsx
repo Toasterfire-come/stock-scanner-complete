@@ -25,11 +25,13 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
+import PayPalCheckout from "../components/PayPalCheckout";
 import { createPayPalOrder } from "../api/client";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [plans, setPlans] = useState({});
   const [currentPlan, setCurrentPlan] = useState('free');
   const navigate = useNavigate();
@@ -238,29 +240,8 @@ const PricingPro = () => {
       navigate('/auth/sign-in');
       return;
     }
-
-    setIsLoading(true);
-    try {
-      const cycle = isAnnual ? 'annual' : 'monthly';
-      const discount = referralCode || null;
-      const order = await createPayPalOrder(planKey, cycle, discount);
-      const approvalUrl = order?.approval_url || order?.links?.find(l => l.rel === 'approve')?.href || order?.approve_link || order?.url;
-      if (approvalUrl) {
-        window.location.assign(approvalUrl);
-        return;
-      }
-      if (order?.id) {
-        // Fallback: if server returns a checkout session id, attempt PayPal web checkout URL format
-        window.location.assign(`https://www.paypal.com/checkoutnow?token=${encodeURIComponent(order.id)}`);
-        return;
-      }
-      throw new Error('Missing PayPal approval URL');
-    } catch (error) {
-      console.error('Checkout init failed:', error);
-      toast.error('Failed to start subscription. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    setCheckoutPlan(planKey);
+    toast.message('Secure checkout opened below');
   };
 
   const ctaLabel = (process.env.REACT_APP_CTA_LABEL || 'Try Free').trim();
@@ -453,6 +434,37 @@ const PricingPro = () => {
           );
         })}
       </div>
+
+      {/* Inline PayPal Checkout */}
+      {checkoutPlan && (
+        <div className="max-w-3xl mx-auto mb-16">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Checkout • {plans[checkoutPlan]?.name || checkoutPlan}</CardTitle>
+              <CardDescription>
+                Secure payment powered by PayPal. Your plan activates immediately after payment.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PayPalCheckout
+                planType={checkoutPlan}
+                billingCycle={isAnnual ? 'annual' : 'monthly'}
+                discountCode={referralCode || null}
+                onSuccess={(info) => {
+                  try {
+                    const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
+                    navigate('/checkout/success', { replace: true, state: { planId: checkoutPlan, amount, discount: referralCode ? { code: referralCode } : undefined } });
+                  } catch {
+                    navigate('/checkout/success', { replace: true, state: { planId: checkoutPlan } });
+                  }
+                }}
+                onError={() => toast.error('Payment failed. Please try again or use a different method.')}
+                onCancel={() => toast.message('Checkout cancelled')}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Which plan is right for me? */}
       <div className="max-w-4xl mx-auto mb-16">
