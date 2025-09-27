@@ -268,11 +268,6 @@ const PricingPro = () => {
           <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2">
             Save 15%
           </Badge>
-          {/* Satisfaction Banner */}
-          <div className="max-w-2xl mx-auto bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
-            <p className="font-medium">30-day money-back guarantee</p>
-            <p className="text-sm">Try any paid plan risk-free. Cancel anytime within 30 days for a full refund.</p>
-          </div>
         </div>
       </div>
 
