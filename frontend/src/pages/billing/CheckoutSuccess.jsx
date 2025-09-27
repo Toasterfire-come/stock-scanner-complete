@@ -14,6 +14,10 @@ const CheckoutSuccess = () => {
   const { updateUser } = useAuth();
   
   const { planId, amount, originalAmount, discount } = location.state || {};
+  const numericAmount = typeof amount === 'number' ? amount : Number(amount || 0);
+  const numericOriginal = typeof originalAmount === 'number' ? originalAmount : Number(originalAmount || 0);
+  const hasSavings = Number.isFinite(numericOriginal) && Number.isFinite(numericAmount) && numericOriginal > numericAmount;
+  const discountAmount = hasSavings ? (numericOriginal - numericAmount) : 0;
 
   useEffect(() => {
     if (planId && planId !== 'free') {
@@ -32,7 +36,10 @@ const CheckoutSuccess = () => {
   const planNames = {
     pro: "Professional",
     enterprise: "Enterprise",
-    free: "Free"
+    free: "Free",
+    bronze: "Bronze",
+    silver: "Silver",
+    gold: "Gold",
   };
 
   return (
@@ -70,15 +77,17 @@ const CheckoutSuccess = () => {
               <span className="font-semibold">Trade Scan Pro {planNames[planId]}</span>
             </div>
             
-            {discount && (
+            {(discount || hasSavings) && (
               <>
+                {hasSavings && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Original Amount:</span>
+                    <span className="line-through text-gray-500">${numericOriginal.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-600">Original Amount:</span>
-                  <span className="line-through text-gray-500">${originalAmount}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-600">Discount ({discount.code}):</span>
-                  <span className="text-green-600">-${discount.discount_amount}</span>
+                  <span className="text-gray-600">Discount{discount?.code ? ` (${discount.code})` : ''}:</span>
+                  <span className="text-green-600">-${hasSavings ? discountAmount.toFixed(2) : (discount?.discount_amount || '0.00')}</span>
                 </div>
               </>
             )}
