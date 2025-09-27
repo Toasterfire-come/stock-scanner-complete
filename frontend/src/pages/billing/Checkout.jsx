@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { Switch } from "../../components/ui/switch";
 import PayPalCheckout from "../../components/PayPalCheckout";
 import { useAuth } from "../../context/SecureAuthContext";
+import { Input } from "../../components/ui/input";
 
 const PLAN_NAMES = {
   free: "Free",
@@ -21,6 +22,12 @@ export default function Checkout() {
   const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
 
+  const sanitizeCode = (v) => {
+    if (!v || typeof v !== 'string') return '';
+    const trimmed = v.trim().slice(0, 32);
+    return /^[A-Za-z0-9_\-]+$/.test(trimmed) ? trimmed : '';
+  };
+
   const initialPlan = useMemo(() => {
     const st = location.state || {};
     return st.plan || searchParams.get("plan") || "bronze";
@@ -33,13 +40,14 @@ export default function Checkout() {
 
   const referralCode = useMemo(() => {
     const st = location.state || {};
-    if (st.discount_code && typeof st.discount_code === "string") return st.discount_code;
+    if (st.discount_code && typeof st.discount_code === "string") return sanitizeCode(st.discount_code);
     const qRef = searchParams.get("ref");
-    return qRef ? `REF_${String(qRef).toUpperCase()}` : "";
+    return qRef ? sanitizeCode(`REF_${String(qRef).toUpperCase()}`) : "";
   }, [location.state, searchParams]);
 
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
   const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
+  const [promo, setPromo] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -82,6 +90,11 @@ export default function Checkout() {
                   <Label className={isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>Annual</Label>
                 </div>
               </div>
+              <div>
+                <Label htmlFor="promo" className="text-sm text-gray-600">Promo Code (optional)</Label>
+                <Input id="promo" placeholder="PROMO2025" value={promo} onChange={(e) => setPromo(sanitizeCode(e.target.value))} />
+                <div className="text-xs text-gray-500 mt-1">Letters, numbers, dash and underscore only.</div>
+              </div>
               <div className="text-xs text-gray-500">
                 You can change or cancel your plan anytime from Account → Plan & Billing.
               </div>
@@ -101,11 +114,11 @@ export default function Checkout() {
               <PayPalCheckout
                 planType={plan}
                 billingCycle={cycle}
-                discountCode={referralCode || null}
+                discountCode={(promo || referralCode) || null}
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
-                    navigate('/checkout/success', { replace: true, state: { planId: plan, amount, discount: referralCode ? { code: referralCode } : undefined } });
+                    navigate('/checkout/success', { replace: true, state: { planId: plan, amount, discount: (promo || referralCode) ? { code: (promo || referralCode) } : undefined } });
                   } catch {
                     navigate('/checkout/success', { replace: true, state: { planId: plan } });
                   }

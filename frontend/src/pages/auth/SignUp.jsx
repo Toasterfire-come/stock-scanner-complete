@@ -99,7 +99,10 @@ const SignUp = () => {
         if (m && m[1]) refCode = m[1];
         const params = new URLSearchParams(location.search || '');
         const qRef = params.get('ref');
-        if (!refCode && qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) refCode = qRef;
+        if (!refCode && qRef) {
+          const trimmed = String(qRef).trim().slice(0, 32);
+          if (/^[A-Za-z0-9_\-]{5,32}$/.test(trimmed)) refCode = trimmed;
+        }
       } catch {}
 
       // Create account
