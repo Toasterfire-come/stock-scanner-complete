@@ -4,6 +4,22 @@ import { useAuth } from "../../context/SecureAuthContext";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 
+async function exchangeCodeForSession(code, state) {
+  const backend = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
+  if (!backend) throw new Error('Backend not configured');
+  const res = await fetch(`${backend}/auth/google/callback/`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, state })
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || `OAuth exchange failed (${res.status})`);
+  }
+  return res.json().catch(() => ({}));
+}
+
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -26,15 +42,11 @@ export default function OAuthCallback() {
           throw new Error("Authorization code not received");
         }
 
-        // In a real app, you would send the code to your backend
-        // For now, we'll simulate a successful login
-        const result = await login("oauth_user", "oauth_password");
-        
-        if (result.success) {
-          navigate("/app/dashboard");
-        } else {
-          throw new Error(result.error || "OAuth login failed");
-        }
+        // Exchange code with backend to establish session (sets cookies)
+        await exchangeCodeForSession(code, state);
+        // Optionally nudge local auth state; backend cookie will gate APIs
+        try { await login("oauth@google", "token"); } catch {}
+        navigate("/app/dashboard", { replace: true });
       } catch (err) {
         setError(err.message);
         setIsProcessing(false);

@@ -10,12 +10,20 @@ DirectorySlash Off
 RewriteEngine On
 RewriteBase /
 
+# Avoid infinite redirects by preventing external redirect to index.html
+RewriteCond %{THE_REQUEST} \s/+(index\.html) [NC]
+RewriteRule ^ / [R=302,L]
+
 # Serve existing files/directories as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Avoid self-redirects by rewriting internally (no 301)
+# Clear cookies utility (optional): /__clear_cookies
+RewriteCond %{REQUEST_URI} ^/__clear_cookies$ [NC]
+RewriteRule ^ - [L]
+
+# Fallback all routes to index.html without redirect
 RewriteCond %{REQUEST_URI} !^/index\.html$
 RewriteRule ^ index.html [L]
 </IfModule>
