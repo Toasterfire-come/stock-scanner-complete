@@ -284,18 +284,15 @@ const Home = () => {
               <MarketStatus showNotice={true} />
             </div>
 
-            {/* Primary CTA + Secondary CTA + Inline Email Capture */}
+            {/* Primary CTA + Inline Email Capture */}
             <div className="flex flex-col items-center gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                   <Link to="/auth/sign-up">
                     <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-                    Try Free
+                    Try free — no card required
                     <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
                   </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto">
-                  <Link to="/pricing">See Pricing</Link>
                 </Button>
               </div>
               <form
@@ -318,7 +315,7 @@ const Home = () => {
                 />
                 <Button type="submit" className="px-5">Start</Button>
               </form>
-              <div className="text-xs text-gray-500">Cancel anytime • 7‑day trial for $1 • No credit card for free plan</div>
+              <div className="text-xs text-gray-500">Cancel anytime • 7‑day trial for $1 • No card needed for Free plan</div>
             </div>
 
             {/* Logos / Social Proof */}
@@ -358,7 +355,7 @@ const Home = () => {
       <div className="fixed bottom-4 left-0 right-0 z-40 block sm:hidden">
         <div className="mx-4 rounded-xl shadow-lg bg-white border flex items-center justify-between px-4 py-3">
           <div className="text-sm text-gray-700">
-            Start free — no card for Free plan
+            Try free — no card required
           </div>
           <Button asChild size="sm" className="ml-3 bg-blue-600 hover:bg-blue-700">
             <Link to="/auth/sign-up">Try Free</Link>
@@ -369,7 +366,7 @@ const Home = () => {
       <div className="hidden sm:block">
         <div className="fixed bottom-6 right-6 z-40">
           <Button asChild size="lg" className="shadow-lg bg-blue-600 hover:bg-blue-700">
-            <Link to="/auth/sign-up">Try Free</Link>
+            <Link to="/auth/sign-up">Try free — no card required</Link>
           </Button>
         </div>
       </div>

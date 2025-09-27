@@ -128,6 +128,7 @@ const PayPalCheckout = ({
           
           <PayPalScriptProvider options={paypalOptions}>
             <PayPalButtons
+              fundingSource={undefined}
               createOrder={() => createOrder()}
               onApprove={onApprove}
               onError={(err) => {
@@ -141,6 +142,24 @@ const PayPalCheckout = ({
                 color: "blue",
                 shape: "rect",
                 label: "paypal"
+              }}
+            />
+            {/* Card funding button */}
+            <PayPalButtons
+              fundingSource="card"
+              createOrder={() => createOrder()}
+              onApprove={onApprove}
+              onError={(err) => {
+                console.error("Card funding error:", err);
+                onError?.(err);
+              }}
+              onCancel={onCancel}
+              disabled={isLoading}
+              style={{
+                layout: "vertical",
+                color: "silver",
+                shape: "rect",
+                label: "pay"
               }}
             />
           </PayPalScriptProvider>
@@ -159,7 +178,7 @@ const PayPalCheckout = ({
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Secure payment processed by PayPal
+            Secure payment processed by PayPal. 7‑day money‑back guarantee.
           </p>
         </div>
       </CardContent>

@@ -53,7 +53,14 @@ const AppDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
   const [realTrendSeries, setRealTrendSeries] = useState({ gainers: [], losers: [], total: [] });
-  const [checklist, setChecklist] = useState({ run: false, save: false, alert: false });
+  const [checklist, setChecklist] = useState(() => {
+    try {
+      const raw = localStorage.getItem('onboarding-checklist-v1');
+      return raw ? JSON.parse(raw) : { run: false, save: false, alert: false };
+    } catch {
+      return { run: false, save: false, alert: false };
+    }
+  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -122,6 +129,13 @@ const AppDashboard = () => {
     fetchDashboardData();
   }, [isAuthenticated]);
 
+  // Persist checklist when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('onboarding-checklist-v1', JSON.stringify(checklist));
+    } catch {}
+  }, [checklist]);
+
   // Generate realistic trend data if backend doesn't provide historical data
   const generateRealisticTrend = (baseValue, maxValue) => {
     return Array.from({ length: 20 }, (_, i) => {
@@ -162,9 +176,9 @@ const AppDashboard = () => {
               </div>
             </div>
             <div className="grid sm:grid-cols-3 gap-3 mt-3 text-sm">
-              <button onClick={() => setChecklist(c => ({ ...c, run: true }))} className={`text-left border rounded p-3 ${checklist.run ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Run a screener</button>
-              <button onClick={() => setChecklist(c => ({ ...c, save: true }))} className={`text-left border rounded p-3 ${checklist.save ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Save a screener</button>
-              <button onClick={() => setChecklist(c => ({ ...c, alert: true }))} className={`text-left border rounded p-3 ${checklist.alert ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Set an alert</button>
+              <a href="/app/screeners/new?template=getting-started" onClick={() => setChecklist(c => ({ ...c, run: true }))} className={`block text-left border rounded p-3 ${checklist.run ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Run a screener</a>
+              <a href="/app/screeners" onClick={() => setChecklist(c => ({ ...c, save: true }))} className={`block text-left border rounded p-3 ${checklist.save ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Save a screener</a>
+              <a href="/app/alerts" onClick={() => setChecklist(c => ({ ...c, alert: true }))} className={`block text-left border rounded p-3 ${checklist.alert ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Set an alert</a>
             </div>
           </div>
         </div>

@@ -13,20 +13,19 @@ import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
 import OneTapGoogle from "../../components/OneTapGoogle";
 
+// Friction-reduced: name + email + password; keep Google SSO. Username optional (derived), last name optional.
 const signUpSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
     .max(20, "Username must be less than 20 characters")
-    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    .regex(/^[a-zA-Z0-9_]*$/, "Username can only contain letters, numbers, and underscores"),
   email: z.string().email("Please enter a valid email address"),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain at least one uppercase letter, one lowercase letter, and one number"),
+    .min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  lastName: z.string().optional(),
   agreeToTerms: z.boolean().refine((val) => val === true, "You must agree to the terms and conditions"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -158,7 +157,7 @@ const SignUp = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lastName" className="text-sm sm:text-base">Last Name</Label>
+            <Label htmlFor="lastName" className="text-sm sm:text-base">Last Name (optional)</Label>
             <Input
               id="lastName"
               type="text"
@@ -166,20 +165,17 @@ const SignUp = () => {
               className="h-11 sm:h-12 text-base"
               {...register("lastName")}
             />
-            {errors.lastName && (
-              <p className="text-sm text-red-600">{errors.lastName.message}</p>
-            )}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="username" className="text-sm sm:text-base">Username</Label>
+          <Label htmlFor="username" className="text-sm sm:text-base">Username (optional)</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               id="username"
               type="text"
-              placeholder="Choose a username"
+              placeholder="Choose a username (optional)"
               className="pl-10 h-11 sm:h-12 text-base"
               {...register("username", { onChange: () => setUsernameTouched(true) })}
             />
