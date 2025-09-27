@@ -31,6 +31,7 @@ const Pricing = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [discountCode, setDiscountCode] = useState("TRIAL");
   const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [referralCode, setReferralCode] = useState("");
   const [openComparison, setOpenComparison] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,6 +46,20 @@ const Pricing = () => {
       }
     } catch {}
   }, [location.state]);
+
+  useEffect(() => {
+    // Read ?ref=abc12 and show referral banner; auto-fill discount field with REF_*
+    try {
+      const params = new URLSearchParams(location.search || "");
+      const qRef = params.get('ref');
+      if (qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) {
+        const code = `REF_${qRef.toUpperCase()}`;
+        setReferralCode(code);
+        setDiscountCode(code);
+        setAppliedDiscount({ code, description: 'Referral discount (first month 50%)', savings_percentage: 50, final_amount: null });
+      }
+    } catch {}
+  }, [location.search]);
 
   const plans = [
     {
@@ -296,6 +311,13 @@ const Pricing = () => {
             <p className="text-xl mb-4">Use code TRIAL for a 7‑day 1$ trial on paid plans</p>
             <p className="text-sm opacity-90">Then continue at regular price or cancel anytime.</p>
           </div>
+
+          {/* Referral Notice */}
+          {referralCode && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-4 max-w-2xl mx-auto mb-8">
+              Referral applied: <span className="font-semibold">{referralCode}</span> • 50% off first month
+            </div>
+          )}
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center space-x-4 mb-8">
