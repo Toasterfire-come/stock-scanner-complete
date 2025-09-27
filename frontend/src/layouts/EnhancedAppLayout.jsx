@@ -92,6 +92,7 @@ const EnhancedAppLayout = () => {
 
   const isUserPage = location.pathname.startsWith("/app");
   const isOnPublicPage = !isUserPage;
+  const isHome = isOnPublicPage && (location.pathname === "/" || location.pathname === "/home");
   const bottomNavVisible = isUserPage;
   const showBreadcrumbs = isUserPage || location.pathname.startsWith("/docs");
 
@@ -124,10 +125,12 @@ const EnhancedAppLayout = () => {
 
             {/* Right side */}
             <div className="flex items-center space-x-3">
-              {/* Market Status */}
-              <div className="hidden lg:block">
-                <MarketStatus />
-              </div>
+              {/* Market Status (hide on public pages to reduce header clutter) */}
+              {!isOnPublicPage && (
+                <div className="hidden lg:block">
+                  <MarketStatus />
+                </div>
+              )}
 
               {isAuthenticated && user ? (
                 <>
@@ -191,7 +194,7 @@ const EnhancedAppLayout = () => {
               {/* Enhanced Mobile menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="h-9 w-9 p-0">
+                  <Button variant="ghost" className={`h-9 w-9 p-0 ${isOnPublicPage ? 'md:hidden' : ''}`}>
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -210,13 +213,18 @@ const EnhancedAppLayout = () => {
                     <nav className="space-y-6">
                       {Object.entries(navigationGroups).map(([key, group]) => {
                         if (group.requiresAuth && !isAuthenticated) return null;
+                        // On public pages, limit Resources menu to key links
+                        const filteredItems = isOnPublicPage && key === 'resources'
+                          ? group.items.filter((item) => ['Features', 'Pricing', 'Documentation', 'Help Center', 'Enterprise', 'About', 'Contact'].includes(item.name))
+                          : group.items;
+                        if (filteredItems.length === 0) return null;
                         return (
                           <div key={key}>
                             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
                               {group.label}
                             </h3>
                             <div className="space-y-1">
-                              {group.items.map((item) => {
+                              {filteredItems.map((item) => {
                                 const Icon = item.icon;
                                 return (
                                   <Link
