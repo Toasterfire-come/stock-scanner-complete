@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,10 @@ const SignUp = () => {
   });
 
   const agreeToTerms = watch("agreeToTerms");
+  const emailValue = watch("email");
+  const usernameValue = watch("username");
+  const [usernameTouched, setUsernameTouched] = useState(false);
+  const lastDerivedRef = useRef("");
 
   // Prefill email/username from navigation state (inline capture flow)
   React.useEffect(() => {
@@ -60,10 +64,28 @@ const SignUp = () => {
         setValue('email', st.emailPrefill);
         // Suggest username from email local-part if empty
         const local = st.emailPrefill.split('@')[0] || '';
-        if (local && !watch('username')) setValue('username', local.replace(/[^a-zA-Z0-9_]/g, ''));
+        const derived = local.replace(/[^a-zA-Z0-9_]/g, '');
+        if (derived && !watch('username')) {
+          setValue('username', derived);
+          lastDerivedRef.current = derived;
+        }
       }
     } catch {}
   }, [location.state]);
+
+  // Auto-suggest username from email while user hasn't edited username
+  useEffect(() => {
+    try {
+      if (usernameTouched) return;
+      const local = (emailValue || '').split('@')[0] || '';
+      const derived = local.replace(/[^a-zA-Z0-9_]/g, '');
+      const shouldUpdate = !usernameValue || usernameValue === lastDerivedRef.current;
+      if (derived && shouldUpdate) {
+        setValue('username', derived);
+        lastDerivedRef.current = derived;
+      }
+    } catch {}
+  }, [emailValue, usernameValue, usernameTouched, setValue]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -154,7 +176,7 @@ const SignUp = () => {
               type="text"
               placeholder="Choose a username"
               className="pl-10 h-11 sm:h-12 text-base"
-              {...register("username")}
+              {...register("username", { onChange: () => setUsernameTouched(true) })}
             />
           </div>
           {errors.username && (

@@ -430,6 +430,29 @@ const PricingPro = () => {
         })}
       </div>
 
+      {/* Which plan is right for me? */}
+      <div className="max-w-4xl mx-auto mb-16">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Which plan is right for me?</h2>
+        <div className="grid sm:grid-cols-2 gap-4 text-sm">
+          <div className="bg-white border rounded-lg p-4">
+            <p className="font-semibold text-gray-900 mb-1">Free</p>
+            <p className="text-gray-600">Trying the platform; basic lookup and 1 portfolio.</p>
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <p className="font-semibold text-gray-900 mb-1">Bronze</p>
+            <p className="text-gray-600">Casual trader; 10 screeners, 2 watchlists, 50 alerts/month.</p>
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <p className="font-semibold text-gray-900 mb-1">Silver</p>
+            <p className="text-gray-600">Active trader; 20 screeners, 10 watchlists, 100 alerts, 1 portfolio.</p>
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <p className="font-semibold text-gray-900 mb-1">Gold</p>
+            <p className="text-gray-600">Power user/team; unlimited limits and premium support.</p>
+          </div>
+        </div>
+      </div>
+
       {/* API Call Pricing Explanation */}
       <div className="bg-gray-50 rounded-lg p-8 mb-16">
         <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
