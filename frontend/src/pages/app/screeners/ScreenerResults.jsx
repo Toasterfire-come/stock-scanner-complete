@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw, Save as SaveIcon, Bell } from "lucide-react";
 import { toast } from "sonner";
-import { filterStocks } from "../../../api/client";
+import { filterStocks, runScreener, api } from "../../../api/client";
 import { 
   Pagination,
   PaginationContent,
@@ -36,28 +36,52 @@ const ScreenerResults = () => {
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      // Pull last-used params from localStorage for adhoc only; saved screeners should not be affected
-      const stored = id === 'adhoc' ? window.localStorage.getItem('screener:lastParams:adhoc') : null;
-      const baseParams = stored ? JSON.parse(stored) : {};
-      const requestParams = { ...baseParams };
-      // Provide both styles for backend compatibility
-      requestParams.limit = pageSize;
-      requestParams.offset = (page - 1) * pageSize;
-      requestParams.page = page;
-      requestParams.page_size = pageSize;
-
-      const data = await filterStocks(requestParams);
-      const rows = Array.isArray(data?.stocks)
-        ? data.stocks
-        : (Array.isArray(data?.results)
+      let rows = [];
+      let total = 0;
+      if (id === 'adhoc') {
+        // Adhoc: use filter endpoint with last stored params
+        const stored = window.localStorage.getItem('screener:lastParams:adhoc');
+        const baseParams = stored ? JSON.parse(stored) : {};
+        const requestParams = {
+          ...baseParams,
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+          page,
+          page_size: pageSize,
+        };
+        const data = await filterStocks(requestParams);
+        rows = Array.isArray(data?.stocks)
+          ? data.stocks
+          : (Array.isArray(data?.results)
+            ? data.results
+            : (Array.isArray(data?.data?.results)
+              ? data.data.results
+              : (Array.isArray(data) ? data : [])));
+        total = Number(
+          data?.total_count ?? data?.totalCount ?? data?.count ?? data?.data?.total_count ?? rows.length
+        );
+      } else {
+        // Saved screener: prefer results endpoint; fallback to runScreener
+        let data;
+        try {
+          const res = await api.get(`/screeners/${id}/results/`, { params: { page, page_size: pageSize } });
+          data = res.data;
+        } catch (e) {
+          // Fallback: trigger run, then try GET again
+          await runScreener(id);
+          const res = await api.get(`/screeners/${id}/results/`, { params: { page, page_size: pageSize } });
+          data = res.data;
+        }
+        rows = Array.isArray(data?.results)
           ? data.results
           : (Array.isArray(data?.data?.results)
             ? data.data.results
-            : (Array.isArray(data) ? data : [])));
+            : (Array.isArray(data?.stocks)
+              ? data.stocks
+              : (Array.isArray(data) ? data : [])));
+        total = Number(data?.count ?? data?.total_count ?? data?.data?.total_count ?? rows.length);
+      }
 
-      const total = Number(
-        data?.total_count ?? data?.totalCount ?? data?.count ?? data?.data?.total_count ?? rows.length
-      );
       setTotalCount(Number.isFinite(total) ? total : rows.length);
 
       // Basic info
