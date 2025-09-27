@@ -84,7 +84,7 @@ const AppLayout = () => {
           <div className="flex h-14 sm:h-16 items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-              <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
               <span className="text-lg sm:text-2xl font-bold text-gray-900 hidden sm:block">
                 Trade Scan Pro
               </span>

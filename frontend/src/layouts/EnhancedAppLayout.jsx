@@ -108,7 +108,12 @@ const EnhancedAppLayout = () => {
               className="flex items-center space-x-2 flex-shrink-0 group transition-all duration-200 hover:scale-105"
             >
               <div className="relative">
-                <BarChart3 className="h-8 w-8 text-blue-600 transition-colors duration-200 group-hover:text-blue-700" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 text-blue-600 transition-colors duration-200 group-hover:text-blue-700" aria-hidden="true">
+                  <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                  <path d="M18 17V9"></path>
+                  <path d="M13 17V5"></path>
+                  <path d="M8 17v-3"></path>
+                </svg>
                 <div className="absolute inset-0 bg-blue-600 rounded opacity-0 group-hover:opacity-20 transition-opacity duration-200" />
               </div>
               <span className="text-xl font-bold text-gray-900 hidden sm:block">
@@ -300,7 +305,7 @@ const EnhancedAppLayout = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <BarChart3 className="h-6 w-6 text-blue-600" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-blue-600" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
                 <span className="text-xl font-bold">Trade Scan Pro</span>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed">
