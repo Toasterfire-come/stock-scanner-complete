@@ -264,7 +264,7 @@ const PricingPro = () => {
       <div className="text-center mb-16">
         <Badge variant="secondary" className="mb-4">
           <Star className="h-4 w-4 mr-1" />
-          Track 10,500+ stocks with professional tools
+          Track 10,500+ NYSE & NASDAQ stocks with professional tools
         </Badge>
         
         <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">

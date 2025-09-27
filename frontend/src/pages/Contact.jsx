@@ -266,7 +266,7 @@ const Contact = () => {
                   </h3>
                   <p className="text-gray-600">
                     We use Yahoo Finance for real-time stock data and proprietary news scraping 
-                    to provide comprehensive market coverage of 10,500+ stocks.
+                    to provide comprehensive market coverage of 10,500+ NYSE & NASDAQ stocks.
                   </p>
                 </CardContent>
               </Card>
