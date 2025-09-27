@@ -163,25 +163,7 @@ const AppDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Onboarding Checklist */}
-        <div className="mb-4 sm:mb-6">
-          <div className="bg-white border rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-gray-900">Getting Started</div>
-                <div className="text-sm text-gray-600">Complete these steps to unlock faster success</div>
-              </div>
-              <div className="text-sm text-gray-700">
-                {Object.values(checklist).filter(Boolean).length}/3
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-3 gap-3 mt-3 text-sm">
-              <a href="/app/screeners/new?template=getting-started" onClick={() => setChecklist(c => ({ ...c, run: true }))} className={`block text-left border rounded p-3 ${checklist.run ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Run a screener</a>
-              <a href="/app/screeners" onClick={() => setChecklist(c => ({ ...c, save: true }))} className={`block text-left border rounded p-3 ${checklist.save ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Save a screener</a>
-              <a href="/app/alerts" onClick={() => setChecklist(c => ({ ...c, alert: true }))} className={`block text-left border rounded p-3 ${checklist.alert ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'}`}>Set an alert</a>
-            </div>
-          </div>
-        </div>
+        {/* Onboarding checklist removed per request */}
         {/* Welcome Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">

@@ -100,6 +100,7 @@ const SignUp = () => {
         if (!refCode && qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) refCode = qRef;
       } catch {}
 
+      // Create account
       const result = await registerUser({
         username: data.username,
         email: data.email,
@@ -110,13 +111,20 @@ const SignUp = () => {
       });
 
       if (result.success) {
-        toast.success("Account created! Let's run your first screener.");
-        navigate("/app/screeners/new?template=getting-started", { 
-          state: { 
-            email: data.email,
-            coach: "run_save_alert",
-            ref: refCode || undefined
-          } 
+        // Auto sign-in by setting backend session via redirect if available, else proceed locally
+        try {
+          const backend = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
+          if (backend) {
+            // Optional session warm-up (non-blocking)
+            fetch(`${backend}/auth/session/warmup`, { method: 'POST', credentials: 'include' }).catch(() => {});
+          }
+        } catch {}
+
+        toast.success("Account created! Choose your plan.");
+        // Send to plan selection and mark as new user; this page will handle free vs paid
+        navigate("/auth/plan-selection", {
+          replace: true,
+          state: { newUser: true, email: data.email, ref: refCode || undefined }
         });
       } else {
         toast.error(result.message || "Registration failed");
