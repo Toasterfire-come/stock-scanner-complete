@@ -1,12 +1,11 @@
 /* eslint-disable react/jsx-no-target-blank */
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { createPayPalOrder, capturePayPalOrder } from "../api/client";
+import { changePlan } from "../api/client";
 
 const PayPalCheckout = ({ 
   planType = "bronze", 
@@ -19,44 +18,28 @@ const PayPalCheckout = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const planPrices = {
-    bronze: { monthly: 24.99, annual: 249.99 },
-    silver: { monthly: 39.99, annual: 399.99 },
-    gold: { monthly: 89.99, annual: 899.99 }
-  };
+  const planId = useMemo(() => {
+    const key = `REACT_APP_PAYPAL_PLAN_${String(planType).toUpperCase()}_${billingCycle.toUpperCase()}`;
+    return process.env[key];
+  }, [planType, billingCycle]);
 
-  const planFeatures = {
-    bronze: ["1,500 API calls/month", "Basic alerts", "Email support", "Portfolio tracking"],
-    silver: ["5,000 API calls/month", "Advanced alerts", "Priority support", "Custom watchlists"],
-    gold: ["Unlimited API calls", "Real-time alerts", "Phone support", "Full API access"]
-  };
-
-  const basePrice = planPrices[planType]?.[billingCycle] || 24.99;
-  const finalPrice = basePrice;
-  const savings = 0;
-
-  // No discount handling in current API contract
-
-  const createOrder = async () => {
-    setIsLoading(true);
-    try {
-      const res = await createPayPalOrder(planType, billingCycle, discountCode || null);
-      setIsLoading(false);
-      return res?.id || res?.order_id;
-    } catch (e) {
-      setIsLoading(false);
-      setError("Failed to create PayPal order");
-      throw e;
+  const createSubscription = async (data, actions) => {
+    if (!planId) {
+      setError("Subscription cannot be created: missing PayPal plan ID");
+      throw new Error("Missing plan_id");
     }
+    return actions.subscription.create({ plan_id: planId });
   };
 
-  const onApprove = async (data) => {
+  const onApproveSubscription = async (data, _actions) => {
     setIsLoading(true);
     try {
-      const res = await capturePayPalOrder(data.orderID, {});
-      onSuccess?.({ paymentDetails: res, planType, billingCycle, finalAmount: finalPrice });
+      // Notify backend about the new subscription to update user plan immediately
+      try {
+        await changePlan({ plan: planType, billing_cycle: billingCycle, subscription_id: data.subscriptionID, discount_code: discountCode || undefined });
+      } catch {}
+      onSuccess?.({ subscriptionId: data.subscriptionID, planType, billingCycle });
     } catch (err) {
-      console.error("Payment processing error:", err);
       onError?.(err);
     } finally {
       setIsLoading(false);
@@ -66,7 +49,8 @@ const PayPalCheckout = ({
   const paypalOptions = {
     "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || "sb-test-client-id-placeholder",
     currency: "USD",
-    intent: "capture",
+    intent: "subscription",
+    vault: true,
     components: "buttons,marks,messages"
   };
 
@@ -88,18 +72,9 @@ const PayPalCheckout = ({
           </Alert>
         )}
 
-        {/* Pricing Summary */}
-        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-          <div className="flex justify-between">
-            <span>Base Price:</span>
-            <span>${basePrice.toFixed(2)}</span>
-          </div>
-          {/* No discount lines in current contract */}
-          <hr />
-          <div className="flex justify-between font-bold text-lg">
-            <span>Total:</span>
-            <span>${finalPrice.toFixed(2)}</span>
-          </div>
+        {/* Renewal Notice */}
+        <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-900">
+          Subscriptions auto‑renew each {billingCycle === 'annual' ? 'year' : 'month'}. You can cancel anytime in Account → Plan & Billing.
         </div>
 
         {/* PayPal Buttons and alternative funding sources */}
@@ -112,51 +87,29 @@ const PayPalCheckout = ({
           )}
           
           <PayPalScriptProvider options={paypalOptions}>
-            {/* Default (smart) buttons */}
+            {/* Default subscription button (PayPal Wallet) */}
             <PayPalButtons
+              style={{ layout: "vertical", color: "blue", shape: "rect", label: "subscribe" }}
+              disabled={isLoading || !planId}
               fundingSource={undefined}
-              createOrder={() => createOrder()}
-              onApprove={onApprove}
-              onError={(err) => { console.error("PayPal error:", err); onError?.(err); }}
+              createSubscription={createSubscription}
+              onApprove={onApproveSubscription}
+              onError={(err) => { console.error("PayPal subscription error:", err); onError?.(err); }}
               onCancel={onCancel}
-              disabled={isLoading}
-              style={{ layout: "vertical", color: "blue", shape: "rect", label: "paypal" }}
             />
 
             {/* Pay Later if available */}
             {billingCycle === 'annual' && (
               <PayPalButtons
-                fundingSource="paylater"
-                createOrder={() => createOrder()}
-                onApprove={onApprove}
-                onError={(err) => { console.error("PayPal PayLater error:", err); onError?.(err); }}
-                onCancel={onCancel}
-                disabled={isLoading}
                 style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                disabled={isLoading || !planId}
+                fundingSource="paylater"
+                createSubscription={createSubscription}
+                onApprove={onApproveSubscription}
+                onError={(err) => { console.error("PayPal PayLater subscription error:", err); onError?.(err); }}
+                onCancel={onCancel}
               />
             )}
-
-            {/* Venmo (US only, if eligible) */}
-            <PayPalButtons
-              fundingSource="venmo"
-              createOrder={() => createOrder()}
-              onApprove={onApprove}
-              onError={(err) => { console.error("Venmo error:", err); onError?.(err); }}
-              onCancel={onCancel}
-              disabled={isLoading}
-              style={{ layout: "vertical", color: "silver", shape: "rect", label: "pay" }}
-            />
-
-            {/* Card funding button */}
-            <PayPalButtons
-              fundingSource="card"
-              createOrder={() => createOrder()}
-              onApprove={onApprove}
-              onError={(err) => { console.error("Card funding error:", err); onError?.(err); }}
-              onCancel={onCancel}
-              disabled={isLoading}
-              style={{ layout: "vertical", color: "silver", shape: "rect", label: "pay" }}
-            />
           </PayPalScriptProvider>
         </div>
 
@@ -173,7 +126,7 @@ const PayPalCheckout = ({
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Secure payment processed by PayPal.
+            By subscribing you agree to automatic renewal per our Terms & Billing Policy.
           </p>
         </div>
       </CardContent>
