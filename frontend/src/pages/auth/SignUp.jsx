@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
 import OneTapGoogle from "../../components/OneTapGoogle";
+import { useAuth } from "../../context/SecureAuthContext";
 
 // Friction-reduced: name + email + password; keep Google SSO. Username optional (derived), last name optional.
 const signUpSchema = z.object({
@@ -38,6 +39,7 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
 
   const {
     register,
@@ -118,6 +120,11 @@ const SignUp = () => {
             // Optional session warm-up (non-blocking)
             fetch(`${backend}/auth/session/warmup`, { method: 'POST', credentials: 'include' }).catch(() => {});
           }
+        } catch {}
+
+        // Ensure client session is authenticated
+        try {
+          await login(data.email, data.password);
         } catch {}
 
         toast.success("Account created! Choose your plan.");
