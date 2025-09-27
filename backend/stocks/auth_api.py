@@ -23,6 +23,7 @@ import logging
 from datetime import datetime, timedelta
 import os
 from django.db import transaction, IntegrityError
+from django.shortcuts import redirect
 from urllib.parse import urlencode
 import base64
 import requests
@@ -85,8 +86,8 @@ def _login_user_and_response(request, user: User):
 def google_login_redirect(request):
     """Redirect user to Google OAuth login (server-side flow)."""
     try:
-        client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', None)
-        redirect_uri = getattr(settings, 'GOOGLE_OAUTH_REDIRECT_URI', None)
+        client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', None) or os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
+        redirect_uri = getattr(settings, 'GOOGLE_OAUTH_REDIRECT_URI', None) or os.environ.get('GOOGLE_OAUTH_REDIRECT_URI')
         scope = 'openid email profile'
         if not client_id or not redirect_uri:
             return JsonResponse({'success': False, 'error': 'Google OAuth not configured'}, status=400)
@@ -97,7 +98,8 @@ def google_login_redirect(request):
             'scope': scope,
             'prompt': 'select_account',
         }
-        return Response({'url': f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"})
+        # Redirect user agent to Google OAuth
+        return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
     except Exception as e:
         logger.error(f"google_login_redirect error: {e}")
         return JsonResponse({'success': False}, status=500)
@@ -145,8 +147,8 @@ def google_onetap_exchange(request):
 def apple_login_redirect(request):
     """Redirect to Sign in with Apple. Assumes configured service."""
     try:
-        redirect_uri = getattr(settings, 'APPLE_REDIRECT_URI', None)
-        client_id = getattr(settings, 'APPLE_CLIENT_ID', None)
+        redirect_uri = getattr(settings, 'APPLE_REDIRECT_URI', None) or os.environ.get('APPLE_REDIRECT_URI')
+        client_id = getattr(settings, 'APPLE_CLIENT_ID', None) or os.environ.get('APPLE_CLIENT_ID')
         if not redirect_uri or not client_id:
             return JsonResponse({'success': False, 'error': 'Apple OAuth not configured'}, status=400)
         params = {
