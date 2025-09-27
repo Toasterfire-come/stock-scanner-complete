@@ -124,15 +124,17 @@ const PayPalCheckout = ({
             />
 
             {/* Pay Later if available */}
-            <PayPalButtons
-              fundingSource="paylater"
-              createOrder={() => createOrder()}
-              onApprove={onApprove}
-              onError={(err) => { console.error("PayPal PayLater error:", err); onError?.(err); }}
-              onCancel={onCancel}
-              disabled={isLoading}
-              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-            />
+            {billingCycle === 'annual' && (
+              <PayPalButtons
+                fundingSource="paylater"
+                createOrder={() => createOrder()}
+                onApprove={onApprove}
+                onError={(err) => { console.error("PayPal PayLater error:", err); onError?.(err); }}
+                onCancel={onCancel}
+                disabled={isLoading}
+                style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+              />
+            )}
 
             {/* Venmo (US only, if eligible) */}
             <PayPalButtons
