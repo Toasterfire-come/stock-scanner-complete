@@ -1,0 +1,125 @@
+import React, { useMemo, useState, useEffect } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Label } from "../../components/ui/label";
+import { Switch } from "../../components/ui/switch";
+import PayPalCheckout from "../../components/PayPalCheckout";
+import { useAuth } from "../../context/SecureAuthContext";
+
+const PLAN_NAMES = {
+  free: "Free",
+  bronze: "Bronze",
+  silver: "Silver",
+  gold: "Gold",
+};
+
+export default function Checkout() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { isAuthenticated } = useAuth();
+
+  const initialPlan = useMemo(() => {
+    const st = location.state || {};
+    return st.plan || searchParams.get("plan") || "bronze";
+  }, [location.state, searchParams]);
+
+  const initialCycle = useMemo(() => {
+    const st = location.state || {};
+    return st.cycle || searchParams.get("cycle") || "monthly";
+  }, [location.state, searchParams]);
+
+  const referralCode = useMemo(() => {
+    const st = location.state || {};
+    if (st.discount_code && typeof st.discount_code === "string") return st.discount_code;
+    const qRef = searchParams.get("ref");
+    return qRef ? `REF_${String(qRef).toUpperCase()}` : "";
+  }, [location.state, searchParams]);
+
+  const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
+  const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/auth/sign-in?redirect=/checkout", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  const cycle = isAnnual ? "annual" : "monthly";
+
+  return (
+    <div className="container mx-auto px-4 py-10">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <Badge variant="secondary" className="mb-3">Secure Checkout</Badge>
+          <h1 className="text-3xl font-bold text-gray-900">Complete your upgrade</h1>
+          {referralCode && (
+            <div className="mt-3 text-sm text-blue-900 bg-blue-50 border border-blue-200 inline-flex items-center px-3 py-2 rounded">
+              Referral applied: {referralCode}
+            </div>
+          )}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan Summary</CardTitle>
+              <CardDescription>Confirm your plan and billing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">Selected Plan</div>
+                <div className="font-semibold">{PLAN_NAMES[plan] || plan}</div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">Billing Cycle</div>
+                <div className="flex items-center gap-3">
+                  <Label className={!isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>Monthly</Label>
+                  <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
+                  <Label className={isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>Annual</Label>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                You can change or cancel your plan anytime from Account → Plan & Billing.
+              </div>
+              <div className="pt-2">
+                <Button variant="outline" className="w-full" onClick={() => navigate("/pricing")}>Change Plan</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pay with PayPal</CardTitle>
+              <CardDescription>Fast, secure checkout with multiple payment options</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PayPalCheckout
+                planType={plan}
+                billingCycle={cycle}
+                discountCode={referralCode || null}
+                onSuccess={(info) => {
+                  try {
+                    const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
+                    navigate('/checkout/success', { replace: true, state: { planId: plan, amount, discount: referralCode ? { code: referralCode } : undefined } });
+                  } catch {
+                    navigate('/checkout/success', { replace: true, state: { planId: plan } });
+                  }
+                }}
+                onError={() => {
+                  navigate('/checkout/failure', { replace: true });
+                }}
+                onCancel={() => {}}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+

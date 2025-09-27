@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-target-blank */
 import React, { useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -65,11 +66,12 @@ const PayPalCheckout = ({
   const paypalOptions = {
     "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || "sb-test-client-id-placeholder",
     currency: "USD",
-    intent: "capture"
+    intent: "capture",
+    components: "buttons,marks,messages"
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="capitalize">{planType} Plan</span>
@@ -78,19 +80,6 @@ const PayPalCheckout = ({
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Plan Features */}
-        <div>
-          <h4 className="font-semibold mb-3">Plan Features:</h4>
-          <ul className="space-y-2">
-            {planFeatures[planType]?.map((feature, index) => (
-              <li key={index} className="flex items-center text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </div>
-
         {/* Error Section */}
         {error && (
           <Alert variant="destructive">
@@ -111,14 +100,9 @@ const PayPalCheckout = ({
             <span>Total:</span>
             <span>${finalPrice.toFixed(2)}</span>
           </div>
-          {billingCycle === "annual" && (
-            <p className="text-sm text-gray-600 text-center">
-              Save {Math.round((1 - (planPrices[planType].annual / (planPrices[planType].monthly * 12))) * 100)}% with annual billing
-            </p>
-          )}
         </div>
 
-        {/* PayPal Buttons */}
+        {/* PayPal Buttons and alternative funding sources */}
         <div className="space-y-3">
           {isLoading && (
             <div className="flex items-center justify-center py-4">
@@ -128,40 +112,48 @@ const PayPalCheckout = ({
           )}
           
           <PayPalScriptProvider options={paypalOptions}>
+            {/* Default (smart) buttons */}
             <PayPalButtons
               fundingSource={undefined}
               createOrder={() => createOrder()}
               onApprove={onApprove}
-              onError={(err) => {
-                console.error("PayPal error:", err);
-                onError?.(err);
-              }}
+              onError={(err) => { console.error("PayPal error:", err); onError?.(err); }}
               onCancel={onCancel}
               disabled={isLoading}
-              style={{
-                layout: "vertical",
-                color: "blue",
-                shape: "rect",
-                label: "paypal"
-              }}
+              style={{ layout: "vertical", color: "blue", shape: "rect", label: "paypal" }}
             />
+
+            {/* Pay Later if available */}
+            <PayPalButtons
+              fundingSource="paylater"
+              createOrder={() => createOrder()}
+              onApprove={onApprove}
+              onError={(err) => { console.error("PayPal PayLater error:", err); onError?.(err); }}
+              onCancel={onCancel}
+              disabled={isLoading}
+              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+            />
+
+            {/* Venmo (US only, if eligible) */}
+            <PayPalButtons
+              fundingSource="venmo"
+              createOrder={() => createOrder()}
+              onApprove={onApprove}
+              onError={(err) => { console.error("Venmo error:", err); onError?.(err); }}
+              onCancel={onCancel}
+              disabled={isLoading}
+              style={{ layout: "vertical", color: "silver", shape: "rect", label: "pay" }}
+            />
+
             {/* Card funding button */}
             <PayPalButtons
               fundingSource="card"
               createOrder={() => createOrder()}
               onApprove={onApprove}
-              onError={(err) => {
-                console.error("Card funding error:", err);
-                onError?.(err);
-              }}
+              onError={(err) => { console.error("Card funding error:", err); onError?.(err); }}
               onCancel={onCancel}
               disabled={isLoading}
-              style={{
-                layout: "vertical",
-                color: "silver",
-                shape: "rect",
-                label: "pay"
-              }}
+              style={{ layout: "vertical", color: "silver", shape: "rect", label: "pay" }}
             />
           </PayPalScriptProvider>
         </div>
@@ -170,16 +162,16 @@ const PayPalCheckout = ({
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-500 mr-1" />
               7-Day Money Back
             </div>
             <div className="flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-500 mr-1" />
               Cancel Anytime
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Secure payment processed by PayPal. 7‑day money‑back guarantee.
+            Secure payment processed by PayPal.
           </p>
         </div>
       </CardContent>

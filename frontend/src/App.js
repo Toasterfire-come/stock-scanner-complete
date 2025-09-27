@@ -37,6 +37,7 @@ import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
+import Checkout from "./pages/billing/Checkout";
 
 // App Pages (Protected)
 const AppDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/AppDashboard"));
@@ -169,6 +170,7 @@ function App() {
                 {/* Billing Routes */}
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 <Route path="/checkout/failure" element={<CheckoutFailure />} />
+                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
 
                 {/* Main App Routes */}
                 <Route element={<EnhancedAppLayout />}>

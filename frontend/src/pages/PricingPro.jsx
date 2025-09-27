@@ -240,8 +240,7 @@ const PricingPro = () => {
       navigate('/auth/sign-in');
       return;
     }
-    setCheckoutPlan(planKey);
-    toast.message('Secure checkout opened below');
+    navigate('/checkout', { state: { plan: planKey, cycle: isAnnual ? 'annual' : 'monthly', discount_code: referralCode || undefined } });
   };
 
   const ctaLabel = (process.env.REACT_APP_CTA_LABEL || 'Try Free').trim();
@@ -435,36 +434,7 @@ const PricingPro = () => {
         })}
       </div>
 
-      {/* Inline PayPal Checkout */}
-      {checkoutPlan && (
-        <div className="max-w-3xl mx-auto mb-16">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Checkout • {plans[checkoutPlan]?.name || checkoutPlan}</CardTitle>
-              <CardDescription>
-                Secure payment powered by PayPal. Your plan activates immediately after payment.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PayPalCheckout
-                planType={checkoutPlan}
-                billingCycle={isAnnual ? 'annual' : 'monthly'}
-                discountCode={referralCode || null}
-                onSuccess={(info) => {
-                  try {
-                    const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
-                    navigate('/checkout/success', { replace: true, state: { planId: checkoutPlan, amount, discount: referralCode ? { code: referralCode } : undefined } });
-                  } catch {
-                    navigate('/checkout/success', { replace: true, state: { planId: checkoutPlan } });
-                  }
-                }}
-                onError={() => toast.error('Payment failed. Please try again or use a different method.')}
-                onCancel={() => toast.message('Checkout cancelled')}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Checkout moved to /checkout */}
 
       {/* Which plan is right for me? */}
       <div className="max-w-4xl mx-auto mb-16">
