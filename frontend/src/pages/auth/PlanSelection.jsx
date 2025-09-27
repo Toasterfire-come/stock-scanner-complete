@@ -185,6 +185,12 @@ export default function PlanSelection() {
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
             Select the perfect plan for your trading needs. All paid plans include a 7-day trial for just $1.
           </p>
+          {referral && (
+            <div className="mt-3 text-sm text-blue-900 bg-blue-50 border border-blue-200 inline-flex items-center px-3 py-2 rounded">
+              <Gift className="h-4 w-4 mr-2" />
+              Referral detected: {String(referral).toUpperCase()} • 50% off first month will apply at checkout
+            </div>
+          )}
         </div>
 
         {/* Updated TRIAL Banner */}
