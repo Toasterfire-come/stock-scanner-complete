@@ -32,10 +32,27 @@ const ScreenerDemo = lazy(() => import("../components/home/ScreenerDemo"));
 const TestimonialsSection = lazy(() => import("../components/home/TestimonialsSection"));
 const HomeFAQ = lazy(() => import("../components/home/HomeFAQ"));
 
+function useExitIntent(callback, enabled = true) {
+  useEffect(() => {
+    if (!enabled) return;
+    let triggered = false;
+    const onMouseLeave = (e) => {
+      if (triggered) return;
+      if (e.clientY <= 0) {
+        triggered = true;
+        callback();
+      }
+    };
+    document.addEventListener('mouseleave', onMouseLeave);
+    return () => document.removeEventListener('mouseleave', onMouseLeave);
+  }, [callback, enabled]);
+}
+
 const Home = () => {
   const [marketStats, setMarketStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const [showExitIntent, setShowExitIntent] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,6 +85,9 @@ const Home = () => {
       }
     } catch {}
   }, []);
+
+  // Exit intent modal toggle
+  useExitIntent(() => setShowExitIntent(true), true);
 
   const features = [
     {
@@ -592,6 +612,46 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Exit Intent Modal */}
+      {showExitIntent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Before you go — get free trading tips</h3>
+              <button
+                aria-label="Close"
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => setShowExitIntent(false)}
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">Join 50,000+ traders. Get a free screener template and weekly insights.</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const email = (e.currentTarget.elements.namedItem('exit_email')?.value || '').toString();
+                if (!email) return;
+                try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+                setShowExitIntent(false);
+                window.location.assign(`/auth/sign-up?email=${encodeURIComponent(email)}`);
+              }}
+              className="flex gap-2"
+            >
+              <input
+                type="email"
+                name="exit_email"
+                placeholder="Enter your email"
+                required
+                className="flex-1 px-4 py-3 rounded-md border border-gray-300"
+              />
+              <Button type="submit" className="px-5">Get Started</Button>
+            </form>
+            <p className="text-xs text-gray-500 mt-3">No spam. Unsubscribe anytime.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
