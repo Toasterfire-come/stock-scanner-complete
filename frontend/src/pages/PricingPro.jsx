@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SEO from "../components/SEO";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -33,10 +33,30 @@ const PricingPro = () => {
   const [currentPlan, setCurrentPlan] = useState('free');
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const [referralCode, setReferralCode] = useState("");
 
   useEffect(() => {
     fetchPlans();
   }, []);
+
+  useEffect(() => {
+    try {
+      const state = location.state || {};
+      let code = "";
+      if (state.discount_code && typeof state.discount_code === 'string') {
+        code = state.discount_code;
+      }
+      if (!code) {
+        const params = new URLSearchParams(location.search || "");
+        const qRef = params.get('ref');
+        if (qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) {
+          code = `REF_${qRef.toUpperCase()}`;
+        }
+      }
+      setReferralCode(code);
+    } catch {}
+  }, [location.state, location.search]);
 
   const fetchPlans = async () => {
     try {
@@ -259,6 +279,11 @@ const PricingPro = () => {
           <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3 text-sm">
             Have a referral? First month 50% off with your code at checkout.
           </div>
+          {referralCode && (
+            <div className="bg-green-50 border border-green-200 text-green-900 rounded-lg p-3 text-sm">
+              Referral applied: <span className="font-semibold">{referralCode}</span> • 50% off first month
+            </div>
+          )}
         </div>
         
         {/* Billing Toggle */}
