@@ -78,7 +78,8 @@
     "test": "craco test",
     "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
     "security:audit": "npm audit --audit-level moderate",
-    "security:check": "node -e \"require('./src/lib/security').validateEnvironment() && console.log('✅ Security validation passed')\""
+    "security:check": "node -e \"require('./src/lib/security').validateEnvironment() && console.log('✅ Security validation passed')\"",
+    "icons:generate": "node scripts/generate-icons.js"
   },
   "browserslist": {
     "production": [
@@ -104,8 +105,10 @@
     "eslint-plugin-react": "7.37.4",
     "globals": "15.15.0",
     "lighthouse": "^12.8.2",
+    "png-to-ico": "^2.1.8",
     "postcss": "^8.4.49",
     "serve-handler": "^6.1.6",
+    "sharp": "^0.33.5",
     "ssh2-sftp-client": "^12.0.1",
     "tailwindcss": "^3.4.17"
   },

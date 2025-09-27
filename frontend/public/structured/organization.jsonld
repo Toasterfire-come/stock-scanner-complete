@@ -3,7 +3,7 @@
   "@type": "Organization",
   "name": "Trade Scan Pro",
   "url": "https://tradescanpro.com",
-  "logo": "https://tradescanpro.com/og-image.png",
+  "logo": "/logo.png",
   "sameAs": [
     "https://x.com/TradeScanPro",
     "https://www.linkedin.com/company/tradescanpro/"

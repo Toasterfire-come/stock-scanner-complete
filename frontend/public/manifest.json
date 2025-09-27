@@ -7,8 +7,8 @@
     { "src": "favicon-16x16.png", "type": "image/png", "sizes": "16x16" },
     { "src": "favicon-32x32.png", "type": "image/png", "sizes": "32x32" },
     { "src": "apple-touch-icon.png", "type": "image/png", "sizes": "180x180" },
-    { "src": "apple-touch-icon.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
-    { "src": "apple-touch-icon.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+    { "src": "icon-192x192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "icon-512x512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
   ],
   "start_url": "/",
   "display": "standalone",

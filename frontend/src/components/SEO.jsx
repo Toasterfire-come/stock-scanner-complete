@@ -74,7 +74,7 @@ export default function SEO(props) {
     const siteName = "Trade Scan Pro";
     const resolvedUrl = url || (typeof window !== "undefined" ? window.location.href : undefined);
     const resolvedCanonical = canonical || resolvedUrl;
-    const resolvedImage = image || "/og-image.png";
+    const resolvedImage = image || "/logo.png";
 
     if (title) {
       document.title = title;
