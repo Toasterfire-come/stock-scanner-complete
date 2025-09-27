@@ -274,7 +274,7 @@ get_header(); ?>
                     <span class="float-right">+</span>
                 </button>
                 <div class="faq-answer hidden p-4 text-gray-600">
-                    We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied, contact our support team for a full refund.
+                    Refunds are not guaranteed. Start with the trial and cancel anytime before renewal. Contact support with any questions.
                 </div>
             </div>
         </div>

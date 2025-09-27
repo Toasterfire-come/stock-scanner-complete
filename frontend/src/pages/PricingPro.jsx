@@ -462,7 +462,7 @@ const PricingPro = () => {
           <AccordionItem value="item-5">
             <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
             <AccordionContent>
-              We offer a 30-day money-back guarantee for all paid plans. Contact {process.env.REACT_APP_SUPPORT_EMAIL || 'noreply.retailtradescanner@gmail.com'} if you're not satisfied.
+              Refunds are not guaranteed; trials are available and you may cancel anytime before renewal. For questions, contact {process.env.REACT_APP_SUPPORT_EMAIL || 'noreply.retailtradescanner@gmail.com'}.
             </AccordionContent>
           </AccordionItem>
         </Accordion>

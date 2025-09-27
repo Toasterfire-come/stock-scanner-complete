@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SEO from "../components/SEO";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -280,7 +280,9 @@ const Home = () => {
                   e.preventDefault();
                   const email = (e.currentTarget.elements.namedItem('hero_email')?.value || '').toString();
                   if (!email) return;
-                  window.location.assign('/auth/sign-up');
+                  // Navigate and prefill email
+                  try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+                  navigate('/auth/sign-up', { state: { emailPrefill: email } });
                 }}
               >
                 <input
@@ -293,6 +295,16 @@ const Home = () => {
                 <Button type="submit" className="px-5">Start</Button>
               </form>
               <div className="text-xs text-gray-500">Cancel anytime • 7‑day trial for $1 • No credit card for free plan</div>
+            </div>
+
+            {/* Logos / Social Proof */}
+            <div className="mt-4 text-xs sm:text-sm text-gray-500 flex flex-wrap justify-center gap-4">
+              <span>As seen on</span>
+              <span className="font-medium">TradingView</span>
+              <span className="font-medium">Finviz</span>
+              <span className="font-medium">Product Hunt</span>
+              <span className="font-medium">Medium</span>
+              <a href="/status" className="underline hover:no-underline">Status & Uptime</a>
             </div>
 
             {/* Trust Indicators */}
@@ -310,6 +322,52 @@ const Home = () => {
                 Cancel Anytime
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+      {/* Sticky Mobile CTA */}
+      <div className="fixed bottom-4 left-0 right-0 z-40 block sm:hidden">
+        <div className="mx-4 rounded-xl shadow-lg bg-white border flex items-center justify-between px-4 py-3">
+          <div className="text-sm text-gray-700">
+            Start free — no card for Free plan
+          </div>
+          <Button asChild size="sm" className="ml-3 bg-blue-600 hover:bg-blue-700">
+            <Link to="/auth/sign-up">Try Free</Link>
+          </Button>
+        </div>
+      </div>
+      {/* Testimonial Snippet */}
+      <section className="py-6 sm:py-8 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto bg-gray-50 border rounded-lg p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-gray-900 text-base sm:text-lg font-medium mb-1">“{testimonials[0].content}”</p>
+                <p className="text-sm text-gray-600">{testimonials[0].name} — {testimonials[0].role}</p>
+              </div>
+              <div className="text-sm text-green-700 font-semibold">{testimonials[0].profit}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sample Results */}
+      <section className="py-10 sm:py-14 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Sample Screener Results</h2>
+            <p className="text-gray-600">Why these tickers matched today</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
+            {[{t:'AAPL',r:'50DMA crossover + volume > 1.5× avg'}, {t:'MSFT',r:'RSI 60–70 with positive price action'}, {t:'NVDA',r:'Momentum continuation; MACD bullish'}].map((s, i) => (
+              <div key={i} className="bg-white rounded-lg border p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-lg font-semibold text-gray-900">{s.t}</div>
+                  <span className="text-xs text-gray-500">NYSE/NASDAQ</span>
+                </div>
+                <p className="text-sm text-gray-700">{s.r}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -405,7 +463,7 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 sm:py-24 bg-white">
+      <section className="py-16 sm:py-24 bg-white" id="testimonials">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 sm:mb-20">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">

@@ -92,7 +92,7 @@ get_header(); ?>
                                 Do you offer refunds?
                             </h3>
                             <div class="faq-answer" style="color: var(--color-text-muted); line-height: 1.6;">
-                                We offer a 30-day money-back guarantee for new premium subscriptions. Contact support for refund requests.
+                                We do not provide a general money-back guarantee. Use the trial first and cancel anytime before renewal. Contact support for help.
                             </div>
                         </div>
                     </div>
