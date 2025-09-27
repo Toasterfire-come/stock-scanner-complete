@@ -88,11 +88,11 @@ const SignUp = () => {
       });
 
       if (result.success) {
-        toast.success("Account created successfully! Choose your plan to get started.");
-        navigate("/auth/plan-selection", { 
+        toast.success("Account created! Let's run your first screener.");
+        navigate("/app/screeners/new?template=getting-started", { 
           state: { 
             email: data.email,
-            newUser: true,
+            coach: "run_save_alert",
             ref: refCode || undefined
           } 
         });

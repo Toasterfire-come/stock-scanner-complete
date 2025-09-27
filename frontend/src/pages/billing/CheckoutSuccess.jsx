@@ -132,8 +132,8 @@ const CheckoutSuccess = () => {
         {/* Action Buttons */}
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
           <Button asChild className="w-full">
-            <Link to="/app/dashboard">
-              Go to Dashboard
+            <Link to="/app/screeners/new?template=getting-started">
+              Run Getting Started Screener
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
           </Button>

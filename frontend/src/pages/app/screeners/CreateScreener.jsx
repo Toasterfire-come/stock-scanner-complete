@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
@@ -14,6 +14,7 @@ import { filterStocks, createScreener } from "../../../api/client";
 
 const CreateScreener = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [screenerData, setScreenerData] = useState({
     name: "",
     description: "",
@@ -31,6 +32,26 @@ const CreateScreener = () => {
     { id: "change_percent", name: "Price Change %", type: "range" },
     { id: "exchange", name: "Exchange", type: "select" }
   ];
+
+  // Apply getting-started template if requested
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search || "");
+      const template = params.get("template");
+      if (template === "getting-started") {
+        setScreenerData({
+          name: "Getting Started: Momentum Setup",
+          description: "Example screener: Price > $10, Volume > 1,000,000, RSI 50-70",
+          isPublic: false
+        });
+        setCriteria([
+          { id: "price", name: "Stock Price", type: "range", min: "10", max: "", value: "" },
+          { id: "volume", name: "Volume", type: "range", min: "1000000", max: "", value: "" },
+          { id: "change_percent", name: "Price Change %", type: "range", min: "2", max: "", value: "" }
+        ]);
+      }
+    } catch {}
+  }, [location.search]);
 
   const addCriterion = (criterionId) => {
     const criterionDef = availableCriteria.find(c => c.id === criterionId);
