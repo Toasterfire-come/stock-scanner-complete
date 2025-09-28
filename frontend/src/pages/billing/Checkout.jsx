@@ -254,6 +254,7 @@ export default function Checkout() {
                 planType={plan}
                 billingCycle={cycle}
                 discountCode={(applied?.code || promo || referralCode) || null}
+                paypalPlanId={planMeta?.paypal_plan_ids?.[isAnnual ? 'annual' : 'monthly'] || ''}
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;

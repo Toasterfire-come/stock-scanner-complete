@@ -11,6 +11,7 @@ const PayPalCheckout = ({
   planType = "bronze", 
   billingCycle = "monthly", 
   discountCode = null,
+  paypalPlanId, // optional explicit PayPal subscription plan id
   onSuccess, 
   onError,
   onCancel 
@@ -19,10 +20,10 @@ const PayPalCheckout = ({
   const [error, setError] = useState("");
 
   const planId = useMemo(() => {
-    // Support env-driven plan ids; backend also supports direct order creation flow
+    if (paypalPlanId) return paypalPlanId;
     const key = `REACT_APP_PAYPAL_PLAN_${String(planType).toUpperCase()}_${billingCycle.toUpperCase()}`;
     return process.env[key];
-  }, [planType, billingCycle]);
+  }, [planType, billingCycle, paypalPlanId]);
 
   const createSubscription = async (data, actions) => {
     if (!planId) {
@@ -88,6 +89,14 @@ const PayPalCheckout = ({
           )}
           
           <PayPalScriptProvider options={paypalOptions}>
+            {!planId && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Payment temporarily unavailable: missing plan configuration.
+                </AlertDescription>
+              </Alert>
+            )}
             {/* Default subscription button (PayPal Wallet) */}
             <PayPalButtons
               style={{ layout: "vertical", color: "blue", shape: "rect", label: "subscribe" }}
