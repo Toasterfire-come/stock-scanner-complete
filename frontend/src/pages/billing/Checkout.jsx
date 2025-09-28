@@ -42,14 +42,27 @@ export default function Checkout() {
   const referralCode = useMemo(() => {
     const st = location.state || {};
     if (st.discount_code && typeof st.discount_code === "string") return sanitizeCode(st.discount_code);
-    const qRef = searchParams.get("ref");
-    if (qRef) return sanitizeCode(String(qRef).toUpperCase());
+    const keysEnv = (process.env.REACT_APP_REFERRAL_QUERY_KEYS || "ref,referral,ref_code,coupon,code,campaign,utm_campaign").split(",").map(k => k.trim()).filter(Boolean);
+    for (const key of keysEnv) {
+      const val = searchParams.get(key);
+      if (val) {
+        return sanitizeCode(String(val).toUpperCase());
+      }
+    }
+    // Fallback: try to extract from UTM-style sources like utm_source=ref-<CODE>
+    const utmSource = searchParams.get("utm_source") || "";
+    const m = String(utmSource).toUpperCase().match(/REF[-_]?([A-Z0-9_-]{2,32})/);
+    if (m && m[1]) return sanitizeCode(m[1]);
     return "";
   }, [location.state, searchParams]);
 
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
   const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
   const [promo, setPromo] = useState("");
+  // Prefill promo with referral code when available
+  useEffect(() => {
+    if (!promo && referralCode) setPromo(referralCode);
+  }, [referralCode]);
   const [applied, setApplied] = useState(null);
   const [applying, setApplying] = useState(false);
   const [meta, setMeta] = useState(null);
