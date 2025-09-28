@@ -152,14 +152,13 @@ export default function PlanSelection() {
         return;
       }
 
-      // For paid plans, send to pricing page to choose cycle and checkout
-      navigate('/pricing', { 
-        state: { 
-          fromSignup: true, 
-          selectedPlan: planId,
-          userEmail: userEmail,
+      // For paid plans, go directly to checkout with selected cycle
+      navigate('/checkout', {
+        state: {
+          plan: planId,
+          cycle: isAnnual ? 'annual' : 'monthly',
           discount_code: referral ? `REF_${String(referral).toUpperCase()}` : undefined
-        } 
+        }
       });
     } catch (error) {
       console.error("Plan selection error:", error);
