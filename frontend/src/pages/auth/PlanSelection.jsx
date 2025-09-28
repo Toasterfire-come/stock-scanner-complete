@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORimport React, { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
@@ -216,7 +216,7 @@ export default function PlanSelection() {
           <span className={isAnnual ? "font-semibold" : "text-gray-600"}>Annual</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-8 lg:gap-12 xl:gap-16 2xl:gap-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-y-10 sm:gap-y-12 lg:gap-y-16 xl:gap-y-20 gap-x-6 sm:gap-x-8 lg:gap-x-12 xl:gap-x-16">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
@@ -226,7 +226,7 @@ export default function PlanSelection() {
                 key={plan.id} 
                 className={`relative h-full flex flex-col cursor-pointer transition-all duration-200 hover:shadow-lg ${
                   isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
-                } ${plan.popular ? "border-orange-200 scale-105" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
+                } ${plan.popular ? "border-orange-200 ring-1 ring-orange-200" : ""} ${plan.isFree ? "order-last lg:order-none" : ""}`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
