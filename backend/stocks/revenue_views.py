@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_http_methods(["POST"])
-@secure_api_endpoint
+@secure_api_endpoint(methods=["POST"], require_auth=False)
 def validate_discount_code(request):
     """
     Validate if a discount code can be used by the current user
@@ -77,7 +77,7 @@ def validate_discount_code(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-@secure_api_endpoint
+@secure_api_endpoint(methods=["POST"], require_auth=False)
 def apply_discount_code(request):
     """
     Apply a discount code and return the calculated pricing
@@ -166,7 +166,7 @@ def apply_discount_code(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-@secure_api_endpoint
+@secure_api_endpoint(methods=["POST"], require_auth=False)
 def record_payment(request):
     """
     Record a payment transaction with optional discount code
