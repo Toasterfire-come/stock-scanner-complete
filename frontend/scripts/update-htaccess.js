@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
 const SftpClient = require('ssh2-sftp-client');
 
-const HTACCESS_CONTENT = `# Minimal SPA routing to avoid redirect loops
-Options -Indexes
+const HTACCESS_CONTENT = `# SPA routing without loops
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+DirectorySlash Off
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
@@ -14,7 +16,7 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # Fallback all routes to index.html (internal rewrite only)
-RewriteRule ^ index.html [L]
+RewriteRule . /index.html [L]
 </IfModule>
 `;
 
