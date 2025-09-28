@@ -234,7 +234,7 @@ export default function Checkout() {
                       <div className="text-gray-500 text-xs">Next month: ${Number(applied.original_amount).toFixed(2)}</div>
                     )}
                     {isAnnual && (
-                      <div className="text-gray-500 text-xs">Next year: ${Number(planMeta.annual_list_price).toFixed(2)} (before annual discount)</div>
+                      <div className="text-gray-500 text-xs">Next year: ${Number(planMeta.annual_final_price ?? planMeta.annual_list_price).toFixed(2)} on {nextDate ? nextDate.toLocaleDateString() : '-'}</div>
                     )}
                   </div>
                 )}
