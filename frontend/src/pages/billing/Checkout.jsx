@@ -43,7 +43,8 @@ export default function Checkout() {
     const st = location.state || {};
     if (st.discount_code && typeof st.discount_code === "string") return sanitizeCode(st.discount_code);
     const qRef = searchParams.get("ref");
-    return qRef ? sanitizeCode(`REF_${String(qRef).toUpperCase()}`) : "";
+    if (qRef) return sanitizeCode(String(qRef).toUpperCase());
+    return "";
   }, [location.state, searchParams]);
 
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());

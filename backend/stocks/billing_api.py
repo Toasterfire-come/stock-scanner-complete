@@ -351,14 +351,17 @@ def create_paypal_order_api(request):
         final_amount = original_amount
         discount_applied = None
         discount_obj = None
-        if discount_code_str and request.user.is_authenticated:
-            validation = DiscountService.validate_discount_code(discount_code_str, request.user, billing_cycle=billing_cycle)
+        # Auto-create referral code (50% first payment) and apply
+        if discount_code_str:
+            try:
+                # Create or normalize referral discount if not exists
+                ref_obj, _ = DiscountService.get_or_create_referral_code(discount_code_str)
+                discount_obj = ref_obj
+            except Exception:
+                discount_obj = None
+        if discount_obj and request.user.is_authenticated:
+            validation = DiscountService.validate_discount_code(discount_obj.code, request.user, billing_cycle=billing_cycle)
             if validation.get('valid'):
-                try:
-                    discount_obj = DiscountCode.objects.get(code=discount_code_str.upper(), is_active=True)
-                except DiscountCode.DoesNotExist:
-                    discount_obj = None
-
                 if validation.get('applies_discount'):
                     if validation['discount'].code.upper() == 'TRIAL':
                         final_amount = Decimal('1.00') if original_amount > Decimal('1.00') else original_amount

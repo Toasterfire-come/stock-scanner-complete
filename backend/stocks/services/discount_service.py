@@ -94,6 +94,44 @@ class DiscountService:
             'discount_amount': discount.discount_percentage,
             'applies_discount': applies_discount
         }
+
+    @staticmethod
+    def get_or_create_referral_code(ref_code: str):
+        """
+        Ensure a referral discount code exists for the given ref link.
+        All referral codes provide 50% off first payment by default.
+        """
+        code = (ref_code or '').strip().upper()
+        if not code:
+            return None, False
+        # Avoid colliding with reserved codes
+        if code in ['TRIAL', 'REF50']:
+            try:
+                return DiscountCode.objects.get(code=code), False
+            except DiscountCode.DoesNotExist:
+                pass
+        obj, created = DiscountCode.objects.get_or_create(
+            code=code,
+            defaults={
+                'discount_percentage': Decimal('50.00'),
+                'is_active': True,
+                'applies_to_first_payment_only': True,
+            }
+        )
+        # If it exists but inactive or different percentage, normalize
+        changed = False
+        if not obj.is_active:
+            obj.is_active = True
+            changed = True
+        if obj.discount_percentage != Decimal('50.00'):
+            obj.discount_percentage = Decimal('50.00')
+            changed = True
+        if obj.applies_to_first_payment_only is not True:
+            obj.applies_to_first_payment_only = True
+            changed = True
+        if changed:
+            obj.save()
+        return obj, created
     
     @staticmethod
     def calculate_discounted_price(original_amount, discount_percentage):
