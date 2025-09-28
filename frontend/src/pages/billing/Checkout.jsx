@@ -60,7 +60,7 @@ export default function Checkout() {
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
   const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
   const [promo, setPromo] = useState("");
-  // Prefill promo with referral code when available
+  // Lazy-load PayPal SDK on viewport
   useEffect(() => {
     // Load PayPal SDK only when checkout is in viewport
     const lazy = process.env.REACT_APP_LAZY_PAYPAL === 'on';
@@ -78,8 +78,11 @@ export default function Checkout() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Prefill promo with referral code when available
+  useEffect(() => {
     if (!promo && referralCode) setPromo(referralCode);
-  }, [referralCode]);
+  }, [promo, referralCode]);
   const [applied, setApplied] = useState(null);
   const [applying, setApplying] = useState(false);
   const [meta, setMeta] = useState(null);
