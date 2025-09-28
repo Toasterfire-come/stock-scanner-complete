@@ -4,14 +4,15 @@ const fs = require('fs');
 const SftpClient = require('ssh2-sftp-client');
 
 async function clearRemoteDir(sftp, remoteDir) {
+  const preserveHtaccess = process.env.PRESERVE_HTACCESS !== 'false';
   const entries = await sftp.list(remoteDir);
   for (const entry of entries) {
     const name = entry.name;
     if (!name || name === '.' || name === '..') continue;
     const remotePath = path.posix.join(remoteDir, name);
     try {
-      // Preserve .htaccess if present
-      if (name === '.htaccess') {
+      // Preserve .htaccess optionally (default: preserve)
+      if (preserveHtaccess && name === '.htaccess') {
         console.log(`Preserving file: ${remotePath}`);
         continue;
       }
