@@ -9,6 +9,7 @@ import PayPalCheckout from "../../components/PayPalCheckout";
 import { useAuth } from "../../context/SecureAuthContext";
 import { api } from "../../api/client";
 import { Input } from "../../components/ui/input";
+import { logClientMetric } from "../../api/client";
 
 const PLAN_NAMES = {
   free: "Free",
@@ -61,6 +62,22 @@ export default function Checkout() {
   const [promo, setPromo] = useState("");
   // Prefill promo with referral code when available
   useEffect(() => {
+    // Load PayPal SDK only when checkout is in viewport
+    const lazy = process.env.REACT_APP_LAZY_PAYPAL === 'on';
+    if (!lazy) return;
+    const el = document.querySelector('#paypal-section');
+    if (!el || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          window.paypalLoadScript?.();
+          observer.disconnect();
+        }
+      });
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
     if (!promo && referralCode) setPromo(referralCode);
   }, [referralCode]);
   const [applied, setApplied] = useState(null);
@@ -181,7 +198,7 @@ export default function Checkout() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6" id="paypal-section">
           {/* Summary */}
           <Card>
             <CardHeader>
@@ -276,12 +293,15 @@ export default function Checkout() {
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
+                    try { logClientMetric({ metric: 'checkout_success', value: 1, tags: { plan, cycle, promo: (!!(promo||referralCode)).toString() } }); } catch {}
                     navigate('/checkout/success', { replace: true, state: { planId: plan, amount, discount: (promo || referralCode) ? { code: (promo || referralCode) } : undefined } });
                   } catch {
+                    try { logClientMetric({ metric: 'checkout_success', value: 1, tags: { plan, cycle, promo: (!!(promo||referralCode)).toString(), parsing:'failed' } }); } catch {}
                     navigate('/checkout/success', { replace: true, state: { planId: plan } });
                   }
                 }}
                 onError={() => {
+                  try { logClientMetric({ metric: 'checkout_error', value: 1, tags: { plan, cycle } }); } catch {}
                   navigate('/checkout/failure', { replace: true });
                 }}
                 onCancel={() => {}}

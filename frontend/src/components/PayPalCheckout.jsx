@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-target-blank */
 import React, { useMemo, useState, useCallback } from "react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PayPalScriptProvider, PayPalButtons, PayPalHostedFieldsProvider, PayPalHostedField } from "@paypal/react-paypal-js";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
@@ -138,7 +138,7 @@ const PayPalCheckout = ({
     currency: "USD",
     intent: isSubscription ? "subscription" : "capture",
     vault: isSubscription,
-    components: "buttons,marks,messages",
+    components: "buttons,marks,messages,hosted-fields",
     "enable-funding": isSubscription ? undefined : "card"
   };
 
@@ -174,7 +174,7 @@ const PayPalCheckout = ({
             </div>
           )}
           
-          <PayPalScriptProvider options={paypalOptions}>
+          <PayPalScriptProvider deferLoading={process.env.REACT_APP_LAZY_PAYPAL === 'on'} options={paypalOptions}>
             {isSubscription ? (
               <>
                 {!planId && (
@@ -229,6 +229,33 @@ const PayPalCheckout = ({
                   onError={(err) => { console.error("PayPal card error:", err); onError?.(err); setError("Card payment error. Please try again."); }}
                   onCancel={onCancel}
                 />
+                {/* Advanced Cards (Hosted Fields) - behind flag */}
+                {process.env.REACT_APP_PAYPAL_ADVANCED === 'on' && (
+                  <PayPalHostedFieldsProvider
+                    createOrder={createOrder}
+                  >
+                    <div className="space-y-2 p-3 border rounded-md">
+                      <div id="card-container" className="grid grid-cols-1 gap-3">
+                        <PayPalHostedField id="card-number" hostedFieldType="number" options={{ selector: '#card-number', placeholder: 'Card number' }} />
+                        <PayPalHostedField id="card-expiry" hostedFieldType="expirationDate" options={{ selector: '#card-expiry', placeholder: 'MM/YY' }} />
+                        <PayPalHostedField id="card-cvv" hostedFieldType="cvv" options={{ selector: '#card-cvv', placeholder: 'CVV' }} />
+                      </div>
+                      <button
+                        type="button"
+                        className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+                        disabled={isLoading}
+                        onClick={async () => {
+                          try {
+                            setIsLoading(true);
+                            // Hosted Fields submit handled by PayPal; createOrder already returns id
+                          } finally { setIsLoading(false); }
+                        }}
+                      >
+                        Pay with card
+                      </button>
+                    </div>
+                  </PayPalHostedFieldsProvider>
+                )}
               </>
             )}
           </PayPalScriptProvider>
