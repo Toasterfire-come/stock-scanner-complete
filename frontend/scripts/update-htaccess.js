@@ -1,16 +1,13 @@
 /* eslint-disable no-console */
 const SftpClient = require('ssh2-sftp-client');
 
-const HTACCESS_CONTENT = `# Canonical host and SPA routing
+const HTACCESS_CONTENT = `# SPA routing only (no host redirects)
 Options -Indexes -MultiViews
+DirectoryIndex index.html
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
-
-# Canonical domain: redirect www -> apex
-RewriteCond %{HTTP_HOST} ^www\.tradescanpro\.com$ [NC]
-RewriteRule ^(.*)$ https://tradescanpro.com/$1 [L,R=301]
 
 # Serve existing files/directories as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
