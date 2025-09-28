@@ -34,7 +34,8 @@ import {
   getSectorPerformance,
   API_ROOT,
   normalizeMarketStats,
-  normalizeTrending
+  normalizeTrending,
+  getCurrentPlan
 } from "../../api/client";
 import MiniSparkline from "../../components/MiniSparkline";
 import RealTrendingSparkline from "../../components/RealTrendingSparkline";
@@ -61,6 +62,7 @@ const AppDashboard = () => {
       return { run: false, save: false, alert: false };
     }
   });
+  const [planName, setPlanName] = useState("");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -129,6 +131,20 @@ const AppDashboard = () => {
     fetchDashboardData();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getCurrentPlan();
+        const name = res?.data?.plan_name || res?.data?.plan_type || 'Free';
+        if (mounted) setPlanName(String(name));
+      } catch {
+        if (mounted) setPlanName((user?.plan || 'Free').toString().replace(/^[a-z]/, (m) => m.toUpperCase()));
+      }
+    })();
+    return () => { mounted = false; };
+  }, [isAuthenticated]);
+
   // Persist checklist when it changes
   useEffect(() => {
     try {
@@ -172,7 +188,7 @@ const AppDashboard = () => {
           <p className="text-gray-600">Here's your comprehensive trading dashboard</p>
           <div className="flex items-center gap-4 mt-3">
             <Badge variant="secondary" className="text-sm">
-              {(user?.plan || (user?.email?.toLowerCase() === 'carter.kiefer2010@outlook.com' ? 'gold' : 'free'))?.toString()?.replace(/^[a-z]/, (m) => m.toUpperCase())} Plan
+              {(planName || 'Free')} Plan
             </Badge>
             <MarketStatus />
           </div>

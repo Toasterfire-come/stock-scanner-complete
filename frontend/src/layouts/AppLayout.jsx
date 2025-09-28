@@ -46,11 +46,29 @@ import {
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import ThemeToggle from "../components/ThemeToggle";
+import React from "react";
+import { getCurrentPlan } from "../api/client";
 
 const AppLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [planName, setPlanName] = useState("");
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getCurrentPlan();
+        const name = res?.data?.plan_name || res?.data?.plan_type || "Free";
+        if (mounted) setPlanName(String(name));
+      } catch {
+        // Fallback to local user plan if API not available
+        if (mounted) setPlanName((user?.plan || "Free").toString().replace(/^[a-z]/, (m) => m.toUpperCase()));
+      }
+    })();
+    return () => { mounted = false; };
+  }, [isAuthenticated]);
 
   // Marketing pages - available to all users
   const marketingNavigation = [
@@ -196,7 +214,7 @@ const AppLayout = () => {
                 <>
                   {/* User badge */}
                   <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
-                    {user.plan || 'Free'} Plan
+                    {(planName || 'Free')} Plan
                   </Badge>
 
                   {/* User menu - only show for authenticated users */}
