@@ -5,6 +5,7 @@ from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlert
 from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
+from . import revenue_views
 from .billing_api import cancel_subscription_api, paypal_plans_meta_api
 from django.http import JsonResponse
 
@@ -104,6 +105,8 @@ urlpatterns = [
     
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
+    path('billing/validate-discount/', revenue_views.validate_discount_code, name='validate_discount_code_alt'),
+    path('billing/apply-discount/', revenue_views.apply_discount_code, name='apply_discount_code_alt'),
 
     # Billing management
     path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),

@@ -49,6 +49,8 @@ export default function Checkout() {
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
   const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
   const [promo, setPromo] = useState("");
+  const [applied, setApplied] = useState(null);
+  const [applying, setApplying] = useState(false);
   const [meta, setMeta] = useState(null);
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [metaError, setMetaError] = useState("");
@@ -126,6 +128,42 @@ export default function Checkout() {
                 <Label htmlFor="promo" className="text-sm text-gray-600">Promo Code (optional)</Label>
                 <Input id="promo" placeholder="PROMO2025" value={promo} onChange={(e) => setPromo(sanitizeCode(e.target.value))} />
                 <div className="text-xs text-gray-500 mt-1">Letters, numbers, dash and underscore only.</div>
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="outline" disabled={!promo || applying || !planMeta} onClick={async () => {
+                    try {
+                      setApplying(true);
+                      const amount = isAnnual ? planMeta.annual_final_price : planMeta.monthly_price;
+                      const { data } = await api.post('/billing/apply-discount/', { code: promo, billing_cycle: isAnnual ? 'annual' : 'monthly', amount });
+                      if (data?.success) {
+                        setApplied({
+                          code: data.code,
+                          final_amount: data.final_amount,
+                          original_amount: data.original_amount,
+                          savings_percentage: data.savings_percentage,
+                          message: data.message,
+                        });
+                      }
+                    } catch (e) {
+                      setApplied(null);
+                    } finally {
+                      setApplying(false);
+                    }
+                  }}>Apply</Button>
+                </div>
+                {applied && (
+                  <div className="mt-3 text-sm">
+                    <div className="text-green-700">Code {applied.code} applied.</div>
+                    <div className="text-gray-700">
+                      Today: ${Number(applied.final_amount).toFixed(2)}{isAnnual ? ' (annual)' : ' (monthly)'}
+                    </div>
+                    {!isAnnual && (
+                      <div className="text-gray-500 text-xs">Next month: ${Number(applied.original_amount).toFixed(2)}</div>
+                    )}
+                    {isAnnual && (
+                      <div className="text-gray-500 text-xs">Next year: ${Number(planMeta.annual_list_price).toFixed(2)} (before annual discount)</div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="text-xs text-gray-500">
                 You can change or cancel your plan anytime from Account → Plan & Billing.
@@ -146,7 +184,7 @@ export default function Checkout() {
               <PayPalCheckout
                 planType={plan}
                 billingCycle={cycle}
-                discountCode={(promo || referralCode) || null}
+                discountCode={(applied?.code || promo || referralCode) || null}
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
