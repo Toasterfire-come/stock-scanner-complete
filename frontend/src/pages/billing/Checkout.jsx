@@ -72,7 +72,49 @@ export default function Checkout() {
           if (data?.success) setMeta(data.data); else setMetaError('Failed to load pricing');
         }
       } catch (e) {
-        if (isMounted) setMetaError('Failed to load pricing');
+        // Fallback local meta when API is unavailable (e.g., 404)
+        if (isMounted) {
+          const pct = 15;
+          const bronzeAnnual = 299.99, silverAnnual = 599.99, goldAnnual = 959.99;
+          const discountAnnual = (v) => Number((v * 0.85).toFixed(2));
+          setMeta({
+            currency: 'USD',
+            discounts: { annual_percent: pct },
+            plans: {
+              bronze: {
+                name: 'Bronze',
+                monthly_price: 24.99,
+                annual_list_price: bronzeAnnual,
+                annual_final_price: discountAnnual(bronzeAnnual),
+                paypal_plan_ids: {
+                  monthly: process.env.REACT_APP_PAYPAL_PLAN_BRONZE_MONTHLY || '',
+                  annual: process.env.REACT_APP_PAYPAL_PLAN_BRONZE_ANNUAL || '',
+                },
+              },
+              silver: {
+                name: 'Silver',
+                monthly_price: 49.99,
+                annual_list_price: silverAnnual,
+                annual_final_price: discountAnnual(silverAnnual),
+                paypal_plan_ids: {
+                  monthly: process.env.REACT_APP_PAYPAL_PLAN_SILVER_MONTHLY || '',
+                  annual: process.env.REACT_APP_PAYPAL_PLAN_SILVER_ANNUAL || '',
+                },
+              },
+              gold: {
+                name: 'Gold',
+                monthly_price: 79.99,
+                annual_list_price: goldAnnual,
+                annual_final_price: discountAnnual(goldAnnual),
+                paypal_plan_ids: {
+                  monthly: process.env.REACT_APP_PAYPAL_PLAN_GOLD_MONTHLY || '',
+                  annual: process.env.REACT_APP_PAYPAL_PLAN_GOLD_ANNUAL || '',
+                },
+              },
+            },
+          });
+          setMetaError('');
+        }
       } finally {
         if (isMounted) setLoadingMeta(false);
       }
