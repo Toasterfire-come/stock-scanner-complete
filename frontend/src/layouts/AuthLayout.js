@@ -1,8 +1,20 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { BarChart3 } from 'lucide-react';
 
 const AuthLayout = () => {
+  const location = useLocation();
+  const isPlanSelection = location.pathname === '/auth/plan-selection';
+
+  if (isPlanSelection) {
+    // Render full-width for plan selection to avoid narrow, mobile-only layout
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Outlet />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
