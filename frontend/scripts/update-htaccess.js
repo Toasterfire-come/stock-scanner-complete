@@ -1,31 +1,24 @@
 /* eslint-disable no-console */
 const SftpClient = require('ssh2-sftp-client');
 
-const HTACCESS_CONTENT = `# SPA routing and redirect protection
+const HTACCESS_CONTENT = `# Canonical host and SPA routing
 Options -Indexes -MultiViews
-DirectoryIndex index.html
-DirectorySlash Off
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
 
-# Avoid infinite redirects by preventing external redirect to index.html
-RewriteCond %{THE_REQUEST} \s/+(index\.html) [NC]
-RewriteRule ^ / [R=302,L]
+# Canonical domain: redirect www -> apex
+RewriteCond %{HTTP_HOST} ^www\.tradescanpro\.com$ [NC]
+RewriteRule ^(.*)$ https://tradescanpro.com/$1 [L,R=301]
 
 # Serve existing files/directories as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Clear cookies utility (optional): /__clear_cookies
-RewriteCond %{REQUEST_URI} ^/__clear_cookies$ [NC]
-RewriteRule ^ - [L]
-
-# Fallback all routes to index.html without redirect
-RewriteCond %{REQUEST_URI} !^/index\.html$
-RewriteRule ^ index.html [L]
+# SPA fallback to index.html (internal rewrite, no redirect)
+RewriteRule . /index.html [L]
 </IfModule>
 `;
 
