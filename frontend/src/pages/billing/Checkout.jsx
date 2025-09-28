@@ -144,6 +144,12 @@ export default function Checkout() {
     return d;
   }, [applied, isAnnual]);
 
+  // Prefer plan IDs from local env over backend meta when available
+  const envPlanId = useMemo(() => {
+    const envKey = `REACT_APP_PAYPAL_PLAN_${String(plan).toUpperCase()}_${(isAnnual ? 'annual' : 'monthly').toUpperCase()}`;
+    return process.env[envKey] || '';
+  }, [plan, isAnnual]);
+
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="max-w-4xl mx-auto">
@@ -250,7 +256,7 @@ export default function Checkout() {
                 planType={plan}
                 billingCycle={cycle}
                 discountCode={(applied?.code || promo || referralCode) || null}
-                paypalPlanId={planMeta?.paypal_plan_ids?.[isAnnual ? 'annual' : 'monthly'] || ''}
+                paypalPlanId={envPlanId || (planMeta?.paypal_plan_ids?.[isAnnual ? 'annual' : 'monthly'] || '')}
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
