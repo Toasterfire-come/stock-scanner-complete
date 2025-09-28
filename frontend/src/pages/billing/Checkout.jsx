@@ -56,11 +56,7 @@ export default function Checkout() {
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [metaError, setMetaError] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/auth/sign-in?redirect=/checkout", { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  // Allow checkout to load even if not authenticated so pricing and PayPal can initialize
 
   useEffect(() => {
     let isMounted = true;
