@@ -6,6 +6,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Separator } from "../../components/ui/separator";
 
 export default function SignIn() {
   const navigate = useNavigate();
@@ -129,6 +130,26 @@ export default function SignIn() {
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>
+
+        {/* Social Sign-In */}
+        <div className="relative py-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+          </div>
+        </div>
+        <div className="grid">
+          <Button variant="outline" className="w-full h-11 sm:h-12 text-base" asChild>
+            <a href={`${process.env.REACT_APP_BACKEND_URL || ''}/auth/google/login`} rel="noopener noreferrer">
+              <span className="inline-flex items-center">
+                <span className="mr-2">G</span>
+                Sign in with Google
+              </span>
+            </a>
+          </Button>
+        </div>
 
         <div className="text-center text-sm">
           Don't have an account?{" "}
