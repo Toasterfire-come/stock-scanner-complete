@@ -41,7 +41,7 @@ const QuickActions = ({ className = "", variant = "floating" }) => {
             <span className="sr-only">Quick Actions</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side={variant === 'floating' ? 'top' : 'bottom'} className="w-72 p-2" sideOffset={10}>
+        <DropdownMenuContent align="end" side={variant === 'floating' ? 'top' : 'bottom'} className="w-72 p-2 max-h-80 overflow-y-auto" sideOffset={10}>
           <DropdownMenuLabel className="flex items-center gap-2 text-base font-semibold">
             <Zap className="h-4 w-4 text-blue-600" /> Quick Actions
           </DropdownMenuLabel>

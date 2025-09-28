@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+THIS SHOULD BE A LINTER ERRORimport React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
@@ -169,8 +169,8 @@ export default function PlanSelection() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
-      <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-16 sm:py-24 px-4">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
           {isNewUser && (
             <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-2">
