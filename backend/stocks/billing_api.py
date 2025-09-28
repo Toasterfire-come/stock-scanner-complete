@@ -19,6 +19,7 @@ from django.db.models import Q, Sum
 import json
 import logging
 from datetime import datetime, timedelta
+from uuid import uuid4
 import os
 from decimal import Decimal
 
@@ -193,6 +194,28 @@ def _paypal_get_access_token():
     resp = requests.post(url, headers=headers, data={ 'grant_type': 'client_credentials' }, timeout=15)
     resp.raise_for_status()
     return resp.json().get('access_token')
+
+# Generate PayPal client token for Advanced Cards/Hosted Fields
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def paypal_client_token_api(request):
+    try:
+        token = _paypal_get_access_token()
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        }
+        url = f"{_paypal_base_url()}/v1/identity/generate-token"
+        r = requests.post(url, headers=headers, timeout=15)
+        r.raise_for_status()
+        data = r.json() or {}
+        client_token = data.get('client_token') or data.get('clientToken')
+        return JsonResponse({'success': True, 'client_token': client_token})
+    except Exception as e:
+        logger.error(f"PayPal client token error: {e}")
+        return JsonResponse({'success': False, 'error': 'Failed to generate client token'}, status=500)
 
 # Public pricing/config for checkout (plan names, prices, PayPal plan IDs)
 @csrf_exempt
@@ -414,6 +437,8 @@ def create_paypal_order_api(request):
                 'Authorization': f'Bearer {token}',
                 'Content-Type': 'application/json'
             }
+            # Idempotency
+            headers['PayPal-Request-Id'] = f"create-{uuid4().hex}"
             resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders", headers=headers, json=payload, timeout=20)
             resp.raise_for_status()
             order = resp.json()
@@ -510,6 +535,7 @@ def capture_paypal_order_api(request):
             # Capture via PayPal REST v2
             token = _paypal_get_access_token()
             headers = { 'Authorization': f'Bearer {token}', 'Content-Type': 'application/json' }
+            headers['PayPal-Request-Id'] = f"capture-{order_id}-{uuid4().hex}"
             resp = requests.post(f"{_paypal_base_url()}/v2/checkout/orders/{order_id}/capture", headers=headers, json={}, timeout=20)
             try:
                 resp.raise_for_status()

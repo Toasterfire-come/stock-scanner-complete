@@ -35,6 +35,7 @@ urlpatterns = [
     path('billing/update-payment-method/', billing_api.update_payment_method_api, name='update_payment_method'),
     path('billing/create-paypal-order/', billing_api.create_paypal_order_api, name='create_paypal_order'),
     path('billing/capture-paypal-order/', billing_api.capture_paypal_order_api, name='capture_paypal_order'),
+    path('billing/paypal-client-token/', billing_api.paypal_client_token_api, name='paypal_client_token'),
     path('billing/paypal-webhook/', billing_api.paypal_webhook_api, name='paypal_webhook'),
     path('billing/paypal-status/', billing_api.paypal_status_api, name='paypal_status'),
     
