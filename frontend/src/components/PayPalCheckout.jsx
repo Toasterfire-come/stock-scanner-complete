@@ -1,11 +1,11 @@
 /* eslint-disable react/jsx-no-target-blank */
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { changePlan } from "../api/client";
+import { changePlan, createPayPalOrder, capturePayPalOrder } from "../api/client";
 
 const PayPalCheckout = ({ 
   planType = "bronze", 
@@ -24,6 +24,8 @@ const PayPalCheckout = ({
     const key = `REACT_APP_PAYPAL_PLAN_${String(planType).toUpperCase()}_${billingCycle.toUpperCase()}`;
     return process.env[key];
   }, [planType, billingCycle, paypalPlanId]);
+
+  const isSubscription = !!planId;
 
   const createSubscription = async (data, actions) => {
     if (!planId) {
@@ -48,12 +50,50 @@ const PayPalCheckout = ({
     }
   };
 
+  // Orders API flow (fallback when subscription plan IDs are not configured)
+  const createOrder = useCallback(async () => {
+    setError("");
+    try {
+      setIsLoading(true);
+      const res = await createPayPalOrder(planType, billingCycle, discountCode || undefined);
+      if (!res?.success || !res?.order_id) {
+        throw new Error(res?.error || "Failed to create order");
+      }
+      return res.order_id; // PayPal order ID or stub ID
+    } catch (e) {
+      const msg = e?.message || "Failed to initialize payment";
+      setError(msg);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [planType, billingCycle, discountCode]);
+
+  const onApproveOrder = useCallback(async (data /*, actions */) => {
+    setIsLoading(true);
+    try {
+      const orderId = data?.orderID;
+      const capture = await capturePayPalOrder(orderId, { plan_type: planType, billing_cycle: billingCycle, discount_code: discountCode || undefined });
+      if (!capture?.success) {
+        throw new Error(capture?.error || "Payment capture failed");
+      }
+      onSuccess?.({ orderId, planType, billingCycle, paymentDetails: capture });
+    } catch (err) {
+      setError(err?.message || "Payment failed");
+      onError?.(err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [planType, billingCycle, discountCode, onSuccess, onError]);
+
   const paypalOptions = {
     "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || "AcqbU_Y_mQK6pdy8hzpPif0UPWrG8_3vi3wxc-cIM2n2PAhdq4kJaq7BO4jUtAvfrYCgvYOzFbsGCHVY",
     currency: "USD",
-    intent: "subscription",
-    vault: true,
-    components: "buttons,marks,messages"
+    intent: isSubscription ? "subscription" : "capture",
+    vault: isSubscription,
+    components: "buttons,marks,messages",
+    "enable-funding": isSubscription ? undefined : "card"
   };
 
   return (
@@ -89,36 +129,61 @@ const PayPalCheckout = ({
           )}
           
           <PayPalScriptProvider options={paypalOptions}>
-            {!planId && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  Payment temporarily unavailable: missing plan configuration.
-                </AlertDescription>
-              </Alert>
-            )}
-            {/* Default subscription button (PayPal Wallet) */}
-            <PayPalButtons
-              style={{ layout: "vertical", color: "blue", shape: "rect", label: "subscribe" }}
-              disabled={isLoading || !planId}
-              fundingSource={undefined}
-              createSubscription={createSubscription}
-              onApprove={onApproveSubscription}
-              onError={(err) => { console.error("PayPal subscription error:", err); onError?.(err); }}
-              onCancel={onCancel}
-            />
-
-            {/* Pay Later if available */}
-            {billingCycle === 'annual' && (
-              <PayPalButtons
-                style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                disabled={isLoading || !planId}
-                fundingSource="paylater"
-                createSubscription={createSubscription}
-                onApprove={onApproveSubscription}
-                onError={(err) => { console.error("PayPal PayLater subscription error:", err); onError?.(err); }}
-                onCancel={onCancel}
-              />
+            {isSubscription ? (
+              <>
+                {!planId && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Payment temporarily unavailable: missing plan configuration.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {/* Subscription Wallet */}
+                <PayPalButtons
+                  style={{ layout: "vertical", color: "blue", shape: "rect", label: "subscribe" }}
+                  disabled={isLoading || !planId}
+                  fundingSource={undefined}
+                  createSubscription={createSubscription}
+                  onApprove={onApproveSubscription}
+                  onError={(err) => { console.error("PayPal subscription error:", err); onError?.(err); }}
+                  onCancel={onCancel}
+                />
+                {billingCycle === 'annual' && (
+                  <PayPalButtons
+                    style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                    disabled={isLoading || !planId}
+                    fundingSource="paylater"
+                    createSubscription={createSubscription}
+                    onApprove={onApproveSubscription}
+                    onError={(err) => { console.error("PayPal PayLater subscription error:", err); onError?.(err); }}
+                    onCancel={onCancel}
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                {/* Orders API: PayPal Wallet */}
+                <PayPalButtons
+                  style={{ layout: "vertical", color: "blue", shape: "rect", label: "checkout" }}
+                  disabled={isLoading}
+                  fundingSource={undefined}
+                  createOrder={createOrder}
+                  onApprove={onApproveOrder}
+                  onError={(err) => { console.error("PayPal order error:", err); onError?.(err); setError("Payment error. Please try again."); }}
+                  onCancel={onCancel}
+                />
+                {/* Orders API: Card button */}
+                <PayPalButtons
+                  style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
+                  disabled={isLoading}
+                  fundingSource="card"
+                  createOrder={createOrder}
+                  onApprove={onApproveOrder}
+                  onError={(err) => { console.error("PayPal card error:", err); onError?.(err); setError("Card payment error. Please try again."); }}
+                  onCancel={onCancel}
+                />
+              </>
             )}
           </PayPalScriptProvider>
         </div>

@@ -701,7 +701,7 @@ export async function capturePayPalOrder(orderId, paymentData) {
   try {
     const { data } = await api.post('/billing/capture-paypal-order/', {
       order_id: orderId,
-      payment_data: paymentData
+      ...(paymentData || {})
     });
     return data;
   } catch (error) {
