@@ -129,6 +129,25 @@ export default function Checkout() {
     return isAnnual ? planMeta.annual_final_price : planMeta.monthly_price;
   })();
 
+  // Billing amounts and dates
+  const todayAmount = useMemo(() => {
+    if (applied?.final_amount != null) return Number(applied.final_amount);
+    return displayPrice != null ? Number(displayPrice) : null;
+  }, [applied, displayPrice]);
+  const nextPrice = useMemo(() => {
+    if (!planMeta) return null;
+    if (applied?.code === 'TRIAL') return Number(planMeta.monthly_price);
+    if (isAnnual) return Number(planMeta.annual_final_price ?? planMeta.annual_list_price);
+    return Number(planMeta.monthly_price);
+  }, [planMeta, applied, isAnnual]);
+  const nextDate = useMemo(() => {
+    const d = new Date();
+    if (applied?.code === 'TRIAL') d.setDate(d.getDate() + 7);
+    else if (isAnnual) d.setDate(d.getDate() + 365);
+    else d.setDate(d.getDate() + 30);
+    return d;
+  }, [applied, isAnnual]);
+
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="max-w-4xl mx-auto">
@@ -165,6 +184,16 @@ export default function Checkout() {
                   <Label className={!isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>Monthly</Label>
                   <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
                   <Label className={isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>Annual</Label>
+                </div>
+              </div>
+              <div className="mt-3 space-y-1 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Today</span>
+                  <span className="font-semibold">{todayAmount != null ? `$${todayAmount.toFixed(2)}` : '-'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Next billing</span>
+                  <span className="font-semibold">{nextPrice != null ? `$${nextPrice.toFixed(2)}` : '-'} on {nextDate ? nextDate.toLocaleDateString() : '-'}</span>
                 </div>
               </div>
               <div>
@@ -209,10 +238,7 @@ export default function Checkout() {
                 )}
               </div>
               <div className="text-xs text-gray-500">
-                You can change or cancel your plan anytime from Account → Plan & Billing.
-              </div>
-              <div className="pt-2">
-                <Button variant="outline" className="w-full" onClick={() => navigate("/pricing")}>Change Plan</Button>
+                You can cancel your plan anytime from Account → Plan & Billing.
               </div>
             </CardContent>
           </Card>
