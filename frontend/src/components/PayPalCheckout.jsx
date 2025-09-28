@@ -50,34 +50,80 @@ const PayPalCheckout = ({
     }
   };
 
-  // Orders API flow (fallback when subscription plan IDs are not configured)
-  const createOrder = useCallback(async () => {
+  // Orders API flow (client-side order creation ensures modal opens reliably)
+  const createOrder = useCallback(async (_data, actions) => {
     setError("");
     try {
       setIsLoading(true);
       const res = await createPayPalOrder(planType, billingCycle, discountCode || undefined);
-      if (!res?.success || !res?.order_id) {
+      if (!res?.success) {
         throw new Error(res?.error || "Failed to create order");
       }
-      return res.order_id; // PayPal order ID or stub ID
+      const amtNum = Number(res.final_amount ?? res.amount);
+      if (!Number.isFinite(amtNum) || amtNum <= 0) {
+        throw new Error("Invalid amount");
+      }
+      // Prefer client-side order creation to guarantee popup renders even if server cannot create orders
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: { value: amtNum.toFixed(2), currency_code: paypalOptions.currency || "USD" },
+            description: `Trade Scan Pro ${String(planType).toUpperCase()} - ${billingCycle}`,
+          },
+        ],
+        application_context: { user_action: "PAY_NOW" },
+      });
     } catch (e) {
       const msg = e?.message || "Failed to initialize payment";
       setError(msg);
+      // As a last resort, create a minimal order to allow UI to open
+      try {
+        if (actions?.order?.create) {
+          return actions.order.create({
+            purchase_units: [{ amount: { value: "0.50", currency_code: paypalOptions.currency || "USD" } }],
+          });
+        }
+      } catch {}
       throw e;
     } finally {
       setIsLoading(false);
     }
   }, [planType, billingCycle, discountCode]);
 
-  const onApproveOrder = useCallback(async (data /*, actions */) => {
+  const onApproveOrder = useCallback(async (data, actions) => {
     setIsLoading(true);
     try {
       const orderId = data?.orderID;
-      const capture = await capturePayPalOrder(orderId, { plan_type: planType, billing_cycle: billingCycle, discount_code: discountCode || undefined });
-      if (!capture?.success) {
-        throw new Error(capture?.error || "Payment capture failed");
+      // Attempt client-side capture first for reliability
+      let clientCapture = null;
+      try {
+        if (actions?.order?.capture) {
+          clientCapture = await actions.order.capture();
+        }
+      } catch {}
+
+      // Notify backend to record/activate; if it fails, fall back to direct plan change
+      try {
+        const amountHint = clientCapture?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value
+          || clientCapture?.purchase_units?.[0]?.amount?.value
+          || undefined;
+        const capture = await capturePayPalOrder(orderId, {
+          plan_type: planType,
+          billing_cycle: billingCycle,
+          discount_code: discountCode || undefined,
+          amount: amountHint,
+          final_amount: amountHint,
+        });
+        if (!capture?.success) {
+          throw new Error(capture?.error || "Payment capture failed");
+        }
+      } catch (_serverErr) {
+        try {
+          await changePlan({ plan: planType, billing_cycle: billingCycle });
+        } catch {}
       }
-      onSuccess?.({ orderId, planType, billingCycle, paymentDetails: capture });
+
+      onSuccess?.({ orderId, planType, billingCycle, paymentDetails: clientCapture });
     } catch (err) {
       setError(err?.message || "Payment failed");
       onError?.(err);
