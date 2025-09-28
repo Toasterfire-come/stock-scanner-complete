@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const SftpClient = require('ssh2-sftp-client');
 
-const HTACCESS_CONTENT = `# SPA routing without loops
+const HTACCESS_CONTENT = `# SPA routing with safe HTTPS enforcement (no loops)
 Options -Indexes -MultiViews
 DirectoryIndex index.html
 DirectorySlash Off
@@ -9,6 +9,11 @@ DirectorySlash Off
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
+
+# Enforce HTTPS only when neither HTTPS nor proxy header indicate https
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Serve existing files/directories as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
