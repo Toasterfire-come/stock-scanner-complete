@@ -194,6 +194,66 @@ def _paypal_get_access_token():
     resp.raise_for_status()
     return resp.json().get('access_token')
 
+# Public pricing/config for checkout (plan names, prices, PayPal plan IDs)
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def paypal_plans_meta_api(request):
+    try:
+        PRICES = {
+            'bronze': { 'monthly': Decimal('24.99'), 'annual': Decimal('299.99') },
+            'silver': { 'monthly': Decimal('49.99'), 'annual': Decimal('599.99') },
+            'gold':   { 'monthly': Decimal('79.99'), 'annual': Decimal('959.99') },
+        }
+
+        # Apply standard 15% annual discount for displayed final annual amount
+        def annual_final(plan_key):
+            return (PRICES[plan_key]['annual'] * Decimal('0.85')).quantize(Decimal('0.01'))
+
+        def env(name, default=''):
+            return os.environ.get(name, default)
+
+        data = {
+            'currency': 'USD',
+            'discounts': { 'annual_percent': 15 },
+            'plans': {
+                'bronze': {
+                    'name': 'Bronze',
+                    'monthly_price': float(PRICES['bronze']['monthly']),
+                    'annual_list_price': float(PRICES['bronze']['annual']),
+                    'annual_final_price': float(annual_final('bronze')),
+                    'paypal_plan_ids': {
+                        'monthly': env('PAYPAL_PLAN_BRONZE_MONTHLY', ''),
+                        'annual': env('PAYPAL_PLAN_BRONZE_ANNUAL', ''),
+                    },
+                },
+                'silver': {
+                    'name': 'Silver',
+                    'monthly_price': float(PRICES['silver']['monthly']),
+                    'annual_list_price': float(PRICES['silver']['annual']),
+                    'annual_final_price': float(annual_final('silver')),
+                    'paypal_plan_ids': {
+                        'monthly': env('PAYPAL_PLAN_SILVER_MONTHLY', ''),
+                        'annual': env('PAYPAL_PLAN_SILVER_ANNUAL', ''),
+                    },
+                },
+                'gold': {
+                    'name': 'Gold',
+                    'monthly_price': float(PRICES['gold']['monthly']),
+                    'annual_list_price': float(PRICES['gold']['annual']),
+                    'annual_final_price': float(annual_final('gold')),
+                    'paypal_plan_ids': {
+                        'monthly': env('PAYPAL_PLAN_GOLD_MONTHLY', ''),
+                        'annual': env('PAYPAL_PLAN_GOLD_ANNUAL', ''),
+                    },
+                },
+            }
+        }
+        return JsonResponse({ 'success': True, 'data': data })
+    except Exception as e:
+        logger.error(f"PayPal plans meta error: {e}")
+        return JsonResponse({ 'success': False, 'error': 'Failed to load plans' }, status=500)
+
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])

@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { Switch } from "../../components/ui/switch";
 import PayPalCheckout from "../../components/PayPalCheckout";
 import { useAuth } from "../../context/SecureAuthContext";
+import { api } from "../../api/client";
 import { Input } from "../../components/ui/input";
 
 const PLAN_NAMES = {
@@ -48,6 +49,9 @@ export default function Checkout() {
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
   const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
   const [promo, setPromo] = useState("");
+  const [meta, setMeta] = useState(null);
+  const [loadingMeta, setLoadingMeta] = useState(true);
+  const [metaError, setMetaError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -55,7 +59,30 @@ export default function Checkout() {
     }
   }, [isAuthenticated, navigate]);
 
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        setLoadingMeta(true);
+        const { data } = await api.get('/billing/plans-meta/');
+        if (isMounted) {
+          if (data?.success) setMeta(data.data); else setMetaError('Failed to load pricing');
+        }
+      } catch (e) {
+        if (isMounted) setMetaError('Failed to load pricing');
+      } finally {
+        if (isMounted) setLoadingMeta(false);
+      }
+    })();
+    return () => { isMounted = false; };
+  }, []);
+
   const cycle = isAnnual ? "annual" : "monthly";
+  const planMeta = meta?.plans?.[plan] || null;
+  const displayPrice = (() => {
+    if (!planMeta) return null;
+    return isAnnual ? planMeta.annual_final_price : planMeta.monthly_price;
+  })();
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -63,6 +90,11 @@ export default function Checkout() {
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3">Secure Checkout</Badge>
           <h1 className="text-3xl font-bold text-gray-900">Complete your upgrade</h1>
+          {planMeta && (
+            <p className="mt-2 text-gray-600">
+              {planMeta.name} • {isAnnual ? 'Annual' : 'Monthly'} • ${displayPrice?.toFixed(2)} {isAnnual && meta?.discounts?.annual_percent ? <span className="text-green-600">(includes {meta.discounts.annual_percent}% off)</span> : null}
+            </p>
+          )}
           {referralCode && (
             <div className="mt-3 text-sm text-blue-900 bg-blue-50 border border-blue-200 inline-flex items-center px-3 py-2 rounded">
               Referral applied: {referralCode}

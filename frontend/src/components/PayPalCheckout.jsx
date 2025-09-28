@@ -19,6 +19,7 @@ const PayPalCheckout = ({
   const [error, setError] = useState("");
 
   const planId = useMemo(() => {
+    // Support env-driven plan ids; backend also supports direct order creation flow
     const key = `REACT_APP_PAYPAL_PLAN_${String(planType).toUpperCase()}_${billingCycle.toUpperCase()}`;
     return process.env[key];
   }, [planType, billingCycle]);
@@ -47,7 +48,7 @@ const PayPalCheckout = ({
   };
 
   const paypalOptions = {
-    "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || "sb-test-client-id-placeholder",
+    "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || "AcqbU_Y_mQK6pdy8hzpPif0UPWrG8_3vi3wxc-cIM2n2PAhdq4kJaq7BO4jUtAvfrYCgvYOzFbsGCHVY",
     currency: "USD",
     intent: "subscription",
     vault: true,
