@@ -208,7 +208,7 @@ export default function Checkout() {
                       setApplying(true);
                       const amount = isAnnual ? planMeta.annual_final_price : planMeta.monthly_price;
                       const { data } = await api.post('/billing/apply-discount/', { code: promo, billing_cycle: isAnnual ? 'annual' : 'monthly', amount });
-                      if (data?.success) {
+                      if (data?.success && data?.applies_discount) {
                         setApplied({
                           code: data.code,
                           final_amount: data.final_amount,
@@ -216,6 +216,9 @@ export default function Checkout() {
                           savings_percentage: data.savings_percentage,
                           message: data.message,
                         });
+                      } else {
+                        // Not applicable (e.g., REF50 on annual) or failed
+                        setApplied(null);
                       }
                     } catch (e) {
                       setApplied(null);
