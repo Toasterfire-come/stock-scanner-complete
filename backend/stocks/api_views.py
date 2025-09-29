@@ -25,6 +25,7 @@ from utils.instrument_classifier import classify_instrument, filter_fields_by_in
 from .models import Stock, StockAlert, StockPrice, Screener, UserPortfolio, PortfolioHolding, UserWatchlist
 from .plan_limits import get_limits_for_user
 from emails.models import EmailSubscription
+from django.conf import settings
 # import yfinance as yf  # Disabled: DB-only mode
 # import requests  # Disabled: DB-only mode
 # from bs4 import BeautifulSoup  # Disabled: DB-only mode
@@ -337,6 +338,248 @@ def stock_insiders_api(request, ticker: str):
     except Exception as e:
         logger.error(f"Insiders API error for {ticker}: {e}", exc_info=True)
         return Response({ 'success': False, 'error': 'Failed to fetch insider data' }, status=500)
+
+# ====================
+# SHAREABLE WATCHLISTS & PORTFOLIOS (no DB migration – HMAC slugs)
+# ====================
+import hmac
+import hashlib
+import base64
+import os as _os
+
+def _b64url(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).decode('utf-8').rstrip('=')
+
+def _b64url_decode(s: str) -> bytes:
+    padding = '=' * (-len(s) % 4)
+    return base64.urlsafe_b64decode(s + padding)
+
+def _share_make_slug(resource_type: str, resource_id: str) -> str:
+    # payload = type:id:nonce
+    nonce = _b64url(_os.urandom(12))
+    payload = f"{resource_type}:{resource_id}:{nonce}".encode('utf-8')
+    key = (getattr(settings, 'SECRET_KEY', 'secret') or 'secret').encode('utf-8')
+    sig = hmac.new(key, payload, hashlib.sha256).digest()
+    return _b64url(payload) + '.' + _b64url(sig)
+
+def _share_parse_slug(slug: str):
+    try:
+        parts = slug.split('.')
+        if len(parts) != 2:
+            return None
+        raw, sig = parts
+        payload = _b64url_decode(raw)
+        key = (getattr(settings, 'SECRET_KEY', 'secret') or 'secret').encode('utf-8')
+        expected = hmac.new(key, payload, hashlib.sha256).digest()
+        if not hmac.compare_digest(expected, _b64url_decode(sig)):
+            return None
+        txt = payload.decode('utf-8')
+        typ, rid, _nonce = txt.split(':', 2)
+        return { 'type': typ, 'id': rid }
+    except Exception:
+        return None
+
+from .models import UserWatchlist, WatchlistItem, UserPortfolio, PortfolioHolding
+from django.contrib.auth.decorators import login_required
+
+def _sanitize_watchlist_payload(w: UserWatchlist):
+    try:
+        items = WatchlistItem.objects.filter(watchlist=w).select_related('stock')
+        stocks = []
+        returns = []
+        for it in items:
+            ticker = getattr(it.stock, 'ticker', None) or ''
+            name = getattr(it.stock, 'company_name', None) or getattr(it.stock, 'name', '')
+            current_price = float(it.current_price or getattr(it.stock, 'current_price', 0) or 0)
+            change_percent = float(getattr(it.stock, 'change_percent', 0) or 0)
+            since_added_ret = None
+            try:
+                if it.added_price and it.added_price > 0 and it.current_price is not None:
+                    since_added_ret = float(((it.current_price - it.added_price) / it.added_price) * 100)
+            except Exception:
+                since_added_ret = None
+            if since_added_ret is not None:
+                returns.append(since_added_ret)
+            stocks.append({
+                'ticker': ticker,
+                'name': name,
+                'current_price': current_price,
+                'change_percent': change_percent,
+                'since_added_return_percent': since_added_ret
+            })
+        avg_return = round(sum(returns)/len(returns), 2) if returns else 0.0
+        return {
+            'type': 'watchlist',
+            'version': '1',
+            'name': w.name,
+            'description': w.description or '',
+            'performance': { 'avg_return_percent': avg_return, 'window_days': 30 },
+            'stocks': stocks,
+            'last_updated': w.updated_at.isoformat() if hasattr(w, 'updated_at') and w.updated_at else None
+        }
+    except Exception:
+        return { 'type': 'watchlist', 'version': '1', 'name': w.name, 'stocks': [] }
+
+def _sanitize_portfolio_payload(p: UserPortfolio):
+    try:
+        holdings = PortfolioHolding.objects.filter(portfolio=p).select_related('stock')
+        total_value = 0.0
+        total_cost = 0.0
+        items = []
+        for h in holdings:
+            ticker = getattr(h.stock, 'ticker', None) or ''
+            name = getattr(h.stock, 'company_name', None) or getattr(h.stock, 'name', '')
+            current_price = float(h.current_price or getattr(h.stock, 'current_price', 0) or 0)
+            value = float(h.shares * h.current_price) if h.shares is not None and h.current_price is not None else 0.0
+            cost = float(h.shares * h.average_cost) if h.shares is not None and h.average_cost is not None else 0.0
+            total_value += value
+            total_cost += cost
+            items.append({
+                'ticker': ticker,
+                'name': name,
+                'allocation_percent': None,  # computed below
+                'shares': float(h.shares or 0),
+                'average_cost': float(h.average_cost or 0),
+                'current_price': current_price
+            })
+        alloc_sum = sum((i['shares'] * i['current_price']) for i in items) or 0.0
+        for i in items:
+            v = (i['shares'] * i['current_price'])
+            i['allocation_percent'] = round((v/alloc_sum)*100, 2) if alloc_sum > 0 else 0.0
+        total_ret_pct = round(((total_value - total_cost)/total_cost)*100, 2) if total_cost > 0 else 0.0
+        return {
+            'type': 'portfolio',
+            'version': '1',
+            'name': p.name,
+            'performance': { 'total_value': round(total_value, 2), 'total_return_percent': total_ret_pct },
+            'holdings': items,
+            'last_updated': p.updated_at.isoformat() if hasattr(p, 'updated_at') and p.updated_at else None
+        }
+    except Exception:
+        return { 'type': 'portfolio', 'version': '1', 'name': p.name, 'holdings': [] }
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_watchlist_create_link(request, watchlist_id: str):
+    try:
+        if not request.user.is_authenticated:
+            return Response({ 'success': False, 'error': 'Authentication required' }, status=401)
+        w = UserWatchlist.objects.get(id=watchlist_id, user=request.user)
+        slug = _share_make_slug('watchlist', str(w.id))
+        return Response({ 'success': True, 'slug': slug, 'url': f"/w/{slug}" })
+    except UserWatchlist.DoesNotExist:
+        return Response({ 'success': False, 'error': 'Not found' }, status=404)
+    except Exception as e:
+        logger.error(f"share_watchlist_create_link error: {e}")
+        return Response({ 'success': False }, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_portfolio_create_link(request, portfolio_id: str):
+    try:
+        if not request.user.is_authenticated:
+            return Response({ 'success': False, 'error': 'Authentication required' }, status=401)
+        p = UserPortfolio.objects.get(id=portfolio_id, user=request.user)
+        slug = _share_make_slug('portfolio', str(p.id))
+        return Response({ 'success': True, 'slug': slug, 'url': f"/p/{slug}" })
+    except UserPortfolio.DoesNotExist:
+        return Response({ 'success': False, 'error': 'Not found' }, status=404)
+    except Exception as e:
+        logger.error(f"share_portfolio_create_link error: {e}")
+        return Response({ 'success': False }, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_watchlist_public(request, slug: str):
+    info = _share_parse_slug(slug)
+    if not info or info.get('type') != 'watchlist':
+        return Response({ 'success': False, 'error': 'Invalid link' }, status=404)
+    try:
+        w = UserWatchlist.objects.get(id=info['id'])
+    except UserWatchlist.DoesNotExist:
+        return Response({ 'success': False, 'error': 'Not found' }, status=404)
+    payload = _sanitize_watchlist_payload(w)
+    return Response({ 'success': True, **payload })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_portfolio_public(request, slug: str):
+    info = _share_parse_slug(slug)
+    if not info or info.get('type') != 'portfolio':
+        return Response({ 'success': False, 'error': 'Invalid link' }, status=404)
+    try:
+        p = UserPortfolio.objects.get(id=info['id'])
+    except UserPortfolio.DoesNotExist:
+        return Response({ 'success': False, 'error': 'Not found' }, status=404)
+    payload = _sanitize_portfolio_payload(p)
+    return Response({ 'success': True, **payload })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_watchlist_export(request, slug: str):
+    resp = share_watchlist_public(request, slug)
+    return resp
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_portfolio_export(request, slug: str):
+    resp = share_portfolio_public(request, slug)
+    return resp
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_watchlist_copy(request, slug: str):
+    if not request.user.is_authenticated:
+        return Response({ 'success': False, 'error': 'Authentication required' }, status=401)
+    info = _share_parse_slug(slug)
+    if not info or info.get('type') != 'watchlist':
+        return Response({ 'success': False, 'error': 'Invalid link' }, status=404)
+    try:
+        w = UserWatchlist.objects.get(id=info['id'])
+        # Create new watchlist for user
+        nw = UserWatchlist.objects.create(user=request.user, name=f"Copy of {w.name}")
+        items = WatchlistItem.objects.filter(watchlist=w)
+        for it in items:
+            WatchlistItem.objects.create(
+                watchlist=nw,
+                stock=it.stock,
+                added_price=it.added_price,
+                current_price=it.current_price,
+                notes=''
+            )
+        return Response({ 'success': True, 'id': nw.id, 'url': f"/app/watchlists/{nw.id}" })
+    except UserWatchlist.DoesNotExist:
+        return Response({ 'success': False, 'error': 'Not found' }, status=404)
+    except Exception as e:
+        logger.error(f"share_watchlist_copy error: {e}")
+        return Response({ 'success': False }, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_portfolio_copy(request, slug: str):
+    if not request.user.is_authenticated:
+        return Response({ 'success': False, 'error': 'Authentication required' }, status=401)
+    info = _share_parse_slug(slug)
+    if not info or info.get('type') != 'portfolio':
+        return Response({ 'success': False, 'error': 'Invalid link' }, status=404)
+    try:
+        p = UserPortfolio.objects.get(id=info['id'])
+        np = UserPortfolio.objects.create(user=request.user, name=f"Copy of {p.name}")
+        hs = PortfolioHolding.objects.filter(portfolio=p)
+        for h in hs:
+            PortfolioHolding.objects.create(
+                portfolio=np,
+                stock=h.stock,
+                shares=h.shares,
+                average_cost=h.average_cost,
+                current_price=h.current_price
+            )
+        return Response({ 'success': True, 'id': np.id, 'url': f"/app/portfolio" })
+    except UserPortfolio.DoesNotExist:
+        return Response({ 'success': False, 'error': 'Not found' }, status=404)
+    except Exception as e:
+        logger.error(f"share_portfolio_copy error: {e}")
+        return Response({ 'success': False }, status=500)
 
     try:
         return float((price_change / (current_price - price_change)) * 100)

@@ -417,6 +417,34 @@ export async function getInsiderTrades(ticker) {
     return { success: false, error: error?.response?.data?.error || 'Failed to load insiders' };
   }
 }
+
+// ====================
+// SHARING (PUBLIC VIEW + COPY)
+// ====================
+export async function getSharedWatchlist(slug) {
+  const { data } = await api.get(`/share/watchlists/${encodeURIComponent(slug)}/`);
+  return data;
+}
+export async function getSharedPortfolio(slug) {
+  const { data } = await api.get(`/share/portfolios/${encodeURIComponent(slug)}/`);
+  return data;
+}
+export async function copySharedWatchlist(slug) {
+  const { data } = await api.post(`/share/watchlists/${encodeURIComponent(slug)}/copy`);
+  return data;
+}
+export async function copySharedPortfolio(slug) {
+  const { data } = await api.post(`/share/portfolios/${encodeURIComponent(slug)}/copy`);
+  return data;
+}
+export async function createShareLinkForWatchlist(id) {
+  const { data } = await api.post(`/share/watchlists/${encodeURIComponent(id)}/create`);
+  return data;
+}
+export async function createShareLinkForPortfolio(id) {
+  const { data } = await api.post(`/share/portfolios/${encodeURIComponent(id)}/create`);
+  return data;
+}
 export async function filterStocks(params = {}) { 
   ensureApiQuotaAndIncrement('runScreener');
   const { data } = await api.get('/filter/', { params }); 

@@ -182,6 +182,10 @@ function App() {
                   <Route path="/pricing" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
                   
+                  {/* Public Share Pages */}
+                  <Route path="/w/:slug" element={<PlaceholderPage title="Shared Watchlist" />} />
+                  <Route path="/p/:slug" element={<PlaceholderPage title="Shared Portfolio" />} />
+
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />
                   <Route path="/data" element={<PlaceholderPage title="Data Coverage" />} />

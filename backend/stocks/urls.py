@@ -50,6 +50,16 @@ urlpatterns = [
     # Generic stock endpoints (after specific routes)
     path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
     path('stocks/<str:ticker>/insiders/', api_views.stock_insiders_api, name='stock_insiders'),
+
+    # Shareable Watchlists & Portfolios
+    path('share/watchlists/<str:slug>/', api_views.share_watchlist_public, name='share_watchlist_public'),
+    path('share/portfolios/<str:slug>/', api_views.share_portfolio_public, name='share_portfolio_public'),
+    path('share/watchlists/<str:slug>/export.json', api_views.share_watchlist_export, name='share_watchlist_export'),
+    path('share/portfolios/<str:slug>/export.json', api_views.share_portfolio_export, name='share_portfolio_export'),
+    path('share/watchlists/<str:slug>/copy', api_views.share_watchlist_copy, name='share_watchlist_copy'),
+    path('share/portfolios/<str:slug>/copy', api_views.share_portfolio_copy, name='share_portfolio_copy'),
+    path('share/watchlists/<str:watchlist_id>/create', api_views.share_watchlist_create_link, name='share_watchlist_create_link'),
+    path('share/portfolios/<str:portfolio_id>/create', api_views.share_portfolio_create_link, name='share_portfolio_create_link'),
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
     path('trending/', api_views.trending_stocks_api, name='trending_stocks'),
     path('market-stats/', api_views.market_stats_api, name='market_stats'),

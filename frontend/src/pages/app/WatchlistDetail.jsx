@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { listWatchlists, createAlert } from '../../api/client';
+import { listWatchlists, createAlert, createShareLinkForWatchlist } from '../../api/client';
 import { TrendingUp, TrendingDown, Bell, Save, ArrowLeft } from 'lucide-react';
 
 export default function WatchlistDetail() {
@@ -93,6 +93,22 @@ export default function WatchlistDetail() {
           <Button asChild variant="ghost"><Link to="/app/watchlists"><ArrowLeft className="h-4 w-4" /></Link></Button>
           <h1 className="text-2xl font-semibold">Watchlist: {groupName}</h1>
           <Badge variant="outline">{list.length} items</Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={async () => {
+            try {
+              const res = await createShareLinkForWatchlist(id);
+              if (res?.success && res?.url) {
+                const link = `${window.location.origin}${res.url}`;
+                await navigator.clipboard.writeText(link);
+                toast.success('Share link copied');
+              } else {
+                toast.error('Failed to create share link');
+              }
+            } catch {
+              toast.error('Failed to create share link');
+            }
+          }}>Share</Button>
         </div>
       </div>
 

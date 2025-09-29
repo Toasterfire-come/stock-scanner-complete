@@ -34,7 +34,8 @@ import {
   listStocks,
   getPlanLimits,
   listPortfolios,
-  createPortfolio
+  createPortfolio,
+  createShareLinkForPortfolio
 } from "../../api/client";
 
 const Portfolio = () => {
@@ -474,6 +475,21 @@ const Portfolio = () => {
           <Button variant="outline" onClick={() => setIsCreatePortfolioOpen(true)}>New Portfolio</Button>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={async () => {
+            try {
+              if (!selectedPortfolioId) { toast.error('Select a portfolio'); return; }
+              const res = await createShareLinkForPortfolio(selectedPortfolioId);
+              if (res?.success && res?.url) {
+                const link = `${window.location.origin}${res.url}`;
+                await navigator.clipboard.writeText(link);
+                toast.success('Share link copied');
+              } else {
+                toast.error('Failed to create share link');
+              }
+            } catch {
+              toast.error('Failed to create share link');
+            }
+          }}>Share</Button>
           <Button onClick={handleExportPortfolio} variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export
