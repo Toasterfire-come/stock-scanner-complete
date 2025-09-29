@@ -424,8 +424,9 @@ const StockDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="valuation">Valuation</TabsTrigger>
                 <TabsTrigger value="news">News</TabsTrigger>
               </TabsList>
 
@@ -482,6 +483,110 @@ const StockDetail = () => {
                       height={400}
                       showControls={true}
                     />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="valuation" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Fair Value (Restricted) — Subsector Multiples</CardTitle>
+                    <CardDescription>
+                      Based on sector/subsector P/E multiples × forward EPS
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const v = stockData?.valuation || {};
+                      const fv = v.fair_value_restricted || {};
+                      const items = [
+                        { label: 'Low', value: fv.low },
+                        { label: 'Base', value: fv.base },
+                        { label: 'High', value: fv.high },
+                      ].filter(x => Number.isFinite(Number(x.value)));
+                      const data = items.map((x, i) => ({ name: x.label, value: Number(x.value) }));
+                      if (!data.length) return <div className="text-sm text-gray-500">No fair value data yet.</div>;
+                      return (
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="colorFv" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis tickFormatter={(v)=>`$${v}`} />
+                              <Tooltip formatter={(v)=>[`$${Number(v).toFixed(2)}`, 'Fair Value']} />
+                              <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorFv)" />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      );
+                    })()}
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <div className="text-gray-500">Forward EPS</div>
+                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.forward_eps)) ? Number(stockData.valuation.forward_eps).toFixed(2) : 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Sector</div>
+                        <div className="font-medium">{stockData?.valuation?.sector || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">PE (Subsector Base)</div>
+                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.subsector_pe_base)) ? Number(stockData.valuation.subsector_pe_base).toFixed(1) : 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Analyst Target</div>
+                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.analyst_target)) ? formatCurrency(stockData.valuation.analyst_target) : 'N/A'}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Fair Value (Unrestricted) — Company Trajectory</CardTitle>
+                    <CardDescription>
+                      Company forward P/E × forward EPS (log scale)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const v = stockData?.valuation || {};
+                      const point = Number(v.fair_value_unrestricted);
+                      if (!Number.isFinite(point)) return <div className="text-sm text-gray-500">No fair value data yet.</div>;
+                      const data = [
+                        { name: 'Now', value: Number(currentData.current_price) || 0 },
+                        { name: 'FV', value: point },
+                      ];
+                      return (
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis scale="log" domain={['auto','auto']} tickFormatter={(v)=>`$${v}`} allowDataOverflow />
+                              <Tooltip formatter={(v)=>[`$${Number(v).toFixed(2)}`, 'Value']} />
+                              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      );
+                    })()}
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <div className="text-gray-500">Forward P/E</div>
+                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.forward_pe)) ? Number(stockData.valuation.forward_pe).toFixed(1) : 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">RSI(14)</div>
+                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.rsi14)) ? Number(stockData.valuation.rsi14).toFixed(2) : 'N/A'}</div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

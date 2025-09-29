@@ -500,6 +500,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     info = None
     hist = None
     current_price = None
+    earnings_trend = None
 
     # Approach 1: Try fast_info first for speed, then fall back to full info with retry
     info = None
@@ -543,6 +544,12 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 current_price = intraday['Close'].dropna().iloc[-1]
         except Exception:
             pass
+
+    # Try to fetch earnings trend for forward EPS and growth
+    try:
+        earnings_trend = yfinance_retry_wrapper(lambda: ticker_obj.get_earnings_trend())
+    except Exception:
+        earnings_trend = None
 
     # Determine if we have enough data to process
     has_data = hist is not None and not hist.empty
@@ -660,6 +667,149 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'created_at': now_ts()
     }
 
+    # =========================
+    # Valuation & Technicals (MVP)
+    # - Forward EPS & PE
+    # - Sector subsector PE mapping (restricted fair value)
+    # - Company forward PE × EPS (unrestricted fair value)
+    # - Analyst target mean price
+    # - RSI(14)
+    # =========================
+
+    def _safe_float(x):
+        try:
+            return float(x) if x is not None and not pd.isna(x) else None
+        except Exception:
+            return None
+
+    # Forward EPS
+    forward_eps = None
+    try:
+        if info:
+            forward_eps = _safe_float(info.get('forwardEps'))
+        if forward_eps is None and earnings_trend is not None:
+            try:
+                # yfinance get_earnings_trend returns a DataFrame; attempt to parse nextYear EPS
+                if hasattr(earnings_trend, 'loc'):
+                    if 'earningsTrend' in getattr(earnings_trend, 'columns', []):
+                        # fallback path not typically used
+                        pass
+                    # Common shape has index with rows and columns including 'epsTrend'
+                    # Try to locate 'next year' EPS estimate
+                # Generic: try attributes as dict-like
+            except Exception:
+                pass
+        # Fallback: use trailing/forward combined already extracted in base_data
+        if forward_eps is None:
+            fe = base_data.get('earnings_per_share')
+            forward_eps = _safe_float(fe)
+    except Exception:
+        forward_eps = _safe_float(base_data.get('earnings_per_share'))
+
+    # Forward PE
+    forward_pe = None
+    try:
+        if fast_info is not None and hasattr(fast_info, 'forward_pe') and getattr(fast_info, 'forward_pe'):
+            forward_pe = _safe_float(getattr(fast_info, 'forward_pe'))
+        if forward_pe is None and info:
+            forward_pe = _safe_float(info.get('forwardPE'))
+        if forward_pe is None and info:
+            # As last resort use trailing PE
+            forward_pe = _safe_float(info.get('trailingPE'))
+    except Exception:
+        pass
+
+    # Sector/Industry and mapping to subsector multiples
+    sector = None
+    industry = None
+    if info:
+        sector = info.get('sector') or None
+        industry = info.get('industry') or None
+
+    SECTOR_PE_MULTIPLES = {
+        'Technology': {'low': 15.0, 'base': 22.0, 'high': 30.0},
+        'Information Technology': {'low': 15.0, 'base': 22.0, 'high': 30.0},
+        'Consumer Discretionary': {'low': 12.0, 'base': 18.0, 'high': 24.0},
+        'Consumer Staples': {'low': 12.0, 'base': 17.0, 'high': 22.0},
+        'Health Care': {'low': 12.0, 'base': 18.0, 'high': 25.0},
+        'Healthcare': {'low': 12.0, 'base': 18.0, 'high': 25.0},
+        'Financials': {'low': 8.0, 'base': 12.0, 'high': 16.0},
+        'Industrials': {'low': 10.0, 'base': 16.0, 'high': 20.0},
+        'Energy': {'low': 6.0, 'base': 9.0, 'high': 12.0},
+        'Utilities': {'low': 10.0, 'base': 15.0, 'high': 18.0},
+        'Real Estate': {'low': 12.0, 'base': 16.0, 'high': 20.0},
+        'Materials': {'low': 9.0, 'base': 13.0, 'high': 17.0},
+        'Communication Services': {'low': 12.0, 'base': 18.0, 'high': 24.0},
+    }
+    default_multiples = {'low': 10.0, 'base': 15.0, 'high': 20.0}
+    multiples = SECTOR_PE_MULTIPLES.get(sector or '', default_multiples)
+
+    # Fair values
+    fv_restricted = {'low': None, 'base': None, 'high': None}
+    fv_unrestricted = None
+    if forward_eps and forward_eps > 0:
+        try:
+            fv_restricted = {
+                'low': round(multiples['low'] * forward_eps, 2),
+                'base': round(multiples['base'] * forward_eps, 2),
+                'high': round(multiples['high'] * forward_eps, 2),
+            }
+        except Exception:
+            pass
+        if forward_pe and forward_pe > 0:
+            try:
+                fv_unrestricted = round(forward_pe * forward_eps, 2)
+            except Exception:
+                fv_unrestricted = None
+
+    # Analyst target
+    analyst_target = None
+    try:
+        if info:
+            analyst_target = _safe_float(info.get('targetMeanPrice'))
+    except Exception:
+        pass
+
+    # RSI(14)
+    rsi14 = None
+    try:
+        # Use existing hist if available; otherwise fetch a month of daily data
+        hist_for_rsi = None
+        if hist is not None and not hist.empty and len(hist) >= 15:
+            hist_for_rsi = hist
+        else:
+            hist_for_rsi = yfinance_retry_wrapper(lambda: ticker_obj.history(period="1mo", interval="1d", timeout=timeout))
+        if hist_for_rsi is not None and not hist_for_rsi.empty:
+            closes = hist_for_rsi['Close'].dropna()
+            if len(closes) >= 15:
+                delta = closes.diff()
+                gain = delta.where(delta > 0, 0.0)
+                loss = -delta.where(delta < 0, 0.0)
+                roll_up = gain.rolling(window=14, min_periods=14).mean()
+                roll_down = loss.rolling(window=14, min_periods=14).mean()
+                rs = roll_up / roll_down
+                rsi = 100.0 - (100.0 / (1.0 + rs))
+                rsi14 = round(float(rsi.iloc[-1]), 2)
+    except Exception:
+        rsi14 = None
+
+    valuation_payload = {
+        'forward_eps': forward_eps,
+        'forward_pe': forward_pe,
+        'sector': sector,
+        'industry': industry,
+        'subsector_pe_low': multiples['low'],
+        'subsector_pe_base': multiples['base'],
+        'subsector_pe_high': multiples['high'],
+        'fair_value_restricted': fv_restricted,
+        'fair_value_unrestricted': fv_unrestricted,
+        'analyst_target': analyst_target,
+        'rsi14': rsi14,
+    }
+
+    # Attach to returned payload for non-DB flows (test/export); ensure DB save ignores it
+    stock_data['valuation'] = valuation_payload
+
     # Remove transient fields not present in DB schema
     stock_data.pop('shares_outstanding', None)
 
@@ -675,9 +825,16 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 return stock_data
             # Serialize DB writes to avoid SQLite lock errors
             with db_write_lock:
+                # Prepare defaults: store valuation in JSON field
+                db_defaults = dict(stock_data)
+                db_defaults.pop('valuation', None)
+                try:
+                    db_defaults['valuation_json'] = valuation_payload
+                except Exception:
+                    pass
                 stock, created = Stock.objects.update_or_create(
                     ticker=symbol,
-                    defaults=stock_data
+                    defaults=db_defaults
                 )
                 if stock_data.get('current_price'):
                     try:

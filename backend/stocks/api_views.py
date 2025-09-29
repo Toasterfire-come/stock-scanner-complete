@@ -592,6 +592,8 @@ def stock_detail_api(request, ticker):
             
             # Additional metadata
             'last_updated': stock.last_updated.isoformat() if getattr(stock, 'last_updated', None) else None,
+            # Valuation JSON (if present)
+            'valuation': getattr(stock, 'valuation_json', None),
         }
 
         return Response({
