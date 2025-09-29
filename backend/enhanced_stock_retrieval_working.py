@@ -30,6 +30,7 @@ import subprocess
 import pytz
 from pathlib import Path
 import importlib.util
+from numbers import Number
 
 # Django imports for database integration
 # Lazy Django initialization: only import when saving to DB
@@ -180,6 +181,43 @@ def parse_arguments():
     parser.add_argument('-combined', action='store_true', help='Use combined tickers from data/combined instead of CSV')
     parser.add_argument('-combined-file', type=str, default=None, help='Path to specific combined_tickers_*.py file')
     return parser.parse_args()
+
+# ---------------------
+# JSON sanitization helpers (convert Decimals, numpy/pandas types to primitives)
+# ---------------------
+def _coerce_number(x):
+    try:
+        import numpy as _np  # type: ignore
+        if isinstance(x, _np.generic):
+            if _np.isnan(x):
+                return None
+            return x.item()
+    except Exception:
+        pass
+    try:
+        import pandas as _pd  # type: ignore
+        if isinstance(x, _pd.Timestamp):
+            return x.isoformat()
+        if _pd.isna(x):
+            return None
+    except Exception:
+        pass
+    try:
+        from decimal import Decimal as _Dec
+        if isinstance(x, _Dec):
+            return float(x)
+    except Exception:
+        pass
+    if isinstance(x, Number):
+        return x
+    return x
+
+def _json_sanitize(obj):
+    if isinstance(obj, dict):
+        return { k: _json_sanitize(v) for k, v in obj.items() }
+    if isinstance(obj, list):
+        return [ _json_sanitize(v) for v in obj ]
+    return _coerce_number(obj)
 
 # Removed _safe_decimal - using shared safe_decimal_conversion from utils.stock_data
 
@@ -588,6 +626,9 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
             pass
     
     # Calculate additional metrics
+    # Ensure avg_volume_3mon fallback before DVAV
+    if (not base_data.get('avg_volume_3mon')) and base_data.get('volume'):
+        base_data['avg_volume_3mon'] = base_data['volume']
     dvav = calculate_volume_ratio(base_data.get('volume'), base_data.get('avg_volume_3mon'))
     
     # Extract bid/ask data
@@ -666,6 +707,16 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'last_updated': now_ts(),
         'created_at': now_ts()
     }
+
+    # Fill price_to_book if not present and book_value + current_price available
+    try:
+        if not stock_data.get('price_to_book') and stock_data.get('book_value') and stock_data.get('current_price'):
+            bv = float(stock_data['book_value'])
+            cp = float(stock_data['current_price'])
+            if bv > 0:
+                stock_data['price_to_book'] = safe_decimal_conversion(cp / bv)
+    except Exception:
+        pass
 
     # =========================
     # Valuation & Technicals (MVP)
@@ -1007,6 +1058,17 @@ def run_stock_update(args):
     
     logger.info(f"CYCLE COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 60)
+
+    # Optional output file for test/export flows
+    try:
+        out_path = getattr(args, 'output', None)
+        if out_path:
+            safe_results = [r for r in results if r]
+            with open(out_path, 'w') as f:
+                json.dump({ 'success': True, 'count': len(safe_results), 'data': _json_sanitize(safe_results) }, f, default=str)
+            logger.info(f"WROTE OUTPUT: {out_path} ({len(safe_results)} records)")
+    except Exception as e:
+        logger.error(f"Failed to write output JSON: {e}")
 
 def _build_subprocess_args(args) -> list[str]:
     """Build argument list to spawn a one-off cycle in a separate process."""
