@@ -1,5 +1,27 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # Enforce HTTPS only when both indicators show non-https (avoid proxy loops)
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Serve existing files and directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Do not rewrite index.html further
+  RewriteRule ^index\.html$ - [L]
+
+  # SPA fallback to index.html
+  RewriteRule . /index.html [L]
+</IfModule>
+
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
   # Enforce HTTPS (respect proxies)
   RewriteCond %{HTTPS} !=on [OR]
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
