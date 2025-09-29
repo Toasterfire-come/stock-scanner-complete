@@ -78,8 +78,10 @@ export default function Checkout() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+  
+  useEffect(() => {
     if (!promo && referralCode) setPromo(referralCode);
-  }, [referralCode]);
+  }, [referralCode, promo]);
   const [applied, setApplied] = useState(null);
   const [applying, setApplying] = useState(false);
   const [meta, setMeta] = useState(null);
