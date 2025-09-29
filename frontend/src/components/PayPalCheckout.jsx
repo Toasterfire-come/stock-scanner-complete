@@ -27,12 +27,29 @@ const PayPalCheckout = ({
 
   const isSubscription = !!planId;
 
+  const isEmbedded = (() => {
+    try {
+      if (window && window.self !== window.top) return true; // iframe/webview
+      const ua = navigator.userAgent || '';
+      // Heuristic for common in-app browsers
+      return /(FBAN|FBAV|Instagram|Line|WeChat|MicroMessenger|Twitter|Snapchat|TikTok|WebView|wv)/i.test(ua);
+    } catch (_) { return false; }
+  })();
+
   const createSubscription = async (data, actions) => {
     if (!planId) {
       setError("Subscription cannot be created: missing PayPal plan ID");
       throw new Error("Missing plan_id");
     }
-    return actions.subscription.create({ plan_id: planId });
+    const baseUrl = (process.env.REACT_APP_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
+    return actions.subscription.create({
+      plan_id: planId,
+      application_context: {
+        user_action: "SUBSCRIBE_NOW",
+        return_url: `${baseUrl}/checkout/success`,
+        cancel_url: `${baseUrl}/checkout/failure`
+      }
+    });
   };
 
   const onApproveSubscription = async (data, _actions) => {
@@ -64,6 +81,7 @@ const PayPalCheckout = ({
         throw new Error("Invalid amount");
       }
       // Prefer client-side order creation to guarantee popup renders even if server cannot create orders
+      const baseUrl = (process.env.REACT_APP_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
       return actions.order.create({
         purchase_units: [
           {
@@ -71,7 +89,13 @@ const PayPalCheckout = ({
             description: `Trade Scan Pro ${String(planType).toUpperCase()} - ${billingCycle}`,
           },
         ],
-        application_context: { user_action: "PAY_NOW" },
+        application_context: {
+          user_action: "PAY_NOW",
+          return_url: `${baseUrl}/checkout/success`,
+          cancel_url: `${baseUrl}/checkout/failure`,
+          landing_page: "LOGIN",
+          shipping_preference: "NO_SHIPPING"
+        },
       });
     } catch (e) {
       const msg = e?.message || "Failed to initialize payment";
@@ -79,8 +103,14 @@ const PayPalCheckout = ({
       // As a last resort, create a minimal order to allow UI to open
       try {
         if (actions?.order?.create) {
+          const baseUrl = (process.env.REACT_APP_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
           return actions.order.create({
             purchase_units: [{ amount: { value: "0.50", currency_code: paypalOptions.currency || "USD" } }],
+            application_context: {
+              user_action: "PAY_NOW",
+              return_url: `${baseUrl}/checkout/success`,
+              cancel_url: `${baseUrl}/checkout/failure`
+            }
           });
         }
       } catch {}
@@ -133,8 +163,10 @@ const PayPalCheckout = ({
     }
   }, [planType, billingCycle, discountCode, onSuccess, onError]);
 
+  const clientId = process.env.REACT_APP_PAYPAL_CLIENT_ID;
+  const usingFallbackClient = !clientId;
   const paypalOptions = {
-    "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || "AcqbU_Y_mQK6pdy8hzpPif0UPWrG8_3vi3wxc-cIM2n2PAhdq4kJaq7BO4jUtAvfrYCgvYOzFbsGCHVY",
+    "client-id": clientId || "AcqbU_Y_mQK6pdy8hzpPif0UPWrG8_3vi3wxc-cIM2n2PAhdq4kJaq7BO4jUtAvfrYCgvYOzFbsGCHVY",
     currency: "USD",
     intent: isSubscription ? "subscription" : "capture",
     vault: isSubscription,
@@ -173,8 +205,15 @@ const PayPalCheckout = ({
               <span>Processing payment...</span>
             </div>
           )}
+          {usingFallbackClient && (
+            <Alert>
+              <AlertDescription>
+                PayPal client is not fully configured. Using fallback client-id; checkout may fail. Set REACT_APP_PAYPAL_CLIENT_ID in your environment.
+              </AlertDescription>
+            </Alert>
+          )}
           
-          <PayPalScriptProvider deferLoading={process.env.REACT_APP_LAZY_PAYPAL === 'on'} options={paypalOptions}>
+          <PayPalScriptProvider deferLoading={false} options={paypalOptions}>
             {isSubscription ? (
               <>
                 {!planId && (
@@ -182,6 +221,13 @@ const PayPalCheckout = ({
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
                       Payment temporarily unavailable: missing plan configuration.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {isEmbedded && (
+                  <Alert>
+                    <AlertDescription>
+                      You're using an in-app or embedded browser. We'll complete checkout using a full-page redirect for reliability.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -210,6 +256,13 @@ const PayPalCheckout = ({
             ) : (
               <>
                 {/* Orders API: PayPal Wallet */}
+                {isEmbedded && (
+                  <Alert>
+                    <AlertDescription>
+                      You're using an in-app or embedded browser. We'll complete checkout using a full-page redirect for reliability.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <PayPalButtons
                   style={{ layout: "vertical", color: "blue", shape: "rect", label: "checkout" }}
                   disabled={isLoading}
