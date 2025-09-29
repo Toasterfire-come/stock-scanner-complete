@@ -404,6 +404,19 @@ export async function getRealTimeQuote(ticker) {
   const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/`); 
   return data; 
 }
+
+// ====================
+// INSIDERS (SEC FORM 4)
+// ====================
+export async function getInsiderTrades(ticker) {
+  try {
+    ensureApiQuotaAndIncrement('getStock');
+    const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/insiders/`);
+    return data;
+  } catch (error) {
+    return { success: false, error: error?.response?.data?.error || 'Failed to load insiders' };
+  }
+}
 export async function filterStocks(params = {}) { 
   ensureApiQuotaAndIncrement('runScreener');
   const { data } = await api.get('/filter/', { params }); 

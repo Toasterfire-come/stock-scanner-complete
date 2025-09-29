@@ -49,6 +49,7 @@ urlpatterns = [
 
     # Generic stock endpoints (after specific routes)
     path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
+    path('stocks/<str:ticker>/insiders/', api_views.stock_insiders_api, name='stock_insiders'),
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
     path('trending/', api_views.trending_stocks_api, name='trending_stocks'),
     path('market-stats/', api_views.market_stats_api, name='market_stats'),

@@ -36,7 +36,7 @@ import {
   AlertTriangle,
   ExternalLink
 } from "lucide-react";
-import { getStock, getRealTimeQuote, addWatchlist, createAlert } from "../../api/client";
+import { getStock, getRealTimeQuote, addWatchlist, createAlert, getInsiderTrades } from "../../api/client";
 import GoogleFinanceChart from "../../components/GoogleFinanceChart";
 import StockNewsIntegration from "../../components/StockNewsIntegration";
 
@@ -49,6 +49,7 @@ const StockDetail = () => {
   const [chartData, setChartData] = useState([]);
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [newsItems, setNewsItems] = useState([]);
+  const [insiders, setInsiders] = useState({ loading: true, data: null, error: null });
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -96,6 +97,17 @@ const StockDetail = () => {
     loadChart();
 
     // Load news via stock news endpoint if needed (handled by StockNewsIntegration component)
+
+    // Load insider trades
+    (async () => {
+      try {
+        setInsiders((s) => ({ ...s, loading: true, error: null }));
+        const res = await getInsiderTrades(symbol);
+        setInsiders({ loading: false, data: res, error: res?.success ? null : (res?.error || 'No data') });
+      } catch (e) {
+        setInsiders({ loading: false, data: null, error: 'Failed to load' });
+      }
+    })();
 
     // Set up real-time updates every 30 seconds
     const interval = setInterval(async () => {
@@ -424,9 +436,10 @@ const StockDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="valuation">Valuation</TabsTrigger>
+                <TabsTrigger value="insiders">Insiders</TabsTrigger>
                 <TabsTrigger value="news">News</TabsTrigger>
               </TabsList>
 
@@ -587,6 +600,73 @@ const StockDetail = () => {
                         <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.rsi14)) ? Number(stockData.valuation.rsi14).toFixed(2) : 'N/A'}</div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="insiders" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Insider Trades (Last 30 Days)</CardTitle>
+                    <CardDescription>SEC Form 4 filings for executives and directors</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {insiders.loading ? (
+                      <div className="text-sm text-gray-500">Loading insider trades...</div>
+                    ) : insiders.error ? (
+                      <div className="text-sm text-red-600">{insiders.error}</div>
+                    ) : !insiders.data?.success ? (
+                      <div className="text-sm text-gray-500">No insider data available.</div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-gray-50 rounded p-3">
+                            <div className="text-xs text-gray-500">Signal</div>
+                            <div className="text-base font-semibold">{insiders.data.summary?.signal || 'Neutral'}</div>
+                          </div>
+                          <div className="bg-gray-50 rounded p-3">
+                            <div className="text-xs text-gray-500">Net Activity (shares)</div>
+                            <div className="text-base font-semibold">{Number(insiders.data.summary?.net_insider_activity_shares || 0).toLocaleString()}</div>
+                          </div>
+                          <div className="bg-gray-50 rounded p-3">
+                            <div className="text-xs text-gray-500">Records</div>
+                            <div className="text-base font-semibold">{insiders.data.summary?.records_count || 0}</div>
+                          </div>
+                          <div className="bg-gray-50 rounded p-3">
+                            <div className="text-xs text-gray-500">CIK</div>
+                            <div className="text-base font-semibold">{insiders.data.cik}</div>
+                          </div>
+                        </div>
+                        <div className="overflow-auto border rounded">
+                          <table className="min-w-full text-sm">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="text-left p-2">Date</th>
+                                <th className="text-left p-2">Insider</th>
+                                <th className="text-left p-2">Role</th>
+                                <th className="text-left p-2">Type</th>
+                                <th className="text-right p-2">Shares</th>
+                                <th className="text-right p-2">Price</th>
+                                <th className="text-right p-2">Value</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {(insiders.data.records || []).map((r, idx) => (
+                                <tr key={idx} className="odd:bg-white even:bg-gray-50">
+                                  <td className="p-2 whitespace-nowrap">{r.date}</td>
+                                  <td className="p-2">{r.insider_name}</td>
+                                  <td className="p-2">{r.role}</td>
+                                  <td className="p-2">{r.transaction_type}{r.ad ? ` (${r.ad === 'A' ? 'Buy' : (r.ad === 'D' ? 'Sell' : r.ad)})` : ''}</td>
+                                  <td className="p-2 text-right">{Number(r.shares || 0).toLocaleString()}</td>
+                                  <td className="p-2 text-right">{r.price != null ? `$${Number(r.price).toFixed(2)}` : '-'}</td>
+                                  <td className="p-2 text-right">{r.value != null ? `$${Number(r.value).toFixed(2)}` : '-'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

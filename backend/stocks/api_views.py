@@ -44,6 +44,300 @@ def calculate_change_percent(current_price, price_change):
     """Calculate percentage change"""
     if not current_price or not price_change:
         return 0.0
+# ====================
+# SEC EDGAR INSIDER TRADES (Form 4)
+# ====================
+import re
+import xml.etree.ElementTree as ET
+import requests
+from django.views.decorators.cache import cache_page
+
+_SEC_TICKER_CACHE = {
+    'last_fetch': None,
+    'map': {}
+}
+
+def _ensure_sec_ticker_map():
+    try:
+        import time
+        now = int(time.time())
+        # Refresh at most every 6 hours
+        if _SEC_TICKER_CACHE['last_fetch'] and (now - _SEC_TICKER_CACHE['last_fetch'] < 6*3600) and _SEC_TICKER_CACHE['map']:
+            return _SEC_TICKER_CACHE['map']
+        url = 'https://www.sec.gov/files/company_tickers.json'
+        headers = {
+            'User-Agent': 'TradeScanPro/1.0 (contact@tradescanpro.com)'
+        }
+        r = requests.get(url, headers=headers, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+        mapping = {}
+        # Newer format is an array-like object with numeric keys
+        if isinstance(data, dict):
+            for _, obj in data.items():
+                try:
+                    t = str(obj.get('ticker') or '').upper().strip()
+                    cik = int(obj.get('cik_str'))
+                    if t:
+                        mapping[t] = cik
+                except Exception:
+                    continue
+        elif isinstance(data, list):
+            for obj in data:
+                try:
+                    t = str(obj.get('ticker') or '').upper().strip()
+                    cik = int(obj.get('cik_str'))
+                    if t:
+                        mapping[t] = cik
+                except Exception:
+                    continue
+        if mapping:
+            _SEC_TICKER_CACHE['map'] = mapping
+            _SEC_TICKER_CACHE['last_fetch'] = now
+        return _SEC_TICKER_CACHE['map']
+    except Exception as e:
+        logger.warning(f"SEC ticker map fetch failed: {e}")
+        return _SEC_TICKER_CACHE['map'] or {}
+
+def _get_cik_for_ticker(ticker: str) -> str | None:
+    mapping = _ensure_sec_ticker_map()
+    cik_int = mapping.get(ticker.upper())
+    if not cik_int:
+        return None
+    return str(cik_int).zfill(10)
+
+def _fetch_recent_form4_entries(cik: str, max_count: int = 20):
+    """Fetch recent Form 4 filing entries (Atom) for a CIK."""
+    try:
+        url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=4&owner=only&count={max_count}&output=atom"
+        headers = { 'User-Agent': 'TradeScanPro/1.0 (contact@tradescanpro.com)' }
+        r = requests.get(url, headers=headers, timeout=20)
+        r.raise_for_status()
+        text = r.text
+        # Parse Atom feed
+        ns = {'a': 'http://www.w3.org/2005/Atom'}
+        root = ET.fromstring(text)
+        entries = []
+        for entry in root.findall('a:entry', ns):
+            title = (entry.findtext('a:title', default='', namespaces=ns) or '').strip()
+            updated = (entry.findtext('a:updated', default='', namespaces=ns) or '').strip()
+            link_el = entry.find('a:link', ns)
+            href = link_el.get('href') if link_el is not None else ''
+            # filing-date inside content? Some feeds include filing-date
+            content_el = entry.find('a:content', ns)
+            filing_date = ''
+            accession = ''
+            if content_el is not None and content_el.text:
+                # Try to pull accession number and filing date via regex
+                m = re.search(r'Accession Number:\s*([0-9\-]+)', content_el.text)
+                if m: accession = m.group(1).strip()
+                m2 = re.search(r'Filing Date:\s*([0-9\-]+)', content_el.text)
+                if m2: filing_date = m2.group(1).strip()
+            entries.append({ 'title': title, 'updated': updated, 'href': href, 'filing_date': filing_date, 'accession': accession })
+        return entries
+    except Exception as e:
+        logger.warning(f"SEC Atom fetch failed for CIK {cik}: {e}")
+        return []
+
+def _fetch_index_json(filing_href: str) -> dict | None:
+    try:
+        if not filing_href:
+            return None
+        # Convert filing page URL to index.json
+        # Typical filing page ends with '/index.htm'
+        idx = filing_href.rfind('/index.htm')
+        if idx == -1:
+            return None
+        index_json_url = filing_href[:idx] + '/index.json'
+        headers = { 'User-Agent': 'TradeScanPro/1.0 (contact@tradescanpro.com)', 'Accept': 'application/json' }
+        r = requests.get(index_json_url, headers=headers, timeout=20)
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        return None
+
+def _find_form4_xml_path(index_json: dict) -> str | None:
+    try:
+        # The JSON usually has directory->item list with 'name'
+        items = index_json.get('directory', {}).get('item', [])
+        for it in items:
+            name = (it.get('name') or '').lower()
+            if name.endswith('.xml') and 'form4' in name:
+                return it.get('name')
+            # Many form4 primaries are named like 'xslF345X03/primary_doc.xml' or 'primary_doc.xml'
+        # Fallback to first XML file
+        for it in items:
+            name = (it.get('name') or '').lower()
+            if name.endswith('.xml'):
+                return it.get('name')
+    except Exception:
+        pass
+    return None
+
+def _fetch_xml(url: str) -> ET.Element | None:
+    try:
+        headers = { 'User-Agent': 'TradeScanPro/1.0 (contact@tradescanpro.com)' }
+        r = requests.get(url, headers=headers, timeout=25)
+        r.raise_for_status()
+        return ET.fromstring(r.content)
+    except Exception:
+        return None
+
+def _parse_form4_xml(root: ET.Element) -> list[dict]:
+    """Return list of transactions with keys: name, role, code, ad, date, shares, price, value."""
+    if root is None:
+        return []
+    ns = {}
+    # Extract reporter name and relationships
+    reporter_name = None
+    role = None
+    try:
+        r_owner = root.find('.//reportingOwner')
+        if r_owner is not None:
+            rid = r_owner.find('.//rptOwnerId')
+            if rid is not None:
+                nm = rid.findtext('rptOwnerName')
+                reporter_name = nm.strip() if nm else None
+            rel = r_owner.find('.//reportingOwnerRelationship')
+            if rel is not None:
+                # Prefer officer title
+                officer = rel.findtext('officerTitle')
+                if officer:
+                    role = officer.strip()
+                else:
+                    # Director or officer flags
+                    if (rel.findtext('isDirector') or '').lower() == 'true':
+                        role = 'Director'
+                    elif (rel.findtext('isOfficer') or '').lower() == 'true':
+                        role = 'Officer'
+    except Exception:
+        pass
+
+    def collect(table_xpath: str):
+        items = []
+        for tx in root.findall(table_xpath):
+            try:
+                code = (tx.findtext('.//transactionCoding/transactionCode') or '').strip()
+                ad = (tx.findtext('.//transactionAmounts/transactionAcquiredDisposedCode/value') or '').strip().upper()
+                dt = (tx.findtext('.//transactionDate/value') or '').strip()
+                sh = tx.findtext('.//transactionAmounts/transactionShares/value')
+                pr = tx.findtext('.//transactionAmounts/transactionPricePerShare/value')
+                shares = float(sh) if sh not in (None, '') else None
+                price = float(pr) if pr not in (None, '') else None
+                value = shares * price if (shares is not None and price is not None) else None
+                items.append({
+                    'name': reporter_name,
+                    'role': role,
+                    'code': code,
+                    'ad': ad,
+                    'date': dt,
+                    'shares': shares,
+                    'price': price,
+                    'value': value,
+                    'table': 'nonDerivative' if 'nonDerivative' in table_xpath else 'derivative'
+                })
+            except Exception:
+                continue
+        return items
+
+    txs = []
+    txs += collect('.//nonDerivativeTable/nonDerivativeTransaction')
+    txs += collect('.//derivativeTable/derivativeTransaction')
+    return txs
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_insiders_api(request, ticker: str):
+    """Return recent insider transactions (Form 4) for a ticker (last 30 days)."""
+    try:
+        import datetime as _dt
+        ticker = ticker.upper()
+        # Basic cache
+        cache_key = f"insiders_{ticker}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        cik = _get_cik_for_ticker(ticker)
+        if not cik:
+            return Response({ 'success': False, 'error': 'CIK not found for ticker' }, status=404)
+
+        entries = _fetch_recent_form4_entries(cik, max_count=25)
+        cutoff = _dt.date.today() - _dt.timedelta(days=30)
+
+        results = []
+        net_shares = 0.0
+        for e in entries:
+            href = e.get('href') or ''
+            if not href:
+                continue
+            idx_json = _fetch_index_json(href)
+            if not idx_json:
+                continue
+            base_dir = idx_json.get('directory', {}).get('name') or ''
+            # Build root URL prefix from href up to the folder
+            # Example href: https://www.sec.gov/Archives/edgar/data/{cik}/{acc-no}/index.htm
+            prefix = href[:href.rfind('/')]  # .../{acc}/index.htm -> .../{acc}
+            form_xml_name = _find_form4_xml_path(idx_json)
+            if not form_xml_name:
+                continue
+            xml_url = f"{prefix}/{form_xml_name}"
+            root = _fetch_xml(xml_url)
+            txs = _parse_form4_xml(root)
+            for tx in txs:
+                # Filter by date window
+                try:
+                    d = tx.get('date') or ''
+                    d_obj = _dt.datetime.strptime(d, '%Y-%m-%d').date()
+                except Exception:
+                    # skip unparsable dates
+                    continue
+                if d_obj < cutoff:
+                    continue
+                shares = tx.get('shares') or 0.0
+                ad = (tx.get('ad') or '').upper()
+                if ad == 'A':
+                    net_shares += float(shares)
+                elif ad == 'D':
+                    net_shares -= float(shares)
+                results.append({
+                    'insider_name': tx.get('name') or 'Unknown',
+                    'role': tx.get('role') or 'Insider',
+                    'transaction_type': tx.get('code') or '',
+                    'ad': ad,
+                    'date': tx.get('date'),
+                    'shares': tx.get('shares'),
+                    'price': tx.get('price'),
+                    'value': tx.get('value'),
+                })
+
+        # Sort newest first
+        results.sort(key=lambda r: r.get('date') or '', reverse=True)
+        signal = 'Neutral'
+        if net_shares > 0:
+            signal = 'Net Insider Buying'
+        elif net_shares < 0:
+            signal = 'Net Insider Selling'
+
+        payload = {
+            'success': True,
+            'ticker': ticker,
+            'cik': cik,
+            'timeframe_days': 30,
+            'summary': {
+                'net_insider_activity_shares': round(float(net_shares), 2),
+                'signal': signal,
+                'records_count': len(results)
+            },
+            'records': results[:100]
+        }
+        # Cache 30 minutes
+        cache.set(cache_key, payload, 1800)
+        return Response(payload)
+    except Exception as e:
+        logger.error(f"Insiders API error for {ticker}: {e}", exc_info=True)
+        return Response({ 'success': False, 'error': 'Failed to fetch insider data' }, status=500)
+
     try:
         return float((price_change / (current_price - price_change)) * 100)
     except (ZeroDivisionError, TypeError):
