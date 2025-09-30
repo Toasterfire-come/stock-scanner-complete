@@ -718,6 +718,19 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     except Exception:
         pass
 
+    # Fill P/E ratio if missing using current price and EPS
+    try:
+        pe_val = stock_data.get('pe_ratio')
+        eps_val = stock_data.get('earnings_per_share')
+        cp_val = stock_data.get('current_price')
+        if (pe_val in (None, 0)) and (eps_val not in (None, 0)) and (cp_val not in (None, 0)):
+            epsf = float(eps_val)
+            cpf = float(cp_val)
+            if epsf and epsf > 0:
+                stock_data['pe_ratio'] = safe_decimal_conversion(cpf / epsf)
+    except Exception:
+        pass
+
     # =========================
     # Valuation & Technicals (MVP)
     # - Forward EPS & PE
