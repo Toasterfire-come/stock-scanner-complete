@@ -227,11 +227,11 @@ def normalized_domain(url: str) -> str:
 
 
 def looks_like_contributor_page(url: str, title: str) -> bool:
-    lower = (url or "").lower()
-    if any(h in lower for h in URL_HINTS):
+    lower_url = (url or "").lower()
+    if any(h in lower_url for h in URL_HINTS):
         return True
-    t = (title or "").lower()
-    if "write for us" in t or "guest post" in t or "contribute" in t:
+    combined = f"{lower_url} {(title or '').lower()}"
+    if ("write for us" in combined) or ("guest post" in combined) or ("submit article" in combined) or ("contribute" in combined) or ("become a contributor" in combined):
         return True
     return False
 
