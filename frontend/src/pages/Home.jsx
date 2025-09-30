@@ -328,6 +328,8 @@ const Home = () => {
               <span className="font-medium">Finviz</span>
               <span className="font-medium">Product Hunt</span>
               <span className="font-medium">Medium</span>
+              <a href="/stock-filter" className="underline hover:no-underline">Stock Filter</a>
+              <a href="/market-scan" className="underline hover:no-underline">Market Scan</a>
               <a href="/status" className="underline hover:no-underline">Status & Uptime</a>
             </div>
 

@@ -251,8 +251,8 @@ const PricingPro = () => {
   return (
       <div className="container mx-auto px-4 py-16">
       <SEO
-        title="Pricing | Trade Scan Pro"
-        description="Choose from Free, Bronze, Silver, and Gold plans. Longer description: real-time alerts, advanced screeners, portfolio analytics, API access, and professional trading tools for serious traders."
+        title="Pricing | Stock Filter & Market Scan Plans"
+        description="Plans for stock filter and market scan workflows: real-time alerts, watchlists, portfolios, insider metrics, and in-depth stock info."
         url="https://tradescanpro.com/pricing"
         jsonLdUrls={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}
       />
