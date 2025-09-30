@@ -43,7 +43,7 @@ const Features = () => {
       title: "NYSE Stock Screening",
       description: `Screen 10,500+ NYSE & NASDAQ stocks with 14 technical and fundamental criteria including real-time data analysis.`,
       details: [
-        "Complete NYSE & NASDAQ market coverage (10,500+ stocks)",
+        "Complete NYSE & NASDAQ market coverage (7,000+ stocks)",
         "7 Technical Indicators: RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change", 
         "7 Fundamental Indicators: Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range",
         "Custom filter combinations with saved presets",
@@ -79,15 +79,14 @@ const Features = () => {
     },
     {
       icon: <TrendingUp className="h-8 w-8" />,
-      title: "Market Intelligence",
-      description: "Real-time insights and market trend analysis.",
+      title: "SEC Insider Trading & Fair Value",
+      description: "Track insider buys/sells and view fair value vs market price charts.",
       details: [
-        "Market trend identification",
-        "Stock performance analysis",
-        "Volume and price momentum tracking",
-        "Market sector performance",
-        "Top movers and active stocks",
-        "Market condition indicators"
+        "Recent insider transactions by executives and directors",
+        "Aggregate insider sentiment by ticker",
+        "Fair value estimates vs current price",
+        "Deviation alerts when price crosses fair value",
+        "Drill-down to individual stock insights"
       ]
     }
   ];

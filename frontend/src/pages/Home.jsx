@@ -170,7 +170,7 @@ const Home = () => {
 
   const stats = [
     { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "10,500+", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "Stocks Tracked", value: "7,000+", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
     { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
   ];
@@ -258,7 +258,7 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
         title="Trade Scan Pro | Professional Stock Market Scanner"
-        description="Advanced stock screening, real-time alerts, portfolio analytics, and market intelligence for serious traders."
+        description="Advanced stock screening, stock filter and market scan tools, real-time alerts, portfolios, insider trading and fair value insights."
         url="https://tradescanpro.com/"
         jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
       />

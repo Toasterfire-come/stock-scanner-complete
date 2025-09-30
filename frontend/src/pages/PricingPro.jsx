@@ -260,7 +260,7 @@ const PricingPro = () => {
       <div className="text-center mb-16">
         <Badge variant="secondary" className="mb-4">
           <Star className="h-4 w-4 mr-1" />
-          Track 10,500+ NYSE & NASDAQ stocks with professional tools
+          Track 7,000+ NYSE & NASDAQ stocks with professional tools
         </Badge>
         
         <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
@@ -272,7 +272,7 @@ const PricingPro = () => {
         {/* Referral / Trial Messaging */}
         <div className="max-w-3xl mx-auto grid gap-3">
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-lg p-3 text-sm">
-            7‑day trial for $1 on paid plans. Cancel anytime before renewal.
+            7‑day trial for $1 on paid plans. Cancel anytime before renewal. Includes insider trading and fair value tools.
           </div>
           <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3 text-sm">
             Have a referral? First month 50% off with your code at checkout.

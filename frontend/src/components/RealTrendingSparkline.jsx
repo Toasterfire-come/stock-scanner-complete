@@ -61,7 +61,7 @@ const RealTrendingSparkline = ({
         case 'losers':
           return overview.losers || 600;
         case 'total':
-          return overview.total_stocks || 10500;
+          return overview.total_stocks || 7000;
         default:
           return 1000;
       }
@@ -76,7 +76,7 @@ const RealTrendingSparkline = ({
       case 'losers':
         return 650;
       case 'total':
-        return 10500;
+        return 7000;
       default:
         return 1000;
     }
