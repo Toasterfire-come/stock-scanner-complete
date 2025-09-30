@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { trackEvent, trackPageView } from "../lib/analytics";
 import SEO from "../components/SEO";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -41,6 +42,7 @@ const PricingPro = () => {
 
   useEffect(() => {
     fetchPlans();
+    try { trackPageView('/pricing'); } catch {}
   }, []);
 
   useEffect(() => {
@@ -240,6 +242,7 @@ const PricingPro = () => {
       navigate('/auth/sign-in');
       return;
     }
+    try { trackEvent('begin_checkout', { items: [{ item_id: planKey, item_name: plans?.[planKey]?.name }], checkout_option: isAnnual ? 'annual' : 'monthly' }); } catch {}
     navigate('/checkout', { state: { plan: planKey, cycle: isAnnual ? 'annual' : 'monthly', discount_code: referralCode || undefined } });
   };
 

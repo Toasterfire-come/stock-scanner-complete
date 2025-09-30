@@ -6,12 +6,14 @@ import "./index.css";
 import App from "./App";
 import { initSentry } from './sentry';
 import { toast } from 'sonner';
+import { initAnalytics } from './lib/analytics';
 
 // Initialize performance monitoring
 const startTime = performance.now();
 
 // Init Sentry early
 initSentry();
+try { initAnalytics(); } catch {}
 
 // Create root with security enhancements
 const root = ReactDOM.createRoot(document.getElementById("root"));

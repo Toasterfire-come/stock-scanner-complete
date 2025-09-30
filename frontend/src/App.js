@@ -121,6 +121,8 @@ import DownloadHistory from "./pages/app/exports/DownloadHistory";
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
 // import LatencyIndicator from "./components/LatencyIndicator";
+import { useEffect } from "react";
+import { trackPageView } from "./lib/analytics";
 
 // Placeholder component for missing pages
 const PlaceholderPage = ({ title }) => (
@@ -143,6 +145,10 @@ const OfflineBanner = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // initial load
+    try { trackPageView(window.location.pathname, document.title); } catch {}
+  }, []);
   return (
     <BackendStatusProvider>
       <AuthProvider>

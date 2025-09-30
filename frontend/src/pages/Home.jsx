@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
+import { trackEvent, trackPageView } from "../lib/analytics";
 import SEO from "../components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -71,6 +72,7 @@ const Home = () => {
     };
 
     fetchData();
+    try { trackPageView('/'); } catch {}
     // First-time onboarding tooltips (simple toasts)
     try {
       const seen = localStorage.getItem('onboarding-tooltips-v1') === '1';
@@ -288,7 +290,7 @@ const Home = () => {
             <div className="flex flex-col items-center gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                  <Link to="/auth/sign-up">
+                  <Link to="/auth/sign-up" onClick={() => { try { trackEvent('select_content', { content_type: 'cta', location: 'home_hero', label: 'try_free' }); } catch {} }}>
                     <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                     Try free — no card required
                     <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
@@ -303,6 +305,7 @@ const Home = () => {
                   if (!email) return;
                   // Navigate and prefill email
                   try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+                  try { trackEvent('generate_lead', { method: 'email_capture', location: 'home_hero' }); } catch {}
                   navigate('/auth/sign-up', { state: { emailPrefill: email } });
                 }}
               >

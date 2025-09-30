@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { trackEvent } from "../../lib/analytics";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
@@ -24,6 +25,16 @@ const CheckoutSuccess = () => {
       updateUser({ plan: planId });
     }
     toast.success("Payment successful! Welcome to your new plan.");
+    try {
+      if (planId) {
+        trackEvent('purchase', {
+          transaction_id: `plan_${planId}_${Date.now()}`,
+          value: Number.isFinite(numericAmount) ? Number(numericAmount) : undefined,
+          currency: 'USD',
+          items: [{ item_id: planId, item_name: planNames[planId] || planId }]
+        });
+      }
+    } catch {}
   }, [planId]);
 
   // Redirect if no payment data
