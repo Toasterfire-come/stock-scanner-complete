@@ -33,6 +33,8 @@ const About = lazy(() => import(/* webpackPrefetch: true */ "./pages/About"));
 const Contact = lazy(() => import(/* webpackPrefetch: true */ "./pages/Contact"));
 const PricingPro = lazy(() => import(/* webpackPrefetch: true */ "./pages/PricingPro"));
 const Pricing = lazy(() => import(/* webpackPrefetch: true */ "./pages/Pricing"));
+const StockFilter = lazy(() => import(/* webpackPrefetch: true */ "./pages/StockFilter"));
+const MarketScan = lazy(() => import(/* webpackPrefetch: true */ "./pages/MarketScan"));
 const Resources = lazy(() => import(/* webpackPrefetch: true */ "./pages/Resources"));
 const Press = lazy(() => import(/* webpackPrefetch: true */ "./pages/Press"));
 const Widgets = lazy(() => import(/* webpackPrefetch: true */ "./pages/Widgets"));
@@ -192,6 +194,8 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
+                  <Route path="/stock-filter" element={<StockFilter />} />
+                  <Route path="/market-scan" element={<MarketScan />} />
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/press" element={<Press />} />
                   <Route path="/widgets" element={<Widgets />} />
