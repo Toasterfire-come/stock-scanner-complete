@@ -33,6 +33,11 @@ const About = lazy(() => import(/* webpackPrefetch: true */ "./pages/About"));
 const Contact = lazy(() => import(/* webpackPrefetch: true */ "./pages/Contact"));
 const PricingPro = lazy(() => import(/* webpackPrefetch: true */ "./pages/PricingPro"));
 const Pricing = lazy(() => import(/* webpackPrefetch: true */ "./pages/Pricing"));
+const Resources = lazy(() => import(/* webpackPrefetch: true */ "./pages/Resources"));
+const Press = lazy(() => import(/* webpackPrefetch: true */ "./pages/Press"));
+const Widgets = lazy(() => import(/* webpackPrefetch: true */ "./pages/Widgets"));
+const Badges = lazy(() => import(/* webpackPrefetch: true */ "./pages/Badges"));
+const Partners = lazy(() => import(/* webpackPrefetch: true */ "./pages/Partners"));
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
 import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
@@ -181,6 +186,11 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/pricing" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/press" element={<Press />} />
+                  <Route path="/widgets" element={<Widgets />} />
+                  <Route path="/badges" element={<Badges />} />
+                  <Route path="/partners" element={<Partners />} />
                   
                   {/* Public Share Pages */}
                   <Route path="/w/:slug" element={<PlaceholderPage title="Shared Watchlist" />} />
