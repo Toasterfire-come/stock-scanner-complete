@@ -153,20 +153,58 @@ def search_duckduckgo_html(query: str, num: int = 10) -> List[Dict]:
     except Exception:
         return []
 
-    # Extract result links from HTML (simplistic; subject to change by provider)
-    # Look for href="/l/?kh=-1&uddg=<url-encoded>"
-    urls = []
-    for m in re.finditer(r'href="/l/\?kh=[^"]*?uddg=([^"&]+)', html):
-        try:
-            u = urllib.parse.unquote(m.group(1))
-            if u.startswith("http"):
-                urls.append(u)
-        except Exception:
-            continue
-        if len(urls) >= num:
+    results: List[Dict] = []
+    # Prefer anchors with class="result__a" to capture titles as well
+    for m in re.finditer(r'<a[^>]*class=\"result__a[^\"]*\"[^>]*href=\"([^\"]+)\"[^>]*>([\s\S]*?)</a>', html, flags=re.IGNORECASE):
+        href = m.group(1)
+        text = re.sub(r"<[^>]+>", "", m.group(2)).strip()
+        # Resolve final URL from uddg param if present
+        if "/l/?" in href and "uddg=" in href:
+            try:
+                q = urllib.parse.urlparse(href).query
+                uddg = dict(urllib.parse.parse_qsl(q)).get("uddg")
+                if uddg:
+                    href = urllib.parse.unquote(uddg)
+            except Exception:
+                pass
+        if href.startswith("http"):
+            results.append({"url": href, "title": text, "snippet": ""})
+        if len(results) >= num:
             break
-    # Return bare results
-    return [{"url": u, "title": "", "snippet": ""} for u in urls]
+
+    if not results:
+        # Fallback: extract /l/? redirect links only
+        urls = []
+        for m in re.finditer(r'href=\"/l/\?[^\"]*?uddg=([^\"&]+)', html):
+            try:
+                u = urllib.parse.unquote(m.group(1))
+                if u.startswith("http"):
+                    urls.append(u)
+            except Exception:
+                continue
+            if len(urls) >= num:
+                break
+        results = [{"url": u, "title": "", "snippet": ""} for u in urls]
+    return results
+
+def estimate_popularity_via_bing_count(domain: str) -> Optional[int]:
+    base = "https://www.bing.com/search"
+    params = {"q": f"site:{domain}"}
+    try:
+        r = requests.get(base, params=params, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
+        r.raise_for_status()
+        html = r.text
+    except Exception:
+        return None
+    m = re.search(r'<span class=\"sb_count\">([^<]+)</span>', html)
+    if not m:
+        return None
+    text = m.group(1)
+    digits = re.sub(r"[^0-9]", "", text)
+    try:
+        return int(digits) if digits else None
+    except Exception:
+        return None
 
 
 def choose_search_provider() -> str:
@@ -174,7 +212,7 @@ def choose_search_provider() -> str:
         return "serpapi"
     if os.getenv("BING_SEARCH_API_KEY"):
         return "bing"
-    return "duckduckgo"
+    return "free_html"
 
 
 def normalized_domain(url: str) -> str:
@@ -283,6 +321,28 @@ def scrape_and_rank(max_results: int = 50) -> List[Dict]:
             results = search_serpapi(q, num=per_query)
         elif provider == "bing":
             results = search_bing(q, num=per_query)
+        elif provider == "free_html":
+            # Combine DDG HTML and Bing HTML without APIs
+            results = search_duckduckgo_html(q, num=per_query)
+            if len(results) < per_query:
+                # Try to top up from Bing HTML scraping
+                extra = min(per_query - len(results), 10)
+                # Simple HTML scrape for Bing results list
+                base = "https://www.bing.com/search"
+                params = {"q": q, "count": extra}
+                try:
+                    r = requests.get(base, params=params, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+                    r.raise_for_status()
+                    html = r.text
+                    for m in re.finditer(r'<li class=\\"b_algo\\">[\\s\\S]*?<h2>\\s*<a href=\\"([^\\"]+)\\"[^>]*>([\\s\\S]*?)</a>', html):
+                        url = m.group(1)
+                        title = re.sub(r'<[^>]+>', '', m.group(2)).strip()
+                        if url.startswith("http"):
+                            results.append({"url": url, "title": title, "snippet": ""})
+                        if len(results) >= per_query:
+                            break
+                except Exception:
+                    pass
         else:
             results = search_duckduckgo_html(q, num=per_query)
 
@@ -299,12 +359,14 @@ def scrape_and_rank(max_results: int = 50) -> List[Dict]:
         if len(collected) >= max_results:
             break
 
-    # Rank by traffic when possible
+    # Rank by traffic when possible (Similarweb); otherwise fallback to Bing site: count as a proxy
     ranked = []
     for r in collected:
         url = r.get("url", "")
         dom = normalized_domain(url)
         visitors = estimate_monthly_visitors(dom)
+        if visitors is None:
+            visitors = estimate_popularity_via_bing_count(dom) or 0
         ranked.append({
             "domain": dom,
             "url": url,
