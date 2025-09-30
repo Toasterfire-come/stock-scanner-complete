@@ -50,6 +50,17 @@
         <link rel="dns-prefetch" href="//www.paypalobjects.com">
         <link rel="dns-prefetch" href="//o.sentry.io">
         <script defer data-domain="tradescanpro.com" src="https://plausible.io/js/script.js"></script>
+        <!-- Preload CSS to reduce render-blocking -->
+        <link rel="preload" href="/static/css/main.css" as="style" onload="this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/static/css/main.css"></noscript>
+        <!-- Defer main bundle explicitly (CRA already injects, this is a hint) -->
+        <script defer src="/static/js/main.js"></script>
+        <!-- Google Analytics placeholder: replace G-XXXX with real GA4 ID -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-XXXX');
+        </script>
         <link rel="preload" href="/hero.webp" as="image" imagesrcset="/hero.avif 1x, /hero.webp 2x" imagesizes="100vw" />
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <!--
