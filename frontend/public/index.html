@@ -27,8 +27,7 @@
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
         <meta name="description" content="Real-time stock market scanner for NYSE & NASDAQ with advanced screeners, portfolio analytics, and instant alerts. Find high-probability trades faster with Trade Scan Pro." />
-        <!-- Google Search Console Verification (replace value) -->
-        <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN" />
+        <!-- Google Search Console Verification is injected via SEO.jsx when REACT_APP_GSC_VERIFICATION is set -->
         <link rel="canonical" href="https://tradescanpro.com/" />
         <!-- Twitter (X) Cards -->
         <meta name="twitter:card" content="summary_large_image" />
@@ -57,12 +56,7 @@
         <noscript><link rel="stylesheet" href="/static/css/main.css"></noscript>
         <!-- Defer main bundle explicitly (CRA already injects, this is a hint) -->
         <script defer src="/static/js/main.js"></script>
-        <!-- Google Analytics placeholder: replace G-XXXX with real GA4 ID -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-XXXX');
-        </script>
+        <!-- GA4 is loaded dynamically via environment (prefer runtime injection) -->
         <link rel="preload" href="/hero.webp" as="image" imagesrcset="/hero.avif 1x, /hero.webp 2x" imagesizes="100vw" />
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <!--
@@ -82,11 +76,11 @@
 
         <!-- Structured Data Base (Organization, Website, Software) -->
         <script type="application/ld+json" id="jsonld-base-organization">
-        {"@context":"https://schema.org","@type":"Organization","name":"Trade Scan Pro","url":"https://tradescanpro.com","logo":"/logo.png","sameAs":["https://x.com/TradeScanPro","https://www.linkedin.com/company/tradescanpro/"]}
+        {"@context":"https://schema.org","@type":"Organization","name":"Trade Scan Pro","url":"https://tradescanpro.com","logo":"https://tradescanpro.com/logo.png","sameAs":["https://x.com/TradeScanPro","https://www.linkedin.com/company/tradescanpro/"]}
         </script>
         <!-- Local Business Schema -->
         <script type="application/ld+json" id="jsonld-local-business">
-        {"@context":"https://schema.org","@type":"LocalBusiness","@id":"https://tradescanpro.com/#localbusiness","name":"Trade Scan Pro LLC","url":"https://tradescanpro.com","sameAs":["https://x.com/TradeScanProLLC","https://www.linkedin.com/company/tradescanpro/"],"image":"/logo.png","priceRange":"$$","areaServed":"US","address":{"@type":"PostalAddress","addressCountry":"US"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"17:00"}]}
+        {"@context":"https://schema.org","@type":"LocalBusiness","@id":"https://tradescanpro.com/#localbusiness","name":"Trade Scan Pro LLC","url":"https://tradescanpro.com","sameAs":["https://x.com/TradeScanProLLC","https://www.linkedin.com/company/tradescanpro/"],"image":"https://tradescanpro.com/logo.png","priceRange":"$$","areaServed":"US","address":{"@type":"PostalAddress","addressCountry":"US"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"17:00"}]}
         </script>
         <script type="application/ld+json" id="jsonld-base-website">
         {"@context":"https://schema.org","@type":"WebSite","name":"Trade Scan Pro","url":"https://tradescanpro.com","potentialAction":{"@type":"SearchAction","target":"https://tradescanpro.com/search?q={query}","query-input":"required name=query"}}
