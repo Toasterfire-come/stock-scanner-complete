@@ -30,6 +30,8 @@ const EditScreener = () => {
     { id: "pe_ratio", name: "P/E Ratio", type: "range" },
     { id: "dividend_yield", name: "Dividend Yield", type: "range" },
     { id: "change_percent", name: "Price Change %", type: "range" },
+    { id: "rsi", name: "RSI (14)", type: "range" },
+    { id: "vwap", name: "VWAP (today)", type: "range" },
     { id: "exchange", name: "Exchange", type: "select" }
   ];
 

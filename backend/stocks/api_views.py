@@ -1460,6 +1460,13 @@ def filter_stocks_api(request):
         min_change_pct = request.GET.get('change_percent_min')
         max_change_pct = request.GET.get('change_percent_max')
         eq_change_pct = request.GET.get('change_percent_eq')
+        # Technicals from valuation_json
+        rsi_min = request.GET.get('rsi_min') or request.GET.get('rsi14_min')
+        rsi_max = request.GET.get('rsi_max') or request.GET.get('rsi14_max')
+        rsi_eq  = request.GET.get('rsi_eq')  or request.GET.get('rsi14_eq')
+        vwap_min = request.GET.get('vwap_min')
+        vwap_max = request.GET.get('vwap_max')
+        vwap_eq  = request.GET.get('vwap_eq')
         
         if eq_price:
             queryset = queryset.filter(current_price=float(eq_price))
@@ -1555,6 +1562,12 @@ def filter_stocks_api(request):
                         if cid == 'change_percent':
                             if c.get('min') is not None: queryset = queryset.filter(change_percent__gte=float(c['min']))
                             if c.get('max') is not None: queryset = queryset.filter(change_percent__lte=float(c['max']))
+                        if cid in ('rsi','rsi14'):
+                            if c.get('min') is not None: queryset = queryset.filter(valuation_json__rsi14__gte=float(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(valuation_json__rsi14__lte=float(c['max']))
+                        if cid == 'vwap':
+                            if c.get('min') is not None: queryset = queryset.filter(valuation_json__vwap__gte=float(c['min']))
+                            if c.get('max') is not None: queryset = queryset.filter(valuation_json__vwap__lte=float(c['max']))
                         if cid == 'exchange':
                             if c.get('value'): queryset = queryset.filter(exchange__icontains=str(c['value']))
                 else:
@@ -1573,8 +1586,31 @@ def filter_stocks_api(request):
                     if 'change_percent_min' in m: queryset = queryset.filter(change_percent__gte=float(m['change_percent_min']))
                     if 'change_percent_max' in m: queryset = queryset.filter(change_percent__lte=float(m['change_percent_max']))
                     if 'exchange' in m: queryset = queryset.filter(exchange__icontains=str(m['exchange']))
+                    if 'rsi_min' in m: queryset = queryset.filter(valuation_json__rsi14__gte=float(m['rsi_min']))
+                    if 'rsi_max' in m: queryset = queryset.filter(valuation_json__rsi14__lte=float(m['rsi_max']))
+                    if 'vwap_min' in m: queryset = queryset.filter(valuation_json__vwap__gte=float(m['vwap_min']))
+                    if 'vwap_max' in m: queryset = queryset.filter(valuation_json__vwap__lte=float(m['vwap_max']))
         except Exception as _:
             # ignore malformed JSON; fall back to query params only
+            pass
+
+        # Apply direct query param technical filters last (so they work without JSON body)
+        try:
+            if rsi_eq is not None:
+                queryset = queryset.filter(valuation_json__rsi14=float(rsi_eq))
+            else:
+                if rsi_min is not None:
+                    queryset = queryset.filter(valuation_json__rsi14__gte=float(rsi_min))
+                if rsi_max is not None:
+                    queryset = queryset.filter(valuation_json__rsi14__lte=float(rsi_max))
+            if vwap_eq is not None:
+                queryset = queryset.filter(valuation_json__vwap=float(vwap_eq))
+            else:
+                if vwap_min is not None:
+                    queryset = queryset.filter(valuation_json__vwap__gte=float(vwap_min))
+                if vwap_max is not None:
+                    queryset = queryset.filter(valuation_json__vwap__lte=float(vwap_max))
+        except Exception:
             pass
 
         # Pagination

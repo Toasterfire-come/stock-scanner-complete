@@ -857,6 +857,19 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     except Exception:
         rsi14 = None
 
+    # VWAP (intraday 1m for current trading day)
+    vwap_val = None
+    try:
+        intraday_for_vwap = yfinance_retry_wrapper(lambda: ticker_obj.history(period="1d", interval="1m", timeout=timeout))
+        if intraday_for_vwap is not None and not intraday_for_vwap.empty:
+            df = intraday_for_vwap.dropna(subset=['High', 'Low', 'Close', 'Volume']).copy()
+            if not df.empty and df['Volume'].sum() > 0:
+                typical_price = (df['High'] + df['Low'] + df['Close']) / 3.0
+                vwap_calc = (typical_price * df['Volume']).sum() / df['Volume'].sum()
+                vwap_val = round(float(vwap_calc), 4)
+    except Exception:
+        vwap_val = None
+
     valuation_payload = {
         'forward_eps': forward_eps,
         'forward_pe': forward_pe,
@@ -869,6 +882,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         'fair_value_unrestricted': fv_unrestricted,
         'analyst_target': analyst_target,
         'rsi14': rsi14,
+        'vwap': vwap_val,
     }
 
     # Attach to returned payload for non-DB flows (test/export); ensure DB save ignores it

@@ -30,6 +30,8 @@ const CreateScreener = () => {
     { id: "pe_ratio", name: "P/E Ratio", type: "range" },
     { id: "dividend_yield", name: "Dividend Yield", type: "range" },
     { id: "change_percent", name: "Price Change %", type: "range" },
+    { id: "rsi", name: "RSI (14)", type: "range" },
+    { id: "vwap", name: "VWAP (today)", type: "range" },
     { id: "exchange", name: "Exchange", type: "select" }
   ];
 
@@ -78,6 +80,8 @@ const CreateScreener = () => {
       if (c.id === "pe_ratio") { if (c.min) params.pe_ratio_min = Number(c.min); if (c.max) params.pe_ratio_max = Number(c.max); }
       if (c.id === "dividend_yield") { if (c.min) params.dividend_yield_min = Number(c.min); if (c.max) params.dividend_yield_max = Number(c.max); }
       if (c.id === "change_percent") { if (c.min) params.change_percent_min = Number(c.min); if (c.max) params.change_percent_max = Number(c.max); }
+      if (c.id === "rsi") { if (c.min) params.rsi_min = Number(c.min); if (c.max) params.rsi_max = Number(c.max); }
+      if (c.id === "vwap") { if (c.min) params.vwap_min = Number(c.min); if (c.max) params.vwap_max = Number(c.max); }
       if (c.id === "exchange" && c.value) { params.exchange = c.value; }
     }
     return params;
