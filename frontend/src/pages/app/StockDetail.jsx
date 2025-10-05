@@ -37,6 +37,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { getStock, getRealTimeQuote, addWatchlist, createAlert, getInsiderTrades } from "../../api/client";
+import { isMissing, formatCurrencySafe, formatNumberSafe } from "../../lib/utils";
 import GoogleFinanceChart from "../../components/GoogleFinanceChart";
 import StockNewsIntegration from "../../components/StockNewsIntegration";
 
@@ -150,12 +151,7 @@ const StockDetail = () => {
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
+  const formatCurrency = (value) => formatCurrencySafe(value, 'USD', '$—');
 
   const formatMarketCap = (value) => {
     const v = Number(value || 0);
@@ -235,11 +231,7 @@ const StockDetail = () => {
   const isPositive = Number(currentData.change_percent || 0) >= 0;
 
   // Build dynamic details rows from available fields
-  const isMissing = (v) => (
-    v === null || v === undefined ||
-    (typeof v === 'string' && (v.trim() === '' || ['na','n/a','null','undefined'].includes(v.trim().toLowerCase()))) ||
-    (typeof v === 'number' && !Number.isFinite(v))
-  );
+  // Use shared isMissing from utils
 
   const toPercent = (v) => {
     const n = Number(v);
@@ -516,7 +508,7 @@ const StockDetail = () => {
                         { label: 'Low', value: fv.low },
                         { label: 'Base', value: fv.base },
                         { label: 'High', value: fv.high },
-                      ].filter(x => Number.isFinite(Number(x.value)));
+                      ].filter(x => Number.isFinite(Number(x.value)) && Number(x.value) > 0);
                       const data = items.map((x, i) => ({ name: x.label, value: Number(x.value) }));
                       if (!data.length) return <div className="text-sm text-gray-500">No fair value data yet.</div>;
                       return (
@@ -532,7 +524,7 @@ const StockDetail = () => {
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="name" />
                               <YAxis tickFormatter={(v)=>`$${v}`} />
-                              <Tooltip formatter={(v)=>[`$${Number(v).toFixed(2)}`, 'Fair Value']} />
+                              <Tooltip formatter={(v)=>[formatCurrencySafe(v, 'USD', '$—'), 'Fair Value']} />
                               <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorFv)" />
                             </AreaChart>
                           </ResponsiveContainer>
@@ -542,19 +534,19 @@ const StockDetail = () => {
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div>
                         <div className="text-gray-500">Forward EPS</div>
-                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.forward_eps)) ? Number(stockData.valuation.forward_eps).toFixed(2) : 'N/A'}</div>
+                        <div className="font-medium">{formatNumberSafe(stockData?.valuation?.forward_eps, 2, 'N/A')}</div>
                       </div>
                       <div>
                         <div className="text-gray-500">Sector</div>
-                        <div className="font-medium">{stockData?.valuation?.sector || 'N/A'}</div>
+                        <div className="font-medium">{isMissing(stockData?.valuation?.sector) ? 'N/A' : stockData.valuation.sector}</div>
                       </div>
                       <div>
                         <div className="text-gray-500">PE (Subsector Base)</div>
-                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.subsector_pe_base)) ? Number(stockData.valuation.subsector_pe_base).toFixed(1) : 'N/A'}</div>
+                        <div className="font-medium">{formatNumberSafe(stockData?.valuation?.subsector_pe_base, 1, 'N/A')}</div>
                       </div>
                       <div>
                         <div className="text-gray-500">Analyst Target</div>
-                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.analyst_target)) ? formatCurrency(stockData.valuation.analyst_target) : 'N/A'}</div>
+                        <div className="font-medium">{formatCurrencySafe(stockData?.valuation?.analyst_target, 'USD', 'N/A')}</div>
                       </div>
                     </div>
                   </CardContent>
@@ -571,7 +563,7 @@ const StockDetail = () => {
                     {(() => {
                       const v = stockData?.valuation || {};
                       const point = Number(v.fair_value_unrestricted);
-                      if (!Number.isFinite(point)) return <div className="text-sm text-gray-500">No fair value data yet.</div>;
+                      if (!Number.isFinite(point) || point <= 0) return <div className="text-sm text-gray-500">No fair value data yet.</div>;
                       const data = [
                         { name: 'Now', value: Number(currentData.current_price) || 0 },
                         { name: 'FV', value: point },
@@ -583,7 +575,7 @@ const StockDetail = () => {
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="name" />
                               <YAxis scale="log" domain={['auto','auto']} tickFormatter={(v)=>`$${v}`} allowDataOverflow />
-                              <Tooltip formatter={(v)=>[`$${Number(v).toFixed(2)}`, 'Value']} />
+                              <Tooltip formatter={(v)=>[formatCurrencySafe(v, 'USD', '$—'), 'Value']} />
                               <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
                             </LineChart>
                           </ResponsiveContainer>
@@ -593,11 +585,11 @@ const StockDetail = () => {
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div>
                         <div className="text-gray-500">Forward P/E</div>
-                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.forward_pe)) ? Number(stockData.valuation.forward_pe).toFixed(1) : 'N/A'}</div>
+                        <div className="font-medium">{formatNumberSafe(stockData?.valuation?.forward_pe, 1, 'N/A')}</div>
                       </div>
                       <div>
                         <div className="text-gray-500">RSI(14)</div>
-                        <div className="font-medium">{Number.isFinite(Number(stockData?.valuation?.rsi14)) ? Number(stockData.valuation.rsi14).toFixed(2) : 'N/A'}</div>
+                        <div className="font-medium">{formatNumberSafe(stockData?.valuation?.rsi14, 2, 'N/A')}</div>
                       </div>
                     </div>
                   </CardContent>
