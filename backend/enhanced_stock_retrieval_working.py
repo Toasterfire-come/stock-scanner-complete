@@ -180,6 +180,7 @@ def parse_arguments():
     parser.add_argument('-daily-update', action='store_true', help='Run daily 9 AM update with proxy refresh')
     parser.add_argument('-combined', action='store_true', help='Use combined tickers from data/combined instead of CSV')
     parser.add_argument('-combined-file', type=str, default=None, help='Path to specific combined_tickers_*.py file')
+    parser.add_argument('-ignore-market-hours', action='store_true', help='Run even outside regular market hours')
     return parser.parse_args()
 
 # ---------------------
@@ -554,10 +555,24 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         if info and len(info) <= 3:
             info = None
 
+    # Helper: history with fallback if yfinance doesn't accept timeout kwarg
+    def yf_history(period=None, interval=None):
+        def _call():
+            try:
+                if interval is None:
+                    return ticker_obj.history(period=period, timeout=timeout)
+                return ticker_obj.history(period=period, interval=interval, timeout=timeout)
+            except TypeError:
+                # Some versions of yfinance don't support timeout kwarg
+                if interval is None:
+                    return ticker_obj.history(period=period)
+                return ticker_obj.history(period=period, interval=interval)
+        return yfinance_retry_wrapper(_call)
+
     # Approach 2: Try to get historical data with multiple periods using retry
     # Start with longer periods for better price change calculations
     for period in ["1y", "6mo", "3mo", "1mo", "5d", "1d"]:
-        hist = yfinance_retry_wrapper(lambda: ticker_obj.history(period=period, timeout=timeout))
+        hist = yf_history(period=period)
         if hist is not None and not hist.empty and len(hist) > 0:
             try:
                 current_price = hist['Close'].iloc[-1]
@@ -577,7 +592,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # As last resort, attempt '1d' with interval to get a recent close
     if current_price is None:
         try:
-            intraday = yfinance_retry_wrapper(lambda: ticker_obj.history(period="1d", interval="1m", timeout=timeout))
+            intraday = yf_history(period="1d", interval="1m")
             if intraday is not None and not intraday.empty:
                 current_price = intraday['Close'].dropna().iloc[-1]
         except Exception:
@@ -731,6 +746,24 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     except Exception:
         pass
 
+    # If critical valuation fields are missing, try fetching full info now
+    try:
+        need_full_info = (
+            not has_info or
+            (info and not isinstance(info, dict)) or
+            (info and len(info) <= 3) or
+            not base_data.get('earnings_per_share')
+        )
+        if need_full_info:
+            info2 = yfinance_retry_wrapper(lambda: ticker_obj.info)
+            if info2 and isinstance(info2, dict) and len(info2) > 3:
+                info = info2
+                has_info = True
+                # Refresh base_data preferentially with richer info
+                base_data = extract_stock_data_from_info(info, symbol, current_price)
+    except Exception:
+        pass
+
     # =========================
     # Valuation & Technicals (MVP)
     # - Forward EPS & PE
@@ -746,29 +779,46 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         except Exception:
             return None
 
-    # Forward EPS
+    # Forward EPS (multi-source with robust parsing)
     forward_eps = None
     try:
+        # 1) Direct from info
         if info:
             forward_eps = _safe_float(info.get('forwardEps'))
+        # 2) Parse from earnings_trend DataFrame (nextYear avg or epsTrend current)
         if forward_eps is None and earnings_trend is not None:
             try:
-                # yfinance get_earnings_trend returns a DataFrame; attempt to parse nextYear EPS
-                if hasattr(earnings_trend, 'loc'):
-                    if 'earningsTrend' in getattr(earnings_trend, 'columns', []):
-                        # fallback path not typically used
-                        pass
-                    # Common shape has index with rows and columns including 'epsTrend'
-                    # Try to locate 'next year' EPS estimate
-                # Generic: try attributes as dict-like
-            except Exception:
-                pass
-        # Fallback: use trailing/forward combined already extracted in base_data
+                import pandas as _pd  # local import guard
+                if hasattr(earnings_trend, 'to_dict'):
+                    # Orient records to iterate rows safely across versions
+                    rows = earnings_trend.to_dict(orient='records')
+                    candidates = []
+                    for row in rows:
+                        period = (row.get('period') or row.get('endDate') or '').lower()
+                        # Prefer next year estimates
+                        is_next_year = any(key in period for key in ['next', '+1y', '1y'])
+                        ee = row.get('earningsEstimate') or {}
+                        et = row.get('epsTrend') or {}
+                        # Try earningsEstimate.avg first
+                        avg_est = ee.get('avg') if isinstance(ee, dict) else None
+                        if avg_est is not None:
+                            candidates.append((2 if is_next_year else 1, _safe_float(avg_est)))
+                        # Try epsTrend.current as a weaker signal
+                        current_est = et.get('current') if isinstance(et, dict) else None
+                        if current_est is not None:
+                            candidates.append((1 if is_next_year else 0, _safe_float(current_est)))
+                    # Pick best candidate by priority then value presence
+                    candidates = [c for c in candidates if c[1] is not None and c[1] > 0]
+                    if candidates:
+                        candidates.sort(key=lambda x: (-x[0]))
+                        forward_eps = candidates[0][1]
+            except Exception as _e:
+                logger.debug(f"{symbol}: Failed to parse earnings_trend for forward EPS: {_e}")
+        # 3) Fallback: use earnings_per_share from base_data (may be trailing)
         if forward_eps is None:
-            fe = base_data.get('earnings_per_share')
-            forward_eps = _safe_float(fe)
-    except Exception:
-        forward_eps = _safe_float(base_data.get('earnings_per_share'))
+            forward_eps = _safe_float(base_data.get('earnings_per_share'))
+    except Exception as _e:
+        logger.debug(f"{symbol}: Forward EPS extraction error: {_e}")
 
     # Forward PE
     forward_pe = None
@@ -777,6 +827,14 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
             forward_pe = _safe_float(getattr(fast_info, 'forward_pe'))
         if forward_pe is None and info:
             forward_pe = _safe_float(info.get('forwardPE'))
+        if forward_pe is None and forward_eps and current_price:
+            # Compute from price / forward EPS
+            try:
+                cpf = float(current_price)
+                if forward_eps and forward_eps > 0:
+                    forward_pe = round(cpf / float(forward_eps), 2)
+            except Exception:
+                pass
         if forward_pe is None and info:
             # As last resort use trailing PE
             forward_pe = _safe_float(info.get('trailingPE'))
@@ -842,7 +900,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         if hist is not None and not hist.empty and len(hist) >= 15:
             hist_for_rsi = hist
         else:
-            hist_for_rsi = yfinance_retry_wrapper(lambda: ticker_obj.history(period="1mo", interval="1d", timeout=timeout))
+            hist_for_rsi = yf_history(period="1mo", interval="1d")
         if hist_for_rsi is not None and not hist_for_rsi.empty:
             closes = hist_for_rsi['Close'].dropna()
             if len(closes) >= 15:
@@ -940,12 +998,13 @@ def run_stock_update(args):
     # Hard guard: run ONLY during regular market hours (weekdays 09:30–16:00 ET)
     now_et = datetime.now(EASTERN_TZ)
     current_hhmm = now_et.strftime("%H:%M")
-    if now_et.weekday() >= 5 or not (MARKET_OPEN <= current_hhmm < MARKET_CLOSE):
-        logger.info(
-            f"Skipping stock update cycle outside regular hours at "
-            f"{now_et.strftime('%Y-%m-%d %H:%M:%S %Z')} (allowed {MARKET_OPEN}-{MARKET_CLOSE} ET)"
-        )
-        return
+    if not getattr(args, 'ignore_market_hours', False):
+        if now_et.weekday() >= 5 or not (MARKET_OPEN <= current_hhmm < MARKET_CLOSE):
+            logger.info(
+                f"Skipping stock update cycle outside regular hours at "
+                f"{now_et.strftime('%Y-%m-%d %H:%M:%S %Z')} (allowed {MARKET_OPEN}-{MARKET_CLOSE} ET)"
+            )
+            return
     
     # Load symbols (prefer combined tickers when available)
     use_combined = bool(getattr(args, 'combined', False) or os.environ.get('USE_COMBINED_TICKERS', '').lower() == 'true')
