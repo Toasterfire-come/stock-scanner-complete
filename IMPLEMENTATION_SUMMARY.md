@@ -250,3 +250,8 @@ The Trade Scan Pro platform is now production-ready with institutional-grade fea
 **Scalability**: ✅ Built for growth and enterprise clients
 
 The platform now offers everything professional traders need while maintaining simplicity for individual investors. With the referral system and free trial offering, user acquisition should accelerate rapidly.
+
+---
+
+Internal documentation
+- Sponsorship-focused UX overview: docs/internal/SPONSORSHIP_USER_EXPERIENCE.md
