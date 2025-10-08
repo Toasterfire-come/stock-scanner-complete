@@ -28,6 +28,7 @@ import {
 import { useAuth } from "../context/SecureAuthContext";
 import PayPalCheckout from "../components/PayPalCheckout";
 import { createPayPalOrder } from "../api/client";
+import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
 
 const PricingPro = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -50,14 +51,17 @@ const PricingPro = () => {
       const state = location.state || {};
       let code = "";
       if (state.discount_code && typeof state.discount_code === 'string') {
-        code = state.discount_code;
+        code = normalizeReferralCode(state.discount_code.replace(/^REF_/, ''));
       }
       if (!code) {
         const params = new URLSearchParams(location.search || "");
         const qRef = params.get('ref');
-        if (qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) {
-          code = `REF_${qRef.toUpperCase()}`;
+        if (qRef && /^[A-Za-z0-9_-]{5,32}$/.test(qRef)) {
+          code = normalizeReferralCode(qRef);
         }
+      }
+      if (code) {
+        try { setReferralCookie(code); } catch {}
       }
       setReferralCode(code);
     } catch {}
@@ -332,7 +336,13 @@ const PricingPro = () => {
                 <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                 <div className="mt-4">
                   <div className="text-4xl font-bold text-gray-900">
-                    ${isAnnual ? savings.yearly : plan.price}
+                    ${(() => {
+                      if (plan.price === 0) return 0;
+                      if (referralCode && !isAnnual) {
+                        return (plan.price * 0.5).toFixed(2);
+                      }
+                      return isAnnual ? savings.yearly : plan.price;
+                    })()}
                     {plan.price > 0 && (
                       <span className="text-lg font-normal text-gray-600">
                         /{isAnnual ? 'year' : 'month'}
