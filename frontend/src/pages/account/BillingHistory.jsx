@@ -327,17 +327,24 @@ const BillingHistory = () => {
               Manage your payment methods and billing information
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            <div className="p-4 border rounded-lg bg-blue-50">
+              <div className="text-sm text-blue-900">
+                Payments are handled via PayPal subscriptions. To manage your billing method, plan, or cancel your subscription, use the PayPal subscription management link in your PayPal account.
+              </div>
+            </div>
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center space-x-3">
                 <CreditCard className="h-6 w-6 text-gray-400" />
                 <div>
-                  <div className="font-medium">•••• •••• •••• 4242</div>
-                  <div className="text-sm text-gray-600">Expires 12/2027</div>
+                  <div className="font-medium">Managed by PayPal</div>
+                  <div className="text-sm text-gray-600">Payment methods are not stored on Trade Scan Pro</div>
                 </div>
               </div>
-              <Button variant="outline" size="sm">
-                Update
+              <Button asChild variant="outline" size="sm">
+                <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" rel="noopener noreferrer">
+                  Manage in PayPal
+                </a>
               </Button>
             </div>
           </CardContent>

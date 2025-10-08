@@ -20,7 +20,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import OAuthCallback from "./pages/auth/OAuthCallback";
-import TwoFactorAuth from "./pages/auth/TwoFactorAuth";
+// TwoFactorAuth removed
 
 // Onboarding
 import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
@@ -171,7 +171,7 @@ function App() {
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/verify-email" element={<VerifyEmail />} />
                   <Route path="/auth/oauth-callback" element={<OAuthCallback />} />
-                  <Route path="/auth/2fa" element={<TwoFactorAuth />} />
+                  {/* 2FA route removed */}
                 </Route>
 
                 {/* Onboarding */}

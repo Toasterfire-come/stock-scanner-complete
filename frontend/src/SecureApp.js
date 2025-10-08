@@ -21,7 +21,7 @@ const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/auth/VerifyEmail"));
 const OAuthCallback = lazy(() => import("./pages/auth/OAuthCallback"));
-const TwoFactorAuth = lazy(() => import("./pages/auth/TwoFactorAuth"));
+// const TwoFactorAuth = lazy(() => import("./pages/auth/TwoFactorAuth"));
 
 // Onboarding
 import OnboardingWizard from "./pages/onboarding/OnboardingWizard";
@@ -173,7 +173,7 @@ function SecureApp() {
                     <Route path="/auth/reset-password" element={<ResetPassword />} />
                     <Route path="/auth/verify-email" element={<VerifyEmail />} />
                     <Route path="/auth/oauth-callback" element={<OAuthCallback />} />
-                    <Route path="/auth/2fa" element={<TwoFactorAuth />} />
+                    {/* 2FA route removed */}
                   </Route>
 
                   {/* Onboarding */}

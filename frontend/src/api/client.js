@@ -524,7 +524,19 @@ export async function registerUser(userData) {
 }
 export async function getProfile() { const { data } = await api.get('/user/profile/'); return data; }
 // Profile update endpoint is not available in the allowed API list
-export async function updateProfile(profileData) { return { success: false, message: 'Profile update is not supported.' }; }
+export async function updateProfile(profileData) {
+  try {
+    const payload = {
+      name: profileData.name,
+      email: profileData.email,
+      username: profileData.username,
+    };
+    const { data } = await api.post('/user/profile/update/', payload);
+    return data;
+  } catch (error) {
+    return { success: false, message: error?.response?.data?.message || 'Failed to update profile' };
+  }
+}
 export async function changePassword(passwordData) {
   const payload = {
     old_password: passwordData.old_password || passwordData.current_password,
