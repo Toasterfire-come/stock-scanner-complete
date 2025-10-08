@@ -61,6 +61,18 @@ const SignUp = () => {
   React.useEffect(() => {
     try {
       const st = location.state || {};
+      // Accept discountCode propagated from pricing/plan pages
+      if (st.discountCode && typeof st.discountCode === 'string') {
+        try {
+          const params = new URLSearchParams(location.search || '');
+          if (!params.get('ref')) {
+            const ref = String(st.discountCode).replace(/^REF_/, '');
+            const url = new URL(window.location.href);
+            url.searchParams.set('ref', ref);
+            window.history.replaceState({}, '', url.toString());
+          }
+        } catch {}
+      }
       if (st.emailPrefill && typeof st.emailPrefill === 'string') {
         setValue('email', st.emailPrefill);
         // Suggest username from email local-part if empty
@@ -95,7 +107,7 @@ const SignUp = () => {
       let refCode = null;
       try {
         const path = location.pathname || '';
-        const m = path.match(/\/auth\/sign-up\/ref-([a-zA-Z0-9]{5})/);
+        const m = path.match(/\/auth\/sign-up\/ref-([A-Za-z0-9_-]{5,32})/);
         if (m && m[1]) refCode = m[1];
         const params = new URLSearchParams(location.search || '');
         const qRef = params.get('ref');

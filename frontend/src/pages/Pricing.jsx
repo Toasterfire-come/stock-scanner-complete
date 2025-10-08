@@ -52,8 +52,8 @@ const Pricing = () => {
     try {
       const params = new URLSearchParams(location.search || "");
       const qRef = params.get('ref');
-      if (qRef && /^[a-zA-Z0-9]{5}$/.test(qRef)) {
-        const code = `REF_${qRef.toUpperCase()}`;
+      if (qRef && /^[A-Za-z0-9_-]{5,32}$/.test(qRef)) {
+        const code = `REF_${qRef.trim().toUpperCase()}`;
         setReferralCode(code);
         setDiscountCode(code);
         setAppliedDiscount({ code, description: 'Referral discount (first month 50%)', savings_percentage: 50, final_amount: null });

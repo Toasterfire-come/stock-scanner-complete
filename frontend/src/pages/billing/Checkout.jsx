@@ -88,6 +88,31 @@ export default function Checkout() {
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [metaError, setMetaError] = useState("");
 
+  // Auto-apply 50% off for a valid REF_* referral on monthly cycle when server code doesn't return a discount
+  useEffect(() => {
+    try {
+      if (!referralCode) return;
+      if (isAnnual) return; // referral only for first month
+      if (applied?.code) return; // server-applied or already set
+      const isRef = /^REF_[A-Z0-9_-]{5,32}$/.test(referralCode);
+      if (!isRef) return;
+      if (!meta) return; // need pricing to compute
+      const currentPlan = String(plan).toLowerCase();
+      const pm = meta?.plans?.[currentPlan];
+      if (!pm || pm.monthly_price == null) return;
+      const amount = Number(pm.monthly_price);
+      if (!Number.isFinite(amount) || amount <= 0) return;
+      const finalAmount = Number((amount * 0.5).toFixed(2));
+      setApplied({
+        code: referralCode,
+        final_amount: finalAmount,
+        original_amount: amount,
+        savings_percentage: 50,
+        message: 'Referral (50% off first month)'
+      });
+    } catch {}
+  }, [referralCode, isAnnual, meta, plan, applied]);
+
   // Allow checkout to load even if not authenticated so pricing and PayPal can initialize
 
   useEffect(() => {
