@@ -74,6 +74,7 @@
     "build:production": "node build-scripts/build-production.js",
     "deploy:check": "node build-scripts/deploy-check.js",
     "deploy:sftp": "node scripts/deploy-sftp.js",
+    "deploy:sftp:remove-build": "node scripts/sftp-remove-dir.js",
     "deploy:htaccess": "node scripts/update-htaccess.js",
     "test": "craco test",
     "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
