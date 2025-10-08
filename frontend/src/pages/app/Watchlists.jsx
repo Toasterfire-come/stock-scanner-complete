@@ -197,6 +197,12 @@ const Watchlists = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="space-y-6">
+        {/* Mobile experience banner */}
+        <div className="block md:hidden">
+          <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3 text-sm">
+            For the best experience managing watchlists, use a desktop browser.
+          </div>
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
