@@ -9,6 +9,7 @@ import PayPalCheckout from "../../components/PayPalCheckout";
 import { useAuth } from "../../context/SecureAuthContext";
 import { api } from "../../api/client";
 import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
+import { getEnvPromos, matchPromo, validatePromoFor, computePromoFinalAmount, getPromoFromCookie, setPromoCookie, normalizePromoCode } from "../../lib/promos";
 import { Input } from "../../components/ui/input";
 import { logClientMetric } from "../../api/client";
 import { buildAttributionTags } from "../../lib/analytics";
@@ -62,6 +63,7 @@ export default function Checkout() {
   const [plan, setPlan] = useState(String(initialPlan).toLowerCase());
   const [isAnnual, setIsAnnual] = useState(String(initialCycle).toLowerCase() === "annual");
   const [promo, setPromo] = useState("");
+  const promos = useMemo(() => getEnvPromos(), []);
   // Prefill promo with referral code when available
   useEffect(() => {
     // Load PayPal SDK only when checkout is in viewport
@@ -84,6 +86,14 @@ export default function Checkout() {
   useEffect(() => {
     if (!promo && referralCode) setPromo(referralCode);
   }, [referralCode, promo]);
+
+  // Load promo from cookie if present
+  useEffect(() => {
+    try {
+      const fromCookie = getPromoFromCookie();
+      if (fromCookie && !promo) setPromo(fromCookie);
+    } catch {}
+  }, []);
 
   // Persist referral code for attribution
   useEffect(() => {
@@ -193,9 +203,23 @@ export default function Checkout() {
 
   // Billing amounts and dates
   const todayAmount = useMemo(() => {
+    // Priority: server-applied promo
     if (applied?.final_amount != null) return Number(applied.final_amount);
+    // Frontend env promo application
+    try {
+      if (displayPrice != null) {
+        const envPromo = matchPromo(promo, promos) || matchPromo(getPromoFromCookie(), promos);
+        if (envPromo) {
+          const { valid } = validatePromoFor(plan, isAnnual ? 'annual' : 'monthly', envPromo);
+          if (valid) {
+            const final = computePromoFinalAmount(envPromo, displayPrice);
+            if (final != null) return Number(final);
+          }
+        }
+      }
+    } catch {}
     return displayPrice != null ? Number(displayPrice) : null;
-  }, [applied, displayPrice]);
+  }, [applied, displayPrice, promo, promos, plan, isAnnual]);
   const nextPrice = useMemo(() => {
     if (!planMeta) return null;
     if (applied?.code === 'TRIAL') return Number(planMeta.monthly_price);
@@ -273,6 +297,7 @@ export default function Checkout() {
                     try {
                       setApplying(true);
                       const amount = isAnnual ? planMeta.annual_final_price : planMeta.monthly_price;
+                      // Try server validation first
                       const { data } = await api.post('/billing/apply-discount/', { code: promo, billing_cycle: isAnnual ? 'annual' : 'monthly', amount });
                       if (data?.success && data?.applies_discount) {
                         setApplied({
@@ -282,9 +307,28 @@ export default function Checkout() {
                           savings_percentage: data.savings_percentage,
                           message: data.message,
                         });
+                        try { setPromoCookie(promo); } catch {}
                       } else {
-                        // Not applicable (e.g., REF50 on annual) or failed
-                        setApplied(null);
+                        // Frontend env fallback
+                        const envPromo = matchPromo(promo, promos);
+                        const { valid } = validatePromoFor(plan, isAnnual ? 'annual' : 'monthly', envPromo);
+                        if (envPromo && valid) {
+                          const final = computePromoFinalAmount(envPromo, amount);
+                          if (final != null) {
+                            setApplied({
+                              code: envPromo.code,
+                              final_amount: final,
+                              original_amount: amount,
+                              savings_percentage: envPromo.type === 'percent' ? envPromo.amount : undefined,
+                              message: 'Promo applied',
+                            });
+                            try { setPromoCookie(envPromo.code); } catch {}
+                          } else {
+                            setApplied(null);
+                          }
+                        } else {
+                          setApplied(null);
+                        }
                       }
                     } catch (e) {
                       setApplied(null);

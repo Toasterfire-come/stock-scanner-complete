@@ -28,6 +28,7 @@ import {
 import { useAuth } from "../context/SecureAuthContext";
 import PayPalCheckout from "../components/PayPalCheckout";
 import { createPayPalOrder } from "../api/client";
+import { setPromoCookie, normalizePromoCode } from "../lib/promos";
 import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
 
 const PricingPro = () => {
@@ -49,21 +50,28 @@ const PricingPro = () => {
   useEffect(() => {
     try {
       const state = location.state || {};
-      let code = "";
+      let ref = "";
       if (state.discount_code && typeof state.discount_code === 'string') {
-        code = normalizeReferralCode(state.discount_code.replace(/^REF_/, ''));
+        ref = normalizeReferralCode(state.discount_code.replace(/^REF_/, ''));
       }
-      if (!code) {
+      if (!ref) {
         const params = new URLSearchParams(location.search || "");
         const qRef = params.get('ref');
         if (qRef && /^[A-Za-z0-9_-]{5,32}$/.test(qRef)) {
-          code = normalizeReferralCode(qRef);
+          ref = normalizeReferralCode(qRef);
         }
       }
-      if (code) {
-        try { setReferralCookie(code); } catch {}
+      if (ref) {
+        try { setReferralCookie(ref); } catch {}
+        setReferralCode(ref);
       }
-      setReferralCode(code);
+      // Capture generic promo code via ?code=
+      try {
+        const params = new URLSearchParams(location.search || "");
+        const p = params.get('code');
+        const norm = normalizePromoCode(p || '');
+        if (norm) setPromoCookie(norm);
+      } catch {}
     } catch {}
   }, [location.state, location.search]);
 
