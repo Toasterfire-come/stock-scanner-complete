@@ -240,6 +240,17 @@ export default function Checkout() {
     return process.env[envKey] || '';
   }, [plan, isAnnual]);
 
+  // Force Orders API (one-time) when today's amount differs from base price (e.g., TRIAL/promos)
+  const useOrdersAPI = useMemo(() => {
+    try {
+      if (displayPrice == null || todayAmount == null) return false;
+      const base = Number(displayPrice);
+      const today = Number(todayAmount);
+      if (!Number.isFinite(base) || !Number.isFinite(today)) return false;
+      return Math.abs(today - base) > 0.009; // discount applied
+    } catch { return false; }
+  }, [displayPrice, todayAmount]);
+
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="max-w-4xl mx-auto">
@@ -369,7 +380,7 @@ export default function Checkout() {
                 planType={plan}
                 billingCycle={cycle}
                 discountCode={(applied?.code || promo || referralCode) || null}
-                paypalPlanId={envPlanId || (planMeta?.paypal_plan_ids?.[isAnnual ? 'annual' : 'monthly'] || '')}
+                paypalPlanId={useOrdersAPI ? '' : (envPlanId || (planMeta?.paypal_plan_ids?.[isAnnual ? 'annual' : 'monthly'] || ''))}
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
