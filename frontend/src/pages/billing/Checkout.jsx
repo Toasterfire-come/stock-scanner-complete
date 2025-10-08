@@ -8,8 +8,10 @@ import { Switch } from "../../components/ui/switch";
 import PayPalCheckout from "../../components/PayPalCheckout";
 import { useAuth } from "../../context/SecureAuthContext";
 import { api } from "../../api/client";
+import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
 import { Input } from "../../components/ui/input";
 import { logClientMetric } from "../../api/client";
+import { buildAttributionTags } from "../../lib/analytics";
 
 const PLAN_NAMES = {
   free: "Free",
@@ -82,6 +84,13 @@ export default function Checkout() {
   useEffect(() => {
     if (!promo && referralCode) setPromo(referralCode);
   }, [referralCode, promo]);
+
+  // Persist referral code for attribution
+  useEffect(() => {
+    try {
+      if (referralCode) setReferralCookie(normalizeReferralCode(referralCode));
+    } catch {}
+  }, [referralCode]);
   const [applied, setApplied] = useState(null);
   const [applying, setApplying] = useState(false);
   const [meta, setMeta] = useState(null);
@@ -320,15 +329,15 @@ export default function Checkout() {
                 onSuccess={(info) => {
                   try {
                     const amount = info?.paymentDetails?.amount || info?.paymentDetails?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || undefined;
-                    try { logClientMetric({ metric: 'checkout_success', value: 1, tags: { plan, cycle, promo: (!!(promo||referralCode)).toString() } }); } catch {}
+                    try { logClientMetric({ metric: 'checkout_success', value: 1, tags: buildAttributionTags({ plan, cycle, promo: (!!(promo||referralCode)).toString() }) }); } catch {}
                     navigate('/checkout/success', { replace: true, state: { planId: plan, amount, discount: (promo || referralCode) ? { code: (promo || referralCode) } : undefined } });
                   } catch {
-                    try { logClientMetric({ metric: 'checkout_success', value: 1, tags: { plan, cycle, promo: (!!(promo||referralCode)).toString(), parsing:'failed' } }); } catch {}
+                    try { logClientMetric({ metric: 'checkout_success', value: 1, tags: buildAttributionTags({ plan, cycle, promo: (!!(promo||referralCode)).toString(), parsing:'failed' }) }); } catch {}
                     navigate('/checkout/success', { replace: true, state: { planId: plan } });
                   }
                 }}
                 onError={() => {
-                  try { logClientMetric({ metric: 'checkout_error', value: 1, tags: { plan, cycle } }); } catch {}
+                  try { logClientMetric({ metric: 'checkout_error', value: 1, tags: buildAttributionTags({ plan, cycle }) }); } catch {}
                   navigate('/checkout/failure', { replace: true });
                 }}
                 onCancel={() => {}}

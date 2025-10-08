@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
+import { getReferralFromCookie, normalizeReferralCode } from "../lib/referral";
 
 // Use REACT_APP_BACKEND_URL exclusively from environment, with production fallback
 const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com";
@@ -204,6 +205,15 @@ api.interceptors.request.use((config) => {
     if (token && token !== 'undefined' && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Attach referral if available (server-side attribution)
+    try {
+      const ref = getReferralFromCookie();
+      const norm = normalizeReferralCode(ref);
+      if (norm) {
+        config.headers['X-Referral-Code'] = norm;
+      }
+    } catch {}
   } catch {}
   
   config.metadata = { start: Date.now(), url: `${config.baseURL || ''}${config.url || ''}` };

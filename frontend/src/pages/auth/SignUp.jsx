@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { registerUser } from "../../api/client";
 import OneTapGoogle from "../../components/OneTapGoogle";
+import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
 import { useAuth } from "../../context/SecureAuthContext";
 
 // Friction-reduced: name + email + password; keep Google SSO. Username optional (derived), last name optional.
@@ -71,6 +72,7 @@ const SignUp = () => {
             url.searchParams.set('ref', ref);
             window.history.replaceState({}, '', url.toString());
           }
+          try { setReferralCookie(st.discountCode); } catch {}
         } catch {}
       }
       if (st.emailPrefill && typeof st.emailPrefill === 'string') {
@@ -115,6 +117,11 @@ const SignUp = () => {
           const trimmed = String(qRef).trim().slice(0, 32);
           if (/^[A-Za-z0-9_\-]{5,32}$/.test(trimmed)) refCode = trimmed;
         }
+      } catch {}
+
+      // Persist referral cookie when present
+      try {
+        if (refCode) setReferralCookie(normalizeReferralCode(refCode));
       } catch {}
 
       // Create account

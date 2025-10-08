@@ -25,6 +25,7 @@ import {
   Mail
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
+import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(true);
@@ -43,6 +44,7 @@ const Pricing = () => {
       if (state.discount_code && typeof state.discount_code === 'string') {
         setDiscountCode(state.discount_code);
         setAppliedDiscount({ code: state.discount_code, description: 'Referral discount (first month 50%)', savings_percentage: 50, final_amount: null });
+        try { setReferralCookie(state.discount_code); } catch {}
       }
     } catch {}
   }, [location.state]);
@@ -53,10 +55,11 @@ const Pricing = () => {
       const params = new URLSearchParams(location.search || "");
       const qRef = params.get('ref');
       if (qRef && /^[A-Za-z0-9_-]{5,32}$/.test(qRef)) {
-        const code = `REF_${qRef.trim().toUpperCase()}`;
+        const code = normalizeReferralCode(qRef);
         setReferralCode(code);
         setDiscountCode(code);
         setAppliedDiscount({ code, description: 'Referral discount (first month 50%)', savings_percentage: 50, final_amount: null });
+        try { setReferralCookie(code); } catch {}
       }
     } catch {}
   }, [location.search]);

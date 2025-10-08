@@ -1,3 +1,19 @@
+import { getReferralFromCookie, normalizeReferralCode, getReferralMonth } from "./referral";
+
+export function buildAttributionTags(extra = {}) {
+  try {
+    const raw = getReferralFromCookie();
+    const ref = normalizeReferralCode(raw);
+    const month = getReferralMonth();
+    const tags = { ...extra };
+    if (ref) tags.referral = ref;
+    if (month) tags.month = month;
+    return tags;
+  } catch {
+    return { ...extra };
+  }
+}
+
 /* Lightweight GA4 loader and helpers (idempotent) */
 
 let initialized = false;
