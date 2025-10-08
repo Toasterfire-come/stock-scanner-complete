@@ -277,11 +277,11 @@ export default function Checkout() {
               <CardDescription>Confirm your plan and billing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                 <div className="text-sm text-gray-600">Selected Plan</div>
                 <div className="font-semibold">{PLAN_NAMES[plan] || plan}</div>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-3">
                 <div className="text-sm text-gray-600">Billing Cycle</div>
                 <div className="flex items-center gap-3">
                   <Label className={!isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>Monthly</Label>
@@ -290,18 +290,18 @@ export default function Checkout() {
                 </div>
               </div>
               <div className="mt-3 space-y-1 text-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                   <span className="text-gray-600">Today</span>
                   <span className="font-semibold">{todayAmount != null ? `$${todayAmount.toFixed(2)}` : '-'}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                   <span className="text-gray-600">Next billing</span>
                   <span className="font-semibold">{nextPrice != null ? `$${nextPrice.toFixed(2)}` : '-'} on {nextDate ? nextDate.toLocaleDateString() : '-'}</span>
                 </div>
               </div>
               <div>
                 <Label htmlFor="promo" className="text-sm text-gray-600">Promo Code (optional)</Label>
-                <Input id="promo" placeholder="PROMO2025" value={promo} onChange={(e) => setPromo(sanitizeCode(e.target.value))} />
+                <Input id="promo" placeholder="PROMO2025" value={promo} onChange={(e) => setPromo(sanitizeCode(e.target.value))} className="w-full" />
                 <div className="text-xs text-gray-500 mt-1">Letters, numbers, dash and underscore only.</div>
                 <div className="mt-2 flex gap-2">
                   <Button size="sm" variant="outline" disabled={!promo || applying || !planMeta} onClick={async () => {

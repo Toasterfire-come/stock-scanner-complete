@@ -204,7 +204,7 @@ const Watchlists = () => {
           </div>
         </div>
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-3">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Watchlists</h1>
             <p className="text-gray-600 mt-2">Keep track of stocks you're interested in</p>
@@ -270,7 +270,7 @@ const Watchlists = () => {
           <div className="grid md:grid-cols-4 gap-6">
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Items</p>
                     <p className="text-2xl font-bold">{watchlist.summary.total_items}</p>
@@ -282,7 +282,7 @@ const Watchlists = () => {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Gainers</p>
                     <div className="flex items-center">
@@ -297,7 +297,7 @@ const Watchlists = () => {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Losers</p>
                     <div className="flex items-center">
@@ -312,7 +312,7 @@ const Watchlists = () => {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-2">
                   <div>
                     <p className="text-sm font-medium text-gray-600">With Alerts</p>
                     <p className="text-2xl font-bold">{allItems.filter(item => item.alert_price).length || 0}</p>
