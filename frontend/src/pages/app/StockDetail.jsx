@@ -360,7 +360,7 @@ const StockDetail = () => {
         {/* Stock Header */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between sm:flex-nowrap flex-wrap gap-3">
               <div className="flex items-center space-x-4">
                 <div>
                   <div className="flex items-center space-x-3">
@@ -388,7 +388,7 @@ const StockDetail = () => {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 sm:flex-nowrap flex-wrap gap-2">
                 <Button asChild variant="outline">
                   <Link to={`/app/watchlists?symbol=${encodeURIComponent(symbol)}`}>
                     <Star className="h-4 w-4 mr-2" />

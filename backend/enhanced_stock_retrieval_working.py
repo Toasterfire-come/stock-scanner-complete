@@ -626,8 +626,24 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Extract comprehensive stock data using utility functions
     base_data = extract_stock_data_from_info(info, symbol, current_price) if info else extract_stock_data_from_fast_info(fast_info, symbol, current_price)
     
-    # Calculate price changes from historical data
-    price_change_today, change_percent = calculate_change_percent_from_history(hist, symbol) if hist is not None and not hist.empty else (None, None)
+    # Calculate price changes from historical data (prefer intraday 1m when available for accuracy)
+    price_change_today, change_percent = (None, None)
+    try:
+        intraday_close_prev = None
+        intraday_close_curr = None
+        intraday = yf_history(period="1d", interval="1m")
+        if intraday is not None and not intraday.empty and len(intraday) >= 2:
+            closes = intraday['Close'].dropna()
+            if len(closes) >= 2:
+                intraday_close_prev = closes.iloc[-2]
+                intraday_close_curr = closes.iloc[-1]
+        if intraday_close_prev is not None and intraday_close_curr is not None and intraday_close_prev != 0:
+            price_change_today = safe_decimal_conversion(intraday_close_curr - intraday_close_prev)
+            change_percent = safe_decimal_conversion(((intraday_close_curr - intraday_close_prev) / intraday_close_prev) * 100)
+    except Exception:
+        price_change_today, change_percent = (None, None)
+    if price_change_today is None or change_percent is None:
+        price_change_today, change_percent = calculate_change_percent_from_history(hist, symbol) if hist is not None and not hist.empty else (None, None)
     # Fallback to info-provided change metrics if history unavailable
     if (price_change_today is None or change_percent is None) and info:
         try:
@@ -654,7 +670,13 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Calculate days range
     days_low = base_data.get('days_low')
     days_high = base_data.get('days_high')
-    days_range = f"{days_low} - {days_high}" if days_low and days_high else ""
+    def _fmt2(x):
+        try:
+            xv = float(x)
+            return f"{xv:.2f}"
+        except Exception:
+            return str(x) if x is not None else ""
+    days_range = f"{_fmt2(days_low)} - {_fmt2(days_high)}" if days_low and days_high else ""
     
     # Extract shares outstanding
     # Prefer extracted shares_outstanding from base_data; otherwise fallback to info

@@ -156,7 +156,17 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
     ]
     avg_vol_value = next((v for v in avg_vol_candidates if v not in (None, 0)), None)
 
-    return {
+    # Compute robust bid/ask with zero treated as missing
+    raw_bid = info.get('bid')
+    raw_ask = info.get('ask')
+    bid_val = safe_decimal_conversion(raw_bid)
+    ask_val = safe_decimal_conversion(raw_ask)
+    if bid_val == 0:
+        bid_val = None
+    if ask_val == 0:
+        ask_val = None
+
+    payload = {
         'ticker': symbol,
         'symbol': symbol,
         'company_name': info.get('longName', info.get('shortName', symbol)),
@@ -186,11 +196,42 @@ def extract_stock_data_from_info(info, symbol, current_price=None):
         'week_52_high': safe_decimal_conversion(info.get('fiftyTwoWeekHigh')),
         
         # Additional metrics
-        'earnings_per_share': safe_decimal_conversion(info.get('trailingEps') or info.get('forwardEps')),
+        'earnings_per_share': safe_decimal_conversion(info.get('trailingEps') or info.get('forwardEps') or info.get('epsTrailingTwelveMonths')),
         'book_value': safe_decimal_conversion(info.get('bookValue')),
         'price_to_book': safe_decimal_conversion(info.get('priceToBook')),
         'exchange': info.get('exchange', info.get('market', 'NYSE')),
+        'bid_price': bid_val,
+        'ask_price': ask_val,
     }
+
+    # Fallbacks: derive price/book and book value if one is missing and the other present
+    try:
+        if (payload.get('price_to_book') in (None, 0)) and payload.get('book_value') and payload.get('current_price'):
+            bv = float(payload['book_value'])
+            cp = float(payload['current_price'])
+            if bv > 0:
+                payload['price_to_book'] = safe_decimal_conversion(cp / bv)
+    except Exception:
+        pass
+    try:
+        if (payload.get('book_value') in (None, 0)) and payload.get('price_to_book') and payload.get('current_price'):
+            pb = float(payload['price_to_book'])
+            cp = float(payload['current_price'])
+            if pb > 0:
+                payload['book_value'] = safe_decimal_conversion(cp / pb)
+    except Exception:
+        pass
+    # Derive PE if missing and EPS positive
+    try:
+        if (payload.get('pe_ratio') in (None, 0)) and payload.get('earnings_per_share') and payload.get('current_price'):
+            eps = float(payload['earnings_per_share'])
+            cp = float(payload['current_price'])
+            if eps > 0 and cp > 0:
+                payload['pe_ratio'] = safe_decimal_conversion(cp / eps)
+    except Exception:
+        pass
+
+    return payload
 
 def extract_stock_data_from_fast_info(fast_info, symbol, current_price=None):
     """Extract best-effort stock data from yfinance fast_info object.
