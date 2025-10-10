@@ -67,8 +67,8 @@ const PayPalCheckout = ({
     }
   };
 
-  // Orders API flow (client-side order creation ensures modal opens reliably)
-  const createOrder = useCallback(async (_data, actions) => {
+  // Orders API (server-created order) flow
+  const createOrder = useCallback(async (_data, _actions) => {
     setError("");
     try {
       setIsLoading(true);
@@ -76,44 +76,12 @@ const PayPalCheckout = ({
       if (!res?.success) {
         throw new Error(res?.error || "Failed to create order");
       }
-      const amtNum = Number(res.final_amount ?? res.amount);
-      if (!Number.isFinite(amtNum) || amtNum <= 0) {
-        throw new Error("Invalid amount");
-      }
-      // Prefer client-side order creation to guarantee popup renders even if server cannot create orders
-      const baseUrl = (process.env.REACT_APP_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
-      return actions.order.create({
-        purchase_units: [
-          {
-            amount: { value: amtNum.toFixed(2), currency_code: paypalOptions.currency || "USD" },
-            description: `Trade Scan Pro ${String(planType).toUpperCase()} - ${billingCycle}`,
-          },
-        ],
-        application_context: {
-          user_action: "PAY_NOW",
-          return_url: `${baseUrl}/checkout/success`,
-          cancel_url: `${baseUrl}/checkout/failure`,
-          landing_page: "LOGIN",
-          shipping_preference: "NO_SHIPPING"
-        },
-      });
+      // Return the server-created order id to the PayPal SDK
+      if (!res.order_id) throw new Error("Order created but missing order_id");
+      return res.order_id;
     } catch (e) {
       const msg = e?.message || "Failed to initialize payment";
       setError(msg);
-      // As a last resort, create a minimal order to allow UI to open
-      try {
-        if (actions?.order?.create) {
-          const baseUrl = (process.env.REACT_APP_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
-          return actions.order.create({
-            purchase_units: [{ amount: { value: "0.50", currency_code: paypalOptions.currency || "USD" } }],
-            application_context: {
-              user_action: "PAY_NOW",
-              return_url: `${baseUrl}/checkout/success`,
-              cancel_url: `${baseUrl}/checkout/failure`
-            }
-          });
-        }
-      } catch {}
       throw e;
     } finally {
       setIsLoading(false);
@@ -124,25 +92,12 @@ const PayPalCheckout = ({
     setIsLoading(true);
     try {
       const orderId = data?.orderID;
-      // Attempt client-side capture first for reliability
-      let clientCapture = null;
+      // Capture on the server and activate plan
       try {
-        if (actions?.order?.capture) {
-          clientCapture = await actions.order.capture();
-        }
-      } catch {}
-
-      // Notify backend to record/activate; if it fails, fall back to direct plan change
-      try {
-        const amountHint = clientCapture?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value
-          || clientCapture?.purchase_units?.[0]?.amount?.value
-          || undefined;
         const capture = await capturePayPalOrder(orderId, {
           plan_type: planType,
           billing_cycle: billingCycle,
           discount_code: discountCode || undefined,
-          amount: amountHint,
-          final_amount: amountHint,
         });
         if (!capture?.success) {
           throw new Error(capture?.error || "Payment capture failed");
@@ -152,8 +107,7 @@ const PayPalCheckout = ({
           await changePlan({ plan: planType, billing_cycle: billingCycle });
         } catch {}
       }
-
-      onSuccess?.({ orderId, planType, billingCycle, paymentDetails: clientCapture });
+      onSuccess?.({ orderId, planType, billingCycle });
     } catch (err) {
       setError(err?.message || "Payment failed");
       onError?.(err);
@@ -164,9 +118,9 @@ const PayPalCheckout = ({
   }, [planType, billingCycle, discountCode, onSuccess, onError]);
 
   const clientId = process.env.REACT_APP_PAYPAL_CLIENT_ID;
-  const usingFallbackClient = !clientId;
+  const missingClientId = !clientId;
   const paypalOptions = {
-    "client-id": clientId || "AcqbU_Y_mQK6pdy8hzpPif0UPWrG8_3vi3wxc-cIM2n2PAhdq4kJaq7BO4jUtAvfrYCgvYOzFbsGCHVY",
+    "client-id": clientId,
     currency: "USD",
     intent: isSubscription ? "subscription" : "capture",
     vault: isSubscription,
@@ -205,14 +159,16 @@ const PayPalCheckout = ({
               <span>Processing payment...</span>
             </div>
           )}
-          {usingFallbackClient && (
-            <Alert>
+          {missingClientId && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                PayPal client is not fully configured. Using fallback client-id; checkout may fail. Set REACT_APP_PAYPAL_CLIENT_ID in your environment.
+                Payment unavailable: PayPal not configured. Set REACT_APP_PAYPAL_CLIENT_ID.
               </AlertDescription>
             </Alert>
           )}
           
+          {!missingClientId && (
           <PayPalScriptProvider deferLoading={false} options={paypalOptions}>
             {isSubscription ? (
               <>
@@ -312,6 +268,7 @@ const PayPalCheckout = ({
               </>
             )}
           </PayPalScriptProvider>
+          )}
         </div>
 
         {/* Trust Indicators */}
