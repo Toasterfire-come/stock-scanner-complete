@@ -127,10 +127,13 @@ import SystemErrorBoundary from "./components/SystemErrorBoundary";
 // import LatencyIndicator from "./components/LatencyIndicator";
 import { useEffect } from "react";
 import { trackPageView } from "./lib/analytics";
+import { useLocation } from "react-router-dom";
+import SEO from "./components/SEO";
 
-// Placeholder component for missing pages
+// Placeholder component for missing pages (noindex)
 const PlaceholderPage = ({ title }) => (
   <div className="container mx-auto px-4 py-8">
+    <SEO title={`${title} | Trade Scan Pro`} robots="noindex,follow" />
     <div className="text-center">
       <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
       <p className="text-gray-600">This page is under development.</p>
@@ -153,6 +156,15 @@ function App() {
     // initial load
     try { trackPageView(window.location.pathname, document.title); } catch {}
   }, []);
+
+  // Track route changes
+  const PageViewTracker = () => {
+    const location = useLocation();
+    useEffect(() => {
+      try { trackPageView(location.pathname, document.title); } catch {}
+    }, [location.pathname]);
+    return null;
+  };
   return (
     <BackendStatusProvider>
       <AuthProvider>
@@ -162,6 +174,7 @@ function App() {
             <div className="min-h-screen bg-background">
               <OfflineBanner />
               <Suspense fallback={<div className="p-8 text-center">Loading…</div>}>
+              <PageViewTracker />
               <Routes>
                 {/* Auth Routes */}
                 <Route element={<AuthLayout />}>

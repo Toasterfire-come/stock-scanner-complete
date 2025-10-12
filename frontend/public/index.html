@@ -30,7 +30,7 @@
 
         <meta name="description" content="Real-time stock market scanner for NYSE & NASDAQ with advanced screeners, portfolio analytics, and instant alerts. Find high-probability trades faster with Trade Scan Pro." />
         <!-- Google Search Console Verification is injected via SEO.jsx when REACT_APP_GSC_VERIFICATION is set -->
-        <link rel="canonical" href="https://tradescanpro.com/" />
+        <!-- canonical is set dynamically per page via SEO.jsx -->
         <!-- Twitter (X) Cards -->
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@TradeScanProLLC" />
@@ -57,8 +57,7 @@
         <!-- Preload CSS to reduce render-blocking -->
         <link rel="preload" href="/static/css/main.css" as="style" onload="this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="/static/css/main.css"></noscript>
-        <!-- Defer main bundle explicitly (CRA already injects, this is a hint) -->
-        <script defer src="/static/js/main.js"></script>
+        <!-- CRA injects bundles; avoid manual script hints that can race-load -->
         <!-- GA4 is loaded dynamically via environment (prefer runtime injection) -->
         <link rel="preload" href="/hero.webp" as="image" imagesrcset="/hero.avif 1x, /hero.webp 2x" imagesizes="100vw" />
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
