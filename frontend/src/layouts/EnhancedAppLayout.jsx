@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
+import SEO from "../components/SEO";
 import { useAuth } from "../context/SecureAuthContext";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -57,6 +58,38 @@ const EnhancedAppLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const seoForPath = (pathname) => {
+    const base = {
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+    };
+    // App/private routes: noindex
+    if (/^\/(app|auth|checkout|onboarding|endpoint-status)\b/i.test(pathname)) {
+      return { ...base, title: "Trade Scan Pro", robots: "noindex,follow" };
+    }
+    // Shared links: noindex
+    if (/^\/(w|p)\//i.test(pathname)) {
+      return { ...base, title: "Shared Link | Trade Scan Pro", robots: "noindex,follow" };
+    }
+    // Marketing pages (defaults)
+    const titles = {
+      "/": "Trade Scan Pro | Professional Stock Market Scanner",
+      "/features": "Features | Trade Scan Pro",
+      "/about": "About | Trade Scan Pro",
+      "/contact": "Contact | Trade Scan Pro",
+      "/pricing": "Pricing | Trade Scan Pro",
+      "/resources": "Resources | Trade Scan Pro",
+      "/press": "Press Kit | Trade Scan Pro",
+      "/widgets": "Widgets | Trade Scan Pro",
+      "/badges": "Badges | Trade Scan Pro",
+      "/partners": "Partners | Trade Scan Pro",
+      "/docs": "Documentation | Trade Scan Pro",
+      "/legal/terms": "Terms of Service | Trade Scan Pro",
+      "/legal/privacy": "Privacy Policy | Trade Scan Pro",
+    };
+    const title = titles[pathname] || "Trade Scan Pro";
+    return { ...base, title, robots: "index,follow" };
+  };
+
   // Enhanced navigation structure with better grouping
   const navigationGroups = {
     user: {
@@ -98,6 +131,7 @@ const EnhancedAppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO {...seoForPath(location.pathname)} />
       {/* Enhanced Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
