@@ -1,4 +1,5 @@
 import React from "react";
+import SEO from "../components/SEO";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -48,6 +49,11 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="About | Trade Scan Pro"
+        description="Learn about Trade Scan Pro's mission, values, and story providing professional-grade screening and analytics tools for traders."
+        url="https://tradescanpro.com/about"
+      />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">
         <div className="container mx-auto px-4">

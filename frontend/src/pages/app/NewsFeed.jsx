@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import SEO from '../../components/SEO';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -87,6 +88,7 @@ const NewsFeed = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <SEO title="Market News | Trade Scan Pro" robots="noindex,follow" />
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Market News</h1>

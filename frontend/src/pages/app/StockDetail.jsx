@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import SEO from "../../components/SEO";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
@@ -217,6 +218,7 @@ const StockDetail = () => {
   if (!stockData) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <SEO title={`Stock Not Found | Trade Scan Pro`} robots="noindex,follow" />
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -346,6 +348,12 @@ const StockDetail = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <SEO
+        title={`${stockData.ticker} | ${stockData.company_name} | Trade Scan Pro`}
+        description={`Live quote, key stats and news for ${stockData.company_name} (${stockData.ticker}).`}
+        url={`https://tradescanpro.com/app/stocks/${encodeURIComponent(stockData.ticker)}`}
+        robots="noindex,follow"
+      />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center space-x-4">
