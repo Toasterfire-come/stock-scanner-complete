@@ -109,6 +109,7 @@ import DocsCategory from "./pages/docs/DocsCategory";
 import DocArticle from "./pages/docs/DocArticle";
 import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
 import Help from "./pages/Help";
+import ReferralApply from "./pages/ReferralApply";
 
 // Enterprise Solutions
 import QuoteRequest from "./pages/enterprise/QuoteRequest";
@@ -193,6 +194,9 @@ function App() {
                   <Route path="/features" element={<Features />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
+                  {/* Referral short links */}
+                  <Route path="/adam50" element={<ReferralApply code="ADAM50" redirectTo="/pricing" />} />
+                  <Route path="/ref/:code" element={<ReferralApply redirectTo="/pricing" />} />
                   <Route path="/pricing" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
                   <Route path="/stock-filter" element={<StockFilter />} />
