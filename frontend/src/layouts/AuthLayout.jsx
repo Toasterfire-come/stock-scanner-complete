@@ -1,4 +1,5 @@
 import React from "react";
+import SEO from "../components/SEO";
 import { Outlet, Link } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
 import { Card } from "../components/ui/card";
@@ -6,6 +7,7 @@ import { Card } from "../components/ui/card";
 const AuthLayout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+      <SEO title="Authentication | Trade Scan Pro" robots="noindex,follow" />
       <header className="p-4 sm:p-6">
         <Link to="/" className="flex items-center space-x-3">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
