@@ -1406,8 +1406,25 @@ def market_stats_api(request):
             'sectors': sectors,
             'last_updated': timezone.now().isoformat()
         }
-        
-        return Response(stats, status=status.HTTP_200_OK)
+        # ETag/Last-Modified handling for efficient caching
+        try:
+            import hashlib as _hashlib
+            payload_bytes = json.dumps(stats, sort_keys=True, default=str).encode('utf-8')
+            etag_value = 'W/"' + _hashlib.md5(payload_bytes).hexdigest() + '"'
+            inm = request.META.get('HTTP_IF_NONE_MATCH')
+            if inm and inm.strip() == etag_value:
+                resp304 = Response(status=status.HTTP_304_NOT_MODIFIED)
+                resp304['ETag'] = etag_value
+                resp304['Cache-Control'] = 'public, max-age=30'
+                resp304['Last-Modified'] = stats['last_updated']
+                return resp304
+            resp = Response(stats, status=status.HTTP_200_OK)
+            resp['ETag'] = etag_value
+            resp['Cache-Control'] = 'public, max-age=30'
+            resp['Last-Modified'] = stats['last_updated']
+            return resp
+        except Exception:
+            return Response(stats, status=status.HTTP_200_OK)
         
     except Exception as e:
         logger.error(f"Market stats API error: {e}", exc_info=True)
@@ -1779,11 +1796,27 @@ def trending_stocks_api(request):
             'most_active': format_stock_data(most_active),
             'last_updated': timezone.now().isoformat()
         }
-        
         # Cache the result for 90 seconds to reduce DB load during peak traffic
         cache.set(cache_key, trending_data, 90)
-        
-        return Response(trending_data, status=status.HTTP_200_OK)
+        # ETag/Last-Modified handling
+        try:
+            import hashlib as _hashlib
+            payload_bytes = json.dumps(trending_data, sort_keys=True, default=str).encode('utf-8')
+            etag_value = 'W/"' + _hashlib.md5(payload_bytes).hexdigest() + '"'
+            inm = request.META.get('HTTP_IF_NONE_MATCH')
+            if inm and inm.strip() == etag_value:
+                resp304 = Response(status=status.HTTP_304_NOT_MODIFIED)
+                resp304['ETag'] = etag_value
+                resp304['Cache-Control'] = 'public, max-age=30'
+                resp304['Last-Modified'] = trending_data['last_updated']
+                return resp304
+            resp = Response(trending_data, status=status.HTTP_200_OK)
+            resp['ETag'] = etag_value
+            resp['Cache-Control'] = 'public, max-age=30'
+            resp['Last-Modified'] = trending_data['last_updated']
+            return resp
+        except Exception:
+            return Response(trending_data, status=status.HTTP_200_OK)
         
     except Exception as e:
         logger.error(f"Trending stocks API error: {e}", exc_info=True)

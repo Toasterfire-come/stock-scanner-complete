@@ -66,6 +66,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Third-party CORS as high as possible
+    'stocks.middleware_security.SecurityHeadersMiddleware',  # Add safe security headers
     'stocks.middleware_error.CircuitBreakerMiddleware',  # Circuit breaker for stability
     'stocks.middleware_error.EnhancedErrorHandlingMiddleware',  # Enhanced error handling
     'stocks.middleware.APICompatibilityMiddleware',  # API/HTML detection (sets request.is_api_request)

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/SecureAuthContext";
@@ -125,7 +125,20 @@ import DownloadHistory from "./pages/app/exports/DownloadHistory";
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
 // import LatencyIndicator from "./components/LatencyIndicator";
-import { useEffect } from "react";
+// hotkey for command palette
+function useGlobalHotkeys(setCmdOpen) {
+  useEffect(() => {
+    const onKey = (e) => {
+      const isK = e.key?.toLowerCase() === 'k';
+      if ((e.ctrlKey || e.metaKey) && isK) {
+        e.preventDefault();
+        setCmdOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setCmdOpen]);
+}
 import { trackPageView } from "./lib/analytics";
 import { useLocation } from "react-router-dom";
 import SEO from "./components/SEO";
@@ -165,6 +178,8 @@ function App() {
     }, [location.pathname]);
     return null;
   };
+  const [cmdOpen, setCmdOpen] = React.useState(false);
+  useGlobalHotkeys(setCmdOpen);
   return (
     <BackendStatusProvider>
       <AuthProvider>
@@ -201,7 +216,7 @@ function App() {
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
 
                 {/* Main App Routes */}
-                <Route element={<EnhancedAppLayout />}>
+                <Route element={<EnhancedAppLayout cmdOpen={cmdOpen} setCmdOpen={setCmdOpen} />}>
                   {/* Public/Marketing Routes - Available to all users */}
                   <Route path="/" element={<Home />} />
                   <Route path="/features" element={<Features />} />

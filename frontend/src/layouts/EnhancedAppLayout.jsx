@@ -51,12 +51,16 @@ import {
   ChevronDown
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
+import CommandPalette from "../components/CommandPalette";
 import QuickActions from "../components/QuickActions";
 
-const EnhancedAppLayout = () => {
+const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } = {}) => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cmdOpenState, setCmdOpenState] = useState(false);
+  const cmdOpen = typeof cmdOpenProp === 'boolean' ? cmdOpenProp : cmdOpenState;
+  const setCmdOpen = typeof setCmdOpenProp === 'function' ? setCmdOpenProp : setCmdOpenState;
 
   const seoForPath = (pathname) => {
     const base = {
@@ -135,6 +139,7 @@ const EnhancedAppLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO {...seoForPath(location.pathname)} />
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
       {/* Enhanced Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -161,7 +166,15 @@ const EnhancedAppLayout = () => {
               </span>
             </Link>
 
-            {/* Remove desktop dropdowns; rely on hamburger menu only */}
+            {/* Command palette trigger (desktop) */}
+            <button
+              onClick={() => setCmdOpen(true)}
+              className="hidden md:flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+              aria-label="Open command palette"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden lg:inline">Quick search (Ctrl/Cmd+K)</span>
+            </button>
 
             {/* Removed header quick-action buttons to rely on the hamburger menu */}
 
