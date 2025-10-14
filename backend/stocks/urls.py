@@ -7,6 +7,7 @@ from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from . import revenue_views
 from .billing_api import cancel_subscription_api, paypal_plans_meta_api
+from . import enterprise_api
 from django.http import JsonResponse
 
 urlpatterns = [
@@ -123,6 +124,11 @@ urlpatterns = [
     # Billing management
     path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
     path('billing/plans-meta/', paypal_plans_meta_api, name='paypal_plans_meta'),
+
+    # Enterprise contact/solutions endpoints
+    path('enterprise/contact/', enterprise_api.enterprise_contact_api, name='enterprise_contact'),
+    path('enterprise/quote-request/', enterprise_api.enterprise_quote_request_api, name='enterprise_quote_request'),
+    path('enterprise/solutions/', enterprise_api.enterprise_solutions_api, name='enterprise_solutions'),
 
     # Logging & monitoring endpoints
     path('logs/client/', logs_api.client_logs_api, name='client_logs'),
