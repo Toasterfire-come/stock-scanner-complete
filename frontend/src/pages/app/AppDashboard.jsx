@@ -175,6 +175,12 @@ const AppDashboard = () => {
               {(user?.plan || (user?.email?.toLowerCase() === 'carter.kiefer2010@outlook.com' ? 'gold' : 'free'))?.toString()?.replace(/^[a-z]/, (m) => m.toUpperCase())} Plan
             </Badge>
             <MarketStatus />
+            {marketData?.last_updated && (
+              <span className="text-xs text-gray-500">
+                Data as of {new Date(marketData.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {marketResponse?.cached ? ' (cached)' : ''}
+              </span>
+            )}
           </div>
         </div>
 

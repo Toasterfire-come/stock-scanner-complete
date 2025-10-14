@@ -333,7 +333,7 @@ export async function getMarketStatsSafe() {
   try {
     ensureApiQuotaAndIncrement('loadMarket');
     const res = await cachedGet('/market-stats/', 'market-stats', 30000);
-    return { success: true, data: normalizeMarketStats(res.data) };
+    return { success: true, data: normalizeMarketStats(res.data), cached: !!res.cached };
   } catch (error) {
     return { success: false, error: error.message || 'Service unavailable' };
   }
