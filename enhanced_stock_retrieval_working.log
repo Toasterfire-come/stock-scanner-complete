@@ -86,3 +86,91 @@
 2025-10-14 19:28:41,329 - INFO - ============================================================
 2025-10-14 19:28:41,334 - INFO - WROTE OUTPUT: /workspace/backend/test_run_output_after_fix.json (26 records)
 2025-10-14 19:28:41,334 - INFO - Script completed!
+2025-10-14 19:42:21,192 - INFO - ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES
+2025-10-14 19:42:21,192 - INFO - ============================================================
+2025-10-14 19:42:21,192 - INFO - Configuration:
+2025-10-14 19:42:21,192 - INFO -   CSV File: flat-ui__data-Fri Aug 01 2025.csv
+2025-10-14 19:42:21,192 - INFO -   Test Mode: True
+2025-10-14 19:42:21,192 - INFO -   Use Proxies: False
+2025-10-14 19:42:21,192 - INFO -   Proxy File: working_proxies.json
+2025-10-14 19:42:21,192 - INFO -   Threads: 8
+2025-10-14 19:42:21,192 - INFO -   Timeout: 10s
+2025-10-14 19:42:21,192 - INFO -   Max Symbols: 30
+2025-10-14 19:42:21,192 - INFO -   Save to DB: False
+2025-10-14 19:42:21,192 - INFO -   Schedule Mode: False
+2025-10-14 19:42:21,192 - INFO -   Daily Update: False
+2025-10-14 19:42:21,192 - INFO - ============================================================
+2025-10-14 19:42:21,193 - INFO - ============================================================
+2025-10-14 19:42:21,193 - INFO - STOCK UPDATE CYCLE - 2025-10-14 19:42:21
+2025-10-14 19:42:21,193 - INFO - ============================================================
+2025-10-14 19:42:21,193 - INFO - Loading combined tickers list (NASDAQ + NYSE/AMEX)...
+2025-10-14 19:42:21,201 - INFO - Loaded 30 combined tickers from combined_tickers_20250921_181527.py
+2025-10-14 19:42:21,202 - INFO - Processing 30 symbols...
+2025-10-14 19:42:21,202 - INFO - DISABLED: Proxy usage disabled
+2025-10-14 19:42:21,202 - INFO - Starting to process 30 symbols...
+2025-10-14 19:42:21,202 - INFO - ============================================================
+2025-10-14 19:42:21,202 - INFO - Submitting 30 tasks to thread pool...
+2025-10-14 19:42:21,204 - INFO - Submitted 30 tasks. Processing...
+2025-10-14 19:42:25,309 - WARNING - AACT.U: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:42:26,361 - WARNING - AACT.W: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:42:26,361 - INFO - [PROGRESS] 10/30 completed (8 successful, 2 failed)
+2025-10-14 19:42:27,808 - WARNING - AAM.U: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:42:27,913 - WARNING - AAM.W: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:42:28,623 - INFO - [PROGRESS] 20/30 completed (16 successful, 4 failed)
+2025-10-14 19:42:31,691 - INFO - [PROGRESS] 30/30 completed (26 successful, 4 failed)
+2025-10-14 19:42:31,703 - INFO - ============================================================
+2025-10-14 19:42:31,703 - INFO - CYCLE RESULTS
+2025-10-14 19:42:31,703 - INFO - ============================================================
+2025-10-14 19:42:31,704 - INFO - SUCCESSFUL: 26
+2025-10-14 19:42:31,704 - INFO - FAILED: 4
+2025-10-14 19:42:31,704 - INFO - SUCCESS RATE: 86.7%
+2025-10-14 19:42:31,704 - INFO - TIME: 10.50s
+2025-10-14 19:42:31,704 - INFO - RATE: 2.86 symbols/sec
+2025-10-14 19:42:31,704 - INFO - CYCLE COMPLETED: 2025-10-14 19:42:31
+2025-10-14 19:42:31,704 - INFO - ============================================================
+2025-10-14 19:42:31,709 - INFO - WROTE OUTPUT: /workspace/backend/test_run_output_pull_only.json (26 records)
+2025-10-14 19:42:31,709 - INFO - Script completed!
+2025-10-14 19:43:33,521 - INFO - ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES
+2025-10-14 19:43:33,521 - INFO - ============================================================
+2025-10-14 19:43:33,521 - INFO - Configuration:
+2025-10-14 19:43:33,521 - INFO -   CSV File: flat-ui__data-Fri Aug 01 2025.csv
+2025-10-14 19:43:33,521 - INFO -   Test Mode: True
+2025-10-14 19:43:33,521 - INFO -   Use Proxies: False
+2025-10-14 19:43:33,521 - INFO -   Proxy File: working_proxies.json
+2025-10-14 19:43:33,521 - INFO -   Threads: 8
+2025-10-14 19:43:33,521 - INFO -   Timeout: 10s
+2025-10-14 19:43:33,521 - INFO -   Max Symbols: 30
+2025-10-14 19:43:33,521 - INFO -   Save to DB: False
+2025-10-14 19:43:33,521 - INFO -   Schedule Mode: False
+2025-10-14 19:43:33,521 - INFO -   Daily Update: False
+2025-10-14 19:43:33,521 - INFO - ============================================================
+2025-10-14 19:43:33,521 - INFO - ============================================================
+2025-10-14 19:43:33,522 - INFO - STOCK UPDATE CYCLE - 2025-10-14 19:43:33
+2025-10-14 19:43:33,522 - INFO - ============================================================
+2025-10-14 19:43:33,522 - INFO - Loading combined tickers list (NASDAQ + NYSE/AMEX)...
+2025-10-14 19:43:33,530 - INFO - Loaded 30 combined tickers from combined_tickers_20250921_181527.py
+2025-10-14 19:43:33,530 - INFO - Processing 30 symbols...
+2025-10-14 19:43:33,530 - INFO - DISABLED: Proxy usage disabled
+2025-10-14 19:43:33,530 - INFO - Starting to process 30 symbols...
+2025-10-14 19:43:33,530 - INFO - ============================================================
+2025-10-14 19:43:33,530 - INFO - Submitting 30 tasks to thread pool...
+2025-10-14 19:43:33,532 - INFO - Submitted 30 tasks. Processing...
+2025-10-14 19:43:36,815 - WARNING - AACT.W: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:43:36,866 - WARNING - AACT.U: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:43:36,867 - INFO - [PROGRESS] 10/30 completed (8 successful, 2 failed)
+2025-10-14 19:43:37,285 - WARNING - AAM.U: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:43:37,856 - WARNING - AAM.W: Error without proxy: 'currentTradingPeriod'
+2025-10-14 19:43:40,231 - INFO - [PROGRESS] 20/30 completed (16 successful, 4 failed)
+2025-10-14 19:43:42,387 - INFO - [PROGRESS] 30/30 completed (26 successful, 4 failed)
+2025-10-14 19:43:42,399 - INFO - ============================================================
+2025-10-14 19:43:42,399 - INFO - CYCLE RESULTS
+2025-10-14 19:43:42,399 - INFO - ============================================================
+2025-10-14 19:43:42,399 - INFO - SUCCESSFUL: 26
+2025-10-14 19:43:42,399 - INFO - FAILED: 4
+2025-10-14 19:43:42,399 - INFO - SUCCESS RATE: 86.7%
+2025-10-14 19:43:42,399 - INFO - TIME: 8.87s
+2025-10-14 19:43:42,400 - INFO - RATE: 3.38 symbols/sec
+2025-10-14 19:43:42,400 - INFO - CYCLE COMPLETED: 2025-10-14 19:43:42
+2025-10-14 19:43:42,400 - INFO - ============================================================
+2025-10-14 19:43:42,405 - INFO - WROTE OUTPUT: /workspace/backend/test_run_output_pull_live.json (26 records)
+2025-10-14 19:43:42,405 - INFO - Script completed!

@@ -527,6 +527,33 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
 
     patch_yfinance_proxy(proxy)
 
+    def fetch_yahoo_live_quote(sym: str, timeout_s: int = 8) -> dict | None:
+        """Fetch fresh quote fields from Yahoo v7/finance/quote. Returns dict or None.
+        This improves pulling fidelity without altering values post-fetch.
+        """
+        try:
+            url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={sym}"
+            sess = None
+            try:
+                import yfinance.shared as _ys
+                sess = getattr(_ys, '_requests', None)
+            except Exception:
+                sess = None
+            s = sess if sess is not None else requests.Session()
+            s.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            })
+            resp = s.get(url, timeout=timeout_s)
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            res = data.get('quoteResponse', {}).get('result', [])
+            if not res:
+                return None
+            return res[0]
+        except Exception:
+            return None
+
     # Filter out symbols with obvious invalid characters that yfinance rejects
     if any(ch in symbol for ch in ['$', '^', ' ', '/']):
         logger.warning(f"{symbol}: Skipping invalid or preferred share ticker format")
@@ -626,116 +653,82 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Extract comprehensive stock data using utility functions
     base_data = extract_stock_data_from_info(info, symbol, current_price) if info else extract_stock_data_from_fast_info(fast_info, symbol, current_price)
     
-    # Calculate price changes from historical data (prefer intraday 1m when available for accuracy)
+    # Price change: prefer quote fields from Yahoo (pull directly, no post adjustments)
     price_change_today, change_percent = (None, None)
     intraday = None
-    intraday_close_prev = None
-    intraday_close_curr = None
     try:
-        intraday = yf_history(period="1d", interval="1m")
-        if intraday is not None and not intraday.empty:
-            closes = intraday['Close'].dropna()
-            if len(closes) >= 2:
-                intraday_close_prev = closes.iloc[-2]
-                intraday_close_curr = closes.iloc[-1]
-        if intraday_close_prev is not None and intraday_close_curr is not None and intraday_close_prev != 0:
-            price_change_today = safe_decimal_conversion(intraday_close_curr - intraday_close_prev)
-            change_percent = safe_decimal_conversion(((intraday_close_curr - intraday_close_prev) / intraday_close_prev) * 100)
+        if info:
+            price_change_today = safe_decimal_conversion(info.get('regularMarketChange'))
+            cp = info.get('regularMarketChangePercent')
+            if cp is not None:
+                change_percent = safe_decimal_conversion(cp)
+        # Pull fresh live quote if missing
+        if price_change_today is None or change_percent is None:
+            q = fetch_yahoo_live_quote(norm_symbol, timeout)
+            if q:
+                if price_change_today is None:
+                    price_change_today = safe_decimal_conversion(q.get('regularMarketChange'))
+                if change_percent is None and q.get('regularMarketChangePercent') is not None:
+                    change_percent = safe_decimal_conversion(q.get('regularMarketChangePercent'))
+        # Fallbacks to history only if still missing
+        if (price_change_today is None or change_percent is None):
+            # Try 1d 1m last two closes
+            intraday = yf_history(period="1d", interval="1m")
+            if intraday is not None and not intraday.empty:
+                closes = intraday['Close'].dropna()
+                if len(closes) >= 2 and closes.iloc[-2] != 0:
+                    price_change_today = safe_decimal_conversion(closes.iloc[-1] - closes.iloc[-2])
+                    change_percent = safe_decimal_conversion(((closes.iloc[-1] - closes.iloc[-2]) / closes.iloc[-2]) * 100)
+        if (price_change_today is None or change_percent is None) and hist is not None and not hist.empty:
+            price_change_today, change_percent = calculate_change_percent_from_history(hist, symbol)
     except Exception:
         price_change_today, change_percent = (None, None)
-    if price_change_today is None or change_percent is None:
-        price_change_today, change_percent = calculate_change_percent_from_history(hist, symbol) if hist is not None and not hist.empty else (None, None)
-    # Fallback to info-provided change metrics if history unavailable
-    if (price_change_today is None or change_percent is None) and info:
-        try:
-            if price_change_today is None:
-                price_change_today = safe_decimal_conversion(info.get('regularMarketChange') or info.get('priceHint'))
-            if change_percent is None:
-                cp = info.get('regularMarketChangePercent')
-                if cp is not None:
-                    change_percent = safe_decimal_conversion(cp)
-        except Exception:
-            pass
-
-    # Sanity-check price change values and recompute using daily data if outliers
-    try:
-        cp_float = float(current_price) if current_price is not None and not pd.isna(current_price) else None
-        ch_float = float(price_change_today) if price_change_today is not None else None
-        # Determine previous price if possible
-        prev_float = None
-        if intraday_close_prev is not None:
-            prev_float = float(intraday_close_prev)
-        elif hist is not None and not hist.empty and len(hist['Close'].dropna()) >= 2:
-            prev_float = float(hist['Close'].dropna().iloc[-2])
-        # Detect obvious anomalies (e.g., change >> price for penny stocks)
-        if cp_float is not None and ch_float is not None:
-            threshold = 2.0 if cp_float >= 1.0 else max(0.5, cp_float * 5.0)
-            if abs(ch_float) > threshold:
-                # Recompute using 5d daily data as a reliable fallback
-                daily5 = yf_history(period="5d", interval=None)
-                if daily5 is not None and not daily5.empty and len(daily5['Close'].dropna()) >= 2:
-                    prev = float(daily5['Close'].dropna().iloc[-2])
-                    curr = float(daily5['Close'].dropna().iloc[-1])
-                    if prev > 0:
-                        price_change_today = safe_decimal_conversion(curr - prev)
-                        change_percent = safe_decimal_conversion(((curr - prev) / prev) * 100)
-                    else:
-                        price_change_today, change_percent = (None, None)
-                else:
-                    # If we cannot recompute reliably, drop the inconsistent values
-                    price_change_today, change_percent = (None, None)
-    except Exception:
-        pass
     
-    # Calculate additional metrics
-    # Fix volume zeros with intraday sum when available
-    try:
-        if (base_data.get('volume') in (None, 0)) and (intraday is not None and not intraday.empty):
-            intraday_clean = intraday.dropna(subset=['Volume'])
-            intraday_sum = float(intraday_clean['Volume'].sum()) if not intraday_clean.empty else 0.0
-            if intraday_sum > 0:
-                base_data['volume'] = safe_decimal_conversion(intraday_sum)
-                base_data['volume_today'] = safe_decimal_conversion(intraday_sum)
-    except Exception:
-        pass
+    # Calculate additional metrics (prefer pulled fields; minimal adjustments)
     # Ensure avg_volume_3mon fallback before DVAV
     if (not base_data.get('avg_volume_3mon')) and base_data.get('volume'):
         base_data['avg_volume_3mon'] = base_data['volume']
     dvav = calculate_volume_ratio(base_data.get('volume'), base_data.get('avg_volume_3mon'))
     
-    # Extract bid/ask data with zero normalization and fast_info fallback
-    bid_price = base_data.get('bid_price') if base_data else None
-    ask_price = base_data.get('ask_price') if base_data else None
-    if (bid_price in (None, 0)) and info:
-        bid_price = safe_decimal_conversion(info.get('bid'))
-    if (ask_price in (None, 0)) and info:
-        ask_price = safe_decimal_conversion(info.get('ask'))
-    # Fallback to fast_info attributes when info returns zeros/None
+    # Extract bid/ask data (pull only, with live quote fallback)
+    bid_price = None
+    ask_price = None
     try:
-        if (bid_price in (None, 0)) and fast_info is not None and hasattr(fast_info, 'bid'):
-            bid_attr = getattr(fast_info, 'bid')
-            bid_price = safe_decimal_conversion(bid_attr)
-        if (ask_price in (None, 0)) and fast_info is not None and hasattr(fast_info, 'ask'):
-            ask_attr = getattr(fast_info, 'ask')
-            ask_price = safe_decimal_conversion(ask_attr)
+        if fast_info is not None:
+            if hasattr(fast_info, 'bid'):
+                bid_price = safe_decimal_conversion(getattr(fast_info, 'bid'))
+            if hasattr(fast_info, 'ask'):
+                ask_price = safe_decimal_conversion(getattr(fast_info, 'ask'))
+        if (bid_price is None or ask_price is None) and info:
+            if bid_price is None:
+                bid_price = safe_decimal_conversion(info.get('bid'))
+            if ask_price is None:
+                ask_price = safe_decimal_conversion(info.get('ask'))
+        # Live quote fallback for more accurate L1
+        if (bid_price in (None, 0)) or (ask_price in (None, 0)):
+            q = fetch_yahoo_live_quote(norm_symbol, timeout)
+            if q:
+                if bid_price in (None, 0):
+                    bid_price = safe_decimal_conversion(q.get('bid'))
+                if ask_price in (None, 0):
+                    ask_price = safe_decimal_conversion(q.get('ask'))
     except Exception:
-        pass
-    # Normalize any zeros to None
-    try:
-        if bid_price == 0:
-            bid_price = None
-        if ask_price == 0:
-            ask_price = None
-    except Exception:
-        pass
+        bid_price, ask_price = (bid_price, ask_price)
     bid_ask_spread = safe_decimal_conversion(float(ask_price) - float(bid_price)) if bid_price and ask_price else None
     
-    # Calculate days range (fallback to intraday/hist when missing)
+    # Calculate days range (fallback to live quote/intraday when missing)
     days_low = base_data.get('days_low')
     days_high = base_data.get('days_high')
     if (days_low in (None, 0)) or (days_high in (None, 0)):
         try:
-            if intraday is not None and not intraday.empty:
+            # Live quote first for regular market day low/high
+            q = fetch_yahoo_live_quote(norm_symbol, timeout)
+            if q and (q.get('regularMarketDayLow') or q.get('regularMarketDayHigh')):
+                if days_low in (None, 0) and q.get('regularMarketDayLow') is not None:
+                    days_low = safe_decimal_conversion(q.get('regularMarketDayLow'))
+                if days_high in (None, 0) and q.get('regularMarketDayHigh') is not None:
+                    days_high = safe_decimal_conversion(q.get('regularMarketDayHigh'))
+            if (days_low in (None, 0) or days_high in (None, 0)) and intraday is not None and not intraday.empty:
                 lows = intraday['Low'].dropna()
                 highs = intraday['High'].dropna()
                 if not lows.empty and not highs.empty:
@@ -878,44 +871,11 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
         except Exception:
             return None
 
-    # Forward EPS (multi-source with robust parsing)
+    # Forward EPS: pull directly from quote info only (avoid mixing sources)
     forward_eps = None
     try:
-        # 1) Direct from info
         if info:
             forward_eps = _safe_float(info.get('forwardEps'))
-        # 2) Parse from earnings_trend DataFrame (nextYear avg or epsTrend current)
-        if forward_eps is None and earnings_trend is not None:
-            try:
-                import pandas as _pd  # local import guard
-                if hasattr(earnings_trend, 'to_dict'):
-                    # Orient records to iterate rows safely across versions
-                    rows = earnings_trend.to_dict(orient='records')
-                    candidates = []
-                    for row in rows:
-                        period = (row.get('period') or row.get('endDate') or '').lower()
-                        # Prefer next year estimates
-                        is_next_year = any(key in period for key in ['next', '+1y', '1y'])
-                        ee = row.get('earningsEstimate') or {}
-                        et = row.get('epsTrend') or {}
-                        # Try earningsEstimate.avg first
-                        avg_est = ee.get('avg') if isinstance(ee, dict) else None
-                        if avg_est is not None:
-                            candidates.append((2 if is_next_year else 1, _safe_float(avg_est)))
-                        # Try epsTrend.current as a weaker signal
-                        current_est = et.get('current') if isinstance(et, dict) else None
-                        if current_est is not None:
-                            candidates.append((1 if is_next_year else 0, _safe_float(current_est)))
-                    # Pick best candidate by priority then value presence
-                    candidates = [c for c in candidates if c[1] is not None and c[1] > 0]
-                    if candidates:
-                        candidates.sort(key=lambda x: (-x[0]))
-                        forward_eps = candidates[0][1]
-            except Exception as _e:
-                logger.debug(f"{symbol}: Failed to parse earnings_trend for forward EPS: {_e}")
-        # 3) Fallback: use earnings_per_share from base_data (may be trailing)
-        if forward_eps is None:
-            forward_eps = _safe_float(base_data.get('earnings_per_share'))
     except Exception as _e:
         logger.debug(f"{symbol}: Forward EPS extraction error: {_e}")
 
@@ -964,13 +924,6 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     }
     default_multiples = {'low': 10.0, 'base': 15.0, 'high': 20.0}
     multiples = SECTOR_PE_MULTIPLES.get(sector or '', default_multiples)
-
-    # If forward EPS is non-positive, nullify forward PE to avoid nonsense values
-    try:
-        if forward_eps is None or (isinstance(forward_eps, (int, float)) and forward_eps <= 0):
-            forward_pe = None
-    except Exception:
-        pass
 
     # Fair values
     fv_restricted = {'low': None, 'base': None, 'high': None}
