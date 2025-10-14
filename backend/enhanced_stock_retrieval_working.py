@@ -174,6 +174,9 @@ def parse_arguments():
                        help='Maximum number of symbols to process (for testing)')
     parser.add_argument('-proxy-file', type=str, default=os.getenv('PROXY_FILE_PATH', 'working_proxies.json'),
                        help='Proxy JSON file path (default from PROXY_FILE_PATH env var or working_proxies.json)')
+    parser.add_argument('-proxy-precheck', action='store_true', help='Precheck proxies against Yahoo before use')
+    parser.add_argument('-proxy-top-n', type=int, default=None, help='Limit to top-N fastest alive proxies after precheck')
+    parser.add_argument('-proxy-test-timeout', type=int, default=3, help='Timeout in seconds for proxy precheck requests')
     parser.add_argument('-schedule', action='store_true', help='Run in scheduler mode (every 3 minutes)')
     parser.add_argument('-save-to-db', action='store_true', default=False, help='Save results to database (default: False)')
     parser.add_argument('-update-proxies', action='store_true', help='Force proxy update before starting')
@@ -252,6 +255,11 @@ def update_proxy_list(proxy_file):
 def load_proxies_direct(proxy_file):
     """Load proxies directly from JSON file without validation"""
     try:
+        # Accept relative to script directory when not absolute
+        if not os.path.isabs(proxy_file):
+            alt_path = os.path.join(os.path.dirname(__file__), proxy_file)
+            if os.path.exists(alt_path) and not os.path.exists(proxy_file):
+                proxy_file = alt_path
         # First check if we need to update proxies (older than 1 hour)
         if os.path.exists(proxy_file):
             file_age = time.time() - os.path.getmtime(proxy_file)
@@ -312,6 +320,49 @@ def load_proxies_direct(proxy_file):
     except Exception as e:
         logger.error(f"Error loading proxies: {e}")
         return []
+
+def precheck_proxies(proxies: list[str], test_url: str | None = None, timeout_s: int = 3, max_workers: int = 50, top_n: int | None = None) -> list[str]:
+    """Quickly test proxies against Yahoo and return fastest alive list.
+
+    Tests are GETs to a lightweight Yahoo endpoint, measuring latency.
+    Does not rewrite proxy strings; simply filters and sorts them.
+    """
+    if not proxies:
+        return []
+    url = test_url or 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL'
+    results: list[tuple[float, str]] = []
+
+    def _probe(px: str):
+        start = time.time()
+        try:
+            s = requests.Session()
+            s.proxies = {'http': px, 'https': px}
+            s.headers.update({'User-Agent': 'Mozilla/5.0'})
+            r = s.get(url, timeout=timeout_s)
+            if r.status_code == 200 and 'quoteResponse' in r.text:
+                latency = time.time() - start
+                return (latency, px)
+        except Exception:
+            return None
+        return None
+
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(proxies))) as ex:
+        futs = [ex.submit(_probe, p) for p in proxies]
+        for fut in as_completed(futs):
+            res = fut.result()
+            if res is not None:
+                results.append(res)
+
+    if not results:
+        logger.warning("Proxy precheck found no alive proxies")
+        return []
+
+    results.sort(key=lambda x: x[0])
+    alive_sorted = [p for _, p in results]
+    if top_n is not None and top_n > 0:
+        alive_sorted = alive_sorted[:top_n]
+    logger.info(f"PROXY PRECHECK: {len(alive_sorted)}/{len(proxies)} alive; fastest {results[0][0]*1000:.0f}ms")
+    return alive_sorted
 
 def get_healthy_proxy(proxies, used_proxies=None):
     """Get a healthy proxy, avoiding blocked ones"""
@@ -1089,13 +1140,24 @@ def run_stock_update(args):
     
     logger.info(f"Processing {len(symbols)} symbols...")
     
-    # Load proxies directly (without validation)
+    # Load proxies directly (without validation), with optional precheck
     proxies = []
     if not args.noproxy:
         logger.info(f"Loading proxies from {args.proxy_file}...")
         proxies = load_proxies_direct(args.proxy_file)
         if proxies:
             logger.info(f"SUCCESS: Loaded {len(proxies)} proxies (no validation)")
+            if getattr(args, 'proxy_precheck', False):
+                logger.info("Running proxy precheck against Yahoo...")
+                proxies = precheck_proxies(
+                    proxies,
+                    timeout_s=getattr(args, 'proxy_test_timeout', 3),
+                    top_n=getattr(args, 'proxy_top_n', None)
+                )
+                if proxies:
+                    logger.info(f"Using {len(proxies)} prechecked proxies")
+                else:
+                    logger.warning("Proxy precheck yielded no alive proxies; proceeding without proxies")
         else:
             logger.warning("No proxies loaded - continuing without proxies")
     else:
