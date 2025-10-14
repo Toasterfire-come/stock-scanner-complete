@@ -105,7 +105,10 @@ const EnhancedAppLayout = () => {
         { name: "Alerts", href: "/app/alerts", icon: AlertCircle, description: "Price & volume alerts" },
         { name: "News", href: "/app/news", icon: Activity, description: "Latest market news" },
         { name: "Exports", href: "/app/exports", icon: FileText, description: "Data exports" },
-        { name: "Developer", href: "/app/developer", icon: Zap, description: "API & developer tools" },
+        // Developer tools gated by plan; hidden when not available
+        ...(user?.plan && user.plan !== 'free' ? [
+          { name: "Developer", href: "/app/developer", icon: Zap, description: "API & developer tools" },
+        ] : []),
         { name: "Account", href: "/account/profile", icon: User, description: "Profile & settings" },
       ]
     },
