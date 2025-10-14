@@ -15,7 +15,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
 django.setup()
 
 from django.utils import timezone
-from stocks.models import Stock
+from stocks.models import Stock, StockPrice
 
 def create_test_stocks():
     """Create realistic test stock data"""
@@ -162,6 +162,23 @@ def create_test_stocks():
             'created_at': timezone.now()
         })
         
+        # Create valuation_json for fair value demo
+        fv_base = float(stock_data['current_price']) * 1.05
+        valuation_json = {
+            'fair_value_restricted': {
+                'low': float(stock_data['current_price']) * 0.9,
+                'base': fv_base,
+                'high': float(stock_data['current_price']) * 1.2,
+            },
+            'fair_value_unrestricted': float(stock_data['current_price']) * 1.1,
+            'forward_eps': 8.5,
+            'sector': 'Technology' if stock_data['exchange'] == 'NASDAQ' else 'Financials',
+            'subsector_pe_base': 22.5,
+            'forward_pe': 24.0,
+            'rsi14': 52.3,
+        }
+        stock_data['valuation_json'] = valuation_json
+
         # Create or update stock
         stock, created = Stock.objects.update_or_create(
             ticker=stock_data['ticker'],
@@ -175,6 +192,16 @@ def create_test_stocks():
             updated_count += 1
             print(f"Updated: {stock.ticker} - {stock.company_name}")
     
+        # Seed simple recent price history for charts
+        try:
+            last_prices = list(StockPrice.objects.filter(stock=stock).order_by('-timestamp')[:3])
+            if len(last_prices) < 3:
+                base = float(stock.current_price or 100)
+                for i in range(3):
+                    StockPrice.objects.create(stock=stock, price=Decimal(str(base * (0.99 + i*0.005))))
+        except Exception:
+            pass
+
     print(f"\nSummary:")
     print(f"Created: {created_count} stocks")
     print(f"Updated: {updated_count} stocks")
