@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
 import PayPalCheckout from "../components/PayPalCheckout";
-import { createPayPalOrder } from "../api/client";
+import { createPayPalOrder, api } from "../api/client";
 import { setPromoCookie, normalizePromoCode } from "../lib/promos";
 import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
 
@@ -77,28 +77,20 @@ const PricingPro = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/plans/comparison/`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const normalizedPlans = data?.plans && Object.keys(data.plans).length > 0 ? data.plans : getDefaultPlans();
-        setPlans(normalizedPlans);
-        setCurrentPlan(data.current_plan || 'free');
+      const { data } = await api.get('/billing/plans-meta/');
+      if (data?.success && data?.data) {
+        // Expect data.data.plans shape; fallback to defaults if missing
+        const normalized = data.data.plans && Object.keys(data.data.plans).length > 0 ? data.data.plans : getDefaultPlans();
+        setPlans(normalized);
+        setCurrentPlan((data.data.current_plan || 'free').toLowerCase());
       } else {
-        // Fallback when API returns non-OK response
         setPlans(getDefaultPlans());
         setCurrentPlan('free');
       }
     } catch (error) {
-      console.error('Failed to fetch plans:', error);
-      // Fallback to default plans if API fails
+      console.error('Failed to load plans-meta:', error);
       setPlans(getDefaultPlans());
+      setCurrentPlan('free');
     }
   };
 
