@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Bell, TrendingUp, TrendingDown, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../context/SecureAuthContext";
-import { createAlert, api, getPlanLimits } from "../../api/client";
+import { createAlert, api, getPlanLimits, alertsMeta } from "../../api/client";
 
 const Alerts = () => {
   const { isAuthenticated } = useAuth();
@@ -25,6 +25,8 @@ const Alerts = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [meta, setMeta] = useState(null);
+  const [rateAfter, setRateAfter] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -33,6 +35,7 @@ const Alerts = () => {
       return;
     }
     fetchAlerts();
+    (async () => { try { const m = await alertsMeta(); setMeta(m); } catch {} })();
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -92,8 +95,16 @@ const Alerts = () => {
         toast.error("Failed to create alert");
       }
     } catch (error) {
-      const errorMessage = error.message || "Failed to create alert";
-      toast.error(errorMessage);
+      // Handle rate limit countdown (Retry-After)
+      const retryAfter = Number(error?.response?.headers?.['retry-after'] || 0);
+      if (retryAfter > 0) {
+        setRateAfter(retryAfter);
+        toast.error(`Rate limited. Try again in ${retryAfter}s`);
+        const t = setInterval(() => setRateAfter((s) => { if (s <= 1) { clearInterval(t); return 0; } return s - 1; }), 1000);
+      } else {
+        const errorMessage = error.message || "Failed to create alert";
+        toast.error(errorMessage);
+      }
     } finally {
       setIsCreating(false);
     }
@@ -185,6 +196,14 @@ const Alerts = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {meta?.fields && (
+              <div className="mb-4 text-xs text-gray-600">
+                <div className="mb-1">Guidelines:</div>
+                <div>Ticker: uppercase letters, optional . or -</div>
+                <div>Target Price: positive dollar amount</div>
+                <div>Condition: above or below</div>
+              </div>
+            )}
             <div className="grid md:grid-cols-5 gap-4">
               <div>
                 <Label htmlFor="ticker">Stock Ticker</Label>
@@ -231,7 +250,7 @@ const Alerts = () => {
               <div className="flex items-end">
                 <Button onClick={createAlertHandler} disabled={isCreating} className="w-full">
                   <Bell className="h-4 w-4 mr-2" />
-                  Create Alert
+                  {rateAfter > 0 ? `Try again in ${rateAfter}s` : 'Create Alert'}
                 </Button>
               </div>
             </div>

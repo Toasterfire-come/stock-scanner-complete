@@ -819,6 +819,14 @@ export async function getBillingStats() {
 
 export async function downloadInvoice(invoiceId) { 
   const response = await api.get(`/billing/download/${invoiceId}/`, { responseType: 'blob' }); 
+  // Attempt to parse JSON error payloads hidden in blob responses
+  try {
+    const ct = response.headers['content-type'] || '';
+    if (!ct.includes('application/pdf') && response.data) {
+      const text = await response.data.text?.() || '';
+      try { const json = JSON.parse(text); throw Object.assign(new Error(json?.message || 'Invoice not available'), { json }); } catch {}
+    }
+  } catch {}
   return response.data; 
 }
 
@@ -989,6 +997,13 @@ export async function generateCustomReport(reportData) {
 
 export async function downloadReport(id) { 
   const response = await api.get(`/reports/${id}/download`, { responseType: 'blob' }); 
+  try {
+    const ct = response.headers['content-type'] || '';
+    if (!ct.includes('application/pdf') && !ct.includes('text/csv') && response.data) {
+      const text = await response.data.text?.() || '';
+      try { const json = JSON.parse(text); throw Object.assign(new Error(json?.message || 'Download failed'), { json }); } catch {}
+    }
+  } catch {}
   return response.data; 
 }
 

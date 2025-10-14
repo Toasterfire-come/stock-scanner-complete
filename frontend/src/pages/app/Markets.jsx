@@ -27,6 +27,9 @@ const Markets = () => {
   // Trending lists now come from marketStats (single endpoint)
   const [statistics, setStatistics] = useState(null);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState(() => {
+    try { return localStorage.getItem('markets_active_tab') || 'gainers'; } catch { return 'gainers'; }
+  });
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -238,7 +241,7 @@ const Markets = () => {
         )}
 
         {/* Market Data Tabs */}
-        <Tabs defaultValue="gainers" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v)=>{ setActiveTab(v); try{ localStorage.setItem('markets_active_tab', v); } catch{} }} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="gainers">Top Gainers</TabsTrigger>
             <TabsTrigger value="losers">Top Losers</TabsTrigger>
