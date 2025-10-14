@@ -671,6 +671,42 @@ export async function addWatchlistStock(payload) {
   throw lastErr;
 }
 
+// Bulk operations (no-op fallbacks if backend lacks support)
+export async function addWatchlistBulk(symbols = [], opts = {}) {
+  const unique = Array.from(new Set(symbols.map(s => String(s || '').toUpperCase()).filter(Boolean)));
+  if (unique.length === 0) return { success: true, added: 0, duplicates: 0, errors: 0 };
+  // Try bulk endpoint if available, else sequential
+  try {
+    const { data } = await api.post('/watchlist/bulk-add/', { symbols: unique, watchlist_name: opts.watchlist_name || 'My Watchlist' });
+    return data;
+  } catch (_) {}
+  let added = 0, duplicates = 0, errors = 0;
+  for (const sym of unique) {
+    const res = await addWatchlist(sym, { watchlist_name: opts.watchlist_name, notes: opts.notes });
+    if (res?.success === false && /already/i.test(res?.message || '')) duplicates++; else if (res?.success === false) errors++; else added++;
+  }
+  return { success: true, added, duplicates, errors };
+}
+
+export async function removeWatchlistBulk(items = []) {
+  const normalized = items.map(x => (typeof x === 'string' ? { id: x } : x)).filter(Boolean);
+  if (normalized.length === 0) return { success: true, removed: 0, notFound: 0, errors: 0 };
+  try {
+    const { data } = await api.post('/watchlist/bulk-remove/', { items: normalized });
+    return data;
+  } catch (_) {}
+  let removed = 0, notFound = 0, errors = 0;
+  for (const it of normalized) {
+    try {
+      await deleteWatchlist(it.id || it);
+      removed++;
+    } catch (e) {
+      if ((e?.message || '').toLowerCase().includes('not in your watchlist') || (e?.message || '').toLowerCase().includes('already removed')) notFound++; else errors++;
+    }
+  }
+  return { success: true, removed, notFound, errors };
+}
+
 export async function removeWatchlistStock(payload) {
   const norm = { stock_ticker: payload.stock_ticker };
   if (Number.isFinite(Number(payload.watchlist_id))) norm.watchlist_id = Number(payload.watchlist_id);
