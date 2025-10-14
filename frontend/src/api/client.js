@@ -229,6 +229,19 @@ api.interceptors.response.use(
       if (dur > 600) window.__NET?.emit('slow', { url: cfg.metadata?.url, duration: dur, status: error.response?.status });
       window.__NET?.emit('end');
     } catch {}
+    // Simple retry/backoff for transient 5xx errors (max 2 retries)
+    try {
+      const cfg = error.config || {};
+      const status = error?.response?.status;
+      const isIdempotent = (cfg.method || 'get').toLowerCase() === 'get';
+      if (status && status >= 500 && status < 600 && isIdempotent) {
+        cfg.__retryCount = (cfg.__retryCount || 0) + 1;
+        if (cfg.__retryCount <= 2) {
+          const delayMs = 300 * Math.pow(3, cfg.__retryCount - 1);
+          return new Promise((resolve) => setTimeout(resolve, delayMs)).then(() => api.request(cfg));
+        }
+      }
+    } catch {}
     // Standardize 401 handling at the callsite; do not auto-logout here
     return Promise.reject(error);
   }
@@ -381,7 +394,8 @@ export async function listStocks(params = {}, options = {}) {
 }
 export async function getStock(ticker) { 
   ensureApiQuotaAndIncrement('getStock');
-  const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/`); 
+  const sym = String(ticker || '').toUpperCase();
+  const { data } = await api.get(`/stocks/${encodeURIComponent(sym)}/`); 
   return data; 
 }
 export async function searchStocks(q, options = {}) { 
@@ -911,14 +925,22 @@ export async function downloadReport(id) {
 // Enhanced Market Data
 export async function getSectorPerformance() { 
   ensureApiQuotaAndIncrement('loadMarket');
-  const { data } = await api.get('/market/sectors/performance'); 
-  return data; 
+  const { data } = await api.get('/market-stats/');
+  return Array.isArray(data?.sectors) ? data.sectors : (Array.isArray(data?.sector_performance) ? data.sector_performance : []);
 }
 
 export async function getMarketStatus() { 
   ensureApiQuotaAndIncrement('getMarketStatus');
-  const { data } = await api.get('/market/market-status'); 
-  return data; 
+  const { data } = await api.get('/market-stats/');
+  const now = new Date();
+  const toET = (d) => new Date(d.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const etNow = toET(now);
+  const openET = new Date(etNow); openET.setHours(9, 30, 0, 0);
+  const closeET = new Date(etNow); closeET.setHours(16, 0, 0, 0);
+  const day = etNow.getDay();
+  const isWeekday = day >= 1 && day <= 5;
+  const status = isWeekday && etNow >= openET && etNow <= closeET ? 'open' : 'closed';
+  return { market: { status, open: openET.toISOString(), close: closeET.toISOString(), last_updated: data?.last_updated || null } };
 }
 
 export async function getStockNews(symbol) { 
