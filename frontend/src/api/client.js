@@ -11,11 +11,8 @@ if (!BASE_URL) {
 
 export const API_ROOT = `${BASE_URL}/api`;
 
-// Secondary axios instance for non-API root endpoints (e.g., Django accounts login view for CSRF cookie)
-const site = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-});
+// Remove secondary axios instance; use one layer with withCredentials for CSRF
+// (deduped per spec)
 
 // Simple network event bus for latency indicator
 (function initNetBus(){
@@ -167,17 +164,15 @@ function getCsrfToken() {
 
 async function ensureCsrfCookie() {
   try {
-    // Attempt to fetch CSRF cookie from a dedicated endpoint if available
-    const hasToken = !!getCsrfToken();
-    if (hasToken) return;
-    // Use only documented API endpoints for CSRF and health
-    if (!getCsrfToken()) await api.get('/auth/csrf/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/health/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/health/detailed/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/health/ready/').catch(() => {});
-    if (!getCsrfToken()) await api.get('/health/live/').catch(() => {});
+    // Bootstrap CSRF once via dedicated endpoint
+    if (ensureCsrfCookie.__bootstrapped) return;
+    if (getCsrfToken()) { ensureCsrfCookie.__bootstrapped = true; return; }
+    await api.get('/auth/csrf/').catch(() => {});
+    ensureCsrfCookie.__bootstrapped = true;
   } catch {}
 }
+ensureCsrfCookie.__bootstrapped = false;
+try { setTimeout(() => { ensureCsrfCookie().catch(()=>{}); }, 0); } catch {}
 
 let __csrfTokenCache = null;
 async function fetchApiCsrfToken() {
@@ -234,11 +229,7 @@ api.interceptors.response.use(
       if (dur > 600) window.__NET?.emit('slow', { url: cfg.metadata?.url, duration: dur, status: error.response?.status });
       window.__NET?.emit('end');
     } catch {}
-    if (error.response?.status === 401) {
-      // Do not forcibly sign the user out on incidental 401s (e.g., news feed) – let pages handle it gracefully
-      // Keep token/state intact and surface the error to callers
-      return Promise.reject(error);
-    }
+    // Standardize 401 handling at the callsite; do not auto-logout here
     return Promise.reject(error);
   }
 );
@@ -410,8 +401,8 @@ export async function getMarketStats() {
 }
 export async function getRealTimeQuote(ticker) { 
   ensureApiQuotaAndIncrement('getStock');
-  // Use the stock detail endpoint as the source of truth for current price
-  const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/`); 
+  const sym = String(ticker || '').toUpperCase();
+  const { data } = await api.get(`/realtime/${encodeURIComponent(sym)}/`); 
   return data; 
 }
 
@@ -421,7 +412,8 @@ export async function getRealTimeQuote(ticker) {
 export async function getInsiderTrades(ticker) {
   try {
     ensureApiQuotaAndIncrement('getStock');
-    const { data } = await api.get(`/stocks/${encodeURIComponent(ticker)}/insiders/`);
+    const sym = String(ticker || '').toUpperCase();
+    const { data } = await api.get(`/stocks/${encodeURIComponent(sym)}/insiders/`);
     return data;
   } catch (error) {
     return { success: false, error: error?.response?.data?.error || 'Failed to load insiders' };
@@ -527,14 +519,20 @@ export async function getProfile() { const { data } = await api.get('/user/profi
 export async function updateProfile(profileData) {
   try {
     const payload = {
-      name: profileData.name,
+      first_name: profileData.first_name || profileData.firstName,
+      last_name: profileData.last_name || profileData.lastName,
       email: profileData.email,
-      username: profileData.username,
     };
-    const { data } = await api.post('/user/profile/update/', payload);
+    const { data } = await api.post('/user/profile/', payload); // use canonical endpoint
     return data;
   } catch (error) {
-    return { success: false, message: error?.response?.data?.message || 'Failed to update profile' };
+    const resp = error?.response?.data;
+    if (resp && typeof resp === 'object') {
+      // Normalize server errors to {field, message}
+      const normalized = Object.keys(resp).map((k) => ({ field: k, message: String(resp[k]) }));
+      return { success: false, errors: normalized, message: resp.message || 'Failed to update profile' };
+    }
+    return { success: false, message: 'Failed to update profile' };
   }
 }
 export async function changePassword(passwordData) {
@@ -706,7 +704,7 @@ export async function deleteWatchlist(idOrPayload) {
 // ====================
 export async function alertsMeta() { 
   ensureApiQuotaAndIncrement('default');
-  const { data } = await api.get('/alerts/create/'); 
+  const { data } = await api.get('/alerts/meta/'); 
   return data; 
 }
 export async function createAlert(payload) { 
@@ -891,7 +889,7 @@ export async function exportPortfolioCSV(params = {}) {
 }
 
 export async function exportScreenerResultsCSV(screenerId, params = {}) { 
-  const response = await api.get('/export/screener-results/csv', { params: { ...params, screener_id: screenerId }, responseType: 'blob' }); 
+  const response = await api.get(`/screeners/${encodeURIComponent(screenerId)}/export.csv`, { params, responseType: 'blob' }); 
   return response.data; 
 }
 

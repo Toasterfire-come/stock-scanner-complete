@@ -31,6 +31,7 @@ import requests
 from .models import UserProfile, BillingHistory, NotificationSettings, DiscountCode, UserDiscountUsage
 from .services.discount_service import DiscountService
 from .security_utils import secure_api_endpoint, validate_user_input
+from .authentication import BearerSessionAuthentication, CsrfExemptSessionAuthentication
 
 logger = logging.getLogger(__name__)
 
@@ -713,3 +714,51 @@ def market_data_api(request):
             'error': 'Failed to retrieve market data',
             'error_code': 'MARKET_DATA_ERROR'
         }, status=500)
+
+
+# Token refresh endpoint (session-backed)
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
+def refresh_token_api(request):
+    """
+    Refresh the session-backed API token.
+    Returns current/rotated session key if the user is authenticated.
+
+    POST /api/auth/refresh-token/
+    Response: { "token": "<session_key>", "success": true }
+    """
+    try:
+        # Ensure user is authenticated via session or bearer session
+        user = getattr(request, 'user', None)
+        if not user or not getattr(user, 'is_authenticated', False):
+            return JsonResponse({'success': False, 'message': 'Authentication required'}, status=401)
+
+        # Ensure session has a key; optionally rotate in future
+        try:
+            if not request.session.session_key:
+                request.session.save()
+        except Exception:
+            pass
+
+        token = request.session.session_key
+        resp = JsonResponse({'success': True, 'token': token})
+
+        # Also ensure CSRF cookie is present to support credentialed POSTs
+        try:
+            csrf_token = get_token(request)
+            resp.set_cookie(
+                key=getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken'),
+                value=csrf_token,
+                secure=getattr(settings, 'CSRF_COOKIE_SECURE', True),
+                samesite=getattr(settings, 'CSRF_COOKIE_SAMESITE', 'None'),
+                httponly=False,
+            )
+        except Exception:
+            pass
+
+        return resp
+    except Exception as e:
+        logger.error(f"refresh_token_api error: {e}")
+        return JsonResponse({'success': False, 'message': 'Unable to refresh token'}, status=500)

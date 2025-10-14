@@ -153,6 +153,39 @@ def alerts_list_api(request):
 
 
 @csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])
+def alerts_meta_api(request):
+    """
+    Return metadata for creating alerts (bounds, examples, messages).
+    GET /api/alerts/meta/
+    """
+    try:
+        payload = {
+            'fields': {
+                'ticker': { 'type': 'string', 'pattern': r'^[A-Z][A-Z\.-]{0,9}$', 'required': True },
+                'target_price': { 'type': 'number', 'min': 0.01, 'required': True },
+                'condition': { 'type': 'string', 'enum': ['above','below'], 'required': True },
+                'email': { 'type': 'email', 'required': False },
+            },
+            'validation_messages': {
+                'ticker': 'Use uppercase letters, optional . or -',
+                'target_price': 'Enter a positive dollar amount',
+                'condition': 'Choose above or below',
+                'email': 'Optional; defaults to account email',
+            },
+            'rate_limits': {
+                'per_user_active_max': 100
+            }
+        }
+        return Response(payload, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"alerts_meta_api error: {e}")
+        return Response({'fields': {}}, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @authentication_classes([BearerSessionAuthentication, CsrfExemptSessionAuthentication])

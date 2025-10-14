@@ -14,6 +14,8 @@ urlpatterns = [
     path('auth/login/', auth_api.login_api, name='login'),
     path('auth/register/', auth_api.register_api, name='register'),
     path('auth/logout/', auth_api.logout_api, name='logout'),
+    # Token refresh for session-backed bearer auth
+    path('auth/refresh-token/', auth_api.refresh_token_api, name='refresh_token'),
     # OAuth / Social
     path('auth/google/login', auth_api.google_login_redirect, name='google_login_redirect'),
     path('auth/google/onetap', auth_api.google_onetap_exchange, name='google_onetap'),

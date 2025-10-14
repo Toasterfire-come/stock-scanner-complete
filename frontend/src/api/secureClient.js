@@ -32,8 +32,10 @@ export const REVENUE_ROOT = `${BASE_URL}/api/revenue`;
 // Create secure axios instance
 export const api = axios.create({
   baseURL: API_ROOT,
-  withCredentials: false,
+  withCredentials: true,
   timeout: 30000, // 30 second timeout
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
   headers: {
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
