@@ -51,6 +51,12 @@ urlpatterns = [
     # Generic stock endpoints (after specific routes)
     path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
     path('stocks/<str:ticker>/insiders/', api_views.stock_insiders_api, name='stock_insiders'),
+    # CSV Exports
+    path('export/stocks/csv', api_views.export_stocks_csv_api, name='export_stocks_csv'),
+    path('export/portfolio/csv', api_views.export_portfolio_csv_api, name='export_portfolio_csv'),
+    path('export/watchlist/csv', api_views.export_watchlist_csv_api, name='export_watchlist_csv'),
+    # Reports download stub
+    path('reports/<str:report_id>/download', api_views.reports_download_api, name='reports_download'),
 
     # Shareable Watchlists & Portfolios
     path('share/watchlists/<str:slug>/', api_views.share_watchlist_public, name='share_watchlist_public'),

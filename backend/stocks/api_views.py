@@ -52,6 +52,7 @@ import re
 import xml.etree.ElementTree as ET
 import requests
 from django.views.decorators.cache import cache_page
+from django.contrib.auth import get_user_model
 
 _SEC_TICKER_CACHE = {
     'last_fetch': None,
@@ -2003,6 +2004,133 @@ def screeners_export_csv_api(request, screener_id: str):
     response = HttpResponse(csv_content, content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="screener-{screener_id}-results.csv"'
     return response
+
+# ====================
+# Simple CSV export endpoints (no keys required)
+# ====================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_stocks_csv_api(request):
+    try:
+        headers = ["Ticker","Company","Price","% Change","Volume","Market Cap","Exchange"]
+        lines = [",".join(headers)]
+        qs = Stock.objects.all().order_by('ticker')[:5000]
+        for s in qs:
+            lines.append(
+                ",".join([
+                    s.ticker,
+                    (s.company_name or s.name or '').replace(',', ' '),
+                    f"{float(s.current_price or 0):.2f}",
+                    f"{float(s.change_percent or 0):.2f}",
+                    str(int(s.volume or 0)),
+                    str(int(float(s.market_cap or 0))),
+                    s.exchange or ''
+                ])
+            )
+        content = "\n".join(lines)
+        resp = HttpResponse(content, content_type='text/csv')
+        resp['Content-Disposition'] = 'attachment; filename="stocks.csv"'
+        return resp
+    except Exception as e:
+        logger.error(f"export_stocks_csv_api error: {e}")
+        return Response({'success': False, 'error': 'Export failed'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_portfolio_csv_api(request):
+    try:
+        # Try to use authenticated user; fallback to a demo/test user if available
+        user = getattr(request, 'user', None)
+        if not user or not getattr(user, 'is_authenticated', False):
+            try:
+                User = get_user_model()
+                user = User.objects.filter(username='test_user').first() or User.objects.first()
+            except Exception:
+                user = None
+        headers = ["Portfolio","Ticker","Shares","Avg Cost","Current Price","Market Value","Unrealized P/L","Unrealized P/L %"]
+        lines = [",".join(headers)]
+        if user:
+            portfolios = UserPortfolio.objects.filter(user=user)
+            for pf in portfolios:
+                holdings = PortfolioHolding.objects.filter(portfolio=pf)
+                for h in holdings:
+                    market_value = float(h.shares or 0) * float(h.current_price or 0)
+                    cost_basis = float(h.shares or 0) * float(h.average_cost or 0)
+                    pl = market_value - cost_basis
+                    pl_pct = (pl / cost_basis * 100) if cost_basis > 0 else 0
+                    lines.append(
+                        ",".join([
+                            pf.name,
+                            h.stock.ticker,
+                            f"{float(h.shares or 0):.4f}",
+                            f"{float(h.average_cost or 0):.4f}",
+                            f"{float(h.current_price or 0):.4f}",
+                            f"{market_value:.2f}",
+                            f"{pl:.2f}",
+                            f"{pl_pct:.2f}"
+                        ])
+                    )
+        content = "\n".join(lines)
+        resp = HttpResponse(content, content_type='text/csv')
+        resp['Content-Disposition'] = 'attachment; filename="portfolio.csv"'
+        return resp
+    except Exception as e:
+        logger.error(f"export_portfolio_csv_api error: {e}")
+        return Response({'success': False, 'error': 'Export failed'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_watchlist_csv_api(request):
+    try:
+        # Try to use authenticated user; fallback to a demo/test user if available
+        user = getattr(request, 'user', None)
+        if not user or not getattr(user, 'is_authenticated', False):
+            try:
+                User = get_user_model()
+                user = User.objects.filter(username='test_user').first() or User.objects.first()
+            except Exception:
+                user = None
+        headers = ["Watchlist","Ticker","Company","Added At","Notes"]
+        lines = [",".join(headers)]
+        if user:
+            lists = UserWatchlist.objects.filter(user=user)
+            for wl in lists:
+                items = wl.items.select_related('stock').all()
+                for it in items:
+                    lines.append(
+                        ",".join([
+                            wl.name,
+                            it.stock.ticker,
+                            (it.stock.company_name or it.stock.name or '').replace(',', ' '),
+                            it.added_at.strftime('%Y-%m-%d'),
+                            (it.notes or '').replace(',', ' ')
+                        ])
+                    )
+        content = "\n".join(lines)
+        resp = HttpResponse(content, content_type='text/csv')
+        resp['Content-Disposition'] = 'attachment; filename="watchlists.csv"'
+        return resp
+    except Exception as e:
+        logger.error(f"export_watchlist_csv_api error: {e}")
+        return Response({'success': False, 'error': 'Export failed'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def reports_download_api(request, report_id: str):
+    try:
+        pdf = f"""
+        REPORT {report_id}
+
+        Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}
+        This is a demo report.
+        """
+        resp = HttpResponse(pdf.encode('utf-8'), content_type='application/pdf')
+        resp['Content-Disposition'] = f'attachment; filename="report_{report_id}.pdf"'
+        return resp
+    except Exception as e:
+        logger.error(f"reports_download_api error: {e}")
+        return Response({'success': False}, status=500)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
