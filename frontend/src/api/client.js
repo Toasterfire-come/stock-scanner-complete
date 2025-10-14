@@ -615,6 +615,12 @@ export async function listWatchlists() {
   for (const attempt of attempts) {
     try {
       const { data } = await attempt();
+      // Detect server capabilities once
+      if (typeof window !== 'undefined') {
+        window.__API_CAPS = window.__API_CAPS || {};
+        window.__API_CAPS.watchlist = window.__API_CAPS.watchlist || {};
+        window.__API_CAPS.watchlist.list = true;
+      }
       return data;
     } catch (e) {
       lastErr = e;
@@ -631,7 +637,11 @@ export async function createWatchlist(payload) {
   ];
   let lastErr;
   for (const attempt of attempts) {
-    try { const { data } = await attempt(); return data; } catch (e) { lastErr = e; }
+    try { const { data } = await attempt(); return data; } catch (e) { 
+      const s = e?.response?.status;
+      if (s === 409) return { success: false, message: 'This watchlist already exists.' };
+      lastErr = e; 
+    }
   }
   throw lastErr;
 }
@@ -652,7 +662,9 @@ export async function addWatchlistStock(payload) {
   let lastErr;
   for (const attempt of attempts) {
     try { const { data } = await attempt(); return data; } catch (e) {
-      if (e?.response?.status && ![404, 405, 400].includes(e.response.status)) { lastErr = e; break; }
+      const s = e?.response?.status;
+      if (s === 409) return { success: false, message: 'This symbol is already in your watchlist.' };
+      if (s && ![404, 405, 400].includes(s)) { lastErr = e; break; }
       lastErr = e;
     }
   }
@@ -692,6 +704,11 @@ export async function addWatchlist(symbol, opts = {}) {
     const { data } = await api.post('/watchlist/add/', payload);
     return data;
   } catch (e) {
+    // Friendly duplicate/conflict handling
+    const s = e?.response?.status;
+    if (s === 409) {
+      return { success: false, message: 'This symbol is already in your watchlist.' };
+    }
     // Fallback to legacy add if RESTful endpoint is unavailable
     const legacyPayload = { stock_ticker: payload.symbol };
     if (opts.watchlist_id) legacyPayload.watchlist_id = opts.watchlist_id;
@@ -703,14 +720,28 @@ export async function addWatchlist(symbol, opts = {}) {
 export async function deleteWatchlist(idOrPayload) {
   // Support deleting by item id (RESTful) or via legacy payload
   if (typeof idOrPayload === 'object') {
-    return removeWatchlistStock(idOrPayload);
+    try { return await removeWatchlistStock(idOrPayload); } catch (e) {
+      const s = e?.response?.status;
+      if (s === 404) throw new Error('That item is not in your watchlist.');
+      if (s === 405) throw new Error('Delete not supported by this server.');
+      if (s === 409) throw new Error('Conflict deleting this item. Try again.');
+      throw e;
+    }
   }
   const id = String(idOrPayload || '').trim();
   if (!id) {
     throw new Error('deleteWatchlist requires item id or {watchlist_id, stock_ticker}');
   }
-  const { data } = await api.delete(`/watchlist/${encodeURIComponent(id)}/`);
-  return data;
+  try {
+    const { data } = await api.delete(`/watchlist/${encodeURIComponent(id)}/`);
+    return data;
+  } catch (e) {
+    const s = e?.response?.status;
+    if (s === 404) throw new Error('Item already removed.');
+    if (s === 405) throw new Error('Delete not supported by this server.');
+    if (s === 409) throw new Error('Could not delete this item right now.');
+    throw e;
+  }
 }
 
 // ====================
@@ -904,7 +935,10 @@ export async function exportPortfolioCSV(params = {}) {
 
 export async function exportScreenerResultsCSV(screenerId, params = {}) { 
   const response = await api.get(`/screeners/${encodeURIComponent(screenerId)}/export.csv`, { params, responseType: 'blob' }); 
-  return response.data; 
+  // Add UTF-8 BOM for Excel compatibility
+  const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'text/csv' });
+  const withBom = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), blob], { type: 'text/csv;charset=utf-8;' });
+  return withBom; 
 }
 
 export async function exportWatchlistCSV(params = {}) { 
