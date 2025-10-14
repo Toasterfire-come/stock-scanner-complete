@@ -6,7 +6,8 @@ import { Badge } from "../../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { TrendingUp, TrendingDown, Eye, Download, RefreshCw, Save as SaveIcon, Bell } from "lucide-react";
 import { toast } from "sonner";
-import { runScreener, api } from "../../../api/client";
+import { runScreener, api, exportScreenerResultsCSV } from "../../../api/client";
+import { estimateCsvSizeBytes, downloadBlob } from "../../../lib/downloads";
 import { 
   Pagination,
   PaginationContent,
@@ -120,22 +121,37 @@ const ScreenerResults = () => {
     }
   };
 
-  const handleExport = () => {
-    const csv = [
-      "Ticker,Company,Price,Change %,Volume,Market Cap,Exchange",
-      ...results.map(stock => 
-        `${stock.ticker},${stock.company_name},${stock.current_price},${stock.change_percent},${stock.volume},${stock.market_cap},${stock.exchange}`
-      )
-    ].join("\n");
+  const handleExport = async () => {
+    try {
+      const csv = [
+        "Ticker,Company,Price,Change %,Volume,Market Cap,Exchange",
+        ...results.map(stock => 
+          `${stock.ticker},${stock.company_name},${stock.current_price},${stock.change_percent},${stock.volume},${stock.market_cap},${stock.exchange}`
+        )
+      ].join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      downloadBlob(blob, `screener-results-${id}.csv`);
+      toast.success("Results exported to CSV");
+    } catch (e) {
+      toast.error("Export failed");
+    }
+  };
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `screener-results-${id}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success("Results exported to CSV");
+  const handleExportAll = async () => {
+    try {
+      // Estimate size; warn user for big datasets
+      const estBytes = estimateCsvSizeBytes(totalCount || results.length, 7);
+      const estMB = estBytes / (1024 * 1024);
+      if (estMB > 5) {
+        const ok = window.confirm(`This export may be large (~${estMB.toFixed(1)} MB). Continue?`);
+        if (!ok) return;
+      }
+      const blob = await exportScreenerResultsCSV(id, { all: 1 });
+      downloadBlob(blob, `screener-results-${id}-all.csv`);
+      toast.success("Export started");
+    } catch (e) {
+      toast.error("Failed to export all results");
+    }
   };
 
   if (isLoading) {
@@ -161,6 +177,10 @@ const ScreenerResults = () => {
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
+          </Button>
+          <Button onClick={handleExportAll}>
+            <Download className="h-4 w-4 mr-2" />
+            Export All
           </Button>
           <Button onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />

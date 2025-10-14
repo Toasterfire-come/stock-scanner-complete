@@ -5,9 +5,9 @@ import { Button } from "../components/ui/button";
 import { listStocks } from "../api/client";
 
 export default function Screeners() {
-  const [search, setSearch] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [search, setSearch] = useState(() => { try { return localStorage.getItem('qs_search') || ""; } catch { return ""; } });
+  const [minPrice, setMinPrice] = useState(() => { try { return localStorage.getItem('qs_min') || ""; } catch { return ""; } });
+  const [maxPrice, setMaxPrice] = useState(() => { try { return localStorage.getItem('qs_max') || ""; } catch { return ""; } });
   const [rows, setRows] = useState([]);
 
   const run = async () => {
@@ -20,6 +20,9 @@ export default function Screeners() {
   };
 
   useEffect(() => { run(); }, []);
+  useEffect(() => { try { localStorage.setItem('qs_search', search); } catch {} }, [search]);
+  useEffect(() => { try { localStorage.setItem('qs_min', minPrice); } catch {} }, [minPrice]);
+  useEffect(() => { try { localStorage.setItem('qs_max', maxPrice); } catch {} }, [maxPrice]);
 
   return (
     <div className="space-y-4">

@@ -18,6 +18,7 @@ import {
   Clock
 } from "lucide-react";
 import { getBillingHistory, downloadInvoice, getBillingStats } from "../../api/client";
+import { downloadBlob } from "../../lib/downloads";
 
 const BillingHistory = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -59,20 +60,11 @@ const BillingHistory = () => {
     
     try {
       const blob = await downloadInvoice(invoiceId);
-      
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${invoiceId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+      downloadBlob(blob, `invoice-${invoiceId}.pdf`);
       toast.success("Invoice downloaded successfully");
     } catch (error) {
-      toast.error("Failed to download invoice");
+      const msg = error?.json?.message || error?.message || "Failed to download invoice";
+      toast.error(msg);
     } finally {
       setDownloadingIds(prev => {
         const newSet = new Set(prev);

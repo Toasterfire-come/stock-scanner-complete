@@ -16,17 +16,22 @@ const NewsFeed = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sort, setSort] = useState('recent');
+  const [searchTerm, setSearchTerm] = useState(() => {
+    try { return localStorage.getItem('news_search') || ''; } catch { return ''; }
+  });
+  const [sort, setSort] = useState(() => {
+    try { return localStorage.getItem('news_sort') || 'recent'; } catch { return 'recent'; }
+  });
   const pageSize = 20;
 
   useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
     (async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await getAllNews({ page, limit: pageSize, sort });
+        const res = await getAllNews({ page, limit: pageSize, sort }, { signal: controller.signal });
         const raws = res?.data?.news_items || [];
         const totalCount = Number(res?.total_count || raws.length);
         if (mounted) {
@@ -34,13 +39,20 @@ const NewsFeed = () => {
           setTotal(totalCount);
         }
       } catch (e) {
-        if (mounted) setError('Failed to load news');
+        if (mounted && (e?.name !== 'CanceledError' && e?.name !== 'AbortError')) setError('Failed to load news');
       } finally {
         if (mounted) setIsLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => { mounted = false; try { controller.abort(); } catch {} };
   }, [page, sort]);
+
+  useEffect(() => {
+    try { localStorage.setItem('news_search', searchTerm); } catch {}
+  }, [searchTerm]);
+  useEffect(() => {
+    try { localStorage.setItem('news_sort', sort); } catch {}
+  }, [sort]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const getPageWindow = () => {
@@ -137,7 +149,11 @@ const NewsFeed = () => {
               <div className="text-center py-10 text-gray-500">Loading news...</div>
             ) : (
               <div className="space-y-4">
-                {filtered.map((n, i) => (
+                {filtered.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    No news found. Try adjusting your search or filters.
+                  </div>
+                ) : filtered.map((n, i) => (
                   <div key={n.id || i} className="p-4 border rounded-lg bg-white hover:bg-gray-50">
                     <div className="flex items-start justify-between mb-2">
                       <div className="text-xs text-gray-500 flex items-center gap-2">

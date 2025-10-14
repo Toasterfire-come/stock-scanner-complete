@@ -30,6 +30,7 @@ import {
   getCurrentApiUsage,
   getPlanLimits
 } from '../../../api/client';
+import { downloadBlob } from '../../../lib/downloads';
 import { toast } from 'sonner';
 
 const ExportManager = () => {
@@ -119,13 +120,7 @@ const ExportManager = () => {
           throw new Error('Unknown export type');
       }
 
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      downloadBlob(blob, filename);
 
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} data exported successfully`);
       
@@ -145,12 +140,7 @@ const ExportManager = () => {
     try {
       if (exportItem.type === 'custom_report') {
         const blob = await downloadReport(exportItem.id);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${exportItem.name}.${exportItem.format.toLowerCase()}`;
-        a.click();
-        window.URL.revokeObjectURL(url);
+        downloadBlob(blob, `${exportItem.name}.${exportItem.format.toLowerCase()}`);
       } else {
         // Handle other export types
         await handleQuickExport(exportItem.type);

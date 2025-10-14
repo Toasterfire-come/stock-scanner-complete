@@ -876,9 +876,9 @@ export async function getNewsFeed(params = {}) {
   const { data } = await api.get('/news/feed/', { params }); 
   return data; 
 }
-export async function getAllNews(params = {}) {
+export async function getAllNews(params = {}, options = {}) {
   ensureApiQuotaAndIncrement('getNews');
-  const { data } = await api.get('/news/all/', { params });
+  const { data } = await api.get('/news/all/', { params, signal: options.signal });
   return data;
 }
 export async function markNewsRead(newsId) { const { data } = await api.post('/news/mark-read/', { news_id: newsId }); return data; }
