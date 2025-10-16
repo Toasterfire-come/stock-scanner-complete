@@ -138,6 +138,14 @@ PROXY_MAX_TICKERS = int(os.getenv('PROXY_MAX_TICKERS', '100'))
 proxy_usage = defaultdict(int)  # proxy -> count of distinct tickers attempted
 proxy_usage_lock = threading.Lock()
 
+# Ensure unique proxy per thread at any given time
+proxies_in_use = set()
+proxies_in_use_lock = threading.Lock()
+
+# Track last proxy used per thread to avoid consecutive reuse
+thread_last_proxy: dict[int, str] = {}
+thread_last_proxy_lock = threading.Lock()
+
 # New: normalize and validate proxy strings
 
 def normalize_proxy_string(proxy_str: str) -> str | None:
@@ -357,7 +365,7 @@ def get_healthy_proxy(proxies, used_proxies=None):
         healthy_proxies.sort(key=lambda p: proxy_health[p]["failures"])
     return healthy_proxies[0]
 
-def acquire_healthy_proxy(proxies, used_proxies=None):
+def acquire_healthy_proxy(proxies, used_proxies=None, thread_id: int | None = None):
     """Select a healthy proxy that has not exceeded per-proxy ticker cap and atomically
     increment its usage. Skips proxies already tried for the current ticker.
 
@@ -371,10 +379,20 @@ def acquire_healthy_proxy(proxies, used_proxies=None):
 
     current_time = datetime.now()
 
-    # Build candidate list honoring health, cooldown, prior attempts, and usage cap
+    # Build candidate list honoring health, cooldown, prior attempts, usage cap, and current in-use reservations
     candidates = []
+    # Fetch last proxy used by this thread (if any)
+    last_proxy_for_thread = None
+    if thread_id is not None:
+        with thread_last_proxy_lock:
+            last_proxy_for_thread = thread_last_proxy.get(thread_id)
+
     for proxy in proxies:
         if proxy in used_proxies:
+            continue
+        # Prefer not to reuse the last proxy used by this thread if alternatives exist
+        if last_proxy_for_thread and proxy == last_proxy_for_thread:
+            # We'll skip it in the first pass; it may be reconsidered if no candidates
             continue
 
         # Check health/cooldown without holding the lock for long
@@ -395,23 +413,71 @@ def acquire_healthy_proxy(proxies, used_proxies=None):
             if proxy_usage[proxy] >= PROXY_MAX_TICKERS:
                 continue
 
+        # Ensure not currently reserved by another thread
+        with proxies_in_use_lock:
+            if proxy in proxies_in_use:
+                continue
+
         candidates.append(proxy)
 
     if not candidates:
+        # As a fallback, allow reusing last proxy for this thread if it's eligible
+        if last_proxy_for_thread:
+            proxy = last_proxy_for_thread
+            # Validate health and caps before reserving
+            allow = True
+            with proxy_health_lock:
+                health = proxy_health[proxy]
+                if health["blocked"] and not (health["last_failure"] and (current_time - health["last_failure"]).total_seconds() > proxy_retry_cooldown):
+                    allow = False
+            if allow:
+                with proxy_usage_lock:
+                    if proxy_usage[proxy] >= PROXY_MAX_TICKERS:
+                        allow = False
+                if allow:
+                    with proxies_in_use_lock:
+                        if proxy in proxies_in_use:
+                            allow = False
+                if allow:
+                    with proxies_in_use_lock:
+                        proxies_in_use.add(proxy)
+                    with proxy_usage_lock:
+                        proxy_usage[proxy] += 1
+                    return proxy
         return None
 
     # Prefer proxies with fewer failures
     with proxy_health_lock:
         candidates.sort(key=lambda p: proxy_health[p]["failures"])
 
-    # Atomically acquire usage for the first available candidate under cap
+    # Atomically acquire usage and reservation for the first available candidate under cap
     for proxy in candidates:
+        # Reserve first to guarantee per-thread uniqueness during this ticker processing
+        reserved = False
+        with proxies_in_use_lock:
+            if proxy not in proxies_in_use:
+                proxies_in_use.add(proxy)
+                reserved = True
+        if not reserved:
+            continue
+
         with proxy_usage_lock:
             if proxy_usage[proxy] < PROXY_MAX_TICKERS:
                 proxy_usage[proxy] += 1
                 return proxy
+            else:
+                # Release reservation if cap exceeded after re-check
+                with proxies_in_use_lock:
+                    proxies_in_use.discard(proxy)
 
     return None
+
+def release_proxy_reservation(proxy: str | None):
+    """Release per-thread reservation on a proxy after finishing a ticker."""
+    if not proxy:
+        return
+    with proxies_in_use_lock:
+        proxies_in_use.discard(proxy)
 
 def mark_proxy_success(proxy):
     """Mark a proxy as successful"""
@@ -507,7 +573,9 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
             
         try:
             # Get a healthy proxy honoring per-proxy 100-ticker cap
-            proxy = acquire_healthy_proxy(proxies, used_proxies) if proxies else None
+            # Capture thread id for better distribution; fall back to ident if absent
+            thread_id = threading.get_ident()
+            proxy = acquire_healthy_proxy(proxies, used_proxies, thread_id) if proxies else None
             if proxy:
                 used_proxies.add(proxy)
                 if ticker_number <= 5 or attempt > 0:  # Show proxy info for first 5 tickers or retries
@@ -519,11 +587,18 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                 # Success - mark proxy as working
                 if proxy:
                     mark_proxy_success(proxy)
+                    # Record last proxy used by this thread and release reservation
+                    with thread_last_proxy_lock:
+                        thread_last_proxy[thread_id] = proxy
+                    release_proxy_reservation(proxy)
                 return result
             else:
                 # No data but no error - might be legitimate (delisted stock)
                 if proxy:
                     mark_proxy_success(proxy)  # Don't penalize proxy for legitimate no-data
+                    with thread_last_proxy_lock:
+                        thread_last_proxy[thread_id] = proxy
+                    release_proxy_reservation(proxy)
                 return None
                 
         except Exception as e:
@@ -538,10 +613,17 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                     
                     # Add small delay before retry
                     time.sleep(random.uniform(0.1, 0.3))
+                    # On error, still set last proxy and release reservation so another proxy can be chosen
+                    with thread_last_proxy_lock:
+                        thread_last_proxy[thread_id] = proxy
+                    release_proxy_reservation(proxy)
                     continue
                 else:
                     # Non-proxy error, might be legitimate (delisted stock, etc.)
                     mark_proxy_success(proxy)  # Don't penalize proxy
+                    with thread_last_proxy_lock:
+                        thread_last_proxy[thread_id] = proxy
+                    release_proxy_reservation(proxy)
                     logger.warning(f"{symbol}: Non-proxy error: {e}")
                     return None
             else:

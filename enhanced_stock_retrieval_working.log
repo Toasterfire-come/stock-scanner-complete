@@ -1,0 +1,64 @@
+2025-10-16 15:40:04,857 - INFO - ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES
+2025-10-16 15:40:04,858 - INFO - ============================================================
+2025-10-16 15:40:04,858 - INFO - Configuration:
+2025-10-16 15:40:04,858 - INFO -   CSV File: flat-ui__data-Fri Aug 01 2025.csv
+2025-10-16 15:40:04,858 - INFO -   Test Mode: True
+2025-10-16 15:40:04,858 - INFO -   Use Proxies: True
+2025-10-16 15:40:04,858 - INFO -   Proxy File: /workspace/backend/working_proxies.json
+2025-10-16 15:40:04,858 - INFO -   Threads: 12
+2025-10-16 15:40:04,858 - INFO -   Timeout: 10s
+2025-10-16 15:40:04,858 - INFO -   Max Symbols: All
+2025-10-16 15:40:04,858 - INFO -   Save to DB: False
+2025-10-16 15:40:04,858 - INFO -   Schedule Mode: False
+2025-10-16 15:40:04,858 - INFO -   Daily Update: False
+2025-10-16 15:40:04,858 - INFO - ============================================================
+2025-10-16 15:40:04,858 - INFO - ============================================================
+2025-10-16 15:40:04,858 - INFO - STOCK UPDATE CYCLE - 2025-10-16 15:40:04
+2025-10-16 15:40:04,858 - INFO - ============================================================
+2025-10-16 15:40:04,858 - INFO - Loading combined tickers list (NASDAQ + NYSE/AMEX)...
+2025-10-16 15:40:04,901 - INFO - Loaded 100 combined tickers from combined_tickers_20250921_181527.py
+2025-10-16 15:40:04,904 - INFO - Processing 100 symbols...
+2025-10-16 15:40:04,904 - INFO - Loading proxies from /workspace/backend/working_proxies.json...
+2025-10-16 15:40:04,905 - INFO - Loaded 384 proxies directly from /workspace/backend/working_proxies.json
+2025-10-16 15:40:04,905 - INFO - SUCCESS: Loaded 384 proxies (no validation)
+2025-10-16 15:40:04,905 - INFO - Starting to process 100 symbols...
+2025-10-16 15:40:04,905 - INFO - ============================================================
+2025-10-16 15:40:04,905 - INFO - Submitting 100 tasks to thread pool...
+2025-10-16 15:40:04,909 - INFO - A (attempt 1): Using proxy http://90.162.35.34:80
+2025-10-16 15:40:04,911 - INFO - AA (attempt 1): Using proxy http://138.68.235.51:80
+2025-10-16 15:40:04,914 - INFO - AAA (attempt 1): Using proxy http://39.102.210.222:1111
+2025-10-16 15:40:04,916 - INFO - AAAA (attempt 1): Using proxy http://147.28.240.213:9443
+2025-10-16 15:40:04,918 - INFO - AAAU (attempt 1): Using proxy http://47.121.183.107:80
+2025-10-16 15:40:04,926 - INFO - Submitted 100 tasks. Processing...
+2025-10-16 15:40:09,968 - INFO - [PROGRESS] 10/100 completed (10 successful, 0 failed)
+2025-10-16 15:40:10,489 - WARNING - AAM.U: Non-proxy error: 'currentTradingPeriod'
+2025-10-16 15:40:10,952 - WARNING - AAM.W: Non-proxy error: 'currentTradingPeriod'
+2025-10-16 15:40:11,129 - WARNING - AACT.W: Non-proxy error: 'currentTradingPeriod'
+2025-10-16 15:40:12,910 - INFO - [PROGRESS] 20/100 completed (17 successful, 3 failed)
+2025-10-16 15:40:16,116 - INFO - [PROGRESS] 30/100 completed (27 successful, 3 failed)
+2025-10-16 15:40:16,185 - WARNING - AACT.U: Non-proxy error: 'currentTradingPeriod'
+2025-10-16 15:40:19,012 - INFO - [PROGRESS] 40/100 completed (36 successful, 4 failed)
+2025-10-16 15:40:19,955 - WARNING - ABR$D: Skipping invalid or preferred share ticker format
+2025-10-16 15:40:20,002 - WARNING - ABR$E: Skipping invalid or preferred share ticker format
+2025-10-16 15:40:20,013 - INFO - [PROGRESS] 50/100 completed (44 successful, 6 failed)
+2025-10-16 15:40:20,024 - WARNING - ABR$F: Skipping invalid or preferred share ticker format
+2025-10-16 15:40:22,696 - INFO - [PROGRESS] 60/100 completed (53 successful, 7 failed)
+2025-10-16 15:40:25,570 - INFO - [PROGRESS] 70/100 completed (63 successful, 7 failed)
+2025-10-16 15:40:27,476 - WARNING - ACHR.W: Non-proxy error: 'currentTradingPeriod'
+2025-10-16 15:40:28,125 - INFO - [PROGRESS] 80/100 completed (72 successful, 8 failed)
+2025-10-16 15:40:29,905 - INFO - [PROGRESS] 90/100 completed (82 successful, 8 failed)
+2025-10-16 15:40:31,838 - INFO - [PROGRESS] 100/100 completed (92 successful, 8 failed)
+2025-10-16 15:40:31,861 - INFO - ============================================================
+2025-10-16 15:40:31,861 - INFO - CYCLE RESULTS
+2025-10-16 15:40:31,861 - INFO - ============================================================
+2025-10-16 15:40:31,861 - INFO - SUCCESSFUL: 92
+2025-10-16 15:40:31,861 - INFO - FAILED: 8
+2025-10-16 15:40:31,861 - INFO - SUCCESS RATE: 92.0%
+2025-10-16 15:40:31,862 - INFO - TIME: 26.96s
+2025-10-16 15:40:31,862 - INFO - RATE: 3.71 symbols/sec
+2025-10-16 15:40:31,862 - INFO - PROXY STATS: Used 384 proxies
+2025-10-16 15:40:31,862 - INFO - PROXY HEALTH: 384 healthy, 0 blocked
+2025-10-16 15:40:31,862 - INFO - PROXY SUCCESS RATE: 100.0% (100 successes, 0 failures)
+2025-10-16 15:40:31,862 - INFO - CYCLE COMPLETED: 2025-10-16 15:40:31
+2025-10-16 15:40:31,862 - INFO - ============================================================
+2025-10-16 15:40:31,863 - INFO - Script completed!
