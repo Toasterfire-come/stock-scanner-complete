@@ -226,6 +226,8 @@ def parse_arguments():
                        help='NYSE CSV file path (default from NYSE_CSV_PATH env var or flat-ui__data-Fri Aug 01 2025.csv)')
     parser.add_argument('-output', type=str, default=None, 
                        help='Output JSON file (default: auto-generated timestamp)')
+    parser.add_argument('-output-csv', type=str, default=None,
+                       help='Optional: Output CSV file path')
     parser.add_argument('-max-symbols', type=int, default=None, 
                        help='Maximum number of symbols to process (for testing)')
     parser.add_argument('-proxy-file', type=str, default=os.getenv('PROXY_FILE_PATH', 'working_proxies.json'),
@@ -1260,6 +1262,62 @@ def run_stock_update(args):
             with open(out_path, 'w') as f:
                 json.dump({ 'success': True, 'count': len(safe_results), 'data': _json_sanitize(safe_results) }, f, default=str)
             logger.info(f"WROTE OUTPUT: {out_path} ({len(safe_results)} records)")
+        csv_path = getattr(args, 'output_csv', None)
+        if csv_path:
+            safe_results = [dict(r) for r in results if r]
+            # Drop nested valuation for CSV simplicity
+            for rec in safe_results:
+                rec.pop('valuation', None)
+            # Build header as union of keys
+            fieldnames = []
+            seen_fields = set()
+            for rec in safe_results:
+                for k in rec.keys():
+                    if k not in seen_fields:
+                        seen_fields.add(k)
+                        fieldnames.append(k)
+            # Ensure deterministic order for common keys
+            preferred = [
+                'ticker', 'symbol', 'company_name', 'current_price',
+                'price_change_today', 'price_change_percent', 'price_change_week', 'price_change_month', 'price_change_year',
+                'dvav', 'volume', 'avg_volume_3mon', 'market_cap',
+                'bid_price', 'ask_price', 'bid_ask_spread', 'days_range',
+                'week_52_low', 'week_52_high', 'one_year_target', 'pe_ratio', 'dividend_yield',
+                'last_updated'
+            ]
+            # Reorder: preferred first, then remaining
+            ordered = [k for k in preferred if k in seen_fields] + [k for k in fieldnames if k not in preferred]
+            def _to_str(v):
+                if v is None:
+                    return ''
+                try:
+                    # pandas timestamp
+                    import pandas as _pd  # type: ignore
+                    if isinstance(v, _pd.Timestamp):
+                        return v.isoformat()
+                except Exception:
+                    pass
+                try:
+                    from decimal import Decimal as _Dec
+                    if isinstance(v, _Dec):
+                        return str(v)
+                except Exception:
+                    pass
+                try:
+                    from datetime import datetime as _dt
+                    if isinstance(v, _dt):
+                        return v.isoformat()
+                except Exception:
+                    pass
+                return str(v)
+            # Write CSV
+            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=ordered)
+                writer.writeheader()
+                for rec in safe_results:
+                    row = {k: _to_str(rec.get(k)) for k in ordered}
+                    writer.writerow(row)
+            logger.info(f"WROTE CSV: {csv_path} ({len(safe_results)} records)")
     except Exception as e:
         logger.error(f"Failed to write output JSON: {e}")
 
