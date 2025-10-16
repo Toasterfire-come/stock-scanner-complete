@@ -149,6 +149,62 @@ def normalize_proxy_string(proxy_str: str) -> str | None:
 
 # Removed unused create_session_for_proxy function
 
+# Thread-safe proxy manager to lease unique proxies per thread
+class ProxyManager:
+    def __init__(self, proxies: list[str] | None = None):
+        self.lock = threading.Lock()
+        self.proxies: list[str] = list(proxies) if proxies else []
+        self.in_use: set[str] = set()
+
+    def _healthy_candidates(self, exclude: set[str] | None = None) -> list[str]:
+        """Return proxies that are not in use, not excluded, and not blocked (or cooled down)."""
+        if exclude is None:
+            exclude = set()
+        now = datetime.now()
+        candidates: list[str] = []
+        for px in self.proxies:
+            if px in self.in_use or px in exclude:
+                continue
+            health = proxy_health[px]
+            if health["blocked"]:
+                if health["last_failure"] and (now - health["last_failure"]).total_seconds() > proxy_retry_cooldown:
+                    # Cooldown expired; un-block
+                    health["blocked"] = False
+                    health["failures"] = 0
+                else:
+                    continue
+            candidates.append(px)
+        # Prefer proxies with fewer failures
+        candidates.sort(key=lambda p: proxy_health[p]["failures"])
+        return candidates
+
+    def lease_proxy(self, exclude: set[str] | None = None, wait: bool = True, timeout: float = 5.0) -> str | None:
+        """Lease a proxy not currently in use. Optionally wait up to timeout seconds."""
+        deadline = time.time() + max(0.0, timeout)
+        while True:
+            with self.lock:
+                candidates = self._healthy_candidates(exclude)
+                if candidates:
+                    px = candidates[0]
+                    self.in_use.add(px)
+                    return px
+            if not wait or time.time() >= deadline:
+                return None
+            time.sleep(0.05)
+
+    def release_proxy(self, proxy: str | None) -> None:
+        if not proxy:
+            return
+        with self.lock:
+            if proxy in self.in_use:
+                self.in_use.remove(proxy)
+
+    def refresh_proxies(self, new_proxies: list[str] | None) -> None:
+        """Replace the proxy list and clear in-use assignments."""
+        with self.lock:
+            self.proxies = list(new_proxies) if new_proxies else []
+            self.in_use.clear()
+
 def signal_handler(signum, frame):
     """Handle interrupt signals gracefully"""
     global shutdown_flag
@@ -164,12 +220,14 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script - WORKING')
     parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=15, help='Number of threads (default: 15)')
+    parser.add_argument('-threads', type=int, default=12, help='Number of threads (default: 12)')
     parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
     parser.add_argument('-csv', type=str, default=os.getenv('NYSE_CSV_PATH', 'flat-ui__data-Fri Aug 01 2025.csv'), 
                        help='NYSE CSV file path (default from NYSE_CSV_PATH env var or flat-ui__data-Fri Aug 01 2025.csv)')
     parser.add_argument('-output', type=str, default=None, 
                        help='Output JSON file (default: auto-generated timestamp)')
+    parser.add_argument('-output-csv', type=str, default=None,
+                       help='Optional: Output CSV file path')
     parser.add_argument('-max-symbols', type=int, default=None, 
                        help='Maximum number of symbols to process (for testing)')
     parser.add_argument('-proxy-file', type=str, default=os.getenv('PROXY_FILE_PATH', 'working_proxies.json'),
@@ -429,8 +487,8 @@ def load_combined_symbols(combined_file: str | None = None, test_mode: bool = Fa
         logger.error(f"Failed to load combined symbols: {e}")
         return []
 
-def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_mode=False, save_to_db=True, max_retries=3):
-    """Process a single symbol with retry logic and proxy rotation"""
+def process_symbol_with_retry(symbol, ticker_number, proxy_manager_or_list, timeout=10, test_mode=False, save_to_db=True, max_retries=3):
+    """Process a single symbol with retry logic using a ProxyManager for unique leases."""
     global shutdown_flag
     
     if shutdown_flag:
@@ -444,8 +502,14 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
             return None
             
         try:
-            # Get a healthy proxy
-            proxy = get_healthy_proxy(proxies, used_proxies) if proxies else None
+            # Lease a unique healthy proxy
+            proxy = None
+            if proxy_manager_or_list:
+                if isinstance(proxy_manager_or_list, ProxyManager):
+                    proxy = proxy_manager_or_list.lease_proxy(exclude=used_proxies, wait=False)
+                else:
+                    # Backward compatibility with list of proxies
+                    proxy = get_healthy_proxy(proxy_manager_or_list, used_proxies)
             if proxy:
                 used_proxies.add(proxy)
                 if ticker_number <= 5 or attempt > 0:  # Show proxy info for first 5 tickers or retries
@@ -457,11 +521,15 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                 # Success - mark proxy as working
                 if proxy:
                     mark_proxy_success(proxy)
+                    if isinstance(proxy_manager_or_list, ProxyManager):
+                        proxy_manager_or_list.release_proxy(proxy)
                 return result
             else:
                 # No data but no error - might be legitimate (delisted stock)
                 if proxy:
                     mark_proxy_success(proxy)  # Don't penalize proxy for legitimate no-data
+                    if isinstance(proxy_manager_or_list, ProxyManager):
+                        proxy_manager_or_list.release_proxy(proxy)
                 return None
                 
         except Exception as e:
@@ -473,6 +541,8 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                 if any(keyword in error_msg for keyword in ['timeout', 'connection', 'proxy', 'network', 'ssl', 'timed out']):
                     mark_proxy_failure(proxy, str(e))
                     logger.warning(f"{symbol} (attempt {attempt + 1}): Proxy error with {proxy}: {e}")
+                    if isinstance(proxy_manager_or_list, ProxyManager):
+                        proxy_manager_or_list.release_proxy(proxy)
                     
                     # Add small delay before retry
                     time.sleep(random.uniform(0.1, 0.3))
@@ -481,6 +551,8 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                     # Non-proxy error, might be legitimate (delisted stock, etc.)
                     mark_proxy_success(proxy)  # Don't penalize proxy
                     logger.warning(f"{symbol}: Non-proxy error: {e}")
+                    if isinstance(proxy_manager_or_list, ProxyManager):
+                        proxy_manager_or_list.release_proxy(proxy)
                     return None
             else:
                 logger.warning(f"{symbol}: Error without proxy: {e}")
@@ -1062,6 +1134,8 @@ def run_stock_update(args):
             logger.warning("No proxies loaded - continuing without proxies")
     else:
         logger.info("DISABLED: Proxy usage disabled")
+    # Initialize proxy manager for unique leasing across threads
+    proxy_manager = ProxyManager(proxies) if (proxies and not args.noproxy) else None
     
     # Process stocks
     logger.info(f"Starting to process {len(symbols)} symbols...")
@@ -1078,11 +1152,24 @@ def run_stock_update(args):
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             future_to_symbol = {}
+            ticker_count_since_refresh = 0
+            refresh_every = 100
             for i, symbol in enumerate(symbols, 1):
                 if shutdown_flag:
                     break
-                future = executor.submit(process_symbol_with_retry, symbol, i, proxies, args.timeout, args.test, args.save_to_db)
+                # Refresh proxies every N tickers processed (submission-time refresh)
+                if proxy_manager and ticker_count_since_refresh >= refresh_every:
+                    try:
+                        logger.info(f"Refreshing proxies after {ticker_count_since_refresh} tickers...")
+                        updated = load_proxies_direct(args.proxy_file)
+                        proxy_manager.refresh_proxies(updated)
+                        ticker_count_since_refresh = 0
+                        logger.info(f"Proxy list refreshed: {len(updated)} proxies available")
+                    except Exception as _e:
+                        logger.warning(f"Failed to refresh proxies: {_e}")
+                future = executor.submit(process_symbol_with_retry, symbol, i, proxy_manager or proxies, args.timeout, args.test, args.save_to_db)
                 future_to_symbol[future] = symbol
+                ticker_count_since_refresh += 1
             
             logger.info(f"Submitted {len(future_to_symbol)} tasks. Processing...")
             completed = 0
@@ -1175,6 +1262,62 @@ def run_stock_update(args):
             with open(out_path, 'w') as f:
                 json.dump({ 'success': True, 'count': len(safe_results), 'data': _json_sanitize(safe_results) }, f, default=str)
             logger.info(f"WROTE OUTPUT: {out_path} ({len(safe_results)} records)")
+        csv_path = getattr(args, 'output_csv', None)
+        if csv_path:
+            safe_results = [dict(r) for r in results if r]
+            # Drop nested valuation for CSV simplicity
+            for rec in safe_results:
+                rec.pop('valuation', None)
+            # Build header as union of keys
+            fieldnames = []
+            seen_fields = set()
+            for rec in safe_results:
+                for k in rec.keys():
+                    if k not in seen_fields:
+                        seen_fields.add(k)
+                        fieldnames.append(k)
+            # Ensure deterministic order for common keys
+            preferred = [
+                'ticker', 'symbol', 'company_name', 'current_price',
+                'price_change_today', 'price_change_percent', 'price_change_week', 'price_change_month', 'price_change_year',
+                'dvav', 'volume', 'avg_volume_3mon', 'market_cap',
+                'bid_price', 'ask_price', 'bid_ask_spread', 'days_range',
+                'week_52_low', 'week_52_high', 'one_year_target', 'pe_ratio', 'dividend_yield',
+                'last_updated'
+            ]
+            # Reorder: preferred first, then remaining
+            ordered = [k for k in preferred if k in seen_fields] + [k for k in fieldnames if k not in preferred]
+            def _to_str(v):
+                if v is None:
+                    return ''
+                try:
+                    # pandas timestamp
+                    import pandas as _pd  # type: ignore
+                    if isinstance(v, _pd.Timestamp):
+                        return v.isoformat()
+                except Exception:
+                    pass
+                try:
+                    from decimal import Decimal as _Dec
+                    if isinstance(v, _Dec):
+                        return str(v)
+                except Exception:
+                    pass
+                try:
+                    from datetime import datetime as _dt
+                    if isinstance(v, _dt):
+                        return v.isoformat()
+                except Exception:
+                    pass
+                return str(v)
+            # Write CSV
+            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=ordered)
+                writer.writeheader()
+                for rec in safe_results:
+                    row = {k: _to_str(rec.get(k)) for k in ordered}
+                    writer.writerow(row)
+            logger.info(f"WROTE CSV: {csv_path} ({len(safe_results)} records)")
     except Exception as e:
         logger.error(f"Failed to write output JSON: {e}")
 
