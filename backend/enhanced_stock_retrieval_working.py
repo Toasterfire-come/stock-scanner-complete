@@ -147,7 +147,66 @@ def normalize_proxy_string(proxy_str: str) -> str | None:
     return p
 
 
-# Removed unused create_session_for_proxy function
+# Build a per-proxy requests.Session configured for Yahoo endpoints
+def create_session_for_proxy(proxy: str | None, timeout_seconds: int) -> requests.Session:
+    """Create a session with proxy, UA headers, retries, and response hook.
+
+    yfinance supports passing a custom requests.Session to Ticker; we avoid
+    globally patching shared session to keep each thread isolated.
+    """
+    session = requests.Session()
+
+    # Proxies if provided
+    if proxy:
+        session.proxies = {"http": proxy, "https": proxy}
+
+    # Reasonable browser-like headers
+    session.headers.update({
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Connection": "keep-alive",
+    })
+
+    # Retry policy including 429/999 with backoff
+    retry = Retry(
+        total=3,
+        read=3,
+        connect=3,
+        status=3,
+        backoff_factor=0.4,
+        status_forcelist=(429, 500, 502, 503, 504, 520, 521, 522, 524, 999),
+        allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=16, pool_maxsize=32)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    # Default timeout injection for all requests made via this session
+    _orig_request = session.request
+
+    def _request_with_timeout(method, url, **kwargs):
+        if "timeout" not in kwargs or kwargs["timeout"] is None:
+            kwargs["timeout"] = timeout_seconds
+        return _orig_request(method, url, **kwargs)
+
+    session.request = _request_with_timeout  # type: ignore[assignment]
+
+    # Hook: mark proxy as failing on HTTP 429/999 to trigger rotation
+    def _response_hook(resp, *args, **kwargs):
+        try:
+            if proxy and resp is not None and resp.status_code in (429, 999):
+                mark_proxy_failure(proxy, f"HTTP {resp.status_code}")
+        except Exception:
+            pass
+
+    session.hooks["response"].append(_response_hook)
+    return session
 
 # Thread-safe proxy manager to lease unique proxies per thread
 class ProxyManager:
@@ -506,10 +565,15 @@ def process_symbol_with_retry(symbol, ticker_number, proxy_manager_or_list, time
             proxy = None
             if proxy_manager_or_list:
                 if isinstance(proxy_manager_or_list, ProxyManager):
-                    proxy = proxy_manager_or_list.lease_proxy(exclude=used_proxies, wait=False)
+                    # Wait briefly for a proxy to avoid falling back to direct IP
+                    proxy = proxy_manager_or_list.lease_proxy(exclude=used_proxies, wait=True, timeout=1.0)
                 else:
                     # Backward compatibility with list of proxies
                     proxy = get_healthy_proxy(proxy_manager_or_list, used_proxies)
+            # If proxying is enabled but none available, wait a bit and retry
+            if proxy_manager_or_list and not proxy:
+                time.sleep(random.uniform(0.08, 0.18))
+                continue
             if proxy:
                 used_proxies.add(proxy)
                 if ticker_number <= 5 or attempt > 0:  # Show proxy info for first 5 tickers or retries
@@ -582,22 +646,8 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 time.sleep(sleep_time)
         return None
 
-    # If proxy provided, patch yfinance to use it for this attempt
-    def patch_yfinance_proxy(px):
-        if not px:
-            return
-        try:
-            session = requests.Session()
-            session.proxies = {'http': px, 'https': px}
-            session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-            })
-            import yfinance.shared
-            yfinance.shared._requests = session
-        except Exception as e:
-            logger.debug(f"Failed to apply proxy to yfinance session: {e}")
-
-    patch_yfinance_proxy(proxy)
+    # Build a per-attempt session (with proxy if provided) and pass to yfinance
+    session = create_session_for_proxy(proxy, timeout)
 
     # Filter out symbols with obvious invalid characters that yfinance rejects
     if any(ch in symbol for ch in ['$', '^', ' ', '/']):
@@ -607,7 +657,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Try multiple approaches to get data letting yfinance manage its own session
     # Normalize special share classes: replace '.' with '-' (e.g., BRK.B -> BRK-B)
     norm_symbol = symbol.replace('.', '-')
-    ticker_obj = yf.Ticker(norm_symbol)
+    ticker_obj = yf.Ticker(norm_symbol, session=session)
     info = None
     hist = None
     current_price = None
