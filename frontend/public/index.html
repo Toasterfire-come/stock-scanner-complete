@@ -54,9 +54,7 @@
         <link rel="dns-prefetch" href="//www.paypalobjects.com">
         <link rel="dns-prefetch" href="//o.sentry.io">
         <script defer data-domain="tradescanpro.com" src="https://plausible.io/js/script.js"></script>
-        <!-- Preload CSS to reduce render-blocking -->
-        <link rel="preload" href="/static/css/main.css" as="style" onload="this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="/static/css/main.css"></noscript>
+        <!-- CRA injects CSS bundle; avoid manual stylesheet hints that can conflict -->
         <!-- CRA injects bundles; avoid manual script hints that can race-load -->
         <!-- GA4 is loaded dynamically via environment (prefer runtime injection) -->
         <link rel="preload" href="/hero.webp" as="image" imagesrcset="/hero.avif 1x, /hero.webp 2x" imagesizes="100vw" />
