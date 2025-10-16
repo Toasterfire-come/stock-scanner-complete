@@ -132,6 +132,12 @@ proxy_health_lock = threading.Lock()  # Protect proxy_health dict updates
 proxy_failure_threshold = 3  # Mark proxy as blocked after 3 consecutive failures
 proxy_retry_cooldown = 300  # 5 minutes before retrying a blocked proxy
 
+# Per-proxy ticker usage limiting (each proxy used for at most N tickers)
+# This enforces: every proxy is only used for 100 tickers per run
+PROXY_MAX_TICKERS = int(os.getenv('PROXY_MAX_TICKERS', '100'))
+proxy_usage = defaultdict(int)  # proxy -> count of distinct tickers attempted
+proxy_usage_lock = threading.Lock()
+
 # New: normalize and validate proxy strings
 
 def normalize_proxy_string(proxy_str: str) -> str | None:
@@ -164,7 +170,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Enhanced Stock Retrieval Script - WORKING')
     parser.add_argument('-noproxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('-test', action='store_true', help='Test mode - process only first 100 tickers')
-    parser.add_argument('-threads', type=int, default=15, help='Number of threads (default: 15)')
+    parser.add_argument('-threads', type=int, default=12, help='Number of threads (default: 12)')
     parser.add_argument('-timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
     parser.add_argument('-csv', type=str, default=os.getenv('NYSE_CSV_PATH', 'flat-ui__data-Fri Aug 01 2025.csv'), 
                        help='NYSE CSV file path (default from NYSE_CSV_PATH env var or flat-ui__data-Fri Aug 01 2025.csv)')
@@ -351,6 +357,62 @@ def get_healthy_proxy(proxies, used_proxies=None):
         healthy_proxies.sort(key=lambda p: proxy_health[p]["failures"])
     return healthy_proxies[0]
 
+def acquire_healthy_proxy(proxies, used_proxies=None):
+    """Select a healthy proxy that has not exceeded per-proxy ticker cap and atomically
+    increment its usage. Skips proxies already tried for the current ticker.
+
+    Returns the acquired proxy string, or None if none available.
+    """
+    if not proxies:
+        return None
+
+    if used_proxies is None:
+        used_proxies = set()
+
+    current_time = datetime.now()
+
+    # Build candidate list honoring health, cooldown, prior attempts, and usage cap
+    candidates = []
+    for proxy in proxies:
+        if proxy in used_proxies:
+            continue
+
+        # Check health/cooldown without holding the lock for long
+        skip = False
+        with proxy_health_lock:
+            health = proxy_health[proxy]
+            if health["blocked"]:
+                if health["last_failure"] and (current_time - health["last_failure"]).total_seconds() > proxy_retry_cooldown:
+                    health["blocked"] = False
+                    health["failures"] = 0
+                else:
+                    skip = True
+        if skip:
+            continue
+
+        # Check usage cap snapshot
+        with proxy_usage_lock:
+            if proxy_usage[proxy] >= PROXY_MAX_TICKERS:
+                continue
+
+        candidates.append(proxy)
+
+    if not candidates:
+        return None
+
+    # Prefer proxies with fewer failures
+    with proxy_health_lock:
+        candidates.sort(key=lambda p: proxy_health[p]["failures"])
+
+    # Atomically acquire usage for the first available candidate under cap
+    for proxy in candidates:
+        with proxy_usage_lock:
+            if proxy_usage[proxy] < PROXY_MAX_TICKERS:
+                proxy_usage[proxy] += 1
+                return proxy
+
+    return None
+
 def mark_proxy_success(proxy):
     """Mark a proxy as successful"""
     if proxy:
@@ -444,8 +506,8 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
             return None
             
         try:
-            # Get a healthy proxy
-            proxy = get_healthy_proxy(proxies, used_proxies) if proxies else None
+            # Get a healthy proxy honoring per-proxy 100-ticker cap
+            proxy = acquire_healthy_proxy(proxies, used_proxies) if proxies else None
             if proxy:
                 used_proxies.add(proxy)
                 if ticker_number <= 5 or attempt > 0:  # Show proxy info for first 5 tickers or retries
@@ -1285,6 +1347,11 @@ def main():
     global shutdown_flag
     
     args = parse_arguments()
+
+    # Enforce exactly 12 threads as required
+    if args.threads != 12:
+        logger.info(f"Overriding threads from {args.threads} to 12 to enforce configuration")
+        args.threads = 12
     
     logger.info("ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES")
     logger.info("=" * 60)
