@@ -604,28 +604,26 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 time.sleep(sleep_time)
         return None
 
-    # Build a per-attempt session scoped to this proxy to avoid global monkey-patching
+    # Build a per-attempt session scoped to this proxy using curl_cffi for yfinance compatibility
     session_for_proxy = None
     if proxy:
         try:
-            session_for_proxy = requests.Session()
-            session_for_proxy.proxies = {'http': proxy, 'https': proxy}
-            # Attach conservative retry strategy to handle transient 429/5xx
-            retry = Retry(
-                total=3,
-                backoff_factor=0.5,
-                status_forcelist=(429, 500, 502, 503, 504),
-                allowed_methods=("GET", "POST"),
-                raise_on_status=False,
-            )
-            adapter = HTTPAdapter(max_retries=retry)
-            session_for_proxy.mount('http://', adapter)
-            session_for_proxy.mount('https://', adapter)
-            session_for_proxy.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-            })
+            cc_requests = None
+            try:
+                from curl_cffi import requests as cc_requests  # type: ignore
+            except Exception:
+                cc_requests = None
+            if cc_requests is not None:
+                session_for_proxy = cc_requests.Session()
+                session_for_proxy.proxies = {'http': proxy, 'https': proxy}
+                session_for_proxy.headers.update({
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+                })
+            else:
+                # Fallback: skip custom session; yfinance will manage its own (avoids incompatible requests.Session)
+                logger.debug("curl_cffi session unavailable; skipping custom per-proxy session")
         except Exception as e:
-            logger.debug(f"Failed to create per-proxy session: {e}")
+            logger.debug(f"Failed to create per-proxy curl_cffi session: {e}")
 
     # Filter out symbols with obvious invalid characters that yfinance rejects
     if any(ch in symbol for ch in ['$', '^', ' ', '/']):
