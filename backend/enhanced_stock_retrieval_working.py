@@ -607,7 +607,7 @@ def process_symbol_with_retry(symbol, ticker_number, proxies, timeout=10, test_m
                 error_msg = str(e).lower()
                 
                 # Check if it's a proxy-related error
-                if any(keyword in error_msg for keyword in ['timeout', 'connection', 'proxy', 'network', 'ssl', 'timed out']):
+                if any(keyword in error_msg for keyword in ['timeout', 'connection', 'proxy', 'network', 'ssl', 'timed out', '429', 'too many', 'rate limit']):
                     mark_proxy_failure(proxy, str(e))
                     logger.warning(f"{symbol} (attempt {attempt + 1}): Proxy error with {proxy}: {e}")
                     
@@ -646,7 +646,9 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 return func()
             except Exception as e:
                 if attempt == max_attempts - 1:  # Last attempt
-                    if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
+                    em = str(e).lower()
+                    # Treat network and rate-limit errors as retriable/raise to trigger proxy rotation
+                    if any(keyword in em for keyword in ['timeout', 'connection', 'proxy', 'ssl', '429', 'too many', 'rate limit']):
                         raise
                     return None
                 # Exponential backoff
@@ -654,22 +656,19 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 time.sleep(sleep_time)
         return None
 
-    # If proxy provided, patch yfinance to use it for this attempt
-    def patch_yfinance_proxy(px):
-        if not px:
-            return
+    # Build a per-attempt yfinance session that uses the selected proxy
+    yf_session = None
+    if proxy:
         try:
-            session = requests.Session()
-            session.proxies = {'http': px, 'https': px}
-            session.headers.update({
+            s = requests.Session()
+            s.trust_env = False  # avoid env proxy interference
+            s.proxies = {'http': proxy, 'https': proxy}
+            s.headers.update({
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             })
-            import yfinance.shared
-            yfinance.shared._requests = session
+            yf_session = s
         except Exception as e:
-            logger.debug(f"Failed to apply proxy to yfinance session: {e}")
-
-    patch_yfinance_proxy(proxy)
+            logger.debug(f"Failed to create yfinance session for proxy: {e}")
 
     # Filter out symbols with obvious invalid characters that yfinance rejects
     if any(ch in symbol for ch in ['$', '^', ' ', '/']):
@@ -679,7 +678,12 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Try multiple approaches to get data letting yfinance manage its own session
     # Normalize special share classes: replace '.' with '-' (e.g., BRK.B -> BRK-B)
     norm_symbol = symbol.replace('.', '-')
-    ticker_obj = yf.Ticker(norm_symbol)
+    # Pass session (and proxy as hint) directly to yfinance so all requests use it
+    try:
+        ticker_obj = yf.Ticker(norm_symbol, session=yf_session, proxy=proxy if proxy else None)
+    except TypeError:
+        # Fallback for versions not supporting 'proxy' kwarg
+        ticker_obj = yf.Ticker(norm_symbol, session=yf_session)
     info = None
     hist = None
     current_price = None
