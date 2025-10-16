@@ -127,7 +127,8 @@ MARKET_CLOSE = os.getenv('MARKET_CLOSE', "16:00")  # 4:00 PM ET
 # POSTMARKET_END = os.getenv('POSTMARKET_END', "20:00")   # DISABLED
 
 # Global proxy health tracking with thread safety
-proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "blocked": False})
+# Track additional rotation metadata to avoid hot-spotting a few proxies
+proxy_health = defaultdict(lambda: {"failures": 0, "successes": 0, "last_failure": None, "last_used": None, "uses": 0, "blocked": False})
 proxy_health_lock = threading.Lock()  # Protect proxy_health dict updates
 proxy_failure_threshold = 3  # Mark proxy as blocked after 3 consecutive failures
 proxy_retry_cooldown = 300  # 5 minutes before retrying a blocked proxy
@@ -174,8 +175,14 @@ class ProxyManager:
                 else:
                     continue
             candidates.append(px)
-        # Prefer proxies with fewer failures
-        candidates.sort(key=lambda p: proxy_health[p]["failures"])
+        # Prefer proxies with fewer failures, fewer uses, least recently used
+        candidates.sort(
+            key=lambda p: (
+                proxy_health[p]["failures"],
+                proxy_health[p].get("uses", 0),
+                proxy_health[p].get("last_used") or datetime.min,
+            )
+        )
         return candidates
 
     def lease_proxy(self, exclude: set[str] | None = None, wait: bool = True, timeout: float = 5.0) -> str | None:
@@ -187,6 +194,10 @@ class ProxyManager:
                 if candidates:
                     px = candidates[0]
                     self.in_use.add(px)
+                    # Update rotation metadata on lease
+                    with proxy_health_lock:
+                        proxy_health[px]["uses"] = proxy_health[px].get("uses", 0) + 1
+                        proxy_health[px]["last_used"] = datetime.now()
                     return px
             if not wait or time.time() >= deadline:
                 return None
@@ -404,9 +415,15 @@ def get_healthy_proxy(proxies, used_proxies=None):
         # If no healthy proxies, return a random one (last resort)
         return random.choice(proxies) if proxies else None
     
-    # Prefer proxies with fewer failures
+    # Prefer proxies with fewer failures, fewer uses, least recently used
     with proxy_health_lock:
-        healthy_proxies.sort(key=lambda p: proxy_health[p]["failures"])
+        healthy_proxies.sort(
+            key=lambda p: (
+                proxy_health[p]["failures"],
+                proxy_health[p].get("uses", 0),
+                proxy_health[p].get("last_used") or datetime.min,
+            )
+        )
     return healthy_proxies[0]
 
 def mark_proxy_success(proxy):
@@ -514,6 +531,9 @@ def process_symbol_with_retry(symbol, ticker_number, proxy_manager_or_list, time
                 used_proxies.add(proxy)
                 if ticker_number <= 5 or attempt > 0:  # Show proxy info for first 5 tickers or retries
                     logger.info(f"{symbol} (attempt {attempt + 1}): Using proxy {proxy}")
+                else:
+                    # Lower verbosity diagnostic for normal flow
+                    logger.debug(f"{symbol}: proxy selected {proxy}")
             
             result = process_symbol_attempt(symbol, proxy, timeout, test_mode, save_to_db)
             
@@ -537,10 +557,12 @@ def process_symbol_with_retry(symbol, ticker_number, proxy_manager_or_list, time
             if proxy:
                 error_msg = str(e).lower()
                 
-                # Check if it's a proxy-related error
-                if any(keyword in error_msg for keyword in ['timeout', 'connection', 'proxy', 'network', 'ssl', 'timed out']):
+                # Check if it's a proxy-related or rate-limit-type error
+                if any(keyword in error_msg for keyword in ['timeout', 'connection', 'proxy', 'network', 'ssl', 'timed out', '429', 'too many requests', 'rate limit', 'noon', 'cloudflare', '403', 'forbidden']):
                     mark_proxy_failure(proxy, str(e))
-                    logger.warning(f"{symbol} (attempt {attempt + 1}): Proxy error with {proxy}: {e}")
+                    logger.warning(f"{symbol} (attempt {attempt + 1}): Proxy/RateLimit error with {proxy}: {e}")
+                    # Attach simple diagnostic hint for logs
+                    logger.debug(f"diagnostic: proxy_health={proxy_health.get(proxy, {})}")
                     if isinstance(proxy_manager_or_list, ProxyManager):
                         proxy_manager_or_list.release_proxy(proxy)
                     
@@ -574,7 +596,7 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 return func()
             except Exception as e:
                 if attempt == max_attempts - 1:  # Last attempt
-                    if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl']):
+                    if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'proxy', 'ssl', '429', 'too many requests', 'rate limit', 'noon', 'cloudflare', '403', 'forbidden']):
                         raise
                     return None
                 # Exponential backoff
@@ -582,22 +604,28 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
                 time.sleep(sleep_time)
         return None
 
-    # If proxy provided, patch yfinance to use it for this attempt
-    def patch_yfinance_proxy(px):
-        if not px:
-            return
+    # Build a per-attempt session scoped to this proxy to avoid global monkey-patching
+    session_for_proxy = None
+    if proxy:
         try:
-            session = requests.Session()
-            session.proxies = {'http': px, 'https': px}
-            session.headers.update({
+            session_for_proxy = requests.Session()
+            session_for_proxy.proxies = {'http': proxy, 'https': proxy}
+            # Attach conservative retry strategy to handle transient 429/5xx
+            retry = Retry(
+                total=3,
+                backoff_factor=0.5,
+                status_forcelist=(429, 500, 502, 503, 504),
+                allowed_methods=("GET", "POST"),
+                raise_on_status=False,
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            session_for_proxy.mount('http://', adapter)
+            session_for_proxy.mount('https://', adapter)
+            session_for_proxy.headers.update({
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             })
-            import yfinance.shared
-            yfinance.shared._requests = session
         except Exception as e:
-            logger.debug(f"Failed to apply proxy to yfinance session: {e}")
-
-    patch_yfinance_proxy(proxy)
+            logger.debug(f"Failed to create per-proxy session: {e}")
 
     # Filter out symbols with obvious invalid characters that yfinance rejects
     if any(ch in symbol for ch in ['$', '^', ' ', '/']):
@@ -607,7 +635,11 @@ def process_symbol_attempt(symbol, proxy, timeout=10, test_mode=False, save_to_d
     # Try multiple approaches to get data letting yfinance manage its own session
     # Normalize special share classes: replace '.' with '-' (e.g., BRK.B -> BRK-B)
     norm_symbol = symbol.replace('.', '-')
-    ticker_obj = yf.Ticker(norm_symbol)
+    try:
+        ticker_obj = yf.Ticker(norm_symbol, session=session_for_proxy) if session_for_proxy else yf.Ticker(norm_symbol)
+    except TypeError:
+        # Older yfinance versions do not accept session param
+        ticker_obj = yf.Ticker(norm_symbol)
     info = None
     hist = None
     current_price = None
