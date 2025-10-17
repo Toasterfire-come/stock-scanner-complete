@@ -716,11 +716,13 @@ class StockScanner:
             logger.error(f"{symbol} error: {e}")
             return symbol, None, False
 
-    def scan(self, symbols: List[str]) -> Dict[str, Any]:
+    def scan(self, symbols: List[str], csv_out: Optional[str] = None) -> Dict[str, Any]:
         start = time.time()
         successes: Dict[str, Dict[str, Any]] = {}
         rate_limited_syms: List[str] = []
+        failed_symbols: List[str] = []
         failures = 0
+        proxy_rotations = 0
 
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
             futures = {executor.submit(self._fetch_symbol, s, i): s for i, s in enumerate(symbols)}
@@ -734,18 +736,22 @@ class StockScanner:
                         # rotate proxy immediately
                         if self.use_proxies:
                             self.proxy_mgr.rotate_and_get_session()
+                            proxy_rotations += 1
                         continue
                     failures += 1
+                    failed_symbols.append(s)
                     continue
                 if rl:
                     rate_limited_syms.append(sym)
                     if self.use_proxies:
                         self.proxy_mgr.rotate_and_get_session()
+                        proxy_rotations += 1
                     continue
                 if payload:
                     successes[sym] = payload
                 else:
                     failures += 1
+                    failed_symbols.append(s)
 
         # Retry rate-limited at end with proxy rotation and slight backoff
         retry_success = 0
@@ -759,10 +765,13 @@ class StockScanner:
                     try:
                         sym, payload, rl = fut.result(timeout=self.timeout + 2)
                     except Exception:
+                        failed_symbols.append(s)
                         continue
                     if payload and not rl:
                         successes[sym] = payload
                         retry_success += 1
+                    else:
+                        failed_symbols.append(s)
 
         # Second pass: percentiles (dvav, momentum_1m, dollar_volume)
         # Collect values
@@ -799,13 +808,73 @@ class StockScanner:
             comps = [x for x in [p_dv, p_dol] if isinstance(x, (int, float))]
             payload['_analytics']['liquidity_score'] = round(sum(comps) / len(comps), 2) if comps else None
 
+        # Optional CSV export
+        if csv_out:
+            try:
+                # Flatten payloads for DataFrame
+                rows: List[Dict[str, Any]] = []
+                for sym, payload in successes.items():
+                    row = {k: v for k, v in payload.items() if not k.startswith('_')}
+                    # Merge analytics subset
+                    analytics = payload.get('_analytics', {})
+                    for k in ['rsi14','atr14','sma_5','sma_20','ema_5','ema_20','macd','macd_signal',
+                              'stochastic14','vwap','gap_open_vs_prev_close','gap_open_percent',
+                              'premarket_active','postmarket_active','earnings_bucket','days_to_cover',
+                              'dollar_volume','momentum_1m','dvav_percentile','momentum_1m_percentile',
+                              'dollar_volume_percentile','liquidity_score']:
+                        row[f'analytics_{k}'] = analytics.get(k)
+                    flags = analytics.get('flags', {}) if isinstance(analytics.get('flags'), dict) else {}
+                    row['flag_large_cap'] = flags.get('large_cap')
+                    row['flag_high_dvav'] = flags.get('high_dvav')
+                    row['flag_rsi_overbought'] = flags.get('rsi_overbought')
+                    row['flag_rsi_oversold'] = flags.get('rsi_oversold')
+                    rows.append(row)
+                df = pd.DataFrame(rows)
+                # Convert Decimals to floats for CSV
+                for col in df.columns:
+                    if df[col].map(lambda x: isinstance(x, Decimal)).any():
+                        df[col] = df[col].astype(str).astype(float)
+                df.to_csv(csv_out, index=False)
+                logger.info(f"Saved CSV: {csv_out} with {len(df)} rows")
+            except Exception as e:
+                logger.error(f"CSV export failed: {e}")
+
+        # Deep-dive stats (nulls, zeros)
+        deep_dive = {}
+        try:
+            if csv_out and os.path.exists(csv_out):
+                df = pd.read_csv(csv_out)
+            else:
+                # Build DataFrame from successes if no CSV written
+                rows = []
+                for sym, payload in successes.items():
+                    r = {k: v for k, v in payload.items() if not k.startswith('_')}
+                    rows.append(r)
+                df = pd.DataFrame(rows)
+            null_counts = df.isna().sum().to_dict()
+            zero_counts = {}
+            for col in df.columns:
+                if df[col].dtype.kind in 'biufc':
+                    zero_counts[col] = int((df[col] == 0).sum())
+            deep_dive = {
+                'null_counts': null_counts,
+                'zero_counts': zero_counts,
+            }
+        except Exception as e:
+            logger.error(f"Deep-dive analysis failed: {e}")
+
         duration = time.time() - start
         return {
             'total': len(symbols),
             'success': len(successes),
             'failed': (len(symbols) - len(successes)),
+            'failed_symbols': failed_symbols,
             'retried_success': retry_success,
             'rate_limited_initial': len(set(rate_limited_syms)),
+            'proxies_available': len(self.proxy_mgr.proxies) if self.use_proxies else 0,
+            'proxy_rotations': proxy_rotations,
+            'csv_out': csv_out,
+            'deep_dive': deep_dive,
             'duration_sec': round(duration, 2),
             'rate_per_sec': round(len(symbols) / duration, 2) if duration > 0 else None,
         }
@@ -822,6 +891,7 @@ def main():
     parser.add_argument('--no-proxy', action='store_true', help='Disable proxy usage')
     parser.add_argument('--limit', type=int, default=None, help='Limit number of tickers processed')
     parser.add_argument('--symbols', type=str, default=None, help='Comma-separated list of symbols to scan (overrides universe)')
+    parser.add_argument('--csv-out', type=str, default=None, help='Save results to CSV file')
     args = parser.parse_args()
 
     # Load symbols
@@ -839,8 +909,24 @@ def main():
         proxy_file=args.proxy_file,
         use_proxies=(not args.no_proxy),
     )
-    stats = scanner.scan(symbols)
-    logger.info(f"Scan complete: {json.dumps(stats)}")
+    stats = scanner.scan(symbols, csv_out=args.csv_out)
+    # Pretty print summary
+    logger.info(f"Scan complete. Total={stats['total']} Success={stats['success']} Failed={stats['failed']} "
+                f"Duration={stats['duration_sec']}s Proxies={stats['proxies_available']} Rotations={stats['proxy_rotations']}\n"
+                f"CSV={stats.get('csv_out')}")
+    # Print top-level deep dive signals
+    dd = stats.get('deep_dive') or {}
+    if dd:
+        # Show top 10 null-heavy columns
+        nulls = sorted(dd.get('null_counts', {}).items(), key=lambda x: x[1], reverse=True)[:10]
+        zeros = sorted(dd.get('zero_counts', {}).items(), key=lambda x: x[1], reverse=True)[:10]
+        logger.info(f"Null-heavy columns (top 10): {nulls}")
+        logger.info(f"Zero-heavy columns (top 10): {zeros}")
+    logger.info(json.dumps({k: v for k, v in stats.items() if k not in ('deep_dive','failed_symbols')}, indent=2))
+    # Keep failed list manageable in logs
+    if stats.get('failed_symbols'):
+        sample_failed = stats['failed_symbols'][:50]
+        logger.info(f"Failed tickers (sample {len(sample_failed)}/{len(stats['failed_symbols'])}): {sample_failed}")
 
 
 if __name__ == '__main__':
