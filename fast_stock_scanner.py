@@ -28,17 +28,29 @@ from decimal import Decimal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
+try:
+    from curl_cffi import requests as cf_requests  # yfinance prefers curl_cffi sessions
+except Exception:
+    cf_requests = None  # type: ignore
 import pandas as pd
 import yfinance as yf
 
-# Django setup for DB writes
-import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
-django.setup()
-
-from django.utils import timezone
-from django.db import close_old_connections
-from stocks.models import Stock, StockPrice
+# Optional Django setup for DB writes (graceful fallback when unavailable)
+DJANGO_AVAILABLE = False
+try:
+    import django  # type: ignore
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings')
+    django.setup()
+    from django.utils import timezone as django_timezone  # type: ignore
+    from django.db import close_old_connections as django_close_old_connections  # type: ignore
+    from stocks.models import Stock, StockPrice  # type: ignore
+    DJANGO_AVAILABLE = True
+except Exception:
+    django_timezone = None
+    Stock = None  # type: ignore
+    StockPrice = None  # type: ignore
+    def django_close_old_connections():  # type: ignore
+        return None
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -95,18 +107,23 @@ class ProxyManager:
         self._index = (self._index + 1) % len(self.proxies)
         return self._index
 
-    def get_session(self, rotate: bool = False) -> Optional[requests.Session]:
+    def get_session(self, rotate: bool = False) -> Optional[object]:
         if not self.proxies:
             return None
         idx = self._next_index() if rotate else self._index
         if idx < 0 and self.proxies:
             idx = 0
         proxy = self.proxies[idx % len(self.proxies)]
+        # Prefer curl_cffi session when available (required by yfinance >=0.2.66)
+        if cf_requests is not None:
+            sess = cf_requests.Session()
+            sess.proxies = {'http': proxy, 'https': proxy}
+            sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+            return sess
+        # Fallback to requests (may be rejected by yfinance)
         sess = requests.Session()
         sess.proxies = {'http': proxy, 'https': proxy}
-        sess.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
+        sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
         # Conservative timeouts via HTTPAdapter are optional; rely on yfinance timeouts
         return sess
 
@@ -294,6 +311,7 @@ class StockScanner:
         timeout: int = 8,
         proxy_file: str = 'working_proxies.json',
         use_proxies: bool = True,
+        db_enabled: bool = True,
     ) -> None:
         self.threads = threads
         self.timeout = timeout
@@ -302,6 +320,7 @@ class StockScanner:
         self.rate_limited: List[str] = []
         self.results: List[Dict[str, Any]] = []
         self._earnings_cache: Dict[str, Optional[datetime]] = {}
+        self.db_enabled = db_enabled and DJANGO_AVAILABLE
 
     def _get_earnings_date(self, ticker: yf.Ticker, symbol: str) -> Optional[datetime]:
         if symbol in self._earnings_cache:
@@ -333,11 +352,17 @@ class StockScanner:
 
     def _fetch_symbol(self, symbol: str, idx: int) -> Tuple[str, Optional[Dict[str, Any]], bool]:
         """Return (symbol, data_dict_or_none, rate_limited)."""
-        close_old_connections()
+        # Close old DB connections only if Django is available
+        if self.db_enabled:
+            django_close_old_connections()
         session = None
         if self.use_proxies and self.proxy_mgr.proxies:
-            # Round-robin session; rotate every ~1500 handled by caller on RL
-            session = self.proxy_mgr.get_session(rotate=False)
+            # Round-robin curl_cffi session; if unavailable, fall back to yfinance default (None)
+            s = self.proxy_mgr.get_session(rotate=False)
+            # yfinance requires curl_cffi session objects; ensure correct type
+            if s is not None and (cf_requests is None or not isinstance(s, cf_requests.Session)):
+                s = None
+            session = s
         try:
             ticker = yf.Ticker(symbol, session=session)
 
@@ -566,47 +591,48 @@ class StockScanner:
                 'change_percent': safe_decimal(change_percent),
                 'market_cap_change_3mon': None,
                 'pe_change_3mon': None,
-                'last_updated': timezone.now(),
-                'created_at': timezone.now(),
+                'last_updated': (django_timezone.now() if django_timezone else datetime.utcnow()),
+                'created_at': (django_timezone.now() if django_timezone else datetime.utcnow()),
             }
 
-            # Persist (partial update semantics: do not overwrite with None/empty)
-            try:
-                stock, created = Stock.objects.get_or_create(ticker=symbol, defaults={
-                    'symbol': symbol,
-                    'company_name': payload['company_name'],
-                    'name': payload['name'],
-                    'exchange': payload['exchange']
-                })
-                # Update only non-null and non-empty values
-                updatable_fields = [
-                    'company_name','name','exchange','current_price','days_low','days_high','days_range',
-                    'volume','volume_today','avg_volume_3mon','dvav','market_cap','shares_available',
-                    'pe_ratio','dividend_yield','one_year_target','week_52_low','week_52_high',
-                    'earnings_per_share','book_value','price_to_book','bid_price','ask_price',
-                    'bid_ask_spread','price_change_today','price_change_week','price_change_month',
-                    'price_change_year','change_percent','market_cap_change_3mon','pe_change_3mon'
-                ]
-                changed = False
-                for f in updatable_fields:
-                    val = payload.get(f)
-                    if val is None:
-                        continue
-                    if isinstance(val, str) and val == '':
-                        continue
-                    # Assign
-                    setattr(stock, f, val)
-                    changed = True
-                if changed:
-                    stock.last_updated = payload['last_updated']
-                    stock.save()
-                if payload.get('current_price') is not None:
-                    try:
-                        StockPrice.objects.create(stock=stock, price=payload['current_price'])
-                    except Exception:
-                        pass
-            except Exception as e:
-                logger.error(f"DB write failed for {symbol}: {e}")
+            # Persist only when DB is enabled and Django is available
+            if self.db_enabled and Stock is not None and StockPrice is not None:
+                try:
+                    stock, created = Stock.objects.get_or_create(ticker=symbol, defaults={
+                        'symbol': symbol,
+                        'company_name': payload['company_name'],
+                        'name': payload['name'],
+                        'exchange': payload['exchange']
+                    })
+                    # Update only non-null and non-empty values
+                    updatable_fields = [
+                        'company_name','name','exchange','current_price','days_low','days_high','days_range',
+                        'volume','volume_today','avg_volume_3mon','dvav','market_cap','shares_available',
+                        'pe_ratio','dividend_yield','one_year_target','week_52_low','week_52_high',
+                        'earnings_per_share','book_value','price_to_book','bid_price','ask_price',
+                        'bid_ask_spread','price_change_today','price_change_week','price_change_month',
+                        'price_change_year','change_percent','market_cap_change_3mon','pe_change_3mon'
+                    ]
+                    changed = False
+                    for f in updatable_fields:
+                        val = payload.get(f)
+                        if val is None:
+                            continue
+                        if isinstance(val, str) and val == '':
+                            continue
+                        # Assign
+                        setattr(stock, f, val)
+                        changed = True
+                    if changed:
+                        stock.last_updated = payload['last_updated']
+                        stock.save()
+                    if payload.get('current_price') is not None:
+                        try:
+                            StockPrice.objects.create(stock=stock, price=payload['current_price'])
+                        except Exception:
+                            pass
+                except Exception as e:
+                    logger.error(f"DB write failed for {symbol}: {e}")
 
             # Light-weight analytics for second pass aggregation
             analytics = {
