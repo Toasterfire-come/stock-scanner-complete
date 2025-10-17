@@ -407,6 +407,189 @@ class StockScanner:
         # Yahoo direct quote client for batch validation and fast fields
         self._yahoo_client = YahooQuoteClient()
 
+    # ------------------------- Batch download pipeline ------------------------- #
+    def _download_chunk(self, symbols: List[str], session: Optional[object], timeout: int) -> Optional[pd.DataFrame]:
+        try:
+            df = yf.download(
+                tickers=symbols,
+                period='5d',
+                interval='1d',
+                group_by='ticker',
+                auto_adjust=False,
+                progress=False,
+                threads=True,
+                session=session,
+            )
+            return df
+        except Exception as e:
+            logger.error(f"download() failed for {len(symbols)} tickers: {e}")
+            return None
+
+    def _build_rows_from_download(self, df: pd.DataFrame, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+        rows: Dict[str, Dict[str, Any]] = {}
+        if df is None or df.empty:
+            return rows
+        multi = isinstance(df.columns, pd.MultiIndex)
+        try:
+            last_idx = df.index[-1]
+        except Exception:
+            return rows
+        for s in symbols:
+            try:
+                if multi:
+                    sub = df.get(s)
+                    if sub is None or sub.empty:
+                        continue
+                    row = sub.loc[last_idx]
+                    close = row.get('Close')
+                    volume = row.get('Volume')
+                    low = row.get('Low')
+                    high = row.get('High')
+                    # prior close for change
+                    prev_close = None
+                    if len(sub.index) >= 2:
+                        try:
+                            prev_close = float(sub.iloc[-2].get('Close'))
+                        except Exception:
+                            prev_close = None
+                else:
+                    # Single ticker frame edge case
+                    row = df.iloc[-1]
+                    close = row.get('Close')
+                    volume = row.get('Volume')
+                    low = row.get('Low')
+                    high = row.get('High')
+                    prev_close = float(df.iloc[-2].get('Close')) if len(df) >= 2 else None
+
+                if pd.isna(close) or pd.isna(volume):
+                    continue
+                price = float(close)
+                vol = int(volume)
+                day_low = float(low) if not pd.isna(low) else None
+                day_high = float(high) if not pd.isna(high) else None
+                days_range = None
+                if day_low is not None and day_high is not None:
+                    try:
+                        days_range = f"{day_low:.2f} - {day_high:.2f}"
+                    except Exception:
+                        days_range = None
+                change_percent = None
+                if prev_close is not None and prev_close != 0:
+                    try:
+                        change_percent = ((price - float(prev_close)) / float(prev_close)) * 100.0
+                    except Exception:
+                        change_percent = None
+                rows[s] = {
+                    'ticker': s,
+                    'symbol': s,
+                    'company_name': s,
+                    'name': s,
+                    'exchange': 'NASDAQ',
+                    'current_price': safe_decimal(price),
+                    'days_low': safe_decimal(day_low),
+                    'days_high': safe_decimal(day_high),
+                    'days_range': days_range,
+                    'volume': vol,
+                    'volume_today': vol,
+                    'avg_volume_3mon': None,
+                    'dvav': None,
+                    'market_cap': None,  # batch path does not fetch mc to stay fast
+                    'shares_available': None,
+                    'pe_ratio': None,
+                    'dividend_yield': None,
+                    'one_year_target': None,
+                    'week_52_low': None,
+                    'week_52_high': None,
+                    'earnings_per_share': None,
+                    'book_value': None,
+                    'price_to_book': None,
+                    'bid_price': None,
+                    'ask_price': None,
+                    'bid_ask_spread': None,
+                    'price_change_today': None,
+                    'price_change_week': None,
+                    'price_change_month': None,
+                    'price_change_year': None,
+                    'change_percent': safe_decimal(change_percent),
+                    'market_cap_change_3mon': None,
+                    'pe_change_3mon': None,
+                    'last_updated': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
+                    'created_at': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
+                }
+            except Exception:
+                continue
+        return rows
+
+    def scan_batch(self, symbols: List[str], csv_out: Optional[str] = None, chunk_size: int = 250) -> Dict[str, Any]:
+        start = time.time()
+        # Normalize symbols
+        symbols = [s.strip().upper() for s in symbols if s and s.strip()]
+        # Split into chunks
+        chunks: List[List[str]] = [symbols[i:i+chunk_size] for i in range(0, len(symbols), chunk_size)]
+        results: Dict[str, Dict[str, Any]] = {}
+        rate_limited_chunks = 0
+
+        def process_chunk(chunk: List[str]) -> Tuple[List[str], Dict[str, Dict[str, Any]]]:
+            # Try with (proxy or none) sessions, rotate on rate limit
+            max_attempts = 3
+            attempt = 0
+            session = None
+            while attempt < max_attempts:
+                df = self._download_chunk(chunk, session=session, timeout=self.timeout)
+                rows = self._build_rows_from_download(df, chunk)
+                # If we got some rows, accept; else rotate proxy and retry smaller chunk_size
+                if rows:
+                    return chunk, rows
+                attempt += 1
+                # rotate proxy
+                if self.use_proxies and self.proxy_mgr.proxies:
+                    session = self.proxy_mgr.rotate_and_get_session()
+                else:
+                    session = None
+                # brief backoff
+                time.sleep(min(1.0 * attempt, 3.0))
+            return chunk, {}
+
+        # Run up to self.threads chunks concurrently
+        with ThreadPoolExecutor(max_workers=self.threads) as ex:
+            futures = [ex.submit(process_chunk, ch) for ch in chunks]
+            for fut in as_completed(futures):
+                ch, rows = fut.result()
+                if not rows:
+                    rate_limited_chunks += 1
+                results.update(rows)
+
+        # Keep only complete rows (price & volume present)
+        complete = {s: p for s, p in results.items() if p.get('current_price') is not None and p.get('volume') is not None}
+
+        # CSV export
+        if csv_out:
+            try:
+                df = pd.DataFrame([{k: v for k, v in p.items() if not str(k).startswith('_')} for p in complete.values()])
+                for col in df.columns:
+                    if df[col].map(lambda x: isinstance(x, Decimal)).any():
+                        df[col] = df[col].map(lambda v: float(v) if isinstance(v, Decimal) else (float('nan') if v is None else v))
+                        df[col] = pd.to_numeric(df[col], errors='coerce')
+                df.to_csv(csv_out, index=False)
+                logger.info(f"Saved CSV: {csv_out} with {len(df)} rows")
+            except Exception as e:
+                logger.error(f"CSV export failed: {e}")
+
+        duration = time.time() - start
+        completeness_ratio = round(len(complete) / max(1, len(symbols)), 3)
+        return {
+            'total': len(symbols),
+            'success': len(complete),
+            'failed': (len(symbols) - len(complete)),
+            'failed_symbols': [s for s in symbols if s not in complete],
+            'proxies_available': len(self.proxy_mgr.proxies) if self.use_proxies else 0,
+            'rate_limited_chunks': rate_limited_chunks,
+            'csv_out': csv_out,
+            'duration_sec': round(duration, 2),
+            'rate_per_sec': round(len(symbols) / duration, 2) if duration > 0 else None,
+            'completeness_ratio': completeness_ratio,
+        }
+
     @staticmethod
     def _is_complete(payload: Dict[str, Any]) -> bool:
         return (
