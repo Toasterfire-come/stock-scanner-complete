@@ -535,66 +535,9 @@ class StockScanner:
             attempt = 0
             session = None
             while attempt < max_attempts:
-                # 5d prices for last-day fields
-                df_5d = self._download_chunk(chunk, session=session, timeout=self.timeout, period='5d', interval='1d', actions=True)
+                # 5d prices for last-day fields (fast path)
+                df_5d = self._download_chunk(chunk, session=session, timeout=self.timeout, period='5d', interval='1d', actions=False)
                 rows = self._build_rows_from_download(df_5d, chunk)
-                # 3mo for avg volume (63 trading days)
-                df_3mo = self._download_chunk(chunk, session=session, timeout=self.timeout, period='3mo', interval='1d', actions=False)
-                # 1y for 52w stats & dividends
-                df_1y = self._download_chunk(chunk, session=session, timeout=self.timeout, period='1y', interval='1d', actions=True)
-                # Merge computed metrics
-                try:
-                    if isinstance(df_3mo, pd.DataFrame):
-                        multi3 = isinstance(df_3mo.columns, pd.MultiIndex)
-                        for s in chunk:
-                            if s not in rows:
-                                continue
-                            try:
-                                sub = df_3mo[s] if multi3 and s in df_3mo.columns.get_level_values(0) else df_3mo
-                                if sub is None or sub.empty:
-                                    continue
-                                vol_series = pd.to_numeric(sub['Volume'], errors='coerce').dropna()
-                                if len(vol_series) >= 30:
-                                    avg3 = int(vol_series.tail(63).mean())
-                                    rows[s]['avg_volume_3mon'] = avg3
-                                    try:
-                                        v = rows[s].get('volume')
-                                        if v:
-                                            rows[s]['dvav'] = safe_decimal(float(v)/float(avg3))
-                                    except Exception:
-                                        pass
-                            except Exception:
-                                continue
-                    if isinstance(df_1y, pd.DataFrame):
-                        multi1 = isinstance(df_1y.columns, pd.MultiIndex)
-                        for s in chunk:
-                            if s not in rows:
-                                continue
-                            try:
-                                sub = df_1y[s] if multi1 and s in df_1y.columns.get_level_values(0) else df_1y
-                                if sub is None or sub.empty:
-                                    continue
-                                lo = pd.to_numeric(sub['Low'], errors='coerce').min()
-                                hi = pd.to_numeric(sub['High'], errors='coerce').max()
-                                if math.isfinite(lo):
-                                    rows[s]['week_52_low'] = safe_decimal(float(lo))
-                                if math.isfinite(hi):
-                                    rows[s]['week_52_high'] = safe_decimal(float(hi))
-                                # Dividend yield from trailing 1y dividends
-                                div_col = 'Dividends'
-                                if div_col in sub.columns:
-                                    div_sum = pd.to_numeric(sub[div_col], errors='coerce').fillna(0.0).sum()
-                                    cp = rows[s].get('current_price')
-                                    if cp is not None:
-                                        try:
-                                            dy = (float(div_sum)/float(cp)) * 100.0 if float(cp) != 0 else None
-                                            rows[s]['dividend_yield'] = safe_decimal(dy) if dy is not None else None
-                                        except Exception:
-                                            pass
-                            except Exception:
-                                continue
-                except Exception:
-                    pass
                 # If we got some rows, accept; else rotate proxy and retry smaller chunk_size
                 if rows:
                     return chunk, rows
@@ -620,47 +563,87 @@ class StockScanner:
         # Keep only complete rows (price & volume present)
         complete = {s: p for s, p in results.items() if p.get('current_price') is not None and p.get('volume') is not None}
 
-        # Fundamentals pass (best-effort via yfinance only) to populate market_cap, shares_available, pe_ratio, one_year_target, earnings_per_share
-        # We do this only for the included rows to minimize load
-        fundamentals_fields = ['market_cap','shares_available','pe_ratio','one_year_target','earnings_per_share']
-        missing_syms = [s for s,p in complete.items() if any(p.get(f) is None for f in fundamentals_fields)]
-        def fetch_fund(sym: str) -> Tuple[str, Dict[str, Any]]:
+        # Fast-info enrichment (yfinance-only; no crumb)
+        def fetch_fast_info(sym: str) -> Tuple[str, Dict[str, Any]]:
             out: Dict[str, Any] = {}
             try:
                 sess = None
                 if self.use_proxies and self.proxy_mgr.proxies:
                     sess = self.proxy_mgr.get_session(rotate=True)
                 t = yf.Ticker(sym, session=sess)
-                info = None
                 try:
-                    info = t.info
+                    fi = t.fast_info
                 except Exception:
-                    info = None
-                if isinstance(info, dict):
-                    mc = info.get('marketCap')
-                    if isinstance(mc, (int, float)):
+                    fi = None
+                if fi:
+                    def getf(k: str) -> Optional[float]:
+                        try:
+                            v = fi.get(k)
+                            return float(v) if v is not None else None
+                        except Exception:
+                            return None
+                    mc = getf('marketCap')
+                    if mc is not None:
                         out['market_cap'] = int(mc)
-                    sh = info.get('sharesOutstanding')
-                    if isinstance(sh, (int, float)):
+                    sh = getf('shares')
+                    if sh is not None:
                         out['shares_available'] = int(sh)
-                    pe = info.get('trailingPE') or info.get('forwardPE')
-                    if isinstance(pe, (int, float)) and math.isfinite(float(pe)):
-                        out['pe_ratio'] = safe_decimal(float(pe))
-                    tgt = info.get('targetMeanPrice')
-                    if isinstance(tgt, (int, float)) and math.isfinite(float(tgt)):
-                        out['one_year_target'] = safe_decimal(float(tgt))
-                    eps = info.get('trailingEps') or info.get('epsTrailingTwelveMonths')
-                    if isinstance(eps, (int, float)) and math.isfinite(float(eps)):
-                        out['earnings_per_share'] = safe_decimal(float(eps))
+                    avg3 = getf('threeMonthAverageVolume')
+                    if avg3 is not None and math.isfinite(avg3):
+                        out['avg_volume_3mon'] = int(avg3)
+                    yl = getf('yearLow')
+                    yh = getf('yearHigh')
+                    if yl is not None:
+                        out['week_52_low'] = safe_decimal(yl)
+                    if yh is not None:
+                        out['week_52_high'] = safe_decimal(yh)
+                    # Some builds expose PE/EPS
+                    pe = getf('trailingPE')
+                    if pe is not None and math.isfinite(pe):
+                        out['pe_ratio'] = safe_decimal(pe)
+                    eps = getf('trailingEps')
+                    if eps is not None and math.isfinite(eps):
+                        out['earnings_per_share'] = safe_decimal(eps)
             except Exception:
                 pass
             return sym, out
 
-        if missing_syms:
+        if complete:
             with ThreadPoolExecutor(max_workers=self.threads) as ex:
-                for sym, upd in ex.map(fetch_fund, missing_syms):
+                for sym, upd in ex.map(fetch_fast_info, list(complete.keys())):
                     if upd:
-                        complete[sym].update({k:v for k,v in upd.items() if v is not None})
+                        complete[sym].update({k: v for k, v in upd.items() if v is not None})
+            # Compute dvav where possible
+            for sym, p in complete.items():
+                try:
+                    v = p.get('volume')
+                    av = p.get('avg_volume_3mon')
+                    if v is not None and av is not None and float(av) != 0:
+                        p['dvav'] = safe_decimal(float(v)/float(av))
+                except Exception:
+                    pass
+
+        # Dividend yield via 1y actions (yfinance-only), limited pass to control runtime
+        need_div = [s for s, p in complete.items() if p.get('dividend_yield') is None]
+        max_div_batches = max(1, min(5, len(need_div)//500))  # cap to ~2500 symbols to stay < 180s
+        for i in range(0, min(len(need_div), max_div_batches*500), 500):
+            chunk = need_div[i:i+500]
+            df_div = self._download_chunk(chunk, session=None, timeout=self.timeout, period='1y', interval='1d', actions=True)
+            if not isinstance(df_div, pd.DataFrame) or df_div.empty:
+                continue
+            multi = isinstance(df_div.columns, pd.MultiIndex)
+            for s in chunk:
+                try:
+                    sub = df_div[s] if multi and s in df_div.columns.get_level_values(0) else df_div
+                    if sub is None or sub.empty or 'Dividends' not in sub.columns:
+                        continue
+                    div_sum = pd.to_numeric(sub['Dividends'], errors='coerce').fillna(0.0).sum()
+                    cp = complete[s].get('current_price')
+                    if cp is not None and float(cp) != 0:
+                        dy = (float(div_sum)/float(cp)) * 100.0
+                        complete[s]['dividend_yield'] = safe_decimal(dy)
+                except Exception:
+                    continue
 
         # CSV export
         if csv_out:
