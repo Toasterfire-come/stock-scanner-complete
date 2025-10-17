@@ -14,9 +14,12 @@ mysqlclient>=2.2.0
 dj-database-url>=2.1.0
 
 # ===== STOCK DATA & API =====
-yfinance>=0.2.25
+# Prefer recent yfinance for fast_info and session support
+yfinance>=0.2.66
 requests>=2.31.0
 urllib3>=2.0.0
+# curl_cffi provides faster, more reliable HTTP sessions (preferred by yfinance)
+curl_cffi>=0.6.0
 
 # ===== TASK QUEUE & SCHEDULING =====
 celery>=5.3.0
