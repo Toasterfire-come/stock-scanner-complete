@@ -563,56 +563,87 @@ class StockScanner:
         # Keep only complete rows (price & volume present)
         complete = {s: p for s, p in results.items() if p.get('current_price') is not None and p.get('volume') is not None}
 
-        # Fast-info enrichment (yfinance-only; no crumb)
-        def fetch_fast_info(sym: str) -> Tuple[str, Dict[str, Any]]:
-            out: Dict[str, Any] = {}
-            try:
-                sess = None
-                if self.use_proxies and self.proxy_mgr.proxies:
-                    sess = self.proxy_mgr.get_session(rotate=True)
-                t = yf.Ticker(sym, session=sess)
-                try:
-                    fi = t.fast_info
-                except Exception:
-                    fi = None
-                if fi:
-                    def getf(k: str) -> Optional[float]:
+        # Fast-info enrichment (yfinance-only; no crumb) with selective retries and session reuse
+        def enrich_chunk_fastinfo(chunk_syms: List[str]) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+            updates: Dict[str, Dict[str, Any]] = {}
+            drop_non_equity: List[str] = []
+            # Reuse one session per chunk
+            sess = None
+            if self.use_proxies and self.proxy_mgr.proxies:
+                sess = self.proxy_mgr.get_session(rotate=False)
+            for sym in chunk_syms:
+                attempts = 0
+                while attempts < 2:
+                    try:
+                        t = yf.Ticker(sym, session=sess)
+                        fi = t.fast_info
+                        if not fi:
+                            raise RuntimeError('no fast_info')
+                        # Filter non-equities when quoteType present
+                        qtype = None
                         try:
-                            v = fi.get(k)
-                            return float(v) if v is not None else None
+                            qtype = fi.get('quoteType')
                         except Exception:
-                            return None
-                    mc = getf('marketCap')
-                    if mc is not None:
-                        out['market_cap'] = int(mc)
-                    sh = getf('shares')
-                    if sh is not None:
-                        out['shares_available'] = int(sh)
-                    avg3 = getf('threeMonthAverageVolume')
-                    if avg3 is not None and math.isfinite(avg3):
-                        out['avg_volume_3mon'] = int(avg3)
-                    yl = getf('yearLow')
-                    yh = getf('yearHigh')
-                    if yl is not None:
-                        out['week_52_low'] = safe_decimal(yl)
-                    if yh is not None:
-                        out['week_52_high'] = safe_decimal(yh)
-                    # Some builds expose PE/EPS
-                    pe = getf('trailingPE')
-                    if pe is not None and math.isfinite(pe):
-                        out['pe_ratio'] = safe_decimal(pe)
-                    eps = getf('trailingEps')
-                    if eps is not None and math.isfinite(eps):
-                        out['earnings_per_share'] = safe_decimal(eps)
-            except Exception:
-                pass
-            return sym, out
+                            qtype = None
+                        if qtype and str(qtype).upper() not in ('EQUITY', 'COMMONSTOCK', 'COMMON_STOCK'):
+                            drop_non_equity.append(sym)
+                            break
+                        def getf(k: str) -> Optional[float]:
+                            try:
+                                v = fi.get(k)
+                                return float(v) if v is not None else None
+                            except Exception:
+                                return None
+                        upd: Dict[str, Any] = {}
+                        mc = getf('marketCap')
+                        if mc is not None:
+                            upd['market_cap'] = int(mc)
+                        sh = getf('shares')
+                        if sh is not None:
+                            upd['shares_available'] = int(sh)
+                        avg3 = getf('threeMonthAverageVolume')
+                        if avg3 is not None and math.isfinite(avg3):
+                            upd['avg_volume_3mon'] = int(avg3)
+                        yl = getf('yearLow')
+                        yh = getf('yearHigh')
+                        if yl is not None:
+                            upd['week_52_low'] = safe_decimal(yl)
+                        if yh is not None:
+                            upd['week_52_high'] = safe_decimal(yh)
+                        pe = getf('trailingPE')
+                        if pe is not None and math.isfinite(pe):
+                            upd['pe_ratio'] = safe_decimal(pe)
+                        eps = getf('trailingEps')
+                        if eps is not None and math.isfinite(eps):
+                            upd['earnings_per_share'] = safe_decimal(eps)
+                        updates[sym] = upd
+                        break
+                    except Exception as e:
+                        attempts += 1
+                        # Rotate session on second attempt for this symbol
+                        if attempts >= 2 and self.use_proxies and self.proxy_mgr.proxies:
+                            sess = self.proxy_mgr.rotate_and_get_session()
+            return updates, drop_non_equity
 
         if complete:
-            with ThreadPoolExecutor(max_workers=self.threads) as ex:
-                for sym, upd in ex.map(fetch_fast_info, list(complete.keys())):
-                    if upd:
-                        complete[sym].update({k: v for k, v in upd.items() if v is not None})
+            enrich_syms = list(complete.keys())
+            # Process fast_info in chunks with parallelism, session reuse within each chunk
+            fi_chunk_size = 300
+            fi_chunks = [enrich_syms[i:i+fi_chunk_size] for i in range(0, len(enrich_syms), fi_chunk_size)]
+            all_updates: Dict[str, Dict[str, Any]] = {}
+            to_drop: List[str] = []
+            with ThreadPoolExecutor(max_workers=min(self.threads, len(fi_chunks) or 1)) as ex:
+                futures = [ex.submit(enrich_chunk_fastinfo, ch) for ch in fi_chunks]
+                for fut in as_completed(futures):
+                    upd, drop_list = fut.result()
+                    all_updates.update(upd)
+                    to_drop.extend(drop_list)
+            for sym, upd in all_updates.items():
+                if sym in complete and upd:
+                    complete[sym].update({k: v for k, v in upd.items() if v is not None})
+            # Drop non-equities
+            for sym in set(to_drop):
+                complete.pop(sym, None)
             # Compute dvav where possible
             for sym, p in complete.items():
                 try:
@@ -625,25 +656,31 @@ class StockScanner:
 
         # Dividend yield via 1y actions (yfinance-only), limited pass to control runtime
         need_div = [s for s, p in complete.items() if p.get('dividend_yield') is None]
-        max_div_batches = max(1, min(5, len(need_div)//500))  # cap to ~2500 symbols to stay < 180s
-        for i in range(0, min(len(need_div), max_div_batches*500), 500):
-            chunk = need_div[i:i+500]
-            df_div = self._download_chunk(chunk, session=None, timeout=self.timeout, period='1y', interval='1d', actions=True)
-            if not isinstance(df_div, pd.DataFrame) or df_div.empty:
-                continue
-            multi = isinstance(df_div.columns, pd.MultiIndex)
-            for s in chunk:
-                try:
-                    sub = df_div[s] if multi and s in df_div.columns.get_level_values(0) else df_div
-                    if sub is None or sub.empty or 'Dividends' not in sub.columns:
+        # Widened subset (up to ~4000 symbols), parallelized downloads
+        max_div_symbols = min(len(need_div), 4000)
+        div_chunk_size = 400
+        div_chunks = [need_div[i:i+div_chunk_size] for i in range(0, max_div_symbols, div_chunk_size)]
+        def fetch_div_chunk(chunk_syms: List[str]) -> Tuple[List[str], Optional[pd.DataFrame]]:
+            df_div = self._download_chunk(chunk_syms, session=None, timeout=self.timeout, period='1y', interval='1d', actions=True)
+            return chunk_syms, df_div
+        if div_chunks:
+            with ThreadPoolExecutor(max_workers=min(6, len(div_chunks))) as ex:
+                for ch_syms, df_div in ex.map(fetch_div_chunk, div_chunks):
+                    if not isinstance(df_div, pd.DataFrame) or df_div.empty:
                         continue
-                    div_sum = pd.to_numeric(sub['Dividends'], errors='coerce').fillna(0.0).sum()
-                    cp = complete[s].get('current_price')
-                    if cp is not None and float(cp) != 0:
-                        dy = (float(div_sum)/float(cp)) * 100.0
-                        complete[s]['dividend_yield'] = safe_decimal(dy)
-                except Exception:
-                    continue
+                    multi = isinstance(df_div.columns, pd.MultiIndex)
+                    for s in ch_syms:
+                        try:
+                            sub = df_div[s] if multi and s in df_div.columns.get_level_values(0) else df_div
+                            if sub is None or sub.empty or 'Dividends' not in sub.columns:
+                                continue
+                            div_sum = pd.to_numeric(sub['Dividends'], errors='coerce').fillna(0.0).sum()
+                            cp = complete[s].get('current_price')
+                            if cp is not None and float(cp) != 0:
+                                dy = (float(div_sum)/float(cp)) * 100.0
+                                complete[s]['dividend_yield'] = safe_decimal(dy)
+                        except Exception:
+                            continue
 
         # CSV export
         if csv_out:
