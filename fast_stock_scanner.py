@@ -483,6 +483,7 @@ class StockScanner:
                         change_percent = ((price - float(prev_close)) / float(prev_close)) * 100.0
                     except Exception:
                         change_percent = None
+                # Only include fields we can guarantee quickly; omit null-heavy metrics entirely
                 rows[s] = {
                     'ticker': s,
                     'symbol': s,
@@ -495,28 +496,7 @@ class StockScanner:
                     'days_range': days_range,
                     'volume': vol,
                     'volume_today': vol,
-                    'avg_volume_3mon': None,
-                    'dvav': None,
-                    'market_cap': None,  # batch path does not fetch mc to stay fast
-                    'shares_available': None,
-                    'pe_ratio': None,
-                    'dividend_yield': None,
-                    'one_year_target': None,
-                    'week_52_low': None,
-                    'week_52_high': None,
-                    'earnings_per_share': None,
-                    'book_value': None,
-                    'price_to_book': None,
-                    'bid_price': None,
-                    'ask_price': None,
-                    'bid_ask_spread': None,
-                    'price_change_today': None,
-                    'price_change_week': None,
-                    'price_change_month': None,
-                    'price_change_year': None,
                     'change_percent': safe_decimal(change_percent),
-                    'market_cap_change_3mon': None,
-                    'pe_change_3mon': None,
                     'last_updated': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
                     'created_at': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
                 }
@@ -528,6 +508,20 @@ class StockScanner:
         start = time.time()
         # Normalize symbols
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
+        # Auto-filter non-standard tickers (basic heuristics)
+        def is_standard(sym: str) -> bool:
+            if not sym or any(c in sym for c in ['^', '=', ' ', '/', '\\', '*', '&']):
+                return False
+            if sym.startswith('$'):
+                return False
+            # Exclude common warrant/unit/right suffixes
+            bad_suffixes = ('W', 'WS', 'WTS', 'U', 'UN', 'R', 'RT')
+            for suf in bad_suffixes:
+                if sym.endswith(suf):
+                    return False
+            return True
+        symbols = [s for s in symbols if is_standard(s)]
+
         # Split into chunks
         chunks: List[List[str]] = [symbols[i:i+chunk_size] for i in range(0, len(symbols), chunk_size)]
         results: Dict[str, Dict[str, Any]] = {}
@@ -570,6 +564,8 @@ class StockScanner:
         if csv_out:
             try:
                 df = pd.DataFrame([{k: v for k, v in p.items() if not str(k).startswith('_')} for p in complete.values()])
+                # Drop columns that are entirely null to avoid null-heavy fields
+                df.dropna(axis=1, how='all', inplace=True)
                 for col in df.columns:
                     if df[col].map(lambda x: isinstance(x, Decimal)).any():
                         df[col] = df[col].map(lambda v: float(v) if isinstance(v, Decimal) else (float('nan') if v is None else v))
