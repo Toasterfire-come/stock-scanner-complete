@@ -331,6 +331,166 @@ class StockScanner:
         self.results: List[Dict[str, Any]] = []
         self._earnings_cache: Dict[str, Optional[datetime]] = {}
         self.db_enabled = db_enabled and DJANGO_AVAILABLE
+        # Target completeness threshold (price, volume, market_cap present)
+        self.completeness_threshold = 0.92
+        # Reusable no-proxy session preferred by yfinance (curl_cffi when available)
+        self._no_proxy_session = None
+        try:
+            if cf_requests is not None:
+                s = cf_requests.Session()
+                s.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+                self._no_proxy_session = s
+            else:
+                s = requests.Session()
+                s.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+                self._no_proxy_session = s
+        except Exception:
+            self._no_proxy_session = None
+
+    @staticmethod
+    def _is_complete(payload: Dict[str, Any]) -> bool:
+        return (
+            payload.get('current_price') is not None and
+            payload.get('volume') is not None and
+            payload.get('market_cap') is not None
+        )
+
+    def _batch_download_ohlcv(self, symbols: List[str], session: Optional[object]) -> Dict[str, Dict[str, Any]]:
+        """Fetch last daily OHLCV for many tickers at once using yfinance.download.
+        Returns mapping: sym -> { 'close': float|None, 'high': float|None, 'low': float|None, 'volume': float|None }
+        """
+        result: Dict[str, Dict[str, Any]] = {s: {'close': None, 'high': None, 'low': None, 'volume': None} for s in symbols}
+        try:
+            # yfinance supports list of tickers; group_by='ticker' yields columns per ticker
+            df = yf.download(
+                tickers=symbols,
+                period='1d',
+                interval='1d',
+                group_by='ticker',
+                auto_adjust=False,
+                progress=False,
+                # Avoid proxies; pass persistent no-proxy session to minimize crumb
+                session=self._no_proxy_session,
+                threads=True
+            )
+            if df is None or df.empty:
+                return result
+            # Handle single vs multi-ticker frames
+            if isinstance(df.columns, pd.MultiIndex):
+                last_idx = df.index[-1]
+                for s in symbols:
+                    try:
+                        sub = df[s]
+                        if sub is None or sub.empty:
+                            continue
+                        row = sub.loc[last_idx]
+                        result[s] = {
+                            'close': float(row.get('Close')) if pd.notna(row.get('Close')) else None,
+                            'high': float(row.get('High')) if pd.notna(row.get('High')) else None,
+                            'low': float(row.get('Low')) if pd.notna(row.get('Low')) else None,
+                            'volume': float(row.get('Volume')) if pd.notna(row.get('Volume')) else None,
+                        }
+                    except Exception:
+                        continue
+            else:
+                # Single ticker
+                try:
+                    row = df.iloc[-1]
+                    result[symbols[0]] = {
+                        'close': float(row.get('Close')) if pd.notna(row.get('Close')) else None,
+                        'high': float(row.get('High')) if pd.notna(row.get('High')) else None,
+                        'low': float(row.get('Low')) if pd.notna(row.get('Low')) else None,
+                        'volume': float(row.get('Volume')) if pd.notna(row.get('Volume')) else None,
+                    }
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error(f"Batch download failed for {len(symbols)} tickers: {e}")
+        return result
+
+    def _fill_market_cap_via_info(self, symbols: List[str], payloads: Dict[str, Dict[str, Any]], target_complete: int) -> None:
+        """Call get_info for a subset of symbols to obtain sharesOutstanding and marketCap.
+        Stops when completeness target is met or all attempted.
+        """
+        completed = sum(1 for p in payloads.values() if self._is_complete(p))
+        if completed >= target_complete:
+            return
+
+        def work(sym: str) -> None:
+            nonlocal completed
+            try:
+                # Use direct session (no proxies) for info to avoid crumb issues
+                t = yf.Ticker(sym, session=None)
+                info = None
+                try:
+                    # yfinance >=0.2.66 recommends .info, but .get_info() returns dict too
+                    info = t.info
+                except Exception as e:
+                    if is_rate_limit_error(e):
+                        return
+                if not isinstance(info, dict):
+                    return
+                p = payloads.get(sym)
+                if not p:
+                    return
+                if p.get('market_cap') is None:
+                    mc = info.get('marketCap')
+                    if isinstance(mc, (int, float)):
+                        p['market_cap'] = int(mc)
+                if p.get('shares_available') is None:
+                    shares = info.get('sharesOutstanding')
+                    if isinstance(shares, (int, float)):
+                        p['shares_available'] = int(shares)
+                # Derive if still missing
+                if p.get('market_cap') is None and p.get('current_price') is not None and p.get('shares_available') is not None:
+                    try:
+                        p['market_cap'] = int(float(p['current_price']) * float(p['shares_available']))
+                    except Exception:
+                        pass
+                if self._is_complete(p):
+                    completed += 1
+            except Exception:
+                return
+
+        # Attempt in small batches with threads
+        to_try = [s for s in symbols if not self._is_complete(payloads.get(s, {}))]
+        if not to_try:
+            return
+        batch_size = 64
+        for i in range(0, len(to_try), batch_size):
+            if completed >= target_complete:
+                break
+            chunk = to_try[i:i+batch_size]
+            with ThreadPoolExecutor(max_workers=min(10, len(chunk))) as ex:
+                list(ex.map(work, chunk))
+
+        # As last resort to reach completeness target, try shares_full for remaining
+        if completed < target_complete:
+            remaining = [s for s in symbols if not self._is_complete(payloads.get(s, {}))]
+            def work_shares(sym: str) -> None:
+                nonlocal completed
+                p = payloads.get(sym)
+                if not p or p.get('market_cap') is not None or p.get('current_price') is None:
+                    return
+                try:
+                    t = yf.Ticker(sym, session=None)
+                    df_sh = t.get_shares_full()
+                    if df_sh is None or df_sh.empty:
+                        return
+                    last = df_sh['Shares'].dropna().iloc[-1]
+                    if isinstance(last, (int, float)):
+                        p['shares_available'] = int(last)
+                        p['market_cap'] = int(float(p['current_price']) * float(p['shares_available']))
+                        if self._is_complete(p):
+                            completed += 1
+                except Exception:
+                    return
+            for i in range(0, len(remaining), 32):
+                if completed >= target_complete:
+                    break
+                chunk = remaining[i:i+32]
+                with ThreadPoolExecutor(max_workers=min(8, len(chunk))) as ex:
+                    list(ex.map(work_shares, chunk))
 
     def _get_earnings_date(self, ticker: yf.Ticker, symbol: str) -> Optional[datetime]:
         if symbol in self._earnings_cache:
@@ -408,8 +568,8 @@ class StockScanner:
                             return None
                 return None
 
-            # Current price
-            current_price = fget(['lastPrice', 'regularMarketPrice'])
+            # Current price with broader fallbacks
+            current_price = fget(['lastPrice', 'regularMarketPrice', 'open', 'previousClose', 'regularMarketPreviousClose', 'fiftyDayAverage', 'twoHundredDayAverage'])
             # Day-over-day change using fast_info when available
             price_change_today = None
             change_percent = None
@@ -426,9 +586,9 @@ class StockScanner:
             # Day low/high/volume
             days_low = fget(['dayLow'])
             days_high = fget(['dayHigh'])
-            volume_today = fget(['lastVolume', 'regularMarketVolume'])
+            volume_today = fget(['lastVolume', 'regularMarketVolume', 'tenDayAverageVolume', 'threeMonthAverageVolume'])
 
-            avg_volume_3mon = fget(['threeMonthAverageVolume'])
+            avg_volume_3mon = fget(['threeMonthAverageVolume']) or fget(['tenDayAverageVolume'])
 
             # Market cap
             market_cap = fget(['marketCap'])
@@ -442,6 +602,11 @@ class StockScanner:
 
             # Shares available from float/sharesOutstanding best-effort
             shares_available = fget(['shares'])
+            if (market_cap is None) and (current_price is not None) and (shares_available is not None):
+                try:
+                    market_cap = float(current_price) * float(shares_available)
+                except Exception:
+                    pass
 
             # Bid/Ask
             bid_price = ask_price = None
@@ -714,6 +879,80 @@ class StockScanner:
                         retry_success += 1
                     else:
                         failed_symbols.append(s)
+
+        # Fallback pass A: fill missing price/volume/day high/low from batch daily download
+        sym_list = list(successes.keys())
+        need_pv = [s for s, p in successes.items() if (p.get('current_price') is None or p.get('volume') is None or p.get('volume') == 0)]
+        if need_pv:
+            logger.info(f"Batch-filling OHLCV for {len(need_pv)} tickers via download()...")
+            batch_size = 200
+            for i in range(0, len(need_pv), batch_size):
+                chunk = need_pv[i:i+batch_size]
+                data = self._batch_download_ohlcv(chunk, session=None)
+                for s in chunk:
+                    p = successes.get(s)
+                    if not p:
+                        continue
+                    d = data.get(s) or {}
+                    cp = d.get('close')
+                    vol = d.get('volume')
+                    lo = d.get('low')
+                    hi = d.get('high')
+                    if p.get('current_price') is None and isinstance(cp, (int, float)) and math.isfinite(cp):
+                        p['current_price'] = safe_decimal(cp)
+                    if (p.get('volume') is None or p.get('volume') == 0) and isinstance(vol, (int, float)) and math.isfinite(vol):
+                        try:
+                            p['volume'] = int(vol)
+                            p['volume_today'] = int(vol)
+                        except Exception:
+                            pass
+                    if p.get('days_low') is None and isinstance(lo, (int, float)):
+                        p['days_low'] = safe_decimal(lo)
+                    if p.get('days_high') is None and isinstance(hi, (int, float)):
+                        p['days_high'] = safe_decimal(hi)
+                    if (p.get('days_low') is not None and p.get('days_high') is not None) and (p.get('days_range') in (None, '')):
+                        try:
+                            p['days_range'] = f"{float(p['days_low']):.2f} - {float(p['days_high']):.2f}"
+                        except Exception:
+                            pass
+
+        # Fallback pass B: derive market cap from shares if possible
+        for s, p in successes.items():
+            if p.get('market_cap') is None and p.get('current_price') is not None and p.get('shares_available') is not None:
+                try:
+                    p['market_cap'] = int(float(p['current_price']) * float(p['shares_available']))
+                except Exception:
+                    pass
+
+        # Fallback pass C: if volume missing/zero, use 3-month avg volume as proxy
+        for s, p in successes.items():
+            vol = p.get('volume')
+            if vol in (None, 0) and p.get('avg_volume_3mon') is not None:
+                try:
+                    p['volume'] = int(p['avg_volume_3mon'])
+                    p['volume_today'] = int(p['avg_volume_3mon'])
+                    # mark proxy in analytics
+                    p.setdefault('_analytics', {}).setdefault('flags', {})['volume_is_average'] = True
+                except Exception:
+                    pass
+
+        # Ensure completeness threshold via targeted info calls
+        target_complete = math.ceil(self.completeness_threshold * len(symbols))
+        complete_now = sum(1 for p in successes.values() if self._is_complete(p))
+        if complete_now < target_complete:
+            remaining = [s for s, p in successes.items() if not self._is_complete(p)]
+            logger.info(f"Completeness {complete_now}/{len(symbols)} below target {target_complete}; fetching info for {len(remaining)}...")
+            self._fill_market_cap_via_info(remaining, successes, target_complete)
+
+        # Recompute dvav with updated volume/avg
+        for s, p in successes.items():
+            try:
+                v = p.get('volume')
+                av = p.get('avg_volume_3mon')
+                if v is not None and av is not None and float(av) != 0:
+                    p['dvav'] = safe_decimal(float(v) / float(av))
+            except Exception:
+                pass
 
         # Second pass: percentiles (dvav, momentum_1m, dollar_volume)
         # Collect values
