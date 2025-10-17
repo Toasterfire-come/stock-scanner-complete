@@ -24,7 +24,7 @@ import glob
 import logging
 import random
 from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -59,6 +59,14 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
     handlers=[logging.StreamHandler()]
 )
+# Quiet verbose logs from yfinance internals
+for _name in (
+    'yfinance', 'yfinance.scrapers', 'yfinance.data', 'yfinance.tz', 'yf'
+):
+    try:
+        logging.getLogger(_name).setLevel(logging.WARNING)
+    except Exception:
+        pass
 
 # ----------------------------- Utility helpers ----------------------------- #
 
@@ -79,7 +87,8 @@ def is_rate_limit_error(exc: Exception) -> bool:
     text = str(exc).lower()
     substrings = [
         '429', 'too many requests', 'rate limit', 'rate-limited', 'blocked',
-        'yahoo finance is down', 'yahoo finance may be down'
+        'yahoo finance is down', 'yahoo finance may be down',
+        'invalid crumb', 'unauthorized', 'unable to access this feature'
     ]
     return any(s in text for s in substrings)
 
@@ -371,24 +380,41 @@ class StockScanner:
                 fast = ticker.fast_info
             except Exception as e:
                 if is_rate_limit_error(e):
-                    return symbol, None, True
+                    # rotate proxy if possible and retry once
+                    if self.use_proxies:
+                        self.proxy_mgr.rotate_and_get_session()
+                    try:
+                        fast = yf.Ticker(symbol, session=session).fast_info
+                    except Exception:
+                        return symbol, None, True
 
             # Skip heavy endpoints (history/info/calendar/earnings) to meet <200ms budget
             hist = None
             info = None
 
+            # Helper to read camelCase keys robustly
+            def fget(keys: List[str]) -> Optional[float]:
+                if fast is None:
+                    return None
+                for k in keys:
+                    try:
+                        val = fast.get(k)
+                    except Exception:
+                        val = None
+                    if val is not None:
+                        try:
+                            return float(val)
+                        except Exception:
+                            return None
+                return None
+
             # Current price
-            current_price = None
-            if fast is not None:
-                for key in ('last_price', 'regular_market_price'):
-                    if key in fast and fast[key] is not None:
-                        current_price = fast.get(key)
-                        break
+            current_price = fget(['lastPrice', 'regularMarketPrice'])
             # Day-over-day change using fast_info when available
             price_change_today = None
             change_percent = None
-            if fast is not None and current_price is not None:
-                prev_close = fast.get('previous_close') or fast.get('regular_market_previous_close')
+            if current_price is not None:
+                prev_close = fget(['previousClose', 'regularMarketPreviousClose'])
                 try:
                     if prev_close is not None and float(prev_close) != 0:
                         price_change_today = float(current_price) - float(prev_close)
@@ -398,36 +424,24 @@ class StockScanner:
                     change_percent = None
 
             # Day low/high/volume
-            days_low = days_high = None
-            volume_today = None
-            if fast is not None:
-                days_low = fast.get('day_low')
-                days_high = fast.get('day_high')
-                volume_today = fast.get('last_volume') or fast.get('regular_market_volume')
+            days_low = fget(['dayLow'])
+            days_high = fget(['dayHigh'])
+            volume_today = fget(['lastVolume', 'regularMarketVolume'])
 
-            avg_volume_3mon = None
-            if fast is not None:
-                avg_volume_3mon = fast.get('three_month_average_volume')
-            if avg_volume_3mon is None and info:
-                avg_volume_3mon = info.get('averageVolume')
+            avg_volume_3mon = fget(['threeMonthAverageVolume'])
 
             # Market cap
-            market_cap = None
-            if fast is not None:
-                market_cap = fast.get('market_cap')
+            market_cap = fget(['marketCap'])
             # Derive from price × shares outstanding when missing (info skipped for speed)
             shares_outstanding = None
 
             # 52-week
-            wk_low = wk_high = None
-            if fast is not None:
-                wk_low = fast.get('year_low')
-                wk_high = fast.get('year_high')
+            wk_low = fget(['yearLow'])
+            wk_high = fget(['yearHigh'])
             # No fallback to info (skipped for speed)
 
             # Shares available from float/sharesOutstanding best-effort
-            shares_available = None
-            # info skipped for speed
+            shares_available = fget(['shares'])
 
             # Bid/Ask
             bid_price = ask_price = None
@@ -526,8 +540,8 @@ class StockScanner:
                 'change_percent': safe_decimal(change_percent),
                 'market_cap_change_3mon': None,
                 'pe_change_3mon': None,
-                'last_updated': (django_timezone.now() if django_timezone else datetime.utcnow()),
-                'created_at': (django_timezone.now() if django_timezone else datetime.utcnow()),
+                'last_updated': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
+                'created_at': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
             }
 
             # Persist only when DB is enabled and Django is available
@@ -758,10 +772,21 @@ class StockScanner:
                     row['flag_rsi_oversold'] = flags.get('rsi_oversold')
                     rows.append(row)
                 df = pd.DataFrame(rows)
-                # Convert Decimals to floats for CSV
+                # Convert Decimal values to floats per-cell without stringifying None
                 for col in df.columns:
                     if df[col].map(lambda x: isinstance(x, Decimal)).any():
-                        df[col] = df[col].astype(str).astype(float)
+                        def _to_float_or_nan(v):
+                            if isinstance(v, Decimal):
+                                try:
+                                    return float(v)
+                                except Exception:
+                                    return float('nan')
+                            if v is None or (isinstance(v, str) and v.strip() == ''):
+                                return float('nan')
+                            return v
+                        df[col] = df[col].map(_to_float_or_nan)
+                        # Coerce residual non-numerics to NaN
+                        df[col] = pd.to_numeric(df[col], errors='coerce')
                 df.to_csv(csv_out, index=False)
                 logger.info(f"Saved CSV: {csv_out} with {len(df)} rows")
             except Exception as e:
