@@ -141,6 +141,64 @@ class ProxyManager:
         return self.get_session(rotate=True)
 
 
+class YahooQuoteClient:
+    """Lightweight client for Yahoo quote API with automatic crumb/cookie handling.
+    Uses a persistent no-proxy session to avoid 401/crumb issues; batch-friendly.
+    """
+    BASE_URL = "https://query1.finance.yahoo.com/v7/finance/quote"
+
+    def __init__(self) -> None:
+        # Prefer curl_cffi session for yfinance compatibility
+        if cf_requests is not None:
+            sess = cf_requests.Session()
+        else:
+            sess = requests.Session()
+        sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+        self.session = sess
+        self.crumb: Optional[str] = None
+        self._init_crumb()
+
+    def _init_crumb(self) -> None:
+        try:
+            # Warm cookies then retrieve crumb
+            self.session.get('https://finance.yahoo.com', timeout=6)
+            r = self.session.get('https://query1.finance.yahoo.com/v1/test/getcrumb', timeout=6)
+            if getattr(r, 'status_code', 0) == 200:
+                txt = (r.text or '').strip()
+                if txt:
+                    self.crumb = txt
+        except Exception:
+            self.crumb = None
+
+    def fetch_quotes(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+        if not symbols:
+            return {}
+        params = {'symbols': ','.join(symbols)}
+        if self.crumb:
+            params['crumb'] = self.crumb
+        try:
+            r = self.session.get(self.BASE_URL, params=params, timeout=8)
+            # Refresh crumb on auth failures and retry once
+            body = r.text or ''
+            if r.status_code in (401, 403) or ('Invalid Crumb' in body):
+                self._init_crumb()
+                if self.crumb:
+                    params['crumb'] = self.crumb
+                r = self.session.get(self.BASE_URL, params=params, timeout=8)
+            r.raise_for_status()
+            data = r.json()
+            result = data.get('quoteResponse', {}).get('result', [])
+            out: Dict[str, Dict[str, Any]] = {}
+            for item in result or []:
+                sym = item.get('symbol')
+                if not sym:
+                    continue
+                out[sym.upper()] = item
+            return out
+        except Exception as e:
+            logger.error(f"Quote fetch failed for {len(symbols)} tickers: {e}")
+            return {}
+
 def load_proxies(proxy_file: str) -> List[str]:
     try:
         with open(proxy_file, 'r') as f:
@@ -346,6 +404,8 @@ class StockScanner:
                 self._no_proxy_session = s
         except Exception:
             self._no_proxy_session = None
+        # Yahoo direct quote client for batch validation and fast fields
+        self._yahoo_client = YahooQuoteClient()
 
     @staticmethod
     def _is_complete(payload: Dict[str, Any]) -> bool:
@@ -831,6 +891,24 @@ class StockScanner:
         failures = 0
         proxy_rotations = 0
 
+        # Optional pre-filter: drop obviously invalid/delisted via direct quotes
+        prefilter_syms: List[str] = []
+        batch = 500
+        prefilter_failed = False
+        for i in range(0, len(symbols), batch):
+            chunk = symbols[i:i+batch]
+            qm = self._yahoo_client.fetch_quotes(chunk)
+            # If Yahoo rejects crumbs broadly, skip prefiltering entirely
+            if i == 0 and len(qm) == 0:
+                prefilter_failed = True
+                break
+            for s in chunk:
+                q = qm.get(s.upper())
+                if q and (q.get('regularMarketPrice') is not None or q.get('regularMarketVolume') is not None or q.get('marketCap') is not None):
+                    prefilter_syms.append(s)
+        if not prefilter_failed and prefilter_syms:
+            symbols = prefilter_syms
+
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
             futures = {executor.submit(self._fetch_symbol, s, i): s for i, s in enumerate(symbols)}
             for fut in as_completed(futures):
@@ -880,39 +958,69 @@ class StockScanner:
                     else:
                         failed_symbols.append(s)
 
-        # Fallback pass A: fill missing price/volume/day high/low from batch daily download
-        sym_list = list(successes.keys())
-        need_pv = [s for s, p in successes.items() if (p.get('current_price') is None or p.get('volume') is None or p.get('volume') == 0)]
-        if need_pv:
-            logger.info(f"Batch-filling OHLCV for {len(need_pv)} tickers via download()...")
-            batch_size = 200
-            for i in range(0, len(need_pv), batch_size):
-                chunk = need_pv[i:i+batch_size]
-                data = self._batch_download_ohlcv(chunk, session=None)
+        # Optional aggressive fill to improve completeness (disabled by default for speed)
+        aggressive_fill = str(os.environ.get('SCANNER_AGGRESSIVE_FILL', '')).lower() in ('1', 'true', 'yes')
+        if aggressive_fill:
+            # Fallback pass A: fill missing price/volume/day high/low from batch daily download
+            sym_list = list(successes.keys())
+            need_pv = [s for s, p in successes.items() if (p.get('current_price') is None or p.get('volume') is None or p.get('volume') == 0)]
+            if need_pv:
+                logger.info(f"Batch-filling OHLCV for {len(need_pv)} tickers via download()...")
+                batch_size = 200
+                for i in range(0, len(need_pv), batch_size):
+                    chunk = need_pv[i:i+batch_size]
+                    data = self._batch_download_ohlcv(chunk, session=None)
+                    for s in chunk:
+                        p = successes.get(s)
+                        if not p:
+                            continue
+                        d = data.get(s) or {}
+                        cp = d.get('close')
+                        vol = d.get('volume')
+                        lo = d.get('low')
+                        hi = d.get('high')
+                        if p.get('current_price') is None and isinstance(cp, (int, float)) and math.isfinite(cp):
+                            p['current_price'] = safe_decimal(cp)
+                        if (p.get('volume') is None or p.get('volume') == 0) and isinstance(vol, (int, float)) and math.isfinite(vol):
+                            try:
+                                p['volume'] = int(vol)
+                                p['volume_today'] = int(vol)
+                            except Exception:
+                                pass
+                        if p.get('days_low') is None and isinstance(lo, (int, float)):
+                            p['days_low'] = safe_decimal(lo)
+                        if p.get('days_high') is None and isinstance(hi, (int, float)):
+                            p['days_high'] = safe_decimal(hi)
+                        if (p.get('days_low') is not None and p.get('days_high') is not None) and (p.get('days_range') in (None, '')):
+                            try:
+                                p['days_range'] = f"{float(p['days_low']):.2f} - {float(p['days_high']):.2f}"
+                            except Exception:
+                                pass
+
+            # Use direct quotes to fill remaining fast fields without proxies
+            remaining_for_quote = [s for s, p in successes.items() if (p.get('current_price') is None or p.get('volume') is None or p.get('market_cap') is None)]
+            for i in range(0, len(remaining_for_quote), 500):
+                chunk = remaining_for_quote[i:i+500]
+                qm = self._yahoo_client.fetch_quotes(chunk)
                 for s in chunk:
+                    q = qm.get(s.upper())
+                    if not q:
+                        continue
                     p = successes.get(s)
                     if not p:
                         continue
-                    d = data.get(s) or {}
-                    cp = d.get('close')
-                    vol = d.get('volume')
-                    lo = d.get('low')
-                    hi = d.get('high')
-                    if p.get('current_price') is None and isinstance(cp, (int, float)) and math.isfinite(cp):
-                        p['current_price'] = safe_decimal(cp)
-                    if (p.get('volume') is None or p.get('volume') == 0) and isinstance(vol, (int, float)) and math.isfinite(vol):
+                    if p.get('current_price') is None and q.get('regularMarketPrice') is not None:
+                        p['current_price'] = safe_decimal(q.get('regularMarketPrice'))
+                    if (p.get('volume') is None or p.get('volume') == 0) and q.get('regularMarketVolume') is not None:
                         try:
-                            p['volume'] = int(vol)
-                            p['volume_today'] = int(vol)
+                            v = int(q.get('regularMarketVolume'))
+                            p['volume'] = v
+                            p['volume_today'] = v
                         except Exception:
                             pass
-                    if p.get('days_low') is None and isinstance(lo, (int, float)):
-                        p['days_low'] = safe_decimal(lo)
-                    if p.get('days_high') is None and isinstance(hi, (int, float)):
-                        p['days_high'] = safe_decimal(hi)
-                    if (p.get('days_low') is not None and p.get('days_high') is not None) and (p.get('days_range') in (None, '')):
+                    if p.get('market_cap') is None and q.get('marketCap') is not None:
                         try:
-                            p['days_range'] = f"{float(p['days_low']):.2f} - {float(p['days_high']):.2f}"
+                            p['market_cap'] = int(q.get('marketCap'))
                         except Exception:
                             pass
 
@@ -953,6 +1061,18 @@ class StockScanner:
                     p['dvav'] = safe_decimal(float(v) / float(av))
             except Exception:
                 pass
+
+        # Filter out fields that are missing (null) from final rows — don't emit empty strings
+        for s, p in successes.items():
+            # Clean empty strings
+            for key, val in list(p.items()):
+                if isinstance(val, str) and val.strip() == '':
+                    p[key] = None
+
+        # Keep only fully complete rows to maximize completeness of included dataset
+        filtered_successes = {s: p for s, p in successes.items() if self._is_complete(p)}
+        removed_incomplete = len(successes) - len(filtered_successes)
+        successes = filtered_successes
 
         # Second pass: percentiles (dvav, momentum_1m, dollar_volume)
         # Collect values
