@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-High-speed stock scanner using yfinance with proxy rotation and retries.
+High-speed stock scanner using yfinance only, with proxy rotation and retries.
 - Loads combined ticker universe (NASDAQ complete + NASDAQ-only) and de-duplicates
 - Uses up to 10 threads (default) with per-request proxy sessions
 - Detects rate limiting (HTTP 429/blocked), rotates proxy immediately, tracks, and retries at end
-- Computes key fundamentals and derived metrics efficiently
+- Focuses on yfinance fast_info for sub-200ms per-ticker latency (avoids heavy endpoints)
 - Writes results into existing Django Stock model (update_or_create)
 
 Notes:
 - Only fields that exist in the current Stock model are persisted to DB
-- Additional analytics (percentiles, indicators) are computed in-memory but not persisted
+- Heavy endpoints (full info, earnings, long history, 1m intraday) are skipped to keep latency low
+- Additional analytics are best-effort and may be None by design for speed
 """
 
 from __future__ import annotations
@@ -357,16 +358,14 @@ class StockScanner:
             django_close_old_connections()
         session = None
         if self.use_proxies and self.proxy_mgr.proxies:
-            # Round-robin curl_cffi session; if unavailable, fall back to yfinance default (None)
-            s = self.proxy_mgr.get_session(rotate=False)
-            # yfinance requires curl_cffi session objects; ensure correct type
-            if s is not None and (cf_requests is None or not isinstance(s, cf_requests.Session)):
-                s = None
+            # Round-robin session (curl_cffi preferred, fall back to requests)
+            s = self.proxy_mgr.get_session(rotate=True)
+            # Pass session through to yfinance (supports both curl_cffi and requests sessions)
             session = s
         try:
             ticker = yf.Ticker(symbol, session=session)
 
-            # Fast info first
+            # Fast path: rely on fast_info only (single lightweight call)
             fast = None
             try:
                 fast = ticker.fast_info
@@ -374,23 +373,9 @@ class StockScanner:
                 if is_rate_limit_error(e):
                     return symbol, None, True
 
-            # Minimal delay jitter
-            time.sleep(random.uniform(0.002, 0.01))
-
-            # Daily history for 2 months (enough for RSI14, MACD, week/month changes)
+            # Skip heavy endpoints (history/info/calendar/earnings) to meet <200ms budget
             hist = None
-            try:
-                hist = ticker.history(period="2mo", interval="1d", prepost=False, repair=True)
-            except Exception as e:
-                if is_rate_limit_error(e):
-                    return symbol, None, True
-
             info = None
-            # Pull info only if needed fallbacks
-            try:
-                info = ticker.info
-            except Exception:
-                info = None
 
             # Current price
             current_price = None
@@ -399,11 +384,18 @@ class StockScanner:
                     if key in fast and fast[key] is not None:
                         current_price = fast.get(key)
                         break
-            if current_price is None and hist is not None and not hist.empty:
+            # Day-over-day change using fast_info when available
+            price_change_today = None
+            change_percent = None
+            if fast is not None and current_price is not None:
+                prev_close = fast.get('previous_close') or fast.get('regular_market_previous_close')
                 try:
-                    current_price = float(hist['Close'].iloc[-1])
+                    if prev_close is not None and float(prev_close) != 0:
+                        price_change_today = float(current_price) - float(prev_close)
+                        change_percent = (price_change_today / float(prev_close)) * 100.0
                 except Exception:
-                    current_price = None
+                    price_change_today = None
+                    change_percent = None
 
             # Day low/high/volume
             days_low = days_high = None
@@ -423,95 +415,47 @@ class StockScanner:
             market_cap = None
             if fast is not None:
                 market_cap = fast.get('market_cap')
-            if market_cap is None and info:
-                market_cap = info.get('marketCap')
-            # Derive from price × shares outstanding when missing
-            shares_outstanding = info.get('sharesOutstanding') if info else None
-            if (market_cap is None) and (current_price is not None) and (shares_outstanding is not None):
-                try:
-                    market_cap = float(current_price) * float(shares_outstanding)
-                except Exception:
-                    pass
+            # Derive from price × shares outstanding when missing (info skipped for speed)
+            shares_outstanding = None
 
             # 52-week
             wk_low = wk_high = None
             if fast is not None:
                 wk_low = fast.get('year_low')
                 wk_high = fast.get('year_high')
-            if (wk_low is None or wk_high is None) and info:
-                wk_low = wk_low or info.get('fiftyTwoWeekLow')
-                wk_high = wk_high or info.get('fiftyTwoWeekHigh')
+            # No fallback to info (skipped for speed)
 
             # Shares available from float/sharesOutstanding best-effort
             shares_available = None
-            if info:
-                shares_available = info.get('floatShares') or info.get('sharesOutstanding')
+            # info skipped for speed
 
             # Bid/Ask
             bid_price = ask_price = None
-            if info:
-                bid_price = info.get('bid') or info.get('bidPrice')
-                ask_price = info.get('ask') or info.get('askPrice')
+            # info skipped for speed
 
             # Earnings per share / book / price-to-book / pe
             eps = None
-            if info:
-                eps = info.get('trailingEps') or info.get('forwardEps')
-            book_value = info.get('bookValue') if info else None
+            # info skipped for speed
+            book_value = None
 
             pe_ratio = None
-            if info:
-                pe_ratio = (
-                    info.get('trailingPE') or info.get('forwardPE') or
-                    (float(current_price) / eps if current_price and eps and eps != 0 else None)
-                )
+            # info skipped for speed; derive only if eps available (not available here)
 
             price_to_book = None
             if current_price and book_value:
                 try:
                     price_to_book = float(current_price) / float(book_value) if float(book_value) != 0 else None
                 except Exception:
-                    price_to_book = info.get('priceToBook') if info else None
-            elif info:
-                price_to_book = info.get('priceToBook')
+                    price_to_book = None
 
             dividend_yield = None
-            if info:
-                dy = info.get('dividendYield') or info.get('fiveYearAvgDividendYield')
-                if dy is not None:
-                    try:
-                        dividend_yield = float(dy) * 100 if isinstance(dy, float) and dy < 1 else float(dy)
-                    except Exception:
-                        dividend_yield = None
 
-            one_year_target = info.get('targetMeanPrice') if info else None
+            one_year_target = None
 
-            # Changes: day/week/month/year
-            price_change_today = change_percent = None
+            # Changes: day/week/month/year (only day via fast_info; others skipped for speed)
             price_change_week = price_change_month = price_change_year = None
-            if hist is not None and not hist.empty:
-                try:
-                    close = hist['Close']
-                    curr = float(close.iloc[-1])
-                    prev = float(close.iloc[-2]) if len(close) >= 2 else None
-                    if prev is not None and prev != 0:
-                        price_change_today = curr - prev
-                        change_percent = (price_change_today / prev) * 100.0
-                    # ~5 trading days ago
-                    if len(close) >= 6:
-                        w_prev = float(close.iloc[-6])
-                        price_change_week = curr - w_prev
-                    # ~21 trading days ago (1 month)
-                    if len(close) >= 22:
-                        m_prev = float(close.iloc[-22])
-                        price_change_month = curr - m_prev
-                    # Year change requires 252 trading days; not available with 2mo
-                    price_change_year = None
-                except Exception:
-                    pass
 
-            volume = volume_today or (int(hist['Volume'].iloc[-1]) if hist is not None and not hist.empty else None)
-            avg_volume_3mon = avg_volume_3mon or (int(hist['Volume'].tail(63).mean()) if hist is not None and len(hist) >= 30 else None)
+            volume = volume_today
             # Fallback to today's volume if average missing
             if avg_volume_3mon is None and volume is not None:
                 try:
@@ -526,20 +470,11 @@ class StockScanner:
                 except Exception:
                     dvav = None
 
-            # Indicators (compute quickly from 2mo daily)
-            rsi14 = compute_rsi(hist['Close']) if hist is not None and not hist.empty else None
-            atr14 = compute_atr(hist) if hist is not None and not hist.empty else None
-            sma_5 = compute_sma(hist['Close'], 5) if hist is not None and not hist.empty else None
-            sma_20 = compute_sma(hist['Close'], 20) if hist is not None and not hist.empty else None
-            ema_5 = compute_ema(hist['Close'], 5) if hist is not None and not hist.empty else None
-            ema_20 = compute_ema(hist['Close'], 20) if hist is not None and not hist.empty else None
-            macd_val, macd_signal = (None, None)
-            if hist is not None and not hist.empty:
-                macd_val, macd_signal = compute_macd(hist['Close'])
-            stoch14 = compute_stochastic(hist) if hist is not None and not hist.empty else None
-
-            # VWAP from 1m intraday (best-effort, may be None)
-            vwap = compute_vwap_1m(ticker)
+            # Indicators skipped for speed
+            rsi14 = atr14 = sma_5 = sma_20 = ema_5 = ema_20 = None
+            macd_val = macd_signal = None
+            stoch14 = None
+            vwap = None
 
             # Derived strings
             days_range = None
@@ -560,9 +495,9 @@ class StockScanner:
             payload: Dict[str, Any] = {
                 'ticker': symbol,
                 'symbol': symbol,
-                'company_name': (info.get('longName') if info else None) or (info.get('shortName') if info else None) or symbol,
-                'name': (info.get('longName') if info else None) or (info.get('shortName') if info else None) or symbol,
-                'exchange': (info.get('exchange') if info else 'NASDAQ'),
+                'company_name': symbol,
+                'name': symbol,
+                'exchange': 'NASDAQ',
                 'current_price': safe_decimal(current_price),
                 'days_low': safe_decimal(days_low),
                 'days_high': safe_decimal(days_high),
@@ -641,14 +576,7 @@ class StockScanner:
                 'dollar_volume': (float(current_price) * float(volume)) if current_price and volume else None,
                 'momentum_1m': None,
             }
-            try:
-                if hist is not None and not hist.empty and len(hist['Close']) >= 22:
-                    curr = float(hist['Close'].iloc[-1])
-                    m_prev = float(hist['Close'].iloc[-22])
-                    if m_prev != 0:
-                        analytics['momentum_1m'] = (curr / m_prev - 1.0) * 100.0
-            except Exception:
-                pass
+            # momentum_1m skipped (requires month history)
 
             # Add non-persisted technicals for reference (not saved to DB)
             payload['_analytics'] = {
@@ -679,18 +607,7 @@ class StockScanner:
                 'momentum_1m': analytics['momentum_1m'],
             }
 
-            # Gap detection and market session flags
-            try:
-                if hist is not None and not hist.empty and len(hist) >= 2:
-                    open_today = float(hist['Open'].iloc[-1])
-                    prev_close = float(hist['Close'].iloc[-2])
-                    if prev_close != 0:
-                        gap = open_today - prev_close
-                        gap_pct = (gap / prev_close) * 100.0
-                        payload['_analytics']['gap_open_vs_prev_close'] = gap
-                        payload['_analytics']['gap_open_percent'] = gap_pct
-            except Exception:
-                pass
+            # Gap detection skipped (requires daily history)
 
             try:
                 market_state = fast.get('market_state') if fast else None
@@ -699,22 +616,7 @@ class StockScanner:
             except Exception:
                 pass
 
-            # Earnings proximity bucket
-            try:
-                next_earn = self._get_earnings_date(ticker, symbol)
-                if next_earn:
-                    days = (next_earn.date() - datetime.utcnow().date()).days
-                    if days < -1:
-                        bucket = 'past'
-                    elif days <= 7:
-                        bucket = 'within_7d'
-                    elif days <= 30:
-                        bucket = 'within_30d'
-                    else:
-                        bucket = 'beyond_30d'
-                    payload['_analytics']['earnings_bucket'] = bucket
-            except Exception:
-                pass
+            # Earnings proximity skipped (requires calendar/earnings endpoints)
 
             # Short interest days-to-cover proxy
             try:
