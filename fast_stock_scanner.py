@@ -417,8 +417,9 @@ class StockScanner:
                 group_by='ticker',
                 auto_adjust=False,
                 progress=False,
-                threads=True,
+                threads=False,
                 session=session,
+                repair=True,
             )
             return df
         except Exception as e:
@@ -437,7 +438,10 @@ class StockScanner:
         for s in symbols:
             try:
                 if multi:
-                    sub = df.get(s)
+                    # Access subframe for ticker reliably
+                    if s not in df.columns.get_level_values(0):
+                        continue
+                    sub = df[s]
                     if sub is None or sub.empty:
                         continue
                     row = sub.loc[last_idx]
