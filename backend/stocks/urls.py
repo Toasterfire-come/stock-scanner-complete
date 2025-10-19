@@ -121,6 +121,7 @@ urlpatterns = [
     
     # News endpoints
     path('news/', include('stocks.news_urls')),
+    path('sms/', include('stocks.sms_urls')),
     
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
