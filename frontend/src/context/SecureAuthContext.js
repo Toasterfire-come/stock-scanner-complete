@@ -37,8 +37,9 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         // Check for stored user data and token
-        const storedUser = secureStorage.get(security.SECURITY_CONFIG.USER_STORAGE_KEY);
-        const storedToken = secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
+        // Prefer decrypted reads when available
+        const storedUser = await secureStorage.getDecrypted(security.SECURITY_CONFIG.USER_STORAGE_KEY) || secureStorage.get(security.SECURITY_CONFIG.USER_STORAGE_KEY);
+        const storedToken = await secureStorage.getDecrypted(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY) || secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
         
         if (storedUser && storedToken && sessionManager.isSessionValid()) {
           setUser(storedUser);
@@ -113,9 +114,9 @@ export const AuthProvider = ({ children }) => {
         };
 
         // Store user data and token securely
-        secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, userData, true);
+        await secureStorage.setEncrypted(security.SECURITY_CONFIG.USER_STORAGE_KEY, userData);
         if (response.data.api_token) {
-          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+          await secureStorage.setEncrypted(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
         }
         
         // Start session
@@ -184,9 +185,9 @@ export const AuthProvider = ({ children }) => {
         };
 
         // Store user data and token securely
-        secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, newUserData, true);
+        await secureStorage.setEncrypted(security.SECURITY_CONFIG.USER_STORAGE_KEY, newUserData);
         if (response.data.api_token) {
-          secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
+          await secureStorage.setEncrypted(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, response.data.api_token);
         }
         
         // Start session
@@ -245,7 +246,7 @@ export const AuthProvider = ({ children }) => {
     
     const updatedUser = { ...user, ...updatedUserData };
     setUser(updatedUser);
-    secureStorage.set(security.SECURITY_CONFIG.USER_STORAGE_KEY, updatedUser, true);
+    secureStorage.setEncrypted(security.SECURITY_CONFIG.USER_STORAGE_KEY, updatedUser);
     sessionManager.updateActivity();
   };
 

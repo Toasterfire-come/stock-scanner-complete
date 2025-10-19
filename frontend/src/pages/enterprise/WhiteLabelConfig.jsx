@@ -129,7 +129,7 @@ const WhiteLabelConfig = () => {
                 White-label configuration and branding customization are available exclusively for Gold plan subscribers. 
                 Create a fully branded trading platform with your company's identity.
               </p>
-              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium">
+              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium" rel="noopener noreferrer">
                 <Crown className="h-4 w-4 mr-2" />
                 Upgrade to Gold Plan
               </a>

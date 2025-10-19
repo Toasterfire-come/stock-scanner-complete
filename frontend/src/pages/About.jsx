@@ -195,7 +195,7 @@ const About = () => {
                       <p className="text-gray-700">
                         We built Trade Scan Pro to focus on NYSE stocks with comprehensive screening capabilities, 
                         real-time alerts, and portfolio tracking. Our goal was to create a platform that combines 
-                        reliability with affordability, starting with code TRIAL for a 7‑day 1$ trial.
+                        reliability with affordability, starting with code TRIAL for a 7‑day $1 trial.
                       </p>
                     </div>
                   </div>
@@ -251,7 +251,7 @@ const About = () => {
           <div className="flex flex-wrap items-center justify-center gap-8 text-lg">
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day 1$ trial
+              Use code TRIAL for a 7‑day $1 trial
             </div>
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />

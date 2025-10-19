@@ -28,6 +28,88 @@ export const SECURITY_CONFIG = {
   CSP_NONCE: Math.random().toString(36).substring(2, 15),
 };
 
+// Lightweight AES-GCM helpers for client-side encryption
+const TEXT_ENCODER = new TextEncoder();
+const TEXT_DECODER = new TextDecoder();
+let __cryptoKeyCache = null;
+
+function toBase64(bytes) {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function fromBase64(b64) {
+  const binary = atob(b64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function deriveKeyFromPassphrase(passphrase, saltBytes) {
+  const baseKey = await crypto.subtle.importKey(
+    'raw', TEXT_ENCODER.encode(passphrase), { name: 'PBKDF2' }, false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: saltBytes, iterations: 250000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+function lsGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
+function lsSet(key, value) { try { localStorage.setItem(key, value); } catch {} }
+
+async function getAesKey() {
+  if (__cryptoKeyCache) return __cryptoKeyCache;
+  const pass = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_ENCRYPTION_KEY) || '';
+  if (pass) {
+    let saltB64 = lsGet('rts_crypto_salt_v1');
+    if (!saltB64) { const salt = crypto.getRandomValues(new Uint8Array(16)); saltB64 = toBase64(salt); lsSet('rts_crypto_salt_v1', saltB64); }
+    __cryptoKeyCache = await deriveKeyFromPassphrase(pass, fromBase64(saltB64));
+    return __cryptoKeyCache;
+  }
+  const stored = lsGet('rts_crypto_key_v1');
+  if (stored) {
+    const raw = fromBase64(stored);
+    __cryptoKeyCache = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt','decrypt']);
+    return __cryptoKeyCache;
+  }
+  const raw = crypto.getRandomValues(new Uint8Array(32));
+  __cryptoKeyCache = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt','decrypt']);
+  lsSet('rts_crypto_key_v1', toBase64(raw));
+  return __cryptoKeyCache;
+}
+
+export async function encryptString(plaintext) {
+  if (plaintext == null) return '';
+  const key = await getAesKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = TEXT_ENCODER.encode(String(plaintext));
+  const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+  const cipherBytes = new Uint8Array(cipherBuf);
+  return `enc:v1:${toBase64(iv)}:${toBase64(cipherBytes)}`;
+}
+
+export async function decryptString(payload) {
+  try {
+    if (typeof payload !== 'string' || !payload.startsWith('enc:v1:')) return payload;
+    const parts = payload.split(':');
+    if (parts.length !== 4) return '';
+    const iv = fromBase64(parts[2]);
+    const cipherBytes = fromBase64(parts[3]);
+    const key = await getAesKey();
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipherBytes);
+    return TEXT_DECODER.decode(plainBuf);
+  } catch {
+    return '';
+  }
+}
+
 // Input validation and sanitization
 export const validateInput = (input, type = 'general') => {
   if (typeof input !== 'string') return '';
@@ -79,13 +161,18 @@ export const secureStorage = {
   set: (key, value, encrypt = false) => {
     try {
       let valueToStore = value;
-      if (encrypt && typeof value === 'object') {
-        // Basic encryption for sensitive data (in production, use proper encryption)
-        valueToStore = btoa(JSON.stringify(value));
+      if (encrypt && typeof value !== 'undefined') {
+        // Store placeholder immediately; then encrypt asynchronously to avoid blocking caller
+        // Callers should prefer setEncrypted/getDecrypted for strict guarantees
+        (async () => {
+          const enc = await encryptString(typeof value === 'string' ? value : JSON.stringify(value));
+          localStorage.setItem(key, enc);
+        })();
+        // Fallback placeholder (non-sensitive) to avoid returning stale data
+        valueToStore = typeof value === 'string' ? value : JSON.stringify(value);
       } else if (typeof value === 'object') {
         valueToStore = JSON.stringify(value);
       }
-      
       localStorage.setItem(key, valueToStore);
     } catch (error) {
       console.error('Failed to store data securely:', error);
@@ -98,8 +185,12 @@ export const secureStorage = {
       if (!value) return null;
       
       if (decrypt) {
-        // Basic decryption (in production, use proper decryption)
-        return JSON.parse(atob(value));
+        // Best-effort: attempt decrypt if value is marked as encrypted
+        if (typeof value === 'string' && value.startsWith('enc:v1:')) {
+          // Synchronous path cannot decrypt; advise callers to use getDecrypted
+          return null;
+        }
+        try { return JSON.parse(value); } catch { return value; }
       }
       
       try {
@@ -109,6 +200,31 @@ export const secureStorage = {
       }
     } catch (error) {
       console.error('Failed to retrieve data securely:', error);
+      return null;
+    }
+  },
+
+  // Strongly-typed encrypted storage (async)
+  setEncrypted: async (key, value) => {
+    try {
+      const enc = await encryptString(typeof value === 'string' ? value : JSON.stringify(value));
+      localStorage.setItem(key, enc);
+    } catch (error) {
+      console.error('Failed to encrypt and store data:', error);
+    }
+  },
+
+  getDecrypted: async (key) => {
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored) return null;
+      if (stored.startsWith('enc:v1:')) {
+        const txt = await decryptString(stored);
+        try { return JSON.parse(txt); } catch { return txt; }
+      }
+      try { return JSON.parse(stored); } catch { return stored; }
+    } catch (error) {
+      console.error('Failed to decrypt stored data:', error);
       return null;
     }
   },

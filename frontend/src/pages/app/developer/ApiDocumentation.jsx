@@ -211,7 +211,7 @@ const ApiDocumentation = () => {
               <p className="mb-4">
                 Complete API documentation and developer resources are available exclusively for Gold plan subscribers.
               </p>
-              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium">
+              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium" rel="noopener noreferrer">
                 Upgrade to Gold Plan
               </a>
             </AlertDescription>
@@ -441,7 +441,7 @@ const ApiDocumentation = () => {
                   <div className="bg-gray-50 p-3 rounded font-mono text-xs">
                     Authorization: Bearer YOUR_API_KEY
                   </div>
-                  <p>Get your API key from the <a href="/app/developer/api-keys" className="text-blue-600 hover:underline">API Key Management</a> page.</p>
+                  <p>Get your API key from the <Link to="/app/developer/api-keys" className="text-blue-600 hover:underline">API Key Management</Link> page.</p>
                 </div>
               </div>
               

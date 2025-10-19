@@ -139,7 +139,7 @@ const ApiKeyManagement = () => {
                 API key management is available exclusively for Gold plan subscribers. Upgrade your plan to access programmatic API features.
               </p>
               <Button asChild className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700">
-                <a href="/account/plan">Upgrade to Gold Plan</a>
+                <a href="/account/plan" rel="noopener noreferrer">Upgrade to Gold Plan</a>
               </Button>
             </AlertDescription>
           </Alert>

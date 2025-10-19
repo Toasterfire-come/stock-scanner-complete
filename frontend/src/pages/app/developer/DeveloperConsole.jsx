@@ -196,7 +196,7 @@ const DeveloperConsole = () => {
               <p className="mb-4">
                 The Developer Console is available exclusively for Gold plan subscribers. Test API endpoints, debug responses, and export results.
               </p>
-              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium">
+              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium" rel="noopener noreferrer">
                 Upgrade to Gold Plan
               </a>
             </AlertDescription>
@@ -451,7 +451,7 @@ const DeveloperConsole = () => {
                 <h4 className="font-semibold text-gray-900 mb-3">Authentication</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Replace YOUR_API_KEY with your actual key</li>
-                  <li>• Get API keys from <a href="/app/developer/api-keys" className="text-blue-600 hover:underline">API Key Management</a></li>
+                  <li>• Get API keys from <Link to="/app/developer/api-keys" className="text-blue-600 hover:underline">API Key Management</Link></li>
                   <li>• All requests require proper authentication</li>
                   <li>• Check headers if you get 401 errors</li>
                 </ul>

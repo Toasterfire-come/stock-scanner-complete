@@ -131,7 +131,7 @@ const DeveloperDashboard = () => {
               <p className="mb-4">
                 Developer tools and API access are available exclusively for Gold plan subscribers. Unlock unlimited API calls, advanced analytics, and developer resources.
               </p>
-              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium">
+              <a href="/account/plan" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white rounded-md font-medium" rel="noopener noreferrer">
                 Upgrade to Gold Plan
               </a>
             </AlertDescription>

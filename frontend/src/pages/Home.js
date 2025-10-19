@@ -217,7 +217,7 @@ const Home = () => {
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
               <div className="flex items-center">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                Use code TRIAL for a 7‑day 1$ trial
+                Use code TRIAL for a 7‑day $1 trial
               </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-blue-500 mr-3" />
@@ -361,7 +361,7 @@ const Home = () => {
             </p>
             <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day 1$ trial
+              Use code TRIAL for a 7‑day $1 trial
             </div>
           </div>
           <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">

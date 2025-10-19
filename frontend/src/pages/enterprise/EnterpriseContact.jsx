@@ -173,7 +173,7 @@ const EnterpriseContact = () => {
 
           <div className="mt-8">
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <a href="/">Return to Homepage</a>
+              <Link to="/">Return to Homepage</Link>
             </Button>
           </div>
         </div>

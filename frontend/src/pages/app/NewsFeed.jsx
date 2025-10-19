@@ -189,11 +189,11 @@ const NewsFeed = () => {
                   <div className="flex items-center justify-between mt-6">
                     <div className="text-sm text-gray-600">Page {page} of {totalPages}</div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" disabled={page===1} onClick={() => setPage(p=>Math.max(1,p-1))}>Previous</Button>
+                      <Button aria-label="Previous page" variant="outline" size="sm" disabled={page===1} onClick={() => setPage(p=>Math.max(1,p-1))}>Previous</Button>
                       {getPageWindow().map(p => (
-                        <Button key={p} variant={p===page? 'default':'outline'} size="sm" onClick={() => setPage(p)}>{p}</Button>
+                        <Button aria-label={`Go to page ${p}`} key={p} variant={p===page? 'default':'outline'} size="sm" onClick={() => setPage(p)}>{p}</Button>
                       ))}
-                      <Button variant="outline" size="sm" disabled={page===totalPages} onClick={() => setPage(p=>Math.min(totalPages,p+1))}>Next</Button>
+                      <Button aria-label="Next page" variant="outline" size="sm" disabled={page===totalPages} onClick={() => setPage(p=>Math.min(totalPages,p+1))}>Next</Button>
                     </div>
                   </div>
                 )}

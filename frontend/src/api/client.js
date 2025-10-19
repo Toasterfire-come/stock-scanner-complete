@@ -196,7 +196,24 @@ api.interceptors.request.use((config) => {
       config.headers['X-CSRFToken'] = csrf;
     }
 
-    const token = (window.localStorage.getItem("rts_token") || '').trim();
+    // Prefer encrypted token from secureStorage if available
+    try {
+      const sec = await import('../lib/security');
+      const tokenDec = await sec.secureStorage.getDecrypted(sec.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
+      if (tokenDec && typeof tokenDec === 'string') {
+        config.headers.Authorization = `Bearer ${tokenDec}`;
+      } else {
+        const token = (window.localStorage.getItem("rts_token") || '').trim();
+        if (token && token !== 'undefined' && token !== 'null') {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch {
+      const token = (window.localStorage.getItem("rts_token") || '').trim();
+      if (token && token !== 'undefined' && token !== 'null') {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
     if (token && token !== 'undefined' && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
     }

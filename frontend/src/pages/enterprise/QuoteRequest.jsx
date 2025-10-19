@@ -186,7 +186,7 @@ const QuoteRequest = () => {
 
           <div className="mt-8">
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <a href="/enterprise">Back to Enterprise Solutions</a>
+              <Link to="/enterprise">Back to Enterprise Solutions</Link>
             </Button>
           </div>
         </div>
