@@ -904,6 +904,24 @@ export async function updateNewsPreferences(preferences) { const { data } = awai
 export async function syncPortfolioNews() { const { data } = await api.post('/news/sync-portfolio/'); return data; }
 
 // (Removed unsupported /revenue/* helper functions)
+// ====================
+// SMS (Local provider only; no external API)
+// ====================
+export async function requestSmsCode(phoneNumber) {
+  const { data } = await api.post('/sms/request-code/', { phone_number: phoneNumber });
+  return data;
+}
+
+export async function verifySmsCode(code) {
+  const { data } = await api.post('/sms/verify/', { code });
+  return data;
+}
+
+export async function sendTestSms(message = 'Test message') {
+  const { data } = await api.post('/sms/send-test/', { message });
+  return data;
+}
+
 
 // ====================
 // SUBSCRIPTIONS

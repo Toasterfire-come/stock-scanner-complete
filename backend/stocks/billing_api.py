@@ -1048,6 +1048,13 @@ def notification_settings_api(request):
                         'login_alerts': getattr(settings, 'login_alerts', True),
                         'billing_updates': getattr(settings, 'billing_updates', True),
                         'plan_updates': getattr(settings, 'plan_updates', True)
+                    },
+                    'sms': {
+                        'enabled': getattr(settings, 'sms_enabled', False),
+                        'verified': getattr(settings, 'sms_verified', False),
+                        'price_alerts': getattr(settings, 'sms_price_alerts', False),
+                        'breaking_news': getattr(settings, 'sms_breaking_news', False),
+                        'milestone_alerts': getattr(settings, 'sms_milestone_alerts', False),
                     }
                 }
             })
@@ -1094,6 +1101,30 @@ def notification_settings_api(request):
                     settings.billing_updates = security['billing_updates']
                 if 'plan_updates' in security:
                     settings.plan_updates = security['plan_updates']
+
+            # Update SMS prefs (no external provider)
+            if 'sms' in data:
+                sms = data['sms']
+                if 'enabled' in sms:
+                    try:
+                        settings.sms_enabled = bool(sms['enabled'])
+                    except Exception:
+                        pass
+                if 'price_alerts' in sms:
+                    try:
+                        settings.sms_price_alerts = bool(sms['price_alerts'])
+                    except Exception:
+                        pass
+                if 'breaking_news' in sms:
+                    try:
+                        settings.sms_breaking_news = bool(sms['breaking_news'])
+                    except Exception:
+                        pass
+                if 'milestone_alerts' in sms:
+                    try:
+                        settings.sms_milestone_alerts = bool(sms['milestone_alerts'])
+                    except Exception:
+                        pass
             
             settings.updated_at = timezone.now()
             settings.save()

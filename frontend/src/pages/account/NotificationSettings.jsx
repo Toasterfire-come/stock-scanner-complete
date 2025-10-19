@@ -16,7 +16,7 @@ import {
   Mail,
   Volume2
 } from "lucide-react";
-import { getNotificationSettings, updateNotificationSettings } from "../../api/client";
+import { getNotificationSettings, updateNotificationSettings, requestSmsCode, verifySmsCode, sendTestSms } from "../../api/client";
 
 const NotificationSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +43,13 @@ const NotificationSettings = () => {
       plan_updates: true
     }
   });
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [smsVerified, setSmsVerified] = useState(false);
+  const [smsPhone, setSmsPhone] = useState("");
+  const [smsCode, setSmsCode] = useState("");
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsVerifying, setSmsVerifying] = useState(false);
+  const [smsPrefs, setSmsPrefs] = useState({ price_alerts: false, breaking_news: false, milestone_alerts: false });
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -50,6 +57,14 @@ const NotificationSettings = () => {
         const response = await getNotificationSettings();
         if (response.success) {
           setSettings(response.data);
+          const sms = response.data.sms || {};
+          setSmsEnabled(!!sms.enabled);
+          setSmsVerified(!!sms.verified);
+          setSmsPrefs({
+            price_alerts: !!sms.price_alerts,
+            breaking_news: !!sms.breaking_news,
+            milestone_alerts: !!sms.milestone_alerts
+          });
         } else {
           toast.error("Failed to load notification settings");
         }
@@ -77,7 +92,8 @@ const NotificationSettings = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await updateNotificationSettings(settings);
+      const payload = { ...settings, sms: { enabled: smsEnabled, ...smsPrefs } };
+      const response = await updateNotificationSettings(payload);
       if (response.success) {
         toast.success("Notification settings updated successfully");
       } else {
@@ -159,14 +175,70 @@ const NotificationSettings = () => {
                   <div className="text-sm text-gray-600">Coming soon</div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 p-4 border rounded-lg opacity-50">
-                <Volume2 className="h-5 w-5 text-gray-400" />
-                <div>
-                  <div className="font-medium">SMS</div>
-                  <div className="text-sm text-gray-600">Premium feature</div>
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Volume2 className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <div className="font-medium">SMS</div>
+                    <div className="text-sm text-gray-600">{smsVerified ? 'Verified' : 'Verify phone to enable'}</div>
+                  </div>
                 </div>
+                <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} disabled={!smsVerified} />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* SMS Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Smartphone className="h-5 w-5 mr-2" />
+              SMS Settings
+            </CardTitle>
+            <CardDescription>
+              Verify your phone and choose which alerts to receive via SMS
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!smsVerified ? (
+              <div className="grid md:grid-cols-3 gap-3 items-end">
+                <div className="md:col-span-2">
+                  <Label htmlFor="sms-phone">Phone Number</Label>
+                  <input id="sms-phone" value={smsPhone} onChange={(e)=>setSmsPhone(e.target.value)} placeholder="+1 555 123 4567" className="w-full px-3 py-2 border rounded-md" />
+                </div>
+                <div className="md:col-span-1">
+                  <Button className="w-full" disabled={smsSending || !smsPhone} onClick={async ()=>{ try{ setSmsSending(true); const r = await requestSmsCode(smsPhone); if (r.success) { toast.success('Verification code sent'); } else { toast.error('Failed to send code'); } } finally { setSmsSending(false);} }}>Send Code</Button>
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="sms-code">Enter Code</Label>
+                  <input id="sms-code" value={smsCode} onChange={(e)=>setSmsCode(e.target.value)} placeholder="6-digit code" className="w-full px-3 py-2 border rounded-md" />
+                </div>
+                <div className="md:col-span-1">
+                  <Button className="w-full" disabled={smsVerifying || !smsCode} onClick={async ()=>{ try{ setSmsVerifying(true); const r = await verifySmsCode(smsCode); if (r.success){ setSmsVerified(true); setSmsEnabled(true); toast.success('Phone verified'); } else { toast.error('Invalid code'); } } finally { setSmsVerifying(false);} }}>Verify</Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="flex items-center justify-between p-3 border rounded">
+                    <span className="text-sm">Price Alerts via SMS</span>
+                    <Switch checked={smsPrefs.price_alerts} onCheckedChange={(v)=>setSmsPrefs(p=>({...p, price_alerts:v}))} disabled={!smsEnabled} />
+                  </div>
+                  <div className="flex items-center justify-between p-3 border rounded">
+                    <span className="text-sm">Breaking News via SMS</span>
+                    <Switch checked={smsPrefs.breaking_news} onCheckedChange={(v)=>setSmsPrefs(p=>({...p, breaking_news:v}))} disabled={!smsEnabled} />
+                  </div>
+                  <div className="flex items-center justify-between p-3 border rounded">
+                    <span className="text-sm">Milestone Alerts via SMS</span>
+                    <Switch checked={smsPrefs.milestone_alerts} onCheckedChange={(v)=>setSmsPrefs(p=>({...p, milestone_alerts:v}))} disabled={!smsEnabled} />
+                  </div>
+                </div>
+                <div>
+                  <Button variant="outline" onClick={async ()=>{ try{ const r = await sendTestSms('This is a test SMS from Trade Scan Pro'); if (r.success) toast.success('Test SMS queued'); else toast.error('Failed to send test'); } catch { toast.error('Failed to send test'); } }}>Send Test SMS</Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

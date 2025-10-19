@@ -645,12 +645,65 @@ class NotificationSettings(models.Model):
     login_alerts = models.BooleanField(default=True, help_text="Login attempt notifications")
     billing_updates = models.BooleanField(default=True, help_text="Billing and payment updates")
     plan_updates = models.BooleanField(default=True, help_text="Plan change notifications")
+
+    # SMS preferences
+    sms_enabled = models.BooleanField(default=False, help_text="Enable SMS notifications")
+    sms_verified = models.BooleanField(default=False, help_text="Phone verified for SMS")
+    sms_price_alerts = models.BooleanField(default=False, help_text="SMS for price alerts")
+    sms_breaking_news = models.BooleanField(default=False, help_text="SMS for breaking news")
+    sms_milestone_alerts = models.BooleanField(default=False, help_text="SMS for portfolio milestones")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"Notification Settings - {self.user.username}"
+
+
+class SMSMessage(models.Model):
+    """Queued SMS messages (local provider marks as sent)."""
+    STATUS_CHOICES = [
+        ('queued', 'Queued'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sms_messages')
+    to_number = models.CharField(max_length=32)
+    body = models.CharField(max_length=1600)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='queued')
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+        ]
+
+    def __str__(self):
+        return f"SMS to {self.to_number} ({self.status})"
+
+
+class SMSVerification(models.Model):
+    """Verification code for SMS phone number."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='sms_verification')
+    phone_number = models.CharField(max_length=32)
+    code_plain = models.CharField(max_length=12)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['expires_at']),
+        ]
+
+    def __str__(self):
+        return f"SMSVerify {self.user.username} {self.phone_number}"
 
 
 class NotificationHistory(models.Model):
