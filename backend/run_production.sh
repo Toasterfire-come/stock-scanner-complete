@@ -179,7 +179,62 @@ start_server() {
     echo -e "\n${GREEN}Server will start at: http://127.0.0.1:8000${NC}"
     echo -e "${GREEN}Admin panel at: http://127.0.0.1:8000/admin${NC}"
     echo -e "${YELLOW}Press Ctrl+C to stop the server${NC}\n"
-    
+    # Optionally start local Matomo (requires docker) if env MATOMO_LOCAL=1
+    if [ "${MATOMO_LOCAL:-0}" = "1" ]; then
+        if command -v docker >/dev/null 2>&1; then
+            print_step "Starting local Matomo via Docker"
+            # Create a minimal docker-compose file on the fly if not present
+            if [ ! -f "matomo-docker-compose.yml" ]; then
+                cat > matomo-docker-compose.yml << 'EOF'
+version: '3.7'
+services:
+  db:
+    image: mariadb:10.6
+    environment:
+      - MARIADB_ROOT_PASSWORD=matomopass
+      - MARIADB_DATABASE=matomo
+      - MARIADB_USER=matomo
+      - MARIADB_PASSWORD=matomopass
+    volumes:
+      - matomo-db:/var/lib/mysql
+  app:
+    image: matomo:latest
+    ports:
+      - "8088:80"
+    environment:
+      - MATOMO_DATABASE_HOST=db
+      - MATOMO_DATABASE_ADAPTER=mysql
+      - MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      - MATOMO_DATABASE_USERNAME=matomo
+      - MATOMO_DATABASE_PASSWORD=matomopass
+      - MATOMO_DATABASE_DBNAME=matomo
+    depends_on:
+      - db
+    volumes:
+      - matomo-data:/var/www/html
+volumes:
+  matomo-db:
+  matomo-data:
+EOF
+            fi
+            # Bring up Matomo stack
+            if command -v docker-compose >/dev/null 2>&1; then
+                docker-compose -f matomo-docker-compose.yml up -d || print_warning "docker-compose failed; continuing without Matomo"
+            else
+                # Use docker compose plugin if available
+                if docker compose version >/dev/null 2>&1; then
+                    docker compose -f matomo-docker-compose.yml up -d || print_warning "docker compose failed; continuing without Matomo"
+                else
+                    print_warning "docker-compose not found; skipping Matomo startup"
+                fi
+            fi
+            echo -e "${GREEN}Matomo running at: http://127.0.0.1:8088${NC}"
+            echo -e "${YELLOW}Configure frontend with REACT_APP_MATOMO_URL=http://127.0.0.1:8088/ and REACT_APP_MATOMO_SITE_ID=1 after initial setup${NC}"
+        else
+            print_warning "Docker not installed; cannot start local Matomo"
+        fi
+    fi
+
     python manage.py runserver 0.0.0.0:8000
 }
 

@@ -67,6 +67,56 @@ prepare_system() {
     fi
     
     log_success "System preparation complete"
+
+    # Optionally start local Matomo analytics via Docker
+    if [ "${MATOMO_LOCAL:-0}" = "1" ]; then
+        log_message "MATOMO_LOCAL=1 detected; attempting to start Matomo stack..."
+        if command -v docker >/dev/null 2>&1; then
+            if [ ! -f "matomo-docker-compose.yml" ]; then
+                cat > matomo-docker-compose.yml << 'EOF'
+version: '3.7'
+services:
+  db:
+    image: mariadb:10.6
+    environment:
+      - MARIADB_ROOT_PASSWORD=matomopass
+      - MARIADB_DATABASE=matomo
+      - MARIADB_USER=matomo
+      - MARIADB_PASSWORD=matomopass
+    volumes:
+      - matomo-db:/var/lib/mysql
+  app:
+    image: matomo:latest
+    ports:
+      - "8088:80"
+    environment:
+      - MATOMO_DATABASE_HOST=db
+      - MATOMO_DATABASE_ADAPTER=mysql
+      - MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      - MATOMO_DATABASE_USERNAME=matomo
+      - MATOMO_DATABASE_PASSWORD=matomopass
+      - MATOMO_DATABASE_DBNAME=matomo
+    depends_on:
+      - db
+    volumes:
+      - matomo-data:/var/www/html
+volumes:
+  matomo-db:
+  matomo-data:
+EOF
+            fi
+            if command -v docker-compose >/dev/null 2>&1; then
+                docker-compose -f matomo-docker-compose.yml up -d && log_success "Matomo started at http://127.0.0.1:8088" || log_warning "Failed to start Matomo"
+            elif docker compose version >/dev/null 2>&1; then
+                docker compose -f matomo-docker-compose.yml up -d && log_success "Matomo started at http://127.0.0.1:8088" || log_warning "Failed to start Matomo"
+            else
+                log_warning "docker-compose not found; skipping Matomo startup"
+            fi
+            log_message "Configure frontend env: REACT_APP_MATOMO_URL=http://127.0.0.1:8088/ REACT_APP_MATOMO_SITE_ID=1"
+        else
+            log_warning "Docker not installed; cannot start local Matomo"
+        fi
+    fi
 }
 
 # Database preparation
