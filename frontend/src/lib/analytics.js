@@ -78,7 +78,9 @@ export function trackEvent(name, params = {}) {
 let matomoBooted = false;
 export function initMatomo() {
   try {
-    const baseUrl = (process.env.REACT_APP_MATOMO_URL || '').trim();
+    // Prefer first-party proxy URL served by Django when configured
+    const proxyBase = (process.env.REACT_APP_MATOMO_PROXY_URL || '').trim();
+    const baseUrl = (proxyBase || process.env.REACT_APP_MATOMO_URL || '').trim();
     const siteId = (process.env.REACT_APP_MATOMO_SITE_ID || '').trim();
     if (!baseUrl || !siteId || matomoBooted || typeof document === 'undefined') return false;
     window._paq = window._paq || [];

@@ -9,6 +9,7 @@ from . import revenue_views
 from .billing_api import cancel_subscription_api, paypal_plans_meta_api
 from . import enterprise_api
 from . import admin_api
+from . import matomo_proxy
 from django.http import JsonResponse
 
 urlpatterns = [
@@ -144,4 +145,7 @@ urlpatterns = [
     path('logs/security/', logs_api.security_logs_api, name='security_logs'),
     # Admin endpoints (staff only)
     path('admin/metrics/', admin_api.admin_metrics_api, name='admin_metrics'),
+    # Matomo proxy (first-party path)
+    path('matomo/matomo.js', matomo_proxy.matomo_js, name='matomo_js'),
+    path('matomo/matomo.php', matomo_proxy.matomo_php, name='matomo_php'),
 ]
