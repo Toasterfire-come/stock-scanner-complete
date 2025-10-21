@@ -74,3 +74,39 @@ export function trackEvent(name, params = {}) {
   try { window.gtag('event', name, params); } catch {}
 }
 
+// Matomo minimal integration (idempotent). Set REACT_APP_MATOMO_URL and REACT_APP_MATOMO_SITE_ID
+let matomoBooted = false;
+export function initMatomo() {
+  try {
+    const baseUrl = (process.env.REACT_APP_MATOMO_URL || '').trim();
+    const siteId = (process.env.REACT_APP_MATOMO_SITE_ID || '').trim();
+    if (!baseUrl || !siteId || matomoBooted) return false;
+    window._paq = window._paq || [];
+    window._paq.push(['trackPageView']);
+    window._paq.push(['enableLinkTracking']);
+    (function() {
+      const u = baseUrl.endsWith('/') ? baseUrl : (baseUrl + '/');
+      window._paq.push(['setTrackerUrl', u + 'matomo.php']);
+      window._paq.push(['setSiteId', siteId]);
+      const d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+      g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+    })();
+    matomoBooted = true; return true;
+  } catch { return false; }
+}
+
+export function matomoTrackEvent(category, action, name, value) {
+  try {
+    window._paq = window._paq || [];
+    window._paq.push(['trackEvent', category, action, name, value]);
+  } catch {}
+}
+
+export function matomoTrackPageView(title) {
+  try {
+    window._paq = window._paq || [];
+    if (title) window._paq.push(['setDocumentTitle', title]);
+    window._paq.push(['trackPageView']);
+  } catch {}
+}
+

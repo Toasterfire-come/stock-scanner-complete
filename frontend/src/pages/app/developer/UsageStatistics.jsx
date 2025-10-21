@@ -87,7 +87,7 @@ const UsageStatistics = () => {
     ]
   };
 
-  const currentStats = stats || mockData;
+  const currentStats = stats && stats.daily && stats.monthly ? stats : mockData;
 
   const pieColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -219,7 +219,7 @@ const UsageStatistics = () => {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={currentStats.usage_history}>
+                    <LineChart data={(currentStats.usage_history || []).map(x=>({ ...x, api_calls: Number(x.api_calls||0), requests: Number(x.requests||0) }))}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 

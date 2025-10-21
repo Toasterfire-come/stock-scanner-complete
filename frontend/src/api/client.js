@@ -1133,7 +1133,26 @@ export { getCurrentApiUsage, getPlanLimits, getStoredUserPlan, API_CALL_COSTS };
 export async function getUsageSummary() {
   try {
     const { data } = await api.get('/usage/');
-    return data; // expected shape now includes categories with counts and limits
+    const safe = (x) => (x && typeof x === 'object') ? x : {};
+    const monthly = safe(data?.data?.monthly);
+    const daily = safe(data?.data?.daily);
+    return {
+      success: !!data?.success,
+      data: {
+        daily: {
+          api_calls: Number(daily.api_calls || 0),
+          requests: Number(daily.requests || 0),
+          date: daily.date || null,
+        },
+        monthly: {
+          api_calls: Number(monthly.api_calls || 0),
+          requests: Number(monthly.requests || 0),
+          limit: Number.isFinite(Number(monthly.limit)) ? Number(monthly.limit) : 0,
+          remaining: Number.isFinite(Number(monthly.remaining)) ? Number(monthly.remaining) : 0,
+        },
+        categories: safe(data?.data?.categories),
+      }
+    };
   } catch (error) {
     return { success: false, error: error?.response?.data?.message || 'Failed to load usage summary' };
   }
