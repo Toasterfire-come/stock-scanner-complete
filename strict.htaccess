@@ -11,6 +11,10 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# Serve a static pricing page for crawlers and non-JS clients
+# This improves curl/SEO responses at /pricing
+RewriteRule ^pricing/?$ /pricing.html [L]
+
 # Do not rewrite index.html further
 RewriteRule ^index\.html$ - [L]
 
