@@ -110,6 +110,7 @@ import DocArticle from "./pages/docs/DocArticle";
 import EnterpriseContact from "./pages/enterprise/EnterpriseContact";
 import Help from "./pages/Help";
 import ReferralApply from "./pages/ReferralApply";
+import AdminConsole from "./pages/admin/AdminConsole";
 
 // Enterprise Solutions
 import QuoteRequest from "./pages/enterprise/QuoteRequest";
@@ -476,6 +477,13 @@ function App() {
                   <Route path="/account/settings" element={
                     <ProtectedRoute>
                       <Settings />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Admin - Protected (staff) */}
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <AdminConsole />
                     </ProtectedRoute>
                   } />
 

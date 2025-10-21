@@ -88,7 +88,7 @@ const DeveloperDashboard = () => {
       title: 'Usage Statistics',
       description: 'Monitor API usage and performance metrics',
       link: '/app/developer/usage-statistics',
-      badge: usageStats ? `${formatNumber(usageStats.daily.api_calls)} today` : '0 today',
+      badge: usageStats ? `${formatNumber(usageStats?.daily?.api_calls ?? 0)} today` : '0 today',
       color: 'green'
     },
     {

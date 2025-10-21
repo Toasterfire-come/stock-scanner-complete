@@ -8,6 +8,7 @@ from . import logs_api
 from . import revenue_views
 from .billing_api import cancel_subscription_api, paypal_plans_meta_api
 from . import enterprise_api
+from . import admin_api
 from django.http import JsonResponse
 
 urlpatterns = [
@@ -141,4 +142,6 @@ urlpatterns = [
     path('logs/client/', logs_api.client_logs_api, name='client_logs'),
     path('logs/metrics/', logs_api.metrics_logs_api, name='metrics_logs'),
     path('logs/security/', logs_api.security_logs_api, name='security_logs'),
+    # Admin endpoints (staff only)
+    path('admin/metrics/', admin_api.admin_metrics_api, name='admin_metrics'),
 ]

