@@ -1,58 +1,102 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pricing | Trade Scan Pro</title>
-  <meta name="robots" content="index,follow"/>
-  <meta name="description" content="Plans for stock filter and market scan workflows: real-time alerts, watchlists, portfolios, insider metrics, and in-depth stock info."/>
-  <link rel="canonical" href="https://tradescanpro.com/pricing"/>
-  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:1.5;color:#111827;margin:0;background:#f8fafc} .wrap{max-width:960px;margin:40px auto;padding:0 16px} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px} .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px} .title{font-size:28px;font-weight:700;margin:0 0 12px} .plan{font-weight:600;margin-bottom:8px} .price{font-size:24px;font-weight:700} .muted{color:#6b7280;font-size:14px} .badge{display:inline-block;background:#fde68a;color:#78350f;border-radius:999px;padding:4px 10px;font-weight:700;font-size:14px;margin:8px 0}</style>
+  <meta name="description" content="Transparent pricing for Trade Scan Pro. Bronze $24.99, Silver $49.99, Gold $79.99. 7‑day $1 trial on paid plans. Cancel anytime." />
+  <link rel="canonical" href="https://tradescanpro.com/pricing" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Pricing | Trade Scan Pro" />
+  <meta property="og:description" content="Bronze $24.99, Silver $49.99, Gold $79.99. 7‑day $1 trial on paid plans. Cancel anytime." />
+  <meta property="og:url" content="https://tradescanpro.com/pricing" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/icon-512x512.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pricing | Trade Scan Pro" />
+  <meta name="twitter:description" content="Bronze $24.99, Silver $49.99, Gold $79.99. 7‑day $1 trial on paid plans." />
+  <meta name="twitter:image" content="/icon-512x512.png" />
+  <style>
+    :root { --bg: #0b1220; --card: #0f172a; --muted: #94a3b8; --text: #e2e8f0; --primary: #2563eb; --ring: #60a5fa; }
+    html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
+    .container { max-width: 1100px; padding: 24px; margin: 0 auto; }
+    .header { text-align:center; margin: 28px 0 8px; }
+    .subtitle { color: var(--muted); margin-top: 6px; }
+    .plans { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
+    .card { background: var(--card); border: 1px solid rgba(148,163,184,.18); border-radius: 12px; padding: 18px; }
+    .price { font-size: 36px; font-weight: 800; letter-spacing: .2px; margin: 6px 0; }
+    .pill { display:inline-block; padding: 6px 10px; border-radius: 9999px; background: #facc15; color:#1f2937; font-weight: 700; font-size: 12px; }
+    ul { padding-left: 18px; margin: 12px 0; }
+    li { margin: 6px 0; color: var(--muted); }
+    .cta { display:inline-block; background: var(--primary); color:#fff; padding: 10px 14px; border-radius: 10px; font-weight:700; text-decoration:none; border:1px solid transparent; }
+    .cta:hover { filter: brightness(1.05); border-color: var(--ring); }
+    .trial { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .footer { color: var(--muted); font-size: 13px; text-align:center; margin: 28px 0 8px; }
+    .links a { color:#93c5fd; text-decoration:none; margin: 0 8px; }
+    .links a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1 class="title">Trade Scan Pro Pricing</h1>
-    <div class="badge">7‑day $1 trial on paid plans</div>
-    <p class="muted">Choose the plan that fits your trading style. You can upgrade or cancel anytime.</p>
-    <div class="grid" aria-label="pricing plans">
-      <div class="card" aria-labelledby="plan-free">
-        <div id="plan-free" class="plan">Free</div>
-        <div class="price">$0<span class="muted">/forever</span></div>
+  <main class="container">
+    <header class="header">
+      <h1>Choose Your Plan</h1>
+      <p class="subtitle">Professional stock scanning with real‑time alerts and market intelligence</p>
+      <div style="margin-top:12px"><span class="pill">TRIAL: 7‑day $1 trial on paid plans</span></div>
+    </header>
+
+    <section class="plans" aria-label="Pricing plans">
+      <article class="card" aria-labelledby="plan-free">
+        <h2 id="plan-free">Free</h2>
+        <div class="price">$0<span style="font-size:14px;font-weight:600;color:var(--muted)">/forever</span></div>
         <ul>
           <li>30 API calls / month</li>
-          <li>Basic screener</li>
+          <li>Basic stock screener</li>
           <li>1 portfolio</li>
         </ul>
-      </div>
-      <div class="card" aria-labelledby="plan-bronze">
-        <div id="plan-bronze" class="plan">Bronze</div>
-        <div class="price">$24.99<span class="muted">/month</span></div>
+        <a class="cta" href="/auth/sign-up" rel="nofollow">Get Started</a>
+      </article>
+
+      <article class="card" aria-labelledby="plan-bronze">
+        <h2 id="plan-bronze">Bronze</h2>
+        <div class="price">$24.99<span style="font-size:14px;font-weight:600;color:var(--muted)">/month</span></div>
         <ul>
           <li>1,500 API calls / month</li>
-          <li>10 screeners</li>
-          <li>50 alerts / month</li>
+          <li>10 screeners • 50 alerts</li>
+          <li>2 watchlists</li>
         </ul>
-      </div>
-      <div class="card" aria-labelledby="plan-silver">
-        <div id="plan-silver" class="plan">Silver</div>
-        <div class="price">$49.99<span class="muted">/month</span></div>
+        <a class="cta" href="/checkout" rel="nofollow">Try for $1</a>
+        <div class="trial">7‑day $1 trial • Cancel anytime</div>
+      </article>
+
+      <article class="card" aria-labelledby="plan-silver">
+        <h2 id="plan-silver">Silver</h2>
+        <div class="price">$49.99<span style="font-size:14px;font-weight:600;color:var(--muted)">/month</span></div>
         <ul>
           <li>5,000 API calls / month</li>
-          <li>20 screeners</li>
-          <li>100 alerts / month</li>
+          <li>20 screeners • 100 alerts</li>
+          <li>10 watchlists • 1 portfolio</li>
         </ul>
-      </div>
-      <div class="card" aria-labelledby="plan-gold">
-        <div id="plan-gold" class="plan">Gold</div>
-        <div class="price">$79.99<span class="muted">/month</span></div>
+        <a class="cta" href="/checkout" rel="nofollow">Try for $1</a>
+        <div class="trial">7‑day $1 trial • Cancel anytime</div>
+      </article>
+
+      <article class="card" aria-labelledby="plan-gold">
+        <h2 id="plan-gold">Gold</h2>
+        <div class="price">$79.99<span style="font-size:14px;font-weight:600;color:var(--muted)">/month</span></div>
         <ul>
-          <li>Unlimited API calls</li>
-          <li>Developer tools & white‑label</li>
-          <li>Priority support</li>
+          <li>Unlimited everything</li>
+          <li>API access & developer tools</li>
+          <li>White‑label & advanced analytics</li>
         </ul>
-      </div>
-    </div>
-    <p class="muted">For checkout and full interactivity, use the JavaScript app version of this page.</p>
-  </div>
+        <a class="cta" href="/checkout" rel="nofollow">Try for $1</a>
+        <div class="trial">7‑day $1 trial • Cancel anytime</div>
+      </article>
+    </section>
+
+    <p class="footer">
+      Have questions? <a class="links" href="/contact">Contact support</a> · <span class="links"><a href="/endpoint-status">Status</a></span>
+    </p>
+  </main>
 </body>
 </html>
