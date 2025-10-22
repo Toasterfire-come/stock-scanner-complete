@@ -187,7 +187,7 @@ async function fetchApiCsrfToken() {
 }
 
 // Attach token, CSRF safety and timing
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   try {
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
     const method = (config.method || 'get').toLowerCase();
@@ -196,26 +196,22 @@ api.interceptors.request.use((config) => {
       config.headers['X-CSRFToken'] = csrf;
     }
 
-    // Prefer encrypted token from secureStorage if available
+    // Prefer encrypted token from secureStorage if available, fallback to localStorage
+    let bearerToken = null;
     try {
       const sec = await import('../lib/security');
-      const tokenDec = await sec.secureStorage.getDecrypted(sec.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
-      if (tokenDec && typeof tokenDec === 'string') {
-        config.headers.Authorization = `Bearer ${tokenDec}`;
-      } else {
-        const token = (window.localStorage.getItem("rts_token") || '').trim();
-        if (token && token !== 'undefined' && token !== 'null') {
-          config.headers.Authorization = `Bearer ${token}`;
+      bearerToken = await sec.secureStorage.getDecrypted(sec.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
+    } catch {}
+    if (!bearerToken) {
+      try {
+        const localToken = (window.localStorage.getItem('rts_token') || '').trim();
+        if (localToken && localToken !== 'undefined' && localToken !== 'null') {
+          bearerToken = localToken;
         }
-      }
-    } catch {
-      const token = (window.localStorage.getItem("rts_token") || '').trim();
-      if (token && token !== 'undefined' && token !== 'null') {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      } catch {}
     }
-    if (token && token !== 'undefined' && token !== 'null') {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (bearerToken) {
+      config.headers.Authorization = `Bearer ${bearerToken}`;
     }
 
     // Attach referral if available (server-side attribution)
@@ -832,6 +828,18 @@ export async function changePlan(planData) {
 export async function getBillingStats() { 
   const { data } = await api.get('/billing/stats/'); 
   return data; 
+}
+
+// ====================
+// ADMIN
+// ====================
+export async function getAdminMetrics() {
+  try {
+    const { data } = await api.get('/admin/metrics/');
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error?.response?.data?.message || 'Failed to load admin metrics' };
+  }
 }
 
 export async function downloadInvoice(invoiceId) { 
