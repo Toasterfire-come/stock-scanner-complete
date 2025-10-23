@@ -72,20 +72,38 @@ def stock_list_api(request):
         search = request.GET.get('search', '').strip()
         category = request.GET.get('category', '').strip()
         
+        # Helper to read either min_x/max_x or x_min/x_max
+        def read_range(param_base):
+            mn = request.GET.get(f'min_{param_base}') or request.GET.get(f'{param_base}_min')
+            mx = request.GET.get(f'max_{param_base}') or request.GET.get(f'{param_base}_max')
+            return mn, mx
+
         # Price filters
-        min_price = request.GET.get('min_price')
-        max_price = request.GET.get('max_price')
+        min_price, max_price = read_range('price')
         
         # Volume filters
-        min_volume = request.GET.get('min_volume')
+        min_volume = request.GET.get('min_volume') or request.GET.get('volume_min')
         
         # Market cap filters
-        min_market_cap = request.GET.get('min_market_cap')
-        max_market_cap = request.GET.get('max_market_cap')
+        min_market_cap = request.GET.get('min_market_cap') or request.GET.get('market_cap_min')
+        max_market_cap = request.GET.get('max_market_cap') or request.GET.get('market_cap_max')
         
         # P/E ratio filters
-        min_pe = request.GET.get('min_pe')
-        max_pe = request.GET.get('max_pe')
+        min_pe = request.GET.get('min_pe') or request.GET.get('pe_ratio_min')
+        max_pe = request.GET.get('max_pe') or request.GET.get('pe_ratio_max')
+
+        # Additional numeric filters
+        dvav_min, dvav_max = read_range('dvav')
+        p2b_min, p2b_max = read_range('price_to_book')
+        eps_min, eps_max = read_range('earnings_per_share')
+        book_min, book_max = read_range('book_value')
+        w52l_min, w52l_max = read_range('week_52_low')
+        w52h_min, w52h_max = read_range('week_52_high')
+        target_min, target_max = read_range('one_year_target')
+        dy_min, dy_max = read_range('dividend_yield')
+        chg_min, chg_max = read_range('change_percent')
+        bid_min, bid_max = read_range('bid_price')
+        ask_min, ask_max = read_range('ask_price')
         
         # Exchange filter
         exchange = request.GET.get('exchange', 'NASDAQ')
@@ -151,6 +169,29 @@ def stock_list_api(request):
                 queryset = queryset.filter(pe_ratio__lte=Decimal(max_pe))
             except (ValueError, TypeError):
                 pass
+
+        # Apply additional numeric filters
+        def apply_decimal_range(qs, field, mn, mx):
+            try:
+                if mn is not None and mn != "":
+                    qs = qs.filter(**{f"{field}__gte": Decimal(str(mn))})
+                if mx is not None and mx != "":
+                    qs = qs.filter(**{f"{field}__lte": Decimal(str(mx))})
+            except (ValueError, TypeError):
+                return qs
+            return qs
+
+        queryset = apply_decimal_range(queryset, 'dvav', dvav_min, dvav_max)
+        queryset = apply_decimal_range(queryset, 'price_to_book', p2b_min, p2b_max)
+        queryset = apply_decimal_range(queryset, 'earnings_per_share', eps_min, eps_max)
+        queryset = apply_decimal_range(queryset, 'book_value', book_min, book_max)
+        queryset = apply_decimal_range(queryset, 'week_52_low', w52l_min, w52l_max)
+        queryset = apply_decimal_range(queryset, 'week_52_high', w52h_min, w52h_max)
+        queryset = apply_decimal_range(queryset, 'one_year_target', target_min, target_max)
+        queryset = apply_decimal_range(queryset, 'dividend_yield', dy_min, dy_max)
+        queryset = apply_decimal_range(queryset, 'change_percent', chg_min, chg_max)
+        queryset = apply_decimal_range(queryset, 'bid_price', bid_min, bid_max)
+        queryset = apply_decimal_range(queryset, 'ask_price', ask_min, ask_max)
 
         # Apply category filters
         if category == 'gainers':

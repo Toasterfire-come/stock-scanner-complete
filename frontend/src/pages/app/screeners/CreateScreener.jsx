@@ -30,8 +30,15 @@ const CreateScreener = () => {
     { id: "pe_ratio", name: "P/E Ratio", type: "range" },
     { id: "dividend_yield", name: "Dividend Yield", type: "range" },
     { id: "change_percent", name: "Price Change %", type: "range" },
-    { id: "rsi", name: "RSI (14)", type: "range" },
-    { id: "vwap", name: "VWAP (today)", type: "range" },
+    { id: "price_to_book", name: "Price to Book", type: "range" },
+    { id: "earnings_per_share", name: "Earnings Per Share (EPS)", type: "range" },
+    { id: "book_value", name: "Book Value", type: "range" },
+    { id: "week_52_low", name: "52-Week Low", type: "range" },
+    { id: "week_52_high", name: "52-Week High", type: "range" },
+    { id: "one_year_target", name: "1-Year Target", type: "range" },
+    { id: "dvav", name: "Volume vs Avg (DV/AV)", type: "range" },
+    { id: "bid_price", name: "Bid Price", type: "range" },
+    { id: "ask_price", name: "Ask Price", type: "range" },
     { id: "exchange", name: "Exchange", type: "select" }
   ];
 
@@ -80,8 +87,15 @@ const CreateScreener = () => {
       if (c.id === "pe_ratio") { if (c.min) params.pe_ratio_min = Number(c.min); if (c.max) params.pe_ratio_max = Number(c.max); }
       if (c.id === "dividend_yield") { if (c.min) params.dividend_yield_min = Number(c.min); if (c.max) params.dividend_yield_max = Number(c.max); }
       if (c.id === "change_percent") { if (c.min) params.change_percent_min = Number(c.min); if (c.max) params.change_percent_max = Number(c.max); }
-      if (c.id === "rsi") { if (c.min) params.rsi_min = Number(c.min); if (c.max) params.rsi_max = Number(c.max); }
-      if (c.id === "vwap") { if (c.min) params.vwap_min = Number(c.min); if (c.max) params.vwap_max = Number(c.max); }
+      if (c.id === "price_to_book") { if (c.min) params.price_to_book_min = Number(c.min); if (c.max) params.price_to_book_max = Number(c.max); }
+      if (c.id === "earnings_per_share") { if (c.min) params.earnings_per_share_min = Number(c.min); if (c.max) params.earnings_per_share_max = Number(c.max); }
+      if (c.id === "book_value") { if (c.min) params.book_value_min = Number(c.min); if (c.max) params.book_value_max = Number(c.max); }
+      if (c.id === "week_52_low") { if (c.min) params.week_52_low_min = Number(c.min); if (c.max) params.week_52_low_max = Number(c.max); }
+      if (c.id === "week_52_high") { if (c.min) params.week_52_high_min = Number(c.min); if (c.max) params.week_52_high_max = Number(c.max); }
+      if (c.id === "one_year_target") { if (c.min) params.one_year_target_min = Number(c.min); if (c.max) params.one_year_target_max = Number(c.max); }
+      if (c.id === "dvav") { if (c.min) params.dvav_min = Number(c.min); if (c.max) params.dvav_max = Number(c.max); }
+      if (c.id === "bid_price") { if (c.min) params.bid_price_min = Number(c.min); if (c.max) params.bid_price_max = Number(c.max); }
+      if (c.id === "ask_price") { if (c.min) params.ask_price_min = Number(c.min); if (c.max) params.ask_price_max = Number(c.max); }
       if (c.id === "exchange" && c.value) { params.exchange = c.value; }
     }
     return params;
