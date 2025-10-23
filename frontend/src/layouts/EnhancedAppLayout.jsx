@@ -139,7 +139,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
   return (
     <div className="min-h-screen bg-background">
       <SEO {...seoForPath(location.pathname)} />
-      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} isAuthenticated={isAuthenticated} />
       {/* Enhanced Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

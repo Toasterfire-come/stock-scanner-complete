@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CommandDialog,
@@ -9,9 +9,17 @@ import {
   CommandEmpty,
   CommandSeparator
 } from "./ui/command";
-import { Search, Hash, LayoutDashboard, TrendingUp, Activity, Eye, Target, AlertCircle, Newspaper, FileText, User } from "lucide-react";
+import { Search, Hash, LayoutDashboard, TrendingUp, Activity, Eye, Target, AlertCircle, Newspaper, FileText, User, Crown } from "lucide-react";
 
-const routes = [
+const marketingRoutes = [
+  { label: "Home", to: "/", icon: LayoutDashboard },
+  { label: "Features", to: "/features", icon: TrendingUp },
+  { label: "Pricing", to: "/pricing", icon: Crown },
+  { label: "Docs", to: "/docs", icon: FileText },
+  { label: "Contact", to: "/contact", icon: Newspaper },
+];
+
+const userRoutes = [
   { label: "Dashboard", to: "/app/dashboard", icon: LayoutDashboard },
   { label: "Markets", to: "/app/markets", icon: TrendingUp },
   { label: "Stocks", to: "/app/stocks", icon: Activity },
@@ -24,7 +32,7 @@ const routes = [
   { label: "Account", to: "/account/profile", icon: User },
 ];
 
-export default function CommandPalette({ open, onOpenChange }) {
+export default function CommandPalette({ open, onOpenChange, isAuthenticated = false }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
@@ -61,7 +69,7 @@ export default function CommandPalette({ open, onOpenChange }) {
           </CommandGroup>
         )}
         <CommandGroup heading="Navigate">
-          {routes.map((r) => {
+          {(isAuthenticated ? [...marketingRoutes, ...userRoutes] : marketingRoutes).map((r) => {
             const Icon = r.icon;
             return (
               <CommandItem key={r.to} onSelect={() => go(r.to)}>

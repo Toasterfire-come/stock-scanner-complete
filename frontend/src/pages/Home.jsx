@@ -112,7 +112,7 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Screen 10,500+ NYSE & NASDAQ stocks with 14 technical and fundamental criteria including real-time data analysis.",
+      description: "Screen 10,500+ NYSE & NASDAQ stocks with comprehensive technical and fundamental criteria.",
       details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
     },
     {
@@ -186,10 +186,7 @@ const Home = () => {
   ];
 
   const stats = [
-    { label: "Active Traders", value: "50,000+", icon: <Users className="h-5 w-5" /> },
-    { label: "Stocks Tracked", value: "7,000+", icon: <BarChart3 className="h-5 w-5" /> },
-    { label: "Daily Alerts Sent", value: "1M+", icon: <Bell className="h-5 w-5" /> },
-    { label: "API Calls/Month", value: "100M+", icon: <Zap className="h-5 w-5" /> }
+    { label: "Stocks Covered", value: "10,500+", icon: <BarChart3 className="h-5 w-5" /> },
   ];
 
   const pricingPlans = [
@@ -285,7 +282,7 @@ const Home = () => {
           <div className="text-center max-w-5xl mx-auto">
             <Badge variant="secondary" className="mb-6 text-base sm:text-lg px-4 py-2">
               <Award className="h-4 w-4 mr-2" />
-              Trusted by 50,000+ Professional Traders
+              Professional-Grade Stock Screening Platform
             </Badge>
             
             <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
@@ -458,10 +455,8 @@ const Home = () => {
               </div>
               
               <div className="text-center">
-                <div className="text-2xl sm:text-4xl font-bold text-purple-600 mb-2">
-                  1M+
-                </div>
-                <div className="text-sm sm:text-base text-gray-600">Alerts Sent This Month</div>
+              <div className="text-2xl sm:text-4xl font-bold text-purple-600 mb-2">10,500+</div>
+                <div className="text-sm sm:text-base text-gray-600">Stocks Covered</div>
               </div>
               
               <div className="text-center">
@@ -604,7 +599,7 @@ const Home = () => {
             Ready to Transform Your Trading?
           </h2>
           <p className="text-xl sm:text-2xl text-green-100 mb-8 sm:mb-12 max-w-3xl mx-auto">
-            Join 50,000+ successful traders who rely on our platform for profitable trading decisions.
+            Screen 10,500+ NYSE & NASDAQ stocks with professional tools.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
@@ -654,7 +649,7 @@ const Home = () => {
                 ×
               </button>
             </div>
-            <p className="text-gray-600 mb-4">Join 50,000+ traders. Get a free screener template, $1 trial instructions, and referral 50% off tips.</p>
+            <p className="text-gray-600 mb-4">Get a free screener template, $1 trial instructions, and referral tips.</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
