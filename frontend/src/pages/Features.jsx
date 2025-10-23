@@ -256,6 +256,42 @@ const Features = () => {
         </div>
       </section>
 
+      {/* Pro Modules */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Pro Modules
+            </h2>
+            <p className="text-xl text-gray-600">
+              Unlock advanced capabilities with our professional toolset
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {proModules.map((mod, i) => (
+              <Card key={i} className="hover:shadow-lg transition-shadow duration-300">
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                      {mod.icon}
+                    </div>
+                    <CardTitle>{mod.title}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                    {mod.points.map((p, idx) => (
+                      <li key={idx}>{p}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Security & Reliability */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
