@@ -1215,6 +1215,69 @@ def usage_stats_api(request):
         }, status=500)
 
 
+# Developer usage stats (explicit path expected by frontend)
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AuthPerm])
+def developer_usage_stats_api(request):
+    """
+    Returns daily.api_calls, monthly.api_calls, and usage_history[] for developer dashboard.
+    GET /api/developer/usage-stats/
+    """
+    try:
+        user = _effective_user(request)
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        today = timezone.now().date()
+        month_start = timezone.now().replace(day=1).date()
+
+        # Fetch daily and monthly aggregates
+        daily = UsageStats.objects.filter(user=user, date=today).first()
+        monthly_qs = UsageStats.objects.filter(user=user, date__gte=month_start)
+        monthly_api_calls = monthly_qs.aggregate(total=Sum('api_calls'))['total'] or 0
+        monthly_requests = monthly_qs.aggregate(total=Sum('requests'))['total'] or 0
+
+        # Build 30-day history (fallback to zeros if none)
+        last_30 = [today - timedelta(days=i) for i in range(29, -1, -1)]
+        stats_map = {
+            s.date: {'api_calls': int(s.api_calls or 0), 'requests': int(s.requests or 0)}
+            for s in UsageStats.objects.filter(user=user, date__gte=today - timedelta(days=30))
+        }
+        usage_history = [
+            {
+                'date': d.isoformat(),
+                'api_calls': int((stats_map.get(d) or {}).get('api_calls', 0)),
+                'requests': int((stats_map.get(d) or {}).get('requests', 0))
+            }
+            for d in last_30
+        ]
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'daily': {
+                    'api_calls': int(getattr(daily, 'api_calls', 0)),
+                    'requests': int(getattr(daily, 'requests', 0)),
+                    'date': today.isoformat()
+                },
+                'monthly': {
+                    'api_calls': int(monthly_api_calls),
+                    'requests': int(monthly_requests),
+                    'limit': int(getattr(profile, 'api_calls_limit', 100)),
+                    'remaining': max(0, int(getattr(profile, 'api_calls_limit', 100)) - int(monthly_api_calls))
+                },
+                'usage_history': usage_history
+            }
+        })
+    except Exception as e:
+        logger.error(f"Developer usage stats error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to retrieve developer usage statistics',
+            'error_code': 'DEV_USAGE_STATS_ERROR'
+        }, status=500)
+
+
 # Additional usage endpoints to satisfy frontend expectations
 @csrf_exempt
 @api_view(['GET'])

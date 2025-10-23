@@ -6,7 +6,7 @@ from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from . import revenue_views
-from .billing_api import cancel_subscription_api, paypal_plans_meta_api
+from .billing_api import cancel_subscription_api, paypal_plans_meta_api, developer_usage_stats_api
 from . import enterprise_api
 from . import admin_api
 from . import matomo_proxy
@@ -74,6 +74,7 @@ urlpatterns = [
     path('market-stats/', api_views.market_stats_api, name='market_stats'),
     # Aliases for platform/frontend compatibility
     path('platform-stats/', api_views.market_stats_api, name='platform_stats_alias'),
+    path('developer/usage-stats/', developer_usage_stats_api, name='developer_usage_stats'),
     # path('nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks'),  # Removed: only NYSE in DB
     path('stocks/', api_views.stock_list_api, name='stock_list'),
     path('stocks/<str:ticker>/quote/', api_views.stock_detail_api, name='stock_quote'),
