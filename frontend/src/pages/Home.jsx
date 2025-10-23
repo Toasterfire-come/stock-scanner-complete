@@ -112,7 +112,7 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Screen 10,500+ NYSE & NASDAQ stocks with comprehensive technical and fundamental criteria.",
+      description: "Screen 10,500+ NYSE & NASDAQ stocks with 14+ technical and fundamental criteria.",
       details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
     },
     {

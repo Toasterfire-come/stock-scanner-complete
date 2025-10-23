@@ -41,14 +41,14 @@ const Features = () => {
     {
       icon: <Search className="h-8 w-8" />,
       title: "NYSE Stock Screening",
-      description: `Screen 10,500+ NYSE & NASDAQ stocks with comprehensive technical and fundamental criteria.`,
+      description: `Screen 10,500+ NYSE & NASDAQ stocks with 14+ technical and fundamental criteria.`,
       details: [
         "Complete NYSE & NASDAQ market coverage (10,500+ stocks)",
-        "7 Technical Indicators: RSI, MACD, Moving Average, Bollinger Bands, Stochastic, Volume, Price Change", 
-        "7 Fundamental Indicators: Market Cap, P/E Ratio, EPS Growth, Revenue Growth, Dividend Yield, Beta, Price Range",
-        "Custom filter combinations with saved presets",
-        "Real-time data processing and updates",
-        "Export results for further analysis"
+        "Technical: RSI, MACD, Moving Averages (5/20/50/200), Bollinger, Stochastic, VWAP, Price/Volume",
+        "Fundamental: Market Cap, P/E, EPS Growth, Revenue Growth, Dividend Yield, Beta, 52‑week range",
+        "Saved presets, shareable screeners, and one‑click re‑run",
+        "Near real‑time updates with efficient caching",
+        "Quick export to CSV for deeper analysis"
       ]
     },
     {
@@ -95,17 +95,32 @@ const Features = () => {
     {
       icon: <Target className="h-6 w-6" />,
       title: "Watchlists",
-      description: "Organize and monitor your favorite stocks"
+      description: "Organize favorites, bulk add/remove, and share read‑only links"
     },
     {
       icon: <Eye className="h-6 w-6" />,
       title: "Market Overview",
-      description: "Visual representation of market performance"
+      description: "Heatmaps, sector trends, top gainers/losers, and most active"
     },
     {
       icon: <Cloud className="h-6 w-6" />,
       title: "Cloud Sync",
-      description: "Access your data from anywhere"
+      description: "Securely sync portfolios, alerts, and screeners across devices"
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Security",
+      description: "CSRF protection, session management, and privacy‑first analytics"
+    },
+    {
+      icon: <Bell className="h-6 w-6" />,
+      title: "Alerts",
+      description: "Price, % change, volume spike, and indicator crossovers"
+    },
+    {
+      icon: <BarChart3 className="h-6 w-6" />,
+      title: "Exports",
+      description: "Export screener and portfolio data to CSV in one click"
     }
   ];
 
