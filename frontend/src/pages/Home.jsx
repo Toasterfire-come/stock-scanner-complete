@@ -54,6 +54,12 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [showExitIntent, setShowExitIntent] = useState(false);
+  const exitIntentKey = React.useMemo(() => {
+    try {
+      const uid = JSON.parse(localStorage.getItem('secure_user') || '{}')?.id || 'anon';
+      return `exit-intent-shown-v1:${uid}`;
+    } catch { return 'exit-intent-shown-v1:anon'; }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,7 +81,9 @@ const Home = () => {
     try { trackPageView('/'); } catch {}
     // First-time onboarding tooltips (simple toasts)
     try {
-      const seen = localStorage.getItem('onboarding-tooltips-v1') === '1';
+      const uid = JSON.parse(localStorage.getItem('secure_user') || '{}')?.id || 'anon';
+      const tipKey = `onboarding-tooltips-v1:${uid}`;
+      const seen = localStorage.getItem(tipKey) === '1';
       if (!seen) {
         setTimeout(() => {
           try { toast.info('Tip: Create your first screener', { description: 'Go to Screeners > New to find trade setups.' }); } catch {}
@@ -83,13 +91,22 @@ const Home = () => {
         setTimeout(() => {
           try { toast.info('Tip: Add to watchlist', { description: 'Use the star/bookmark buttons across the app.' }); } catch {}
         }, 2000);
-        localStorage.setItem('onboarding-tooltips-v1', '1');
+        localStorage.setItem(tipKey, '1');
       }
     } catch {}
   }, []);
 
   // Exit intent modal toggle
-  useExitIntent(() => setShowExitIntent(true), true);
+  useExitIntent(() => {
+    try {
+      const shown = localStorage.getItem(exitIntentKey) === '1';
+      if (shown) return;
+      localStorage.setItem(exitIntentKey, '1');
+      setShowExitIntent(true);
+    } catch {
+      setShowExitIntent(true);
+    }
+  }, true);
 
   const features = [
     {

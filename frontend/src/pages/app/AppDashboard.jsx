@@ -41,6 +41,7 @@ import RealTrendingSparkline from "../../components/RealTrendingSparkline";
 import UsageTracker from "../../components/UsageTracker";
 // Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
 import MarketStatus from "../../components/MarketStatus";
+import OnboardingChecklist from "../../components/OnboardingChecklist";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -163,7 +164,12 @@ const AppDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Onboarding checklist removed per request */}
+        {/* Per-user onboarding checklist */}
+        {user?.id && (
+          <div className="mb-6">
+            <OnboardingChecklist userId={user.id} />
+          </div>
+        )}
         {/* Welcome Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
