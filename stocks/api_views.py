@@ -222,8 +222,15 @@ def stock_list_api(request):
             except:
                 queryset = queryset.order_by('-last_updated')
 
-        # Limit results
-        stocks = queryset[:limit]
+        # Limit and offset results
+        try:
+            offset = int(request.GET.get('offset', 0))
+            if offset < 0:
+                offset = 0
+        except (ValueError, TypeError):
+            offset = 0
+
+        stocks = queryset[offset:offset + limit]
 
         # Format comprehensive data
         stock_data = []
@@ -302,7 +309,7 @@ def stock_list_api(request):
         return Response({
             'success': True,
             'count': len(stock_data),
-            'total_available': queryset.count() if len(stock_data) < limit else len(stock_data),
+            'total_available': queryset.count(),
             'filters_applied': {
                 'search': search,
                 'category': category,
