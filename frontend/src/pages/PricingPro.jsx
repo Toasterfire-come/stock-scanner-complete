@@ -26,8 +26,6 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
-import PayPalCheckout from "../components/PayPalCheckout";
-import { createPayPalOrder, api } from "../api/client";
 import { setPromoCookie, normalizePromoCode } from "../lib/promos";
 import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
 
@@ -43,7 +41,9 @@ const PricingPro = () => {
   const [referralCode, setReferralCode] = useState("");
 
   useEffect(() => {
-    fetchPlans();
+    // static page: no backend calls here
+    setPlans(getDefaultPlans());
+    setCurrentPlan('free');
     try { trackPageView('/pricing'); } catch {}
   }, []);
 
@@ -75,24 +75,7 @@ const PricingPro = () => {
     } catch {}
   }, [location.state, location.search]);
 
-  const fetchPlans = async () => {
-    try {
-      const { data } = await api.get('/billing/plans-meta/');
-      if (data?.success && data?.data) {
-        // Expect data.data.plans shape; fallback to defaults if missing
-        const normalized = data.data.plans && Object.keys(data.data.plans).length > 0 ? data.data.plans : getDefaultPlans();
-        setPlans(normalized);
-        setCurrentPlan((data.data.current_plan || 'free').toLowerCase());
-      } else {
-        setPlans(getDefaultPlans());
-        setCurrentPlan('free');
-      }
-    } catch (error) {
-      console.error('Failed to load plans-meta:', error);
-      setPlans(getDefaultPlans());
-      setCurrentPlan('free');
-    }
-  };
+  // fetchPlans removed to keep pricing fully static
 
   const getDefaultPlans = () => ({
     free: {
