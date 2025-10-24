@@ -226,7 +226,14 @@ const PricingPro = () => {
 
   const handleSubscribe = async (planKey) => {
     if (!isAuthenticated) {
-      navigate('/auth/sign-in');
+      // Reduce friction: take users directly to sign up with context
+      navigate('/auth/sign-up', {
+        state: {
+          discountCode: referralCode ? `REF_${String(referralCode).toUpperCase()}` : undefined,
+          selectedPlan: planKey,
+          cycle: isAnnual ? 'annual' : 'monthly'
+        }
+      });
       return;
     }
     try { trackEvent('begin_checkout', { items: [{ item_id: planKey, item_name: plans?.[planKey]?.name }], checkout_option: isAnnual ? 'annual' : 'monthly' }); } catch {}
