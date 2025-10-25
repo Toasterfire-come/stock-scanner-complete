@@ -61,7 +61,7 @@ def validate_discount_code(request):
         if validation['valid']:
             description = f"{validation['discount_amount']}% off"
             if validation['discount'].code.upper() == 'TRIAL':
-                description = '7-day $1 trial'
+                description = 'Trial code deprecated'
             response_data.update({
                 'code': validation['discount'].code,
                 'discount_percentage': float(validation['discount_amount']),
@@ -115,19 +115,17 @@ def apply_discount_code(request):
             }, status=400)
         
         if validation['applies_discount']:
-            if validation['discount'].code.upper() == 'TRIAL':
-                final_amount = Decimal('1.00') if original_amount > Decimal('1.00') else original_amount
-                discount_amount = original_amount - final_amount
-                pricing = {
-                    'original_amount': original_amount,
-                    'discount_amount': discount_amount,
-                    'final_amount': final_amount
-                }
-            else:
+            if validation['discount'].code.upper() != 'TRIAL':
                 pricing = DiscountService.calculate_discounted_price(
                     original_amount, 
                     validation['discount_amount']
                 )
+            else:
+                pricing = {
+                    'original_amount': original_amount,
+                    'discount_amount': Decimal('0.00'),
+                    'final_amount': original_amount
+                }
         else:
             pricing = {
                 'original_amount': original_amount,
@@ -137,10 +135,7 @@ def apply_discount_code(request):
         
         savings_percentage = 0.0
         if validation['applies_discount']:
-            if validation['discount'].code.upper() == 'TRIAL':
-                if original_amount > 0:
-                    savings_percentage = float(((original_amount - pricing['final_amount']) / original_amount) * 100)
-            else:
+            if validation['discount'].code.upper() != 'TRIAL':
                 savings_percentage = float(validation['discount_amount'])
         
         return JsonResponse({

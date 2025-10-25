@@ -13,6 +13,7 @@ import { getEnvPromos, matchPromo, validatePromoFor, computePromoFinalAmount, ge
 import { Input } from "../../components/ui/input";
 import { logClientMetric } from "../../api/client";
 import { buildAttributionTags } from "../../lib/analytics";
+import { getNextMonthFirstUTC } from "../../lib/dates";
 
 const PLAN_NAMES = {
   free: "Free",
@@ -227,12 +228,10 @@ export default function Checkout() {
     return Number(planMeta.monthly_price);
   }, [planMeta, applied, isAnnual]);
   const nextDate = useMemo(() => {
-    const d = new Date();
-    if (applied?.code === 'TRIAL') d.setDate(d.getDate() + 7);
-    else if (isAnnual) d.setDate(d.getDate() + 365);
-    else d.setDate(d.getDate() + 30);
+    // Trial until next 1st of the month
+    const d = getNextMonthFirstUTC(new Date());
     return d;
-  }, [applied, isAnnual]);
+  }, []);
 
   // Prefer plan IDs from local env over backend meta when available
   const envPlanId = useMemo(() => {
@@ -357,9 +356,9 @@ export default function Checkout() {
                     {!isAnnual && (
                       <div className="text-gray-500 text-xs">Next month: ${Number(applied.original_amount).toFixed(2)}</div>
                     )}
-                    {isAnnual && (
-                      <div className="text-gray-500 text-xs">Next year: ${Number(planMeta.annual_final_price ?? planMeta.annual_list_price).toFixed(2)} on {nextDate ? nextDate.toLocaleDateString() : '-'}</div>
-                    )}
+                  {isAnnual && (
+                    <div className="text-gray-500 text-xs">Next year: ${Number(planMeta.annual_final_price ?? planMeta.annual_list_price).toFixed(2)} on {nextDate ? nextDate.toLocaleDateString() : '-'}</div>
+                  )}
                   </div>
                 )}
               </div>

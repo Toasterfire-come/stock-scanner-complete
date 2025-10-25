@@ -364,10 +364,9 @@ def create_paypal_order_api(request):
         if billing_cycle == 'annual':
             original_amount = (original_amount * Decimal('0.85')).quantize(Decimal('0.01'))
 
-        # Ensure discount codes exist (idempotent)
+        # Ensure referral code exists; TRIAL discount deprecated in favor of calendar-based trial
         try:
             DiscountService.initialize_ref50_code()
-            DiscountService.initialize_trial_code()
         except Exception:
             pass
 
@@ -386,16 +385,7 @@ def create_paypal_order_api(request):
             validation = DiscountService.validate_discount_code(discount_obj.code, request.user, billing_cycle=billing_cycle)
             if validation.get('valid'):
                 if validation.get('applies_discount'):
-                    if validation['discount'].code.upper() == 'TRIAL':
-                        final_amount = Decimal('1.00') if original_amount > Decimal('1.00') else original_amount
-                        discount_applied = {
-                            'code': 'TRIAL',
-                            'type': 'trial',
-                            'description': '7-day $1 trial',
-                            'original_amount': float(original_amount),
-                            'final_amount': float(final_amount)
-                        }
-                    else:
+                    if validation['discount'].code.upper() != 'TRIAL':
                         calc = DiscountService.calculate_discounted_price(original_amount, validation['discount_amount'])
                         final_amount = calc['final_amount']
                         discount_applied = {

@@ -24,7 +24,7 @@ get_header(); ?>
                     </div>
                 <?php else: ?>
                     <div class="hero-actions" style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-                        <a href="<?php echo wp_registration_url(); ?>" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; min-width: 180px;">Start Free Trial</a>
+                        <a href="<?php echo wp_registration_url(); ?>" class="btn btn-secondary" style="background: white; color: var(--color-primary); border: 2px solid white; min-width: 180px;">Try for Free</a>
                         <a href="<?php echo wp_login_url(); ?>" class="btn btn-outline" style="border-color: white; color: white; min-width: 180px;">🔑 Login</a>
                     </div>
                 <?php endif; ?>

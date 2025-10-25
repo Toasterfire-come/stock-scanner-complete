@@ -146,7 +146,7 @@ get_header();
             <div class="promo-code">
                 <label for="promo-input">Have a promo code?</label>
                 <div class="promo-row">
-                    <input id="promo-input" type="text" placeholder="Enter TRIAL or REF50" />
+                    <input id="promo-input" type="text" placeholder="Enter REF50" />
                     <button type="button" class="btn btn-outline" onclick="applyPromo()">Apply</button>
                 </div>
                 <div id="promo-message" class="promo-message" style="display:none"></div>
@@ -534,7 +534,7 @@ function initPayPalButtons() {
     
     paypal.Buttons({
         createOrder: function(data, actions) {
-            // Ask backend to compute first charge (handles TRIAL/REF50)
+            // Ask backend to compute first charge (handles REF50)
             return fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                 method: 'POST',
                 headers: {
@@ -610,15 +610,15 @@ function applyPromo() {
     const msg = document.getElementById('promo-message');
     const code = (input.value || '').trim().toUpperCase();
     if (!code) { currentPromo = ''; msg.style.display='none'; return; }
-    if (code !== 'TRIAL' && code !== 'REF50') {
-        msg.textContent = 'Invalid code. Use TRIAL or REF50.';
+    if (code !== 'REF50') {
+        msg.textContent = 'Invalid code. Use REF50.';
         msg.style.color = '#e74c3c';
         msg.style.display = 'block';
         currentPromo = '';
         return;
     }
     currentPromo = code;
-    msg.textContent = code === 'TRIAL' ? 'TRIAL applied: $1 for 7 days then monthly.' : 'REF50 applied: 50% off first month then monthly.';
+    msg.textContent = 'REF50 applied: 50% off first month then monthly.';
     msg.style.color = '#27ae60';
     msg.style.display = 'block';
     // Re-init to reflect new first charge

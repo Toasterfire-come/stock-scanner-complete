@@ -78,26 +78,7 @@ const PricingPro = () => {
   // fetchPlans removed to keep pricing fully static
 
   const getDefaultPlans = () => ({
-    free: {
-      name: 'Free Plan',
-      price: 0,
-      price_yearly: 0,
-      popular: false,
-      limits: {
-        api_calls: 30,
-        screeners: 1,
-        alerts: 0,
-        watchlists: 1,
-        portfolios: 1,
-      },
-      features: [
-        'Stock data access',
-        '30 API calls per month',
-        'Basic stock screener',
-        '1 screener',
-        '1 portfolio'
-      ]
-    },
+    // Free plan removed
     bronze: {
       name: 'Bronze Plan', 
       price: 24.99,
@@ -265,8 +246,8 @@ const PricingPro = () => {
         </p>
         {/* Referral / Trial Messaging */}
         <div className="max-w-3xl mx-auto grid gap-3">
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-lg p-3 text-sm">
-            7‑day trial for $1 on paid plans. Cancel anytime before renewal. Includes insider trading and fair value tools.
+          <div className="bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg p-3 text-sm">
+            Trial is free until the next 1st of the month. Cancel anytime before billing begins.
           </div>
           <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3 text-sm">
             Have a referral? First month 50% off with your code at checkout.
@@ -417,7 +398,7 @@ const PricingPro = () => {
                   {/* Trial / Referral note under CTAs */}
                   {planKey !== 'free' && (
                     <p className="text-xs text-gray-500 text-center">
-                      $1 for 7 days • 50% off 1st month with referral code
+                      Trial free until next 1st • 50% off 1st month with referral code
                     </p>
                   )}
                   
@@ -520,9 +501,9 @@ const PricingPro = () => {
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-3">
-            <AccordionTrigger>What's included in the free plan?</AccordionTrigger>
+            <AccordionTrigger>Do you offer a free plan?</AccordionTrigger>
             <AccordionContent>
-              The free plan includes stock data access, 30 API calls per month, basic stock screener (30 calls, 1 screener, 1 portfolio).
+              No. We no longer offer a free plan. Trials are free until the next 1st of the month, then regular billing begins unless you cancel.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-4">

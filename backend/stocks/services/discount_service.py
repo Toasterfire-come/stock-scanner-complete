@@ -81,11 +81,19 @@ class DiscountService:
             applies_discount = True
 
         # Business rule adjustments:
-        # - TRIAL: valid for either monthly or annual (first payment), billed at $1 for 7 days
+        # - TRIAL: deprecated (trial is calendar-based until next 1st)
         # - REF50: 50% off first monthly payment only
         code_upper = discount.code.upper()
         if code_upper == 'REF50' and billing_cycle and billing_cycle.lower() != 'monthly':
             applies_discount = False
+        if code_upper == 'TRIAL':
+            return {
+                'valid': False,
+                'discount': discount,
+                'message': 'TRIAL code no longer supported',
+                'discount_amount': Decimal('0.00'),
+                'applies_discount': False
+            }
         
         return {
             'valid': True,
@@ -181,18 +189,7 @@ class DiscountService:
         if discount_code:
             validation = DiscountService.validate_discount_code(discount_code.code, user, billing_cycle=billing_cycle)
             if validation['valid'] and validation['applies_discount']:
-                if discount_code.code.upper() == 'TRIAL':
-                    # Special trial pricing: $1 for the first 7 days
-                    final_amount = Decimal('1.00')
-                    if original_amount < final_amount:
-                        final_amount = original_amount
-                    pricing = {
-                        'original_amount': original_amount,
-                        'discount_amount': (original_amount - final_amount),
-                        'final_amount': final_amount
-                    }
-                    revenue_type = 'discount_generated'
-                else:
+                if discount_code.code.upper() != 'TRIAL':
                     pricing = DiscountService.calculate_discounted_price(
                         original_amount, 
                         discount_code.discount_percentage
@@ -235,11 +232,7 @@ class DiscountService:
             usage.total_savings += pricing['discount_amount']
             usage.save()
         
-        # If trial, set next billing date to 7 days later
-        if discount_code and discount_code.code.upper() == 'TRIAL':
-            profile, _ = UserProfile.objects.get_or_create(user=user)
-            profile.next_billing_date = payment_date + timedelta(days=7)
-            profile.save()
+        # Trial next billing now handled by calendar policy until next 1st
         
         # Update monthly summary
         DiscountService.update_monthly_summary(payment_date.strftime('%Y-%m'))
@@ -392,16 +385,9 @@ class DiscountService:
 
     @staticmethod
     def initialize_trial_code():
-        """
-        Initialize the TRIAL discount code if it doesn't exist
-        TRIAL: $1 for 7 days, applies to first payment only
-        """
-        code, created = DiscountCode.objects.get_or_create(
-            code='TRIAL',
-            defaults={
-                'discount_percentage': Decimal('0.00'),
-                'is_active': True,
-                'applies_to_first_payment_only': True,
-            }
-        )
-        return code, created
+        # Deprecated; keep as no-op to avoid caller errors
+        try:
+            code = DiscountCode.objects.filter(code='TRIAL').first()
+            return code, False
+        except Exception:
+            return None, False

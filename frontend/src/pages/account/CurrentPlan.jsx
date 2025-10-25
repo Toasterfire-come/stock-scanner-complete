@@ -174,11 +174,7 @@ const CurrentPlan = () => {
                     <Crown className="h-3 w-3 mr-1" />
                     Premium
                   </Badge>
-                ) : (
-                  <Badge variant="secondary" className="mb-4">
-                    Free Plan
-                  </Badge>
-                )}
+                ) : null}
 
                 {planData.next_billing_date && (
                   <div className="text-sm text-gray-600 mb-4">

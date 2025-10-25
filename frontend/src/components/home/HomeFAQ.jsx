@@ -18,7 +18,7 @@ const defaultFaqs = [
   },
   {
     question: "What's the difference between plans?",
-    answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Free plan includes 30 calls/month, Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+    answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
   },
   {
     question: "How does the API call counting work?",

@@ -177,7 +177,7 @@ const Home = () => {
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Free plan includes 30 calls/month, Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
     },
     {
       question: "How does the API call counting work?",
@@ -224,7 +224,7 @@ const Home = () => {
         "Email support"
       ],
       popular: true,
-      cta: "Start Free Trial"
+      cta: "Try for free"
     },
     {
       name: "Silver", 
@@ -245,7 +245,7 @@ const Home = () => {
         "Priority support"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Try for free"
     },
     {
       name: "Gold",
@@ -264,7 +264,7 @@ const Home = () => {
         "Professional reporting"
       ],
       popular: false,
-      cta: "Start Free Trial"
+      cta: "Try for free"
     }
   ];
 
@@ -332,7 +332,7 @@ const Home = () => {
                 />
                 <Button type="submit" className="px-5">Start</Button>
               </form>
-              <div className="text-xs text-gray-500">Cancel anytime • 7‑day trial for $1 • No card needed for Free plan</div>
+              <div className="text-xs text-gray-500">Cancel anytime • Trial free until next 1st</div>
             </div>
 
             {/* Logos / Social Proof */}
@@ -526,11 +526,11 @@ const Home = () => {
       {/* Pricing Section */}
       <section className="py-16 sm:py-24 bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="container mx-auto px-4">
-          {/* TRIAL banner */}
+          {/* Trial banner */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
+            <div className="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-full font-bold text-lg">
               <Zap className="h-5 w-5 mr-2" />
-              TRIAL: 7-Day Free Trial on All Paid Plans
+              Trial: Free until the next 1st of the month
             </div>
           </div>
           
@@ -577,7 +577,7 @@ const Home = () => {
                   
                   {!plan.isFree && (
                     <p className="text-xs text-gray-500 text-center mt-3">
-                      TRIAL: Start with 7-day free trial
+                      Trial: Free until the next 1st of the month
                     </p>
                   )}
                 </CardContent>
@@ -649,7 +649,7 @@ const Home = () => {
                 ×
               </button>
             </div>
-            <p className="text-gray-600 mb-4">Get a free screener template, $1 trial instructions, and referral tips.</p>
+            <p className="text-gray-600 mb-4">Get a free screener template and onboarding tips.</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();

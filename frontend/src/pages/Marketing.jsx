@@ -150,7 +150,7 @@ export function FAQ() {
   return (
     <Section title="FAQ">
       <ul>
-        <li>Do you offer a trial? Yes, use code "trial" for $1 / 7 days, then auto-renew.</li>
+        <li>Do you offer a trial? Yes — trial is free until the next 1st of the month, then auto-renew unless you cancel.</li>
       </ul>
     </Section>
   );
