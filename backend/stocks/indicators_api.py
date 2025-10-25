@@ -82,7 +82,7 @@ def get_indicator(request, indicator_id: str):
 
 
 @csrf_exempt
-@require_http_methods(["PUT","PATCH"])]
+@require_http_methods(["PUT","PATCH"])
 @login_required
 def update_indicator(request, indicator_id: str):
     try:
