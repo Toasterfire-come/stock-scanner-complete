@@ -562,20 +562,43 @@ class StockScanner:
         try:
             url = 'https://query2.finance.yahoo.com/v7/finance/quote'
             data = None
+            # Determine proxy URL from provided session if possible
+            proxy_url = None
+            try:
+                if session is not None and getattr(session, 'proxies', None):
+                    px = getattr(session, 'proxies', {}) or {}
+                    proxy_url = px.get('https') or px.get('http')
+            except Exception:
+                proxy_url = None
+
+            params = {'symbols': ','.join(symbols)}
+
             if yf_get_json is not None:
+                # Try with session argument first; if unsupported, retry with proxy only
                 try:
-                    # yfinance >=0.2.6x supports session param on get_json
-                    data = yf_get_json(url, params={'symbols': ','.join(symbols)}, session=session)  # type: ignore
+                    data = yf_get_json(url, params=params, session=session)  # type: ignore[arg-type]
+                except TypeError:
+                    try:
+                        if proxy_url:
+                            data = yf_get_json(url, params=params, proxy=proxy_url)  # type: ignore[arg-type]
+                    except Exception:
+                        data = None
                 except Exception:
                     data = None
-            # If utils not available or failed, attempt through yf.utils module attribute dynamically
+
+            # If utils not available or failed, attempt through yf.utils.get_json
             if data is None:
                 try:
                     utils = getattr(yf, 'utils', None)
-                    if utils is not None:
-                        gj = getattr(utils, 'get_json', None)
-                        if callable(gj):
-                            data = gj(url, params={'symbols': ','.join(symbols)}, session=session)
+                    gj = getattr(utils, 'get_json', None) if utils is not None else None
+                    if callable(gj):
+                        try:
+                            data = gj(url, params=params, session=session)
+                        except TypeError:
+                            if proxy_url:
+                                data = gj(url, params=params, proxy=proxy_url)
+                        except Exception:
+                            data = None
                 except Exception:
                     data = None
             if not isinstance(data, dict):
