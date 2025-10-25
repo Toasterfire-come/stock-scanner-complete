@@ -108,6 +108,28 @@ class ProxyManager:
             self._lock = None
         # Build and warm persistent sessions per proxy (or one no-proxy session)
         self._sessions: List[object] = []
+        # Create a master warmed session without proxy to acquire stable cookies/crumb
+        master_cookies = None
+        try:
+            if cf_requests is not None:
+                master = cf_requests.Session()
+            else:
+                master = requests.Session()
+            master.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Connection': 'keep-alive',
+            })
+            try:
+                master.get('https://finance.yahoo.com', timeout=4)
+                # Seed yfinance cookies
+                _ = yf.Ticker('AAPL', session=master).fast_info
+            except Exception:
+                pass
+            master_cookies = master.cookies
+        except Exception:
+            master_cookies = None
+
         targets = self.proxies if self.proxies else [None]
         for proxy in targets:
             try:
@@ -130,6 +152,12 @@ class ProxyManager:
                 # Trigger yfinance to establish crumb/cookies within this session
                 try:
                     _ = yf.Ticker('AAPL', session=sess).fast_info
+                except Exception:
+                    pass
+                # Share cookies from master if available
+                try:
+                    if master_cookies is not None:
+                        sess.cookies.update(master_cookies)
                 except Exception:
                     pass
                 self._sessions.append(sess)
