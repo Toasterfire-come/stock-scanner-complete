@@ -35,6 +35,11 @@ except Exception:
     cf_requests = None  # type: ignore
 import pandas as pd
 import yfinance as yf
+try:
+    # Prefer yfinance utils to access crumbless quote endpoint in batch
+    from yfinance.utils import get_json as yf_get_json  # type: ignore
+except Exception:
+    yf_get_json = None  # type: ignore
 
 # Optional Django setup for DB writes (graceful fallback when unavailable)
 DJANGO_AVAILABLE = False
@@ -374,6 +379,219 @@ class StockScanner:
             self._no_proxy_session = s
         except Exception:
             self._no_proxy_session = None
+
+    # ------------------------- Batch quote (v7) pipeline ------------------------- #
+    def _map_quote_to_payload(self, q: Dict[str, Any], symbol_hint: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Map Yahoo v7 quote JSON to our Stock payload shape (fast, yfinance-only)."""
+        if not isinstance(q, dict):
+            return None
+        try:
+            symbol = str(q.get('symbol') or symbol_hint or '').strip().upper()
+            if not symbol:
+                return None
+            # Filter non-equities if quoteType present
+            qtype = str(q.get('quoteType') or '').upper()
+            if qtype and qtype not in ('EQUITY', 'COMMONSTOCK', 'COMMON_STOCK'):
+                return None
+
+            # Core numerics
+            def _get_num(keys: List[str]) -> Optional[float]:
+                for k in keys:
+                    v = q.get(k)
+                    if v is not None:
+                        try:
+                            f = float(v)
+                            if math.isfinite(f):
+                                return f
+                        except Exception:
+                            continue
+                return None
+
+            current_price = _get_num(['regularMarketPrice', 'postMarketPrice', 'preMarketPrice'])
+            prev_close = _get_num(['regularMarketPreviousClose', 'previousClose'])
+            price_change_today = None
+            change_percent = None
+            if current_price is not None and prev_close not in (None, 0):
+                try:
+                    price_change_today = current_price - float(prev_close)
+                    change_percent = (price_change_today / float(prev_close)) * 100.0
+                except Exception:
+                    price_change_today = None
+                    change_percent = None
+
+            days_low = _get_num(['regularMarketDayLow'])
+            days_high = _get_num(['regularMarketDayHigh'])
+            days_range = None
+            if days_low is not None and days_high is not None:
+                try:
+                    days_range = f"{days_low:.2f} - {days_high:.2f}"
+                except Exception:
+                    days_range = None
+
+            volume = _get_num(['regularMarketVolume'])
+            avg_volume_3mon = _get_num(['threeMonthAverageVolume']) or _get_num(['tenDayAverageVolume'])
+            dvav = None
+            if volume is not None and avg_volume_3mon not in (None, 0):
+                try:
+                    dvav = float(volume) / float(avg_volume_3mon)
+                except Exception:
+                    dvav = None
+
+            market_cap = _get_num(['marketCap'])
+            shares_available = _get_num(['sharesOutstanding', 'shares'])
+            if market_cap is None and current_price is not None and shares_available is not None:
+                try:
+                    market_cap = float(current_price) * float(shares_available)
+                except Exception:
+                    pass
+
+            wk_low = _get_num(['fiftyTwoWeekLow', 'yearLow'])
+            wk_high = _get_num(['fiftyTwoWeekHigh', 'yearHigh'])
+            eps = _get_num(['epsTrailingTwelveMonths', 'trailingEps'])
+            pe_ratio = _get_num(['trailingPE'])
+            if pe_ratio is None and current_price is not None and eps not in (None, 0):
+                try:
+                    pe_ratio = float(current_price) / float(eps)
+                except Exception:
+                    pe_ratio = None
+
+            book_value = _get_num(['bookValue'])
+            price_to_book = _get_num(['priceToBook'])
+            if price_to_book is None and current_price is not None and book_value not in (None, 0):
+                try:
+                    price_to_book = float(current_price) / float(book_value)
+                except Exception:
+                    price_to_book = None
+
+            bid_price = _get_num(['bid'])
+            ask_price = _get_num(['ask'])
+            bid_ask_spread = None
+            if bid_price is not None and ask_price is not None:
+                try:
+                    bid_ask_spread = f"{bid_price:.2f} - {ask_price:.2f}"
+                except Exception:
+                    bid_ask_spread = None
+
+            # Dividend yield handling (ensure percentage)
+            dividend_yield = _get_num(['trailingAnnualDividendYield', 'dividendYield'])
+            if dividend_yield is not None and dividend_yield < 1.0:
+                dividend_yield = dividend_yield * 100.0
+
+            one_year_target = _get_num(['targetMeanPrice'])
+
+            company_name = q.get('longName') or q.get('shortName') or symbol
+            exchange = q.get('fullExchangeName') or q.get('exchange') or 'NASDAQ'
+
+            payload: Dict[str, Any] = {
+                'ticker': symbol,
+                'symbol': symbol,
+                'company_name': company_name,
+                'name': company_name,
+                'exchange': exchange,
+                'current_price': safe_decimal(current_price),
+                'days_low': safe_decimal(days_low),
+                'days_high': safe_decimal(days_high),
+                'days_range': days_range or '',
+                'volume': int(volume) if volume is not None else None,
+                'volume_today': int(volume) if volume is not None else None,
+                'avg_volume_3mon': int(avg_volume_3mon) if avg_volume_3mon is not None else None,
+                'dvav': safe_decimal(dvav),
+                'market_cap': int(market_cap) if market_cap is not None else None,
+                'shares_available': int(shares_available) if shares_available is not None else None,
+                'pe_ratio': safe_decimal(pe_ratio),
+                'dividend_yield': safe_decimal(dividend_yield),
+                'one_year_target': safe_decimal(one_year_target),
+                'week_52_low': safe_decimal(wk_low),
+                'week_52_high': safe_decimal(wk_high),
+                'earnings_per_share': safe_decimal(eps),
+                'book_value': safe_decimal(book_value),
+                'price_to_book': safe_decimal(price_to_book),
+                'bid_price': safe_decimal(bid_price),
+                'ask_price': safe_decimal(ask_price),
+                'bid_ask_spread': bid_ask_spread or '',
+                'price_change_today': safe_decimal(price_change_today),
+                'price_change_week': None,
+                'price_change_month': None,
+                'price_change_year': None,
+                'change_percent': safe_decimal(change_percent),
+                'market_cap_change_3mon': None,
+                'pe_change_3mon': None,
+                'last_updated': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
+                'created_at': (django_timezone.now() if django_timezone else datetime.now(timezone.utc)),
+            }
+            # Analytics (minimal, keep shape compatible)
+            payload['_analytics'] = {
+                'rsi14': None,
+                'atr14': None,
+                'sma_5': None,
+                'sma_20': None,
+                'ema_5': None,
+                'ema_20': None,
+                'macd': None,
+                'macd_signal': None,
+                'stochastic14': None,
+                'vwap': None,
+                'gap_open_vs_prev_close': None,
+                'gap_open_percent': None,
+                'premarket_active': None,
+                'postmarket_active': None,
+                'earnings_bucket': None,
+                'days_to_cover': None,
+                'liquidity_score': None,
+                'flags': {
+                    'large_cap': (market_cap is not None and float(market_cap) >= 10_000_000_000),
+                    'high_dvav': (dvav is not None and float(dvav) >= 2.0) if dvav is not None else None,
+                    'rsi_overbought': None,
+                    'rsi_oversold': None,
+                },
+                'dollar_volume': (float(current_price) * float(volume)) if (current_price is not None and volume is not None) else None,
+                'momentum_1m': None,
+            }
+            return payload
+        except Exception:
+            return None
+
+    def _batch_quote(self, symbols: List[str], session: Optional[object]) -> Dict[str, Dict[str, Any]]:
+        """Fetch quote data for many tickers at once via yfinance's crumbless quote endpoint.
+        Returns mapping: sym -> payload
+        """
+        out: Dict[str, Dict[str, Any]] = {}
+        if not symbols:
+            return out
+        # Build symbols param (Yahoo limit is generous, but we cap to ~250 per call upstream)
+        try:
+            url = 'https://query2.finance.yahoo.com/v7/finance/quote'
+            data = None
+            if yf_get_json is not None:
+                try:
+                    # yfinance >=0.2.6x supports session param on get_json
+                    data = yf_get_json(url, params={'symbols': ','.join(symbols)}, session=session)  # type: ignore
+                except Exception:
+                    data = None
+            # If utils not available or failed, attempt through yf.utils module attribute dynamically
+            if data is None:
+                try:
+                    utils = getattr(yf, 'utils', None)
+                    if utils is not None:
+                        gj = getattr(utils, 'get_json', None)
+                        if callable(gj):
+                            data = gj(url, params={'symbols': ','.join(symbols)}, session=session)
+                except Exception:
+                    data = None
+            if not isinstance(data, dict):
+                return out
+            results = []
+            try:
+                results = data.get('quoteResponse', {}).get('result', []) or []
+            except Exception:
+                results = data.get('result', []) or []
+            for q in results:
+                payload = self._map_quote_to_payload(q)
+                if payload and payload.get('symbol'):
+                    out[payload['symbol']] = payload
+        except Exception as e:
+            logger.error(f"Quote batch failed for {len(symbols)} tickers: {e}")
+        return out
 
     # ------------------------- Batch download pipeline ------------------------- #
     def _download_chunk(self, symbols: List[str], session: Optional[object], timeout: int,
@@ -1158,61 +1376,72 @@ class StockScanner:
     def scan(self, symbols: List[str], csv_out: Optional[str] = None) -> Dict[str, Any]:
         start = time.time()
         successes: Dict[str, Dict[str, Any]] = {}
-        rate_limited_syms: List[str] = []
         failed_symbols: List[str] = []
-        failures = 0
         proxy_rotations = 0
+        rate_limited_chunks = 0
 
-        # Prefilter disabled: rely solely on yfinance to avoid crumb/401 issues
+        # Chunking tuned for high throughput; will be further tunable via env
+        default_chunk = 200
+        quote_chunk_size = int(os.environ.get('SCANNER_QUOTE_CHUNK', default_chunk))
+        # Build chunks
+        symbols = [s.strip().upper() for s in symbols if s and s.strip()]
+        chunks: List[List[str]] = [symbols[i:i+quote_chunk_size] for i in range(0, len(symbols), quote_chunk_size)]
 
-        with ThreadPoolExecutor(max_workers=self.threads) as executor:
-            futures = {executor.submit(self._fetch_symbol, s, i): s for i, s in enumerate(symbols)}
-            for fut in as_completed(futures):
-                s = futures[fut]
+        def process_quote_chunk(chunk_syms: List[str]) -> Tuple[List[str], Dict[str, Dict[str, Any]]]:
+            nonlocal proxy_rotations
+            attempts = 0
+            sess = None
+            if self.use_proxies and self.proxy_mgr.proxies:
+                sess = self.proxy_mgr.get_session(rotate=False)
+            while attempts < 3:
                 try:
-                    sym, payload, rl = fut.result(timeout=self.timeout + 2)
-                except Exception as e:
-                    if is_rate_limit_error(e):
-                        rate_limited_syms.append(s)
-                        # rotate proxy immediately
-                        if self.use_proxies:
-                            self.proxy_mgr.rotate_and_get_session()
-                            proxy_rotations += 1
-                        continue
-                    failures += 1
-                    failed_symbols.append(s)
-                    continue
-                if rl:
-                    rate_limited_syms.append(sym)
-                    if self.use_proxies:
-                        self.proxy_mgr.rotate_and_get_session()
+                    data = self._batch_quote(chunk_syms, session=sess)
+                    if data:
+                        return chunk_syms, data
+                    # No data returned – rotate and retry
+                    attempts += 1
+                    if self.use_proxies and self.proxy_mgr.proxies:
+                        sess = self.proxy_mgr.rotate_and_get_session()
                         proxy_rotations += 1
-                    continue
-                if payload:
-                    successes[sym] = payload
-                else:
-                    failures += 1
-                    failed_symbols.append(s)
+                    time.sleep(min(0.25 + random.random() * 0.5, 0.75))
+                except Exception as e:
+                    attempts += 1
+                    if is_rate_limit_error(e) and self.use_proxies and self.proxy_mgr.proxies:
+                        sess = self.proxy_mgr.rotate_and_get_session()
+                        proxy_rotations += 1
+                    time.sleep(min(0.25 + random.random() * 0.5, 0.75))
+            return chunk_syms, {}
 
-        # Retry rate-limited at end with proxy rotation and slight backoff
+        # Dispatch chunks concurrently
+        with ThreadPoolExecutor(max_workers=self.threads) as ex:
+            futures = [ex.submit(process_quote_chunk, ch) for ch in chunks]
+            for fut in as_completed(futures):
+                ch, rows = fut.result()
+                if not rows:
+                    rate_limited_chunks += 1
+                    failed_symbols.extend(ch)
+                else:
+                    successes.update(rows)
+
+        # Retry wave for chunks that produced no rows
         retry_success = 0
-        if rate_limited_syms:
-            logger.info(f"Retrying {len(rate_limited_syms)} rate-limited tickers with rotated proxies...")
-            time.sleep(1.0)
-            with ThreadPoolExecutor(max_workers=self.threads) as executor:
-                futures = {executor.submit(self._fetch_symbol, s, i): s for i, s in enumerate(rate_limited_syms)}
+        if failed_symbols:
+            # Reduce chunk size for retries
+            retry_chunk = max(100, int(quote_chunk_size * 0.7))
+            retry_chunks = [failed_symbols[i:i+retry_chunk] for i in range(0, len(failed_symbols), retry_chunk)]
+            failed_symbols = []
+            with ThreadPoolExecutor(max_workers=self.threads) as ex:
+                futures = [ex.submit(process_quote_chunk, ch) for ch in retry_chunks]
                 for fut in as_completed(futures):
-                    s = futures[fut]
-                    try:
-                        sym, payload, rl = fut.result(timeout=self.timeout + 2)
-                    except Exception:
-                        failed_symbols.append(s)
-                        continue
-                    if payload and not rl:
-                        successes[sym] = payload
-                        retry_success += 1
+                    ch, rows = fut.result()
+                    if not rows:
+                        failed_symbols.extend(ch)
                     else:
-                        failed_symbols.append(s)
+                        # Merge; count newly added
+                        before = len(successes)
+                        for sym, payload in rows.items():
+                            successes[sym] = payload
+                        retry_success += (len(successes) - before)
 
         # Optional aggressive fill to improve completeness (disabled by default for speed)
         aggressive_fill = str(os.environ.get('SCANNER_AGGRESSIVE_FILL', '')).lower() in ('1', 'true', 'yes')
@@ -1275,10 +1504,10 @@ class StockScanner:
                 except Exception:
                     pass
 
-        # Ensure completeness threshold via targeted info calls
+        # Ensure completeness threshold via targeted info calls (disabled by default)
         target_complete = math.ceil(self.completeness_threshold * len(symbols))
         complete_now = sum(1 for p in successes.values() if self._is_complete(p))
-        if complete_now < target_complete:
+        if complete_now < target_complete and target_complete > 0:
             remaining = [s for s, p in successes.items() if not self._is_complete(p)]
             logger.info(f"Completeness {complete_now}/{len(symbols)} below target {target_complete}; fetching info for {len(remaining)}...")
             self._fill_market_cap_via_info(remaining, successes, target_complete)
@@ -1406,6 +1635,47 @@ class StockScanner:
         except Exception as e:
             logger.error(f"Deep-dive analysis failed: {e}")
 
+        # Persist to DB (mirror prior behavior) - update_or_create and add price point
+        if self.db_enabled and Stock is not None and StockPrice is not None:
+            try:
+                for symbol, payload in successes.items():
+                    try:
+                        stock, created = Stock.objects.get_or_create(ticker=symbol, defaults={
+                            'symbol': symbol,
+                            'company_name': payload.get('company_name') or symbol,
+                            'name': payload.get('name') or symbol,
+                            'exchange': payload.get('exchange') or 'NASDAQ',
+                        })
+                        updatable_fields = [
+                            'company_name','name','exchange','current_price','days_low','days_high','days_range',
+                            'volume','volume_today','avg_volume_3mon','dvav','market_cap','shares_available',
+                            'pe_ratio','dividend_yield','one_year_target','week_52_low','week_52_high',
+                            'earnings_per_share','book_value','price_to_book','bid_price','ask_price',
+                            'bid_ask_spread','price_change_today','price_change_week','price_change_month',
+                            'price_change_year','change_percent','market_cap_change_3mon','pe_change_3mon'
+                        ]
+                        changed = False
+                        for f in updatable_fields:
+                            val = payload.get(f)
+                            if val is None:
+                                continue
+                            if isinstance(val, str) and val == '':
+                                continue
+                            setattr(stock, f, val)
+                            changed = True
+                        if changed:
+                            stock.last_updated = payload.get('last_updated') or (django_timezone.now() if django_timezone else datetime.now(timezone.utc))
+                            stock.save()
+                        if payload.get('current_price') is not None:
+                            try:
+                                StockPrice.objects.create(stock=stock, price=payload['current_price'])
+                            except Exception:
+                                pass
+                    except Exception as e:
+                        logger.error(f"DB write failed for {symbol}: {e}")
+            except Exception as e:
+                logger.error(f"DB bulk write error: {e}")
+
         duration = time.time() - start
         return {
             'total': len(symbols),
@@ -1413,7 +1683,7 @@ class StockScanner:
             'failed': (len(symbols) - len(successes)),
             'failed_symbols': failed_symbols,
             'retried_success': retry_success,
-            'rate_limited_initial': len(set(rate_limited_syms)),
+            'rate_limited_chunks': rate_limited_chunks,
             'proxies_available': len(self.proxy_mgr.proxies) if self.use_proxies else 0,
             'proxy_rotations': proxy_rotations,
             'csv_out': csv_out,
