@@ -593,7 +593,7 @@ class StockScanner:
                             sess = self.proxy_mgr.rotate_and_get_session()
             return updates, drop_non_equity
 
-        if complete:
+        if complete and str(os.environ.get('SCANNER_ENRICH_FASTINFO', '')).lower() in ('1', 'true', 'yes'):
             enrich_syms = list(complete.keys())
             # Process fast_info in chunks with parallelism, session reuse within each chunk
             fi_chunk_size = 300
