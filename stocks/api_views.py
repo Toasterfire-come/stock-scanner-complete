@@ -1080,14 +1080,14 @@ def stock_ohlc_api(request, ticker: str):
             for w in [10, 20, 50, 100, 200]:
                 key = f'sma{w}'
                 if key in indicators:
-                    ind[key] = _compute_sma([x for x in closes if x is not None], w)
+                    ind[key] = _compute_sma(closes, w)
         if any(name.startswith('ema') for name in indicators):
             for s in [10, 20, 50, 100, 200]:
                 key = f'ema{s}'
                 if key in indicators:
-                    ind[key] = _compute_ema([x for x in closes if x is not None], s)
+                    ind[key] = _compute_ema(closes, s)
         if 'rsi14' in indicators or 'rsi' in indicators:
-            ind['rsi14'] = _compute_rsi([x for x in closes if x is not None], 14)
+            ind['rsi14'] = _compute_rsi(closes, 14)
 
         return Response({
             'success': True,

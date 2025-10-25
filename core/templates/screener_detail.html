@@ -46,7 +46,7 @@
 
                     const rows = (data.stocks || []).map(item => `
                         <tr>
-                            <td><strong>${item.ticker || ''}</strong></td>
+                            <td><a class="btn" href="/stocks/${(item.ticker||'').toUpperCase()}/"><strong>${item.ticker || ''}</strong></a></td>
                             <td>${item.name || ''}</td>
                             <td>${item.current_price ?? ''}</td>
                             <td>${item.price_change_percent ?? ''}</td>
