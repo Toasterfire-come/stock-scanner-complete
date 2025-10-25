@@ -141,63 +141,7 @@ class ProxyManager:
         return self.get_session(rotate=True)
 
 
-class YahooQuoteClient:
-    """Lightweight client for Yahoo quote API with automatic crumb/cookie handling.
-    Uses a persistent no-proxy session to avoid 401/crumb issues; batch-friendly.
-    """
-    BASE_URL = "https://query1.finance.yahoo.com/v7/finance/quote"
-
-    def __init__(self) -> None:
-        # Prefer curl_cffi session for yfinance compatibility
-        if cf_requests is not None:
-            sess = cf_requests.Session()
-        else:
-            sess = requests.Session()
-        sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-        self.session = sess
-        self.crumb: Optional[str] = None
-        self._init_crumb()
-
-    def _init_crumb(self) -> None:
-        try:
-            # Warm cookies then retrieve crumb
-            self.session.get('https://finance.yahoo.com', timeout=6)
-            r = self.session.get('https://query1.finance.yahoo.com/v1/test/getcrumb', timeout=6)
-            if getattr(r, 'status_code', 0) == 200:
-                txt = (r.text or '').strip()
-                if txt:
-                    self.crumb = txt
-        except Exception:
-            self.crumb = None
-
-    def fetch_quotes(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
-        if not symbols:
-            return {}
-        params = {'symbols': ','.join(symbols)}
-        if self.crumb:
-            params['crumb'] = self.crumb
-        try:
-            r = self.session.get(self.BASE_URL, params=params, timeout=8)
-            # Refresh crumb on auth failures and retry once
-            body = r.text or ''
-            if r.status_code in (401, 403) or ('Invalid Crumb' in body):
-                self._init_crumb()
-                if self.crumb:
-                    params['crumb'] = self.crumb
-                r = self.session.get(self.BASE_URL, params=params, timeout=8)
-            r.raise_for_status()
-            data = r.json()
-            result = data.get('quoteResponse', {}).get('result', [])
-            out: Dict[str, Dict[str, Any]] = {}
-            for item in result or []:
-                sym = item.get('symbol')
-                if not sym:
-                    continue
-                out[sym.upper()] = item
-            return out
-        except Exception as e:
-            logger.error(f"Quote fetch failed for {len(symbols)} tickers: {e}")
-            return {}
+## Direct Yahoo quote client removed: we rely solely on yfinance interfaces.
 
 def load_proxies(proxy_file: str) -> List[str]:
     try:
@@ -391,21 +335,17 @@ class StockScanner:
         self.db_enabled = db_enabled and DJANGO_AVAILABLE
         # Target completeness threshold (price, volume, market_cap present)
         self.completeness_threshold = 0.92
-        # Reusable no-proxy session preferred by yfinance (curl_cffi when available)
+        # Base headers for sessions
         self._no_proxy_session = None
         try:
             if cf_requests is not None:
                 s = cf_requests.Session()
-                s.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-                self._no_proxy_session = s
             else:
                 s = requests.Session()
-                s.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-                self._no_proxy_session = s
+            s.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+            self._no_proxy_session = s
         except Exception:
             self._no_proxy_session = None
-        # Yahoo direct quote client for batch validation and fast fields
-        self._yahoo_client = YahooQuoteClient()
 
     # ------------------------- Batch download pipeline ------------------------- #
     def _download_chunk(self, symbols: List[str], session: Optional[object], timeout: int,
@@ -734,8 +674,7 @@ class StockScanner:
                 group_by='ticker',
                 auto_adjust=False,
                 progress=False,
-                # Avoid proxies; pass persistent no-proxy session to minimize crumb
-                session=self._no_proxy_session,
+                session=(self.proxy_mgr.get_session(rotate=False) if (self.use_proxies and self.proxy_mgr.proxies) else self._no_proxy_session),
                 threads=True
             )
             if df is None or df.empty:
@@ -1196,23 +1135,7 @@ class StockScanner:
         failures = 0
         proxy_rotations = 0
 
-        # Optional pre-filter: drop obviously invalid/delisted via direct quotes
-        prefilter_syms: List[str] = []
-        batch = 500
-        prefilter_failed = False
-        for i in range(0, len(symbols), batch):
-            chunk = symbols[i:i+batch]
-            qm = self._yahoo_client.fetch_quotes(chunk)
-            # If Yahoo rejects crumbs broadly, skip prefiltering entirely
-            if i == 0 and len(qm) == 0:
-                prefilter_failed = True
-                break
-            for s in chunk:
-                q = qm.get(s.upper())
-                if q and (q.get('regularMarketPrice') is not None or q.get('regularMarketVolume') is not None or q.get('marketCap') is not None):
-                    prefilter_syms.append(s)
-        if not prefilter_failed and prefilter_syms:
-            symbols = prefilter_syms
+        # Prefilter disabled: rely solely on yfinance to avoid crumb/401 issues
 
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
             futures = {executor.submit(self._fetch_symbol, s, i): s for i, s in enumerate(symbols)}
@@ -1302,32 +1225,7 @@ class StockScanner:
                             except Exception:
                                 pass
 
-            # Use direct quotes to fill remaining fast fields without proxies
-            remaining_for_quote = [s for s, p in successes.items() if (p.get('current_price') is None or p.get('volume') is None or p.get('market_cap') is None)]
-            for i in range(0, len(remaining_for_quote), 500):
-                chunk = remaining_for_quote[i:i+500]
-                qm = self._yahoo_client.fetch_quotes(chunk)
-                for s in chunk:
-                    q = qm.get(s.upper())
-                    if not q:
-                        continue
-                    p = successes.get(s)
-                    if not p:
-                        continue
-                    if p.get('current_price') is None and q.get('regularMarketPrice') is not None:
-                        p['current_price'] = safe_decimal(q.get('regularMarketPrice'))
-                    if (p.get('volume') is None or p.get('volume') == 0) and q.get('regularMarketVolume') is not None:
-                        try:
-                            v = int(q.get('regularMarketVolume'))
-                            p['volume'] = v
-                            p['volume_today'] = v
-                        except Exception:
-                            pass
-                    if p.get('market_cap') is None and q.get('marketCap') is not None:
-                        try:
-                            p['market_cap'] = int(q.get('marketCap'))
-                        except Exception:
-                            pass
+            # Direct quote fallback removed to keep yfinance-only
 
         # Fallback pass B: derive market cap from shares if possible
         for s, p in successes.items():
