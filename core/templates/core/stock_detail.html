@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+  <script src="https://unpkg.com/lightweight-charts@4.2.4/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    .chart-wrap { display:grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 1100px) { .chart-wrap { grid-template-columns: 2fr 1fr; } }
+    #chart { width: 100%; height: 440px; }
+    #rsi { width: 100%; height: 140px; }
+  </style>
+{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">{{ ticker }} • Interactive Chart</div>
+      <div class="d-flex gap-2">
+        <a href="/screeners/" class="btn">Back</a>
+        <span class="badge">Daily</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap">
+        <div class="chart-panel">
+          <div class="chart-title">
+            <h2>Price</h2>
+            <div class="chart-legend">
+              <span><span class="legend-dot" style="background:#4f7cff"></span> SMA20</span>
+              <span><span class="legend-dot" style="background:#22d3ee"></span> EMA50</span>
+            </div>
+          </div>
+          <div id="chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Overview</div></div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="kpi"><div class="label">Ticker</div><div class="value">{{ ticker }}</div></div>
+              <div class="kpi"><div class="label">Exchange</div><div class="value">NASDAQ</div></div>
+              <div class="kpi"><div class="label">Status</div><div class="value">Active</div></div>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div class="card-header"><div class="card-title">RSI(14)</div></div>
+          <div class="card-body"><div id="rsi"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script>
+    const ticker = "{{ ticker }}";
+  </script>
+  <script>
+    (async function() {
+      const url = `/api/stocks/${ticker}/ohlc/?period=6mo&interval=1d&indicators=sma20,ema50,rsi14`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.success) return;
+
+      const ohlc = data.ohlc.map(o => ({ time: o.t / 1000, open: o.o, high: o.h, low: o.l, close: o.c }));
+
+      const priceChart = LightweightCharts.createChart(document.getElementById('chart'), {
+        layout: { background: { type: 'solid', color: 'transparent' }, textColor: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() },
+        grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Magnet },
+      });
+      const candleSeries = priceChart.addCandlestickSeries({ upColor: '#1fbf75', downColor: '#f44336', borderVisible: false, wickUpColor: '#1fbf75', wickDownColor: '#f44336' });
+      candleSeries.setData(ohlc);
+
+      const sma20 = data.indicators.sma20 || [];
+      const ema50 = data.indicators.ema50 || [];
+      const sma20Series = priceChart.addLineSeries({ color: '#4f7cff', lineWidth: 2 });
+      const ema50Series = priceChart.addLineSeries({ color: '#22d3ee', lineWidth: 2 });
+      sma20Series.setData(ohlc.map((d, i) => ({ time: d.time, value: sma20[i] ?? null })).filter(p => p.value !== null));
+      ema50Series.setData(ohlc.map((d, i) => ({ time: d.time, value: ema50[i] ?? null })).filter(p => p.value !== null));
+
+      const rsiChart = LightweightCharts.createChart(document.getElementById('rsi'), {
+        layout: { background: { type: 'solid', color: 'transparent' }, textColor: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false },
+        grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
+      });
+      const rsiSeries = rsiChart.addLineSeries({ color: '#f59e0b', lineWidth: 2 });
+      const rsi = data.indicators.rsi14 || [];
+      rsiSeries.setData(ohlc.map((d, i) => ({ time: d.time, value: rsi[i] ?? null })).filter(p => p.value !== null));
+    })();
+  </script>
+{% endblock %}

@@ -76,3 +76,10 @@ def screener_detail(request, key):
         'api_url': '/api/market/filter/'
     }
     return render(request, 'screener_detail.html', context)
+
+def stock_detail_page(request, ticker: str):
+    ticker = (ticker or '').upper()
+    return render(request, 'core/stock_detail.html', {
+        'title': f"{ticker} • Stock Detail",
+        'ticker': ticker,
+    })

@@ -1,180 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    <style>
-        :root {
-            --cream-white: #f8f6f0;
-            --warm-beige: #e8dcc6;
-            --marble-grey: #d4c5b3;
-            --sage-green: #a8b5a0;
-            --deep-sage: #7a8471;
-            --charcoal: #3c3633;
-            --soft-brown: #8b7355;
-            --accent-gold: #c9a961;
-        }
-        
-        body {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            background: linear-gradient(135deg, var(--cream-white) 0%, var(--warm-beige) 50%, var(--marble-grey) 100%);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            color: var(--charcoal);
-            position: relative;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(168, 181, 160, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(201, 169, 97, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 60%, rgba(212, 197, 179, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: rgba(248, 246, 240, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 25px;
-            padding: 50px;
-            box-shadow: 
-                0 20px 40px rgba(60, 54, 51, 0.1),
-                0 8px 16px rgba(60, 54, 51, 0.05),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(212, 197, 179, 0.3);
-        }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 2.8em;
-            font-weight: 300;
-            color: var(--deep-sage);
-            text-shadow: 0 2px 4px rgba(60, 54, 51, 0.1);
-            letter-spacing: -0.5px;
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: var(--soft-brown);
-            margin-bottom: 40px;
-            font-size: 1.1em;
-            font-style: italic;
-            font-weight: 300;
-        }
-        
-        .endpoints {
-            display: grid;
-            gap: 25px;
-            margin-top: 40px;
-        }
-        
-        .endpoint {
-            background: linear-gradient(145deg, rgba(248, 246, 240, 0.9), rgba(232, 220, 198, 0.6));
-            padding: 25px;
-            border-radius: 18px;
-            border: 1px solid rgba(168, 181, 160, 0.2);
-            box-shadow: 
-                0 8px 16px rgba(60, 54, 51, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            transition: all 0.3s ease;
-        }
-        
-        .endpoint:hover {
-            transform: translateY(-2px);
-            box-shadow: 
-                0 12px 24px rgba(60, 54, 51, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
-        
-        .endpoint h3 {
-            margin: 0 0 12px 0;
-            color: var(--deep-sage);
-            font-size: 1.3em;
-            font-weight: 400;
-        }
-        
-        .endpoint a {
-            color: var(--sage-green);
-            text-decoration: none;
-            font-weight: 500;
-            font-family: 'Monaco', 'Consolas', monospace;
-            padding: 2px 6px;
-            background: rgba(168, 181, 160, 0.1);
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-        
-        .endpoint a:hover {
-            background: rgba(168, 181, 160, 0.2);
-            color: var(--deep-sage);
-        }
-        
-        .status {
-            background: linear-gradient(145deg, rgba(168, 181, 160, 0.15), rgba(168, 181, 160, 0.05));
-            border: 1px solid rgba(168, 181, 160, 0.3);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 35px;
-            color: var(--deep-sage);
-            font-weight: 500;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-        }
-        
-        .version {
-            text-align: center;
-            margin-top: 40px;
-            color: var(--soft-brown);
-            font-size: 0.95em;
-            font-style: italic;
-        }
-        
-        .logo-accent {
-            background: linear-gradient(135deg, var(--accent-gold), var(--sage-green));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1><span class="logo-accent">📈</span> {{ title }}</h1>
-        <p class="subtitle">Professional NASDAQ Stock Data & News Sentiment Analysis Platform</p>
-        
-        <div class="status">
-            ✅ Server Running Successfully • MySQL Connected • API Ready
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+  <div class="grid cols-3">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Status</div>
+        <span class="badge success">Operational</span>
+      </div>
+      <div class="card-body">
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">Framework</div>
+            <div class="value">Django</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Database</div>
+            <div class="value">MySQL</div>
+          </div>
+          <div class="kpi">
+            <div class="label">API</div>
+            <div class="value">Ready</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Cache</div>
+            <div class="value">Enabled</div>
+          </div>
         </div>
-
-        <div class="endpoints">
-            {% for endpoint in endpoints %}
-            <div class="endpoint">
-                <h3>{{ endpoint.description }}</h3>
-                <p><a href="{{ endpoint.url }}" target="_blank">{{ endpoint.url }}</a></p>
-            </div>
-            {% endfor %}
-            
-            <div class="endpoint">
-                <h3>Health Check</h3>
-                <p><a href="/health/" target="_blank">/health/</a></p>
-            </div>
-        </div>
-
-        <div class="version">
-            Version {{ version }} • Django Framework • MySQL Database • Professional API Suite
-        </div>
+      </div>
     </div>
-</body>
-</html>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Quick Links</div>
+      </div>
+      <div class="card-body">
+        <div class="grid">
+          {% for endpoint in endpoints %}
+          <a class="btn" href="{{ endpoint.url }}" target="_blank">{{ endpoint.description }}</a>
+          {% endfor %}
+          <a class="btn" href="/health/" target="_blank">Health Check</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Get Started</div>
+      </div>
+      <div class="card-body">
+        <p class="muted">Explore the latest screeners and detailed stock pages with real-time charts and indicators.</p>
+        <div class="grid">
+          <a class="btn primary" href="/screeners/">Browse Screeners</a>
+          <a class="btn" href="/api/stocks/" target="_blank">View Stock API</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

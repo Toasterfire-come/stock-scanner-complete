@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 from decimal import Decimal
+from typing import List, Dict, Any, Optional
 
 from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
@@ -43,6 +44,73 @@ def calculate_change_percent(current_price, price_change):
         return float((price_change / (current_price - price_change)) * 100)
     except (ZeroDivisionError, TypeError):
         return 0.0
+
+def _safe_float(v: Any) -> Optional[float]:
+    try:
+        return None if v is None else float(v)
+    except Exception:
+        return None
+
+def _compute_sma(values: List[Optional[float]], window: int) -> List[Optional[float]]:
+    out: List[Optional[float]] = []
+    acc: List[float] = []
+    for x in values:
+        if x is None:
+            out.append(None)
+            continue
+        acc.append(x)
+        if len(acc) > window:
+            acc.pop(0)
+        out.append(sum(acc) / window if len(acc) == window else None)
+    return out
+
+def _compute_ema(values: List[Optional[float]], span: int) -> List[Optional[float]]:
+    out: List[Optional[float]] = []
+    k = 2 / (span + 1)
+    ema: Optional[float] = None
+    for x in values:
+        if x is None:
+            out.append(None)
+            continue
+        ema = (x if ema is None else (x - ema) * k + ema)
+        out.append(ema)
+    return out
+
+def _compute_rsi(values: List[Optional[float]], period: int = 14) -> List[Optional[float]]:
+    out: List[Optional[float]] = []
+    gains: List[float] = []
+    losses: List[float] = []
+    prev: Optional[float] = None
+    avg_gain: Optional[float] = None
+    avg_loss: Optional[float] = None
+    for price in values:
+        if price is None:
+            out.append(None)
+            continue
+        if prev is None:
+            out.append(None)
+            prev = price
+            continue
+        change = price - prev
+        gain = max(change, 0)
+        loss = max(-change, 0)
+        gains.append(gain)
+        losses.append(loss)
+        if len(gains) < period:
+            out.append(None)
+        elif len(gains) == period:
+            avg_gain = sum(gains[-period:]) / period
+            avg_loss = sum(losses[-period:]) / period
+            rs = (avg_gain / avg_loss) if (avg_loss and avg_loss != 0) else None
+            out.append(100 - (100 / (1 + rs)) if rs is not None else None)
+        else:
+            assert avg_gain is not None and avg_loss is not None
+            avg_gain = (avg_gain * (period - 1) + gain) / period
+            avg_loss = (avg_loss * (period - 1) + loss) / period
+            rs = (avg_gain / avg_loss) if (avg_loss and avg_loss != 0) else None
+            out.append(100 - (100 / (1 + rs)) if rs is not None else None)
+        prev = price
+    return out
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -965,6 +1033,72 @@ def trending_stocks_api(request):
             {'error': 'Failed to retrieve trending stocks'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_ohlc_api(request, ticker: str):
+    """
+    Get OHLC history and common indicators for a ticker.
+    Query params:
+      - period: yfinance period (1mo, 3mo, 6mo, 1y, 2y, 5y) default 6mo
+      - interval: yfinance interval (1d, 1h, 30m, 15m) default 1d
+      - indicators: comma list (sma20,sma50,ema20,ema50,rsi14)
+    """
+    try:
+        period = request.GET.get('period', '6mo')
+        interval = request.GET.get('interval', '1d')
+        indicators_raw = request.GET.get('indicators', 'sma20,sma50,ema20,ema50,rsi14')
+        indicators = [i.strip().lower() for i in indicators_raw.split(',') if i.strip()]
+
+        t = yf.Ticker(ticker.upper())
+        hist = t.history(period=period, interval=interval)
+        if hist is None or hist.empty:
+            return Response({'success': False, 'error': 'No history'}, status=404)
+
+        # Build arrays
+        records: List[Dict[str, Any]] = []
+        closes: List[float] = []
+        for idx, row in hist.iterrows():
+            item = {
+                't': int(idx.timestamp() * 1000),
+                'o': _safe_float(row.get('Open')),
+                'h': _safe_float(row.get('High')),
+                'l': _safe_float(row.get('Low')),
+                'c': _safe_float(row.get('Close')),
+                'v': _safe_float(row.get('Volume')),
+            }
+            if item['c'] is not None:
+                closes.append(item['c'])
+            else:
+                # keep list lengths aligned
+                closes.append(closes[-1] if closes else None)
+            records.append(item)
+
+        # Indicators
+        ind: Dict[str, List[Optional[float]]] = {}
+        if any(name.startswith('sma') for name in indicators):
+            for w in [10, 20, 50, 100, 200]:
+                key = f'sma{w}'
+                if key in indicators:
+                    ind[key] = _compute_sma([x for x in closes if x is not None], w)
+        if any(name.startswith('ema') for name in indicators):
+            for s in [10, 20, 50, 100, 200]:
+                key = f'ema{s}'
+                if key in indicators:
+                    ind[key] = _compute_ema([x for x in closes if x is not None], s)
+        if 'rsi14' in indicators or 'rsi' in indicators:
+            ind['rsi14'] = _compute_rsi([x for x in closes if x is not None], 14)
+
+        return Response({
+            'success': True,
+            'ticker': ticker.upper(),
+            'count': len(records),
+            'ohlc': records,
+            'indicators': ind,
+        })
+    except Exception as e:
+        logger.error(f"stock_ohlc_api error for {ticker}: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to load OHLC'}, status=500)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

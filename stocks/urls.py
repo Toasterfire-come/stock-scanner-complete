@@ -20,6 +20,8 @@ urlpatterns = [
     # Real-time data endpoints
     path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock_api'),
     path('trending/', api_views.trending_stocks_api, name='trending_stocks_api'),
+    # OHLC and indicators
+    path('stocks/<str:ticker>/ohlc/', api_views.stock_ohlc_api, name='stock_ohlc_api'),
     
     # Alert management
     path('alerts/create/', api_views.create_alert_api, name='create_alert_api'),
