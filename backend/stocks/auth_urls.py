@@ -19,6 +19,8 @@ urlpatterns = [
     # OAuth / Social
     path('auth/google/login', auth_api.google_login_redirect, name='google_login_redirect'),
     path('auth/google/onetap', auth_api.google_onetap_exchange, name='google_onetap'),
+    path('auth/google/callback/', auth_api.google_oauth_callback, name='google_oauth_callback'),
+    path('auth/google/config', auth_api.google_config_api, name='google_config'),
     # Compatibility alias expected by some clients
     path('auth/user/', auth_api.user_profile_api, name='auth_user_alias'),
     
