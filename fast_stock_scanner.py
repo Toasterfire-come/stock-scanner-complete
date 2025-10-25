@@ -106,6 +106,30 @@ class ProxyManager:
             self._lock = threading.Lock()
         except Exception:
             self._lock = None
+        # Build and warm persistent sessions per proxy (or one no-proxy session)
+        self._sessions: List[object] = []
+        targets = self.proxies if self.proxies else [None]
+        for proxy in targets:
+            try:
+                if cf_requests is not None:
+                    sess = cf_requests.Session()
+                else:
+                    sess = requests.Session()
+                if proxy:
+                    sess.proxies = {'http': proxy, 'https': proxy}
+                sess.headers.update({
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Connection': 'keep-alive',
+                })
+                # Warm cookie jar once to reduce crumb-related 401s inside yfinance
+                try:
+                    sess.get('https://finance.yahoo.com', timeout=4)
+                except Exception:
+                    pass
+                self._sessions.append(sess)
+            except Exception:
+                continue
 
     def _next_index(self) -> int:
         if not self.proxies:
@@ -118,24 +142,13 @@ class ProxyManager:
         return self._index
 
     def get_session(self, rotate: bool = False) -> Optional[object]:
-        if not self.proxies:
+        if not self._sessions:
             return None
-        idx = self._next_index() if rotate else self._index
-        if idx < 0 and self.proxies:
-            idx = 0
-        proxy = self.proxies[idx % len(self.proxies)]
-        # Prefer curl_cffi session when available (required by yfinance >=0.2.66)
-        if cf_requests is not None:
-            sess = cf_requests.Session()
-            sess.proxies = {'http': proxy, 'https': proxy}
-            sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-            return sess
-        # Fallback to requests (may be rejected by yfinance)
-        sess = requests.Session()
-        sess.proxies = {'http': proxy, 'https': proxy}
-        sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-        # Conservative timeouts via HTTPAdapter are optional; rely on yfinance timeouts
-        return sess
+        if rotate:
+            self._next_index()
+        # Ensure index in range
+        idx = self._index % len(self._sessions)
+        return self._sessions[idx]
 
     def rotate_and_get_session(self) -> Optional[requests.Session]:
         return self.get_session(rotate=True)
@@ -336,13 +349,22 @@ class StockScanner:
         # Target completeness threshold (price, volume, market_cap present)
         self.completeness_threshold = 0.92
         # Base headers for sessions
+        # No-proxy warmed session (used when proxies disabled)
         self._no_proxy_session = None
         try:
             if cf_requests is not None:
                 s = cf_requests.Session()
             else:
                 s = requests.Session()
-            s.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+            s.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Connection': 'keep-alive',
+            })
+            try:
+                s.get('https://finance.yahoo.com', timeout=4)
+            except Exception:
+                pass
             self._no_proxy_session = s
         except Exception:
             self._no_proxy_session = None
@@ -446,7 +468,7 @@ class StockScanner:
                 continue
         return rows
 
-    def scan_batch(self, symbols: List[str], csv_out: Optional[str] = None, chunk_size: int = 250) -> Dict[str, Any]:
+    def scan_batch(self, symbols: List[str], csv_out: Optional[str] = None, chunk_size: int = 150) -> Dict[str, Any]:
         start = time.time()
         # Normalize symbols
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
@@ -471,7 +493,7 @@ class StockScanner:
 
         def process_chunk(chunk: List[str]) -> Tuple[List[str], Dict[str, Dict[str, Any]]]:
             # Try with (proxy or none) sessions, rotate on rate limit
-            max_attempts = 3
+            max_attempts = 4
             attempt = 0
             session = None
             while attempt < max_attempts:
@@ -488,7 +510,7 @@ class StockScanner:
                 else:
                     session = None
                 # brief backoff
-                time.sleep(min(1.0 * attempt, 3.0))
+                time.sleep(min(0.5 + random.random(), 2.0))
             return chunk, {}
 
         # Run up to self.threads chunks concurrently
