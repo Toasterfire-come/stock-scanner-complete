@@ -127,6 +127,11 @@ class ProxyManager:
                     sess.get('https://finance.yahoo.com', timeout=4)
                 except Exception:
                     pass
+                # Trigger yfinance to establish crumb/cookies within this session
+                try:
+                    _ = yf.Ticker('AAPL', session=sess).fast_info
+                except Exception:
+                    pass
                 self._sessions.append(sess)
             except Exception:
                 continue
