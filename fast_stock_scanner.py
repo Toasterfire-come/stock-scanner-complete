@@ -347,7 +347,8 @@ class StockScanner:
         self._earnings_cache: Dict[str, Optional[datetime]] = {}
         self.db_enabled = db_enabled and DJANGO_AVAILABLE
         # Target completeness threshold (price, volume, market_cap present)
-        self.completeness_threshold = 0.92
+        # Set to 0.0 to avoid fallback .info calls which can trigger crumb-protected endpoints
+        self.completeness_threshold = 0.0
         # Base headers for sessions
         # No-proxy warmed session (used when proxies disabled)
         self._no_proxy_session = None
