@@ -1480,7 +1480,8 @@ def main():
         proxy_file=args.proxy_file,
         use_proxies=(not args.no_proxy),
     )
-    stats = scanner.scan(symbols, csv_out=args.csv_out)
+    # Use batch-only path to avoid per-symbol calls that can trigger crumb-protected endpoints
+    stats = scanner.scan_batch(symbols, csv_out=args.csv_out)
     # Pretty print summary
     logger.info(f"Scan complete. Total={stats['total']} Success={stats['success']} Failed={stats['failed']} "
                 f"Duration={stats['duration_sec']}s Proxies={stats['proxies_available']} Rotations={stats['proxy_rotations']}\n"
