@@ -158,15 +158,8 @@
       });
 
       // Create Alert (client-side modal prompt)
-      document.getElementById('createAlert').addEventListener('click', async () => {
-        const price = prompt('Target price?');
-        if (!price) return;
-        const condition = prompt('Condition: above/below', 'above');
-        const email = prompt('Your email to notify?');
-        if (!email) return;
-        const resp = await fetch('/api/alerts/create/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticker, target_price: parseFloat(price), condition, email }) });
-        const j = await resp.json();
-        alert(j.message || 'Alert saved');
+      document.getElementById('createAlert').addEventListener('click', () => {
+        window.openCreateAlert?.({ ticker });
       });
     })();
   </script>

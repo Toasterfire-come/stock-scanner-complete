@@ -31,6 +31,7 @@ urlpatterns = [
     path('wordpress/stocks/', WordPressStockView.as_view(), name='wordpress_stocks_detailed'),
     path('wordpress/news/', WordPressNewsView.as_view(), name='wordpress_news'),
     path('wordpress/alerts/', WordPressAlertsView.as_view(), name='wordpress_alerts'),
+    path('wordpress/subscribe/', api_views.wordpress_subscription_api, name='wordpress_subscribe'),
     
     # Simple APIs (no database required)
     path('simple/stocks/', SimpleStockView.as_view(), name='simple_stocks'),

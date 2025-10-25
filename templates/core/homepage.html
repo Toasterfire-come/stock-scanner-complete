@@ -1,57 +1,34 @@
 {% extends 'base.html' %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-  <div class="grid cols-3">
+  <div class="grid">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Status</div>
-        <span class="badge success">Operational</span>
+        <div class="card-title">Make faster trading decisions</div>
+        <a class="btn primary" href="/pricing/">Start free trial</a>
       </div>
       <div class="card-body">
-        <div class="kpis">
-          <div class="kpi">
-            <div class="label">Framework</div>
-            <div class="value">Django</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Database</div>
-            <div class="value">MySQL</div>
-          </div>
-          <div class="kpi">
-            <div class="label">API</div>
-            <div class="value">Ready</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Cache</div>
-            <div class="value">Enabled</div>
-          </div>
+        <div class="grid cols-3">
+          <div class="kpi"><div class="label">Alerts sent (7d)</div><div class="value">4,200+</div></div>
+          <div class="kpi"><div class="label">Avg. signal latency</div><div class="value">< 2s</div></div>
+          <div class="kpi"><div class="label">Uptime</div><div class="value">99.9%</div></div>
+        </div>
+        <div class="hr"></div>
+        <div class="grid cols-3">
+          <div class="card"><div class="card-header"><div class="card-title">Scan</div></div><div class="card-body"><p class="muted">High‑volume movers, gainers, premarket activity.</p></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">Analyze</div></div><div class="card-body"><p class="muted">SMA/EMA/RSI overlays with shareable charts.</p></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">Alert</div></div><div class="card-body"><p class="muted">Create price alerts in one click.</p></div></div>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Quick Links</div>
-      </div>
+      <div class="card-header"><div class="card-title">Popular screeners</div><a class="btn" href="/screeners/">See all</a></div>
       <div class="card-body">
-        <div class="grid">
-          {% for endpoint in endpoints %}
-          <a class="btn" href="{{ endpoint.url }}" target="_blank">{{ endpoint.description }}</a>
-          {% endfor %}
-          <a class="btn" href="/health/" target="_blank">Health Check</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Get Started</div>
-      </div>
-      <div class="card-body">
-        <p class="muted">Explore the latest screeners and detailed stock pages with real-time charts and indicators.</p>
-        <div class="grid">
-          <a class="btn primary" href="/screeners/">Browse Screeners</a>
-          <a class="btn" href="/api/stocks/" target="_blank">View Stock API</a>
+        <div class="grid cols-3">
+          <a class="btn" href="/screeners/high-volume/">High Volume Movers</a>
+          <a class="btn" href="/screeners/top-gainers/">Top Gainers</a>
+          <a class="btn" href="/screeners/large-cap/">Large Cap</a>
         </div>
       </div>
     </div>

@@ -108,21 +108,29 @@
                     // Append Alert buttons
                     Array.from(document.querySelectorAll('tbody tr')).forEach(tr => {
                       const td = document.createElement('td');
+                      const star = document.createElement('button');
+                      star.className = 'btn';
+                      star.textContent = '★';
+                      star.title = 'Save to watchlist';
                       const btn = document.createElement('button');
                       btn.className = 'btn';
                       btn.textContent = 'Alert';
-                      btn.addEventListener('click', async () => {
+                      btn.addEventListener('click', () => {
                         const ticker = tr.querySelector('td a')?.textContent?.trim();
                         if (!ticker) return;
-                        const price = prompt(`Create alert for ${ticker}. Target price?`);
-                        if (!price) return;
-                        const condition = prompt('Condition: above/below', 'above');
-                        const email = prompt('Your email to notify?');
-                        if (!email) return;
-                        const resp = await fetch('/api/alerts/create/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticker, target_price: parseFloat(price), condition, email }) });
-                        const j = await resp.json();
-                        alert(j.message || 'Alert saved');
+                        window.openCreateAlert?.({ ticker });
                       });
+                      star.addEventListener('click', () => {
+                        const ticker = tr.querySelector('td a')?.textContent?.trim();
+                        if (!ticker) return;
+                        const key = 'watchlist';
+                        const list = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (!list.includes(ticker)) list.push(ticker);
+                        localStorage.setItem(key, JSON.stringify(list));
+                        star.textContent = '✓';
+                        analytics.track('watchlist_add', { ticker });
+                      });
+                      td.appendChild(star);
                       td.appendChild(btn);
                       tr.appendChild(td);
                     });
