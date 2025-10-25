@@ -1,0 +1,43 @@
+[Unit]
+Description=Stock Scanner API with Cloudflare Tunnel
+After=network.target network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+WorkingDirectory=/workspace
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# Pre-start DNS check and fix
+ExecStartPre=/bin/bash -c 'echo "nameserver 1.1.1.1" > /etc/resolv.conf.tmp && echo "nameserver 8.8.8.8" >> /etc/resolv.conf.tmp && mv /etc/resolv.conf.tmp /etc/resolv.conf'
+ExecStartPre=/bin/sleep 2
+
+# Main service
+ExecStart=/bin/bash /workspace/tunnel_monitor_enhanced.sh
+PIDFile=/var/run/stock-scanner-tunnel.pid
+
+# Restart configuration
+Restart=always
+RestartSec=10
+TimeoutStartSec=90
+TimeoutStopSec=30
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Kill mode
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Logging
+StandardOutput=append:/workspace/logs/service.log
+StandardError=append:/workspace/logs/service_error.log
+
+[Install]
+WantedBy=multi-user.target

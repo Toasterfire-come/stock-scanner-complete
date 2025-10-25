@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 2,
+  "settings": {
+    "appearanceTools": true,
+    "color": {
+      "duotone": [],
+      "gradients": [],
+      "link": true,
+      "palette": [
+        { "slug": "navy", "name": "Deep Navy", "color": "#0B1B33" },
+        { "slug": "blue", "name": "Rich Blue", "color": "#1F4E79" },
+        { "slug": "emerald", "name": "Emerald Green", "color": "#21A179" },
+        { "slug": "red", "name": "Signal Red", "color": "#D64545" },
+        { "slug": "gold", "name": "Gold", "color": "#E3B341" },
+        { "slug": "offwhite", "name": "Off-White", "color": "#F4F6F8" },
+        { "slug": "coolgray", "name": "Cool Gray", "color": "#A3A9B1" },
+        { "slug": "charcoal", "name": "Charcoal", "color": "#2C2C2C" }
+      ]
+    },
+    "custom": {
+      "spacingScale": {
+        "0": "0px",
+        "1": "4px",
+        "2": "8px",
+        "3": "12px",
+        "4": "16px",
+        "5": "24px",
+        "6": "32px",
+        "7": "40px",
+        "8": "48px"
+      }
+    },
+    "layout": {
+      "contentSize": "720px",
+      "wideSize": "1200px"
+    },
+    "spacing": {
+      "units": ["px", "%", "em", "rem", "vh", "vw"],
+      "spacingScale": {
+        "steps": 8,
+        "mediumStep": 1.2
+      }
+    },
+    "typography": {
+      "dropCap": false,
+      "fluid": true,
+      "fontFamilies": [
+        { "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", "slug": "system", "name": "System UI" }
+      ],
+      "fontSizes": [
+        { "slug": "xs", "size": "12px", "name": "XS" },
+        { "slug": "sm", "size": "14px", "name": "Small" },
+        { "slug": "base", "size": "16px", "name": "Base" },
+        { "slug": "lg", "size": "18px", "name": "Large" },
+        { "slug": "xl", "size": "24px", "name": "XL" },
+        { "slug": "2xl", "size": "30px", "name": "2XL" },
+        { "slug": "3xl", "size": "36px", "name": "3XL" }
+      ]
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#F4F6F8",
+      "text": "#2C2C2C",
+      "link": "#1F4E79"
+    },
+    "elements": {
+      "link": {
+        ":hover": { "color": { "text": "#153854" } }
+      },
+      "heading": {
+        "color": { "text": "#2C2C2C" }
+      }
+    }
+  }
+}

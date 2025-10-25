@@ -1,0 +1,78 @@
+2025-10-06 12:41:13,800 - INFO - ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES
+2025-10-06 12:41:13,800 - INFO - ============================================================
+2025-10-06 12:41:13,800 - INFO - Configuration:
+2025-10-06 12:41:13,800 - INFO -   CSV File: flat-ui__data-Fri Aug 01 2025.csv
+2025-10-06 12:41:13,800 - INFO -   Test Mode: True
+2025-10-06 12:41:13,800 - INFO -   Use Proxies: False
+2025-10-06 12:41:13,800 - INFO -   Proxy File: working_proxies.json
+2025-10-06 12:41:13,800 - INFO -   Threads: 2
+2025-10-06 12:41:13,800 - INFO -   Timeout: 5s
+2025-10-06 12:41:13,800 - INFO -   Max Symbols: 2
+2025-10-06 12:41:13,800 - INFO -   Save to DB: False
+2025-10-06 12:41:13,800 - INFO -   Schedule Mode: False
+2025-10-06 12:41:13,800 - INFO -   Daily Update: False
+2025-10-06 12:41:13,801 - INFO - ============================================================
+2025-10-06 12:41:13,801 - INFO - ============================================================
+2025-10-06 12:41:13,801 - INFO - STOCK UPDATE CYCLE - 2025-10-06 12:41:13
+2025-10-06 12:41:13,801 - INFO - ============================================================
+2025-10-06 12:41:13,801 - INFO - Detected combined tickers file. Defaulting to combined (NASDAQ + NYSE/AMEX).
+2025-10-06 12:41:13,802 - INFO - Loading combined tickers list (NASDAQ + NYSE/AMEX)...
+2025-10-06 12:41:13,841 - INFO - Loaded 2 combined tickers from combined_tickers_20250921_181527.py
+2025-10-06 12:41:13,845 - INFO - Processing 2 symbols...
+2025-10-06 12:41:13,845 - INFO - DISABLED: Proxy usage disabled
+2025-10-06 12:41:13,845 - INFO - Starting to process 2 symbols...
+2025-10-06 12:41:13,845 - INFO - ============================================================
+2025-10-06 12:41:13,845 - INFO - Submitting 2 tasks to thread pool...
+2025-10-06 12:41:13,850 - INFO - Submitted 2 tasks. Processing...
+2025-10-06 12:41:16,348 - INFO - [PROGRESS] 2/2 completed (2 successful, 0 failed)
+2025-10-06 12:41:16,363 - INFO - ============================================================
+2025-10-06 12:41:16,363 - INFO - CYCLE RESULTS
+2025-10-06 12:41:16,363 - INFO - ============================================================
+2025-10-06 12:41:16,363 - INFO - SUCCESSFUL: 2
+2025-10-06 12:41:16,363 - INFO - FAILED: 0
+2025-10-06 12:41:16,363 - INFO - SUCCESS RATE: 100.0%
+2025-10-06 12:41:16,363 - INFO - TIME: 2.52s
+2025-10-06 12:41:16,363 - INFO - RATE: 0.79 symbols/sec
+2025-10-06 12:41:16,364 - INFO - CYCLE COMPLETED: 2025-10-06 12:41:16
+2025-10-06 12:41:16,364 - INFO - ============================================================
+2025-10-06 12:41:16,365 - INFO - WROTE OUTPUT: /workspace/test_output.json (2 records)
+2025-10-06 12:41:16,365 - INFO - Script completed!
+2025-10-06 12:42:39,950 - INFO - ENHANCED STOCK RETRIEVAL SCRIPT - WORKING VERSION WITH PROXIES
+2025-10-06 12:42:39,950 - INFO - ============================================================
+2025-10-06 12:42:39,950 - INFO - Configuration:
+2025-10-06 12:42:39,950 - INFO -   CSV File: flat-ui__data-Fri Aug 01 2025.csv
+2025-10-06 12:42:39,950 - INFO -   Test Mode: True
+2025-10-06 12:42:39,950 - INFO -   Use Proxies: False
+2025-10-06 12:42:39,950 - INFO -   Proxy File: working_proxies.json
+2025-10-06 12:42:39,950 - INFO -   Threads: 2
+2025-10-06 12:42:39,950 - INFO -   Timeout: 5s
+2025-10-06 12:42:39,950 - INFO -   Max Symbols: 2
+2025-10-06 12:42:39,950 - INFO -   Save to DB: False
+2025-10-06 12:42:39,950 - INFO -   Schedule Mode: False
+2025-10-06 12:42:39,950 - INFO -   Daily Update: False
+2025-10-06 12:42:39,950 - INFO - ============================================================
+2025-10-06 12:42:39,951 - INFO - ============================================================
+2025-10-06 12:42:39,951 - INFO - STOCK UPDATE CYCLE - 2025-10-06 12:42:39
+2025-10-06 12:42:39,951 - INFO - ============================================================
+2025-10-06 12:42:39,951 - INFO - Detected combined tickers file. Defaulting to combined (NASDAQ + NYSE/AMEX).
+2025-10-06 12:42:39,951 - INFO - Loading combined tickers list (NASDAQ + NYSE/AMEX)...
+2025-10-06 12:42:39,962 - INFO - Loaded 2 combined tickers from combined_tickers_20250921_181527.py
+2025-10-06 12:42:39,963 - INFO - Processing 2 symbols...
+2025-10-06 12:42:39,963 - INFO - DISABLED: Proxy usage disabled
+2025-10-06 12:42:39,963 - INFO - Starting to process 2 symbols...
+2025-10-06 12:42:39,963 - INFO - ============================================================
+2025-10-06 12:42:39,963 - INFO - Submitting 2 tasks to thread pool...
+2025-10-06 12:42:39,968 - INFO - Submitted 2 tasks. Processing...
+2025-10-06 12:42:42,444 - INFO - [PROGRESS] 2/2 completed (2 successful, 0 failed)
+2025-10-06 12:42:42,458 - INFO - ============================================================
+2025-10-06 12:42:42,458 - INFO - CYCLE RESULTS
+2025-10-06 12:42:42,458 - INFO - ============================================================
+2025-10-06 12:42:42,458 - INFO - SUCCESSFUL: 2
+2025-10-06 12:42:42,458 - INFO - FAILED: 0
+2025-10-06 12:42:42,458 - INFO - SUCCESS RATE: 100.0%
+2025-10-06 12:42:42,458 - INFO - TIME: 2.49s
+2025-10-06 12:42:42,458 - INFO - RATE: 0.80 symbols/sec
+2025-10-06 12:42:42,459 - INFO - CYCLE COMPLETED: 2025-10-06 12:42:42
+2025-10-06 12:42:42,459 - INFO - ============================================================
+2025-10-06 12:42:42,460 - INFO - WROTE OUTPUT: /workspace/test_output.json (2 records)
+2025-10-06 12:42:42,460 - INFO - Script completed!

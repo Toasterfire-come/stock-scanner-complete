@@ -1,0 +1,26 @@
+{
+  "type": "portfolio",
+  "version": "1",
+  "name": "Portfolio 1",
+  "as_of": "2025-09-29",
+  "started": "2025-06-29",
+  "objective": "Illustrative static portfolio (~30% gain in 3 months)",
+  "holdings": [
+    { "ticker": "AAPL",  "name": "Apple Inc.",                 "shares": 40,  "average_cost": 180.00, "current_price": 249.60 },
+    { "ticker": "MSFT",  "name": "Microsoft Corp.",           "shares": 25,  "average_cost": 370.00, "current_price": 499.20 },
+    { "ticker": "NVDA",  "name": "NVIDIA Corp.",              "shares": 12,  "average_cost": 110.00, "current_price": 145.60 },
+    { "ticker": "META",  "name": "Meta Platforms",            "shares": 10,  "average_cost": 410.00, "current_price": 546.00 },
+    { "ticker": "AMZN",  "name": "Amazon.com Inc.",           "shares": 22,  "average_cost": 140.00, "current_price": 182.00 },
+    { "ticker": "GOOGL", "name": "Alphabet Inc.",             "shares": 18,  "average_cost": 155.00, "current_price": 208.00 },
+    { "ticker": "TSLA",  "name": "Tesla Inc.",                "shares": 14,  "average_cost": 190.00, "current_price": 254.80 },
+    { "ticker": "AVGO",  "name": "Broadcom Inc.",             "shares": 3,   "average_cost": 1475.00, "current_price": 1976.00 },
+    { "ticker": "SMCI",  "name": "Super Micro Computer",      "shares": 6,   "average_cost": 620.00,  "current_price": 811.20 },
+    { "ticker": "QQQ",   "name": "Invesco QQQ Trust",         "shares": 20,  "average_cost": 440.00, "current_price": 561.60 },
+    { "ticker": "SPY",   "name": "SPDR S&P 500 ETF",          "shares": 15,  "average_cost": 510.00, "current_price": 582.40 },
+    { "ticker": "IWM",   "name": "iShares Russell 2000 ETF",  "shares": 18,  "average_cost": 200.00, "current_price": 239.20 },
+    { "ticker": "SOXX",  "name": "iShares Semi ETF",          "shares": 10,  "average_cost": 210.00, "current_price": 286.00 },
+    { "ticker": "ARKK",  "name": "ARK Innovation ETF",        "shares": 20,  "average_cost": 43.00,  "current_price": 54.08 },
+    { "ticker": "XLF",   "name": "Financial Select ETF",      "shares": 25,  "average_cost": 39.00,  "current_price": 46.80 }
+  ]
+}
+

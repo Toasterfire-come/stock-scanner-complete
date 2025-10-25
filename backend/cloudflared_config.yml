@@ -1,0 +1,64 @@
+tunnel: django-api
+credentials-file: /root/.cloudflared/credentials.json
+
+# Optimize for stability over performance
+originRequest:
+  # Keepalive settings to prevent timeouts
+  keepAliveConnections: 100
+  keepAliveTimeout: 90s
+  tcpKeepAlive: 30s
+  
+  # Disable HTTP2 to reduce complexity
+  noHappyEyeballs: false
+  
+  # Connection pool settings
+  connectTimeout: 30s
+  
+  # TLS settings
+  noTLSVerify: false
+  
+  # Proxy settings
+  proxyAddress: ""
+  proxyPort: 0
+  
+  # Retry settings
+  retryBackoff: 1s
+  
+# Ingress rules
+ingress:
+  # Health check endpoint - keeps connection active
+  - hostname: api.retailtradescanner.com
+    path: /health/*
+    service: http://localhost:8000
+    originRequest:
+      connectTimeout: 5s
+      
+  # Main service
+  - hostname: api.retailtradescanner.com
+    service: http://localhost:8000
+    originRequest:
+      connectTimeout: 30s
+      tcpKeepAlive: 30s
+      keepAliveTimeout: 90s
+      
+  # Catch-all rule
+  - service: http_status:404
+
+# Protocol settings
+protocol: quic
+
+# Logging
+loglevel: info
+transport-loglevel: warn
+
+# Metrics for monitoring
+metrics: localhost:2000
+
+# Auto-update disabled for stability
+no-autoupdate: true
+
+# Grace period for shutdown
+grace-period: 30s
+
+# Compression disabled to reduce CPU load
+compression-quality: 0

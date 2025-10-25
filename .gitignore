@@ -1,149 +1,88 @@
-# Stock Scanner Django Project .gitignore
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# IDE and editors
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Production builds
+/build
+dist/
+dist
+
+# Environment files (comprehensive coverage)
+
+*token.json*
+*credentials.json*
+
+# Logs and debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb
+
+# System files
+.DS_Store
+*.pem
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Environment variables
-.env
-.env.local
-.env.production
-
-# Virtual environment
+*pyc*
 venv/
-env/
-ENV/
-env.bak/
-venv.bak/
+.venv/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Development tools
+chainlit.md
+.chainlit
+.ipynb_checkpoints/
+.ac
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Deployment
+.vercel
 
-# Media files (user uploads)
-media/
+# Data and databases
+agenthub/agents/youtube/db
 
-# Static files (collected)
-staticfiles/
-static_collected/
+# Archive files and large assets
+**/*.zip
+**/*.tar.gz
+**/*.tar
+**/*.tgz
+*.pack
+*.deb
+*.dylib
 
-# Logs
-logs/
-*.log
-celery.log
-beat.log
-caddy.log
-
-# Database backups
-backups/
-*.db.backup
-*_backup_*.db
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Cache
+# Build caches
 .cache/
-.pytest_cache/
 
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-.hypothesis/
-
-# Translations
-*.mo
-*.pot
-
-# Local development
-local/
-development/
-
-# Security
-*.pem
-*.key
-*.crt
-
-# Node modules (if any)
-node_modules/
-
-# Webpack
-/static/webpack_bundles/
-/static/dist/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Caddy
-Caddyfile.local
-
-# Keep important files
-!.env.sample
-!requirements*.txt
-!README.md
-!**/README.md
-!COMPLETE_SETUP_GUIDE.md
-!PACKAGE_MANIFEST.md
-!INSTALLATION_CHECKLIST.md
-# Additional cleanup
-*.log
-*.sqlite3
-celery.log
-beat.log
-caddy.log
-stock_data_export.json
-venv/
-staticfiles/
-logs/
-logs_archive/
-deployment_old/
-*.pyc
-__pycache__/
-.env
-.DS_Store
-Thumbs.db
+# Mobile development
+<<<<<<< HEAD
+android-sdk/ temp_repo/.git/objects/pack/pack-6f31cac1074197aa15f8c4986dd54e5b91bbfcae.pack
+temp_main19/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
+temp_main/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/1.pack
+=======
+android-sdk/ 
+>>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)

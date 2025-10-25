@@ -1,0 +1,23 @@
+# Force correct MIME types for assets
+<IfModule mod_mime.c>
+    AddType text/css .css
+    AddType application/javascript .js
+    AddType text/javascript .js
+</IfModule>
+
+# Override any incorrect MIME type detection
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css)$">
+        Header always set Content-Type "text/css"
+        Header unset X-Content-Type-Options
+    </FilesMatch>
+    
+    <FilesMatch "\.(js)$">
+        Header always set Content-Type "application/javascript"
+    </FilesMatch>
+</IfModule>
+
+# Prevent access to source files
+<FilesMatch "\.(scss|sass|less)$">
+    Deny from all
+</FilesMatch>

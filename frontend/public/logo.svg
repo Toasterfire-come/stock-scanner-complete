@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#0F172A"/>
+  <g transform="translate(64,120)">
+    <path d="M0 176h48l48-96 64 160 48-96h80" stroke="#60A5FA" stroke-width="28" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="256" y="428" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="48" font-weight="700" fill="#E2E8F0">TSP</text>
+</svg>
+

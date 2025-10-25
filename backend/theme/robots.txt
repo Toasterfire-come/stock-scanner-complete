@@ -1,0 +1,127 @@
+# robots.txt for Stock Scanner Pro WordPress Theme
+# This file should be placed in your WordPress root directory
+
+User-agent: *
+Allow: /
+
+# Disallow WordPress admin areas
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+# Disallow WordPress includes and plugins
+Disallow: /wp-includes/
+
+# Allow WordPress content
+Allow: /wp-content/uploads/
+Allow: /wp-content/themes/
+Allow: /wp-content/plugins/
+
+# Disallow private/temporary files
+Disallow: /wp-config.php
+Disallow: /readme.html
+Disallow: /license.txt
+Disallow: /wp-content/debug.log
+
+# Allow important theme assets
+Allow: /wp-content/themes/stock-scanner-pro-theme/assets/
+Allow: /wp-content/themes/stock-scanner-pro-theme/style.css
+Allow: /wp-content/themes/stock-scanner-pro-theme/screenshot.png
+
+# Block search parameters that don't add value
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?page_id=
+Disallow: /*?preview=
+Disallow: /*?share=
+Disallow: /*?replytocom=
+
+# Block print and attachment pages
+Disallow: /*/print/
+Disallow: /attachment/
+
+# Block feed duplicates
+Disallow: /feed/
+Disallow: /comments/feed/
+
+# Block trackback
+Disallow: /trackback/
+
+# Block WordPress login and registration
+Disallow: /wp-login.php
+Disallow: /wp-register.php
+
+# Common crawl-delay for all bots (1 second)
+Crawl-delay: 1
+
+# Sitemap location (if using XML sitemaps)
+Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://yourdomain.com/sitemap_index.xml
+
+# Special instructions for major search engines
+User-agent: Googlebot
+Crawl-delay: 1
+Allow: /wp-content/uploads/
+Allow: /wp-content/themes/stock-scanner-pro-theme/
+
+User-agent: Bingbot
+Crawl-delay: 2
+Allow: /wp-content/uploads/
+Allow: /wp-content/themes/stock-scanner-pro-theme/
+
+User-agent: Slurp
+Crawl-delay: 2
+Allow: /wp-content/uploads/
+Allow: /wp-content/themes/stock-scanner-pro-theme/
+
+# Block specific problematic bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MauiBot
+Disallow: /
+
+User-agent: AlphaBot
+Disallow: /
+
+User-agent: dotbot
+Disallow: /
+
+User-agent: seokicks-robot
+Disallow: /
+
+User-agent: spbot
+Disallow: /
+
+User-agent: TweetmemeBot
+Disallow: /
+
+User-agent: PaperLiBot
+Disallow: /
+
+# Allow social media crawlers for sharing
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+# Note: Remember to replace "yourdomain.com" with your actual domain
+# This robots.txt is optimized for WordPress with Stock Scanner Pro theme

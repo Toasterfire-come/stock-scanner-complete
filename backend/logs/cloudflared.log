@@ -1,0 +1,604 @@
+2025-09-19T01:04:58Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-19T01:04:58Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-19T01:04:58Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-19T01:04:58Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-19T01:04:58Z INF cloudflared will not automatically update on Windows systems.
+2025-09-19T01:04:58Z INF Generated Connector ID: da6fbab4-9f52-401a-84c0-092c58647767
+2025-09-19T01:04:58Z INF Initial protocol quic
+2025-09-19T01:04:58Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T01:04:58Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T01:04:58Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-19T01:04:58Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T01:04:58Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.53
+2025-09-19T01:04:58Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T01:04:58Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-19T01:04:58Z INF Registered tunnel connection connIndex=0 connection=42d69f28-ceb7-4a6b-a441-d052043a16ef event=0 ip=198.41.200.53 location=ord08 protocol=quic
+2025-09-19T01:04:58Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.57
+2025-09-19T01:04:58Z INF Registered tunnel connection connIndex=1 connection=517f70a2-8a86-4297-8344-f1b7a5d9a941 event=0 ip=198.41.192.57 location=ord14 protocol=quic
+2025-09-19T01:04:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.13
+2025-09-19T01:04:59Z INF Registered tunnel connection connIndex=2 connection=13fc87e4-627d-488f-acb4-8f6ffe851eb4 event=0 ip=198.41.200.13 location=ord11 protocol=quic
+2025-09-19T01:05:00Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.107
+2025-09-19T01:05:01Z INF Registered tunnel connection connIndex=3 connection=353027e8-9284-4146-a412-a8ec16ccf04a event=0 ip=198.41.192.107 location=ord02 protocol=quic
+2025-09-19T01:15:59Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T01:15:59Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/features event=0 ip=198.41.200.13 type=http
+2025-09-19T01:53:14Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T01:53:14Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 dest=https://api.retailtradescanner.com/ event=0 ip=198.41.192.57 type=http
+2025-09-19T01:53:17Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T01:53:17Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 dest=https://api.retailtradescanner.com/ event=0 ip=198.41.192.57 type=http
+2025-09-19T02:16:25Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T02:16:25Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/robots.txt event=0 ip=198.41.192.107 type=http
+2025-09-19T05:37:07Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T05:37:07Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/sitemap.xml event=0 ip=198.41.192.107 type=http
+2025-09-19T11:31:12Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T11:31:12Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/robots.txt event=0 ip=198.41.200.13 type=http
+2025-09-19T11:31:14Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T11:31:14Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 dest=https://api.retailtradescanner.com/sitemap.xml event=0 ip=198.41.192.57 type=http
+2025-09-19T11:41:14Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-19T11:41:14Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.107
+2025-09-19T11:41:14Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.107
+2025-09-19T11:41:14Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.57
+2025-09-19T11:41:14Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.57
+2025-09-19T11:41:15Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.53
+2025-09-19T11:41:15Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.53
+2025-09-19T11:41:15Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.13
+2025-09-19T11:41:15Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.13
+2025-09-19T11:41:15Z ERR no more connections active and exiting
+2025-09-19T11:41:15Z INF Tunnel server stopped
+2025-09-19T11:41:15Z ERR icmp router terminated error="context canceled"
+2025-09-19T11:41:15Z INF Metrics server stopped
+2025-09-19T12:13:56Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-19T12:13:56Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-19T12:13:56Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-19T12:13:56Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-19T12:13:56Z INF cloudflared will not automatically update on Windows systems.
+2025-09-19T12:13:57Z INF Generated Connector ID: e37ed08e-edb2-46ee-b743-e1139b8a676c
+2025-09-19T12:13:57Z INF Initial protocol quic
+2025-09-19T12:13:57Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T12:13:57Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T12:13:57Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-19T12:13:57Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T12:13:57Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.37
+2025-09-19T12:13:57Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T12:13:57Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-19T12:13:57Z INF Registered tunnel connection connIndex=0 connection=4b7d9e28-5e1b-45b5-ad40-ec5fde47a45d event=0 ip=198.41.192.37 location=ord06 protocol=quic
+2025-09-19T12:13:57Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.43
+2025-09-19T12:13:57Z INF Registered tunnel connection connIndex=1 connection=3aee2548-d925-4f06-ba7e-17e308f8d7d8 event=0 ip=198.41.200.43 location=ord08 protocol=quic
+2025-09-19T12:13:58Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.7
+2025-09-19T12:13:58Z INF Registered tunnel connection connIndex=2 connection=a622f36d-014d-4cac-9530-c100ad57e7ad event=0 ip=198.41.192.7 location=ord06 protocol=quic
+2025-09-19T12:13:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.23
+2025-09-19T12:13:59Z INF Registered tunnel connection connIndex=3 connection=c362cdf2-cb77-4430-96a5-a1271c3ba5ce event=0 ip=198.41.200.23 location=ord11 protocol=quic
+2025-09-19T12:25:50Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-19T12:25:51Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.192.37
+2025-09-19T12:25:51Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.37
+2025-09-19T12:25:51Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.23
+2025-09-19T12:25:51Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.23
+2025-09-19T12:25:51Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.7
+2025-09-19T12:25:51Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.7
+2025-09-19T12:25:51Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.200.43
+2025-09-19T12:25:51Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.43
+2025-09-19T12:25:51Z ERR no more connections active and exiting
+2025-09-19T12:25:51Z ERR icmp router terminated error="context canceled"
+2025-09-19T12:25:51Z INF Metrics server stopped
+2025-09-19T12:26:02Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-19T12:26:02Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-19T12:26:02Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-19T12:26:02Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-19T12:26:02Z INF cloudflared will not automatically update on Windows systems.
+2025-09-19T12:26:02Z INF Generated Connector ID: 2ed8077c-0134-4ae2-b8be-316ac08348a3
+2025-09-19T12:26:02Z INF Initial protocol quic
+2025-09-19T12:26:02Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T12:26:02Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T12:26:02Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-19T12:26:02Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T12:26:02Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.7
+2025-09-19T12:26:02Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T12:26:02Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-19T12:26:02Z INF Registered tunnel connection connIndex=0 connection=c7ed1930-140a-4869-b67c-420c40e70ccd event=0 ip=198.41.192.7 location=ord02 protocol=quic
+2025-09-19T12:26:02Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.13
+2025-09-19T12:26:03Z INF Registered tunnel connection connIndex=1 connection=3b0f9eb8-08d2-48f4-b0a2-bbdb32644b83 event=0 ip=198.41.200.13 location=ord11 protocol=quic
+2025-09-19T12:26:03Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.227
+2025-09-19T12:26:04Z INF Registered tunnel connection connIndex=2 connection=2a085869-5c1a-4301-99af-731a3c3c0191 event=0 ip=198.41.192.227 location=ord06 protocol=quic
+2025-09-19T12:26:04Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.43
+2025-09-19T12:26:05Z INF Registered tunnel connection connIndex=3 connection=ad5dad68-fe68-4ca6-81f3-4cc4cafd9b43 event=0 ip=198.41.200.43 location=ord11 protocol=quic
+2025-09-19T14:26:09Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T14:26:09Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.43 type=http
+2025-09-19T14:26:09Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T14:26:09Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/platform-stats event=0 ip=198.41.200.43 type=http
+2025-09-19T14:28:51Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T14:28:51Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.13 type=http
+2025-09-19T14:32:03Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T14:32:03Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.43 type=http
+2025-09-19T14:38:26Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-19T14:38:26Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.43
+2025-09-19T14:38:26Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.43
+2025-09-19T14:38:26Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.192.7
+2025-09-19T14:38:26Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.7
+2025-09-19T14:38:26Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.200.13
+2025-09-19T14:38:26Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.13
+2025-09-19T14:38:26Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.227
+2025-09-19T14:38:26Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.227
+2025-09-19T14:38:26Z ERR no more connections active and exiting
+2025-09-19T14:38:26Z INF Tunnel server stopped
+2025-09-19T14:38:26Z ERR icmp router terminated error="context canceled"
+2025-09-19T14:38:26Z INF Metrics server stopped
+2025-09-19T14:38:38Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-19T14:38:38Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-19T14:38:38Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-19T14:38:38Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-19T14:38:38Z INF cloudflared will not automatically update on Windows systems.
+2025-09-19T14:38:38Z INF Generated Connector ID: 0d6b6db3-d6ff-4309-81b7-5c66376b2754
+2025-09-19T14:38:38Z INF Initial protocol quic
+2025-09-19T14:38:38Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T14:38:38Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T14:38:38Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-19T14:38:38Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T14:38:38Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.57
+2025-09-19T14:38:38Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T14:38:38Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-19T14:38:38Z INF Registered tunnel connection connIndex=0 connection=8e0ba25a-2e2b-4968-92d5-89cde426044b event=0 ip=198.41.192.57 location=ord06 protocol=quic
+2025-09-19T14:38:38Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.63
+2025-09-19T14:38:38Z INF Registered tunnel connection connIndex=1 connection=4077d616-5935-4d5f-84d0-6899b5f0baa3 event=0 ip=198.41.200.63 location=ord08 protocol=quic
+2025-09-19T14:38:39Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.53
+2025-09-19T14:38:39Z INF Registered tunnel connection connIndex=2 connection=399e2bad-c897-41f0-baa6-c7def49e09cc event=0 ip=198.41.200.53 location=ord12 protocol=quic
+2025-09-19T14:38:40Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.227
+2025-09-19T14:38:40Z INF Registered tunnel connection connIndex=3 connection=2e796538-b910-4ff9-be84-0681168f3d07 event=0 ip=198.41.192.227 location=ord06 protocol=quic
+2025-09-19T14:40:53Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-19T14:40:53Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.53 type=http
+2025-09-19T15:12:07Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-19T15:12:07Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-19T15:12:07Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-19T15:12:07Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-19T15:12:07Z INF cloudflared will not automatically update on Windows systems.
+2025-09-19T15:12:07Z INF Generated Connector ID: 6df70623-5107-4000-b851-8cf188511e46
+2025-09-19T15:12:07Z INF Initial protocol quic
+2025-09-19T15:12:07Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T15:12:07Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T15:12:07Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-19T15:12:07Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-19T15:12:07Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.77
+2025-09-19T15:12:07Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-19T15:12:07Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-19T15:12:07Z INF Registered tunnel connection connIndex=0 connection=a18ba82d-8a44-434f-a3f2-807b950027c5 event=0 ip=198.41.192.77 location=ord02 protocol=quic
+2025-09-19T15:12:07Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.43
+2025-09-19T15:12:08Z INF Registered tunnel connection connIndex=1 connection=86fc50bf-40e6-4b02-9441-8439db0c206a event=0 ip=198.41.200.43 location=ord08 protocol=quic
+2025-09-19T15:12:08Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.233
+2025-09-19T15:12:09Z INF Registered tunnel connection connIndex=2 connection=fd799b2f-371c-40f2-a8d1-f846942c1f86 event=0 ip=198.41.200.233 location=ord12 protocol=quic
+2025-09-19T15:12:09Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.7
+2025-09-19T15:12:09Z INF Registered tunnel connection connIndex=3 connection=f1eecb23-ef99-4f6a-b7ce-33dbbb2ddd88 event=0 ip=198.41.192.7 location=ord14 protocol=quic
+2025-09-20T15:12:06Z WRN Your version 2025.7.0 is outdated. We recommend upgrading it to 2025.9.0
+2025-09-21T00:49:07Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T00:49:07Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.7
+2025-09-21T00:49:07Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.7
+2025-09-21T00:49:08Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.200.43
+2025-09-21T00:49:08Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.43
+2025-09-21T00:49:08Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.192.77
+2025-09-21T00:49:08Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.77
+2025-09-21T00:49:08Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.233
+2025-09-21T00:49:08Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.233
+2025-09-21T00:49:08Z ERR no more connections active and exiting
+2025-09-21T00:49:08Z INF Tunnel server stopped
+2025-09-21T00:49:08Z ERR icmp router terminated error="context canceled"
+2025-09-21T00:49:08Z INF Metrics server stopped
+2025-09-21T01:19:27Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T01:19:27Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T01:19:27Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T01:19:27Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T01:19:27Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T01:19:27Z INF Generated Connector ID: 3de1667e-42d8-46da-80ca-3d28a325801e
+2025-09-21T01:19:27Z INF Initial protocol quic
+2025-09-21T01:19:27Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T01:19:27Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T01:19:27Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T01:19:27Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T01:19:27Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T01:19:27Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T01:19:27Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T01:19:27Z INF Registered tunnel connection connIndex=0 connection=bd5d8b56-144c-4dc4-848e-dd2c5312be59 event=0 ip=198.41.200.113 location=ord08 protocol=quic
+2025-09-21T01:19:27Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.67
+2025-09-21T01:19:27Z INF Registered tunnel connection connIndex=1 connection=8c38f1bc-3c67-4502-a942-80d897a5beb7 event=0 ip=198.41.192.67 location=ord10 protocol=quic
+2025-09-21T01:19:28Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.53
+2025-09-21T01:19:29Z INF Registered tunnel connection connIndex=2 connection=810d7cee-8ee2-4c9c-97ee-31cabb57b95d event=0 ip=198.41.200.53 location=ord08 protocol=quic
+2025-09-21T01:19:29Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.27
+2025-09-21T01:19:29Z INF Registered tunnel connection connIndex=3 connection=825e4ddd-cbfc-4ffc-8c86-e47d034dc8eb event=0 ip=198.41.192.27 location=ord02 protocol=quic
+2025-09-21T01:20:59Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T01:20:59Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T01:20:59Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T01:20:59Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T01:20:59Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T01:20:59Z INF Generated Connector ID: 551e6ec6-19d6-4c87-92ac-2bc0b3793e4a
+2025-09-21T01:20:59Z INF Initial protocol quic
+2025-09-21T01:20:59Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T01:20:59Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T01:20:59Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T01:20:59Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T01:20:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T01:20:59Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T01:20:59Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T01:20:59Z INF Registered tunnel connection connIndex=0 connection=45282c56-37d9-4d08-a27c-cf7c1d4a1258 event=0 ip=198.41.200.113 location=ord12 protocol=quic
+2025-09-21T01:20:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.47
+2025-09-21T01:20:59Z INF Registered tunnel connection connIndex=1 connection=0d303ad9-0ef7-42cf-814c-79e384131ef5 event=0 ip=198.41.192.47 location=ord14 protocol=quic
+2025-09-21T01:21:00Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.77
+2025-09-21T01:21:01Z INF Registered tunnel connection connIndex=2 connection=e4e9ef88-b2b4-48ff-a237-2b473177ceaa event=0 ip=198.41.192.77 location=ord06 protocol=quic
+2025-09-21T01:21:01Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.63
+2025-09-21T01:21:02Z INF Registered tunnel connection connIndex=3 connection=49b1ec82-4606-4adf-8651-56a3196c94cd event=0 ip=198.41.200.63 location=ord12 protocol=quic
+2025-09-21T01:22:58Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T01:22:58Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.47
+2025-09-21T01:22:58Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.47
+2025-09-21T01:22:58Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.63
+2025-09-21T01:22:58Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.63
+2025-09-21T01:22:58Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.77
+2025-09-21T01:22:58Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.77
+2025-09-21T01:22:59Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T01:22:59Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T01:22:59Z ERR no more connections active and exiting
+2025-09-21T01:22:59Z INF Tunnel server stopped
+2025-09-21T01:22:59Z ERR icmp router terminated error="context canceled"
+2025-09-21T01:22:59Z INF Metrics server stopped
+2025-09-21T01:43:24Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T01:43:24Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T01:43:24Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T01:43:24Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T01:43:24Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T01:43:24Z INF Generated Connector ID: d8f4e6df-d7d0-4487-bad0-3cf4da8a0504
+2025-09-21T01:43:24Z INF Initial protocol quic
+2025-09-21T01:43:24Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T01:43:24Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T01:43:24Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T01:43:24Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T01:43:24Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.53
+2025-09-21T01:43:24Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T01:43:24Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T01:43:24Z INF Registered tunnel connection connIndex=0 connection=26d08c38-84a6-4a5c-9cdc-c615ec64fe83 event=0 ip=198.41.200.53 location=ord11 protocol=quic
+2025-09-21T01:43:24Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.37
+2025-09-21T01:43:24Z INF Registered tunnel connection connIndex=1 connection=8c0e74a8-9b82-46a6-b446-8a98501ba31d event=0 ip=198.41.192.37 location=ord06 protocol=quic
+2025-09-21T01:43:25Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.7
+2025-09-21T01:43:25Z INF Registered tunnel connection connIndex=2 connection=fb6b22ea-36c5-4bda-be6b-3f1502dc503f event=0 ip=198.41.192.7 location=ord06 protocol=quic
+2025-09-21T01:43:26Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.13
+2025-09-21T01:43:26Z INF Registered tunnel connection connIndex=3 connection=e7cffa27-f970-4f66-b1b0-ca58a39e96f3 event=0 ip=198.41.200.13 location=ord11 protocol=quic
+2025-09-21T12:29:14Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T12:29:14Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.13
+2025-09-21T12:29:14Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.13
+2025-09-21T12:29:14Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.53
+2025-09-21T12:29:14Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.53
+2025-09-21T12:29:14Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.37
+2025-09-21T12:29:14Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.37
+2025-09-21T12:29:15Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.7
+2025-09-21T12:29:15Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.7
+2025-09-21T12:29:15Z ERR no more connections active and exiting
+2025-09-21T12:29:15Z INF Tunnel server stopped
+2025-09-21T12:29:15Z ERR icmp router terminated error="context canceled"
+2025-09-21T12:29:15Z INF Metrics server stopped
+2025-09-21T12:29:28Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T12:29:28Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T12:29:28Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T12:29:28Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T12:29:28Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T12:29:28Z INF Generated Connector ID: aa611462-47c8-4ee1-b964-cb4b043e5bc7
+2025-09-21T12:29:28Z INF Initial protocol quic
+2025-09-21T12:29:28Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T12:29:28Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T12:29:28Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T12:29:28Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T12:29:28Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T12:29:28Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T12:29:28Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T12:29:28Z INF Registered tunnel connection connIndex=0 connection=8163e9ac-a7dc-4e35-a3cb-4b563f41a525 event=0 ip=198.41.192.47 location=ord14 protocol=quic
+2025-09-21T12:29:28Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.233
+2025-09-21T12:29:28Z INF Registered tunnel connection connIndex=1 connection=9eafdafe-537c-4511-99af-64b9345e5577 event=0 ip=198.41.200.233 location=ord12 protocol=quic
+2025-09-21T12:29:29Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.67
+2025-09-21T12:29:29Z INF Registered tunnel connection connIndex=2 connection=00bc477f-b428-41ed-b66d-40a0a38e72ce event=0 ip=198.41.192.67 location=ord06 protocol=quic
+2025-09-21T12:29:30Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.73
+2025-09-21T12:29:30Z INF Registered tunnel connection connIndex=3 connection=1a1dbbf5-9a39-49fc-9fcb-edcfdb99abd0 event=0 ip=198.41.200.73 location=ord08 protocol=quic
+2025-09-21T12:29:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-21T12:29:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.192.47 type=http
+2025-09-21T12:29:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-21T12:29:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 dest=https://api.retailtradescanner.com/api/endpoint-status/ event=0 ip=198.41.192.47 type=http
+2025-09-21T12:57:20Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T12:57:21Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.73
+2025-09-21T12:57:21Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.73
+2025-09-21T12:57:21Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T12:57:21Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T12:57:21Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.67
+2025-09-21T12:57:21Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.67
+2025-09-21T12:57:21Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.200.233
+2025-09-21T12:57:21Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.233
+2025-09-21T12:57:21Z ERR no more connections active and exiting
+2025-09-21T12:57:21Z INF Tunnel server stopped
+2025-09-21T12:57:21Z ERR icmp router terminated error="context canceled"
+2025-09-21T12:57:21Z INF Metrics server stopped
+2025-09-21T12:57:31Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T12:57:31Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T12:57:31Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T12:57:31Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T12:57:31Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T12:57:31Z INF Generated Connector ID: 31118297-b6a1-4649-8d33-ec4adab2ee11
+2025-09-21T12:57:31Z INF Initial protocol quic
+2025-09-21T12:57:31Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T12:57:31Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T12:57:31Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T12:57:31Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T12:57:31Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.33
+2025-09-21T12:57:31Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T12:57:31Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T12:57:32Z INF Registered tunnel connection connIndex=0 connection=66d92655-6e23-4f75-a8e9-558d9eb21e95 event=0 ip=198.41.200.33 location=ord08 protocol=quic
+2025-09-21T12:57:32Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.107
+2025-09-21T12:57:32Z INF Registered tunnel connection connIndex=1 connection=e86adfdc-f9ee-41b0-a82e-f61fbda3d565 event=0 ip=198.41.192.107 location=ord06 protocol=quic
+2025-09-21T12:57:33Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.7
+2025-09-21T12:57:33Z INF Registered tunnel connection connIndex=2 connection=e5a5843d-ad32-430d-9bcb-02049f927251 event=0 ip=198.41.192.7 location=ord14 protocol=quic
+2025-09-21T12:57:34Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.63
+2025-09-21T12:57:34Z INF Registered tunnel connection connIndex=3 connection=dd50da1e-e917-45e9-98a0-2b6997a05869 event=0 ip=198.41.200.63 location=ord08 protocol=quic
+2025-09-21T13:04:27Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T13:04:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.33
+2025-09-21T13:04:27Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.33
+2025-09-21T13:04:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.107
+2025-09-21T13:04:27Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.107
+2025-09-21T13:04:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.63
+2025-09-21T13:04:27Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.63
+2025-09-21T13:04:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.7
+2025-09-21T13:04:27Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.7
+2025-09-21T13:04:27Z ERR no more connections active and exiting
+2025-09-21T13:04:27Z INF Tunnel server stopped
+2025-09-21T13:04:27Z ERR icmp router terminated error="context canceled"
+2025-09-21T13:04:27Z INF Metrics server stopped
+2025-09-21T13:04:46Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T13:04:46Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T13:04:46Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T13:04:46Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T13:04:46Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T13:04:46Z INF Generated Connector ID: f83c9cd7-9653-462f-802e-c7f37d7dfef4
+2025-09-21T13:04:46Z INF Initial protocol quic
+2025-09-21T13:04:46Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T13:04:46Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T13:04:46Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T13:04:46Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T13:04:46Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T13:04:46Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T13:04:46Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T13:04:46Z INF Registered tunnel connection connIndex=0 connection=e6c6eaaa-a22b-46b8-b9c8-d1759c3d7255 event=0 ip=198.41.192.47 location=ord10 protocol=quic
+2025-09-21T13:04:46Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.53
+2025-09-21T13:04:47Z INF Registered tunnel connection connIndex=1 connection=12f105e9-0d71-4899-a31a-a64b1b916020 event=0 ip=198.41.200.53 location=ord12 protocol=quic
+2025-09-21T13:04:47Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.23
+2025-09-21T13:04:48Z INF Registered tunnel connection connIndex=2 connection=eddeb932-6168-4582-82aa-8125fca13c77 event=0 ip=198.41.200.23 location=ord12 protocol=quic
+2025-09-21T13:04:48Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.227
+2025-09-21T13:04:49Z INF Registered tunnel connection connIndex=3 connection=3a443a7a-2a1b-4322-8d50-84a9dafdaebe event=0 ip=198.41.192.227 location=ord06 protocol=quic
+2025-09-21T18:20:55Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T18:20:55Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.200.53
+2025-09-21T18:20:55Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.53
+2025-09-21T18:20:55Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.23
+2025-09-21T18:20:55Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.23
+2025-09-21T18:20:55Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T18:20:55Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T18:20:56Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.227
+2025-09-21T18:20:56Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.227
+2025-09-21T18:20:56Z ERR no more connections active and exiting
+2025-09-21T18:20:56Z INF Tunnel server stopped
+2025-09-21T18:20:56Z ERR icmp router terminated error="context canceled"
+2025-09-21T18:20:56Z INF Metrics server stopped
+2025-09-21T18:21:22Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T18:21:22Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T18:21:22Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T18:21:22Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T18:21:22Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T18:21:22Z INF Generated Connector ID: 54e6a644-7bf7-4497-b4fc-5449bcd47260
+2025-09-21T18:21:22Z INF Initial protocol quic
+2025-09-21T18:21:22Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T18:21:22Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T18:21:22Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T18:21:22Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T18:21:22Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T18:21:22Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T18:21:22Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T18:21:23Z INF Registered tunnel connection connIndex=0 connection=c7bef5e6-70be-41da-b44a-c594e0aca151 event=0 ip=198.41.192.47 location=ord06 protocol=quic
+2025-09-21T18:21:23Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.193
+2025-09-21T18:21:23Z INF Registered tunnel connection connIndex=1 connection=5bb1b994-1791-4412-8682-e270e6e95e58 event=0 ip=198.41.200.193 location=ord11 protocol=quic
+2025-09-21T18:21:24Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.13
+2025-09-21T18:21:24Z INF Registered tunnel connection connIndex=2 connection=0d68f4c3-c804-413b-ac6b-ce43c91dcf91 event=0 ip=198.41.200.13 location=ord11 protocol=quic
+2025-09-21T18:21:25Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.77
+2025-09-21T18:21:25Z INF Registered tunnel connection connIndex=3 connection=eb2d78af-f5bc-4568-914a-f705cd2be4f7 event=0 ip=198.41.192.77 location=ord02 protocol=quic
+2025-09-21T18:21:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-21T18:21:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=1 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.193 type=http
+2025-09-21T18:21:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-21T18:21:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 dest=https://api.retailtradescanner.com/api/health/detailed/ event=0 ip=198.41.192.47 type=http
+2025-09-21T18:21:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-21T18:21:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 dest=https://api.retailtradescanner.com/api/health/ready/ event=0 ip=198.41.192.47 type=http
+2025-09-21T18:21:45Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-21T18:21:45Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=0 dest=https://api.retailtradescanner.com/api/health/live/ event=0 ip=198.41.192.47 type=http
+2025-09-21T19:25:27Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T19:25:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.13
+2025-09-21T19:25:27Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.13
+2025-09-21T19:25:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.77
+2025-09-21T19:25:27Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.77
+2025-09-21T19:25:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.200.193
+2025-09-21T19:25:27Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.193
+2025-09-21T19:25:27Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T19:25:27Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.47
+2025-09-21T19:25:27Z ERR no more connections active and exiting
+2025-09-21T19:25:27Z INF Tunnel server stopped
+2025-09-21T19:25:27Z ERR icmp router terminated error="context canceled"
+2025-09-21T19:25:27Z INF Metrics server stopped
+2025-09-21T19:25:44Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T19:25:44Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T19:25:44Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T19:25:44Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T19:25:44Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T19:25:44Z INF Generated Connector ID: ba7f211e-9efd-48d9-aebc-4c48a4ea6982
+2025-09-21T19:25:44Z INF Initial protocol quic
+2025-09-21T19:25:44Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T19:25:44Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T19:25:44Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T19:25:44Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T19:25:44Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T19:25:44Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T19:25:44Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T19:25:44Z INF Registered tunnel connection connIndex=0 connection=69fb975a-e259-4760-a2ea-7034a9ff5a42 event=0 ip=198.41.200.113 location=ord08 protocol=quic
+2025-09-21T19:25:44Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.7
+2025-09-21T19:25:44Z INF Registered tunnel connection connIndex=1 connection=d27df0fc-4257-4458-8666-39b272b56d7b event=0 ip=198.41.192.7 location=ord06 protocol=quic
+2025-09-21T19:25:45Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.23
+2025-09-21T19:25:45Z INF Registered tunnel connection connIndex=2 connection=e7cfaa84-ceaa-478a-ba7b-8f076411dad4 event=0 ip=198.41.200.23 location=ord12 protocol=quic
+2025-09-21T19:25:46Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.27
+2025-09-21T19:25:46Z INF Registered tunnel connection connIndex=3 connection=458768fe-36a4-4cfe-9baa-c8c87d6f7a29 event=0 ip=198.41.192.27 location=ord14 protocol=quic
+2025-09-21T19:49:22Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-21T19:49:23Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T19:49:23Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T19:49:23Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.27
+2025-09-21T19:49:23Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.27
+2025-09-21T19:49:23Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.7
+2025-09-21T19:49:23Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.7
+2025-09-21T19:49:23Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.23
+2025-09-21T19:49:23Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.23
+2025-09-21T19:49:23Z ERR no more connections active and exiting
+2025-09-21T19:49:23Z INF Tunnel server stopped
+2025-09-21T19:49:23Z ERR icmp router terminated error="context canceled"
+2025-09-21T19:49:23Z INF Metrics server stopped
+2025-09-21T20:04:57Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-21T20:04:57Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-21T20:04:57Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-21T20:04:57Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-21T20:04:57Z INF cloudflared will not automatically update on Windows systems.
+2025-09-21T20:04:57Z INF Generated Connector ID: badccbf2-d75f-435f-bb70-dab9a804bcd5
+2025-09-21T20:04:57Z INF Initial protocol quic
+2025-09-21T20:04:57Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T20:04:57Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T20:04:57Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-21T20:04:57Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-21T20:04:57Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.113
+2025-09-21T20:04:57Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-21T20:04:57Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-21T20:04:57Z INF Registered tunnel connection connIndex=0 connection=ef1c7a71-a70a-4975-b0ab-9609f66a4ebb event=0 ip=198.41.200.113 location=ord08 protocol=quic
+2025-09-21T20:04:57Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.77
+2025-09-21T20:04:58Z INF Registered tunnel connection connIndex=1 connection=5062ed40-838b-490d-933a-b92a6f47d190 event=0 ip=198.41.192.77 location=ord06 protocol=quic
+2025-09-21T20:04:58Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.233
+2025-09-21T20:04:59Z INF Registered tunnel connection connIndex=2 connection=52be5f81-843d-45a5-b03a-43605adab213 event=0 ip=198.41.200.233 location=ord08 protocol=quic
+2025-09-21T20:04:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.167
+2025-09-21T20:05:00Z INF Registered tunnel connection connIndex=3 connection=3e10df9f-e9ed-44fa-b449-ddc85bfd6786 event=0 ip=198.41.192.167 location=ord02 protocol=quic
+2025-09-22T09:22:06Z WRN Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.167
+2025-09-22T09:22:06Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.167
+2025-09-22T09:22:06Z WRN Connection terminated error="context canceled" connIndex=3
+2025-09-22T09:22:11Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.167
+2025-09-22T09:22:11Z INF Registered tunnel connection connIndex=3 connection=367a3a40-215b-4309-99b5-4204c2064638 event=0 ip=198.41.192.167 location=ord02 protocol=quic
+2025-09-22T10:11:29Z WRN Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.113
+2025-09-22T10:11:29Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.113
+2025-09-22T10:11:30Z WRN Connection terminated error="context canceled" connIndex=0
+2025-09-22T10:11:31Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.113
+2025-09-22T10:11:31Z INF Registered tunnel connection connIndex=0 connection=5cca9bfc-d66c-474b-83af-96a5db1d4099 event=0 ip=198.41.200.113 location=ord08 protocol=quic
+2025-09-22T10:12:05Z WRN Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.233
+2025-09-22T10:12:05Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.233
+2025-09-22T10:12:05Z WRN Connection terminated error="context canceled" connIndex=2
+2025-09-22T10:12:19Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.233
+2025-09-22T10:12:19Z INF Registered tunnel connection connIndex=2 connection=0a2beae4-887e-43d4-92f7-b823a97f74bf event=0 ip=198.41.200.233 location=ord08 protocol=quic
+2025-09-22T11:18:19Z WRN Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T11:18:19Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T11:18:19Z WRN Connection terminated error="context canceled" connIndex=1
+2025-09-22T11:18:20Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T11:18:25Z WRN Failed to dial a quic connection error="failed to dial to edge with quic: timeout: no recent network activity" connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T11:18:25Z INF Retrying connection in up to 4s connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T11:18:25Z WRN Connection terminated error="failed to dial to edge with quic: timeout: no recent network activity" connIndex=1
+2025-09-22T11:18:58Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.7
+2025-09-22T11:18:59Z INF Registered tunnel connection connIndex=1 connection=6b557607-2e43-42ae-8501-9d1ae3d654fe event=0 ip=198.41.192.7 location=ord06 protocol=quic
+2025-09-22T11:56:40Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-22T11:56:40Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.7
+2025-09-22T11:56:40Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.7
+2025-09-22T11:56:40Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.113
+2025-09-22T11:56:40Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.113
+2025-09-22T11:56:40Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.167
+2025-09-22T11:56:40Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.167
+2025-09-22T11:56:40Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.233
+2025-09-22T11:56:40Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.233
+2025-09-22T11:56:40Z ERR no more connections active and exiting
+2025-09-22T11:56:40Z INF Tunnel server stopped
+2025-09-22T11:56:40Z ERR icmp router terminated error="context canceled"
+2025-09-22T11:56:40Z INF Metrics server stopped
+2025-09-22T11:57:37Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-22T11:57:37Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-22T11:57:37Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-22T11:57:37Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-22T11:57:37Z INF cloudflared will not automatically update on Windows systems.
+2025-09-22T11:57:37Z INF Generated Connector ID: f6f9ca5a-f3c3-40a5-bf57-2fa0e3d73d6f
+2025-09-22T11:57:37Z INF Initial protocol quic
+2025-09-22T11:57:37Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-22T11:57:37Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-22T11:57:37Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-22T11:57:37Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-22T11:57:37Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.63
+2025-09-22T11:57:37Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-22T11:57:37Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-22T11:57:37Z INF Registered tunnel connection connIndex=0 connection=44d84e3f-932e-4fb5-81bc-b26aede915ed event=0 ip=198.41.200.63 location=ord11 protocol=quic
+2025-09-22T11:57:37Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T11:57:38Z INF Registered tunnel connection connIndex=1 connection=da208de6-0026-4ee2-ad1b-566e9c612ff1 event=0 ip=198.41.192.77 location=ord06 protocol=quic
+2025-09-22T11:57:38Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.27
+2025-09-22T11:57:39Z INF Registered tunnel connection connIndex=2 connection=8c190d6d-73a5-400f-88f8-315d34e7a736 event=0 ip=198.41.192.27 location=ord10 protocol=quic
+2025-09-22T11:57:39Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.53
+2025-09-22T11:57:39Z INF Registered tunnel connection connIndex=3 connection=180047c7-3fb0-40f3-b435-035cda76a5b5 event=0 ip=198.41.200.53 location=ord12 protocol=quic
+2025-09-22T12:11:05Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-22T12:11:05Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.200.53
+2025-09-22T12:11:05Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.53
+2025-09-22T12:11:05Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T12:11:05Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.77
+2025-09-22T12:11:06Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.63
+2025-09-22T12:11:06Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.63
+2025-09-22T12:11:06Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.192.27
+2025-09-22T12:11:06Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.192.27
+2025-09-22T12:11:06Z ERR no more connections active and exiting
+2025-09-22T12:11:06Z INF Tunnel server stopped
+2025-09-22T12:11:06Z ERR icmp router terminated error="context canceled"
+2025-09-22T12:11:06Z INF Metrics server stopped
+2025-09-22T12:11:53Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-09-22T12:11:53Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-09-22T12:11:53Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-09-22T12:11:53Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-09-22T12:11:53Z INF cloudflared will not automatically update on Windows systems.
+2025-09-22T12:11:53Z INF Generated Connector ID: 116ed3ef-9f29-4165-957d-1fac4f08177c
+2025-09-22T12:11:53Z INF Initial protocol quic
+2025-09-22T12:11:53Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-22T12:11:53Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-22T12:11:53Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-09-22T12:11:53Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-09-22T12:11:53Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.23
+2025-09-22T12:11:53Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-09-22T12:11:53Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-09-22T12:11:53Z INF Registered tunnel connection connIndex=0 connection=13b3a155-e26e-4d88-a156-aba5d77f6216 event=0 ip=198.41.200.23 location=ord08 protocol=quic
+2025-09-22T12:11:53Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.192.47
+2025-09-22T12:11:53Z INF Registered tunnel connection connIndex=1 connection=6f0ea65a-0350-4142-9914-102c3ebecbf7 event=0 ip=198.41.192.47 location=ord06 protocol=quic
+2025-09-22T12:11:54Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.200.63
+2025-09-22T12:11:54Z INF Registered tunnel connection connIndex=2 connection=26c8ca0d-b889-49d9-8f65-f0133c3e8bbe event=0 ip=198.41.200.63 location=ord08 protocol=quic
+2025-09-22T12:11:55Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.192.67
+2025-09-22T12:11:56Z INF Registered tunnel connection connIndex=3 connection=3cf8c172-710a-43c7-bd91-f3846b8fd586 event=0 ip=198.41.192.67 location=ord06 protocol=quic
+2025-09-22T12:12:19Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:19Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:19Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/news/feed/?page=1&limit=20&mode=all&sort=recent event=0 ip=198.41.192.67 type=http
+2025-09-22T12:12:19Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.192.67 type=http
+2025-09-22T12:12:19Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:19Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/detailed/ event=0 ip=198.41.192.67 type=http
+2025-09-22T12:12:19Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:19Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/ready/ event=0 ip=198.41.192.67 type=http
+2025-09-22T12:12:19Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:19Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/live/ event=0 ip=198.41.192.67 type=http
+2025-09-22T12:12:43Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:43Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:43Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:43Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=3 dest=https://api.retailtradescanner.com/api/health/detailed/ event=0 ip=198.41.192.67 type=http
+2025-09-22T12:12:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/ready/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:44Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:44Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/live/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:49Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:49Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:49Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:49Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/detailed/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:49Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:49Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/ready/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:49Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 event=1 ingressRule=0 originService=http://localhost:8000
+2025-09-22T12:12:49Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8000: connectex: No connection could be made because the target machine actively refused it." connIndex=2 dest=https://api.retailtradescanner.com/api/health/live/ event=0 ip=198.41.200.63 type=http
+2025-09-22T12:12:53Z INF Initiating graceful shutdown due to signal interrupt ...
+2025-09-22T12:12:53Z ERR Failed to serve tunnel connection error="context canceled" connIndex=0 event=0 ip=198.41.200.23
+2025-09-22T12:12:53Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.23
+2025-09-22T12:12:53Z ERR Failed to serve tunnel connection error="context canceled" connIndex=1 event=0 ip=198.41.192.47
+2025-09-22T12:12:53Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.192.47
+2025-09-22T12:12:53Z ERR Failed to serve tunnel connection error="context canceled" connIndex=3 event=0 ip=198.41.192.67
+2025-09-22T12:12:53Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.67
+2025-09-22T12:12:53Z ERR Failed to serve tunnel connection error="context canceled" connIndex=2 event=0 ip=198.41.200.63
+2025-09-22T12:12:53Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.63
+2025-09-22T12:12:53Z ERR no more connections active and exiting
+2025-09-22T12:12:53Z INF Tunnel server stopped
+2025-09-22T12:12:53Z ERR icmp router terminated error="context canceled"
+2025-09-22T12:12:53Z INF Metrics server stopped
