@@ -30,7 +30,7 @@ import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [discountCode, setDiscountCode] = useState("TRIAL");
+  const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [referralCode, setReferralCode] = useState("");
   const [openComparison, setOpenComparison] = useState(false);
@@ -82,7 +82,7 @@ const Pricing = () => {
       limitations: [],
       popular: true,
       color: "orange",
-      cta: "Try for $1"
+      cta: "Try for free"
     },
     {
       id: "silver",
@@ -101,7 +101,7 @@ const Pricing = () => {
       limitations: [],
       popular: false,
       color: "blue",
-      cta: "Try for $1"
+      cta: "Try for free"
     },
     {
       id: "gold",
@@ -119,28 +119,9 @@ const Pricing = () => {
       limitations: [],
       popular: false,
       color: "yellow",
-      cta: "Try for $1"
+      cta: "Try for free"
     },
-    {
-      id: "free",
-      name: "Free",
-      icon: <Zap className="h-6 w-6" />,
-      description: "Basic stock lookup and filtering",
-      price: { monthly: 0, annual: 0 },
-      features: [
-        "15 stock queries per month",
-        "Stock symbol lookup & search",
-        "Basic price filtering"
-      ],
-      limitations: [
-        "No portfolio management",
-        "No email alerts",
-        "No watchlists"
-      ],
-      popular: false,
-      color: "gray",
-      cta: "Get Started Free"
-    },
+    // Free plan removed per policy
   ];
 
   // Annual pricing: 15% off, rounded to nearest value ending in 9.99
@@ -161,10 +142,7 @@ const Pricing = () => {
       return;
     }
 
-    if (planId === "free") {
-      toast.success("You're already on the free plan!");
-      return;
-    }
+    // Free plan removed
 
     setIsLoading(true);
     
@@ -172,8 +150,8 @@ const Pricing = () => {
       const plan = plans.find(p => p.id === planId);
       const amount = isAnnual ? plan.price.annual : plan.price.monthly;
       
-      // Create PayPal checkout with TRIAL discount
-      await createPayPalOrder(planId, 1.00); // $1 for trial
+      // Create PayPal checkout without $1 trial
+      await createPayPalOrder(planId);
     } catch (error) {
       toast.error("Failed to create checkout session");
     } finally {
@@ -181,10 +159,8 @@ const Pricing = () => {
     }
   };
 
-  const createPayPalOrder = async (planId, amount) => {
-    const finalAmount = amount;
-      
-    toast.success(`Redirecting to PayPal for $${finalAmount} payment...`);
+  const createPayPalOrder = async (planId) => {
+    toast.success("Redirecting to PayPal...");
     
     // Simulate redirect to PayPal
     setTimeout(() => {
@@ -192,8 +168,7 @@ const Pricing = () => {
         state: { 
           planId, 
           amount: finalAmount,
-          originalAmount: plans.find(p => p.id === planId).price.monthly,
-          discount: { code: "TRIAL", description: "7-Day Trial" }
+          originalAmount: plans.find(p => p.id === planId).price.monthly
         } 
       });
     }, 2000);
@@ -206,18 +181,7 @@ const Pricing = () => {
     }
 
     try {
-      // Simulate TRIAL code validation
-      if (discountCode.toUpperCase() === "TRIAL") {
-        setAppliedDiscount({
-          code: "TRIAL",
-          description: "7-Day Trial for $1",
-          savings_percentage: 95,
-          final_amount: 1.00
-        });
-        toast.success("TRIAL code applied! 7 days for just $1");
-      } else {
-        toast.error("Invalid discount code");
-      }
+      toast.error("No trial codes. Trial is free until next 1st.");
     } catch (error) {
       toast.error("Failed to apply discount code");
     }
@@ -301,9 +265,9 @@ const Pricing = () => {
             Simple, Transparent Pricing
           </h1>
           
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Start with our 7-day trial. Cancel anytime, no hidden fees.
-          </p>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Try for free until the next 1st of the month. Cancel anytime.
+            </p>
 
           {/* Social proof logo bar + trust markers */}
           <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-6">
@@ -316,13 +280,13 @@ const Pricing = () => {
           </div>
 
           {/* Trust Banner with guarantee */}
-          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 max-w-2xl mx-auto mb-8">
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg p-6 max-w-2xl mx-auto mb-8">
             <div className="flex items-center justify-center mb-3">
               <Zap className="h-6 w-6 mr-2" />
-              <span className="text-lg font-bold">TRIAL</span>
+              <span className="text-lg font-bold">Trial</span>
             </div>
-            <p className="text-xl mb-4">Use code TRIAL for a 7‑day $1 trial on paid plans</p>
-            <p className="text-sm opacity-90">Then continue at regular price or cancel anytime. 7‑day money‑back guarantee.</p>
+            <p className="text-xl mb-4">Try for free until the next 1st of the month</p>
+            <p className="text-sm opacity-90">Then continue at regular price or cancel anytime. Money‑back guarantee.</p>
           </div>
 
           {/* Referral Notice */}
@@ -348,19 +312,7 @@ const Pricing = () => {
             </Label>
           </div>
 
-          {/* Discount Code Input */}
-          <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto mb-8">
-            <input
-              type="text"
-              placeholder="Enter discount code"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md flex-1"
-            />
-            <Button onClick={applyDiscountCode} variant="outline">
-              Apply Code
-            </Button>
-          </div>
+          {/* Discount codes disabled for trial policy */}
 
           {appliedDiscount && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto mb-8">
@@ -548,12 +500,12 @@ const Pricing = () => {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How does the 7-day trial work?</CardTitle>
+              <CardTitle className="text-lg">How does the free trial work?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Use code TRIAL to access any paid plan for 7 days for just $1. You can cancel anytime during the trial. 
-                  After 7 days, you'll be charged the regular monthly price unless you cancel.
+                  Your trial lasts until the next 1st of the month. No $1 trial codes.
+                  You'll be charged the regular price on the 1st unless you cancel before then.
                 </p>
               </CardContent>
             </Card>
@@ -584,12 +536,11 @@ const Pricing = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Is there a free plan available?</CardTitle>
+              <CardTitle className="text-lg">Is there a free plan available?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Yes, we offer a free plan with basic features including 15 stock lookups per month 
-                  and basic filtering. Perfect for getting started with our platform.
+                  No. We no longer offer a free plan. Instead, trials are free until the next 1st of the month.
                 </p>
               </CardContent>
             </Card>

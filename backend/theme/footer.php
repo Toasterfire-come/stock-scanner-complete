@@ -90,7 +90,7 @@
                         <p>Join thousands of investors using our professional platform</p>
                         <div class="cta-buttons">
                             <?php if (!is_user_logged_in()): ?>
-                                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-large">Start Free Trial</a>
+                                <a href="<?php echo wp_registration_url(); ?>" class="btn btn-primary btn-large">Try for Free</a>
                                 <a href="/premium-plans/" class="btn btn-outline btn-large">View Plans</a>
                             <?php else: ?>
                                 <a href="/dashboard/" class="btn btn-primary btn-large">Go to Dashboard</a>

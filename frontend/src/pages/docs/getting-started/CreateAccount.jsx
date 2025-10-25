@@ -58,12 +58,12 @@ const CreateAccount = () => {
       title: "Choose Your Plan",
       description: "Select the subscription plan that best fits your trading needs.",
       details: [
-        "Review our available plans: Free, Bronze, Silver, and Gold",
+        "Review our available plans: Bronze, Silver, and Gold",
         "Compare features, API call limits, and pricing",
-        "Start with our free plan to explore the platform",
+        "Start a free trial (until next 1st) to explore the platform",
         "Upgrade anytime as your needs grow"
       ],
-      tips: "All paid plans include a 7-day free trial. You can cancel anytime with no cancellation fees."
+      tips: "Trials are free until the next 1st of the month. You can cancel anytime before billing begins."
     },
     {
       number: "05",
@@ -80,13 +80,7 @@ const CreateAccount = () => {
   ];
 
   const planComparison = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "/forever",
-      features: ["30 API calls/month", "Basic stock data", "1 Portfolio", "Community support"],
-      recommended: false
-    },
+    // Free plan removed per policy
     {
       name: "Bronze", 
       price: "$24.99",

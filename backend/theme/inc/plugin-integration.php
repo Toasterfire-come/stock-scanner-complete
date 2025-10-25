@@ -1068,12 +1068,7 @@ function handle_create_paypal_order_ajax() {
     $promo_applied = false;
     $message = '';
 
-    if ($promo_code === 'TRIAL') {
-        // $1 for 7 days, then renew at full monthly price
-        $first_charge = 1.00;
-        $promo_applied = true;
-        $message = 'TRIAL applied: $1 for 7 days, then renews monthly at full price.';
-    } elseif ($promo_code === 'REF50') {
+    if ($promo_code === 'REF50') {
         // 50% off first month, then renew at full monthly price
         $first_charge = round($base_amount * 0.5, 2);
         $promo_applied = true;
@@ -1146,13 +1141,8 @@ function handle_capture_paypal_order_ajax() {
             $now = current_time('mysql');
             $expires = null;
 
-            if ($promo_code === 'TRIAL') {
-                // Trial: 7 days from now
-                $expires = date('Y-m-d H:i:s', strtotime('+7 days', current_time('timestamp')));
-            } else {
-                // Regular/ref50: first period ends in 1 month
-                $expires = date('Y-m-d H:i:s', strtotime('+30 days', current_time('timestamp')));
-            }
+            // First period ends in 1 month (trial handled by calendar policy on app side)
+            $expires = date('Y-m-d H:i:s', strtotime('+30 days', current_time('timestamp')));
 
             $existing_id = $wpdb->get_var($wpdb->prepare(
                 "SELECT id FROM $subs_table WHERE user_id = %d",

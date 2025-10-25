@@ -108,14 +108,15 @@ const CheckoutFailure = () => {
             <CardTitle>Alternative Options</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Free plan removed: offer to start trial instead */}
             <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Continue with Free Plan</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">Start Trial</h4>
               <p className="text-sm text-blue-700 mb-3">
-                Start using Trade Scan Pro with our free features while you resolve payment issues.
+                Trial is free until the next 1st of the month. You can cancel anytime.
               </p>
               <Button asChild variant="outline" size="sm">
-                <Link to="/app/dashboard">
-                  Continue with Free Plan
+                <Link to="/pricing">
+                  Try for free
                 </Link>
               </Button>
             </div>

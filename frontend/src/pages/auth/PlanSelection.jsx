@@ -4,7 +4,7 @@ import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Check, Crown, Zap, Star, Gift, ArrowRight } from "lucide-react";
+import { Check, Crown, Zap, ArrowRight } from "lucide-react";
 
 const plans = [
   {
@@ -12,7 +12,7 @@ const plans = [
     name: "Bronze",
     price: "$24.99",
     period: "month",
-    trialPrice: "$1",
+    trialPrice: "free",
     description: "Great for individual traders",
     features: [
       "150 API calls per day, 1500/month",
@@ -39,7 +39,7 @@ const plans = [
     name: "Silver",
     price: "$49.99",
     period: "month",
-    trialPrice: "$1",
+    trialPrice: "free",
     description: "Perfect for professional traders",
     features: [
       "500 API calls per day, 5000/month",
@@ -66,7 +66,7 @@ const plans = [
     name: "Gold",
     price: "$89.99",
     period: "month",
-    trialPrice: "$1",
+    trialPrice: "free",
     description: "For trading teams and institutions",
     features: [
       "Unlimited API calls",
@@ -87,36 +87,7 @@ const plans = [
     icon: Crown,
     color: "yellow",
   },
-  {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Perfect for getting started",
-    features: [
-      "15 API calls per month",
-      "Unlimited scanner combinations",
-      "Basic stock screening",
-      "Community support",
-      "Basic portfolio tracking",
-      "0 Watchlists",
-      "1 Portfolio"
-    ],
-    limitations: [
-      "No email alerts",
-      "No watchlists"
-    ],
-    limits: {
-      api_calls: 30,
-      screeners: 1,
-      alerts: 0,
-      watchlists: 0,
-      portfolios: 1,
-    },
-    icon: Star,
-    color: "gray",
-    isFree: true,
-  },
+  // Removed free plan per new trial model
 ];
 
 export default function PlanSelection() {
@@ -145,12 +116,7 @@ export default function PlanSelection() {
     setIsLoading(true);
     
     try {
-      if (planId === "free") {
-        // Keep user on free plan and go to app
-        updateUser({ plan: 'free' });
-        navigate('/app/dashboard', { replace: true });
-        return;
-      }
+      // Free plan removed: always proceed to checkout for paid plans
 
       // For paid plans, go directly to checkout with selected cycle
       navigate('/checkout', {
@@ -182,7 +148,7 @@ export default function PlanSelection() {
             Choose Your Trading Plan
           </h1>
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-            Select the perfect plan for your trading needs. All paid plans include a 7-day trial for just $1.
+            Try for free until the next 1st of the month. No $1 trial, no free plan.
           </p>
           {referral && (
             <div className="mt-3 text-sm text-blue-900 bg-blue-50 border border-blue-200 inline-flex items-center px-3 py-2 rounded">
@@ -192,11 +158,11 @@ export default function PlanSelection() {
           )}
         </div>
 
-        {/* Updated TRIAL Banner */}
+        {/* Trial policy banner */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-base">
+          <div className="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-full font-bold text-base">
             <Zap className="h-5 w-5 mr-2" />
-            Use code TRIAL for a 7‑day $1 trial on paid plans
+            Try for free until the next 1st of the month
           </div>
         </div>
 
@@ -250,11 +216,9 @@ export default function PlanSelection() {
                   <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
                   
                   <div className="space-y-2">
-                    {!plan.isFree && (
-                      <div className="text-lg font-bold text-blue-600">
-                        TRIAL: {plan.trialPrice} for 7 days
-                      </div>
-                    )}
+                    <div className="text-lg font-bold text-blue-600">
+                      Trial: free until next 1st
+                    </div>
                     <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                       {(() => {
                         const monthly = parseFloat(String(plan.price).replace('$',''));
@@ -337,15 +301,13 @@ export default function PlanSelection() {
                     }}
                     disabled={isLoading}
                   >
-                    {plan.isFree ? "Get Started Free" : "Try for $1"}
+                    Try for free
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                   
-                  {!plan.isFree && (
-                    <p className="text-xs text-gray-500 text-center">
-                      TRIAL: 7-day trial for $1 then {plan.price}/{plan.period}
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 text-center">
+                    Trial runs until the next 1st, then {plan.price}/{plan.period}
+                  </p>
                 </CardContent>
               </Card>
             );

@@ -578,6 +578,42 @@ class MonthlyRevenueSummary(models.Model):
         return f"Revenue Summary {self.month_year}: ${self.total_revenue}"
 
 
+# Indicators
+class CustomIndicator(models.Model):
+    """User-defined custom indicators (formula or JS mode)."""
+    MODE_CHOICES = [
+        ('formula', 'Formula'),
+        ('js', 'JavaScript'),
+    ]
+    PRIVACY_CHOICES = [
+        ('private', 'Private'),
+        ('unlisted', 'Unlisted'),
+        ('public', 'Public'),
+    ]
+
+    id = models.CharField(max_length=64, primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='custom_indicators')
+    name = models.CharField(max_length=150)
+    mode = models.CharField(max_length=16, choices=MODE_CHOICES, default='formula')
+    formula = models.TextField(blank=True)
+    js_code = models.TextField(blank=True)
+    params = models.JSONField(default=list, help_text="Parameter schema array")
+    palette = models.JSONField(default=dict, help_text="Color configuration for rendering")
+    privacy = models.CharField(max_length=16, choices=PRIVACY_CHOICES, default='private')
+    version = models.IntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['user', '-updated_at']),
+            models.Index(fields=['privacy', '-updated_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} v{self.version} ({self.mode})"
+
 # Screeners
 class Screener(models.Model):
     """Saved stock screener definitions with JSON criteria."""

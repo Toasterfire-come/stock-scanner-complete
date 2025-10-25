@@ -345,7 +345,7 @@ const Features = () => {
             Ready to Experience These Features?
           </h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Start your 7-day trial for just $1 and see how Trade Scan Pro can transform your trading strategy.
+            Try for free until the next 1st of the month and see how Trade Scan Pro can transform your trading strategy.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center">

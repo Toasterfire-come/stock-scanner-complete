@@ -108,8 +108,8 @@ const Home = () => {
       answer: "Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees."
     },
     {
-      question: "What's included in the TRIAL code?",
-      answer: "The TRIAL code gives you 7 days of full access to your chosen plan's features for just $1. After 7 days, you'll be charged the regular monthly price unless you cancel."
+      question: "How does the trial work?",
+      answer: "Your trial lasts until the next 1st of the month. No $1 trial. You'll be charged at the start of the next month unless you cancel before then."
     },
     {
       question: "What's the difference between plans?",
@@ -201,7 +201,7 @@ const Home = () => {
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-6 w-6 mr-3" />
-                  Try Now for Free
+                  Try free — no card required
                   <ArrowRight className="h-6 w-6 ml-3" />
                 </Link>
               </Button>
@@ -215,10 +215,10 @@ const Home = () => {
 
             {/* Trust Indicators */}
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg text-gray-600">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                Use code TRIAL for a 7‑day $1 trial
-              </div>
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+              Trial: Free until the next 1st of the month
+            </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-blue-500 mr-3" />
                 Secure & Reliable
@@ -359,10 +359,10 @@ const Home = () => {
             <p className="text-2xl text-blue-100 mb-8">
               Choose the plan that fits your trading style
             </p>
-            <div className="inline-flex items-center bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full font-bold text-lg">
-              <Zap className="h-5 w-5 mr-2" />
-              Use code TRIAL for a 7‑day $1 trial
-            </div>
+                <div className="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-full font-bold text-lg">
+                  <Zap className="h-5 w-5 mr-2" />
+                  Trial: Free until the next 1st of the month
+                </div>
           </div>
           <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (

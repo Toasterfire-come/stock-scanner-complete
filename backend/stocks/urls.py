@@ -7,6 +7,7 @@ from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from . import revenue_views
 from .billing_api import cancel_subscription_api, paypal_plans_meta_api, developer_usage_stats_api
+from . import indicators_api
 from . import enterprise_api
 from . import admin_api
 from . import matomo_proxy
@@ -134,6 +135,13 @@ urlpatterns = [
     # Billing management
     path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
     path('billing/plans-meta/', paypal_plans_meta_api, name='paypal_plans_meta'),
+
+    # Custom Indicators CRUD
+    path('indicators/', indicators_api.list_indicators, name='indicators_list'),
+    path('indicators/create/', indicators_api.create_indicator, name='indicators_create'),
+    path('indicators/<str:indicator_id>/', indicators_api.get_indicator, name='indicators_get'),
+    path('indicators/<str:indicator_id>/update/', indicators_api.update_indicator, name='indicators_update'),
+    path('indicators/<str:indicator_id>/delete/', indicators_api.delete_indicator, name='indicators_delete'),
 
     # Enterprise contact/solutions endpoints
     path('enterprise/contact/', enterprise_api.enterprise_contact_api, name='enterprise_contact'),
