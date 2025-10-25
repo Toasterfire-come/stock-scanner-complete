@@ -94,3 +94,7 @@ body {
 /* Utilities */
 .muted { color: var(--muted); }
 .hr { height: 1px; background: var(--border); border: 0; margin: 12px 0; }
+
+/* Sticky mobile CTA */
+.sticky-cta { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display:flex; gap: 10px; background: rgba(10,14,32,0.8); border:1px solid var(--border); box-shadow: var(--shadow); padding: 8px; border-radius: 999px; z-index: 50; backdrop-filter: blur(10px); }
+@media (min-width: 900px) { .sticky-cta { display: none; } }

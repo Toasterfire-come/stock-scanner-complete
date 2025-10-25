@@ -28,6 +28,22 @@
               <span><span class="legend-dot" style="background:#22d3ee"></span> EMA50</span>
             </div>
           </div>
+          <div class="grid" style="margin-bottom:8px;">
+            <div class="btn-group" role="group" aria-label="Intervals">
+              <button class="btn" data-interval="1d">1D</button>
+              <button class="btn" data-interval="1w">1W</button>
+              <button class="btn" data-interval="1m">1M</button>
+              <button class="btn" data-interval="6mo">6M</button>
+              <button class="btn" data-interval="1y">1Y</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="Presets">
+              <button class="btn" data-preset="day">Day Trader</button>
+              <button class="btn" data-preset="swing">Swing</button>
+              <button class="btn" data-preset="invest">Investor</button>
+            </div>
+            <button id="exportPng" class="btn">Export PNG</button>
+            <button id="createAlert" class="btn primary">Create alert</button>
+          </div>
           <div id="chart"></div>
         </div>
         <div class="card">
@@ -53,9 +69,12 @@
   </script>
   <script>
     (async function() {
-      const url = `/api/stocks/${ticker}/ohlc/?period=6mo&interval=1d&indicators=sma20,ema50,rsi14`;
-      const res = await fetch(url);
-      const data = await res.json();
+      async function fetchData(period = '6mo', interval = '1d', indicators = 'sma20,ema50,rsi14') {
+        const url = `/api/stocks/${ticker}/ohlc/?period=${period}&interval=${interval}&indicators=${indicators}`;
+        const res = await fetch(url);
+        return await res.json();
+      }
+      let data = await fetchData();
       if (!data.success) return;
 
       const ohlc = data.ohlc.map(o => ({ time: o.t / 1000, open: o.o, high: o.h, low: o.l, close: o.c }));
@@ -74,8 +93,11 @@
       const ema50 = data.indicators.ema50 || [];
       const sma20Series = priceChart.addLineSeries({ color: '#4f7cff', lineWidth: 2 });
       const ema50Series = priceChart.addLineSeries({ color: '#22d3ee', lineWidth: 2 });
-      sma20Series.setData(ohlc.map((d, i) => ({ time: d.time, value: sma20[i] ?? null })).filter(p => p.value !== null));
-      ema50Series.setData(ohlc.map((d, i) => ({ time: d.time, value: ema50[i] ?? null })).filter(p => p.value !== null));
+      function renderOverlays() {
+        sma20Series.setData(ohlc.map((d, i) => ({ time: d.time, value: sma20[i] ?? null })).filter(p => p.value !== null));
+        ema50Series.setData(ohlc.map((d, i) => ({ time: d.time, value: ema50[i] ?? null })).filter(p => p.value !== null));
+      }
+      renderOverlays();
 
       const rsiChart = LightweightCharts.createChart(document.getElementById('rsi'), {
         layout: { background: { type: 'solid', color: 'transparent' }, textColor: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() },
@@ -84,8 +106,68 @@
         grid: { vertLines: { color: 'rgba(255,255,255,0.05)' }, horzLines: { color: 'rgba(255,255,255,0.05)' } },
       });
       const rsiSeries = rsiChart.addLineSeries({ color: '#f59e0b', lineWidth: 2 });
-      const rsi = data.indicators.rsi14 || [];
-      rsiSeries.setData(ohlc.map((d, i) => ({ time: d.time, value: rsi[i] ?? null })).filter(p => p.value !== null));
+      function renderRsi() {
+        const rsi = data.indicators.rsi14 || [];
+        rsiSeries.setData(ohlc.map((d, i) => ({ time: d.time, value: rsi[i] ?? null })).filter(p => p.value !== null));
+      }
+      renderRsi();
+
+      // Controls: interval chips
+      document.querySelectorAll('[data-interval]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const choice = btn.getAttribute('data-interval');
+          const map = { '1d': ['1mo','1h'], '1w': ['3mo','1h'], '1m': ['6mo','1d'], '6mo': ['6mo','1d'], '1y': ['1y','1d'] };
+          const [period, interval] = map[choice] || ['6mo','1d'];
+          data = await fetchData(period, interval);
+          const newOhlc = data.ohlc.map(o => ({ time: o.t / 1000, open: o.o, high: o.h, low: o.l, close: o.c }));
+          ohlc.length = 0; ohlc.push(...newOhlc);
+          candleSeries.setData(ohlc);
+          sma20 = data.indicators.sma20 || [];
+          ema50 = data.indicators.ema50 || [];
+          renderOverlays();
+          renderRsi();
+        });
+      });
+
+      // Presets
+      document.querySelectorAll('[data-preset]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const preset = btn.getAttribute('data-preset');
+          let inds = 'sma20,ema50,rsi14';
+          if (preset === 'day') inds = 'ema10,ema20,rsi14';
+          if (preset === 'swing') inds = 'sma20,ema50,rsi14';
+          if (preset === 'invest') inds = 'sma50,sma200,rsi14';
+          data = await fetchData('6mo','1d', inds);
+          const newOhlc = data.ohlc.map(o => ({ time: o.t / 1000, open: o.o, high: o.h, low: o.l, close: o.c }));
+          ohlc.length = 0; ohlc.push(...newOhlc);
+          candleSeries.setData(ohlc);
+          sma20 = data.indicators.sma20 || [];
+          ema50 = data.indicators.ema50 || [];
+          renderOverlays();
+          renderRsi();
+        });
+      });
+
+      // Export PNG
+      document.getElementById('exportPng').addEventListener('click', async () => {
+        const canvas = document.querySelector('#chart canvas');
+        if (!canvas) return;
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url; a.download = `${ticker}.png`; a.click();
+      });
+
+      // Create Alert (client-side modal prompt)
+      document.getElementById('createAlert').addEventListener('click', async () => {
+        const price = prompt('Target price?');
+        if (!price) return;
+        const condition = prompt('Condition: above/below', 'above');
+        const email = prompt('Your email to notify?');
+        if (!email) return;
+        const resp = await fetch('/api/alerts/create/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticker, target_price: parseFloat(price), condition, email }) });
+        const j = await resp.json();
+        alert(j.message || 'Alert saved');
+      });
     })();
   </script>
 {% endblock %}

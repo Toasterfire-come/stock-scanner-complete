@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+  <div class="container-narrow">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Choose your plan</div></div>
+      <div class="card-body">
+        <div class="grid cols-3">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Starter</div><span class="badge">Free trial</span></div>
+            <div class="card-body">
+              <h2 style="margin:0 0 8px 0;">$19/mo</h2>
+              <ul class="muted" style="padding-left: 18px;">
+                <li>Real-time screeners</li>
+                <li>Basic indicators</li>
+                <li>Email alerts (up to 5)</li>
+              </ul>
+              <a class="btn primary" href="/register/">Start free trial</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Pro</div><span class="badge success">Popular</span></div>
+            <div class="card-body">
+              <h2 style="margin:0 0 8px 0;">$39/mo</h2>
+              <ul class="muted" style="padding-left: 18px;">
+                <li>All Starter features</li>
+                <li>Advanced screeners & presets</li>
+                <li>Unlimited alerts</li>
+              </ul>
+              <a class="btn primary" href="/register/">Start free trial</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Elite</div><span class="badge warn">Best value</span></div>
+            <div class="card-body">
+              <h2 style="margin:0 0 8px 0;">$79/mo</h2>
+              <ul class="muted" style="padding-left: 18px;">
+                <li>All Pro features</li>
+                <li>Priority data refresh</li>
+                <li>Premium indicators & exports</li>
+              </ul>
+              <a class="btn primary" href="/register/">Start free trial</a>
+            </div>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="muted">7‑day free trial • Cancel anytime • Secure checkout</div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

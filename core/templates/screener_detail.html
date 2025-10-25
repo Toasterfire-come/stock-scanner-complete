@@ -30,17 +30,44 @@
             const resultsContainer = document.getElementById('results');
             const statusEl = document.getElementById('status');
             const apiUrl = '{{ api_url }}';
-            const params = new URLSearchParams({
+            let filters = {
                 {% for k, v in filters.items %}
                 '{{ k }}': '{{ v }}',
                 {% endfor %}
+            };
+            const presetsKey = `screener-presets-${'{{ screener_key }}'}`;
+            // Preset controls
+            const presetBar = document.createElement('div');
+            presetBar.className = 'grid';
+            presetBar.innerHTML = `
+              <div class="btn-group">
+                <button class="btn" id="savePreset">Save preset</button>
+                <button class="btn" id="loadPreset">Load preset</button>
+                <button class="btn" id="clearPreset">Clear preset</button>
+              </div>
+            `;
+            document.currentScript.parentElement?.appendChild?.(presetBar);
+            document.addEventListener('click', (e) => {
+              if (e.target?.id === 'savePreset') {
+                localStorage.setItem(presetsKey, JSON.stringify(filters));
+                alert('Preset saved');
+              }
+              if (e.target?.id === 'loadPreset') {
+                const raw = localStorage.getItem(presetsKey);
+                if (raw) { filters = JSON.parse(raw); runScreener(); }
+                else alert('No preset saved');
+              }
+              if (e.target?.id === 'clearPreset') {
+                localStorage.removeItem(presetsKey);
+                alert('Preset cleared');
+              }
             });
 
             async function runScreener() {
                 try {
                     statusEl.textContent = 'Running…';
                     resultsContainer.innerHTML = '<div class="muted">Loading…</div>';
-                    const res = await fetch(apiUrl + '?' + params.toString());
+                    const res = await fetch(apiUrl + '?' + new URLSearchParams(filters).toString());
                     const data = await res.json();
                     statusEl.textContent = 'Done';
 
@@ -70,12 +97,35 @@
                               <th>Change %</th>
                               <th>Volume</th>
                               <th>Market Cap</th>
+                              <th></th>
                             </tr>
                           </thead>
                           <tbody>${rows}</tbody>
                         </table>
                       </div>
                     `;
+
+                    // Append Alert buttons
+                    Array.from(document.querySelectorAll('tbody tr')).forEach(tr => {
+                      const td = document.createElement('td');
+                      const btn = document.createElement('button');
+                      btn.className = 'btn';
+                      btn.textContent = 'Alert';
+                      btn.addEventListener('click', async () => {
+                        const ticker = tr.querySelector('td a')?.textContent?.trim();
+                        if (!ticker) return;
+                        const price = prompt(`Create alert for ${ticker}. Target price?`);
+                        if (!price) return;
+                        const condition = prompt('Condition: above/below', 'above');
+                        const email = prompt('Your email to notify?');
+                        if (!email) return;
+                        const resp = await fetch('/api/alerts/create/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticker, target_price: parseFloat(price), condition, email }) });
+                        const j = await resp.json();
+                        alert(j.message || 'Alert saved');
+                      });
+                      td.appendChild(btn);
+                      tr.appendChild(td);
+                    });
 
                     document.getElementById('rerun').addEventListener('click', runScreener);
                 } catch (e) {
