@@ -982,6 +982,112 @@ def realtime_stock_api(request, ticker):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def top_gainers_api(request):
+    """Return top gainers by price_change_percent.
+
+    Query params:
+      - limit: number of results (default 10, max 100)
+    """
+    try:
+        try:
+            limit = max(1, min(int(request.GET.get('limit', 10)), 100))
+        except (TypeError, ValueError):
+            limit = 10
+
+        queryset = (
+            Stock.objects.exclude(price_change_percent__isnull=True)
+            .order_by('-price_change_percent')[:limit]
+        )
+
+        def serialize(stock: Stock) -> Dict[str, Any]:
+            return {
+                'ticker': stock.ticker,
+                'name': getattr(stock, 'name', None) or getattr(stock, 'company_name', None),
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change': format_decimal_safe(getattr(stock, 'price_change', None)),
+                'price_change_percent': format_decimal_safe(getattr(stock, 'price_change_percent', None)),
+                'volume': stock.volume,
+                'market_cap': format_decimal_safe(stock.market_cap),
+                'wordpress_url': f"/stock/{stock.ticker.lower()}/",
+            }
+
+        data = [serialize(s) for s in queryset]
+        return Response({'top_gainers': data, 'count': len(data), 'timestamp': timezone.now().isoformat()})
+    except Exception as e:
+        logger.error(f"top_gainers_api error: {e}", exc_info=True)
+        return Response({'error': 'Failed to retrieve top gainers'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def top_losers_api(request):
+    """Return top losers by price_change_percent (ascending)."""
+    try:
+        try:
+            limit = max(1, min(int(request.GET.get('limit', 10)), 100))
+        except (TypeError, ValueError):
+            limit = 10
+
+        queryset = (
+            Stock.objects.exclude(price_change_percent__isnull=True)
+            .order_by('price_change_percent')[:limit]
+        )
+
+        def serialize(stock: Stock) -> Dict[str, Any]:
+            return {
+                'ticker': stock.ticker,
+                'name': getattr(stock, 'name', None) or getattr(stock, 'company_name', None),
+                'current_price': format_decimal_safe(stock.current_price),
+                'price_change': format_decimal_safe(getattr(stock, 'price_change', None)),
+                'price_change_percent': format_decimal_safe(getattr(stock, 'price_change_percent', None)),
+                'volume': stock.volume,
+                'market_cap': format_decimal_safe(stock.market_cap),
+                'wordpress_url': f"/stock/{stock.ticker.lower()}/",
+            }
+
+        data = [serialize(s) for s in queryset]
+        return Response({'top_losers': data, 'count': len(data), 'timestamp': timezone.now().isoformat()})
+    except Exception as e:
+        logger.error(f"top_losers_api error: {e}", exc_info=True)
+        return Response({'error': 'Failed to retrieve top losers'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def most_active_api(request):
+    """Return most active stocks by volume."""
+    try:
+        try:
+            limit = max(1, min(int(request.GET.get('limit', 10)), 100))
+        except (TypeError, ValueError):
+            limit = 10
+
+        queryset = (
+            Stock.objects.exclude(volume__isnull=True)
+            .order_by('-volume')[:limit]
+        )
+
+        def serialize(stock: Stock) -> Dict[str, Any]:
+            return {
+                'ticker': stock.ticker,
+                'name': getattr(stock, 'name', None) or getattr(stock, 'company_name', None),
+                'current_price': format_decimal_safe(stock.current_price),
+                'volume': stock.volume,
+                'price_change': format_decimal_safe(getattr(stock, 'price_change', None)),
+                'price_change_percent': format_decimal_safe(getattr(stock, 'price_change_percent', None)),
+                'market_cap': format_decimal_safe(stock.market_cap),
+                'wordpress_url': f"/stock/{stock.ticker.lower()}/",
+            }
+
+        data = [serialize(s) for s in queryset]
+        return Response({'most_active': data, 'count': len(data), 'timestamp': timezone.now().isoformat()})
+    except Exception as e:
+        logger.error(f"most_active_api error: {e}", exc_info=True)
+        return Response({'error': 'Failed to retrieve most active stocks'}, status=500)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def trending_stocks_api(request):
