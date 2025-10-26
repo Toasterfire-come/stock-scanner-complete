@@ -1,5 +1,12 @@
 from django.urls import path, include
 from . import views, api_views, views_health
+try:
+    # Prefer DRF versions when available
+    _tg = api_views.top_gainers_api
+    _tl = api_views.top_losers_api
+    _ma = api_views.most_active_api
+except Exception:  # Fallback to lightweight endpoints for Windows
+    from . import simple_market_api as api_views  # type: ignore
 from . import alerts_api
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
