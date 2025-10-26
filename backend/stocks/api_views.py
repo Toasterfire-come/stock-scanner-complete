@@ -19,7 +19,7 @@ import logging
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
 
-from .models import Stock, StockAlert, StockPrice
+from .models import Stock, StockAlert, StockPrice, Screener
 from emails.models import EmailSubscription
 import yfinance as yf
 import requests
@@ -1273,3 +1273,159 @@ def create_alert_api(request):
         )
 
 # Helper functions - moved to utils for better organization
+
+
+# =============================
+# Screener Endpoints (Windows-safe minimal implementations)
+# =============================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_list_api(request):
+    try:
+        limit = max(1, min(int(request.GET.get('limit', 50)), 200))
+        qs = Screener.objects.order_by('-updated_at')[:limit]
+        data = [{
+            'id': s.id,
+            'name': s.name,
+            'description': s.description or '',
+            'criteria': s.criteria,
+            'is_public': bool(getattr(s, 'is_public', False)),
+            'updated_at': s.updated_at.isoformat() if getattr(s, 'updated_at', None) else None,
+            'created_at': s.created_at.isoformat() if getattr(s, 'created_at', None) else None,
+        } for s in qs]
+        return Response({'success': True, 'data': data})
+    except Exception as e:
+        logger.error(f"screeners_list_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to list screeners'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def screeners_create_api(request):
+    try:
+        body = request.data if hasattr(request, 'data') and request.data else json.loads(request.body or '{}')
+        name = (body.get('name') or '').strip()[:150]
+        if not name:
+            return Response({'success': False, 'error': 'name required'}, status=400)
+        description = (body.get('description') or '').strip()[:500]
+        criteria = body.get('criteria') or []
+        s = Screener.objects.create(name=name, description=description, criteria=criteria)
+        return Response({'success': True, 'data': {'id': s.id, 'name': s.name, 'criteria': s.criteria}}, status=201)
+    except json.JSONDecodeError:
+        return Response({'success': False, 'error': 'invalid json'}, status=400)
+    except Exception as e:
+        logger.error(f"screeners_create_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to create screener'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_detail_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+        return Response({'success': True, 'data': {
+            'id': s.id,
+            'name': s.name,
+            'description': s.description or '',
+            'criteria': s.criteria,
+            'is_public': bool(getattr(s, 'is_public', False)),
+            'updated_at': s.updated_at.isoformat() if getattr(s, 'updated_at', None) else None,
+            'created_at': s.created_at.isoformat() if getattr(s, 'created_at', None) else None,
+        }})
+    except Screener.DoesNotExist:
+        return Response({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        logger.error(f"screeners_detail_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to fetch screener'}, status=500)
+
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def screeners_update_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+        body = request.data if hasattr(request, 'data') and request.data else json.loads(request.body or '{}')
+        changed = False
+        for field in ['name', 'description', 'criteria', 'is_public']:
+            if field in body:
+                setattr(s, field, body[field])
+                changed = True
+        if changed:
+            s.save()
+        return Response({'success': True, 'data': {'id': s.id, 'name': s.name, 'criteria': s.criteria}})
+    except Screener.DoesNotExist:
+        return Response({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        logger.error(f"screeners_update_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to update screener'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_templates_api(request):
+    try:
+        templates = [
+            {'id': 'rsi-oversold', 'name': 'RSI Oversold (RSI<30)', 'criteria': [{'field': 'rsi14', 'op': '<', 'value': 30}]},
+            {'id': 'ma-crossover', 'name': '50/200 MA Bullish Cross', 'criteria': [{'field': 'ma50_over_ma200', 'op': '==', 'value': True}]},
+        ]
+        return Response({'success': True, 'data': templates})
+    except Exception as e:
+        logger.error(f"screeners_templates_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to load templates'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_results_api(request, screener_id: str):
+    # Minimal results: return latest 20 stocks as placeholder
+    try:
+        _ = Screener.objects.get(id=screener_id)  # ensure exists
+        qs = Stock.objects.order_by('-last_updated')[:20]
+        data = [{'ticker': s.ticker, 'company_name': s.company_name or s.name, 'current_price': format_decimal_safe(s.current_price)} for s in qs]
+        return Response({'success': True, 'count': len(data), 'data': data, 'generated_at': timezone.now().isoformat()})
+    except Screener.DoesNotExist:
+        return Response({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        logger.error(f"screeners_results_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to run screener'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def screeners_export_csv_api(request, screener_id: str):
+    try:
+        import io, csv
+        _ = Screener.objects.get(id=screener_id)
+        qs = Stock.objects.order_by('-last_updated')[:100]
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(['ticker', 'company_name', 'current_price'])
+        for s in qs:
+            w.writerow([s.ticker, s.company_name or s.name, format_decimal_safe(s.current_price) or 0])
+        from django.http import HttpResponse
+        resp = HttpResponse(buf.getvalue(), content_type='text/csv')
+        resp['Content-Disposition'] = f'attachment; filename="screener_{screener_id}.csv"'
+        return resp
+    except Screener.DoesNotExist:
+        return Response({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        logger.error(f"screeners_export_csv_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to export CSV'}, status=500)
+
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def screeners_delete_api(request, screener_id: str):
+    try:
+        s = Screener.objects.get(id=screener_id)
+        s.delete()
+        return Response({'success': True})
+    except Screener.DoesNotExist:
+        return Response({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        logger.error(f"screeners_delete_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to delete screener'}, status=500)
