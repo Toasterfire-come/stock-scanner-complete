@@ -27,6 +27,7 @@ from django.shortcuts import redirect
 from urllib.parse import urlencode
 import base64
 import requests
+import re
 
 from .models import UserProfile, BillingHistory, NotificationSettings, DiscountCode, UserDiscountUsage
 from .services.discount_service import DiscountService
@@ -363,28 +364,31 @@ def register_api(request):
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 # Optional referral: apply 50% off first month and attach usage record
                 ref = (data.get('ref') or '').strip()
-                if ref and len(ref) == 5 and ref.isalnum():
-                    # If REF_ACTIVE is configured, enforce whitelist
-                    allowed = _active_ref_codes()
-                    if allowed and ref.upper() not in allowed:
-                        # Skip creating referral code if not whitelisted
-                        pass
-                    else:
-                    # Create or fetch a dynamic discount code REF_<ref> at 50% first payment only
-                        code_str = f"REF_{ref.upper()}"
-                        disc, _ = DiscountCode.objects.get_or_create(
-                            code=code_str,
-                            defaults={
-                                'discount_percentage': 50,
-                                'is_active': True,
-                                'applies_to_first_payment_only': True,
-                            }
-                        )
-                        # Track that this user is associated with this referral code (for lifetime attribution)
-                        try:
-                            UserDiscountUsage.objects.get_or_create(user=user, discount_code=disc)
-                        except Exception:
+                if ref:
+                    candidate = ref.strip()
+                    # Accept 5-32 length, alphanumeric, underscore, dash (consistent with frontend)
+                    if re.match(r'^[A-Za-z0-9_\-]{5,32}$', candidate or ''):
+                        # If REF_ACTIVE is configured, enforce whitelist
+                        allowed = _active_ref_codes()
+                        if allowed and candidate.upper() not in allowed:
+                            # Skip creating referral code if not whitelisted
                             pass
+                        else:
+                            # Create or fetch a dynamic discount code REF_<code> at 50% first payment only
+                            code_str = f"REF_{candidate.upper()}"
+                            disc, _ = DiscountCode.objects.get_or_create(
+                                code=code_str,
+                                defaults={
+                                    'discount_percentage': 50,
+                                    'is_active': True,
+                                    'applies_to_first_payment_only': True,
+                                }
+                            )
+                            # Track that this user is associated with this referral code (for lifetime attribution)
+                            try:
+                                UserDiscountUsage.objects.get_or_create(user=user, discount_code=disc)
+                            except Exception:
+                                pass
         except IntegrityError:
             # Handle rare race conditions where another request created the same user concurrently
             return JsonResponse({
