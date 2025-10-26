@@ -43,6 +43,7 @@ import UsageTracker from "../../components/UsageTracker";
 import MarketStatus from "../../components/MarketStatus";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "../../components/ui/resizable";
+import { API_ROOT } from "../../api/client";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -55,6 +56,7 @@ const AppDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
   const [realTrendSeries, setRealTrendSeries] = useState({ gainers: [], losers: [], total: [] });
+  const [partnerSummary, setPartnerSummary] = useState(null);
   const [checklist, setChecklist] = useState(() => {
     try {
       const raw = localStorage.getItem('onboarding-checklist-v1');
@@ -121,6 +123,16 @@ const AppDashboard = () => {
           losers: losersData,
           total: totalData,
         });
+
+        // Partner analytics (gate to specific email)
+        const email = (user?.email || '').toLowerCase();
+        if (email === 'hamzashehata3000@gmail.com') {
+          try {
+            const r = await fetch(`${API_ROOT}/partner/analytics/summary?code=ADAM50`, { credentials: 'include' });
+            const jd = await r.json();
+            if (jd?.success) setPartnerSummary(jd);
+          } catch {}
+        }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -297,6 +309,36 @@ const AppDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Partner Analytics - gated */}
+        {user?.email?.toLowerCase() === 'hamzashehata3000@gmail.com' && partnerSummary && (
+          <div className="mb-6 sm:mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Partner Analytics (ADAM50)</CardTitle>
+                <CardDescription>Clicks, trials, purchases</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-lg border bg-white">
+                    <div className="text-sm text-gray-600">Clicks</div>
+                    <div className="text-2xl font-bold">{partnerSummary?.totals?.clicks ?? 0}</div>
+                  </div>
+                  <div className="p-4 rounded-lg border bg-white">
+                    <div className="text-sm text-gray-600">Trials</div>
+                    <div className="text-2xl font-bold">{partnerSummary?.totals?.trials ?? 0}</div>
+                    <div className="text-xs text-gray-600">CR: {partnerSummary?.totals?.trial_conversion_percent ?? 0}%</div>
+                  </div>
+                  <div className="p-4 rounded-lg border bg-white">
+                    <div className="text-sm text-gray-600">Purchases</div>
+                    <div className="text-2xl font-bold">{partnerSummary?.totals?.purchases ?? 0}</div>
+                    <div className="text-xs text-gray-600">CR: {partnerSummary?.totals?.purchase_conversion_percent ?? 0}%</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Main Content Grid with resizable panels */}
         <ResizablePanelGroup direction="horizontal" className="h-full">
