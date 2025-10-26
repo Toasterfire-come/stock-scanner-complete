@@ -6,7 +6,39 @@ from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
 from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from . import revenue_views
-from .billing_api import cancel_subscription_api, paypal_plans_meta_api, developer_usage_stats_api
+try:
+    from .billing_api import cancel_subscription_api, paypal_plans_meta_api, developer_usage_stats_api
+except Exception as _billing_import_err:  # Graceful fallback if optional deps (DRF) missing
+    from django.http import JsonResponse
+    from django.views.decorators.csrf import csrf_exempt
+    from django.views.decorators.http import require_http_methods
+
+    @csrf_exempt
+    @require_http_methods(["GET"])  # type: ignore
+    def paypal_plans_meta_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'Billing module unavailable',
+            'details': str(_billing_import_err)
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["POST"])  # type: ignore
+    def cancel_subscription_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'Billing module unavailable',
+            'details': str(_billing_import_err)
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["GET"])  # type: ignore
+    def developer_usage_stats_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'Billing module unavailable',
+            'details': str(_billing_import_err)
+        }, status=503)
 from . import indicators_api
 from . import enterprise_api
 from . import admin_api
