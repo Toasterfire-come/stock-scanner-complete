@@ -42,6 +42,7 @@ import UsageTracker from "../../components/UsageTracker";
 // Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
 import MarketStatus from "../../components/MarketStatus";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "../../components/ui/resizable";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -297,10 +298,11 @@ const AppDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Top Gainers */}
-          <Card className="lg:col-span-2">
+        {/* Main Content Grid with resizable panels */}
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          <ResizablePanel defaultSize={66} minSize={40}>
+            {/* Top Gainers */}
+            <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Top Gainers Today</CardTitle>
@@ -339,48 +341,51 @@ const AppDashboard = () => {
                 </div>
               )}
             </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Access your most-used tools</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/stocks">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Stock Scanner
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/screeners">
-                  <Target className="h-4 w-4 mr-2" />
-                  My Screeners
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/watchlists">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Watchlists
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/portfolio">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Portfolio
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/app/alerts">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Alerts
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </Card>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={34} minSize={26}>
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Access your most-used tools</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/app/stocks">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Stock Scanner
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/app/screeners">
+                    <Target className="h-4 w-4 mr-2" />
+                    My Screeners
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/app/watchlists">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Watchlists
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/app/portfolio">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Portfolio
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/app/alerts">
+                    <Bell className="h-4 w-4 mr-2" />
+                    Alerts
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </ResizablePanel>
+        </ResizablePanelGroup>
 
         {/* Activity & Market Status Grid */}  
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6">

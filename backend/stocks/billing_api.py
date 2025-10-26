@@ -19,6 +19,7 @@ from django.db.models import Q, Sum
 import json
 import logging
 from datetime import datetime, timedelta
+from .utils.date_utils import next_month_first_utc
 from uuid import uuid4
 import os
 from decimal import Decimal
@@ -579,9 +580,16 @@ def capture_paypal_order_api(request):
                 profile.plan_type = plan_type
                 profile.is_premium = plan_type not in ['free', 'basic']
                 profile.billing_cycle = billing_cycle if billing_cycle in ['monthly','annual'] else 'monthly'
-                # Set next billing date: monthly +30d, annual +365d, trial handled elsewhere
-                days = 30 if profile.billing_cycle == 'monthly' else 365
-                profile.next_billing_date = timezone.now() + timedelta(days=days)
+                # Set next billing date. If request indicates trial start, align to next 1st (UTC)
+                try:
+                    requested_trial = bool(data.get('trial') or data.get('start_trial'))
+                except Exception:
+                    requested_trial = False
+                if requested_trial:
+                    profile.next_billing_date = next_month_first_utc()
+                else:
+                    days = 30 if profile.billing_cycle == 'monthly' else 365
+                    profile.next_billing_date = timezone.now() + timedelta(days=days)
                 # Set sensible API limits
                 plan_limits = {
                     'free': 100,

@@ -39,7 +39,8 @@ import {
 } from "lucide-react";
 import { getStock, getRealTimeQuote, addWatchlist, createAlert, getInsiderTrades } from "../../api/client";
 import { isMissing, formatCurrencySafe, formatNumberSafe } from "../../lib/utils";
-import GoogleFinanceChart from "../../components/GoogleFinanceChart";
+import LightweightPriceChart from "../../components/LightweightPriceChart";
+import { computeIndicatorsInWorker } from "../../lib/indicatorsWorkerClient";
 import StockNewsIntegration from "../../components/StockNewsIntegration";
 
 const StockDetail = () => {
@@ -50,6 +51,7 @@ const StockDetail = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [chartData, setChartData] = useState([]);
   const [isChartLoading, setIsChartLoading] = useState(false);
+  const [overlays, setOverlays] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
   const [insiders, setInsiders] = useState({ loading: true, data: null, error: null });
 
@@ -91,7 +93,32 @@ const StockDetail = () => {
     const loadChart = async () => {
       try {
         setIsChartLoading(true);
-        setChartData([]);
+        const prices = (stockResponse?.data?.recent_prices || []).map(d => ({
+          time: d.timestamp || d.time,
+          open: d.open,
+          high: d.high,
+          low: d.low,
+          close: d.close ?? d.price,
+          volume: d.volume,
+        }));
+        setChartData(prices);
+        // Compute lightweight overlays in worker for performance
+        const closes = prices.map(p => Number(p.close ?? 0));
+        const highs = prices.map(p => Number(p.high ?? p.close ?? 0));
+        const lows = prices.map(p => Number(p.low ?? p.close ?? 0));
+        const volumes = prices.map(p => Number(p.volume ?? 0));
+        const res = await computeIndicatorsInWorker([
+          { name: 'sma', period: 20 },
+          { name: 'ema', period: 12 },
+          { name: 'ema', period: 26 },
+        ], { closes, highs, lows, volumes });
+        const ts = prices.map(p => p.time);
+        const toSeries = (arr) => (arr || []).map((v, i) => v == null ? null : ({ time: ts[i], value: Number(v) })).filter(Boolean);
+        const overlaySeries = [];
+        if (res?.output?.sma20) overlaySeries.push({ name: 'SMA20', color: '#3b82f6', values: toSeries(res.output.sma20) });
+        if (res?.output?.ema12) overlaySeries.push({ name: 'EMA12', color: '#f59e0b', values: toSeries(res.output.ema12) });
+        if (res?.output?.ema26) overlaySeries.push({ name: 'EMA26', color: '#10b981', values: toSeries(res.output.ema26) });
+        setOverlays(overlaySeries);
       } finally {
         setIsChartLoading(false);
       }
@@ -491,11 +518,13 @@ const StockDetail = () => {
                     <CardDescription>Recent price movements</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <GoogleFinanceChart 
-                      symbol={symbol} 
-                      height={400}
-                      showControls={true}
-                    />
+                    <div className="w-full">
+                      <LightweightPriceChart
+                        data={chartData}
+                        overlays={overlays}
+                        height={400}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

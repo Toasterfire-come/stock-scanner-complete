@@ -31,14 +31,14 @@ const GoogleFinanceChart = ({
   const [containerWidth, setContainerWidth] = useState(800);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [indicators, setIndicators] = useState({
-    sma20: true,
+    sma20: false,
     sma50: false,
     ema12: false,
     ema26: false,
-    bb: true,
-    vwap: true,
-    rsi: true,
-    macd: true,
+    bb: false,
+    vwap: false,
+    rsi: false,
+    macd: false,
   });
 
   useEffect(() => {

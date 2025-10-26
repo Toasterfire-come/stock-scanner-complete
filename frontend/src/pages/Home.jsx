@@ -28,6 +28,8 @@ import {
 import { getMarketStatsSafe } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
 import { toast } from "sonner";
+import LightweightPriceChart from "../components/LightweightPriceChart";
+import { computeIndicatorsInWorker } from "../lib/indicatorsWorkerClient";
 const QuickMiniFAQ = lazy(() => import("../components/home/QuickMiniFAQ"));
 const ScreenerDemo = lazy(() => import("../components/home/ScreenerDemo"));
 const TestimonialsSection = lazy(() => import("../components/home/TestimonialsSection"));
@@ -54,6 +56,8 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [showExitIntent, setShowExitIntent] = useState(false);
+  const [heroData, setHeroData] = useState([]);
+  const [heroOverlays, setHeroOverlays] = useState([]);
   const exitIntentKey = React.useMemo(() => {
     try {
       const uid = JSON.parse(localStorage.getItem('secure_user') || '{}')?.id || 'anon';
@@ -78,6 +82,33 @@ const Home = () => {
     };
 
     fetchData();
+    // Prepare lightweight demo chart data for hero (synthetic, fast)
+    (async () => {
+      const now = Date.now();
+      const points = 240;
+      let price = 150;
+      const data = [];
+      for (let i = points - 1; i >= 0; i--) {
+        const t = now - i * 5 * 60 * 1000; // 5 min bars
+        const open = price;
+        const high = open * (1 + Math.random() * 0.004);
+        const low = open * (1 - Math.random() * 0.004);
+        const close = low + Math.random() * (high - low);
+        price = close;
+        data.push({ time: Math.floor(t / 1000), open, high, low, close, volume: Math.floor(200000 + Math.random() * 800000) });
+      }
+      setHeroData(data);
+      const closes = data.map(d => d.close);
+      const res = await computeIndicatorsInWorker([
+        { name: 'sma', period: 20 },
+        { name: 'ema', period: 12 },
+      ], { closes });
+      const toSeries = (arr) => (arr || []).map((v, i) => v == null ? null : ({ time: data[i].time, value: Number(v) })).filter(Boolean);
+      const overlays = [];
+      if (res?.output?.sma20) overlays.push({ name: 'SMA20', color: '#3b82f6', values: toSeries(res.output.sma20) });
+      if (res?.output?.ema12) overlays.push({ name: 'EMA12', color: '#f59e0b', values: toSeries(res.output.ema12) });
+      setHeroOverlays(overlays);
+    })();
     try { trackPageView('/'); } catch {}
     // First-time onboarding tooltips (simple toasts)
     try {
@@ -276,7 +307,7 @@ const Home = () => {
         url="https://tradescanpro.com/"
         jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
       />
-      {/* Hero Section - Conversion Focused */}
+      {/* Hero Section - Conversion Focused with Interactive Chart */}
       <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-5xl mx-auto">
@@ -333,6 +364,11 @@ const Home = () => {
                 <Button type="submit" className="px-5">Start</Button>
               </form>
               <div className="text-xs text-gray-500">Cancel anytime • Trial free until next 1st</div>
+            </div>
+
+            {/* Interactive Chart Hero */}
+            <div className="mx-auto max-w-5xl rounded-xl border bg-white shadow-sm">
+              <LightweightPriceChart data={heroData} overlays={heroOverlays} height={320} />
             </div>
 
             {/* Logos / Social Proof */}
