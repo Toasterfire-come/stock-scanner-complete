@@ -204,18 +204,18 @@ const Features = () => {
                   </Card>
                 </div>
                 <div className="lg:w-1/2">
-                  <div className="rounded-2xl overflow-hidden border bg-white">
-                    <img
-                      src={`/react/screenshots/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.webp`}
-                      alt={`${feature.title} screenshot`}
-                      className="w-full h-64 object-cover"
-                      loading="lazy"
-                      decoding="async"
-                      width="1024"
-                      height="512"
-                      sizes="(max-width: 1024px) 100vw, 1024px"
-                      onError={(e)=>{ e.currentTarget.src='/hero.webp'; e.currentTarget.classList.add('object-contain','bg-gray-50'); }}
-                    />
+                  <div className="rounded-2xl overflow-hidden border bg-black">
+                    <video
+                      className="w-full h-64"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      poster={`/react/demos/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.jpg`}
+                    >
+                      <source src={`/react/demos/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.mp4`} type="video/mp4" />
+                    </video>
                   </div>
                 </div>
               </div>
