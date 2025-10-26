@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
@@ -18,6 +18,7 @@ import json
 import logging
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
+import csv
 
 from .models import Stock, StockAlert, StockPrice, Screener
 from emails.models import EmailSubscription
@@ -1429,3 +1430,247 @@ def screeners_delete_api(request, screener_id: str):
     except Exception as e:
         logger.error(f"screeners_delete_api error: {e}", exc_info=True)
         return Response({'success': False, 'error': 'Failed to delete screener'}, status=500)
+
+
+# =============================
+# Additional endpoints referenced by urls.py (Windows-safe minimal implementations)
+# =============================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stock_insiders_api(request, ticker: str):
+    try:
+        # Minimal placeholder: return empty insiders list
+        return Response({'success': True, 'ticker': ticker.upper(), 'insiders': []})
+    except Exception as e:
+        logger.error(f"stock_insiders_api error for {ticker}: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to load insiders'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_stocks_csv_api(request):
+    try:
+        qs = Stock.objects.order_by('ticker')[:1000]
+        buf = []
+        writer = csv.writer(buf := [])  # type: ignore
+        # Build CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ticker', 'company_name', 'current_price', 'change_percent', 'volume'])
+        for s in qs:
+            writer.writerow([
+                s.ticker,
+                s.company_name or s.name,
+                format_decimal_safe(s.current_price),
+                format_decimal_safe(s.change_percent),
+                s.volume or 0,
+            ])
+        resp = HttpResponse(output.getvalue(), content_type='text/csv')
+        resp['Content-Disposition'] = 'attachment; filename="stocks.csv"'
+        return resp
+    except Exception as e:
+        logger.error(f"export_stocks_csv_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to export stocks CSV'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_portfolio_csv_api(request):
+    try:
+        # Export aggregate holdings across all portfolios (placeholder)
+        from .models import PortfolioHolding
+        holdings = PortfolioHolding.objects.select_related('portfolio', 'stock').all()[:5000]
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['portfolio', 'ticker', 'shares', 'avg_cost', 'current_price', 'market_value', 'unrealized_pnl'])
+        for h in holdings:
+            writer.writerow([
+                h.portfolio.name,
+                h.stock.ticker,
+                float(h.shares),
+                float(h.average_cost),
+                float(h.current_price),
+                float(h.market_value),
+                float(h.unrealized_gain_loss),
+            ])
+        resp = HttpResponse(output.getvalue(), content_type='text/csv')
+        resp['Content-Disposition'] = 'attachment; filename="portfolio_holdings.csv"'
+        return resp
+    except Exception as e:
+        logger.error(f"export_portfolio_csv_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to export portfolio CSV'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_watchlist_csv_api(request):
+    try:
+        # Export all watchlist items (placeholder)
+        from .models import WatchlistItem
+        items = WatchlistItem.objects.select_related('watchlist', 'stock').all()[:5000]
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['watchlist', 'ticker', 'added_price', 'current_price', 'price_change_percent'])
+        for it in items:
+            writer.writerow([
+                it.watchlist.name,
+                it.stock.ticker,
+                float(it.added_price),
+                float(it.current_price),
+                float(it.price_change_percent),
+            ])
+        resp = HttpResponse(output.getvalue(), content_type='text/csv')
+        resp['Content-Disposition'] = 'attachment; filename="watchlist_items.csv"'
+        return resp
+    except Exception as e:
+        logger.error(f"export_watchlist_csv_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to export watchlist CSV'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def reports_download_api(request, report_id: str):
+    try:
+        return Response({'success': False, 'error': 'Report not available', 'report_id': report_id}, status=404)
+    except Exception as e:
+        logger.error(f"reports_download_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to process report download'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def total_tickers_api(request):
+    try:
+        total = Stock.objects.count()
+        return Response({'success': True, 'total_tickers': total})
+    except Exception as e:
+        logger.error(f"total_tickers_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute total tickers'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def gainers_losers_stats_api(request):
+    try:
+        gainers = Stock.objects.filter(price_change_today__gt=0).count()
+        losers = Stock.objects.filter(price_change_today__lt=0).count()
+        unchanged = Stock.objects.filter(price_change_today=0).count()
+        return Response({'success': True, 'gainers': gainers, 'losers': losers, 'unchanged': unchanged})
+    except Exception as e:
+        logger.error(f"gainers_losers_stats_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute stats'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def total_alerts_api(request):
+    try:
+        total = StockAlert.objects.count()
+        return Response({'success': True, 'total_alerts': total})
+    except Exception as e:
+        logger.error(f"total_alerts_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute total alerts'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_value_api(request):
+    try:
+        from .models import PortfolioHolding
+        agg = PortfolioHolding.objects.all()
+        total_value = sum((h.market_value or 0) for h in agg)
+        return Response({'success': True, 'total_portfolio_value': float(total_value)})
+    except Exception as e:
+        logger.error(f"portfolio_value_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute portfolio value'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_pnl_api(request):
+    try:
+        from .models import PortfolioHolding
+        agg = PortfolioHolding.objects.all()
+        total_pnl = sum((h.unrealized_gain_loss or 0) for h in agg)
+        return Response({'success': True, 'unrealized_pnl': float(total_pnl)})
+    except Exception as e:
+        logger.error(f"portfolio_pnl_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute PnL'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_return_api(request):
+    try:
+        from .models import UserPortfolio
+        portfolios = UserPortfolio.objects.all()
+        # Weighted by total_cost if available
+        total_cost = sum((p.total_cost or 0) for p in portfolios)
+        total_return = sum((p.total_return or 0) for p in portfolios)
+        pct = float((total_return / total_cost) * 100) if total_cost else 0.0
+        return Response({'success': True, 'total_return_amount': float(total_return), 'total_return_percent': pct})
+    except Exception as e:
+        logger.error(f"portfolio_return_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute portfolio return'}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def portfolio_holdings_count_api(request):
+    try:
+        from .models import PortfolioHolding
+        count = PortfolioHolding.objects.count()
+        return Response({'success': True, 'holdings_count': count})
+    except Exception as e:
+        logger.error(f"portfolio_holdings_count_api error: {e}", exc_info=True)
+        return Response({'success': False, 'error': 'Failed to compute holdings count'}, status=500)
+
+
+# Shareable resources placeholders
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_watchlist_public(request, slug: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_portfolio_public(request, slug: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_watchlist_export(request, slug: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def share_portfolio_export(request, slug: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_watchlist_copy(request, slug: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_portfolio_copy(request, slug: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_watchlist_create_link(request, watchlist_id: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'watchlist_id': watchlist_id}, status=501)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def share_portfolio_create_link(request, portfolio_id: str):
+    return Response({'success': False, 'error': 'Sharing not enabled', 'portfolio_id': portfolio_id}, status=501)
