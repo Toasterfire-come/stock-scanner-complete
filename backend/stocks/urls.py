@@ -47,6 +47,12 @@ from . import indicators_api
 from . import enterprise_api
 from . import admin_api
 from . import matomo_proxy
+from django.conf import settings
+from django.utils import timezone
+import hashlib
+from django.shortcuts import redirect
+from . import partner_analytics_api
+
 
 
 # Lazy loader for api_views with safe fallbacks so Windows environments start reliably
@@ -264,4 +270,10 @@ urlpatterns = [
     # Matomo proxy (first-party path)
     path('matomo/matomo.js', matomo_proxy.matomo_js, name='matomo_js'),
     path('matomo/matomo.php', matomo_proxy.matomo_php, name='matomo_php'),
+    
+    # Partner referral redirect: /r/<code>
+    path('r/<str:code>/', partner_analytics_api.referral_redirect, name='referral_redirect'),
+    # Partner analytics (auth required + gating)
+    path('partner/analytics/summary', partner_analytics_api.partner_analytics_summary_api, name='partner_analytics_summary'),
+    path('partner/analytics/timeseries', partner_analytics_api.partner_analytics_timeseries_api, name='partner_analytics_timeseries'),
 ]

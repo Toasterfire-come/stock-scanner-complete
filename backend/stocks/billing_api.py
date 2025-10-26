@@ -31,6 +31,7 @@ from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
 from .services.discount_service import DiscountService
 from .models import DiscountCode
+from .models import ReferralTrialEvent
 import hmac
 import hashlib
 from django.conf import settings as django_settings
@@ -567,6 +568,13 @@ def capture_paypal_order_api(request):
                         payment_date=timezone.now(),
                         billing_cycle=billing_cycle
                     )
+                    # If a referral code (e.g., ADAM50) is present, ensure a trial event exists for attribution
+                    try:
+                        dc = discount_obj.code if discount_obj else None
+                        if dc:
+                            ReferralTrialEvent.objects.get_or_create(code=dc.upper(), user=inferred_user)
+                    except Exception:
+                        pass
         except Exception as rec_err:
             logger.error(f"Failed to record payment for order {order_id}: {rec_err}")
 

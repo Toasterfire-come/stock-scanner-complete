@@ -29,6 +29,7 @@ import base64
 import requests
 
 from .models import UserProfile, BillingHistory, NotificationSettings, DiscountCode, UserDiscountUsage
+from .models import ReferralTrialEvent
 from .services.discount_service import DiscountService
 from .security_utils import secure_api_endpoint, validate_user_input
 from .authentication import BearerSessionAuthentication, CsrfExemptSessionAuthentication
@@ -362,7 +363,8 @@ def register_api(request):
                 # Ensure a profile exists
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 # Optional referral: apply 50% off first month and attach usage record
-                ref = (data.get('ref') or '').strip()
+                # Accept from body, query, cookie, or X-Referral-Code header
+                ref = (data.get('ref') or request.GET.get('ref') or request.COOKIES.get('ref') or request.META.get('HTTP_X_REFERRAL_CODE') or '').strip()
                 if ref and len(ref) == 5 and ref.isalnum():
                     # If REF_ACTIVE is configured, enforce whitelist
                     allowed = _active_ref_codes()
@@ -383,6 +385,13 @@ def register_api(request):
                         # Track that this user is associated with this referral code (for lifetime attribution)
                         try:
                             UserDiscountUsage.objects.get_or_create(user=user, discount_code=disc)
+                        except Exception:
+                            pass
+                        # Log trial event for partner analytics (code may be provided directly e.g., ADAM50)
+                        try:
+                            # If the client passes full code like ADAM50, allow that; else use parsed discount code
+                            full_code = ref.upper() if ref.upper().startswith('ADAM') else disc.code
+                            ReferralTrialEvent.objects.create(code=full_code, user=user)
                         except Exception:
                             pass
         except IntegrityError:

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
 import json
+from django.utils import timezone
 
 class Stock(models.Model):
     # Basic stock info
@@ -764,6 +765,34 @@ class NotificationHistory(models.Model):
     def __str__(self):
         return f"{self.title} - {self.user.username}"
 
+
+# Partner referral analytics
+class ReferralClickEvent(models.Model):
+    """Tracks referral clicks for partner codes (e.g., ADAM50)."""
+    code = models.CharField(max_length=50, db_index=True)
+    session_id = models.CharField(max_length=64, blank=True, db_index=True)
+    ip_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    user_agent = models.TextField(blank=True)
+    occurred_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['code', 'occurred_at']),
+            models.Index(fields=['ip_hash', 'occurred_at']),
+        ]
+
+
+class ReferralTrialEvent(models.Model):
+    """Tracks trial start events attributed to a referral code."""
+    code = models.CharField(max_length=50, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    occurred_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['code', 'occurred_at']),
+            models.Index(fields=['user', 'occurred_at']),
+        ]
 
 class UsageStats(models.Model):
     """Daily user usage statistics"""
