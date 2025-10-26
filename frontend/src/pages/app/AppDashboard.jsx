@@ -42,6 +42,7 @@ import UsageTracker from "../../components/UsageTracker";
 // Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
 import MarketStatus from "../../components/MarketStatus";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
+import ReferralSystem from "../../components/ReferralSystem";
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -389,6 +390,26 @@ const AppDashboard = () => {
             <MarketStatus />
           </div>
         </div>
+
+        {/* Partner Analytics - visible to specific users only */}
+        {(() => {
+          const allowed = (user?.email || '').toLowerCase();
+          const canSeePartner = ['hamzashehata3000@gmail.com', 'carter.kiefer2010@outlook.com'].includes(allowed);
+          if (!canSeePartner) return null;
+          return (
+            <div className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Partner Analytics</CardTitle>
+                  <CardDescription>Referral performance for code ADAM50</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ReferralSystem user={user} referralCode="ADAM50" />
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

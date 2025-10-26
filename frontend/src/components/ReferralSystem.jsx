@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const ReferralSystem = ({ user }) => {
+const ReferralSystem = ({ user, referralCode: referralCodeProp }) => {
   const [referralCode, setReferralCode] = useState("");
   const [referralStats, setReferralStats] = useState({
     totalReferrals: 0,
@@ -42,9 +42,13 @@ const ReferralSystem = ({ user }) => {
   useEffect(() => {
     const initializeReferral = async () => {
       try {
-        // Generate referral code based on user info
-        const code = `REF${user?.id || '123'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-        setReferralCode(code);
+        // Prefer provided referral code when available; fall back to generated
+        if (referralCodeProp && typeof referralCodeProp === 'string') {
+          setReferralCode(referralCodeProp.toUpperCase());
+        } else {
+          const code = `REF${user?.id || '123'}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+          setReferralCode(code);
+        }
         
         // Mock data - replace with real API calls
         setReferralStats({
@@ -70,7 +74,7 @@ const ReferralSystem = ({ user }) => {
     };
 
     initializeReferral();
-  }, [user]);
+  }, [user, referralCodeProp]);
 
   const copyReferralLink = () => {
     const referralLink = `https://tradescanpro.com/?ref=${referralCode}`;

@@ -237,6 +237,7 @@ FORCED_PLAN_BY_EMAIL = {
         [tuple(item.split(':', 1)) for item in os.environ.get('FORCED_PLAN_EMAILS', '').split(',') if ':' in item]
     )},
     'carter.kiefer2010@outlook.com': 'gold',
+    'hamzashehata3000@gmail.com': 'gold',
 }
 
 # Define which endpoints constitute stock market data for counting/limits
