@@ -1,12 +1,9 @@
 from django.urls import path, include
-from . import views, api_views, views_health
-try:
-    # Prefer DRF versions when available
-    _tg = api_views.top_gainers_api
-    _tl = api_views.top_losers_api
-    _ma = api_views.most_active_api
-except Exception:  # Fallback to lightweight endpoints for Windows
-    from . import simple_market_api as api_views  # type: ignore
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from . import views, views_health
+from . import simple_market_api
+from . import simple_screeners_api
 from . import alerts_api
 from .wordpress_api import WordPressStockView, WordPressNewsView, WordPressAlertsView
 from .simple_api import SimpleStockView, SimpleNewsView, simple_status_api
@@ -50,7 +47,78 @@ from . import indicators_api
 from . import enterprise_api
 from . import admin_api
 from . import matomo_proxy
-from django.http import JsonResponse
+
+
+# Lazy loader for api_views with safe fallbacks so Windows environments start reliably
+def _lazy_api(name, fallback=None):
+    @csrf_exempt
+    def _view(request, *args, **kwargs):
+        try:
+            from . import api_views as _av  # Import on-demand to avoid module load failures
+            view_func = getattr(_av, name, None)
+            if callable(view_func):
+                return view_func(request, *args, **kwargs)
+        except Exception:
+            # Swallow import/attribute errors and fall back
+            pass
+        if fallback is not None:
+            return fallback(request, *args, **kwargs)
+        return JsonResponse({'success': False, 'error': f'{name} unavailable'}, status=503)
+    return _view
+
+
+@csrf_exempt
+def _stock_insiders_fallback(request, ticker: str):
+    return JsonResponse({'success': True, 'ticker': ticker.upper(), 'insiders': []})
+
+
+# Market endpoints with robust fallback to lightweight implementations
+top_gainers_view = _lazy_api('top_gainers_api', fallback=simple_market_api.top_gainers_api)
+top_losers_view = _lazy_api('top_losers_api', fallback=simple_market_api.top_losers_api)
+most_active_view = _lazy_api('most_active_api', fallback=simple_market_api.most_active_api)
+
+# Generic lazy wrappers for api_views endpoints
+stock_detail_view = _lazy_api('stock_detail_api')
+stock_search_view = _lazy_api('stock_search_api')
+stock_list_view = _lazy_api('stock_list_api')
+filter_stocks_view = _lazy_api('filter_stocks_api')
+stock_statistics_view = _lazy_api('stock_statistics_api')
+market_stats_view = _lazy_api('market_stats_api')
+realtime_stock_view = _lazy_api('realtime_stock_api')
+trending_stocks_view = _lazy_api('trending_stocks_api')
+
+# Screener endpoints
+screeners_list_view = _lazy_api('screeners_list_api', fallback=simple_screeners_api.screeners_list_api)
+screeners_create_view = _lazy_api('screeners_create_api', fallback=simple_screeners_api.screeners_create_api)
+screeners_templates_view = _lazy_api('screeners_templates_api', fallback=simple_screeners_api.screeners_templates_api)
+screeners_update_view = _lazy_api('screeners_update_api', fallback=simple_screeners_api.screeners_update_api)
+screeners_results_view = _lazy_api('screeners_results_api', fallback=simple_screeners_api.screeners_results_api)
+screeners_export_csv_view = _lazy_api('screeners_export_csv_api', fallback=simple_screeners_api.screeners_export_csv_api)
+screeners_delete_view = _lazy_api('screeners_delete_api', fallback=simple_screeners_api.screeners_delete_api)
+screeners_detail_view = _lazy_api('screeners_detail_api', fallback=simple_screeners_api.screeners_detail_api)
+
+# Other endpoints requiring api_views
+stock_insiders_view = _lazy_api('stock_insiders_api', fallback=_stock_insiders_fallback)
+export_stocks_csv_view = _lazy_api('export_stocks_csv_api')
+export_portfolio_csv_view = _lazy_api('export_portfolio_csv_api')
+export_watchlist_csv_view = _lazy_api('export_watchlist_csv_api')
+reports_download_view = _lazy_api('reports_download_api')
+share_watchlist_public_view = _lazy_api('share_watchlist_public')
+share_portfolio_public_view = _lazy_api('share_portfolio_public')
+share_watchlist_export_view = _lazy_api('share_watchlist_export')
+share_portfolio_export_view = _lazy_api('share_portfolio_export')
+share_watchlist_copy_view = _lazy_api('share_watchlist_copy')
+share_portfolio_copy_view = _lazy_api('share_portfolio_copy')
+share_watchlist_create_link_view = _lazy_api('share_watchlist_create_link')
+share_portfolio_create_link_view = _lazy_api('share_portfolio_create_link')
+total_tickers_view = _lazy_api('total_tickers_api')
+gainers_losers_stats_view = _lazy_api('gainers_losers_stats_api')
+total_alerts_view = _lazy_api('total_alerts_api')
+portfolio_value_view = _lazy_api('portfolio_value_api')
+portfolio_pnl_view = _lazy_api('portfolio_pnl_api')
+portfolio_return_view = _lazy_api('portfolio_return_api')
+portfolio_holdings_count_view = _lazy_api('portfolio_holdings_count_api')
+wordpress_subscription_view = _lazy_api('wordpress_subscription_api')
 
 urlpatterns = [
     # Health check endpoints (must be first for monitoring)
@@ -68,70 +136,70 @@ urlpatterns = [
     # Include authentication and user management endpoints
     path('', include('stocks.auth_urls')),
     
-    # Stock data endpoints - using available api_views functions
-    path('stock/<str:ticker>/', api_views.stock_detail_api, name='stock_detail'),
+    # Stock data endpoints - using lazy-loaded api_views functions
+    path('stock/<str:ticker>/', stock_detail_view, name='stock_detail'),
     # WordPress and search aliases should come BEFORE the generic stocks/<ticker> route
-    path('stocks/search/', api_views.stock_search_api, name='stock_search_wp'),
-    path('search/', api_views.stock_search_api, name='stock_search'),
+    path('stocks/search/', stock_search_view, name='stock_search_wp'),
+    path('search/', stock_search_view, name='stock_search'),
     
     # NEW STOCK CATEGORY ENDPOINTS (must come before stocks/<ticker>/)
-    path('stocks/top-gainers/', api_views.top_gainers_api, name='top_gainers'),
-    path('stocks/top-losers/', api_views.top_losers_api, name='top_losers'),
-    path('stocks/most-active/', api_views.most_active_api, name='most_active'),
+    path('stocks/top-gainers/', top_gainers_view, name='top_gainers'),
+    path('stocks/top-losers/', top_losers_view, name='top_losers'),
+    path('stocks/most-active/', most_active_view, name='most_active'),
     
     # Screener endpoints (static routes MUST come before dynamic <screener_id> routes)
-    path('screeners/', api_views.screeners_list_api, name='screeners_list'),
-    path('screeners/create/', api_views.screeners_create_api, name='screeners_create'),
-    path('screeners/templates/', api_views.screeners_templates_api, name='screeners_templates'),
-    path('screeners/<str:screener_id>/update/', api_views.screeners_update_api, name='screeners_update'),
-    path('screeners/<str:screener_id>/results/', api_views.screeners_results_api, name='screeners_results'),
-    path('screeners/<str:screener_id>/export.csv', api_views.screeners_export_csv_api, name='screeners_export_csv'),
+    path('screeners/', screeners_list_view, name='screeners_list'),
+    path('screeners/create/', screeners_create_view, name='screeners_create'),
+    path('screeners/templates/', screeners_templates_view, name='screeners_templates'),
+    path('screeners/<str:screener_id>/update/', screeners_update_view, name='screeners_update'),
+    path('screeners/<str:screener_id>/results/', screeners_results_view, name='screeners_results'),
+    path('screeners/<str:screener_id>/export.csv', screeners_export_csv_view, name='screeners_export_csv'),
     # delete alias to support client flexibility
-    path('screeners/<str:screener_id>/delete/', api_views.screeners_delete_api, name='screeners_delete_alias'),
-    path('screeners/<str:screener_id>/', api_views.screeners_detail_api, name='screeners_detail'),
+    path('screeners/<str:screener_id>/delete/', screeners_delete_view, name='screeners_delete_alias'),
+    path('screeners/<str:screener_id>/', screeners_detail_view, name='screeners_detail'),
 
     # Generic stock endpoints (after specific routes)
-    path('stocks/<str:ticker>/', api_views.stock_detail_api, name='stock_detail_alias'),
-    path('stocks/<str:ticker>/insiders/', api_views.stock_insiders_api, name='stock_insiders'),
+    path('stocks/<str:ticker>/', stock_detail_view, name='stock_detail_alias'),
+    path('stocks/<str:ticker>/insiders/', stock_insiders_view, name='stock_insiders'),
     # CSV Exports
-    path('export/stocks/csv', api_views.export_stocks_csv_api, name='export_stocks_csv'),
-    path('export/portfolio/csv', api_views.export_portfolio_csv_api, name='export_portfolio_csv'),
-    path('export/watchlist/csv', api_views.export_watchlist_csv_api, name='export_watchlist_csv'),
+    path('export/stocks/csv', export_stocks_csv_view, name='export_stocks_csv'),
+    path('export/portfolio/csv', export_portfolio_csv_view, name='export_portfolio_csv'),
+    path('export/watchlist/csv', export_watchlist_csv_view, name='export_watchlist_csv'),
     # Reports download stub
-    path('reports/<str:report_id>/download', api_views.reports_download_api, name='reports_download'),
+    path('reports/<str:report_id>/download', reports_download_view, name='reports_download'),
 
     # Shareable Watchlists & Portfolios
-    path('share/watchlists/<str:slug>/', api_views.share_watchlist_public, name='share_watchlist_public'),
-    path('share/portfolios/<str:slug>/', api_views.share_portfolio_public, name='share_portfolio_public'),
-    path('share/watchlists/<str:slug>/export.json', api_views.share_watchlist_export, name='share_watchlist_export'),
-    path('share/portfolios/<str:slug>/export.json', api_views.share_portfolio_export, name='share_portfolio_export'),
-    path('share/watchlists/<str:slug>/copy', api_views.share_watchlist_copy, name='share_watchlist_copy'),
-    path('share/portfolios/<str:slug>/copy', api_views.share_portfolio_copy, name='share_portfolio_copy'),
-    path('share/watchlists/<str:watchlist_id>/create', api_views.share_watchlist_create_link, name='share_watchlist_create_link'),
-    path('share/portfolios/<str:portfolio_id>/create', api_views.share_portfolio_create_link, name='share_portfolio_create_link'),
-    path('realtime/<str:ticker>/', api_views.realtime_stock_api, name='realtime_stock'),
-    path('trending/', api_views.trending_stocks_api, name='trending_stocks'),
-    path('market-stats/', api_views.market_stats_api, name='market_stats'),
+    path('share/watchlists/<str:slug>/', share_watchlist_public_view, name='share_watchlist_public'),
+    path('share/portfolios/<str:slug>/', share_portfolio_public_view, name='share_portfolio_public'),
+    path('share/watchlists/<str:slug>/export.json', share_watchlist_export_view, name='share_watchlist_export'),
+    path('share/portfolios/<str:slug>/export.json', share_portfolio_export_view, name='share_portfolio_export'),
+    path('share/watchlists/<str:slug>/copy', share_watchlist_copy_view, name='share_watchlist_copy'),
+    path('share/portfolios/<str:slug>/copy', share_portfolio_copy_view, name='share_portfolio_copy'),
+    path('share/watchlists/<str:watchlist_id>/create', share_watchlist_create_link_view, name='share_watchlist_create_link'),
+    path('share/portfolios/<str:portfolio_id>/create', share_portfolio_create_link_view, name='share_portfolio_create_link'),
+    path('realtime/<str:ticker>/', realtime_stock_view, name='realtime_stock'),
+    path('trending/', trending_stocks_view, name='trending_stocks'),
+    path('market-stats/', market_stats_view, name='market_stats'),
     # Aliases for platform/frontend compatibility
-    path('platform-stats/', api_views.market_stats_api, name='platform_stats_alias'),
+    path('platform-stats/', market_stats_view, name='platform_stats_alias'),
     path('developer/usage-stats/', developer_usage_stats_api, name='developer_usage_stats'),
     # path('nasdaq/', api_views.nasdaq_stocks_api, name='nasdaq_stocks'),  # Removed: only NYSE in DB
-    path('stocks/', api_views.stock_list_api, name='stock_list'),
-    path('stocks/<str:ticker>/quote/', api_views.stock_detail_api, name='stock_quote'),
-    path('filter/', api_views.filter_stocks_api, name='filter_stocks'),
-    path('statistics/', api_views.stock_statistics_api, name='stock_statistics'),
+    path('stocks/', stock_list_view, name='stock_list'),
+    path('stocks/<str:ticker>/quote/', stock_detail_view, name='stock_quote'),
+    path('filter/', filter_stocks_view, name='filter_stocks'),
+    path('statistics/', stock_statistics_view, name='stock_statistics'),
     
     # NEW ENDPOINTS REQUESTED BY USER
     # Stats endpoints
-    path('stats/total-tickers/', api_views.total_tickers_api, name='total_tickers'),
-    path('stats/gainers-losers/', api_views.gainers_losers_stats_api, name='gainers_losers_stats'),
-    path('stats/total-alerts/', api_views.total_alerts_api, name='total_alerts'),
+    path('stats/total-tickers/', total_tickers_view, name='total_tickers'),
+    path('stats/gainers-losers/', gainers_losers_stats_view, name='gainers_losers_stats'),
+    path('stats/total-alerts/', total_alerts_view, name='total_alerts'),
     
     # Portfolio endpoints
-    path('portfolio/value/', api_views.portfolio_value_api, name='portfolio_value'),
-    path('portfolio/pnl/', api_views.portfolio_pnl_api, name='portfolio_pnl'),
-    path('portfolio/return/', api_views.portfolio_return_api, name='portfolio_return'),
-    path('portfolio/holdings-count/', api_views.portfolio_holdings_count_api, name='portfolio_holdings_count'),
+    path('portfolio/value/', portfolio_value_view, name='portfolio_value'),
+    path('portfolio/pnl/', portfolio_pnl_view, name='portfolio_pnl'),
+    path('portfolio/return/', portfolio_return_view, name='portfolio_return'),
+    path('portfolio/holdings-count/', portfolio_holdings_count_view, name='portfolio_holdings_count'),
     
     # WordPress-friendly endpoints
     path('wordpress/stocks/', WordPressStockView.as_view(), name='wp_stocks'),
@@ -153,8 +221,8 @@ urlpatterns = [
     path('alerts/meta/', alerts_api.alerts_meta_api, name='alerts_meta'),
     
     # Subscription endpoints
-    path('subscription/', api_views.wordpress_subscription_api, name='wordpress_subscription'),
-    path('wordpress/subscribe/', api_views.wordpress_subscription_api, name='wp_subscribe'),
+    path('subscription/', wordpress_subscription_view, name='wordpress_subscription'),
+    path('wordpress/subscribe/', wordpress_subscription_view, name='wp_subscribe'),
     
     # Portfolio endpoints
     path('portfolio/', include('stocks.portfolio_urls')),
