@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+// Recharts kept for some simple visuals below; main price chart moved to ChartKit
 import {
   LineChart,
   Line,
@@ -16,6 +17,7 @@ import {
   Area,
   AreaChart
 } from "recharts";
+import ChartKit from "../../components/chartkit/ChartKit";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
@@ -488,14 +490,10 @@ const StockDetail = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Price History</CardTitle>
-                    <CardDescription>Recent price movements</CardDescription>
+                    <CardDescription>High-performance chart with technical indicators</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <GoogleFinanceChart 
-                      symbol={symbol} 
-                      height={400}
-                      showControls={true}
-                    />
+                    <ChartKit symbol={symbol} height={420} showControls={true} />
                   </CardContent>
                 </Card>
               </TabsContent>
