@@ -1,0 +1,270 @@
+{
+  "data_methods": {
+    "server_render_django": {
+      "description": "Django view renders HTML with context; no client fetch required.",
+      "examples": ["/", "/health/"]
+    },
+    "client_fetch_json_django": {
+      "description": "Browser fetch() requests JSON from Django endpoints, then renders in-page.",
+      "examples": ["/api/stocks/", "/api/market/stats/", "/api/trending/"]
+    },
+    "wordpress_admin_ajax": {
+      "description": "Theme/plugin JS posts to WordPress admin-ajax.php with an action and nonce; PHP handlers call Django API and return JSON.",
+      "examples": [
+        {"action": "get_stock_data", "used_on": "Stock lookup and display throughout WordPress"}
+      ]
+    },
+    "wordpress_rest": {
+      "description": "WordPress REST routes (wp-json/stock-scanner/v1/*) for PayPal webhooks.",
+      "routes": [
+        "POST /wp-json/stock-scanner/v1/paypal-webhook"
+      ]
+    },
+    "direct_frontend_fetch_to_django": {
+      "description": "Browser fetches Django API directly using base URL from frontend JavaScript.",
+      "examples": ["/api/stocks/", "/api/market/stats/", "/api/trending/", "/api/realtime/{ticker}/"]
+    },
+    "paypal_via_admin_ajax": {
+      "description": "PayPal Buttons call WP admin-ajax actions that talk to PayPal + Django.",
+      "actions": ["create_paypal_order", "capture_paypal_order", "create_paypal_subscription"]
+    }
+  },
+  "pages": {
+    "django": [
+      {
+        "route": "/",
+        "template": "templates/core/homepage.html",
+        "content": ["API overview with title and version", "Endpoint documentation", "Links to admin, stocks API, and WordPress integration"],
+        "data_sources": ["server_render_django"],
+        "endpoints_used": []
+      },
+      {
+        "route": "/health/",
+        "template": "JSON response only",
+        "content": ["Health check status", "Database connection status", "API version"],
+        "data_sources": ["server_render_django"],
+        "endpoints_used": []
+      }
+    ],
+    "django_api_endpoints": [
+      {
+        "route": "/api/",
+        "description": "API index endpoint",
+        "method": "GET",
+        "response": "JSON status message"
+      },
+      {
+        "route": "/api/stocks/",
+        "description": "Comprehensive stock list with filtering, searching, and sorting",
+        "method": "GET",
+        "parameters": ["limit", "search", "category", "min_price", "max_price", "min_volume", "min_market_cap", "max_market_cap", "min_pe", "max_pe", "exchange", "sort_by", "sort_order"],
+        "response": "Paginated stock data with full market information"
+      },
+      {
+        "route": "/api/stocks/nasdaq/",
+        "description": "NASDAQ-specific stock listings",
+        "method": "GET",
+        "response": "NASDAQ stock data"
+      },
+      {
+        "route": "/api/stocks/search/",
+        "description": "Stock search functionality",
+        "method": "GET",
+        "parameters": ["q"],
+        "response": "Search results for stocks"
+      },
+      {
+        "route": "/api/stocks/{ticker}/",
+        "description": "Individual stock details",
+        "method": "GET",
+        "response": "Detailed stock information for specific ticker"
+      },
+      {
+        "route": "/api/market/stats/",
+        "description": "Market statistics and overview",
+        "method": "GET",
+        "response": "Market-wide statistics"
+      },
+      {
+        "route": "/api/market/filter/",
+        "description": "Advanced stock filtering",
+        "method": "GET",
+        "response": "Filtered stock results"
+      },
+      {
+        "route": "/api/realtime/{ticker}/",
+        "description": "Real-time stock data",
+        "method": "GET",
+        "response": "Live stock price and market data"
+      },
+      {
+        "route": "/api/trending/",
+        "description": "Trending stocks",
+        "method": "GET",
+        "response": "List of trending stocks"
+      },
+      {
+        "route": "/api/alerts/create/",
+        "description": "Create stock alerts",
+        "method": "POST",
+        "response": "Alert creation confirmation"
+      },
+      {
+        "route": "/api/wordpress/",
+        "description": "WordPress integration endpoint",
+        "method": "GET",
+        "response": "WordPress-optimized stock data"
+      },
+      {
+        "route": "/api/wordpress/stocks/",
+        "description": "WordPress detailed stock data",
+        "method": "GET",
+        "response": "WordPress-formatted detailed stock information"
+      },
+      {
+        "route": "/api/wordpress/news/",
+        "description": "WordPress news integration",
+        "method": "GET",
+        "response": "News data for WordPress consumption"
+      },
+      {
+        "route": "/api/wordpress/alerts/",
+        "description": "WordPress alerts integration",
+        "method": "GET",
+        "response": "Alert data for WordPress"
+      },
+      {
+        "route": "/api/simple/stocks/",
+        "description": "Simple stock API (no database required)",
+        "method": "GET",
+        "response": "Simplified stock data"
+      },
+      {
+        "route": "/api/simple/news/",
+        "description": "Simple news API (no database required)",
+        "method": "GET",
+        "response": "Simplified news data"
+      }
+    ],
+    "wordpress_integration": {
+      "theme_structure": {
+        "theme_name": "stock-scanner-theme",
+        "main_files": ["functions.php", "index.php", "style.css"],
+        "javascript": ["js/theme.js"],
+        "features": [
+          "Smooth scrolling navigation",
+          "Mobile menu toggle", 
+          "Sticky header functionality",
+          "Scroll animations",
+          "Real-time market clock",
+          "Responsive design elements"
+        ]
+      },
+      "plugin_structure": {
+        "plugin_name": "stock-scanner-integration",
+        "main_file": "stock-scanner-integration.php",
+        "includes": ["class-paypal-integration.php"],
+        "assets": [
+          "stock-scanner.js",
+          "stock-scanner-frontend.js", 
+          "stock-scanner-optimized.js",
+          "paypal-integration.js",
+          "stock-scanner.css"
+        ],
+        "features": [
+          "Stock data shortcodes",
+          "Membership level integration",
+          "Usage tracking and paywalls",
+          "PayPal payment processing",
+          "Tax calculation for sales",
+          "Email signup functionality",
+          "Stock filtering and lookup",
+          "News display integration"
+        ]
+      },
+      "admin_ajax_actions": [
+        {
+          "action": "get_stock_data",
+          "description": "Fetch stock data with membership and usage validation",
+          "handler": "StockScannerIntegration::ajax_get_stock_data",
+          "authentication": "logged_in_and_guest",
+          "parameters": ["symbol", "nonce"]
+        },
+        {
+          "action": "create_paypal_order", 
+          "description": "Create PayPal payment order",
+          "handler": "PayPalIntegration::create_paypal_order",
+          "authentication": "logged_in_and_guest"
+        },
+        {
+          "action": "capture_paypal_order",
+          "description": "Capture completed PayPal payment",
+          "handler": "PayPalIntegration::capture_paypal_order", 
+          "authentication": "logged_in_and_guest"
+        },
+        {
+          "action": "create_paypal_subscription",
+          "description": "Create recurring PayPal subscription",
+          "handler": "PayPalIntegration::create_paypal_subscription",
+          "authentication": "logged_in_and_guest"
+        }
+      ],
+      "rest_api_routes": [
+        {
+          "route": "POST /wp-json/stock-scanner/v1/paypal-webhook",
+          "description": "PayPal webhook endpoint for payment notifications",
+          "handler": "PayPalIntegration::paypal_webhook_handler"
+        }
+      ],
+      "shortcodes": [
+        {
+          "shortcode": "[stock_scanner]",
+          "description": "Display stock widget with symbol, chart, and details",
+          "attributes": ["symbol", "show_chart", "show_details"],
+          "membership_required": true
+        }
+      ]
+    },
+    "frontend_data_patterns": {
+      "direct_django_api_calls": {
+        "description": "Frontend JavaScript directly calls Django API endpoints",
+        "base_url": "/api/",
+        "endpoints_used": [
+          "/api/stocks/",
+          "/api/market/stats/", 
+          "/api/trending/",
+          "/api/realtime/{ticker}/"
+        ],
+        "implementation": "StockScannerFrontend class in stock-scanner-frontend.js"
+      },
+      "wordpress_ajax_integration": {
+        "description": "WordPress admin-ajax.php intermediary for authenticated requests",
+        "ajax_url": "admin_url('admin-ajax.php')",
+        "security": "wp_nonce verification",
+        "usage_tracking": "Membership level and API call limits enforced"
+      },
+      "paypal_integration": {
+        "description": "Client-side PayPal SDK integration with WordPress backend",
+        "client_id": "Configured in WordPress options",
+        "webhook_url": "/wp-json/stock-scanner/v1/paypal-webhook",
+        "order_actions": ["create", "capture", "subscription"]
+      }
+    }
+  },
+  "current_implementation_notes": {
+    "django_focus": "Core API functionality with comprehensive stock data endpoints",
+    "wordpress_integration": "Plugin-based integration with membership management and PayPal payments",
+    "frontend_architecture": "Hybrid approach - direct API calls and WordPress admin-ajax depending on authentication needs",
+    "missing_features": [
+      "Full WordPress REST API implementation for stock data",
+      "WordPress server-side PHP API calling patterns",
+      "Multiple WordPress themes (only stock-scanner-theme implemented)",
+      "Portfolio and watchlist management endpoints",
+      "News application integration", 
+      "Email subscription management",
+      "Enhanced analytics and reporting"
+    ],
+    "api_maturity": "Django API is well-developed with comprehensive filtering and real-time capabilities",
+    "wordpress_maturity": "Basic plugin integration with payment processing, needs expansion for full feature parity"
+  }
+}
