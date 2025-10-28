@@ -26,6 +26,12 @@ from decimal import Decimal
 from collections import defaultdict
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+
+# Prefer curl_cffi session for yfinance compatibility when available
+try:
+    from curl_cffi import requests as cfre  # type: ignore
+except Exception:  # pragma: no cover
+    cfre = None
 import subprocess
 import pytz
 from pathlib import Path
@@ -149,12 +155,13 @@ def normalize_proxy_string(proxy_str: str) -> str | None:
 
 # Build a per-proxy requests.Session configured for Yahoo endpoints
 def create_session_for_proxy(proxy: str | None, timeout_seconds: int) -> requests.Session:
-    """Create a session with proxy, UA headers, retries, and response hook.
+    """Create a session with proxy, UA headers, and sensible defaults.
 
-    yfinance supports passing a custom requests.Session to Ticker; we avoid
-    globally patching shared session to keep each thread isolated.
+    For newer yfinance versions, a curl_cffi session is required for Yahoo endpoints.
+    We use curl_cffi when available; otherwise fall back to requests.Session.
     """
-    session = requests.Session()
+    # Use curl_cffi session if available for yfinance compatibility
+    session = cfre.Session() if cfre is not None else requests.Session()
 
     # Proxies if provided
     if proxy:
@@ -172,20 +179,21 @@ def create_session_for_proxy(proxy: str | None, timeout_seconds: int) -> request
         "Connection": "keep-alive",
     })
 
-    # Retry policy including 429/999 with backoff
-    retry = Retry(
-        total=3,
-        read=3,
-        connect=3,
-        status=3,
-        backoff_factor=0.4,
-        status_forcelist=(429, 500, 502, 503, 504, 520, 521, 522, 524, 999),
-        allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]),
-        raise_on_status=False,
-    )
-    adapter = HTTPAdapter(max_retries=retry, pool_connections=16, pool_maxsize=32)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
+    # Retry policy including 429/999 with backoff (only for requests.Session)
+    if isinstance(session, requests.Session):
+        retry = Retry(
+            total=3,
+            read=3,
+            connect=3,
+            status=3,
+            backoff_factor=0.4,
+            status_forcelist=(429, 500, 502, 503, 504, 520, 521, 522, 524, 999),
+            allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]),
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry, pool_connections=16, pool_maxsize=32)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
     # Default timeout injection for all requests made via this session
     _orig_request = session.request
@@ -197,15 +205,19 @@ def create_session_for_proxy(proxy: str | None, timeout_seconds: int) -> request
 
     session.request = _request_with_timeout  # type: ignore[assignment]
 
-    # Hook: mark proxy as failing on HTTP 429/999 to trigger rotation
-    def _response_hook(resp, *args, **kwargs):
-        try:
-            if proxy and resp is not None and resp.status_code in (429, 999):
-                mark_proxy_failure(proxy, f"HTTP {resp.status_code}")
-        except Exception:
-            pass
-
-    session.hooks["response"].append(_response_hook)
+    # Hook: mark proxy as failing on HTTP 429/999 to trigger rotation (if hooks supported)
+    try:
+        if hasattr(session, "hooks") and isinstance(getattr(session, "hooks", None), dict):
+            def _response_hook(resp, *args, **kwargs):
+                try:
+                    if proxy and resp is not None and getattr(resp, "status_code", None) in (429, 999):
+                        mark_proxy_failure(proxy, f"HTTP {resp.status_code}")
+                except Exception:
+                    pass
+            session.hooks.setdefault("response", []).append(_response_hook)
+    except Exception:
+        # Non-fatal if hooks aren't available
+        pass
     return session
 
 # Thread-safe proxy manager to lease unique proxies per thread
