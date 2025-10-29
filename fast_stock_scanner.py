@@ -243,10 +243,41 @@ def load_combined_tickers() -> List[str]:
         'complete_nasdaq_tickers_*.py',
         'COMPLETE_NASDAQ_TICKERS'
     )
-    # De-dup while preserving order preference: nasdaq_only first, then rest
+    # Optionally include NYSE tickers from NASDAQ "otherlisted.txt" (Exchange 'N'), common shares only
+    nyse: List[str] = []
+    otherlisted_path = os.path.join(complete_dir, 'otherlisted.txt')
+    if os.path.exists(otherlisted_path):
+        try:
+            with open(otherlisted_path, 'r', encoding='utf-8', errors='ignore') as f:
+                header = f.readline()  # skip header
+                for line in f:
+                    parts = [p.strip() for p in line.strip().split('|')]
+                    # Columns: ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol
+                    if len(parts) < 8:
+                        continue
+                    act_symbol, _, exchange, _, etf_flag, _, test_issue, _ = parts[:8]
+                    # Only NYSE ('N'), non-ETF, non-test issues
+                    if exchange != 'N' or etf_flag == 'Y' or test_issue == 'Y':
+                        continue
+                    # Filter out units/warrants/preferred series and exotic symbols
+                    if any(x in act_symbol for x in ['.', '$', '=', '+', ' ']):
+                        continue
+                    bad_suffixes = ('W', 'WS', 'WTS', 'U', 'UN', 'RT', 'R')
+                    if any(act_symbol.endswith(suf) for suf in bad_suffixes):
+                        continue
+                    if act_symbol:
+                        nyse.append(act_symbol.upper())
+        except Exception:
+            nyse = []
+
+    # De-dup while preserving order preference: NASDAQ-only first, then complete NASDAQ, then NYSE
     seen = set()
     combined: List[str] = []
     for s in nasdaq_only + complete:
+        if s not in seen:
+            seen.add(s)
+            combined.append(s)
+    for s in nyse:
         if s not in seen:
             seen.add(s)
             combined.append(s)
