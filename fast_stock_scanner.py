@@ -103,7 +103,16 @@ def is_rate_limit_error(exc: Exception) -> bool:
 class ProxyManager:
     """Thread-safe round-robin proxy/session manager."""
     def __init__(self, proxies: List[str]):
-        self.proxies = list(dict.fromkeys([p.strip() for p in proxies if p]))
+        # Optional cap to limit active proxies (e.g., prioritize healthiest subset)
+        proxy_limit_env = os.environ.get('SCANNER_PROXY_LIMIT')
+        try:
+            proxy_limit = int(proxy_limit_env) if proxy_limit_env else None
+        except Exception:
+            proxy_limit = None
+        incoming = [p.strip() for p in proxies if p]
+        if proxy_limit is not None and proxy_limit > 0:
+            incoming = incoming[:proxy_limit]
+        self.proxies = list(dict.fromkeys(incoming))
         self._index = 0
         self._lock = None
         try:
@@ -113,30 +122,19 @@ class ProxyManager:
             self._lock = None
         # Build and warm persistent sessions per proxy (or one no-proxy session)
         self._sessions: List[object] = []
-        # Create a master warmed session without proxy to acquire stable cookies/crumb
+        # We DO NOT share cookies across proxies to avoid identity coupling across IPs
         master_cookies = None
-        try:
-            if cf_requests is not None:
-                master = cf_requests.Session()
-            else:
-                master = requests.Session()
-            master.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Connection': 'keep-alive',
-            })
-            try:
-                master.get('https://finance.yahoo.com', timeout=4)
-                # Seed yfinance cookies
-                _ = yf.Ticker('AAPL', session=master).fast_info
-            except Exception:
-                pass
-            master_cookies = master.cookies
-        except Exception:
-            master_cookies = None
 
         targets = self.proxies if self.proxies else [None]
-        for proxy in targets:
+        # Diverse User-Agents for each proxy session
+        uas = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36'
+        ]
+        for i, proxy in enumerate(targets):
             try:
                 if cf_requests is not None:
                     sess = cf_requests.Session()
@@ -145,7 +143,7 @@ class ProxyManager:
                 if proxy:
                     sess.proxies = {'http': proxy, 'https': proxy}
                 sess.headers.update({
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'User-Agent': uas[i % len(uas)],
                     'Accept-Language': 'en-US,en;q=0.9',
                     'Connection': 'keep-alive',
                 })
@@ -157,12 +155,6 @@ class ProxyManager:
                 # Trigger yfinance to establish crumb/cookies within this session
                 try:
                     _ = yf.Ticker('AAPL', session=sess).fast_info
-                except Exception:
-                    pass
-                # Share cookies from master if available
-                try:
-                    if master_cookies is not None:
-                        sess.cookies.update(master_cookies)
                 except Exception:
                     pass
                 self._sessions.append(sess)
@@ -743,7 +735,7 @@ class StockScanner:
                 continue
         return rows
 
-    def scan_batch(self, symbols: List[str], csv_out: Optional[str] = None, chunk_size: int = 150) -> Dict[str, Any]:
+    def scan_batch(self, symbols: List[str], csv_out: Optional[str] = None, chunk_size: int = 100) -> Dict[str, Any]:
         start = time.time()
         # Normalize symbols
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
@@ -762,16 +754,39 @@ class StockScanner:
         symbols = [s for s in symbols if is_standard(s)]
 
         # Split into chunks
+        # Allow env override of chunk size
+        try:
+            env_chunk = int(os.environ.get('SCANNER_BATCH_CHUNK', str(chunk_size)))
+            chunk_size = max(1, env_chunk)
+        except Exception:
+            pass
         chunks: List[List[str]] = [symbols[i:i+chunk_size] for i in range(0, len(symbols), chunk_size)]
         results: Dict[str, Dict[str, Any]] = {}
         rate_limited_chunks = 0
+        proxy_rotations = 0
+        # Global throttle knobs
+        try:
+            min_interval = float(os.environ.get('SCANNER_MIN_INTERVAL', '0'))
+        except Exception:
+            min_interval = 0.0
 
         def process_chunk(chunk: List[str]) -> Tuple[List[str], Dict[str, Dict[str, Any]]]:
             # Try with (proxy or none) sessions, rotate on rate limit
             max_attempts = 4
             attempt = 0
             session = None
+            # Seed a session up-front to reduce crumb/auth misses
+            if self.use_proxies and self.proxy_mgr.proxies:
+                # Attempt to give each worker a unique session via rotation at start
+                session = self.proxy_mgr.rotate_and_get_session()
+                # Track rotation used to obtain this session
+                nonlocal proxy_rotations
+                proxy_rotations += 1
+            else:
+                session = self._no_proxy_session
             while attempt < max_attempts:
+                if min_interval > 0:
+                    time.sleep(min_interval)
                 # 5d prices for last-day fields (fast path)
                 df_5d = self._download_chunk(chunk, session=session, timeout=self.timeout, period='5d', interval='1d', actions=False)
                 rows = self._build_rows_from_download(df_5d, chunk)
@@ -782,14 +797,26 @@ class StockScanner:
                 # rotate proxy
                 if self.use_proxies and self.proxy_mgr.proxies:
                     session = self.proxy_mgr.rotate_and_get_session()
+                    proxy_rotations += 1
                 else:
-                    session = None
+                    session = self._no_proxy_session
                 # brief backoff
                 time.sleep(min(0.5 + random.random(), 2.0))
             return chunk, {}
 
-        # Run up to self.threads chunks concurrently
-        with ThreadPoolExecutor(max_workers=self.threads) as ex:
+        # Cap concurrency by env and available proxies (to avoid sharing same proxy across threads)
+        max_workers_env = os.environ.get('SCANNER_MAX_NET_WORKERS')
+        try:
+            max_workers_cap = int(max_workers_env) if max_workers_env else self.threads
+        except Exception:
+            max_workers_cap = self.threads
+        if self.use_proxies and self.proxy_mgr.proxies:
+            max_workers_cap = min(max_workers_cap, self.threads, len(self.proxy_mgr.proxies))
+        else:
+            max_workers_cap = min(max_workers_cap, self.threads)
+
+        # Run chunks concurrently with capped workers
+        with ThreadPoolExecutor(max_workers=max_workers_cap) as ex:
             futures = [ex.submit(process_chunk, ch) for ch in chunks]
             for fut in as_completed(futures):
                 ch, rows = fut.result()
@@ -934,6 +961,25 @@ class StockScanner:
             except Exception as e:
                 logger.error(f"CSV export failed: {e}")
 
+        # Deep-dive stats (nulls, zeros)
+        deep_dive = {}
+        try:
+            if csv_out and os.path.exists(csv_out):
+                df_dd = pd.read_csv(csv_out)
+            else:
+                df_dd = pd.DataFrame([{k: v for k, v in p.items() if not str(k).startswith('_')} for p in complete.values()])
+            null_counts = df_dd.isna().sum().to_dict()
+            zero_counts = {}
+            for col in df_dd.columns:
+                if df_dd[col].dtype.kind in 'biufc':
+                    zero_counts[col] = int((df_dd[col] == 0).sum())
+            deep_dive = {
+                'null_counts': null_counts,
+                'zero_counts': zero_counts,
+            }
+        except Exception as e:
+            logger.error(f"Deep-dive analysis failed: {e}")
+
         duration = time.time() - start
         completeness_ratio = round(len(complete) / max(1, len(symbols)), 3)
         return {
@@ -943,10 +989,12 @@ class StockScanner:
             'failed_symbols': [s for s in symbols if s not in complete],
             'proxies_available': len(self.proxy_mgr.proxies) if self.use_proxies else 0,
             'rate_limited_chunks': rate_limited_chunks,
+            'proxy_rotations': proxy_rotations,
             'csv_out': csv_out,
             'duration_sec': round(duration, 2),
             'rate_per_sec': round(len(symbols) / duration, 2) if duration > 0 else None,
             'completeness_ratio': completeness_ratio,
+            'deep_dive': deep_dive,
         }
 
     @staticmethod
@@ -1775,16 +1823,32 @@ def main():
     )
     # Use batch-only path to avoid per-symbol calls that can trigger crumb-protected endpoints
     stats = scanner.scan_batch(symbols, csv_out=args.csv_out)
-    # Pretty print summary
-    logger.info(f"Scan complete. Total={stats['total']} Success={stats['success']} Failed={stats['failed']} "
-                f"Duration={stats['duration_sec']}s Proxies={stats['proxies_available']} Rotations={stats['proxy_rotations']}\n"
-                f"CSV={stats.get('csv_out')}")
+    # Pretty print summary (robust when fields are missing)
+    logger.info(
+        f"Scan complete. Total={stats.get('total')} Success={stats.get('success')} Failed={stats.get('failed')} "
+        f"Duration={stats.get('duration_sec')}s Proxies={stats.get('proxies_available')} "
+        f"Rotations={stats.get('proxy_rotations', 0)}\nCSV={stats.get('csv_out')}"
+    )
     # Print top-level deep dive signals
     dd = stats.get('deep_dive') or {}
     if dd:
-        # Show top 10 null-heavy columns
-        nulls = sorted(dd.get('null_counts', {}).items(), key=lambda x: x[1], reverse=True)[:10]
-        zeros = sorted(dd.get('zero_counts', {}).items(), key=lambda x: x[1], reverse=True)[:10]
+        # Focus metrics: key nulls/zeros
+        null_counts = dd.get('null_counts', {})
+        zero_counts = dd.get('zero_counts', {})
+        chg_null = int(null_counts.get('change_percent', 0) or 0)
+        vol_zero = int(zero_counts.get('volume', 0) or 0)
+        volt_zero = int(zero_counts.get('volume_today', 0) or 0)
+        chg_zero = int(zero_counts.get('change_percent', 0) or 0)
+        div_zero = int(zero_counts.get('dividend_yield', 0) or 0)
+        logger.info(
+            f"Nulls: change_percent has {chg_null} null; core price/volume fields non-null for successes."
+        )
+        logger.info(
+            f"Zeros: volume={vol_zero}, volume_today={volt_zero}, change_percent={chg_zero}, dividend_yield={div_zero}"
+        )
+        # Also show top 10 for additional context
+        nulls = sorted(null_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        zeros = sorted(zero_counts.items(), key=lambda x: x[1], reverse=True)[:10]
         logger.info(f"Null-heavy columns (top 10): {nulls}")
         logger.info(f"Zero-heavy columns (top 10): {zeros}")
     logger.info(json.dumps({k: v for k, v in stats.items() if k not in ('deep_dive','failed_symbols')}, indent=2))
