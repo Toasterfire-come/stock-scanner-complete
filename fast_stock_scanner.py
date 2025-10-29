@@ -1183,7 +1183,7 @@ class StockScanner:
         try:
             ticker = yf.Ticker(symbol, session=session)
 
-            # Fast path: rely on fast_info only (single lightweight call)
+            # Fast path: rely on fast_info first
             fast = None
             try:
                 fast = ticker.fast_info
@@ -1198,7 +1198,6 @@ class StockScanner:
                         return symbol, None, True
 
             # Skip heavy endpoints (history/info/calendar/earnings) to meet <200ms budget
-            hist = None
             info = None
 
             # Helper to read camelCase keys robustly
@@ -1241,7 +1240,7 @@ class StockScanner:
 
             # Market cap
             market_cap = fget(['marketCap'])
-            # Derive from price × shares outstanding when missing (info skipped for speed)
+            # Derive from price × shares outstanding when missing; may fill from .info later
             shares_outstanding = None
 
             # 52-week
@@ -1263,11 +1262,9 @@ class StockScanner:
 
             # Earnings per share / book / price-to-book / pe
             eps = None
-            # info skipped for speed
             book_value = None
 
             pe_ratio = None
-            # info skipped for speed; derive only if eps available (not available here)
 
             price_to_book = None
             if current_price and book_value:
@@ -1319,6 +1316,82 @@ class StockScanner:
                 except Exception:
                     bid_ask_spread = None
 
+            # If key fields missing, try .info to enrich before building payload
+            need_info = (
+                current_price is None or
+                volume is None or
+                market_cap is None or
+                shares_outstanding is None or
+                eps is None or
+                pe_ratio is None or
+                book_value is None or
+                change_percent is None
+            )
+            if need_info:
+                try:
+                    info = ticker.info
+                except Exception as e:
+                    info = None
+                if isinstance(info, dict) and info:
+                    def iget_num(keys: List[str]) -> Optional[float]:
+                        for k in keys:
+                            v = info.get(k)
+                            if v is not None:
+                                try:
+                                    f = float(v)
+                                    if math.isfinite(f):
+                                        return f
+                                except Exception:
+                                    continue
+                        return None
+                    if current_price is None:
+                        current_price = iget_num(['regularMarketPrice','postMarketPrice','preMarketPrice','open'])
+                    if volume is None:
+                        v = iget_num(['regularMarketVolume'])
+                        volume = int(v) if v is not None else None
+                    if market_cap is None:
+                        mc = iget_num(['marketCap'])
+                        market_cap = mc if mc is not None else market_cap
+                    if shares_outstanding is None:
+                        so = iget_num(['sharesOutstanding','shares'])
+                        shares_outstanding = so
+                    if eps is None:
+                        eps = iget_num(['epsTrailingTwelveMonths','trailingEps'])
+                    if pe_ratio is None:
+                        pe_ratio = iget_num(['trailingPE'])
+                    if book_value is None:
+                        book_value = iget_num(['bookValue'])
+                    if change_percent is None and current_price is not None:
+                        pc = iget_num(['regularMarketPreviousClose','previousClose'])
+                        if pc is not None and pc != 0:
+                            try:
+                                price_change_today = float(current_price) - float(pc)
+                                change_percent = (price_change_today / float(pc)) * 100.0
+                            except Exception:
+                                pass
+
+            # As last resort, if price/volume still missing, try per-symbol history
+            if (current_price is None or volume is None):
+                try:
+                    h = ticker.history(period="5d", interval="1d", prepost=False)
+                    if h is not None and not h.empty:
+                        last = h.iloc[-1]
+                        if current_price is None and pd.notna(last.get('Close')):
+                            current_price = float(last.get('Close'))
+                        if volume is None and pd.notna(last.get('Volume')):
+                            volume = int(last.get('Volume'))
+                        # Try to compute change from previousClose if available in history
+                        if change_percent is None and current_price is not None and len(h) >= 2:
+                            try:
+                                prev = float(h.iloc[-2].get('Close'))
+                                if prev != 0:
+                                    price_change_today = float(current_price) - prev
+                                    change_percent = (price_change_today / prev) * 100.0
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
             # Compose DB payload (only existing Stock fields)
             payload: Dict[str, Any] = {
                 'ticker': symbol,
@@ -1335,7 +1408,7 @@ class StockScanner:
                 'avg_volume_3mon': int(avg_volume_3mon) if avg_volume_3mon is not None else None,
                 'dvav': safe_decimal(dvav),
                 'market_cap': int(market_cap) if market_cap is not None else None,
-                'shares_available': int(shares_available) if shares_available is not None else None,
+                'shares_available': int(shares_available) if shares_available is not None else (int(shares_outstanding) if shares_outstanding is not None else None),
                 'pe_ratio': safe_decimal(pe_ratio),
                 'dividend_yield': safe_decimal(dividend_yield),
                 'one_year_target': safe_decimal(one_year_target),
@@ -1476,112 +1549,75 @@ class StockScanner:
         start = time.time()
         successes: Dict[str, Dict[str, Any]] = {}
         failed_symbols: List[str] = []
+        rate_limited_failures: List[str] = []
         proxy_rotations = 0
         rate_limited_chunks = 0
 
-        # Chunking tuned for high throughput; will be further tunable via env
-        default_chunk = 200
-        quote_chunk_size = int(os.environ.get('SCANNER_QUOTE_CHUNK', default_chunk))
-        # Build chunks
+        # Per-symbol mode: use fast_info and .info, download only as last resort
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
-        chunks: List[List[str]] = [symbols[i:i+quote_chunk_size] for i in range(0, len(symbols), quote_chunk_size)]
 
-        def process_quote_chunk(chunk_syms: List[str]) -> Tuple[List[str], Dict[str, Dict[str, Any]]]:
-            nonlocal proxy_rotations
-            attempts = 0
-            sess = None
-            if self.use_proxies and self.proxy_mgr.proxies:
-                sess = self.proxy_mgr.get_session(rotate=False)
-            while attempts < 3:
-                try:
-                    data = self._batch_quote(chunk_syms, session=sess)
-                    if data:
-                        return chunk_syms, data
-                    # No data returned – rotate and retry
-                    attempts += 1
-                    if self.use_proxies and self.proxy_mgr.proxies:
-                        sess = self.proxy_mgr.rotate_and_get_session()
-                        proxy_rotations += 1
-                    time.sleep(min(0.25 + random.random() * 0.5, 0.75))
-                except Exception as e:
-                    attempts += 1
-                    if is_rate_limit_error(e) and self.use_proxies and self.proxy_mgr.proxies:
-                        sess = self.proxy_mgr.rotate_and_get_session()
-                        proxy_rotations += 1
-                    time.sleep(min(0.25 + random.random() * 0.5, 0.75))
-            return chunk_syms, {}
+        # Concurrency cap by env and proxies
+        max_workers_env = os.environ.get('SCANNER_MAX_NET_WORKERS')
+        try:
+            max_workers_cap = int(max_workers_env) if max_workers_env else self.threads
+        except Exception:
+            max_workers_cap = self.threads
+        if self.use_proxies and self.proxy_mgr.proxies:
+            max_workers_cap = min(max_workers_cap, self.threads, len(self.proxy_mgr.proxies))
+        else:
+            max_workers_cap = min(max_workers_cap, self.threads)
 
-        # Dispatch chunks concurrently
-        with ThreadPoolExecutor(max_workers=self.threads) as ex:
-            futures = [ex.submit(process_quote_chunk, ch) for ch in chunks]
+        # Global throttle between task dispatches
+        try:
+            min_interval = float(os.environ.get('SCANNER_MIN_INTERVAL', '0'))
+        except Exception:
+            min_interval = 0.0
+
+        def work(sym_idx: Tuple[int, str]) -> Tuple[str, Optional[Dict[str, Any]], bool]:
+            i, s = sym_idx
+            if min_interval > 0:
+                time.sleep(min_interval)
+            return self._fetch_symbol(s, i)
+
+        indices = list(enumerate(symbols))
+        with ThreadPoolExecutor(max_workers=max_workers_cap) as ex:
+            futures = [ex.submit(work, pair) for pair in indices]
             for fut in as_completed(futures):
-                ch, rows = fut.result()
-                if not rows:
-                    rate_limited_chunks += 1
-                    failed_symbols.extend(ch)
+                sym, payload, rate_limited = fut.result()
+                if payload is not None:
+                    successes[sym] = payload
                 else:
-                    successes.update(rows)
+                    failed_symbols.append(sym)
+                    if rate_limited:
+                        rate_limited_failures.append(sym)
+                if rate_limited:
+                    rate_limited_chunks += 1
 
-        # Retry wave for chunks that produced no rows
+        # Retry wave for rate-limited symbols using per-symbol path with rotation
         retry_success = 0
-        if failed_symbols:
-            # Reduce chunk size for retries
-            retry_chunk = max(100, int(quote_chunk_size * 0.7))
-            retry_chunks = [failed_symbols[i:i+retry_chunk] for i in range(0, len(failed_symbols), retry_chunk)]
-            failed_symbols = []
-            with ThreadPoolExecutor(max_workers=self.threads) as ex:
-                futures = [ex.submit(process_quote_chunk, ch) for ch in retry_chunks]
+        if rate_limited_failures:
+            def retry_work(sym: str) -> Tuple[str, Optional[Dict[str, Any]], bool]:
+                # brief jitter
+                time.sleep(0.2 + random.random()*0.3)
+                return self._fetch_symbol(sym, 0)
+            with ThreadPoolExecutor(max_workers=max_workers_cap) as ex:
+                futures = [ex.submit(retry_work, s) for s in rate_limited_failures]
+                new_failed: List[str] = []
                 for fut in as_completed(futures):
-                    ch, rows = fut.result()
-                    if not rows:
-                        failed_symbols.extend(ch)
-                    else:
-                        # Merge; count newly added
+                    sym, payload, rate_limited = fut.result()
+                    if payload is not None:
                         before = len(successes)
-                        for sym, payload in rows.items():
-                            successes[sym] = payload
+                        successes[sym] = payload
                         retry_success += (len(successes) - before)
+                    else:
+                        new_failed.append(sym)
+                        if rate_limited:
+                            rate_limited_chunks += 1
+                # Merge remaining failures back
+                failed_symbols = [s for s in failed_symbols if s not in rate_limited_failures] + new_failed
 
-        # Optional aggressive fill to improve completeness (disabled by default for speed)
-        aggressive_fill = str(os.environ.get('SCANNER_AGGRESSIVE_FILL', '')).lower() in ('1', 'true', 'yes')
-        if aggressive_fill:
-            # Fallback pass A: fill missing price/volume/day high/low from batch daily download
-            sym_list = list(successes.keys())
-            need_pv = [s for s, p in successes.items() if (p.get('current_price') is None or p.get('volume') is None or p.get('volume') == 0)]
-            if need_pv:
-                logger.info(f"Batch-filling OHLCV for {len(need_pv)} tickers via download()...")
-                batch_size = 200
-                for i in range(0, len(need_pv), batch_size):
-                    chunk = need_pv[i:i+batch_size]
-                    data = self._batch_download_ohlcv(chunk, session=None)
-                    for s in chunk:
-                        p = successes.get(s)
-                        if not p:
-                            continue
-                        d = data.get(s) or {}
-                        cp = d.get('close')
-                        vol = d.get('volume')
-                        lo = d.get('low')
-                        hi = d.get('high')
-                        if p.get('current_price') is None and isinstance(cp, (int, float)) and math.isfinite(cp):
-                            p['current_price'] = safe_decimal(cp)
-                        if (p.get('volume') is None or p.get('volume') == 0) and isinstance(vol, (int, float)) and math.isfinite(vol):
-                            try:
-                                p['volume'] = int(vol)
-                                p['volume_today'] = int(vol)
-                            except Exception:
-                                pass
-                        if p.get('days_low') is None and isinstance(lo, (int, float)):
-                            p['days_low'] = safe_decimal(lo)
-                        if p.get('days_high') is None and isinstance(hi, (int, float)):
-                            p['days_high'] = safe_decimal(hi)
-                        if (p.get('days_low') is not None and p.get('days_high') is not None) and (p.get('days_range') in (None, '')):
-                            try:
-                                p['days_range'] = f"{float(p['days_low']):.2f} - {float(p['days_high']):.2f}"
-                            except Exception:
-                                pass
-
-            # Direct quote fallback removed to keep yfinance-only
+        # Optional batch fill disabled by default; per request recommends only last-resort download
+        # If still missing essentials, perform limited per-symbol history salvage (already in _fetch_symbol)
 
         # Fallback pass B: derive market cap from shares if possible
         for s, p in successes.items():
@@ -1821,8 +1857,8 @@ def main():
         proxy_file=args.proxy_file,
         use_proxies=(not args.no_proxy),
     )
-    # Use batch-only path to avoid per-symbol calls that can trigger crumb-protected endpoints
-    stats = scanner.scan_batch(symbols, csv_out=args.csv_out)
+    # Per request: stop batching; use per-symbol fast_info/.info; download only as last resort
+    stats = scanner.scan(symbols, csv_out=args.csv_out)
     # Pretty print summary (robust when fields are missing)
     logger.info(
         f"Scan complete. Total={stats.get('total')} Success={stats.get('success')} Failed={stats.get('failed')} "
