@@ -413,6 +413,20 @@ class StockScanner:
         # Base headers for sessions
         # No-proxy warmed session (used when proxies disabled)
         self._no_proxy_session = None
+        # Auto-denylist support (skip delisted/invalid tickers on future runs)
+        self._auto_denylist_path = os.environ.get('SCANNER_DENYLIST_FILE') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'denylist_auto.json')
+        self._auto_denylist: set[str] = set()
+        self._delisted_found: set[str] = set()
+        try:
+            if os.path.exists(self._auto_denylist_path):
+                with open(self._auto_denylist_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    dj = json.load(f)
+                    if isinstance(dj, list):
+                        self._auto_denylist.update([str(x).strip().upper() for x in dj if str(x).strip()])
+                    elif isinstance(dj, dict) and 'tickers' in dj and isinstance(dj['tickers'], list):
+                        self._auto_denylist.update([str(x).strip().upper() for x in dj['tickers'] if str(x).strip()])
+        except Exception:
+            self._auto_denylist = set()
         try:
             if cf_requests is not None:
                 s = cf_requests.Session()
@@ -1476,6 +1490,14 @@ class StockScanner:
                 except Exception:
                     pass
 
+            # If still no core fields, mark as delisted/invalid for future runs
+            if current_price is None and volume is None and (fast is None or not isinstance(fast, dict)):
+                try:
+                    self._delisted_found.add(symbol)
+                except Exception:
+                    pass
+                return symbol, None, False
+
             # Compose DB payload (only existing Stock fields)
             payload: Dict[str, Any] = {
                 'ticker': symbol,
@@ -1639,6 +1661,13 @@ class StockScanner:
 
         # Per-symbol mode: use fast_info and .info, download only as last resort
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
+        # Apply auto denylist
+        if self._auto_denylist:
+            before = len(symbols)
+            symbols = [s for s in symbols if s not in self._auto_denylist]
+            after = len(symbols)
+            if before != after:
+                logger.info(f"Skipped {before-after} symbols from auto denylist")
 
         # Concurrency cap by env and proxies
         max_workers_env = os.environ.get('SCANNER_MAX_NET_WORKERS')
@@ -1896,6 +1925,15 @@ class StockScanner:
                 logger.error(f"DB bulk write error: {e}")
 
         duration = time.time() - start
+        # Persist updated auto denylist (merge newly detected delisted symbols)
+        try:
+            if self._delisted_found:
+                merged = sorted(set(self._auto_denylist).union({s for s in self._delisted_found}))
+                os.makedirs(os.path.dirname(self._auto_denylist_path), exist_ok=True)
+                with open(self._auto_denylist_path, 'w', encoding='utf-8') as f:
+                    json.dump({'tickers': merged, 'count': len(merged)}, f, indent=2)
+        except Exception:
+            pass
         return {
             'total': len(symbols),
             'success': len(successes),
