@@ -1181,6 +1181,43 @@ class StockScanner:
             # Pass session through to yfinance (supports both curl_cffi and requests sessions)
             session = s
         try:
+            # Helper: build a fresh session with same proxy (refresh crumb/cookies without rotating proxy pool)
+            def _fresh_session_like(sess: Optional[object]) -> Optional[object]:
+                try:
+                    new_sess = cf_requests.Session() if cf_requests is not None else requests.Session()
+                    # copy proxies if present
+                    try:
+                        if sess is not None and getattr(sess, 'proxies', None):
+                            new_sess.proxies = dict(getattr(sess, 'proxies'))
+                    except Exception:
+                        pass
+                    uas = [
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+                    ]
+                    new_sess.headers.update({
+                        'User-Agent': random.choice(uas),
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Connection': 'keep-alive',
+                    })
+                    try:
+                        new_sess.get('https://finance.yahoo.com', timeout=4)
+                    except Exception:
+                        pass
+                    try:
+                        _ = yf.Ticker('AAPL', session=new_sess).fast_info
+                    except Exception:
+                        pass
+                    return new_sess
+                except Exception:
+                    return None
+
+            def _is_crumb_error(exc: Exception) -> bool:
+                t = str(exc).lower()
+                return ('invalid crumb' in t) or ('unauthorized' in t)
+
             ticker = yf.Ticker(symbol, session=session)
 
             # Fast path: rely on fast_info first
@@ -1188,10 +1225,19 @@ class StockScanner:
             try:
                 fast = ticker.fast_info
             except Exception as e:
-                if is_rate_limit_error(e):
-                    # rotate proxy if possible and retry once
+                if _is_crumb_error(e):
+                    # Refresh crumb/cookies with same proxy and retry once
+                    session = _fresh_session_like(session) or session
+                    try:
+                        fast = yf.Ticker(symbol, session=session).fast_info
+                    except Exception as e2:
+                        if is_rate_limit_error(e2):
+                            return symbol, None, True
+                        return symbol, None, False
+                elif is_rate_limit_error(e):
+                    # rotate proxy and retry once
                     if self.use_proxies:
-                        self.proxy_mgr.rotate_and_get_session()
+                        session = self.proxy_mgr.rotate_and_get_session()
                     try:
                         fast = yf.Ticker(symbol, session=session).fast_info
                     except Exception:
@@ -1331,7 +1377,14 @@ class StockScanner:
                 try:
                     info = ticker.info
                 except Exception as e:
-                    info = None
+                    if _is_crumb_error(e):
+                        session = _fresh_session_like(session) or session
+                        try:
+                            info = yf.Ticker(symbol, session=session).info
+                        except Exception:
+                            info = None
+                    else:
+                        info = None
                 if isinstance(info, dict) and info:
                     def iget_num(keys: List[str]) -> Optional[float]:
                         for k in keys:
