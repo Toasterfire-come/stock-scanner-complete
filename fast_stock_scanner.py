@@ -2020,8 +2020,17 @@ def main():
         proxy_file=args.proxy_file,
         use_proxies=(not args.no_proxy),
     )
-    # Per request: stop batching; use per-symbol fast_info/.info; download only as last resort
-    stats = scanner.scan(symbols, csv_out=args.csv_out)
+    # Choose mode via env SCANNER_MODE: 'batch' or default 'per'
+    mode = (os.environ.get('SCANNER_MODE') or 'per').lower()
+    if mode in ('batch', 'b'):
+        try:
+            ch = int(os.environ.get('SCANNER_BATCH_CHUNK', '300'))
+        except Exception:
+            ch = 300
+        stats = scanner.scan_batch(symbols, csv_out=args.csv_out, chunk_size=ch)
+    else:
+        # Per request: stop batching; use per-symbol fast_info/.info; download only as last resort
+        stats = scanner.scan(symbols, csv_out=args.csv_out)
     # Pretty print summary (robust when fields are missing)
     logger.info(
         f"Scan complete. Total={stats.get('total')} Success={stats.get('success')} Failed={stats.get('failed')} "
