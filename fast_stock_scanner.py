@@ -410,6 +410,21 @@ class StockScanner:
         # Target completeness threshold (price, volume, market_cap present)
         # Set to 0.0 to avoid fallback .info calls which can trigger crumb-protected endpoints
         self.completeness_threshold = 0.0
+        try:
+            required_ratio_env = os.environ.get('SCANNER_REQUIRED_COMPLETENESS', '0.97')
+            self.required_completeness_ratio = max(0.0, min(1.0, float(required_ratio_env)))
+        except Exception:
+            self.required_completeness_ratio = 0.97
+        try:
+            max_fail_env = os.environ.get('SCANNER_MAX_FAILURE_RATIO', '0.05')
+            self.max_failure_ratio = max(0.0, min(1.0, float(max_fail_env)))
+        except Exception:
+            self.max_failure_ratio = 0.05
+        try:
+            runtime_target_env = os.environ.get('SCANNER_RUNTIME_TARGET_SEC', '180')
+            self.batch_runtime_target_sec = max(1.0, float(runtime_target_env))
+        except Exception:
+            self.batch_runtime_target_sec = 180.0
         # Base headers for sessions
         # No-proxy warmed session (used when proxies disabled)
         self._no_proxy_session = None
@@ -666,6 +681,32 @@ class StockScanner:
                             data = None
                 except Exception:
                     data = None
+            if data is None:
+                try:
+                    sess = session
+                    created_session = False
+                    if sess is None:
+                        if cf_requests is not None:
+                            sess = cf_requests.Session()
+                        else:
+                            sess = requests.Session()
+                        created_session = True
+                        sess.headers.update({
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Connection': 'keep-alive',
+                        })
+                    response = sess.get(url, params=params, timeout=max(4, getattr(self, 'timeout', 8)))
+                    response.raise_for_status()
+                    data = response.json()
+                    if created_session:
+                        try:
+                            sess.close()
+                        except Exception:
+                            pass
+                except Exception as http_exc:
+                    logger.error(f"Quote batch HTTP fallback failed for {len(symbols)} tickers: {http_exc}")
+                    data = None
             if not isinstance(data, dict):
                 return out
             results = []
@@ -782,74 +823,72 @@ class StockScanner:
 
     def scan_batch(self, symbols: List[str], csv_out: Optional[str] = None, chunk_size: int = 100) -> Dict[str, Any]:
         start = time.time()
-        # Normalize symbols
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
-        # Auto-filter non-standard tickers (basic heuristics)
+
         def is_standard(sym: str) -> bool:
             if not sym or any(c in sym for c in ['^', '=', ' ', '/', '\\', '*', '&']):
                 return False
             if sym.startswith('$'):
                 return False
-            # Exclude common warrant/unit/right suffixes
             bad_suffixes = ('W', 'WS', 'WTS', 'U', 'UN', 'R', 'RT')
             for suf in bad_suffixes:
                 if sym.endswith(suf):
                     return False
             return True
+
         symbols = [s for s in symbols if is_standard(s)]
 
-        # Split into chunks
-        # Allow env override of chunk size
+        use_denylist_env = os.environ.get('SCANNER_USE_DENYLIST', '1').lower()
+        use_denylist = use_denylist_env in ('1', 'true', 'yes')
+        skipped_from_denylist = 0
+        if use_denylist and self._auto_denylist:
+            before = len(symbols)
+            symbols = [s for s in symbols if s not in self._auto_denylist]
+            skipped_from_denylist = before - len(symbols)
+            if skipped_from_denylist > 0:
+                logger.info(f"Skipped {skipped_from_denylist} symbols from auto denylist")
+
+        if not symbols:
+            duration = time.time() - start
+            return {
+                'total': 0,
+                'success': 0,
+                'failed': 0,
+                'failed_symbols': [],
+                'proxies_available': len(self.proxy_mgr.proxies) if self.use_proxies else 0,
+                'rate_limited_chunks': 0,
+                'proxy_rotations': 0,
+                'csv_out': csv_out,
+                'duration_sec': round(duration, 2),
+                'rate_per_sec': None,
+                'completeness_ratio': 0.0,
+                'failure_ratio': 0.0,
+                'completeness_target_met': True,
+                'failure_ratio_target_met': True,
+                'runtime_target_met': duration <= self.batch_runtime_target_sec,
+                'runtime_target_sec': self.batch_runtime_target_sec,
+                'skipped_from_denylist': skipped_from_denylist,
+                'deep_dive': {},
+            }
+
         try:
             env_chunk = int(os.environ.get('SCANNER_BATCH_CHUNK', str(chunk_size)))
             chunk_size = max(1, env_chunk)
         except Exception:
-            pass
-        chunks: List[List[str]] = [symbols[i:i+chunk_size] for i in range(0, len(symbols), chunk_size)]
-        results: Dict[str, Dict[str, Any]] = {}
+            chunk_size = max(1, chunk_size)
+
+        chunks: List[List[str]] = [symbols[i:i + chunk_size] for i in range(0, len(symbols), chunk_size)]
+        quote_results: Dict[str, Dict[str, Any]] = {}
+        missing_after_quotes: List[str] = []
         rate_limited_chunks = 0
         proxy_rotations = 0
-        # Global throttle knobs
+        fallback_recovered = 0
+
         try:
             min_interval = float(os.environ.get('SCANNER_MIN_INTERVAL', '0'))
         except Exception:
             min_interval = 0.0
 
-        def process_chunk(chunk: List[str]) -> Tuple[List[str], Dict[str, Dict[str, Any]]]:
-            # Try with (proxy or none) sessions, rotate on rate limit
-            max_attempts = 4
-            attempt = 0
-            session = None
-            # Seed a session up-front to reduce crumb/auth misses
-            if self.use_proxies and self.proxy_mgr.proxies:
-                # Attempt to give each worker a unique session via rotation at start
-                session = self.proxy_mgr.rotate_and_get_session()
-                # Track rotation used to obtain this session
-                nonlocal proxy_rotations
-                proxy_rotations += 1
-            else:
-                session = self._no_proxy_session
-            while attempt < max_attempts:
-                if min_interval > 0:
-                    time.sleep(min_interval)
-                # 5d prices for last-day fields (fast path)
-                df_5d = self._download_chunk(chunk, session=session, timeout=self.timeout, period='5d', interval='1d', actions=False)
-                rows = self._build_rows_from_download(df_5d, chunk)
-                # If we got some rows, accept; else rotate proxy and retry smaller chunk_size
-                if rows:
-                    return chunk, rows
-                attempt += 1
-                # rotate proxy
-                if self.use_proxies and self.proxy_mgr.proxies:
-                    session = self.proxy_mgr.rotate_and_get_session()
-                    proxy_rotations += 1
-                else:
-                    session = self._no_proxy_session
-                # brief backoff
-                time.sleep(min(0.5 + random.random(), 2.0))
-            return chunk, {}
-
-        # Cap concurrency by env and available proxies (to avoid sharing same proxy across threads)
         max_workers_env = os.environ.get('SCANNER_MAX_NET_WORKERS')
         try:
             max_workers_cap = int(max_workers_env) if max_workers_env else self.threads
@@ -859,24 +898,152 @@ class StockScanner:
             max_workers_cap = min(max_workers_cap, self.threads, len(self.proxy_mgr.proxies))
         else:
             max_workers_cap = min(max_workers_cap, self.threads)
+        if max_workers_cap <= 0:
+            max_workers_cap = 1
 
-        # Run chunks concurrently with capped workers
+        try:
+            max_attempts = int(os.environ.get('SCANNER_BATCH_MAX_ATTEMPTS', '4'))
+        except Exception:
+            max_attempts = 4
+        max_attempts = max(1, max_attempts)
+
+        def process_chunk(chunk: List[str]) -> Tuple[Dict[str, Dict[str, Any]], List[str], int]:
+            pending = list(chunk)
+            collected: Dict[str, Dict[str, Any]] = {}
+            local_rotations = 0
+            attempt = 0
+            if self.use_proxies and self.proxy_mgr.proxies:
+                session: Optional[object] = self.proxy_mgr.rotate_and_get_session()
+                local_rotations += 1
+            else:
+                session = self._no_proxy_session
+            while pending and attempt < max_attempts:
+                if min_interval > 0:
+                    time.sleep(min_interval)
+                batch_payloads = self._batch_quote(pending, session)
+                if batch_payloads:
+                    collected.update(batch_payloads)
+                pending = [s for s in pending if s not in collected]
+                if pending:
+                    attempt += 1
+                    if self.use_proxies and self.proxy_mgr.proxies:
+                        session = self.proxy_mgr.rotate_and_get_session()
+                        local_rotations += 1
+                    else:
+                        session = self._no_proxy_session
+                    time.sleep(min(0.5 + random.random(), 1.5))
+            return collected, pending, local_rotations
+
         with ThreadPoolExecutor(max_workers=max_workers_cap) as ex:
             futures = [ex.submit(process_chunk, ch) for ch in chunks]
             for fut in as_completed(futures):
-                ch, rows = fut.result()
-                if not rows:
+                collected, pending, local_rot = fut.result()
+                if collected:
+                    quote_results.update(collected)
+                if pending:
                     rate_limited_chunks += 1
-                results.update(rows)
+                    missing_after_quotes.extend(pending)
+                proxy_rotations += local_rot
 
-        # Keep only complete rows (price & volume present)
-        complete = {s: p for s, p in results.items() if p.get('current_price') is not None and p.get('volume') is not None}
+        payloads: Dict[str, Dict[str, Any]] = dict(quote_results)
 
-        # Fast-info enrichment (yfinance-only; no crumb) with selective retries and session reuse
+        def normalize_payload(payload: Dict[str, Any]) -> None:
+            if not payload:
+                return
+            if payload.get('symbol') and not payload.get('ticker'):
+                payload['ticker'] = payload['symbol']
+            if payload.get('ticker') and not payload.get('symbol'):
+                payload['symbol'] = payload['ticker']
+            if not payload.get('exchange'):
+                payload['exchange'] = 'NASDAQ'
+            try:
+                vol = payload.get('volume')
+                if vol is not None and not isinstance(vol, int):
+                    payload['volume'] = int(vol)
+            except Exception:
+                payload['volume'] = None
+            if payload.get('volume_today') is None and payload.get('volume') is not None:
+                payload['volume_today'] = payload['volume']
+            try:
+                avg_vol = payload.get('avg_volume_3mon')
+                if avg_vol is not None and not isinstance(avg_vol, int):
+                    payload['avg_volume_3mon'] = int(avg_vol)
+            except Exception:
+                pass
+            avg_vol_val = payload.get('avg_volume_3mon')
+            if payload.get('volume') in (None, 0) and avg_vol_val not in (None, 0):
+                try:
+                    fallback_vol = int(avg_vol_val)
+                    payload['volume'] = fallback_vol
+                    payload['volume_today'] = fallback_vol
+                except Exception:
+                    pass
+            shares = payload.get('shares_available')
+            try:
+                if shares is not None and not isinstance(shares, int):
+                    payload['shares_available'] = int(shares)
+            except Exception:
+                pass
+            mc_val = payload.get('market_cap')
+            try:
+                if mc_val is not None and not isinstance(mc_val, int):
+                    payload['market_cap'] = int(mc_val)
+            except Exception:
+                pass
+            if payload.get('market_cap') is None and payload.get('current_price') is not None and payload.get('shares_available') is not None:
+                try:
+                    payload['market_cap'] = int(float(payload['current_price']) * float(payload['shares_available']))
+                except Exception:
+                    pass
+            if payload.get('dvav') is None and payload.get('volume') not in (None, 0) and payload.get('avg_volume_3mon') not in (None, 0):
+                try:
+                    payload['dvav'] = safe_decimal(float(payload['volume']) / float(payload['avg_volume_3mon']))
+                except Exception:
+                    pass
+            if 'last_updated' not in payload or payload.get('last_updated') is None:
+                payload['last_updated'] = (django_timezone.now() if django_timezone else datetime.now(timezone.utc))
+            if 'created_at' not in payload or payload.get('created_at') is None:
+                payload['created_at'] = payload['last_updated']
+
+        for payload in payloads.values():
+            normalize_payload(payload)
+
+        missing_symbols: set[str] = set(missing_after_quotes)
+        missing_symbols.update(s for s in symbols if s not in payloads)
+
+        if missing_symbols:
+            if chunk_size > 20:
+                fallback_chunk_size = min(60, max(10, chunk_size // 2))
+            else:
+                fallback_chunk_size = max(1, chunk_size)
+            fallback_list = list(missing_symbols)
+            fallback_chunk_size = max(1, fallback_chunk_size)
+            fallback_payloads: Dict[str, Dict[str, Any]] = {}
+            for i in range(0, len(fallback_list), fallback_chunk_size):
+                sub = fallback_list[i:i + fallback_chunk_size]
+                if self.use_proxies and self.proxy_mgr.proxies:
+                    session = self.proxy_mgr.rotate_and_get_session()
+                    proxy_rotations += 1
+                else:
+                    session = self._no_proxy_session
+                df_rows = self._download_chunk(sub, session=session, timeout=self.timeout, period='5d', interval='1d', actions=False)
+                rows = self._build_rows_from_download(df_rows, sub)
+                if rows:
+                    fallback_payloads.update(rows)
+                else:
+                    rate_limited_chunks += 1
+                if len(fallback_list) > fallback_chunk_size:
+                    time.sleep(min(0.2 + random.random(), 0.6))
+            for sym, payload in fallback_payloads.items():
+                payloads[sym] = payload
+                normalize_payload(payload)
+                if sym in missing_symbols:
+                    missing_symbols.remove(sym)
+            fallback_recovered = len(fallback_payloads)
+
         def enrich_chunk_fastinfo(chunk_syms: List[str]) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
             updates: Dict[str, Dict[str, Any]] = {}
             drop_non_equity: List[str] = []
-            # Reuse one session per chunk
             sess = None
             if self.use_proxies and self.proxy_mgr.proxies:
                 sess = self.proxy_mgr.get_session(rotate=False)
@@ -888,7 +1055,6 @@ class StockScanner:
                         fi = t.fast_info
                         if not fi:
                             raise RuntimeError('no fast_info')
-                        # Filter non-equities when quoteType present
                         qtype = None
                         try:
                             qtype = fi.get('quoteType')
@@ -897,81 +1063,98 @@ class StockScanner:
                         if qtype and str(qtype).upper() not in ('EQUITY', 'COMMONSTOCK', 'COMMON_STOCK'):
                             drop_non_equity.append(sym)
                             break
-                        def getf(k: str) -> Optional[float]:
+                        def getf(key: str) -> Optional[float]:
                             try:
-                                v = fi.get(k)
-                                return float(v) if v is not None else None
+                                val = fi.get(key)
+                                return float(val) if val is not None else None
                             except Exception:
                                 return None
                         upd: Dict[str, Any] = {}
                         mc = getf('marketCap')
-                        if mc is not None:
+                        if mc is not None and math.isfinite(mc):
                             upd['market_cap'] = int(mc)
-                        sh = getf('shares')
-                        if sh is not None:
-                            upd['shares_available'] = int(sh)
+                        shares_val = getf('shares')
+                        if shares_val is not None and math.isfinite(shares_val):
+                            upd['shares_available'] = int(shares_val)
                         avg3 = getf('threeMonthAverageVolume')
                         if avg3 is not None and math.isfinite(avg3):
                             upd['avg_volume_3mon'] = int(avg3)
                         yl = getf('yearLow')
                         yh = getf('yearHigh')
-                        if yl is not None:
+                        if yl is not None and math.isfinite(yl):
                             upd['week_52_low'] = safe_decimal(yl)
-                        if yh is not None:
+                        if yh is not None and math.isfinite(yh):
                             upd['week_52_high'] = safe_decimal(yh)
-                        pe = getf('trailingPE')
-                        if pe is not None and math.isfinite(pe):
-                            upd['pe_ratio'] = safe_decimal(pe)
-                        eps = getf('trailingEps')
-                        if eps is not None and math.isfinite(eps):
-                            upd['earnings_per_share'] = safe_decimal(eps)
+                        pe_val = getf('trailingPE')
+                        if pe_val is not None and math.isfinite(pe_val):
+                            upd['pe_ratio'] = safe_decimal(pe_val)
+                        eps_val = getf('trailingEps')
+                        if eps_val is not None and math.isfinite(eps_val):
+                            upd['earnings_per_share'] = safe_decimal(eps_val)
                         updates[sym] = upd
                         break
-                    except Exception as e:
+                    except Exception:
                         attempts += 1
-                        # Rotate session on second attempt for this symbol
                         if attempts >= 2 and self.use_proxies and self.proxy_mgr.proxies:
                             sess = self.proxy_mgr.rotate_and_get_session()
+                        time.sleep(min(0.1 + random.random(), 0.3))
             return updates, drop_non_equity
 
-        if complete and str(os.environ.get('SCANNER_ENRICH_FASTINFO', '')).lower() in ('1', 'true', 'yes'):
-            enrich_syms = list(complete.keys())
-            # Process fast_info in chunks with parallelism, session reuse within each chunk
-            fi_chunk_size = 300
-            fi_chunks = [enrich_syms[i:i+fi_chunk_size] for i in range(0, len(enrich_syms), fi_chunk_size)]
-            all_updates: Dict[str, Dict[str, Any]] = {}
-            to_drop: List[str] = []
-            with ThreadPoolExecutor(max_workers=min(self.threads, len(fi_chunks) or 1)) as ex:
-                futures = [ex.submit(enrich_chunk_fastinfo, ch) for ch in fi_chunks]
-                for fut in as_completed(futures):
-                    upd, drop_list = fut.result()
-                    all_updates.update(upd)
-                    to_drop.extend(drop_list)
-            for sym, upd in all_updates.items():
-                if sym in complete and upd:
-                    complete[sym].update({k: v for k, v in upd.items() if v is not None})
-            # Drop non-equities
-            for sym in set(to_drop):
-                complete.pop(sym, None)
-            # Compute dvav where possible
-            for sym, p in complete.items():
+        enrich_env = str(os.environ.get('SCANNER_ENRICH_FASTINFO', '1')).lower()
+        if payloads and enrich_env in ('1', 'true', 'yes'):
+            to_enrich = [sym for sym, p in payloads.items() if not self._is_complete(p) or p.get('avg_volume_3mon') is None or p.get('market_cap') is None]
+            if to_enrich:
+                fi_chunk_size = 300
+                fi_chunks = [to_enrich[i:i + fi_chunk_size] for i in range(0, len(to_enrich), fi_chunk_size)]
+                all_updates: Dict[str, Dict[str, Any]] = {}
+                to_drop: List[str] = []
+                with ThreadPoolExecutor(max_workers=min(self.threads, len(fi_chunks) or 1)) as ex:
+                    futures = [ex.submit(enrich_chunk_fastinfo, ch) for ch in fi_chunks]
+                    for fut in as_completed(futures):
+                        upd, drop_list = fut.result()
+                        all_updates.update(upd)
+                        to_drop.extend(drop_list)
+                for sym, upd in all_updates.items():
+                    if sym in payloads and upd:
+                        payloads[sym].update({k: v for k, v in upd.items() if v is not None})
+                        normalize_payload(payloads[sym])
+                for sym in set(to_drop):
+                    if sym in payloads:
+                        payloads.pop(sym, None)
+                    missing_symbols.add(sym)
+
+        target_complete_count = int(math.ceil(len(symbols) * self.required_completeness_ratio))
+        if target_complete_count > len(symbols):
+            target_complete_count = len(symbols)
+        if payloads:
+            self._fill_market_cap_via_info(list(payloads.keys()), payloads, target_complete_count)
+            for payload in payloads.values():
+                normalize_payload(payload)
+
+        missing_symbols.update(s for s in symbols if s not in payloads)
+
+        complete = {s: p for s, p in payloads.items() if self._is_complete(p)}
+        failed_symbols = [s for s in symbols if s not in complete]
+        for sym in failed_symbols:
+            if sym not in payloads or payloads[sym].get('current_price') is None:
                 try:
-                    v = p.get('volume')
-                    av = p.get('avg_volume_3mon')
-                    if v is not None and av is not None and float(av) != 0:
-                        p['dvav'] = safe_decimal(float(v)/float(av))
+                    self._delisted_found.add(sym)
                 except Exception:
                     pass
 
-        # Dividend yield via 1y actions (yfinance-only), limited pass to control runtime
+        completeness_ratio = (len(complete) / len(symbols)) if symbols else 0.0
+        failure_ratio = (len(failed_symbols) / len(symbols)) if symbols else 0.0
+
+        # Dividend enrichment moved after completeness evaluation ensures we only run for subset
         need_div = [s for s, p in complete.items() if p.get('dividend_yield') is None]
-        # Widened subset (up to ~4000 symbols), parallelized downloads
         max_div_symbols = min(len(need_div), 4000)
         div_chunk_size = 400
-        div_chunks = [need_div[i:i+div_chunk_size] for i in range(0, max_div_symbols, div_chunk_size)]
+        div_chunks = [need_div[i:i + div_chunk_size] for i in range(0, max_div_symbols, div_chunk_size)]
+
         def fetch_div_chunk(chunk_syms: List[str]) -> Tuple[List[str], Optional[pd.DataFrame]]:
             df_div = self._download_chunk(chunk_syms, session=None, timeout=self.timeout, period='1y', interval='1d', actions=True)
             return chunk_syms, df_div
+
         if div_chunks:
             with ThreadPoolExecutor(max_workers=min(6, len(div_chunks))) as ex:
                 for ch_syms, df_div in ex.map(fetch_div_chunk, div_chunks):
@@ -984,18 +1167,16 @@ class StockScanner:
                             if sub is None or sub.empty or 'Dividends' not in sub.columns:
                                 continue
                             div_sum = pd.to_numeric(sub['Dividends'], errors='coerce').fillna(0.0).sum()
-                            cp = complete[s].get('current_price')
+                            cp = complete[s].get('current_price') if s in complete else None
                             if cp is not None and float(cp) != 0:
-                                dy = (float(div_sum)/float(cp)) * 100.0
+                                dy = (float(div_sum) / float(cp)) * 100.0
                                 complete[s]['dividend_yield'] = safe_decimal(dy)
                         except Exception:
                             continue
 
-        # CSV export
         if csv_out:
             try:
                 df = pd.DataFrame([{k: v for k, v in p.items() if not str(k).startswith('_')} for p in complete.values()])
-                # Drop columns that are entirely null to avoid null-heavy fields
                 df.dropna(axis=1, how='all', inplace=True)
                 for col in df.columns:
                     if df[col].map(lambda x: isinstance(x, Decimal)).any():
@@ -1006,8 +1187,7 @@ class StockScanner:
             except Exception as e:
                 logger.error(f"CSV export failed: {e}")
 
-        # Deep-dive stats (nulls, zeros)
-        deep_dive = {}
+        deep_dive: Dict[str, Any] = {}
         try:
             if csv_out and os.path.exists(csv_out):
                 df_dd = pd.read_csv(csv_out)
@@ -1026,19 +1206,34 @@ class StockScanner:
             logger.error(f"Deep-dive analysis failed: {e}")
 
         duration = time.time() - start
-        completeness_ratio = round(len(complete) / max(1, len(symbols)), 3)
+        rate_per_sec = round(len(symbols) / duration, 2) if duration > 0 else None
+        completeness_ratio_round = round(completeness_ratio, 3)
+        failure_ratio_round = round(failure_ratio, 3)
+
         return {
             'total': len(symbols),
             'success': len(complete),
-            'failed': (len(symbols) - len(complete)),
-            'failed_symbols': [s for s in symbols if s not in complete],
+            'failed': len(failed_symbols),
+            'failed_symbols': failed_symbols,
+            'failed_symbols_sample': failed_symbols[:50],
+            'missing_symbols_sample': sorted(list(missing_symbols))[:50],
             'proxies_available': len(self.proxy_mgr.proxies) if self.use_proxies else 0,
             'rate_limited_chunks': rate_limited_chunks,
             'proxy_rotations': proxy_rotations,
+            'batch_quote_results': len(quote_results),
+            'fallback_recovered': fallback_recovered,
             'csv_out': csv_out,
             'duration_sec': round(duration, 2),
-            'rate_per_sec': round(len(symbols) / duration, 2) if duration > 0 else None,
-            'completeness_ratio': completeness_ratio,
+            'rate_per_sec': rate_per_sec,
+            'completeness_ratio': completeness_ratio_round,
+            'failure_ratio': failure_ratio_round,
+            'required_completeness_ratio': self.required_completeness_ratio,
+            'max_failure_ratio': self.max_failure_ratio,
+            'completeness_target_met': len(complete) >= target_complete_count,
+            'failure_ratio_target_met': failure_ratio <= self.max_failure_ratio,
+            'runtime_target_met': duration <= self.batch_runtime_target_sec,
+            'runtime_target_sec': self.batch_runtime_target_sec,
+            'skipped_from_denylist': skipped_from_denylist,
             'deep_dive': deep_dive,
         }
 
