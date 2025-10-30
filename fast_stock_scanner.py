@@ -1210,7 +1210,7 @@ class StockScanner:
         completeness_ratio_round = round(completeness_ratio, 3)
         failure_ratio_round = round(failure_ratio, 3)
 
-        return {
+        stats: Dict[str, Any] = {
             'total': len(symbols),
             'success': len(complete),
             'failed': len(failed_symbols),
@@ -1236,6 +1236,11 @@ class StockScanner:
             'skipped_from_denylist': skipped_from_denylist,
             'deep_dive': deep_dive,
         }
+        include_payloads_env = str(os.environ.get('SCANNER_INCLUDE_PAYLOADS', '0')).lower()
+        if include_payloads_env in ('1', 'true', 'yes'):
+            stats['payloads'] = payloads
+            stats['complete_payloads'] = complete
+        return stats
 
     @staticmethod
     def _is_complete(payload: Dict[str, Any]) -> bool:
