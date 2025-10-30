@@ -1661,8 +1661,10 @@ class StockScanner:
 
         # Per-symbol mode: use fast_info and .info, download only as last resort
         symbols = [s.strip().upper() for s in symbols if s and s.strip()]
-        # Apply auto denylist
-        if self._auto_denylist:
+        # Apply auto denylist (can be disabled via SCANNER_USE_DENYLIST=0)
+        use_denylist_env = os.environ.get('SCANNER_USE_DENYLIST', '1').lower()
+        use_denylist = use_denylist_env in ('1', 'true', 'yes')
+        if use_denylist and self._auto_denylist:
             before = len(symbols)
             symbols = [s for s in symbols if s not in self._auto_denylist]
             after = len(symbols)
@@ -1777,10 +1779,35 @@ class StockScanner:
                 if isinstance(val, str) and val.strip() == '':
                     p[key] = None
 
-        # Keep only fully complete rows to maximize completeness of included dataset
-        filtered_successes = {s: p for s, p in successes.items() if self._is_complete(p)}
-        removed_incomplete = len(successes) - len(filtered_successes)
-        successes = filtered_successes
+        # Weighted success scoring (do not drop partially-complete rows)
+        def _weight_score(p: Dict[str, Any]) -> float:
+            score = 0.0
+            if p.get('current_price') is not None:
+                score += 0.45
+            if p.get('volume') is not None:
+                score += 0.35
+            if p.get('change_percent') is not None:
+                score += 0.10
+            if p.get('market_cap') is not None:
+                score += 0.05
+            if p.get('avg_volume_3mon') is not None:
+                score += 0.05
+            return round(score, 3)
+
+        weight_classes = {'core_ok': 0, 'partial': 0, 'core_fail': 0}
+        core_fail_symbols: List[str] = []
+        strict_complete = 0
+        for sym, p in successes.items():
+            if self._is_complete(p):
+                strict_complete += 1
+            sc = _weight_score(p)
+            if sc >= 0.8:
+                weight_classes['core_ok'] += 1
+            elif sc >= 0.5:
+                weight_classes['partial'] += 1
+            else:
+                weight_classes['core_fail'] += 1
+                core_fail_symbols.append(sym)
 
         # Second pass: percentiles (dvav, momentum_1m, dollar_volume)
         # Collect values
@@ -1947,6 +1974,20 @@ class StockScanner:
             'deep_dive': deep_dive,
             'duration_sec': round(duration, 2),
             'rate_per_sec': round(len(symbols) / duration, 2) if duration > 0 else None,
+            'diagnostics': {
+                'crumb_errors': getattr(self, '_crumb_errors_count', 0),
+                'rate_limit_errors': getattr(self, '_rate_limit_errors_count', 0),
+                'delisted_suspected_count': len(getattr(self, '_delisted_found', set())),
+                'strict_complete': strict_complete,
+                'weights': {
+                    'core_ok': weight_classes['core_ok'],
+                    'partial': weight_classes['partial'],
+                    'core_fail': weight_classes['core_fail'],
+                    'thresholds': {'core_ok': 0.8, 'partial': 0.5}
+                },
+                'core_fail_symbols_sample': core_fail_symbols[:50],
+                'delisted_symbols_sample': sorted(list(getattr(self, '_delisted_found', set())))[:50],
+            },
         }
 
 
