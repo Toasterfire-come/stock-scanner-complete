@@ -883,6 +883,8 @@ class StockScanner:
         rate_limited_chunks = 0
         proxy_rotations = 0
         fallback_recovered = 0
+        total_chunks = len(chunks)
+        total_symbols = len(symbols)
 
         try:
             min_interval = float(os.environ.get('SCANNER_MIN_INTERVAL', '0'))
@@ -906,6 +908,32 @@ class StockScanner:
         except Exception:
             max_attempts = 4
         max_attempts = max(1, max_attempts)
+
+        default_chunk_progress = max(1, total_chunks // 10) if total_chunks > 0 else 0
+        progress_chunk_interval = 0
+        progress_chunk_raw = os.environ.get('SCANNER_PROGRESS_CHUNK_INTERVAL')
+        if progress_chunk_raw is None:
+            progress_chunk_interval = default_chunk_progress
+        else:
+            try:
+                parsed = int(progress_chunk_raw)
+                if parsed > 0:
+                    progress_chunk_interval = parsed
+            except Exception:
+                progress_chunk_interval = default_chunk_progress
+
+        default_symbol_progress = 1000 if total_symbols >= 1000 else max(1, total_symbols // 5) if total_symbols > 0 else 0
+        progress_symbol_interval = 0
+        progress_symbol_raw = os.environ.get('SCANNER_PROGRESS_SYMBOL_INTERVAL')
+        if progress_symbol_raw is None:
+            progress_symbol_interval = default_symbol_progress
+        else:
+            try:
+                parsed = int(progress_symbol_raw)
+                if parsed > 0:
+                    progress_symbol_interval = parsed
+            except Exception:
+                progress_symbol_interval = default_symbol_progress
 
         def process_chunk(chunk: List[str]) -> Tuple[Dict[str, Dict[str, Any]], List[str], int]:
             pending = list(chunk)
@@ -935,8 +963,12 @@ class StockScanner:
             return collected, pending, local_rotations
 
         with ThreadPoolExecutor(max_workers=max_workers_cap) as ex:
-            futures = [ex.submit(process_chunk, ch) for ch in chunks]
-            for fut in as_completed(futures):
+            future_map = {ex.submit(process_chunk, ch): len(ch) for ch in chunks}
+            completed_chunks = 0
+            processed_symbols_est = 0
+            next_symbol_milestone = progress_symbol_interval
+            for fut in as_completed(future_map):
+                chunk_size_est = future_map[fut]
                 collected, pending, local_rot = fut.result()
                 if collected:
                     quote_results.update(collected)
@@ -944,6 +976,26 @@ class StockScanner:
                     rate_limited_chunks += 1
                     missing_after_quotes.extend(pending)
                 proxy_rotations += local_rot
+                completed_chunks += 1
+                processed_symbols_est += chunk_size_est
+                if progress_chunk_interval and (completed_chunks % progress_chunk_interval == 0):
+                    logger.info(
+                        "Batch progress: %d/%d chunks finished (~%d/%d symbols), %d quote payloads gathered",
+                        completed_chunks,
+                        total_chunks,
+                        min(processed_symbols_est, total_symbols),
+                        total_symbols,
+                        len(quote_results),
+                    )
+                if progress_symbol_interval and processed_symbols_est >= next_symbol_milestone:
+                    logger.info(
+                        "Batch progress: processed ~%d/%d symbols (%d chunks), quote hits so far %d",
+                        min(processed_symbols_est, total_symbols),
+                        total_symbols,
+                        completed_chunks,
+                        len(quote_results),
+                    )
+                    next_symbol_milestone += progress_symbol_interval
 
         payloads: Dict[str, Dict[str, Any]] = dict(quote_results)
 
