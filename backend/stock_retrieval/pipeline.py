@@ -49,6 +49,7 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
         tickers=ticker_result.tickers,
         config=config,
         fetcher=fetcher,
+        proxy_pool=proxy_pool,
     )
 
     quality_gate = QualityGate(config)
@@ -101,6 +102,7 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
         "executor_aborted": exec_result.aborted,
         "success_count": len(exec_result.successes),
         "failure_count": len(exec_result.failures),
+        "executor_metrics": exec_result.metrics,
         "quality_passed": quality_gate.stats.passed,
         "quality_failed": quality_gate.stats.failed,
         "quality_success_ratio": round(quality_gate.stats.success_ratio, 4),

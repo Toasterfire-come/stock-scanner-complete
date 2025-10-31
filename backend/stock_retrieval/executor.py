@@ -11,6 +11,7 @@ from typing import Dict, Iterable, List, Optional
 from .config import StockRetrievalConfig
 from .data_transformer import StockPayload, build_stock_payload
 from .logging_utils import get_logger
+from .session_factory import ProxyPool
 from .yfinance_client import FetchResult, YFinanceFetcher
 
 
@@ -31,13 +32,16 @@ class ExecutionResult:
     failures: List[Dict[str, object]] = field(default_factory=list)
     elapsed_seconds: float = 0.0
     aborted: bool = False
+    metrics: Dict[str, float] = field(default_factory=dict)
 
 
 def _worker(
     symbol: str,
     fetcher: YFinanceFetcher,
     timestamp: datetime,
+    proxy_pool: ProxyPool,
 ) -> WorkerOutcome:
+    proxy = proxy_pool.get_proxy(0)
     try:
         fetch_result = fetcher.fetch(symbol)
         if fetch_result.has_data and fetch_result.current_price is not None:
@@ -50,6 +54,8 @@ def _worker(
             )
             return WorkerOutcome(symbol=symbol, payload=payload, fetch_result=fetch_result)
 
+        proxy_pool.mark_failure(proxy)
+        next_proxy = proxy_pool.rotate()
         return WorkerOutcome(
             symbol=symbol,
             payload=None,
@@ -58,6 +64,8 @@ def _worker(
         )
     except Exception as exc:  # pragma: no cover - defensive catch
         logger.debug("Worker for %s raised exception: %s", symbol, exc)
+        proxy_pool.mark_failure(proxy)
+        proxy_pool.rotate()
         return WorkerOutcome(symbol=symbol, payload=None, fetch_result=None, error=str(exc))
 
 
@@ -66,6 +74,7 @@ def run_executor(
     tickers: Iterable[str],
     config: StockRetrievalConfig,
     fetcher: YFinanceFetcher,
+    proxy_pool: ProxyPool,
 ) -> ExecutionResult:
     start = time.monotonic()
     timestamp = datetime.now(timezone.utc)
@@ -85,11 +94,11 @@ def run_executor(
 
     with ThreadPoolExecutor(max_workers=config.max_threads) as executor:
         future_map = {
-            executor.submit(_worker, symbol, fetcher, timestamp): symbol
+            executor.submit(_worker, symbol, fetcher, timestamp, proxy_pool): symbol
             for symbol in tickers_list
         }
 
-        for index, future in enumerate(as_completed(future_map), start=1):
+    for index, future in enumerate(as_completed(future_map), start=1):
             if result.aborted:
                 future.cancel()
                 continue
@@ -145,6 +154,12 @@ def run_executor(
                 )
 
     result.elapsed_seconds = time.monotonic() - start
+    result.metrics = {
+        "success_count": len(result.successes),
+        "failure_count": len(result.failures),
+        "elapsed_seconds": result.elapsed_seconds,
+        "aborted": 1.0 if result.aborted else 0.0,
+    }
     return result
 
 

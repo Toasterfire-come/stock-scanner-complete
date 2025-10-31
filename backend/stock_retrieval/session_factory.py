@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -43,6 +43,8 @@ def _flatten_proxy_payload(payload: object) -> List[str]:
 class ProxyPool:
     proxies: List[str]
     enabled: bool = True
+    failures: List[str] = field(default_factory=list)
+    rotation_index: int = 0
 
     @classmethod
     def from_config(cls, config: StockRetrievalConfig) -> "ProxyPool":
@@ -71,7 +73,23 @@ class ProxyPool:
     def get_proxy(self, worker_index: int) -> Optional[str]:
         if not self.enabled or not self.proxies:
             return None
-        return self.proxies[worker_index % len(self.proxies)]
+
+        index = (self.rotation_index + worker_index) % len(self.proxies)
+        return self.proxies[index]
+
+    def mark_failure(self, proxy: Optional[str]) -> None:
+        if proxy is None:
+            return
+        self.failures.append(proxy)
+
+    def rotate(self) -> Optional[str]:
+        if not self.enabled or not self.proxies:
+            return None
+
+        self.rotation_index = (self.rotation_index + 1) % len(self.proxies)
+        proxy = self.proxies[self.rotation_index]
+        logger.debug("Rotated proxy to %s", proxy)
+        return proxy
 
 
 def _build_retry(timeout_seconds: float) -> Retry:
