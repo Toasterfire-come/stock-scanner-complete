@@ -1,6 +1,0 @@
-open -oPort=22 access-5018544625.webspace-host.com
-user a1531117 C2rt3rK%232010
-pwd
-ls -la
-get /.htaccess .htaccess.remote
-quit
