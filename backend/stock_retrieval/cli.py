@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional
 from .config import StockRetrievalConfig, build_config_from_args
 from .logging_utils import get_logger, setup_logging
 from .pipeline import run_pipeline
+from .reporting import write_csv_summary, write_json_summary
 
 
 logger = get_logger(__name__)
@@ -56,6 +57,8 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         help="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
     )
     parser.add_argument("--json", action="store_true", help="Emit run summary as JSON to stdout")
+    parser.add_argument("--summary-json-path", type=str, default=None, help="Write run summary to JSON file path")
+    parser.add_argument("--summary-csv-path", type=str, default=None, help="Write run summary to CSV file path")
 
     parser.add_argument("--version", action="store_true", help="Print package version and exit")
 
@@ -79,14 +82,30 @@ def configure_environment(args: argparse.Namespace) -> StockRetrievalConfig:
     return build_config_from_args(args)
 
 
-def run_once(config: StockRetrievalConfig, *, emit_json: bool = False) -> Dict[str, Any]:
+def run_once(
+    config: StockRetrievalConfig,
+    *,
+    emit_json: bool = False,
+    summary_json_path: Optional[str] = None,
+    summary_csv_path: Optional[str] = None,
+) -> Dict[str, Any]:
     result = run_pipeline(config)
+    if summary_json_path:
+        write_json_summary(result, summary_json_path)
+    if summary_csv_path:
+        write_csv_summary(result, summary_csv_path)
     if emit_json:
         print(json.dumps(result, indent=2, default=str))
     return result
 
 
-def run_scheduler(config: StockRetrievalConfig, *, emit_json: bool = False) -> None:
+def run_scheduler(
+    config: StockRetrievalConfig,
+    *,
+    emit_json: bool = False,
+    summary_json_path: Optional[str] = None,
+    summary_csv_path: Optional[str] = None,
+) -> None:
     interval_seconds = max(60, config.schedule_interval_minutes * 60)
     logger.info(
         "Scheduler initialized with %s-minute interval.",
@@ -95,7 +114,12 @@ def run_scheduler(config: StockRetrievalConfig, *, emit_json: bool = False) -> N
 
     while not _stop_requested:
         start = time.monotonic()
-        run_once(config, emit_json=emit_json)
+        run_once(
+            config,
+            emit_json=emit_json,
+            summary_json_path=summary_json_path,
+            summary_csv_path=summary_csv_path,
+        )
         if _stop_requested:
             break
 
@@ -119,9 +143,19 @@ def main(argv: Optional[list[str]] = None) -> int:
     logger.info("Starting stock retrieval CLI with config: %s", config)
 
     if args.schedule:
-        run_scheduler(config, emit_json=args.json)
+        run_scheduler(
+            config,
+            emit_json=args.json,
+            summary_json_path=args.summary_json_path,
+            summary_csv_path=args.summary_csv_path,
+        )
     else:
-        run_once(config, emit_json=args.json)
+        run_once(
+            config,
+            emit_json=args.json,
+            summary_json_path=args.summary_json_path,
+            summary_csv_path=args.summary_csv_path,
+        )
 
     logger.info("Stock retrieval CLI exiting. stop_requested=%s", _stop_requested)
     return 0

@@ -176,7 +176,14 @@ def build_stock_payload(
         "ticker": symbol,
         "symbol": symbol,
         "company_name": info.get("longName") or info.get("shortName") or symbol,
+        "name": info.get("longName") or info.get("shortName") or symbol,
         "current_price": safe_decimal(current_price),
+        "price_change": None,
+        "price_change_percent": None,
+        "bid_price": safe_decimal(info.get("bid")) if info else None,
+        "ask_price": safe_decimal(info.get("ask")) if info else None,
+        "bid_ask_spread": "",
+        "days_range": "",
         "days_low": safe_decimal(info.get("dayLow")),
         "days_high": safe_decimal(info.get("dayHigh")),
         "volume": safe_decimal(info.get("volume")),
@@ -196,7 +203,14 @@ def build_stock_payload(
         "created_at": timestamp,
     }
 
-    payload.update(compute_price_changes(history))
+    price_changes = compute_price_changes(history)
+    payload.update(price_changes)
+
+    if price_changes["price_change_today"] is not None:
+        payload["price_change"] = price_changes["price_change_today"]
+
+    if price_changes["change_percent"] is not None:
+        payload["price_change_percent"] = price_changes["change_percent"]
 
     volume_ratio = compute_volume_ratio(payload["volume"], payload["avg_volume_3mon"])
     payload["dvav"] = volume_ratio

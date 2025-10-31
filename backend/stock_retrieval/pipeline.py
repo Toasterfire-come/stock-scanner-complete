@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from .config import StockRetrievalConfig
 from .logging_utils import get_logger
+from .data_transformer import StockPayload
 from .quality_gate import QualityGate
 from .session_factory import (
     ProxyPool,
@@ -51,7 +52,7 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
     )
 
     quality_gate = QualityGate(config)
-    quality_passed_payloads: List[Any] = []
+    quality_passed_payloads: List[StockPayload] = []
 
     for payload in exec_result.successes:
         if quality_gate.evaluate(payload.data):
@@ -64,6 +65,27 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
         status = "aborted"
     elif exec_result.failures or quality_gate.stats.failed:
         status = "incomplete"
+
+    persistence_summary = {
+        "saved": 0,
+        "price_records": 0,
+        "errors": [],
+    }
+
+    if config.save_to_db and not config.dry_run and quality_passed_payloads:
+        from .db_writer import persist_payloads
+
+        persistence = persist_payloads(quality_passed_payloads)
+        persistence_summary = {
+            "saved": persistence.saved,
+            "price_records": persistence.price_records,
+            "errors": persistence.errors,
+        }
+
+        if persistence.errors:
+            logger.warning(
+                "Persistence completed with %s error(s)", len(persistence.errors)
+            )
 
     summary: Dict[str, Any] = {
         "status": status,
@@ -85,6 +107,9 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
         "meets_quality_threshold": meets_threshold,
         "dry_run": config.dry_run,
         "ready_for_persistence": len(quality_passed_payloads),
+        "persistence_saved": persistence_summary["saved"],
+        "persistence_price_records": persistence_summary["price_records"],
+        "persistence_errors": persistence_summary["errors"][:5],
         "sample_successes": [payload.symbol for payload in quality_passed_payloads[:5]],
         "sample_failures": exec_result.failures[:5],
         "quality_issues": [

@@ -65,6 +65,22 @@
 - **Accuracy Verification**: Compare random 200 ticker sample against historical successful runs; assert ≥97% completeness metric.
 - **Regression Suite**: Ensure database writes remain idempotent and do not duplicate `StockPrice` entries when run repeatedly within short intervals.
 
+#### Detailed Test Inventory (current modules)
+- **`ticker_loader`**: Unit tests for latest-file discovery, malformed ticker rejection, deterministic ordering, and `--max-tickers` truncation.
+- **`yfinance_client`**: Mocked `yf.Ticker` to validate retry envelope, history fallbacks, `fast_info` usage, and captured error traces in `FetchResult`.
+- **`executor`**: Fake fetcher to assert concurrency fan-out, runtime guard abort, and progress logging cadence under mixed success/failure scenarios.
+- **`data_transformer`**: Numerical coercion checks (Decimal/int), price-change deltas across sparse histories, and dividend/PE extraction edge cases.
+- **`quality_gate`**: Parameterised cases covering required-field enforcement, timestamp staleness (>300 s), and invalid volume handling with `QualityIssue` capture.
+- **`db_writer`**: In-memory DB integration tests verifying update-or-create semantics, BigInteger coercion, and avoidance of duplicate `StockPrice` rows.
+- **Reporting utilities**: Golden-file tests for JSON/CSV summary outputs ensuring executor + quality metrics persist as expected.
+
+#### Performance & Acceptance Targets
+- **Concurrency Benchmark**: With 24 worker threads, sustain ≤180 s total runtime for ≈5.5k combined tickers on production-equivalent hardware (document CPU/RAM/network baseline).
+- **Quality Threshold**: Maintain ≥97 % quality-approved payloads per run; emit warning and retry batch if ratio dips below threshold for two consecutive runs.
+- **Persistence Latency**: Keep database writes under 20 s per full batch (≤5 ms per `Stock` update, ≤3 ms per `StockPrice` insert) on target database engine.
+- **Output Reporting**: Validate JSON/CSV summaries capture executor timing, success/failure counts, quality ratios, and persistence stats; ensure file rotation or overwrite strategy aligns with ops runbooks.
+- **Scheduler Soak Test**: Exercise `--schedule` mode for 2 hours to observe memory stability, proxy rotation health, and resilience to intermittent Yahoo Finance outages.
+
 ### Rollout Steps
 - Milestone 1: Implement modular structure with dry-run mode and validate against sample data.
 - Milestone 2: Integrate proxy management, dynamic executor, and baseline metrics logging.
