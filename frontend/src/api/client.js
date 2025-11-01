@@ -363,6 +363,44 @@ export async function getStatisticsSafe() {
 }
 
 // ====================
+// PARTNER / REFERRAL ANALYTICS
+// ====================
+export async function getPartnerReferralSummary(params = {}) {
+  try {
+    const query = {};
+    if (params.code) query.code = params.code;
+    if (params.from) query.from = params.from;
+    if (params.to) query.to = params.to;
+    const { data } = await api.get('/partner/analytics/summary', { params: query });
+    if (data?.success) {
+      return { success: true, data };
+    }
+    return { success: false, error: data?.error || 'Failed to load referral analytics', data };
+  } catch (error) {
+    const message = error?.response?.data?.error || error.message || 'Failed to load referral analytics';
+    return { success: false, error: message, data: error?.response?.data };
+  }
+}
+
+export async function getPartnerReferralTimeseries(params = {}) {
+  try {
+    const query = {};
+    if (params.code) query.code = params.code;
+    if (params.from) query.from = params.from;
+    if (params.to) query.to = params.to;
+    if (params.interval) query.interval = params.interval;
+    const { data } = await api.get('/partner/analytics/timeseries', { params: query });
+    if (data?.success) {
+      return { success: true, data };
+    }
+    return { success: false, error: data?.error || 'Failed to load referral trend data', data };
+  } catch (error) {
+    const message = error?.response?.data?.error || error.message || 'Failed to load referral trend data';
+    return { success: false, error: message, data: error?.response?.data };
+  }
+}
+
+// ====================
 // HEALTH & STATUS
 // ====================
 export async function pingHealth() {
