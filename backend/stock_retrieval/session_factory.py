@@ -163,8 +163,11 @@ def create_requests_session(
         session = requests.Session()
 
     adapter = HTTPAdapter(max_retries=_build_retry(timeout))
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
+    if hasattr(session, "mount"):
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+    else:
+        logger.debug("Session type %s does not support mount(); skipping adapter install", type(session))
 
     session.headers.update({"User-Agent": USER_AGENT})
 
