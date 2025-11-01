@@ -9,6 +9,7 @@ import pandas as pd
 import yfinance as yf
 
 from .logging_utils import get_logger
+from .session_factory import ProxyPool, create_requests_session
 
 
 logger = get_logger(__name__)
@@ -25,6 +26,7 @@ class FetchResult:
     current_price: Optional[float] = None
     attempts: int = 0
     errors: List[str] = field(default_factory=list)
+    proxy: Optional[str] = None
 
     @property
     def has_data(self) -> bool:
@@ -39,16 +41,23 @@ class YFinanceFetcher:
         *,
         history_periods: Sequence[str] = HISTORY_PERIODS_DEFAULT,
         max_attempts: int = 3,
+        proxy_pool: Optional[ProxyPool] = None,
+        request_timeout: float = 8.0,
     ) -> None:
         self.history_periods = history_periods
         self.max_attempts = max_attempts
+        self.proxy_pool = proxy_pool
+        self.request_timeout = request_timeout
 
     def fetch(self, symbol: str) -> FetchResult:
         result = FetchResult(symbol=symbol)
 
         for attempt in range(1, self.max_attempts + 1):
-            ticker = yf.Ticker(symbol)
+            proxy = self._select_proxy()
+            session = create_requests_session(proxy=proxy, timeout=self.request_timeout)
+            ticker = yf.Ticker(symbol, session=session)
             result.attempts = attempt
+            result.proxy = proxy
 
             if not result.info:
                 try:
@@ -59,6 +68,8 @@ class YFinanceFetcher:
                     message = f"Attempt {attempt} info error: {exc}"
                     logger.debug("%s", message)
                     result.errors.append(message)
+                    self._handle_failure(proxy)
+                    continue
 
             if result.history is None or result.history.empty:
                 history = self._fetch_history(ticker)
@@ -69,12 +80,33 @@ class YFinanceFetcher:
                 result.current_price = self._derive_current_price(ticker, result)
 
             if result.has_data and result.current_price is not None:
+                self._record_success(proxy)
                 break
+            else:
+                self._handle_failure(proxy)
 
         if not result.has_data:
             logger.debug("No data retrieved for %s after %s attempts", symbol, result.attempts)
 
         return result
+
+    def _select_proxy(self) -> Optional[str]:
+        if self.proxy_pool is None:
+            return None
+        proxy = self.proxy_pool.acquire()
+        if proxy:
+            logger.debug("Using proxy %s", proxy)
+        return proxy
+
+    def _handle_failure(self, proxy: Optional[str]) -> None:
+        if self.proxy_pool is None or proxy is None:
+            return
+        self.proxy_pool.mark_failure(proxy)
+
+    def _record_success(self, proxy: Optional[str]) -> None:
+        if self.proxy_pool is None or proxy is None:
+            return
+        self.proxy_pool.record_success(proxy)
 
     def _fetch_history(self, ticker: yf.Ticker) -> Optional[pd.DataFrame]:
         for period in self.history_periods:

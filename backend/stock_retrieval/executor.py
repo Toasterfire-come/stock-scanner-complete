@@ -41,7 +41,6 @@ def _worker(
     timestamp: datetime,
     proxy_pool: ProxyPool,
 ) -> WorkerOutcome:
-    proxy = proxy_pool.get_proxy(0)
     try:
         fetch_result = fetcher.fetch(symbol)
         if fetch_result.has_data and fetch_result.current_price is not None:
@@ -54,8 +53,6 @@ def _worker(
             )
             return WorkerOutcome(symbol=symbol, payload=payload, fetch_result=fetch_result)
 
-        proxy_pool.mark_failure(proxy)
-        next_proxy = proxy_pool.rotate()
         return WorkerOutcome(
             symbol=symbol,
             payload=None,
@@ -64,7 +61,6 @@ def _worker(
         )
     except Exception as exc:  # pragma: no cover - defensive catch
         logger.debug("Worker for %s raised exception: %s", symbol, exc)
-        proxy_pool.mark_failure(proxy)
         proxy_pool.rotate()
         return WorkerOutcome(symbol=symbol, payload=None, fetch_result=None, error=str(exc))
 

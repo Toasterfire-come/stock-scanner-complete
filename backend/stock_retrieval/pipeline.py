@@ -44,7 +44,10 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
     session = create_requests_session(proxy=proxy, timeout=config.request_timeout)
     configure_yfinance_session(session)
 
-    fetcher = YFinanceFetcher()
+    fetcher = YFinanceFetcher(
+        proxy_pool=proxy_pool,
+        request_timeout=config.request_timeout,
+    )
     exec_result = run_executor(
         tickers=ticker_result.tickers,
         config=config,

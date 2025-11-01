@@ -6,6 +6,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Optional
+import threading
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -45,6 +46,7 @@ class ProxyPool:
     enabled: bool = True
     failures: List[str] = field(default_factory=list)
     rotation_index: int = 0
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
     @classmethod
     def from_config(cls, config: StockRetrievalConfig) -> "ProxyPool":
@@ -52,44 +54,84 @@ class ProxyPool:
             logger.info("Proxy usage disabled via configuration.")
             return cls(proxies=[], enabled=False)
 
-        path = Path(config.proxy_file)
-        if not path.exists():
-            logger.warning("Proxy file not found at %s; continuing without proxies.", path)
+        def _load(path: Path) -> List[str]:
+            if not path.exists():
+                return []
+            try:
+                with path.open("r", encoding="utf-8") as handle:
+                    payload = json.load(handle)
+            except json.JSONDecodeError as exc:
+                logger.error("Failed to parse proxy file %s: %s", path, exc)
+                return []
+
+            proxies = _flatten_proxy_payload(payload)
+            return list(dict.fromkeys(proxy.strip() for proxy in proxies if proxy))
+
+        primary_path = Path(config.proxy_file)
+        proxies = _load(primary_path)
+
+        if not proxies:
+            repo_root = config.combined_ticker_dir.parent.parent
+            fallback_path = repo_root / "healthy_proxies.json"
+            proxies = _load(fallback_path)
+            if proxies:
+                logger.info(
+                    "Loaded %s proxies from fallback %s",
+                    len(proxies),
+                    fallback_path.name,
+                )
+
+        if not proxies:
+            logger.warning(
+                "Proxy file not found or empty at %s; continuing without proxies.",
+                primary_path,
+            )
             return cls(proxies=[], enabled=False)
 
-        try:
-            with path.open("r", encoding="utf-8") as handle:
-                payload = json.load(handle)
-        except json.JSONDecodeError as exc:
-            logger.error("Failed to parse proxy file %s: %s", path, exc)
-            return cls(proxies=[], enabled=False)
-
-        proxies = _flatten_proxy_payload(payload)
-        unique = list(dict.fromkeys(proxy.strip() for proxy in proxies if proxy))
-
-        logger.info("Loaded %s proxies from %s", len(unique), path.name)
-        return cls(proxies=unique, enabled=bool(unique))
+        logger.info("Loaded %s proxies for rotation", len(proxies))
+        return cls(proxies=proxies, enabled=bool(proxies))
 
     def get_proxy(self, worker_index: int) -> Optional[str]:
         if not self.enabled or not self.proxies:
             return None
+        with self._lock:
+            index = (self.rotation_index + worker_index) % len(self.proxies)
+            return self.proxies[index]
 
-        index = (self.rotation_index + worker_index) % len(self.proxies)
-        return self.proxies[index]
+    def acquire(self) -> Optional[str]:
+        if not self.enabled or not self.proxies:
+            return None
+        with self._lock:
+            proxy = self.proxies[self.rotation_index % len(self.proxies)]
+            self.rotation_index = (self.rotation_index + 1) % len(self.proxies)
+            return proxy
 
     def mark_failure(self, proxy: Optional[str]) -> None:
+        if proxy is None or not self.enabled or proxy not in self.proxies:
+            return
+        with self._lock:
+            self.failures.append(proxy)
+            idx = self.proxies.index(proxy)
+            failed = self.proxies.pop(idx)
+            self.proxies.append(failed)
+            if self.rotation_index >= len(self.proxies):
+                self.rotation_index = 0
+
+    def record_success(self, proxy: Optional[str]) -> None:
         if proxy is None:
             return
-        self.failures.append(proxy)
+        with self._lock:
+            if proxy in self.failures:
+                self.failures = [p for p in self.failures if p != proxy]
 
     def rotate(self) -> Optional[str]:
         if not self.enabled or not self.proxies:
             return None
-
-        self.rotation_index = (self.rotation_index + 1) % len(self.proxies)
-        proxy = self.proxies[self.rotation_index]
-        logger.debug("Rotated proxy to %s", proxy)
-        return proxy
+        with self._lock:
+            self.rotation_index = (self.rotation_index + 1) % len(self.proxies)
+            proxy = self.proxies[self.rotation_index]
+            logger.debug("Rotated proxy to %s", proxy)
+            return proxy
 
 
 def _build_retry(timeout_seconds: float) -> Retry:
