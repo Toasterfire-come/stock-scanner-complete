@@ -7,9 +7,11 @@ Partner analytics endpoints and referral redirect.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from decimal import Decimal
+from typing import Dict, Any, List, Tuple
 
 from django.conf import settings
+from django.db.models import Sum
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -54,6 +56,51 @@ def _enforce_partner_access(request, code: str) -> tuple[bool, str | None]:
         return False, 'Not authorized for this partner code'
     except Exception as e:
         return False, f'Access check failed: {e}'
+
+
+def _resolve_partner_code(request, raw_code: str | None) -> Tuple[str | None, str | None, int]:
+    """Resolve partner code either from query param or inferred mapping.
+
+    Returns (code, error_message, status_code).
+    """
+    try:
+        code = (raw_code or '').upper().strip()
+    except Exception:
+        code = ''
+
+    if code:
+        ok, msg = _enforce_partner_access(request, code)
+        if ok:
+            return code, None, 200
+        return None, msg or 'Not authorized for this partner code', 403
+
+    # Attempt to infer from authenticated user's email
+    user = getattr(request, 'user', None)
+    email = (getattr(user, 'email', '') or '').lower().strip()
+    mapping = getattr(settings, 'PARTNER_CODE_BY_EMAIL', {}) or {}
+    inferred = (mapping.get(email) or '').upper().strip()
+
+    if inferred:
+        ok, msg = _enforce_partner_access(request, inferred)
+        if ok:
+            return inferred, None, 200
+        return None, msg or 'Not authorized for inferred partner code', 403
+
+    if getattr(user, 'is_staff', False):
+        return None, 'code is required for staff users', 400
+
+    return None, 'Partner referral access is not configured for this account', 404
+
+
+def _dec_to_float(value: Decimal | float | int | None) -> float:
+    if isinstance(value, Decimal):
+        return float(value)
+    if value is None:
+        return 0.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 # ----- Redirect: /r/<code> -----
@@ -115,12 +162,10 @@ def referral_redirect(request, code: str):
 @permission_classes([IsAuthenticated])
 def partner_analytics_summary_api(request):
     try:
-        code = (request.GET.get('code') or '').upper().strip()
+        raw_code = request.GET.get('code')
+        code, error_msg, status_code = _resolve_partner_code(request, raw_code)
         if not code:
-            return Response({'success': False, 'error': 'code is required'}, status=400)
-        ok, msg = _enforce_partner_access(request, code)
-        if not ok:
-            return Response({'success': False, 'error': msg}, status=403)
+            return Response({'success': False, 'error': error_msg}, status=status_code)
         now = timezone.now()
         start_default = now - timedelta(days=30)
         start = _parse_dt(request.GET.get('from'), start_default)
@@ -137,14 +182,73 @@ def partner_analytics_summary_api(request):
         trials = trials_qs.count()
         unique_trial_users = trials_qs.exclude(user__isnull=True).values('user').distinct().count()
         # Purchases via discount code
-        purchases = RevenueTracking.objects.filter(
+        purchases_qs = RevenueTracking.objects.filter(
             discount_code__code=code,
             payment_date__gte=start,
             payment_date__lte=end,
-        ).count()
+        )
+        purchases = purchases_qs.count()
         # Conversion rates
         trial_conv = (trials / clicks) * 100 if clicks else 0.0
         purchase_conv = (purchases / clicks) * 100 if clicks else 0.0
+
+        # Revenue aggregates for window
+        window_revenue_totals = purchases_qs.aggregate(
+            total_revenue=Sum('final_amount'),
+            total_commission=Sum('commission_amount'),
+            total_discount=Sum('discount_amount'),
+        )
+
+        # Lifetime aggregates
+        lifetime_clicks = ReferralClickEvent.objects.filter(code=code).count()
+        lifetime_trials = ReferralTrialEvent.objects.filter(code=code).count()
+        lifetime_purchases_qs = RevenueTracking.objects.filter(discount_code__code=code)
+        lifetime_purchases = lifetime_purchases_qs.count()
+        lifetime_revenue_totals = lifetime_purchases_qs.aggregate(
+            total_revenue=Sum('final_amount'),
+            total_commission=Sum('commission_amount'),
+            total_discount=Sum('discount_amount'),
+        )
+
+        # Recent referral purchases (most recent 10)
+        recent_purchases = []
+        for entry in purchases_qs.select_related('user').order_by('-payment_date')[:10]:
+            user = getattr(entry, 'user', None)
+            profile = None
+            if user:
+                try:
+                    profile = user.userprofile
+                except Exception:
+                    profile = None
+            display_name = ''
+            if user:
+                full_name = f"{user.first_name} {user.last_name}".strip()
+                display_name = full_name or user.username or (user.email or 'Referral')
+            recent_purchases.append({
+                'id': entry.id,
+                'user': {
+                    'id': getattr(user, 'id', None),
+                    'name': display_name,
+                    'email': getattr(user, 'email', None),
+                },
+                'plan': 'premium' if getattr(profile, 'is_premium', False) else 'trial',
+                'final_amount': _dec_to_float(entry.final_amount),
+                'commission_amount': _dec_to_float(entry.commission_amount),
+                'discount_amount': _dec_to_float(entry.discount_amount),
+                'payment_date': entry.payment_date.isoformat() if entry.payment_date else None,
+                'status': 'paid' if _dec_to_float(entry.commission_amount) > 0 else 'pending',
+            })
+
+        discount_obj = DiscountCode.objects.filter(code=code).first()
+        discount_meta = None
+        if discount_obj:
+            discount_meta = {
+                'code': discount_obj.code,
+                'discount_percentage': _dec_to_float(discount_obj.discount_percentage),
+                'is_active': discount_obj.is_active,
+                'first_payment_only': discount_obj.applies_to_first_payment_only,
+            }
+
         return Response({
             'success': True,
             'code': code,
@@ -160,6 +264,26 @@ def partner_analytics_summary_api(request):
                 'trial_conversion_percent': round(trial_conv, 2),
                 'purchase_conversion_percent': round(purchase_conv, 2),
             },
+            'revenue': {
+                'window': {
+                    'total_revenue': _dec_to_float(window_revenue_totals.get('total_revenue')),
+                    'total_commission': _dec_to_float(window_revenue_totals.get('total_commission')),
+                    'total_discount': _dec_to_float(window_revenue_totals.get('total_discount')),
+                },
+                'lifetime': {
+                    'total_revenue': _dec_to_float(lifetime_revenue_totals.get('total_revenue')),
+                    'total_commission': _dec_to_float(lifetime_revenue_totals.get('total_commission')),
+                    'total_discount': _dec_to_float(lifetime_revenue_totals.get('total_discount')),
+                },
+                'pending_commission': _dec_to_float(window_revenue_totals.get('total_commission')),
+            },
+            'lifetime': {
+                'clicks': lifetime_clicks,
+                'trials': lifetime_trials,
+                'purchases': lifetime_purchases,
+            },
+            'recent_referrals': recent_purchases,
+            'discount': discount_meta,
         })
     except Exception as e:
         return Response({'success': False, 'error': str(e)}, status=500)
@@ -172,12 +296,10 @@ def partner_analytics_summary_api(request):
 @permission_classes([IsAuthenticated])
 def partner_analytics_timeseries_api(request):
     try:
-        code = (request.GET.get('code') or '').upper().strip()
+        raw_code = request.GET.get('code')
+        code, error_msg, status_code = _resolve_partner_code(request, raw_code)
         if not code:
-            return Response({'success': False, 'error': 'code is required'}, status=400)
-        ok, msg = _enforce_partner_access(request, code)
-        if not ok:
-            return Response({'success': False, 'error': msg}, status=403)
+            return Response({'success': False, 'error': error_msg}, status=status_code)
         now = timezone.now()
         start_default = now - timedelta(days=30)
         start = _parse_dt(request.GET.get('from'), start_default)

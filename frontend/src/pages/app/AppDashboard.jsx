@@ -43,6 +43,11 @@ import UsageTracker from "../../components/UsageTracker";
 import MarketStatus from "../../components/MarketStatus";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "../../components/ui/resizable";
+import ReferralSystem from "../../components/ReferralSystem";
+
+const PARTNER_REFERRAL_EMAILS = [
+  "hamzashehata3000@gmail.com",
+];
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -63,6 +68,8 @@ const AppDashboard = () => {
       return { run: false, save: false, alert: false };
     }
   });
+
+  const showReferralDashboard = !!(user?.email && PARTNER_REFERRAL_EMAILS.includes(user.email.toLowerCase()));
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -394,6 +401,12 @@ const AppDashboard = () => {
             <MarketStatus />
           </div>
         </div>
+
+        {showReferralDashboard && (
+          <div className="mt-8">
+            <ReferralSystem user={user} />
+          </div>
+        )}
       </div>
     </div>
   );
