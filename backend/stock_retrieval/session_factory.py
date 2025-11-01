@@ -18,6 +18,11 @@ from .logging_utils import get_logger
 
 logger = get_logger(__name__)
 
+try:  # Prefer curl_cffi sessions for Yahoo compatibility when available
+    from curl_cffi import requests as curl_requests  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    curl_requests = None
+
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -116,6 +121,7 @@ class ProxyPool:
             self.proxies.append(failed)
             if self.rotation_index >= len(self.proxies):
                 self.rotation_index = 0
+            logger.debug("Marked proxy %s as unhealthy; moved to rotation tail", proxy)
 
     def record_success(self, proxy: Optional[str]) -> None:
         if proxy is None:
@@ -151,7 +157,10 @@ def create_requests_session(
     proxy: Optional[str],
     timeout: float,
 ) -> requests.Session:
-    session = requests.Session()
+    if curl_requests is not None and proxy:
+        session = curl_requests.Session()
+    else:
+        session = requests.Session()
 
     adapter = HTTPAdapter(max_retries=_build_retry(timeout))
     session.mount("http://", adapter)

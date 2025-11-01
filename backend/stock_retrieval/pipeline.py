@@ -40,9 +40,11 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
     )
 
     proxy_pool = ProxyPool.from_config(config)
-    proxy = proxy_pool.get_proxy(0)
-    session = create_requests_session(proxy=proxy, timeout=config.request_timeout)
-    configure_yfinance_session(session)
+    proxy = None
+    if proxy_pool.enabled and proxy_pool.proxies:
+        proxy = proxy_pool.acquire()
+        session = create_requests_session(proxy=proxy, timeout=config.request_timeout)
+        configure_yfinance_session(session)
 
     fetcher = YFinanceFetcher(
         proxy_pool=proxy_pool,

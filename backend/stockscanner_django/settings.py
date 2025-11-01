@@ -31,6 +31,15 @@ DEBUG = str(_debug_raw).lower() == 'true'
 _allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('ALLOWED_HOSTS')
 if _allowed_hosts_env:
     ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(',') if host.strip()]
+    for fallback_host in (
+        "api.retailtradescanner.com",
+        "retailtradescanner.com",
+        "www.retailtradescanner.com",
+        "tradescanpro.com",
+        "www.tradescanpro.com",
+    ):
+        if fallback_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(fallback_host)
 else:
     ALLOWED_HOSTS = [
         "127.0.0.1",

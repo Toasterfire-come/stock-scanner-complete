@@ -54,8 +54,12 @@ class YFinanceFetcher:
 
         for attempt in range(1, self.max_attempts + 1):
             proxy = self._select_proxy()
-            session = create_requests_session(proxy=proxy, timeout=self.request_timeout)
-            ticker = yf.Ticker(symbol, session=session)
+            session = (
+                create_requests_session(proxy=proxy, timeout=self.request_timeout)
+                if proxy
+                else None
+            )
+            ticker = yf.Ticker(symbol, session=session) if session else yf.Ticker(symbol)
             result.attempts = attempt
             result.proxy = proxy
 
