@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List
+from collections import Counter
 
 from .config import StockRetrievalConfig
 from .logging_utils import get_logger
@@ -93,6 +94,37 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
                 "Persistence completed with %s error(s)", len(persistence.errors)
             )
 
+    failure_reasons: Counter[str] = Counter()
+    for failure in exec_result.failures:
+        for err in failure.get("errors", []) or []:
+            failure_reasons[err] += 1
+
+    top_failure_causes = failure_reasons.most_common(5)
+    success_ratio = (
+        (len(exec_result.successes) / max(1, len(exec_result.successes) + len(exec_result.failures)))
+        * 100
+    )
+    quality_ratio = quality_gate.stats.success_ratio * 100
+
+    logger.info(
+        "Run summary: %d processed | %.1f%% success | quality %.1f%% (target %.1f%%) | runtime %.1fs",
+        len(exec_result.successes) + len(exec_result.failures),
+        success_ratio,
+        quality_ratio,
+        config.min_success_ratio * 100,
+        exec_result.elapsed_seconds,
+    )
+    if top_failure_causes:
+        formatted_causes = "; ".join(f"{err[:80]} ({count})" for err, count in top_failure_causes)
+        logger.info("Top failure causes: %s", formatted_causes)
+    if not meets_threshold:
+        logger.warning(
+            "Quality ratio %.2f%% below required %.2f%%; %d payloads queued for retry",
+            quality_ratio,
+            config.min_success_ratio * 100,
+            len(exec_result.failures),
+        )
+
     summary: Dict[str, Any] = {
         "status": status,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -123,6 +155,7 @@ def run_pipeline(config: StockRetrievalConfig) -> Dict[str, Any]:
             {"symbol": issue.symbol, "reasons": issue.reasons[:5]}
             for issue in quality_gate.stats.issues[:5]
         ],
+        "top_failure_reasons": top_failure_causes,
     }
     logger.info("Pipeline summary: %s", summary)
     return summary

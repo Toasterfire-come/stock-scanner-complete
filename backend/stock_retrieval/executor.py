@@ -141,11 +141,17 @@ def run_executor(
                 )
 
             if index % 50 == 0 or index == len(tickers_list):
+                processed_pct = (index / len(tickers_list)) * 100 if tickers_list else 0.0
+                success_pct = (
+                    (len(result.successes) / index) * 100 if index else 0.0
+                )
                 logger.info(
-                    "Executor progress: %s/%s processed (%s successes, %s failures)",
+                    "Progress %d/%d (%.1f%%) | success %d (%.1f%%) | failures %d",
                     index,
                     len(tickers_list),
+                    processed_pct,
                     len(result.successes),
+                    success_pct,
                     len(result.failures),
                 )
 
