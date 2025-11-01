@@ -2,7 +2,7 @@
 set -eu
 
 # Ensure required tools are available
-for cmd in sshpass ssh tar; do
+for cmd in git sshpass ssh tar; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     printf 'Missing required command: %s\n' "$cmd" >&2
     exit 1
@@ -16,6 +16,7 @@ REPO_ROOT_REL=${REPO_ROOT_REL:-.}
 BUILD_WORKDIR_REL=${BUILD_WORKDIR_REL:-frontend}
 BUILD_OUTPUT_REL=${BUILD_OUTPUT_REL:-build}
 BUILD_CMD=${BUILD_CMD:-"npm run build"}
+GIT_BRANCH=${GIT_BRANCH:-}
 
 REMOTE_HOSTNAME=${REMOTE_HOSTNAME:-access-5018544625.webspace-host.com}
 REMOTE_PORT=${REMOTE_PORT:-22}
@@ -36,6 +37,7 @@ BUILD_OUTPUT="$BUILD_WORKDIR/$BUILD_OUTPUT_REL"
 printf 'Repository root      : %s\n' "$REPO_ROOT"
 printf 'Build working dir    : %s\n' "$BUILD_WORKDIR"
 printf 'Build output dir     : %s\n' "$BUILD_OUTPUT"
+printf 'Git branch           : %s\n' "${GIT_BRANCH:-<unchanged>}"
 printf 'Remote destination   : %s@%s:%s (path: %s)\n' \
   "$REMOTE_USER" "$REMOTE_HOSTNAME" "$REMOTE_PORT" "$REMOTE_ROOT"
 printf 'Keeping remote items : %s\n' "$KEEP_REMOTE_ITEMS"
@@ -44,6 +46,21 @@ if [ ! -d "$BUILD_WORKDIR" ]; then
   printf 'Build working directory not found: %s\n' "$BUILD_WORKDIR" >&2
   exit 1
 fi
+
+printf 'Updating git repository...\n'
+(
+  cd "$REPO_ROOT"
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    printf 'Not a git repository: %s\n' "$REPO_ROOT" >&2
+    exit 1
+  fi
+  git fetch --all --tags
+  if [ -n "$GIT_BRANCH" ]; then
+    git checkout "$GIT_BRANCH"
+  fi
+  git pull --ff-only
+  printf 'Current revision: %s\n' "$(git rev-parse HEAD)"
+)
 
 printf 'Running build command: %s\n' "$BUILD_CMD"
 (
