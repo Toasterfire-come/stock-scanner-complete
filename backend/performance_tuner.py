@@ -25,7 +25,8 @@ import django
 django.setup()
 
 import yfinance as yf
-from stock_retrieval.session_factory import create_session_with_proxy, ProxyPool
+from stock_retrieval.session_factory import create_requests_session, ProxyPool
+from stock_retrieval.config import StockRetrievalConfig
 from stock_retrieval.ticker_loader import load_combined_tickers
 
 # =====================================================
@@ -39,7 +40,7 @@ def measure_fast_info_timing(sample_tickers, proxy=None, num_samples=20):
     times = []
     successes = 0
 
-    session = create_session_with_proxy(proxy=proxy, timeout=10)
+    session = create_requests_session(proxy=proxy, timeout=10)
 
     for ticker in sample_tickers[:num_samples]:
         try:
@@ -76,7 +77,7 @@ def measure_info_timing(sample_tickers, proxy=None, num_samples=20):
     times = []
     successes = 0
 
-    session = create_session_with_proxy(proxy=proxy, timeout=10)
+    session = create_requests_session(proxy=proxy, timeout=10)
 
     for ticker in sample_tickers[:num_samples]:
         try:
@@ -125,7 +126,7 @@ def test_concurrency_level(tickers, num_workers, proxy_pool, test_size=100):
 
         for idx, ticker in enumerate(test_tickers):
             worker_id = idx % num_workers
-            proxy = proxy_pool.get_proxy_for_worker(worker_id) if hasattr(proxy_pool, 'get_proxy_for_worker') else None
+            proxy = proxy_pool.get_proxy(worker_id) if hasattr(proxy_pool, 'get_proxy') else None
 
             future = executor.submit(test_single_ticker, ticker, proxy)
             futures[future] = ticker
@@ -153,7 +154,7 @@ def test_concurrency_level(tickers, num_workers, proxy_pool, test_size=100):
 def test_single_ticker(ticker, proxy):
     """Test fetching single ticker"""
     try:
-        session = create_session_with_proxy(proxy=proxy, timeout=4)
+        session = create_requests_session(proxy=proxy, timeout=4)
         ticker_obj = yf.Ticker(ticker, session=session)
 
         # Try fast_info first
@@ -193,7 +194,7 @@ def test_proxy_pool(proxy_pool, num_tests=10):
 
         try:
             start = time.time()
-            session = create_session_with_proxy(proxy=proxy, timeout=5)
+            session = create_requests_session(proxy=proxy, timeout=5)
             ticker_obj = yf.Ticker(test_ticker, session=session)
             _ = ticker_obj.fast_info.last_price
             duration = time.time() - start
@@ -331,7 +332,8 @@ def run_performance_tuning(target_tickers=5373, target_seconds=180):
 
     # Load proxy pool
     print("\n🌐 Loading proxy pool...")
-    proxy_pool = ProxyPool()
+    config = StockRetrievalConfig()
+    proxy_pool = ProxyPool.from_config(config)
     print(f"   Loaded {len(proxy_pool.proxies)} proxies")
 
     # Test proxy health
