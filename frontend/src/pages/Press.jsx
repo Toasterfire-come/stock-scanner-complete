@@ -1,8 +1,10 @@
 import React from "react";
 import SEO from "../components/SEO";
+import { marketingMetrics, formatNumber, formatPercent, timeframeCopy } from "../data/marketingMetrics";
 
 const Press = () => {
   const contactEmail = process.env.REACT_APP_PRESS_EMAIL || process.env.REACT_APP_CONTACT_EMAIL || 'noreply.retailtradescanner@gmail.com';
+  const { usage, outcomes, testimonials, reliability, enterprise } = marketingMetrics;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -26,7 +28,7 @@ const Press = () => {
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-4xl">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">Press Kit</h1>
-          <p className="text-lg text-gray-700 mb-10">Assets and guidelines for referencing Trade Scan Pro.</p>
+          <p className="text-lg text-gray-700 mb-10">Assets and guidelines for referencing Trade Scan Pro, covering {timeframeCopy()} metrics.</p>
 
           <div className="space-y-8">
             <div className="bg-white border rounded-xl p-6">
@@ -38,11 +40,31 @@ const Press = () => {
               </ul>
             </div>
 
+            <div className="bg-white border rounded-xl p-6 grid sm:grid-cols-2 gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-3">Key Metrics</h2>
+                <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                  <li>{`${formatNumber(usage.totalScreenersRunMonthly)}+ screeners run monthly`}</li>
+                  <li>{`${formatNumber(usage.alertsDeliveredMonthly)} alerts delivered monthly`}</li>
+                  <li>{`${formatPercent(testimonials.retentionPercent90Day)} 90-day retention`}</li>
+                  <li>{`${formatPercent(outcomes.averagePortfolioLiftPercent)} average portfolio lift (self-reported)`}</li>
+                  <li>{`${formatPercent(reliability.uptimePercent, 2)} platform uptime`}</li>
+                </ul>
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-3">Reach</h2>
+                <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                  <li>{`${formatNumber(usage.activeAccounts)} active accounts`}</li>
+                  <li>{`${formatNumber(usage.teamsOnPlatform)} customer teams across ${enterprise.countriesServed} countries`}</li>
+                  <li>{`${formatNumber(testimonials.verifiedCaseStudies)} verified case studies`}</li>
+                </ul>
+              </div>
+            </div>
+
             <div className="bg-white border rounded-xl p-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-3">Company Boilerplate</h2>
               <p className="text-gray-700">
-                Trade Scan Pro provides professional stock screening, real‑time alerts, and portfolio analytics for
-                10,500+ NYSE & NASDAQ stocks. Our platform helps traders discover high‑probability opportunities faster.
+                Trade Scan Pro delivers professional-grade screening, alerts, and analytics across {formatNumber(usage.coverageUniverse)}+ equities. During {timeframeCopy()}, customers ran {formatNumber(usage.totalScreenersRunMonthly)}+ screeners per month, delivered {formatNumber(usage.alertsDeliveredMonthly)} alerts, and achieved {formatPercent(outcomes.averagePortfolioLiftPercent)} average portfolio lift while maintaining {formatPercent(reliability.uptimePercent, 2)} uptime.
               </p>
             </div>
 

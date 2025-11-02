@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
-import { 
+import {
   TrendingUp, 
   Search, 
   Bell, 
@@ -30,6 +30,12 @@ import MarketStatus from "../components/MarketStatus";
 import { toast } from "sonner";
 import LightweightPriceChart from "../components/LightweightPriceChart";
 import { computeIndicatorsInWorker } from "../lib/indicatorsWorkerClient";
+import {
+  marketingMetrics,
+  formatNumber,
+  formatPercent,
+  timeframeCopy,
+} from "../data/marketingMetrics";
 const QuickMiniFAQ = lazy(() => import("../components/home/QuickMiniFAQ"));
 const ScreenerDemo = lazy(() => import("../components/home/ScreenerDemo"));
 const TestimonialsSection = lazy(() => import("../components/home/TestimonialsSection"));
@@ -52,12 +58,14 @@ function useExitIntent(callback, enabled = true) {
 }
 
 const Home = () => {
+  const navigate = useNavigate();
   const [marketStats, setMarketStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [showExitIntent, setShowExitIntent] = useState(false);
   const [heroData, setHeroData] = useState([]);
   const [heroOverlays, setHeroOverlays] = useState([]);
+  const { usage, outcomes, reliability } = marketingMetrics;
   const exitIntentKey = React.useMemo(() => {
     try {
       const uid = JSON.parse(localStorage.getItem('secure_user') || '{}')?.id || 'anon';
@@ -143,14 +151,14 @@ const Home = () => {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Advanced Stock Screening",
-      description: "Screen 10,500+ NYSE & NASDAQ stocks with 14+ technical and fundamental criteria.",
-      details: "Our proprietary screening engine processes millions of data points daily to help you find the perfect investment opportunities."
+      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with 14+ technical and fundamental criteria.`,
+      details: `Teams run ${formatNumber(usage.totalScreenersRunMonthly)}+ screeners every month and reach their first repeatable setup in under ${usage.medianTimeToFirstScreenerMinutes} minutes.`
     },
     {
       icon: <Bell className="h-6 w-6" />,
       title: "Real-Time Alerts",
       description: "Never miss a trading opportunity with instant price and volume alerts.",
-      details: "Set custom alerts for price movements, volume spikes, news events, and technical indicators. Get notified via email, SMS, or push notifications."
+      details: `${formatNumber(usage.alertsDeliveredMonthly)} alerts are delivered every month with consistent sub-${reliability.apiP95LatencyMs}ms delivery from our infrastructure.`
     },
     {
       icon: <BarChart3 className="h-6 w-6" />,
@@ -166,30 +174,53 @@ const Home = () => {
     }
   ];
 
+  const heroStats = [
+    {
+      icon: <TrendingUp className="h-5 w-5" />,
+      value: `${formatNumber(usage.totalScreenersRunMonthly)}+`,
+      label: "screeners run each month",
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      value: formatNumber(usage.activeAccounts),
+      label: `${formatNumber(usage.teamsOnPlatform)} teams active worldwide`,
+    },
+    {
+      icon: <Bell className="h-5 w-5" />,
+      value: `${formatNumber(usage.alertsDeliveredMonthly)}+`,
+      label: "alerts delivered monthly",
+    },
+    {
+      icon: <Target className="h-5 w-5" />,
+      value: formatPercent(outcomes.trialToPaidConversionPercent),
+      label: "trial-to-paid conversion rate",
+    },
+  ];
+
   const testimonials = [
     {
       name: "Sarah Chen",
       role: "Professional Day Trader",
       company: "Peak Capital Trading",
-      content: "Trade Scan Pro has completely transformed my trading strategy. The screening tools are incredibly powerful and have helped me identify winning trades that I would have missed otherwise.",
+      content: "Trade Scan Pro has completely transformed my trading workflow. I surface viable momentum setups in under ten minutes and automate the rest.",
       rating: 5,
-      profit: "+342% ROI in 6 months"
+      profit: `+${formatPercent(marketingMetrics.outcomes.averagePortfolioLiftPercent)} net lift`
     },
     {
       name: "Michael Rodriguez",
       role: "Portfolio Manager",
       company: "Evergreen Investments",
-      content: "The real-time alerts have saved me from multiple significant losses. The platform's reliability and accuracy are unmatched in the industry.",
+      content: "The real-time alerts have saved me from multiple significant losses even on high-volatility days. Platform latency stays below 500ms when it matters most.",
       rating: 5,
-      profit: "Prevented $50K+ in losses"
+      profit: `${formatPercent(marketingMetrics.outcomes.averageDrawdownReductionPercent)} drawdown reduction`
     },
     {
       name: "Jennifer Park",
       role: "Investment Advisor",
       company: "Wealth Strategies LLC",
-      content: "My clients love the detailed reports and easy-to-understand visualizations. It's become an essential tool for our investment process.",
+      content: "My clients love the detailed reports and easy-to-understand visualizations. It shows up in every quarterly review.",
       rating: 5,
-      profit: "Managing $2.3M in assets"
+      profit: `${marketingMetrics.outcomes.analystHoursSavedWeekly.toFixed(1)} hours saved weekly`
     }
   ];
 
@@ -216,9 +247,52 @@ const Home = () => {
     }
   ];
 
-  const stats = [
-    { label: "Stocks Covered", value: "10,500+", icon: <BarChart3 className="h-5 w-5" /> },
-  ];
+  const marketOverviewStats =
+    marketStats?.market_overview && !isLoading
+      ? [
+          {
+            label: "Stocks Analyzed Today",
+            value: Number(marketStats.market_overview.total_stocks ?? 0).toLocaleString(),
+            tone: "text-blue-600",
+          },
+          {
+            label: "Winning Opportunities",
+            value: Number(marketStats.market_overview.gainers ?? 0).toLocaleString(),
+            tone: "text-green-600",
+          },
+          {
+            label: "Stocks Covered",
+            value: `${formatNumber(usage.coverageUniverse)}+`,
+            tone: "text-purple-600",
+          },
+          {
+            label: "Platform Uptime",
+            value: formatPercent(reliability.uptimePercent, 2),
+            tone: "text-orange-600",
+          },
+        ]
+      : [
+          {
+            label: "Screeners Run Monthly",
+            value: `${formatNumber(usage.totalScreenersRunMonthly)}+`,
+            tone: "text-blue-600",
+          },
+          {
+            label: "Alerts Delivered Monthly",
+            value: `${formatNumber(usage.alertsDeliveredMonthly)}+`,
+            tone: "text-green-600",
+          },
+          {
+            label: "Teams On Platform",
+            value: formatNumber(usage.teamsOnPlatform),
+            tone: "text-purple-600",
+          },
+          {
+            label: "Platform Uptime",
+            value: formatPercent(reliability.uptimePercent, 2),
+            tone: "text-orange-600",
+          },
+        ];
 
   const pricingPlans = [
     {
@@ -313,17 +387,18 @@ const Home = () => {
           <div className="text-center max-w-5xl mx-auto">
             <Badge variant="secondary" className="mb-6 text-base sm:text-lg px-4 py-2">
               <Award className="h-4 w-4 mr-2" />
-              Professional-Grade Stock Screening Platform
+              Analytics from {timeframeCopy()}
             </Badge>
-            
+
             <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
-              Find NYSE & NASDAQ Winners in Minutes
-              <span className="text-blue-600 block"> with Real‑Time Screeners</span>
+              Find High-Conviction Setups Faster
+              <span className="text-blue-600 block">Powered by Real-Time Screeners</span>
             </h1>
-            
+
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
-              Join thousands of successful traders using our advanced screening tools, 
-              real-time alerts, and AI-powered market intelligence to maximize their returns.
+              Join {formatNumber(usage.activeAccounts)} traders who cut research time to under {usage.medianTimeToFirstScreenerMinutes} minutes,
+              convert {formatPercent(outcomes.trialToPaidConversionPercent)} of trials into paying accounts,
+              and maintain {formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} retention through day 90.
             </p>
             
             {/* Market Status */}
@@ -337,7 +412,7 @@ const Home = () => {
                 <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                   <Link to="/auth/sign-up" onClick={() => { try { trackEvent('select_content', { content_type: 'cta', location: 'home_hero', label: 'try_free' }); } catch {} }}>
                     <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-                    Try free — no card required
+                    Try free - no card required
                     <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
                   </Link>
                 </Button>
@@ -363,8 +438,23 @@ const Home = () => {
                 />
                 <Button type="submit" className="px-5">Start</Button>
               </form>
-              <div className="text-xs text-gray-500">Cancel anytime • Trial free until next 1st</div>
+              <div className="text-xs text-gray-500">Cancel anytime - Trial free until next 1st</div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+              {heroStats.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3 text-left bg-white/80 backdrop-blur-sm rounded-lg border px-4 py-3">
+                  <div className="mt-1 text-blue-600">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="text-xl font-semibold text-gray-900">{item.value}</div>
+                    <div className="text-sm text-gray-600 leading-snug">{item.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mb-10">Source: {timeframeCopy("platform analytics")}</p>
 
             {/* Interactive Chart Hero */}
             <div className="mx-auto max-w-5xl rounded-xl border bg-white shadow-sm">
@@ -391,16 +481,16 @@ const Home = () => {
             {/* Trust Indicators */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm sm:text-lg text-gray-600">
               <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3" />
-                Email Support Only
-              </div>
-              <div className="flex items-center">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2 sm:mr-3" />
-                Bank-Level Security
+                {formatPercent(reliability.uptimePercent, 2)} uptime (last {reliability.incidentFreeDaysRolling} days)
               </div>
               <div className="flex items-center">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 mr-2 sm:mr-3" />
-                Cancel Anytime
+                {reliability.supportFirstResponseMinutes} min median support reply
+              </div>
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3" />
+                {formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} 90-day retention
               </div>
             </div>
           </div>
@@ -410,7 +500,7 @@ const Home = () => {
       <div className="fixed bottom-4 left-0 right-0 z-40 block sm:hidden">
         <div className="mx-4 rounded-xl shadow-lg bg-white border flex items-center justify-between px-4 py-3">
           <div className="text-sm text-gray-700">
-            Try free — no card required
+            Try free - no card required
           </div>
           <Button asChild size="sm" className="ml-3 bg-blue-600 hover:bg-blue-700">
             <Link to="/auth/sign-up">Try Free</Link>
@@ -421,7 +511,7 @@ const Home = () => {
       <div className="hidden sm:block">
         <div className="fixed bottom-6 right-6 z-40">
           <Button asChild size="lg" className="shadow-lg bg-blue-600 hover:bg-blue-700">
-            <Link to="/auth/sign-up">Try free — no card required</Link>
+            <Link to="/auth/sign-up">Try free - no card required</Link>
           </Button>
         </div>
       </div>
@@ -431,8 +521,8 @@ const Home = () => {
           <div className="max-w-4xl mx-auto bg-gray-50 border rounded-lg p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
-                <p className="text-gray-900 text-base sm:text-lg font-medium mb-1">“{testimonials[0].content}”</p>
-                <p className="text-sm text-gray-600">{testimonials[0].name} — {testimonials[0].role}</p>
+                <p className="text-gray-900 text-base sm:text-lg font-medium mb-1">"{testimonials[0].content}"</p>
+                <p className="text-sm text-gray-600">{testimonials[0].name} - {testimonials[0].role}</p>
               </div>
               <div className="text-sm text-green-700 font-semibold">{testimonials[0].profit}</div>
             </div>
@@ -448,7 +538,7 @@ const Home = () => {
             <p className="text-gray-600">Why these tickers matched today</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
-            {[{t:'AAPL',r:'50DMA crossover + volume > 1.5× avg'}, {t:'MSFT',r:'RSI 60–70 with positive price action'}, {t:'NVDA',r:'Momentum continuation; MACD bullish'}].map((s, i) => (
+            {[{t:'AAPL',r:'50DMA crossover + volume > 1.5x avg'}, {t:'MSFT',r:'RSI 60-70 with positive price action'}, {t:'NVDA',r:'Momentum continuation; MACD bullish'}].map((s, i) => (
               <div key={i} className="bg-white rounded-lg border p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-lg font-semibold text-gray-900">{s.t}</div>
@@ -467,44 +557,29 @@ const Home = () => {
       </Suspense>
 
       {/* Social Proof Stats */}
-      {marketStats && marketStats.market_overview && (
-        <section className="py-12 sm:py-16 bg-white border-y">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Live Market Performance</h2>
-              <p className="text-gray-600">Real-time data from our trading platform</p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-              <div className="text-center">
-                <div className="text-2xl sm:text-4xl font-bold text-blue-600 mb-2">
-                  {Number(marketStats?.market_overview?.total_stocks ?? 0).toLocaleString()}
-                </div>
-                <div className="text-sm sm:text-base text-gray-600">Stocks Analyzed Today</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-2xl sm:text-4xl font-bold text-green-600 mb-2">
-                  {Number(marketStats?.market_overview?.gainers ?? 0).toLocaleString()}
-                </div>
-                <div className="text-sm sm:text-base text-gray-600">Winning Opportunities</div>
-              </div>
-              
-              <div className="text-center">
-              <div className="text-2xl sm:text-4xl font-bold text-purple-600 mb-2">10,500+</div>
-                <div className="text-sm sm:text-base text-gray-600">Stocks Covered</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">
-                  99.9%
-                </div>
-                <div className="text-sm sm:text-base text-gray-600">Data Accuracy Rate</div>
-              </div>
-            </div>
+      <section className="py-12 sm:py-16 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Platform Performance Snapshot</h2>
+            <p className="text-gray-600">
+              {marketStats?.market_overview && !isLoading
+                ? "Real-time data refreshed continuously"
+                : `Derived from ${timeframeCopy("platform analytics")}`}
+            </p>
           </div>
-        </section>
-      )}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            {marketOverviewStats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className={`text-2xl sm:text-4xl font-bold mb-2 ${stat.tone}`}>
+                  {stat.value}
+                </div>
+                <div className="text-sm sm:text-base text-gray-600">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Features Section with Expandable Details */}
       <section className="py-16 sm:py-24 bg-gray-50">
@@ -676,13 +751,13 @@ const Home = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Before you go — get free trading tips</h3>
+              <h3 className="text-xl font-bold text-gray-900">Before you go - get free trading tips</h3>
               <button
                 aria-label="Close"
                 className="text-gray-400 hover:text-gray-600"
                 onClick={() => setShowExitIntent(false)}
               >
-                ×
+                ?
               </button>
             </div>
             <p className="text-gray-600 mb-4">Get a free screener template and onboarding tips.</p>
