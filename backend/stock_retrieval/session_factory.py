@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Optional
@@ -72,8 +73,15 @@ class ProxyPool:
             proxies = _flatten_proxy_payload(payload)
             return list(dict.fromkeys(proxy.strip() for proxy in proxies if proxy))
 
+        def _load_text(path: Path) -> List[str]:
+            try:
+                with path.open("r", encoding="utf-8") as handle:
+                    return [line.strip() for line in handle.readlines() if line.strip()]
+            except Exception:
+                return []
+
         primary_path = Path(config.proxy_file)
-        proxies = _load(primary_path)
+        proxies: List[str] = _load(primary_path)
 
         if not proxies:
             repo_root = config.combined_ticker_dir.parent.parent
@@ -86,6 +94,30 @@ class ProxyPool:
                     fallback_path.name,
                 )
 
+        # Load supplemental proxies from backend/proxies and backend/tmp_proxies directories
+        repo_root = config.combined_ticker_dir.parent.parent
+        supplemental_dirs = [repo_root / "proxies", repo_root / "tmp_proxies"]
+        for directory in supplemental_dirs:
+            if not directory.exists() or not directory.is_dir():
+                continue
+            for file in directory.iterdir():
+                if not file.is_file():
+                    continue
+                loaded: List[str] = []
+                if file.suffix.lower() in {".json", ".jsonl"}:
+                    loaded = _load(file)
+                else:
+                    loaded = _load_text(file)
+                if loaded:
+                    logger.debug("Loaded %s proxies from %s", len(loaded), file.name)
+                    proxies.extend(loaded)
+
+        # Allow env override for additional proxies (comma-separated)
+        extra_env = os.getenv("STOCK_RETRIEVAL_EXTRA_PROXIES")
+        if extra_env:
+            env_proxies = [p.strip() for p in extra_env.split(",") if p.strip()]
+            proxies.extend(env_proxies)
+
         if not proxies:
             logger.warning(
                 "Proxy file not found or empty at %s; continuing without proxies.",
@@ -93,8 +125,9 @@ class ProxyPool:
             )
             return cls(proxies=[], enabled=False)
 
-        logger.info("Loaded %s proxies for rotation", len(proxies))
-        return cls(proxies=proxies, enabled=bool(proxies))
+        unique = list(dict.fromkeys(proxy.strip() for proxy in proxies if proxy))
+        logger.info("Loaded %s proxies for rotation", len(unique))
+        return cls(proxies=unique, enabled=bool(unique))
 
     def get_proxy(self, worker_index: int) -> Optional[str]:
         if not self.enabled or not self.proxies:
@@ -111,7 +144,7 @@ class ProxyPool:
             self.rotation_index = (self.rotation_index + 1) % len(self.proxies)
             return proxy
 
-    def mark_failure(self, proxy: Optional[str]) -> None:
+    def mark_failure(self, proxy: Optional[str], *, reason: str | None = None) -> None:
         if proxy is None or not self.enabled or proxy not in self.proxies:
             return
         with self._lock:
@@ -121,7 +154,11 @@ class ProxyPool:
             self.proxies.append(failed)
             if self.rotation_index >= len(self.proxies):
                 self.rotation_index = 0
-            logger.debug("Marked proxy %s as unhealthy; moved to rotation tail", proxy)
+            logger.debug(
+                "Marked proxy %s as unhealthy; moved to rotation tail%s",
+                proxy,
+                f" ({reason})" if reason else "",
+            )
 
     def record_success(self, proxy: Optional[str]) -> None:
         if proxy is None:

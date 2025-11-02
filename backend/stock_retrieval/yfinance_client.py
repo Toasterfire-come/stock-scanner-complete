@@ -72,13 +72,17 @@ class YFinanceFetcher:
                     message = f"Attempt {attempt} info error: {exc}"
                     logger.debug("%s", message)
                     result.errors.append(message)
-                    self._handle_failure(proxy)
+                    reason = "rate_limited" if "Too Many Requests" in message else str(exc)
+                    self._handle_failure(proxy, reason=reason)
                     continue
 
             if result.history is None or result.history.empty:
                 history = self._fetch_history(ticker)
                 if history is not None and not history.empty:
                     result.history = history
+                else:
+                    if proxy:
+                        self._handle_failure(proxy, reason="empty_history")
 
             if result.current_price is None:
                 result.current_price = self._derive_current_price(ticker, result)
@@ -87,7 +91,7 @@ class YFinanceFetcher:
                 self._record_success(proxy)
                 break
             else:
-                self._handle_failure(proxy)
+                self._handle_failure(proxy, reason="no_data")
 
         if not result.has_data:
             logger.debug("No data retrieved for %s after %s attempts", symbol, result.attempts)
@@ -102,10 +106,11 @@ class YFinanceFetcher:
             logger.debug("Using proxy %s", proxy)
         return proxy
 
-    def _handle_failure(self, proxy: Optional[str]) -> None:
+    def _handle_failure(self, proxy: Optional[str], *, reason: str | None = None) -> None:
         if self.proxy_pool is None or proxy is None:
             return
-        self.proxy_pool.mark_failure(proxy)
+        self.proxy_pool.mark_failure(proxy, reason=reason)
+        self.proxy_pool.rotate()
 
     def _record_success(self, proxy: Optional[str]) -> None:
         if self.proxy_pool is None or proxy is None:
