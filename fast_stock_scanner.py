@@ -242,7 +242,31 @@ def _import_list_from_latest_py(directory: str, pattern: str, var_name: str) -> 
 
 
 def load_combined_tickers() -> List[str]:
+    """
+    Load combined NASDAQ + NYSE ticker list from the fresh generated file.
+    Falls back to old format if new format is not available.
+    """
     base = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base, 'data')
+
+    # Try to load new combined ticker file first
+    try:
+        combined_files = sorted(glob.glob(os.path.join(data_dir, 'combined_tickers_*.py')))
+        if combined_files:
+            latest = combined_files[-1]
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("combined_tickers", latest)
+            mod = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(mod)  # type: ignore[attr-defined]
+            data = getattr(mod, 'COMBINED_TICKERS', [])
+            if isinstance(data, list) and data:
+                logger.info(f"Loaded {len(data)} tickers from {os.path.basename(latest)}")
+                return [str(x).strip().upper() for x in data if str(x).strip()]
+    except Exception as e:
+        logger.warning(f"Failed to load combined tickers, falling back to old format: {e}")
+
+    # Fallback to old format (for backward compatibility)
     nasdaq_only_dir = os.path.join(base, 'data', 'nasdaq_only')
     complete_dir = os.path.join(base, 'data', 'complete_nasdaq')
 
@@ -263,6 +287,10 @@ def load_combined_tickers() -> List[str]:
         if s not in seen:
             seen.add(s)
             combined.append(s)
+
+    if not combined:
+        logger.error("No tickers loaded! Please run generate_fresh_tickers.py to create ticker list.")
+
     return combined
 
 

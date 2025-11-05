@@ -446,19 +446,30 @@ def nasdaq_stocks_api(request):
     URL: /api/stocks/nasdaq/
     """
     try:
-        # Import NASDAQ tickers
+        # Import combined tickers (NASDAQ + NYSE)
         import sys
+        import glob
+        import importlib.util
         from pathlib import Path
-        sys.path.append(str(Path(__file__).parent.parent.parent / 'data' / 'nasdaq_only'))
-        
+
+        # Load combined ticker list
+        COMBINED_TICKERS = []
         try:
-            from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
-        except ImportError:
-            NASDAQ_ONLY_TICKERS = []
-        
-        # Filter stocks to NASDAQ only
+            data_dir = Path(__file__).parent.parent.parent / 'data'
+            combined_files = sorted(glob.glob(str(data_dir / 'combined_tickers_*.py')))
+            if combined_files:
+                latest = combined_files[-1]
+                spec = importlib.util.spec_from_file_location("combined_tickers", latest)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                COMBINED_TICKERS = getattr(mod, 'COMBINED_TICKERS', [])
+        except Exception as e:
+            logger.warning(f"Failed to load combined tickers: {e}")
+            COMBINED_TICKERS = []
+
+        # Filter stocks to NASDAQ only (from combined list)
         nasdaq_stocks = Stock.objects.filter(
-            ticker__in=NASDAQ_ONLY_TICKERS,
+            ticker__in=COMBINED_TICKERS,
             exchange__iexact='NASDAQ'
         ).order_by('ticker')
         
@@ -488,7 +499,7 @@ def nasdaq_stocks_api(request):
             'success': True,
             'exchange': 'NASDAQ',
             'count': len(stock_data),
-            'total_nasdaq_tickers': len(NASDAQ_ONLY_TICKERS),
+            'total_tickers': len(COMBINED_TICKERS),
             'data': stock_data,
             'timestamp': timezone.now().isoformat()
         })

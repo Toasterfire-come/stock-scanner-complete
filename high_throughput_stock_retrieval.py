@@ -138,14 +138,30 @@ def safe_decimal(value: Any) -> Optional[Decimal]:
 
 
 def load_tickers() -> List[str]:
-    """Load tickers from data files"""
+    """Load tickers from data files - uses new combined ticker file"""
     import glob
     import importlib.util
 
-    tickers = []
     base_dir = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(base_dir, 'data')
 
+    # Try to load new combined ticker file first
+    try:
+        combined_files = sorted(glob.glob(os.path.join(data_dir, 'combined_tickers_*.py')))
+        if combined_files:
+            latest = combined_files[-1]
+            spec = importlib.util.spec_from_file_location("combined_tickers", latest)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            data = getattr(mod, 'COMBINED_TICKERS', [])
+            if isinstance(data, list) and data:
+                logger.info(f"Loaded {len(data)} tickers from {os.path.basename(latest)}")
+                return [str(x).strip().upper() for x in data if str(x).strip()]
+    except Exception as e:
+        logger.warning(f"Failed to load combined tickers: {e}")
+
+    # Fallback to old format (for backward compatibility)
+    tickers = []
     for subdir in ['nasdaq_only', 'complete_nasdaq']:
         pattern = os.path.join(data_dir, subdir, '*_tickers_*.py')
         files = sorted(glob.glob(pattern))
@@ -165,7 +181,10 @@ def load_tickers() -> List[str]:
             except Exception:
                 pass
 
-    return list(dict.fromkeys([t for t in tickers if t]))
+    result = list(dict.fromkeys([t for t in tickers if t]))
+    if not result:
+        logger.error("No tickers loaded! Please run generate_fresh_tickers.py")
+    return result
 
 
 def fetch_batch_fast(symbols: List[str], session_pool: SessionPool,
