@@ -147,3 +147,16 @@ __pycache__/
 .env
 .DS_Store
 Thumbs.db
+
+# Stock retrieval test outputs and scans
+test_*.csv
+*_test*.csv
+*_scan_*.csv
+production_scan_*.csv
+improved_scan_*.csv
+optimized_scan_*.csv
+ultra_fast_scan_*.csv
+stock_scan_*.csv
+scan_*.csv
+*_test.log
+*_test*.log
