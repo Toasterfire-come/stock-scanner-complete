@@ -158,5 +158,10 @@ optimized_scan_*.csv
 ultra_fast_scan_*.csv
 stock_scan_*.csv
 scan_*.csv
+ht_*.csv
+high_throughput_*.csv
+scheduled_scan_*.csv
 *_test.log
 *_test*.log
+ht_*.log
+*.log
