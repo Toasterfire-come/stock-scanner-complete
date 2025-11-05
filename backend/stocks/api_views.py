@@ -3,16 +3,19 @@ Django REST API Views for Stock Data Integration
 Provides comprehensive real-time stock data endpoints with full filtering capabilities
 """
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from django.db.models import Q, F
 from django.utils import timezone
+from django.conf import settings
+from django.db import transaction
 from datetime import datetime, timedelta
 import json
 import logging
@@ -22,6 +25,10 @@ import csv
 
 from .models import Stock, StockAlert, StockPrice, Screener
 from emails.models import EmailSubscription
+from .api_utils import (
+    sanitize_search_input, sanitize_sort_field, validate_positive_integer,
+    validate_decimal, error_response, success_response, get_client_ip
+)
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
@@ -114,14 +121,16 @@ def _compute_rsi(values: List[Optional[float]], period: int = 14) -> List[Option
     return out
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_list_api(request):
     """
     Get comprehensive list of stocks with full data and filtering
 
+    **Authentication Required**
+
     URL: /api/stocks/
     Parameters:
-    - limit: Number of stocks to return (default: 50, max: 1000)
+    - limit: Number of stocks to return (default: 50, max: 100)
     - search: Search by ticker or company name
     - category: Filter by category (gainers, losers, high_volume, large_cap, small_cap)
     - min_price: Minimum price filter
@@ -136,10 +145,14 @@ def stock_list_api(request):
     - sort_order: Sort order (asc, desc) default: desc
     """
     try:
-        # Parse parameters
-        limit = min(int(request.GET.get('limit', 50)), 1000)
-        search = request.GET.get('search', '').strip()
-        category = request.GET.get('category', '').strip()
+        # Parse parameters with validation
+        limit = validate_positive_integer(
+            request.GET.get('limit', 50),
+            default=50,
+            max_value=settings.API_CONFIG['MAX_PAGE_SIZE']
+        )
+        search = sanitize_search_input(request.GET.get('search', ''))
+        category = sanitize_search_input(request.GET.get('category', ''))
         
         # Helper to read either min_x/max_x or x_min/x_max
         def read_range(param_base):
@@ -175,14 +188,19 @@ def stock_list_api(request):
         ask_min, ask_max = read_range('ask_price')
         
         # Exchange filter
-        exchange = request.GET.get('exchange', 'NASDAQ')
-        
-        # Sorting
-        sort_by = request.GET.get('sort_by', 'last_updated')
-        sort_order = request.GET.get('sort_order', 'desc')
-        
-        # Base queryset
-        queryset = Stock.objects.filter(exchange__iexact=exchange)
+        exchange = sanitize_search_input(request.GET.get('exchange', 'NASDAQ'))
+
+        # Sorting - Security: Use whitelist to prevent SQL injection
+        sort_by = sanitize_sort_field(request.GET.get('sort_by', 'last_updated'))
+        sort_order = 'desc' if request.GET.get('sort_order', 'desc') == 'desc' else 'asc'
+
+        # Base queryset with optimized query
+        queryset = Stock.objects.filter(exchange__iexact=exchange).only(
+            'ticker', 'symbol', 'company_name', 'name', 'current_price',
+            'volume', 'market_cap', 'change_percent', 'price_change_today',
+            'pe_ratio', 'last_updated', 'week_52_high', 'week_52_low',
+            'dividend_yield', 'one_year_target'
+        )
 
         # Apply search filter
         if search:
@@ -270,26 +288,16 @@ def stock_list_api(request):
         elif category == 'high_volume':
             queryset = queryset.filter(volume__isnull=False).exclude(volume=0)
         elif category == 'large_cap':
-            queryset = queryset.filter(market_cap__gte=10000000000)  # $10B+
+            queryset = queryset.filter(market_cap__gte=settings.API_CONFIG['MARKET_CAP_LARGE'])
         elif category == 'small_cap':
-            queryset = queryset.filter(market_cap__lt=2000000000, market_cap__gt=0)  # < $2B
+            queryset = queryset.filter(
+                market_cap__lt=settings.API_CONFIG['MARKET_CAP_SMALL'],
+                market_cap__gt=0
+            )
 
-        # Apply sorting
-        sort_field = sort_by
-        if sort_order == 'desc':
-            sort_field = f'-{sort_by}'
-            
-        # Handle special sorting cases
-        if sort_by == 'change_percent':
-            if sort_order == 'desc':
-                queryset = queryset.order_by('-change_percent')
-            else:
-                queryset = queryset.order_by('change_percent')
-        else:
-            try:
-                queryset = queryset.order_by(sort_field)
-            except:
-                queryset = queryset.order_by('-last_updated')
+        # Apply sorting - Security: sort_by is already sanitized via whitelist
+        sort_field = f'-{sort_by}' if sort_order == 'desc' else sort_by
+        queryset = queryset.order_by(sort_field)
 
         # Limit and offset results
         try:
@@ -405,7 +413,7 @@ def stock_list_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_detail_api(request, ticker):
     """
     Get comprehensive detailed information for a specific stock
@@ -555,7 +563,7 @@ def stock_detail_api(request, ticker):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def nasdaq_stocks_api(request):
     """
     Get all NASDAQ-listed stocks with comprehensive data
@@ -563,19 +571,30 @@ def nasdaq_stocks_api(request):
     URL: /api/stocks/nasdaq/
     """
     try:
-        # Import NASDAQ tickers
+        # Import combined tickers (NASDAQ + NYSE)
         import sys
+        import glob
+        import importlib.util
         from pathlib import Path
-        sys.path.append(str(Path(__file__).parent.parent.parent / 'data' / 'nasdaq_only'))
-        
+
+        # Load combined ticker list
+        COMBINED_TICKERS = []
         try:
-            from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
-        except ImportError:
-            NASDAQ_ONLY_TICKERS = []
-        
-        # Filter stocks to NASDAQ only
+            data_dir = Path(__file__).parent.parent.parent / 'data'
+            combined_files = sorted(glob.glob(str(data_dir / 'combined_tickers_*.py')))
+            if combined_files:
+                latest = combined_files[-1]
+                spec = importlib.util.spec_from_file_location("combined_tickers", latest)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                COMBINED_TICKERS = getattr(mod, 'COMBINED_TICKERS', [])
+        except Exception as e:
+            logger.warning(f"Failed to load combined tickers: {e}")
+            COMBINED_TICKERS = []
+
+        # Filter stocks to NASDAQ only (from combined list)
         nasdaq_stocks = Stock.objects.filter(
-            ticker__in=NASDAQ_ONLY_TICKERS,
+            ticker__in=COMBINED_TICKERS,
             exchange__iexact='NASDAQ'
         ).order_by('ticker')
         
@@ -605,7 +624,7 @@ def nasdaq_stocks_api(request):
             'success': True,
             'exchange': 'NASDAQ',
             'count': len(stock_data),
-            'total_nasdaq_tickers': len(NASDAQ_ONLY_TICKERS),
+            'total_tickers': len(COMBINED_TICKERS),
             'data': stock_data,
             'timestamp': timezone.now().isoformat()
         })
@@ -618,7 +637,7 @@ def nasdaq_stocks_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_search_api(request):
     """
     Advanced stock search with multiple criteria
@@ -670,7 +689,7 @@ def stock_search_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 @csrf_exempt
 def wordpress_subscription_api(request):
     """
@@ -716,7 +735,7 @@ def wordpress_subscription_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_statistics_api(request):
     """
     Get overall market statistics for WordPress dashboard
@@ -806,7 +825,7 @@ def stock_statistics_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def market_stats_api(request):
     """
     Get overall market statistics
@@ -865,7 +884,7 @@ def market_stats_api(request):
         )
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def filter_stocks_api(request):
     """
     Filter stocks based on various criteria
@@ -940,7 +959,7 @@ def filter_stocks_api(request):
         )
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def realtime_stock_api(request, ticker):
     """
     Get real-time stock data using yfinance
@@ -1090,7 +1109,7 @@ def most_active_api(request):
         return Response({'error': 'Failed to retrieve most active stocks'}, status=500)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def trending_stocks_api(request):
     """
     Get trending stocks based on volume and price changes
@@ -1208,7 +1227,7 @@ def stock_ohlc_api(request, ticker: str):
         return Response({'success': False, 'error': 'Failed to load OHLC'}, status=500)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def create_alert_api(request):
     """
     Create a new stock price alert

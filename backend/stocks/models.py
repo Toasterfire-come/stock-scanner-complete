@@ -68,6 +68,7 @@ class Stock(models.Model):
     class Meta:
         ordering = ['ticker']
         indexes = [
+            # Single field indexes
             models.Index(fields=['ticker']),
             models.Index(fields=['market_cap']),
             models.Index(fields=['current_price']),
@@ -77,10 +78,11 @@ class Stock(models.Model):
             models.Index(fields=['exchange']),
             models.Index(fields=['pe_ratio']),
             models.Index(fields=['price_change_today']),
-            # Composite indexes for common query patterns
+            # Composite indexes for common query patterns (security improvements)
+            models.Index(fields=['exchange', 'volume']),
+            models.Index(fields=['exchange', 'market_cap']),
+            models.Index(fields=['exchange', 'current_price']),
             models.Index(fields=['exchange', 'last_updated']),
-            models.Index(fields=['current_price', 'last_updated']),
-            models.Index(fields=['market_cap', 'last_updated']),
         ]
     
     def __str__(self):
@@ -122,10 +124,18 @@ class Stock(models.Model):
         return "N/A"
 
 class StockPrice(models.Model):
-    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, db_index=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            # Performance: Composite index for time-series queries
+            models.Index(fields=['stock', 'timestamp']),
+            models.Index(fields=['timestamp']),
+        ]
+
     def __str__(self):
         return f'{self.stock.ticker} - ${self.price} at {self.timestamp}'
 
@@ -148,22 +158,25 @@ class StockAlert(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.stock.ticker} {self.alert_type} {self.target_value}'
 
-class Membership(models.Model):
-    PLAN_CHOICES = [
-        ('free', 'Free'),
-        ('basic', 'Basic - $15'),
-        ('pro', 'Pro - $30'),
-        ('enterprise', 'Enterprise - $100'),
-    ]
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    plan = models.CharField(max_length=50, choices=PLAN_CHOICES, default='free')
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(null=True, blank=True)
-    
-    def __str__(self):
-        return f'{self.user.username} - {self.plan}'
+# DEPRECATED: This model is being replaced by billing.models.Subscription
+# TODO: Migrate existing Membership data to Subscription model, then remove this
+#
+# class Membership(models.Model):
+#     PLAN_CHOICES = [
+#         ('free', 'Free'),
+#         ('basic', 'Basic - $15'),
+#         ('pro', 'Pro - $30'),
+#         ('enterprise', 'Enterprise - $100'),
+#     ]
+#
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     plan = models.CharField(max_length=50, choices=PLAN_CHOICES, default='free')
+#     is_active = models.BooleanField(default=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     expires_at = models.DateTimeField(null=True, blank=True)
+#
+#     def __str__(self):
+#         return f'{self.user.username} - {self.plan}'
 
 # New Portfolio Tracking Models
 
