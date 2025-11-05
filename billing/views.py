@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.conf import settings
+from django.db import transaction
 from decimal import Decimal
 import json
 import requests
@@ -223,6 +224,7 @@ def create_paypal_order(request):
 
 @require_http_methods(["POST"])
 @login_required
+@transaction.atomic  # Performance & Data Integrity: Ensure all DB operations succeed or rollback
 def capture_paypal_order(request):
     """Capture PayPal order and activate subscription"""
     try:
@@ -566,15 +568,89 @@ def apply_discount(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+def verify_paypal_webhook_signature(request):
+    """
+    Verify PayPal webhook signature for security
+
+    Security: Prevents fake webhook events from malicious actors
+    Returns: True if signature is valid, False otherwise
+    """
+    # Get PayPal signature headers
+    transmission_id = request.META.get('HTTP_PAYPAL_TRANSMISSION_ID')
+    transmission_time = request.META.get('HTTP_PAYPAL_TRANSMISSION_TIME')
+    cert_url = request.META.get('HTTP_PAYPAL_CERT_URL')
+    transmission_sig = request.META.get('HTTP_PAYPAL_TRANSMISSION_SIG')
+    auth_algo = request.META.get('HTTP_PAYPAL_AUTH_ALGO', 'SHA256withRSA')
+
+    # Check if all required headers are present
+    if not all([transmission_id, transmission_time, cert_url, transmission_sig]):
+        logger.warning("Missing PayPal webhook signature headers")
+        return False
+
+    webhook_id = settings.PAYPAL_WEBHOOK_ID
+    if not webhook_id:
+        logger.warning("PAYPAL_WEBHOOK_ID not configured in settings")
+        return False
+
+    # Verify signature using PayPal API
+    # Documentation: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature
+    try:
+        access_token = get_paypal_access_token()
+        if not access_token:
+            logger.error("Failed to get PayPal access token for webhook verification")
+            return False
+
+        base_url = 'https://api-m.paypal.com' if settings.PAYPAL_MODE == 'live' else 'https://api-m.sandbox.paypal.com'
+        url = f'{base_url}/v1/notifications/verify-webhook-signature'
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {access_token}'
+        }
+
+        payload = {
+            'transmission_id': transmission_id,
+            'transmission_time': transmission_time,
+            'cert_url': cert_url,
+            'auth_algo': auth_algo,
+            'transmission_sig': transmission_sig,
+            'webhook_id': webhook_id,
+            'webhook_event': json.loads(request.body)
+        }
+
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        result = response.json()
+
+        verification_status = result.get('verification_status')
+        if verification_status == 'SUCCESS':
+            return True
+        else:
+            logger.warning(f"PayPal webhook signature verification failed: {verification_status}")
+            return False
+
+    except Exception as e:
+        logger.exception(f"Error verifying PayPal webhook signature: {e}")
+        return False
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def paypal_webhook(request):
-    """Handle PayPal webhook events"""
+    """
+    Handle PayPal webhook events
+
+    Security: Verifies webhook signature before processing
+    """
     try:
+        # Security: Verify webhook signature FIRST
+        if not verify_paypal_webhook_signature(request):
+            logger.warning(f"Invalid PayPal webhook signature from IP {request.META.get('REMOTE_ADDR')}")
+            return JsonResponse({'error': 'Invalid signature'}, status=403)
+
         payload = json.loads(request.body)
         event_id = payload.get('id')
         event_type = payload.get('event_type')
-        
+
         # Log webhook event
         webhook_event, created = PayPalWebhookEvent.objects.get_or_create(
             event_id=event_id,
@@ -584,12 +660,12 @@ def paypal_webhook(request):
                 'payload': payload,
             }
         )
-        
+
         if not created:
             # Duplicate event, ignore
             return JsonResponse({'status': 'duplicate'})
-        
-        # TODO: Verify webhook signature
+
+        # Signature verified - process event
         
         # Process event
         if event_type == 'PAYMENT.CAPTURE.COMPLETED':

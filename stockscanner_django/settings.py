@@ -21,7 +21,10 @@ if IS_XAMPP_AVAILABLE:
         os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+
+# Security: Default DEBUG to False for safety
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
@@ -99,18 +102,21 @@ if IS_XAMPP_AVAILABLE:
     print("INFO: Using XAMPP MySQL configuration")
 else:
     # Standard MySQL configuration
+    # Security: No default password - must be provided via environment
     DATABASES = {
         'default': {
             'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
             'NAME': os.environ.get('DB_NAME', 'stock_scanner_nasdaq'),
             'USER': os.environ.get('DB_USER', 'django_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'StockScanner2010'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),  # No default - required!
             'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
             'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': {
                 'charset': 'utf8mb4',
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            }
+            },
+            # Performance: Connection pooling
+            'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
         }
     }
     print("INFO: Using standard MySQL configuration")
@@ -136,25 +142,61 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# CORS settings - Security: Never allow all origins
+CORS_ALLOW_ALL_ORIGINS = False
+
+# Production origins (update with your actual domain)
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
+    'https://tradescanpro.com',
+    'https://www.tradescanpro.com',
+    'https://app.tradescanpro.com',
 ]
 
-# REST Framework
+# Add development origins only in DEBUG mode
+if DEBUG:
+    CORS_ALLOWED_ORIGINS += [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# REST Framework - Security: Require authentication by default
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',  # Changed from AllowAny
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 50,
+    'MAX_PAGE_SIZE': 100,  # Performance: Limit max page size
+    # Security: Rate limiting
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',  # Anonymous users: 100 requests per hour
+        'user': '1000/hour',  # Authenticated users: 1000 requests per hour
+        'burst': '60/minute',  # Burst protection: 60 per minute
+    }
+}
+
+# API Configuration
+API_CONFIG = {
+    'DEFAULT_PAGE_SIZE': 50,
+    'MAX_PAGE_SIZE': 100,
+    'CACHE_TIMEOUT': 60,  # 60 seconds cache
+    'MARKET_CAP_LARGE': 10_000_000_000,  # $10B
+    'MARKET_CAP_SMALL': 2_000_000_000,   # $2B
 }
 
 # Cache
@@ -195,17 +237,45 @@ PAYPAL_PLAN_GOLD_ANNUAL = os.environ.get('PAYPAL_PLAN_GOLD_ANNUAL', '')
 # Frontend URL for PayPal redirects
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
-# Logging
+# PayPal Webhook ID for signature verification
+PAYPAL_WEBHOOK_ID = os.environ.get('PAYPAL_WEBHOOK_ID', '')
+
+# Security Settings - HTTPS Enforcement (disabled in DEBUG mode)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # Secure cookies
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
+    # HSTS - Tell browsers to always use HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Logging with security filtering
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
+        'level': 'INFO',
     },
     'loggers': {
         'billing': {
@@ -213,5 +283,18 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'stocks': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
+
+# Note: Sensitive data (passwords, tokens, etc.) should never be logged
+# Filter request.POST data in production before logging
