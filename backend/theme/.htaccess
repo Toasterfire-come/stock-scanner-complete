@@ -86,7 +86,7 @@ Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
 
 # CSP for Stock Scanner Pro theme
 # Allow connections to our APIs and required market data sources
-Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://api.retailtradescanner.com https://api.stockscanner.com https://www.google-analytics.com https://query1.finance.yahoo.com https://www.alphavantage.com https://stooq.com https://cors.isomorphic-git.org; frame-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'self';"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://api.tradescanpro.com https://api.retailtradescanner.com https://api.stockscanner.com https://www.google-analytics.com https://query1.finance.yahoo.com https://www.alphavantage.com https://stooq.com https://cors.isomorphic-git.org; frame-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'self';"
 
 # Remove server signature
 Header unset Server

@@ -1,6 +1,6 @@
 tunnel: stock-scanner
 credentials-file: %USERPROFILE%.cloudflaredYOUR_TUNNEL_ID.json
 ingress:
-- hostname: api.retailtradescanner.com
+- hostname: api.tradescanpro.com
 service: http://localhost:8000
 - service: http_status:404

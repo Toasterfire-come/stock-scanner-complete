@@ -10,7 +10,7 @@ echo "Starting Market Hours Manager..."
 MANAGER_PID=$!
 
 echo "Both services started!"
-echo "API available at: https://api.retailtradescanner.com"
+echo "API available at: https://api.tradescanpro.com"
 echo "Press Ctrl+C to stop"
 
 trap 'kill $TUNNEL_PID $MANAGER_PID; exit' INT

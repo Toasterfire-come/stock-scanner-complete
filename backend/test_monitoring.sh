@@ -11,7 +11,7 @@ echo "==============================================="
 echo ""
 
 # Configuration
-API_URL="https://api.retailtradescanner.com"
+API_URL="https://api.tradescanpro.com"
 LOCAL_URL="http://localhost:8000"
 
 # Colors for output
