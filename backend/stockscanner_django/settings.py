@@ -271,27 +271,28 @@ STOCK_DATA_ENDPOINT_PREFIXES = [
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',  # Security: Require auth
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'stocks.authentication.BearerSessionAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'stockscanner_django.exceptions.custom_exception_handler',
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
+    'PAGE_SIZE': 50,
+    'MAX_PAGE_SIZE': 100,
     'DEFAULT_THROTTLE_CLASSES': [
-        'stocks.throttling.SafeAnonRateThrottle',
-        'stocks.throttling.SafeUserRateThrottle'
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': os.environ.get('THROTTLE_RATE_ANON', '200/hour'),
-        'user': os.environ.get('THROTTLE_RATE_USER', '2000/hour')
-    },
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'burst': '60/minute',
+    }
+},
     'DEFAULT_THROTTLE_CACHE': 'default',
 }
 
@@ -330,6 +331,20 @@ FINNHUB_KEYS = [
 # Scanner run-window feature flags (pre/post disabled by default)
 SCAN_PREMARKET = os.environ.get('SCAN_PREMARKET', 'false').lower() == 'true'
 SCAN_POSTMARKET = os.environ.get('SCAN_POSTMARKET', 'false').lower() == 'true'
+
+
+# Security Settings - HTTPS Enforcement (disabled in DEBUG mode)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Logging
 LOGGING = {
