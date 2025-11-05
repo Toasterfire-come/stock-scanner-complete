@@ -22,7 +22,7 @@ if IS_XAMPP_AVAILABLE:
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "api.retailtradescanner.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "api.tradescanpro.com", "api.retailtradescanner.com"]
 # API key for WordPress/backend-to-backend auth
 WORDPRESS_API_KEY = os.environ.get('WORDPRESS_API_KEY', '')
 
@@ -194,6 +194,6 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
     },
-}CSRF_TRUSTED_ORIGINS = ["https://api.retailtradescanner.com"]
+}CSRF_TRUSTED_ORIGINS = ["https://api.tradescanpro.com", "https://api.retailtradescanner.com"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = ["https://api.retailtradescanner.com"]
+CSRF_TRUSTED_ORIGINS = ["https://api.tradescanpro.com", "https://api.retailtradescanner.com"]

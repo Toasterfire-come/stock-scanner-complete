@@ -3,7 +3,7 @@ import { getCache, setCache } from "../lib/cache";
 import { getReferralFromCookie, normalizeReferralCode } from "../lib/referral";
 
 // Use REACT_APP_BACKEND_URL exclusively from environment, with production fallback
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com";
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.tradescanpro.com";
 
 if (!BASE_URL) {
   console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");

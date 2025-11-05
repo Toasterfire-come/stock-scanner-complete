@@ -32,7 +32,7 @@ _allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('A
 if _allowed_hosts_env:
     ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(',') if host.strip()]
     for fallback_host in (
-        "api.retailtradescanner.com",
+        "api.tradescanpro.com",
         "retailtradescanner.com",
         "www.retailtradescanner.com",
         "tradescanpro.com",
@@ -44,7 +44,8 @@ else:
     ALLOWED_HOSTS = [
         "127.0.0.1",
         "localhost",
-        os.environ.get('PRIMARY_DOMAIN', 'api.retailtradescanner.com'),
+        os.environ.get('PRIMARY_DOMAIN', 'api.tradescanpro.com'),
+        "api.tradescanpro.com",
         "api.retailtradescanner.com",
         "retailtradescanner.com",
         "www.retailtradescanner.com",
@@ -367,7 +368,8 @@ else:
         os.environ.get('PRIMARY_ORIGIN', 'https://tradescanpro.com'),
         'https://tradescanpro.com',
         'https://www.tradescanpro.com',
-        'https://api.retailtradescanner.com',
+          'https://api.tradescanpro.com',
+          'https://api.retailtradescanner.com',
         'https://retailtradescanner.com',
         'https://www.retailtradescanner.com',
         # Deployed static hosting domain(s)

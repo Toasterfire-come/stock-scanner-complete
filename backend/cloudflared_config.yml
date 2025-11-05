@@ -27,14 +27,14 @@ originRequest:
 # Ingress rules
 ingress:
   # Health check endpoint - keeps connection active
-  - hostname: api.retailtradescanner.com
+  - hostname: api.tradescanpro.com
     path: /health/*
     service: http://localhost:8000
     originRequest:
       connectTimeout: 5s
       
   # Main service
-  - hostname: api.retailtradescanner.com
+  - hostname: api.tradescanpro.com
     service: http://localhost:8000
     originRequest:
       connectTimeout: 30s

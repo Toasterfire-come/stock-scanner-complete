@@ -383,7 +383,7 @@ export const generateCSPMeta = () => {
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.retailtradescanner.com https://www.paypal.com https://www.google-analytics.com",
+    "connect-src 'self' https://api.tradescanpro.com https://api.retailtradescanner.com https://www.paypal.com https://www.google-analytics.com",
     "frame-src https://www.paypal.com",
     "object-src 'none'",
     "base-uri 'self'"

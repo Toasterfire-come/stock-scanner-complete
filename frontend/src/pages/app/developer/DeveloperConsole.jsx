@@ -50,7 +50,7 @@ const DeveloperConsole = () => {
     if (endpoint) {
       setSelectedEndpoint(endpointPath);
       setMethod(endpoint.method);
-      setRequestUrl(`https://api.retailtradescanner.com/api${endpointPath}`);
+        setRequestUrl(`https://api.tradescanpro.com/api${endpointPath}`);
       
       // Set example request body for POST endpoints
       if (endpoint.method === 'POST') {
@@ -103,7 +103,7 @@ const DeveloperConsole = () => {
       }
 
       // Extract the API path from the full URL
-      const apiPath = requestUrl.replace('https://api.retailtradescanner.com/api', '');
+        const apiPath = requestUrl.replace('https://api.tradescanpro.com/api', '');
       
       let result;
       if (method === 'GET') {
@@ -278,11 +278,11 @@ const DeveloperConsole = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Request URL
                     </label>
-                    <Input
-                      value={requestUrl}
-                      onChange={(e) => setRequestUrl(e.target.value)}
-                      placeholder="https://api.retailtradescanner.com/api/..."
-                    />
+                      <Input
+                        value={requestUrl}
+                        onChange={(e) => setRequestUrl(e.target.value)}
+                        placeholder="https://api.tradescanpro.com/api/..."
+                      />
                   </div>
                 </div>
 

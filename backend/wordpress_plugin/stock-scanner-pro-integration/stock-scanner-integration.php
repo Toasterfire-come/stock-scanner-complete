@@ -243,7 +243,7 @@ class Stock_Scanner_Integration {
      * Setup default options
      */
     private function setup_default_options() {
-        add_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
+        add_option('stock_scanner_api_url', 'https://api.tradescanpro.com/api/');
         add_option('stock_scanner_version', STOCK_SCANNER_VERSION);
         
         // Payment defaults (PayPal)

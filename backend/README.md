@@ -10,10 +10,10 @@ ENVIRONMENT=production
 
 # Hosts / Frontend
 DJANGO_SECRET_KEY="((#cx+mb@f-(8x*p@9mfnanqe%ha1@6-b%w)q##v@)lanop"
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,retailtradescanner.com,api.retailtradescanner.com,tradescanpro.com,www.tradescanpro.com
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,retailtradescanner.com,api.retailtradescanner.com,api.tradescanpro.com,tradescanpro.com,www.tradescanpro.com
 FRONTEND_URL=https://tradescanpro.com
 WORDPRESS_URL=https://retailtradescanner.com
-CSRF_TRUSTED_ORIGINS=https://api.retailtradescanner.com,https://tradescanpro.com,https://www.tradescanpro.com
+CSRF_TRUSTED_ORIGINS=https://api.tradescanpro.com,https://api.retailtradescanner.com,https://tradescanpro.com,https://www.tradescanpro.com
 PRIMARY_ORIGIN=https://tradescanpro.com
 
 # Database
@@ -146,6 +146,14 @@ Ensure `FRONTEND_URL` includes your static site (e.g., https://tradescanpro.com)
 ## Notes
 - No Redis required. Cache can be locmem/db/file.
 - Celery uses RabbitMQ in this environment; disable via `CELERY_ENABLED=false` if not used.
+
+## API domain migration checklist
+- Update Cloudflare DNS: point `api.tradescanpro.com` at the tunnel or origin IP, keep `api.retailtradescanner.com` during the cutover if you need parallel traffic.
+- Issue/verify SSL certificates: extend your wildcard or request a new cert that covers `api.tradescanpro.com` before flipping traffic.
+- Deploy tunnel config: redeploy `cloudflared` with the updated hostname and confirm `cloudflared tunnel route dns` maps the tunnel to the new record.
+- Rotate backend env vars: reload `.env`/secret manager values so Django picks up the new allowed hosts and CSRF origins, then restart the backend service.
+- Frontend rollout: rebuild the React app with the new `REACT_APP_BACKEND_URL`, invalidate CDN caches, and smoke test against the new API domain.
+- Sunset legacy host: once monitoring looks clean, remove `api.retailtradescanner.com` DNS/Tunnel routes and inform external integrations about the deadline.
 
 ## Data transfer: local → server (both databases)
 

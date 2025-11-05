@@ -24,7 +24,7 @@ HEALTH_CHECK_INTERVAL=30
 DNS_CHECK_INTERVAL=60
 QUIC_TIMEOUT_THRESHOLD=3
 DNS_FAILURE_THRESHOLD=2
-API_URL="https://api.retailtradescanner.com"
+API_URL="https://api.tradescanpro.com"
 LOCAL_URL="http://localhost:8000"
 
 # Create log directory if it doesn't exist

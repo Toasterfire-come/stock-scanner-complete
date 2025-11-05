@@ -38,8 +38,8 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'https://api.retailtradescanner.com'}/api/enterprise/contact/`, {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'https://api.tradescanpro.com'}/api/enterprise/contact/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
