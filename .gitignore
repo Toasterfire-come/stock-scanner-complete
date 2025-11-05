@@ -78,12 +78,83 @@ agenthub/agents/youtube/db
 .cache/
 
 # Mobile development
-<<<<<<< HEAD
-android-sdk/ temp_repo/.git/objects/pack/pack-6f31cac1074197aa15f8c4986dd54e5b91bbfcae.pack
-temp_main19/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
-temp_main/.git/objects/pack/pack-8e42a0d7bc1d49f044094cb40a2835d52b6ad34e.pack
-frontend/node_modules/.cache/default-development/0.pack
-frontend/node_modules/.cache/default-development/1.pack
-=======
-android-sdk/ 
->>>>>>> b9dee287 (auto-commit for f45bf728-febb-4567-ac8e-02aafd409816)
+android-sdk/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Local development
+local/
+development/
+
+# Security
+*.pem
+*.key
+*.crt
+
+# Node modules (if any)
+node_modules/
+
+# Webpack
+/static/webpack_bundles/
+/static/dist/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Caddy
+Caddyfile.local
+
+# Keep important files
+!.env.sample
+!requirements*.txt
+!README.md
+!**/README.md
+!COMPLETE_SETUP_GUIDE.md
+!PACKAGE_MANIFEST.md
+!INSTALLATION_CHECKLIST.md
+
+# Additional cleanup
+*.log
+*.sqlite3
+celery.log
+beat.log
+caddy.log
+stock_data_export.json
+venv/
+staticfiles/
+logs/
+logs_archive/
+deployment_old/
+*.pyc
+__pycache__/
+.env
+.DS_Store
+Thumbs.db
+
+# Stock retrieval test outputs and scans
+test_*.csv
+*_test*.csv
+*_scan_*.csv
+production_scan_*.csv
+improved_scan_*.csv
+optimized_scan_*.csv
+ultra_fast_scan_*.csv
+stock_scan_*.csv
+scan_*.csv
+ht_*.csv
+high_throughput_*.csv
+scheduled_scan_*.csv
+*_test.log
+*_test*.log
+ht_*.log

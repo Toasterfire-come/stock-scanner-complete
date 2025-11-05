@@ -3,25 +3,30 @@ Django REST API Views for Stock Data Integration
 Provides comprehensive real-time stock data endpoints with full filtering capabilities
 """
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import JsonResponse, HttpResponse
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from django.db.models import Q, F
 from django.utils import timezone
+from django.conf import settings
+from django.db import transaction
 from datetime import datetime, timedelta
 import json
 import logging
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
-import csv
 
-from .models import Stock, StockAlert, StockPrice, Screener
+from .models import Stock, StockAlert, StockPrice
 from emails.models import EmailSubscription
+from .api_utils import (
+    sanitize_search_input, sanitize_sort_field, validate_positive_integer,
+    validate_decimal, error_response, success_response, get_client_ip
+)
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
@@ -46,82 +51,17 @@ def calculate_change_percent(current_price, price_change):
     except (ZeroDivisionError, TypeError):
         return 0.0
 
-def _safe_float(v: Any) -> Optional[float]:
-    try:
-        return None if v is None else float(v)
-    except Exception:
-        return None
-
-def _compute_sma(values: List[Optional[float]], window: int) -> List[Optional[float]]:
-    out: List[Optional[float]] = []
-    acc: List[float] = []
-    for x in values:
-        if x is None:
-            out.append(None)
-            continue
-        acc.append(x)
-        if len(acc) > window:
-            acc.pop(0)
-        out.append(sum(acc) / window if len(acc) == window else None)
-    return out
-
-def _compute_ema(values: List[Optional[float]], span: int) -> List[Optional[float]]:
-    out: List[Optional[float]] = []
-    k = 2 / (span + 1)
-    ema: Optional[float] = None
-    for x in values:
-        if x is None:
-            out.append(None)
-            continue
-        ema = (x if ema is None else (x - ema) * k + ema)
-        out.append(ema)
-    return out
-
-def _compute_rsi(values: List[Optional[float]], period: int = 14) -> List[Optional[float]]:
-    out: List[Optional[float]] = []
-    gains: List[float] = []
-    losses: List[float] = []
-    prev: Optional[float] = None
-    avg_gain: Optional[float] = None
-    avg_loss: Optional[float] = None
-    for price in values:
-        if price is None:
-            out.append(None)
-            continue
-        if prev is None:
-            out.append(None)
-            prev = price
-            continue
-        change = price - prev
-        gain = max(change, 0)
-        loss = max(-change, 0)
-        gains.append(gain)
-        losses.append(loss)
-        if len(gains) < period:
-            out.append(None)
-        elif len(gains) == period:
-            avg_gain = sum(gains[-period:]) / period
-            avg_loss = sum(losses[-period:]) / period
-            rs = (avg_gain / avg_loss) if (avg_loss and avg_loss != 0) else None
-            out.append(100 - (100 / (1 + rs)) if rs is not None else None)
-        else:
-            assert avg_gain is not None and avg_loss is not None
-            avg_gain = (avg_gain * (period - 1) + gain) / period
-            avg_loss = (avg_loss * (period - 1) + loss) / period
-            rs = (avg_gain / avg_loss) if (avg_loss and avg_loss != 0) else None
-            out.append(100 - (100 / (1 + rs)) if rs is not None else None)
-        prev = price
-    return out
-
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_list_api(request):
     """
     Get comprehensive list of stocks with full data and filtering
 
+    **Authentication Required**
+
     URL: /api/stocks/
     Parameters:
-    - limit: Number of stocks to return (default: 50, max: 1000)
+    - limit: Number of stocks to return (default: 50, max: 100)
     - search: Search by ticker or company name
     - category: Filter by category (gainers, losers, high_volume, large_cap, small_cap)
     - min_price: Minimum price filter
@@ -136,53 +76,44 @@ def stock_list_api(request):
     - sort_order: Sort order (asc, desc) default: desc
     """
     try:
-        # Parse parameters
-        limit = min(int(request.GET.get('limit', 50)), 1000)
-        search = request.GET.get('search', '').strip()
-        category = request.GET.get('category', '').strip()
+        # Parse parameters with validation
+        limit = validate_positive_integer(
+            request.GET.get('limit', 50),
+            default=50,
+            max_value=settings.API_CONFIG['MAX_PAGE_SIZE']
+        )
+        search = sanitize_search_input(request.GET.get('search', ''))
+        category = sanitize_search_input(request.GET.get('category', ''))
         
-        # Helper to read either min_x/max_x or x_min/x_max
-        def read_range(param_base):
-            mn = request.GET.get(f'min_{param_base}') or request.GET.get(f'{param_base}_min')
-            mx = request.GET.get(f'max_{param_base}') or request.GET.get(f'{param_base}_max')
-            return mn, mx
-
         # Price filters
-        min_price, max_price = read_range('price')
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
         
         # Volume filters
-        min_volume = request.GET.get('min_volume') or request.GET.get('volume_min')
+        min_volume = request.GET.get('min_volume')
         
         # Market cap filters
-        min_market_cap = request.GET.get('min_market_cap') or request.GET.get('market_cap_min')
-        max_market_cap = request.GET.get('max_market_cap') or request.GET.get('market_cap_max')
+        min_market_cap = request.GET.get('min_market_cap')
+        max_market_cap = request.GET.get('max_market_cap')
         
         # P/E ratio filters
-        min_pe = request.GET.get('min_pe') or request.GET.get('pe_ratio_min')
-        max_pe = request.GET.get('max_pe') or request.GET.get('pe_ratio_max')
-
-        # Additional numeric filters
-        dvav_min, dvav_max = read_range('dvav')
-        p2b_min, p2b_max = read_range('price_to_book')
-        eps_min, eps_max = read_range('earnings_per_share')
-        book_min, book_max = read_range('book_value')
-        w52l_min, w52l_max = read_range('week_52_low')
-        w52h_min, w52h_max = read_range('week_52_high')
-        target_min, target_max = read_range('one_year_target')
-        dy_min, dy_max = read_range('dividend_yield')
-        chg_min, chg_max = read_range('change_percent')
-        bid_min, bid_max = read_range('bid_price')
-        ask_min, ask_max = read_range('ask_price')
+        min_pe = request.GET.get('min_pe')
+        max_pe = request.GET.get('max_pe')
         
         # Exchange filter
-        exchange = request.GET.get('exchange', 'NASDAQ')
-        
-        # Sorting
-        sort_by = request.GET.get('sort_by', 'last_updated')
-        sort_order = request.GET.get('sort_order', 'desc')
-        
-        # Base queryset
-        queryset = Stock.objects.filter(exchange__iexact=exchange)
+        exchange = sanitize_search_input(request.GET.get('exchange', 'NASDAQ'))
+
+        # Sorting - Security: Use whitelist to prevent SQL injection
+        sort_by = sanitize_sort_field(request.GET.get('sort_by', 'last_updated'))
+        sort_order = 'desc' if request.GET.get('sort_order', 'desc') == 'desc' else 'asc'
+
+        # Base queryset with optimized query
+        queryset = Stock.objects.filter(exchange__iexact=exchange).only(
+            'ticker', 'symbol', 'company_name', 'name', 'current_price',
+            'volume', 'market_cap', 'change_percent', 'price_change_today',
+            'pe_ratio', 'last_updated', 'week_52_high', 'week_52_low',
+            'dividend_yield', 'one_year_target'
+        )
 
         # Apply search filter
         if search:
@@ -239,29 +170,6 @@ def stock_list_api(request):
             except (ValueError, TypeError):
                 pass
 
-        # Apply additional numeric filters
-        def apply_decimal_range(qs, field, mn, mx):
-            try:
-                if mn is not None and mn != "":
-                    qs = qs.filter(**{f"{field}__gte": Decimal(str(mn))})
-                if mx is not None and mx != "":
-                    qs = qs.filter(**{f"{field}__lte": Decimal(str(mx))})
-            except (ValueError, TypeError):
-                return qs
-            return qs
-
-        queryset = apply_decimal_range(queryset, 'dvav', dvav_min, dvav_max)
-        queryset = apply_decimal_range(queryset, 'price_to_book', p2b_min, p2b_max)
-        queryset = apply_decimal_range(queryset, 'earnings_per_share', eps_min, eps_max)
-        queryset = apply_decimal_range(queryset, 'book_value', book_min, book_max)
-        queryset = apply_decimal_range(queryset, 'week_52_low', w52l_min, w52l_max)
-        queryset = apply_decimal_range(queryset, 'week_52_high', w52h_min, w52h_max)
-        queryset = apply_decimal_range(queryset, 'one_year_target', target_min, target_max)
-        queryset = apply_decimal_range(queryset, 'dividend_yield', dy_min, dy_max)
-        queryset = apply_decimal_range(queryset, 'change_percent', chg_min, chg_max)
-        queryset = apply_decimal_range(queryset, 'bid_price', bid_min, bid_max)
-        queryset = apply_decimal_range(queryset, 'ask_price', ask_min, ask_max)
-
         # Apply category filters
         if category == 'gainers':
             queryset = queryset.filter(price_change_today__gt=0)
@@ -270,36 +178,19 @@ def stock_list_api(request):
         elif category == 'high_volume':
             queryset = queryset.filter(volume__isnull=False).exclude(volume=0)
         elif category == 'large_cap':
-            queryset = queryset.filter(market_cap__gte=10000000000)  # $10B+
+            queryset = queryset.filter(market_cap__gte=settings.API_CONFIG['MARKET_CAP_LARGE'])
         elif category == 'small_cap':
-            queryset = queryset.filter(market_cap__lt=2000000000, market_cap__gt=0)  # < $2B
+            queryset = queryset.filter(
+                market_cap__lt=settings.API_CONFIG['MARKET_CAP_SMALL'],
+                market_cap__gt=0
+            )
 
-        # Apply sorting
-        sort_field = sort_by
-        if sort_order == 'desc':
-            sort_field = f'-{sort_by}'
-            
-        # Handle special sorting cases
-        if sort_by == 'change_percent':
-            if sort_order == 'desc':
-                queryset = queryset.order_by('-change_percent')
-            else:
-                queryset = queryset.order_by('change_percent')
-        else:
-            try:
-                queryset = queryset.order_by(sort_field)
-            except:
-                queryset = queryset.order_by('-last_updated')
+        # Apply sorting - Security: sort_by is already sanitized via whitelist
+        sort_field = f'-{sort_by}' if sort_order == 'desc' else sort_by
+        queryset = queryset.order_by(sort_field)
 
-        # Limit and offset results
-        try:
-            offset = int(request.GET.get('offset', 0))
-            if offset < 0:
-                offset = 0
-        except (ValueError, TypeError):
-            offset = 0
-
-        stocks = queryset[offset:offset + limit]
+        # Limit results
+        stocks = queryset[:limit]
 
         # Format comprehensive data
         stock_data = []
@@ -378,7 +269,7 @@ def stock_list_api(request):
         return Response({
             'success': True,
             'count': len(stock_data),
-            'total_available': queryset.count(),
+            'total_available': queryset.count() if len(stock_data) < limit else len(stock_data),
             'filters_applied': {
                 'search': search,
                 'category': category,
@@ -405,7 +296,7 @@ def stock_list_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_detail_api(request, ticker):
     """
     Get comprehensive detailed information for a specific stock
@@ -555,7 +446,7 @@ def stock_detail_api(request, ticker):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def nasdaq_stocks_api(request):
     """
     Get all NASDAQ-listed stocks with comprehensive data
@@ -563,19 +454,30 @@ def nasdaq_stocks_api(request):
     URL: /api/stocks/nasdaq/
     """
     try:
-        # Import NASDAQ tickers
+        # Import combined tickers (NASDAQ + NYSE)
         import sys
+        import glob
+        import importlib.util
         from pathlib import Path
-        sys.path.append(str(Path(__file__).parent.parent.parent / 'data' / 'nasdaq_only'))
-        
+
+        # Load combined ticker list
+        COMBINED_TICKERS = []
         try:
-            from nasdaq_only_tickers_20250724_184741 import NASDAQ_ONLY_TICKERS
-        except ImportError:
-            NASDAQ_ONLY_TICKERS = []
-        
-        # Filter stocks to NASDAQ only
+            data_dir = Path(__file__).parent.parent.parent / 'data'
+            combined_files = sorted(glob.glob(str(data_dir / 'combined_tickers_*.py')))
+            if combined_files:
+                latest = combined_files[-1]
+                spec = importlib.util.spec_from_file_location("combined_tickers", latest)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                COMBINED_TICKERS = getattr(mod, 'COMBINED_TICKERS', [])
+        except Exception as e:
+            logger.warning(f"Failed to load combined tickers: {e}")
+            COMBINED_TICKERS = []
+
+        # Filter stocks to NASDAQ only (from combined list)
         nasdaq_stocks = Stock.objects.filter(
-            ticker__in=NASDAQ_ONLY_TICKERS,
+            ticker__in=COMBINED_TICKERS,
             exchange__iexact='NASDAQ'
         ).order_by('ticker')
         
@@ -605,7 +507,7 @@ def nasdaq_stocks_api(request):
             'success': True,
             'exchange': 'NASDAQ',
             'count': len(stock_data),
-            'total_nasdaq_tickers': len(NASDAQ_ONLY_TICKERS),
+            'total_tickers': len(COMBINED_TICKERS),
             'data': stock_data,
             'timestamp': timezone.now().isoformat()
         })
@@ -618,7 +520,7 @@ def nasdaq_stocks_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_search_api(request):
     """
     Advanced stock search with multiple criteria
@@ -670,7 +572,7 @@ def stock_search_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 @csrf_exempt
 def wordpress_subscription_api(request):
     """
@@ -716,7 +618,7 @@ def wordpress_subscription_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def stock_statistics_api(request):
     """
     Get overall market statistics for WordPress dashboard
@@ -806,7 +708,7 @@ def stock_statistics_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def market_stats_api(request):
     """
     Get overall market statistics
@@ -865,7 +767,7 @@ def market_stats_api(request):
         )
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def filter_stocks_api(request):
     """
     Filter stocks based on various criteria
@@ -940,7 +842,7 @@ def filter_stocks_api(request):
         )
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def realtime_stock_api(request, ticker):
     """
     Get real-time stock data using yfinance
@@ -983,114 +885,8 @@ def realtime_stock_api(request, ticker):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-
 @api_view(['GET'])
-@permission_classes([AllowAny])
-def top_gainers_api(request):
-    """Return top gainers by price_change_percent.
-
-    Query params:
-      - limit: number of results (default 10, max 100)
-    """
-    try:
-        try:
-            limit = max(1, min(int(request.GET.get('limit', 10)), 100))
-        except (TypeError, ValueError):
-            limit = 10
-
-        queryset = (
-            Stock.objects.exclude(price_change_percent__isnull=True)
-            .order_by('-price_change_percent')[:limit]
-        )
-
-        def serialize(stock: Stock) -> Dict[str, Any]:
-            return {
-                'ticker': stock.ticker,
-                'name': getattr(stock, 'name', None) or getattr(stock, 'company_name', None),
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(getattr(stock, 'price_change', None)),
-                'price_change_percent': format_decimal_safe(getattr(stock, 'price_change_percent', None)),
-                'volume': stock.volume,
-                'market_cap': format_decimal_safe(stock.market_cap),
-                'wordpress_url': f"/stock/{stock.ticker.lower()}/",
-            }
-
-        data = [serialize(s) for s in queryset]
-        return Response({'top_gainers': data, 'count': len(data), 'timestamp': timezone.now().isoformat()})
-    except Exception as e:
-        logger.error(f"top_gainers_api error: {e}", exc_info=True)
-        return Response({'error': 'Failed to retrieve top gainers'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def top_losers_api(request):
-    """Return top losers by price_change_percent (ascending)."""
-    try:
-        try:
-            limit = max(1, min(int(request.GET.get('limit', 10)), 100))
-        except (TypeError, ValueError):
-            limit = 10
-
-        queryset = (
-            Stock.objects.exclude(price_change_percent__isnull=True)
-            .order_by('price_change_percent')[:limit]
-        )
-
-        def serialize(stock: Stock) -> Dict[str, Any]:
-            return {
-                'ticker': stock.ticker,
-                'name': getattr(stock, 'name', None) or getattr(stock, 'company_name', None),
-                'current_price': format_decimal_safe(stock.current_price),
-                'price_change': format_decimal_safe(getattr(stock, 'price_change', None)),
-                'price_change_percent': format_decimal_safe(getattr(stock, 'price_change_percent', None)),
-                'volume': stock.volume,
-                'market_cap': format_decimal_safe(stock.market_cap),
-                'wordpress_url': f"/stock/{stock.ticker.lower()}/",
-            }
-
-        data = [serialize(s) for s in queryset]
-        return Response({'top_losers': data, 'count': len(data), 'timestamp': timezone.now().isoformat()})
-    except Exception as e:
-        logger.error(f"top_losers_api error: {e}", exc_info=True)
-        return Response({'error': 'Failed to retrieve top losers'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def most_active_api(request):
-    """Return most active stocks by volume."""
-    try:
-        try:
-            limit = max(1, min(int(request.GET.get('limit', 10)), 100))
-        except (TypeError, ValueError):
-            limit = 10
-
-        queryset = (
-            Stock.objects.exclude(volume__isnull=True)
-            .order_by('-volume')[:limit]
-        )
-
-        def serialize(stock: Stock) -> Dict[str, Any]:
-            return {
-                'ticker': stock.ticker,
-                'name': getattr(stock, 'name', None) or getattr(stock, 'company_name', None),
-                'current_price': format_decimal_safe(stock.current_price),
-                'volume': stock.volume,
-                'price_change': format_decimal_safe(getattr(stock, 'price_change', None)),
-                'price_change_percent': format_decimal_safe(getattr(stock, 'price_change_percent', None)),
-                'market_cap': format_decimal_safe(stock.market_cap),
-                'wordpress_url': f"/stock/{stock.ticker.lower()}/",
-            }
-
-        data = [serialize(s) for s in queryset]
-        return Response({'most_active': data, 'count': len(data), 'timestamp': timezone.now().isoformat()})
-    except Exception as e:
-        logger.error(f"most_active_api error: {e}", exc_info=True)
-        return Response({'error': 'Failed to retrieve most active stocks'}, status=500)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def trending_stocks_api(request):
     """
     Get trending stocks based on volume and price changes
@@ -1141,74 +937,8 @@ def trending_stocks_api(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def stock_ohlc_api(request, ticker: str):
-    """
-    Get OHLC history and common indicators for a ticker.
-    Query params:
-      - period: yfinance period (1mo, 3mo, 6mo, 1y, 2y, 5y) default 6mo
-      - interval: yfinance interval (1d, 1h, 30m, 15m) default 1d
-      - indicators: comma list (sma20,sma50,ema20,ema50,rsi14)
-    """
-    try:
-        period = request.GET.get('period', '6mo')
-        interval = request.GET.get('interval', '1d')
-        indicators_raw = request.GET.get('indicators', 'sma20,sma50,ema20,ema50,rsi14')
-        indicators = [i.strip().lower() for i in indicators_raw.split(',') if i.strip()]
-
-        t = yf.Ticker(ticker.upper())
-        hist = t.history(period=period, interval=interval)
-        if hist is None or hist.empty:
-            return Response({'success': False, 'error': 'No history'}, status=404)
-
-        # Build arrays
-        records: List[Dict[str, Any]] = []
-        closes: List[float] = []
-        for idx, row in hist.iterrows():
-            item = {
-                't': int(idx.timestamp() * 1000),
-                'o': _safe_float(row.get('Open')),
-                'h': _safe_float(row.get('High')),
-                'l': _safe_float(row.get('Low')),
-                'c': _safe_float(row.get('Close')),
-                'v': _safe_float(row.get('Volume')),
-            }
-            if item['c'] is not None:
-                closes.append(item['c'])
-            else:
-                # keep list lengths aligned
-                closes.append(closes[-1] if closes else None)
-            records.append(item)
-
-        # Indicators
-        ind: Dict[str, List[Optional[float]]] = {}
-        if any(name.startswith('sma') for name in indicators):
-            for w in [10, 20, 50, 100, 200]:
-                key = f'sma{w}'
-                if key in indicators:
-                    ind[key] = _compute_sma(closes, w)
-        if any(name.startswith('ema') for name in indicators):
-            for s in [10, 20, 50, 100, 200]:
-                key = f'ema{s}'
-                if key in indicators:
-                    ind[key] = _compute_ema(closes, s)
-        if 'rsi14' in indicators or 'rsi' in indicators:
-            ind['rsi14'] = _compute_rsi(closes, 14)
-
-        return Response({
-            'success': True,
-            'ticker': ticker.upper(),
-            'count': len(records),
-            'ohlc': records,
-            'indicators': ind,
-        })
-    except Exception as e:
-        logger.error(f"stock_ohlc_api error for {ticker}: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to load OHLC'}, status=500)
-
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # Security: Require authentication
 def create_alert_api(request):
     """
     Create a new stock price alert
@@ -1274,403 +1004,3 @@ def create_alert_api(request):
         )
 
 # Helper functions - moved to utils for better organization
-
-
-# =============================
-# Screener Endpoints (Windows-safe minimal implementations)
-# =============================
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def screeners_list_api(request):
-    try:
-        limit = max(1, min(int(request.GET.get('limit', 50)), 200))
-        qs = Screener.objects.order_by('-updated_at')[:limit]
-        data = [{
-            'id': s.id,
-            'name': s.name,
-            'description': s.description or '',
-            'criteria': s.criteria,
-            'is_public': bool(getattr(s, 'is_public', False)),
-            'updated_at': s.updated_at.isoformat() if getattr(s, 'updated_at', None) else None,
-            'created_at': s.created_at.isoformat() if getattr(s, 'created_at', None) else None,
-        } for s in qs]
-        return Response({'success': True, 'data': data})
-    except Exception as e:
-        logger.error(f"screeners_list_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to list screeners'}, status=500)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def screeners_create_api(request):
-    try:
-        body = request.data if hasattr(request, 'data') and request.data else json.loads(request.body or '{}')
-        name = (body.get('name') or '').strip()[:150]
-        if not name:
-            return Response({'success': False, 'error': 'name required'}, status=400)
-        description = (body.get('description') or '').strip()[:500]
-        criteria = body.get('criteria') or []
-        s = Screener.objects.create(name=name, description=description, criteria=criteria)
-        return Response({'success': True, 'data': {'id': s.id, 'name': s.name, 'criteria': s.criteria}}, status=201)
-    except json.JSONDecodeError:
-        return Response({'success': False, 'error': 'invalid json'}, status=400)
-    except Exception as e:
-        logger.error(f"screeners_create_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to create screener'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def screeners_detail_api(request, screener_id: str):
-    try:
-        s = Screener.objects.get(id=screener_id)
-        return Response({'success': True, 'data': {
-            'id': s.id,
-            'name': s.name,
-            'description': s.description or '',
-            'criteria': s.criteria,
-            'is_public': bool(getattr(s, 'is_public', False)),
-            'updated_at': s.updated_at.isoformat() if getattr(s, 'updated_at', None) else None,
-            'created_at': s.created_at.isoformat() if getattr(s, 'created_at', None) else None,
-        }})
-    except Screener.DoesNotExist:
-        return Response({'success': False, 'error': 'Not found'}, status=404)
-    except Exception as e:
-        logger.error(f"screeners_detail_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to fetch screener'}, status=500)
-
-
-@api_view(['PUT', 'PATCH'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def screeners_update_api(request, screener_id: str):
-    try:
-        s = Screener.objects.get(id=screener_id)
-        body = request.data if hasattr(request, 'data') and request.data else json.loads(request.body or '{}')
-        changed = False
-        for field in ['name', 'description', 'criteria', 'is_public']:
-            if field in body:
-                setattr(s, field, body[field])
-                changed = True
-        if changed:
-            s.save()
-        return Response({'success': True, 'data': {'id': s.id, 'name': s.name, 'criteria': s.criteria}})
-    except Screener.DoesNotExist:
-        return Response({'success': False, 'error': 'Not found'}, status=404)
-    except Exception as e:
-        logger.error(f"screeners_update_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to update screener'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def screeners_templates_api(request):
-    try:
-        templates = [
-            {'id': 'rsi-oversold', 'name': 'RSI Oversold (RSI<30)', 'criteria': [{'field': 'rsi14', 'op': '<', 'value': 30}]},
-            {'id': 'ma-crossover', 'name': '50/200 MA Bullish Cross', 'criteria': [{'field': 'ma50_over_ma200', 'op': '==', 'value': True}]},
-        ]
-        return Response({'success': True, 'data': templates})
-    except Exception as e:
-        logger.error(f"screeners_templates_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to load templates'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def screeners_results_api(request, screener_id: str):
-    # Minimal results: return latest 20 stocks as placeholder
-    try:
-        _ = Screener.objects.get(id=screener_id)  # ensure exists
-        qs = Stock.objects.order_by('-last_updated')[:20]
-        data = [{'ticker': s.ticker, 'company_name': s.company_name or s.name, 'current_price': format_decimal_safe(s.current_price)} for s in qs]
-        return Response({'success': True, 'count': len(data), 'data': data, 'generated_at': timezone.now().isoformat()})
-    except Screener.DoesNotExist:
-        return Response({'success': False, 'error': 'Not found'}, status=404)
-    except Exception as e:
-        logger.error(f"screeners_results_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to run screener'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def screeners_export_csv_api(request, screener_id: str):
-    try:
-        import io, csv
-        _ = Screener.objects.get(id=screener_id)
-        qs = Stock.objects.order_by('-last_updated')[:100]
-        buf = io.StringIO()
-        w = csv.writer(buf)
-        w.writerow(['ticker', 'company_name', 'current_price'])
-        for s in qs:
-            w.writerow([s.ticker, s.company_name or s.name, format_decimal_safe(s.current_price) or 0])
-        from django.http import HttpResponse
-        resp = HttpResponse(buf.getvalue(), content_type='text/csv')
-        resp['Content-Disposition'] = f'attachment; filename="screener_{screener_id}.csv"'
-        return resp
-    except Screener.DoesNotExist:
-        return Response({'success': False, 'error': 'Not found'}, status=404)
-    except Exception as e:
-        logger.error(f"screeners_export_csv_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to export CSV'}, status=500)
-
-
-@api_view(['DELETE'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def screeners_delete_api(request, screener_id: str):
-    try:
-        s = Screener.objects.get(id=screener_id)
-        s.delete()
-        return Response({'success': True})
-    except Screener.DoesNotExist:
-        return Response({'success': False, 'error': 'Not found'}, status=404)
-    except Exception as e:
-        logger.error(f"screeners_delete_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to delete screener'}, status=500)
-
-
-# =============================
-# Additional endpoints referenced by urls.py (Windows-safe minimal implementations)
-# =============================
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def stock_insiders_api(request, ticker: str):
-    try:
-        # Minimal placeholder: return empty insiders list
-        return Response({'success': True, 'ticker': ticker.upper(), 'insiders': []})
-    except Exception as e:
-        logger.error(f"stock_insiders_api error for {ticker}: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to load insiders'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def export_stocks_csv_api(request):
-    try:
-        qs = Stock.objects.order_by('ticker')[:1000]
-        buf = []
-        writer = csv.writer(buf := [])  # type: ignore
-        # Build CSV in memory
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['ticker', 'company_name', 'current_price', 'change_percent', 'volume'])
-        for s in qs:
-            writer.writerow([
-                s.ticker,
-                s.company_name or s.name,
-                format_decimal_safe(s.current_price),
-                format_decimal_safe(s.change_percent),
-                s.volume or 0,
-            ])
-        resp = HttpResponse(output.getvalue(), content_type='text/csv')
-        resp['Content-Disposition'] = 'attachment; filename="stocks.csv"'
-        return resp
-    except Exception as e:
-        logger.error(f"export_stocks_csv_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to export stocks CSV'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def export_portfolio_csv_api(request):
-    try:
-        # Export aggregate holdings across all portfolios (placeholder)
-        from .models import PortfolioHolding
-        holdings = PortfolioHolding.objects.select_related('portfolio', 'stock').all()[:5000]
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['portfolio', 'ticker', 'shares', 'avg_cost', 'current_price', 'market_value', 'unrealized_pnl'])
-        for h in holdings:
-            writer.writerow([
-                h.portfolio.name,
-                h.stock.ticker,
-                float(h.shares),
-                float(h.average_cost),
-                float(h.current_price),
-                float(h.market_value),
-                float(h.unrealized_gain_loss),
-            ])
-        resp = HttpResponse(output.getvalue(), content_type='text/csv')
-        resp['Content-Disposition'] = 'attachment; filename="portfolio_holdings.csv"'
-        return resp
-    except Exception as e:
-        logger.error(f"export_portfolio_csv_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to export portfolio CSV'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def export_watchlist_csv_api(request):
-    try:
-        # Export all watchlist items (placeholder)
-        from .models import WatchlistItem
-        items = WatchlistItem.objects.select_related('watchlist', 'stock').all()[:5000]
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['watchlist', 'ticker', 'added_price', 'current_price', 'price_change_percent'])
-        for it in items:
-            writer.writerow([
-                it.watchlist.name,
-                it.stock.ticker,
-                float(it.added_price),
-                float(it.current_price),
-                float(it.price_change_percent),
-            ])
-        resp = HttpResponse(output.getvalue(), content_type='text/csv')
-        resp['Content-Disposition'] = 'attachment; filename="watchlist_items.csv"'
-        return resp
-    except Exception as e:
-        logger.error(f"export_watchlist_csv_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to export watchlist CSV'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def reports_download_api(request, report_id: str):
-    try:
-        return Response({'success': False, 'error': 'Report not available', 'report_id': report_id}, status=404)
-    except Exception as e:
-        logger.error(f"reports_download_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to process report download'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def total_tickers_api(request):
-    try:
-        total = Stock.objects.count()
-        return Response({'success': True, 'total_tickers': total})
-    except Exception as e:
-        logger.error(f"total_tickers_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute total tickers'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def gainers_losers_stats_api(request):
-    try:
-        gainers = Stock.objects.filter(price_change_today__gt=0).count()
-        losers = Stock.objects.filter(price_change_today__lt=0).count()
-        unchanged = Stock.objects.filter(price_change_today=0).count()
-        return Response({'success': True, 'gainers': gainers, 'losers': losers, 'unchanged': unchanged})
-    except Exception as e:
-        logger.error(f"gainers_losers_stats_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute stats'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def total_alerts_api(request):
-    try:
-        total = StockAlert.objects.count()
-        return Response({'success': True, 'total_alerts': total})
-    except Exception as e:
-        logger.error(f"total_alerts_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute total alerts'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def portfolio_value_api(request):
-    try:
-        from .models import PortfolioHolding
-        agg = PortfolioHolding.objects.all()
-        total_value = sum((h.market_value or 0) for h in agg)
-        return Response({'success': True, 'total_portfolio_value': float(total_value)})
-    except Exception as e:
-        logger.error(f"portfolio_value_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute portfolio value'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def portfolio_pnl_api(request):
-    try:
-        from .models import PortfolioHolding
-        agg = PortfolioHolding.objects.all()
-        total_pnl = sum((h.unrealized_gain_loss or 0) for h in agg)
-        return Response({'success': True, 'unrealized_pnl': float(total_pnl)})
-    except Exception as e:
-        logger.error(f"portfolio_pnl_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute PnL'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def portfolio_return_api(request):
-    try:
-        from .models import UserPortfolio
-        portfolios = UserPortfolio.objects.all()
-        # Weighted by total_cost if available
-        total_cost = sum((p.total_cost or 0) for p in portfolios)
-        total_return = sum((p.total_return or 0) for p in portfolios)
-        pct = float((total_return / total_cost) * 100) if total_cost else 0.0
-        return Response({'success': True, 'total_return_amount': float(total_return), 'total_return_percent': pct})
-    except Exception as e:
-        logger.error(f"portfolio_return_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute portfolio return'}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def portfolio_holdings_count_api(request):
-    try:
-        from .models import PortfolioHolding
-        count = PortfolioHolding.objects.count()
-        return Response({'success': True, 'holdings_count': count})
-    except Exception as e:
-        logger.error(f"portfolio_holdings_count_api error: {e}", exc_info=True)
-        return Response({'success': False, 'error': 'Failed to compute holdings count'}, status=500)
-
-
-# Shareable resources placeholders
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def share_watchlist_public(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def share_portfolio_public(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def share_watchlist_export(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def share_portfolio_export(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def share_watchlist_copy(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def share_portfolio_copy(request, slug: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'slug': slug}, status=501)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def share_watchlist_create_link(request, watchlist_id: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'watchlist_id': watchlist_id}, status=501)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def share_portfolio_create_link(request, portfolio_id: str):
-    return Response({'success': False, 'error': 'Sharing not enabled', 'portfolio_id': portfolio_id}, status=501)
