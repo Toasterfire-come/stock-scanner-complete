@@ -93,23 +93,21 @@ const PayPalCheckout = ({
     try {
       const orderId = data?.orderID;
       // Capture on the server and activate plan
-      try {
-        const capture = await capturePayPalOrder(orderId, {
-          plan_type: planType,
-          billing_cycle: billingCycle,
-          discount_code: discountCode || undefined,
-        });
-        if (!capture?.success) {
-          throw new Error(capture?.error || "Payment capture failed");
-        }
-      } catch (_serverErr) {
-        try {
-          await changePlan({ plan: planType, billing_cycle: billingCycle });
-        } catch {}
+      const capture = await capturePayPalOrder(orderId, {
+        plan_type: planType,
+        billing_cycle: billingCycle,
+        discount_code: discountCode || undefined,
+      });
+
+      if (!capture?.success) {
+        throw new Error(capture?.error || "Payment capture failed");
       }
-      onSuccess?.({ orderId, planType, billingCycle });
+
+      // Only proceed if payment was successfully captured
+      onSuccess?.({ orderId, planType, billingCycle, captureId: capture.capture_id });
     } catch (err) {
-      setError(err?.message || "Payment failed");
+      const errorMessage = err?.message || "Payment failed. Please try again or contact support.";
+      setError(errorMessage);
       onError?.(err);
       throw err;
     } finally {

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'emails',
     'core',
     'news',
+    'billing',
 ]
 
 MIDDLEWARE = [
@@ -178,6 +179,22 @@ FINNHUB_KEYS = [
     if key.strip()
 ]
 
+# PayPal Configuration
+PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')  # 'sandbox' or 'live'
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+
+# PayPal Subscription Plan IDs (get these from PayPal dashboard)
+PAYPAL_PLAN_BRONZE_MONTHLY = os.environ.get('PAYPAL_PLAN_BRONZE_MONTHLY', '')
+PAYPAL_PLAN_BRONZE_ANNUAL = os.environ.get('PAYPAL_PLAN_BRONZE_ANNUAL', '')
+PAYPAL_PLAN_SILVER_MONTHLY = os.environ.get('PAYPAL_PLAN_SILVER_MONTHLY', '')
+PAYPAL_PLAN_SILVER_ANNUAL = os.environ.get('PAYPAL_PLAN_SILVER_ANNUAL', '')
+PAYPAL_PLAN_GOLD_MONTHLY = os.environ.get('PAYPAL_PLAN_GOLD_MONTHLY', '')
+PAYPAL_PLAN_GOLD_ANNUAL = os.environ.get('PAYPAL_PLAN_GOLD_ANNUAL', '')
+
+# Frontend URL for PayPal redirects
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
 # Logging
 LOGGING = {
     'version': 1,
@@ -189,5 +206,12 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
+    },
+    'loggers': {
+        'billing': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }

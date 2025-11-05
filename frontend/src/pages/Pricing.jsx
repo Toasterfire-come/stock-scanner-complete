@@ -117,7 +117,7 @@ const Pricing = () => {
       name: "Gold",
       icon: <Star className="h-6 w-6" />,
       description: "Ultimate trading experience",
-      price: { monthly: 89.99, annual: null },
+      price: { monthly: 79.99, annual: null },
       features: [
         "Unlimited API calls",
         "All premium features",
@@ -170,18 +170,14 @@ const Pricing = () => {
   };
 
   const createPayPalOrder = async (planId) => {
-    toast.success("Redirecting to PayPal...");
-    
-    // Simulate redirect to PayPal
-    setTimeout(() => {
-      navigate("/checkout/success", { 
-        state: { 
-          planId, 
-          amount: finalAmount,
-          originalAmount: plans.find(p => p.id === planId).price.monthly
-        } 
-      });
-    }, 2000);
+    // Navigate to proper checkout page with plan pre-selected
+    navigate("/billing/checkout", {
+      state: {
+        plan: planId,
+        cycle: isAnnual ? 'annual' : 'monthly',
+        discount_code: discountCode || referralCode || null
+      }
+    });
   };
 
   const applyDiscountCode = async () => {
