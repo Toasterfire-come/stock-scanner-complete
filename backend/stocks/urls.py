@@ -11,7 +11,16 @@ from .api_views_fixed import trigger_stock_update, trigger_news_update
 from . import logs_api
 from . import revenue_views
 try:
-    from .billing_api import cancel_subscription_api, paypal_plans_meta_api, developer_usage_stats_api
+    from .billing_api import (
+        cancel_subscription_api,
+        paypal_plans_meta_api,
+        developer_usage_stats_api,
+        create_paypal_order_api,
+        capture_paypal_order_api,
+        paypal_webhook_api,
+        paypal_client_token_api,
+        paypal_status_api
+    )
 except Exception as _billing_import_err:  # Graceful fallback if optional deps (DRF) missing
     from django.http import JsonResponse
     from django.views.decorators.csrf import csrf_exempt
@@ -42,6 +51,48 @@ except Exception as _billing_import_err:  # Graceful fallback if optional deps (
             'success': False,
             'error': 'Billing module unavailable',
             'details': str(_billing_import_err)
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["POST"])  # type: ignore
+    def create_paypal_order_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'PayPal billing unavailable',
+            'error_code': 'BILLING_MODULE_UNAVAILABLE'
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["POST"])  # type: ignore
+    def capture_paypal_order_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'PayPal billing unavailable',
+            'error_code': 'BILLING_MODULE_UNAVAILABLE'
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["POST"])  # type: ignore
+    def paypal_webhook_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'PayPal webhook unavailable'
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["GET"])  # type: ignore
+    def paypal_client_token_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'PayPal client token unavailable'
+        }, status=503)
+
+    @csrf_exempt
+    @require_http_methods(["GET"])  # type: ignore
+    def paypal_status_api(request):  # type: ignore
+        return JsonResponse({
+            'success': False,
+            'error': 'PayPal status unavailable'
         }, status=503)
 from . import indicators_api
 from . import enterprise_api
@@ -248,6 +299,13 @@ urlpatterns = [
     # Billing management
     path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
     path('billing/plans-meta/', paypal_plans_meta_api, name='paypal_plans_meta'),
+
+    # PayPal Integration Endpoints
+    path('billing/create-paypal-order/', create_paypal_order_api, name='create_paypal_order'),
+    path('billing/capture-paypal-order/', capture_paypal_order_api, name='capture_paypal_order'),
+    path('billing/paypal-webhook/', paypal_webhook_api, name='paypal_webhook'),
+    path('billing/paypal-client-token/', paypal_client_token_api, name='paypal_client_token'),
+    path('billing/paypal-status/', paypal_status_api, name='paypal_status'),
 
     # Custom Indicators CRUD
     path('indicators/', indicators_api.list_indicators, name='indicators_list'),
