@@ -73,7 +73,7 @@ EMAIL_VERIFICATION = {
 }
 
 # Unsubscribe settings
-UNSUBSCRIBE_URL = os.getenv('SITE_URL', 'https://retailtradescan.net') + '/unsubscribe/{token}/'
+UNSUBSCRIBE_URL = os.getenv('SITE_URL', 'https://tradescanpro.com') + '/unsubscribe/{token}/'
 
 def get_email_settings():
     """Return email configuration dictionary for Django settings"""

@@ -57,7 +57,7 @@ class StockScannerIntegration {
     private $api_secret;
     
     public function __construct() {
-        $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.retailtradescanner.com/api/');
+        $this->api_base_url = get_option('stock_scanner_api_url', 'https://api.tradescanpro.com/api/');
         $this->api_secret = get_option('stock_scanner_api_secret', '');
         
         add_action('init', array($this, 'init'));
