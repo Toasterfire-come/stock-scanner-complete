@@ -5,10 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
+import {
+  EnhancedSelect,
+  EnhancedSelectContent,
+  EnhancedSelectItem,
+  EnhancedSelectTrigger,
+  EnhancedSelectValue,
+  EnhancedSelectGroup,
+  EnhancedSelectLabel
+} from "../../../components/ui/enhanced-select";
 import { Textarea } from "../../../components/ui/textarea";
 import { Separator } from "../../../components/ui/separator";
 import { Badge } from "../../../components/ui/badge";
-import { X, Plus, Save, Play } from "lucide-react";
+import { X, Plus, Save, Play, DollarSign, TrendingUp, BarChart3, Target } from "lucide-react";
 import { toast } from "sonner";
 import { createScreener, runScreener } from "../../../api/client";
 
@@ -24,23 +33,36 @@ const CreateScreener = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const availableCriteria = [
-    { id: "market_cap", name: "Market Cap", type: "range" },
-    { id: "price", name: "Stock Price", type: "range" },
-    { id: "volume", name: "Volume", type: "range" },
-    { id: "pe_ratio", name: "P/E Ratio", type: "range" },
-    { id: "dividend_yield", name: "Dividend Yield", type: "range" },
-    { id: "change_percent", name: "Price Change %", type: "range" },
-    { id: "price_to_book", name: "Price to Book", type: "range" },
-    { id: "earnings_per_share", name: "Earnings Per Share (EPS)", type: "range" },
-    { id: "book_value", name: "Book Value", type: "range" },
-    { id: "week_52_low", name: "52-Week Low", type: "range" },
-    { id: "week_52_high", name: "52-Week High", type: "range" },
-    { id: "one_year_target", name: "1-Year Target", type: "range" },
-    { id: "dvav", name: "Volume vs Avg (DV/AV)", type: "range" },
-    { id: "bid_price", name: "Bid Price", type: "range" },
-    { id: "ask_price", name: "Ask Price", type: "range" },
-    { id: "exchange", name: "Exchange", type: "select" }
+    // Price & Valuation
+    { id: "market_cap", name: "Market Cap", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "price", name: "Stock Price", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "pe_ratio", name: "P/E Ratio", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "price_to_book", name: "Price to Book", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "dividend_yield", name: "Dividend Yield", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "bid_price", name: "Bid Price", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "ask_price", name: "Ask Price", type: "range", category: "price", icon: <DollarSign className="h-4 w-4" /> },
+
+    // Trading Activity
+    { id: "volume", name: "Volume", type: "range", category: "trading", icon: <BarChart3 className="h-4 w-4" /> },
+    { id: "dvav", name: "Volume vs Avg (DV/AV)", type: "range", category: "trading", icon: <BarChart3 className="h-4 w-4" /> },
+    { id: "change_percent", name: "Price Change %", type: "range", category: "trading", icon: <TrendingUp className="h-4 w-4" /> },
+
+    // Fundamentals
+    { id: "earnings_per_share", name: "Earnings Per Share (EPS)", type: "range", category: "fundamentals", icon: <Target className="h-4 w-4" /> },
+    { id: "book_value", name: "Book Value", type: "range", category: "fundamentals", icon: <Target className="h-4 w-4" /> },
+
+    // 52-Week Metrics
+    { id: "week_52_low", name: "52-Week Low", type: "range", category: "52week", icon: <TrendingUp className="h-4 w-4" /> },
+    { id: "week_52_high", name: "52-Week High", type: "range", category: "52week", icon: <TrendingUp className="h-4 w-4" /> },
+    { id: "one_year_target", name: "1-Year Target", type: "range", category: "52week", icon: <Target className="h-4 w-4" /> },
+
+    // Exchange
+    { id: "exchange", name: "Exchange", type: "select", category: "other" }
   ];
+
+  const getCriteriaByCategory = (category) => {
+    return availableCriteria.filter(c => c.category === category && !criteria.some(existing => existing.id === c.id));
+  };
 
   // Apply getting-started template if requested
   useEffect(() => {
@@ -231,20 +253,92 @@ const CreateScreener = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
-                  <Select onValueChange={addCriterion}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Add a criterion" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCriteria
-                        .filter(c => !criteria.some(existing => existing.id === c.id))
-                        .map(criterion => (
-                          <SelectItem key={criterion.id} value={criterion.id}>
-                            {criterion.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <EnhancedSelect onValueChange={addCriterion}>
+                    <EnhancedSelectTrigger>
+                      <EnhancedSelectValue placeholder="Search and add a criterion..." />
+                    </EnhancedSelectTrigger>
+                    <EnhancedSelectContent
+                      searchable={true}
+                      searchPlaceholder="Search criteria..."
+                      showCount={true}
+                      grouped={true}
+                      maxHeight={400}
+                    >
+                      {getCriteriaByCategory('price').length > 0 && (
+                        <EnhancedSelectGroup>
+                          <EnhancedSelectLabel>Price & Valuation</EnhancedSelectLabel>
+                          {getCriteriaByCategory('price').map(criterion => (
+                            <EnhancedSelectItem
+                              key={criterion.id}
+                              value={criterion.id}
+                              icon={criterion.icon}
+                            >
+                              {criterion.name}
+                            </EnhancedSelectItem>
+                          ))}
+                        </EnhancedSelectGroup>
+                      )}
+
+                      {getCriteriaByCategory('trading').length > 0 && (
+                        <EnhancedSelectGroup>
+                          <EnhancedSelectLabel>Trading Activity</EnhancedSelectLabel>
+                          {getCriteriaByCategory('trading').map(criterion => (
+                            <EnhancedSelectItem
+                              key={criterion.id}
+                              value={criterion.id}
+                              icon={criterion.icon}
+                            >
+                              {criterion.name}
+                            </EnhancedSelectItem>
+                          ))}
+                        </EnhancedSelectGroup>
+                      )}
+
+                      {getCriteriaByCategory('fundamentals').length > 0 && (
+                        <EnhancedSelectGroup>
+                          <EnhancedSelectLabel>Fundamentals</EnhancedSelectLabel>
+                          {getCriteriaByCategory('fundamentals').map(criterion => (
+                            <EnhancedSelectItem
+                              key={criterion.id}
+                              value={criterion.id}
+                              icon={criterion.icon}
+                            >
+                              {criterion.name}
+                            </EnhancedSelectItem>
+                          ))}
+                        </EnhancedSelectGroup>
+                      )}
+
+                      {getCriteriaByCategory('52week').length > 0 && (
+                        <EnhancedSelectGroup>
+                          <EnhancedSelectLabel>52-Week Metrics</EnhancedSelectLabel>
+                          {getCriteriaByCategory('52week').map(criterion => (
+                            <EnhancedSelectItem
+                              key={criterion.id}
+                              value={criterion.id}
+                              icon={criterion.icon}
+                            >
+                              {criterion.name}
+                            </EnhancedSelectItem>
+                          ))}
+                        </EnhancedSelectGroup>
+                      )}
+
+                      {getCriteriaByCategory('other').length > 0 && (
+                        <EnhancedSelectGroup>
+                          <EnhancedSelectLabel>Other</EnhancedSelectLabel>
+                          {getCriteriaByCategory('other').map(criterion => (
+                            <EnhancedSelectItem
+                              key={criterion.id}
+                              value={criterion.id}
+                            >
+                              {criterion.name}
+                            </EnhancedSelectItem>
+                          ))}
+                        </EnhancedSelectGroup>
+                      )}
+                    </EnhancedSelectContent>
+                  </EnhancedSelect>
                 </div>
 
                 <div className="space-y-4">
