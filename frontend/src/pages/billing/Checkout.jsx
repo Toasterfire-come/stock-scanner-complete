@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/badge";
 import { Label } from "../../components/ui/label";
 import { Switch } from "../../components/ui/switch";
 import PayPalCheckout from "../../components/PayPalCheckout";
+import TrustBadges from "../../components/TrustBadges";
 import { useAuth } from "../../context/SecureAuthContext";
 import { api } from "../../api/client";
 import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
