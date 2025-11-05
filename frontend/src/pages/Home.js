@@ -136,7 +136,7 @@ const Home = () => {
         "Basic portfolio tracking"
       ],
       popular: true,
-      cta: "Try Now for Free"
+      cta: "Start 7-Day Free Trial"
     },
     {
       name: "Silver", 
@@ -152,7 +152,7 @@ const Home = () => {
         "Priority email support"
       ],
       popular: false,
-      cta: "Try Now for Free"
+      cta: "Start 7-Day Free Trial"
     },
     {
       name: "Gold",
@@ -168,7 +168,7 @@ const Home = () => {
         "Priority email support"
       ],
       popular: false,
-      cta: "Try Now for Free"
+      cta: "Start 7-Day Free Trial"
     }
   ];
 
@@ -183,12 +183,12 @@ const Home = () => {
               Trusted by Professional Traders
             </Badge>
             <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-              Turn Market Data Into
-              <span className="text-blue-600 block"> Profitable Trades</span>
+              Find Profitable Stocks 10X Faster
+              <span className="text-blue-600 block">NYSE & NASDAQ Real-Time Scanner</span>
             </h1>
             <p className="text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Professional stock screening tools with real-time alerts and market intelligence 
-              to help you make better trading decisions.
+              Scan 7,000+ stocks with 14 technical indicators, instant alerts, and portfolio analytics.
+              Join 5,000+ active traders finding opportunities faster.
             </p>
 
             {/* Market Status */}
@@ -201,14 +201,14 @@ const Home = () => {
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-6 w-6 mr-3" />
-                  Try free — no card required
+                  Start 7-Day Free Trial
                   <ArrowRight className="h-6 w-6 ml-3" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-xl px-12 py-6 h-auto border-2">
-                <Link to="/contact">
-                  <Mail className="h-6 w-6 mr-3" />
-                  Contact Support
+                <Link to="/pricing">
+                  <DollarSign className="h-6 w-6 mr-3" />
+                  View Pricing
                 </Link>
               </Button>
             </div>
