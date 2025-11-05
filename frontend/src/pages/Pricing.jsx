@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/SecureAuthContext";
 import { normalizeReferralCode, setReferralCookie } from "../lib/referral";
+import PricingComparisonTable from "../components/PricingComparisonTable";
+import PricingFAQ from "../components/PricingFAQ";
 import {
   marketingMetrics,
   formatNumber,
@@ -572,6 +574,16 @@ const Pricing = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Pricing Comparison Table */}
+        <div className="mt-24">
+          <PricingComparisonTable />
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mt-24">
+          <PricingFAQ />
         </div>
 
         {/* CTA Section */}

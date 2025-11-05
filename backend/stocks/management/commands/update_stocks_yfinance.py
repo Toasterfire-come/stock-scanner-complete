@@ -26,7 +26,6 @@ import random
 import requests
 import csv
 import signal
-from utils.stock_data import compute_market_cap_fallback
 
 # Add XAMPP MySQL to PATH if it exists
 XAMPP_MYSQL_PATH = r"C:\xampp\mysql\bin"
@@ -34,18 +33,20 @@ if os.path.exists(XAMPP_MYSQL_PATH) and XAMPP_MYSQL_PATH not in os.environ.get('
     os.environ['PATH'] = os.environ.get('PATH', '') + os.pathsep + XAMPP_MYSQL_PATH
     print(f"INFO: Added XAMPP MySQL to PATH for stock updates: {XAMPP_MYSQL_PATH}")
 
-# Configure PyMySQL for MySQL compatibility
-try:
-    import pymysql
-    pymysql.install_as_MySQLdb()
-    print("PyMySQL configured for MySQL compatibility")
-except ImportError:
-    print("PyMySQL not available")
-
 logger = logging.getLogger(__name__)
 
 # Global flag for graceful shutdown
 shutdown_flag = False
+
+def signal_handler(signum, frame):
+    """Handle interrupt signals gracefully"""
+    global shutdown_flag
+    print("\nReceived interrupt signal. Shutting down gracefully...")
+    shutdown_flag = True
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 class Command(BaseCommand):
     help = 'Enhanced stock data update with 3-minute auto-scheduler and NYSE focus - WORKING VERSION'
@@ -122,16 +123,6 @@ class Command(BaseCommand):
         """Main command handler"""
         global shutdown_flag
         
-        # Set up signal handlers for this command
-        def signal_handler(signum, frame):
-            global shutdown_flag
-            self.stdout.write("\nReceived interrupt signal. Shutting down gracefully...")
-            shutdown_flag = True
-        
-        # Register signal handlers
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
-        
         if options['schedule']:
             self._run_scheduler(options)
         elif options['startup']:
@@ -197,12 +188,7 @@ class Command(BaseCommand):
         else:
             # Use the working approach from enhanced_stock_retrieval_working.py
             csv_file = options['csv']
-            try:
-                symbols = self.load_nyse_symbols(csv_file, test_mode=False, max_symbols=options['limit'])
-            except Exception as e:
-                self.stdout.write(f"ERROR: Failed to load symbols from {csv_file}: {e}")
-                self.stdout.write("Falling back to test symbols...")
-                symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA']  # Fallback symbols
+            symbols = self.load_nyse_symbols(csv_file, test_mode=False, max_symbols=options['limit'])
         
         if not symbols:
             self.stdout.write("ERROR: No symbols loaded. Exiting.")
@@ -289,20 +275,18 @@ class Command(BaseCommand):
             return
             
         try:
-            import requests
             session = requests.Session()
             session.proxies = {
                 'http': proxy,
                 'https': proxy
             }
             session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             })
             import yfinance.shared
             yfinance.shared._requests = session
-            self.stdout.write(f"[PROXY] Applied proxy session for yfinance")
         except Exception as e:
-            self.stdout.write(f"Failed to patch yfinance proxy handling: {e}")
+            self.stdout.write(f"Failed to set proxy {proxy}: {e}")
 
     def _extract_pe_ratio(self, info):
         """Extract PE ratio with multiple fallback options"""
@@ -417,7 +401,6 @@ class Command(BaseCommand):
         """Process a single symbol with comprehensive data collection and Django integration"""
         global shutdown_flag
         
-        # Check shutdown flag at the start
         if shutdown_flag:
             return None
             
@@ -437,23 +420,13 @@ class Command(BaseCommand):
             # Try multiple approaches to get data
             ticker_obj = yf.Ticker(symbol)
             info = None
-            fast_info = None
             hist = None
             current_price = None
-            
-            # Approach 0: Try to get fast_info first for speed
-            try:
-                fast_info = ticker_obj.fast_info
-                if fast_info and hasattr(fast_info, 'last_price') and fast_info.last_price:
-                    current_price = fast_info.last_price
-            except Exception:
-                pass
             
             # Approach 1: Try to get basic info
             try:
                 info = ticker_obj.info
-            except (Exception, KeyError, ValueError, ConnectionError, TimeoutError) as e:
-                logger.debug(f"Failed to get info for {ticker}: {e}")
+            except:
                 pass
             
             # Approach 2: Try to get historical data with multiple periods
@@ -465,8 +438,7 @@ class Command(BaseCommand):
                             current_price = hist['Close'].iloc[-1]
                             if current_price is not None and not pd.isna(current_price):
                                 break
-                        except (KeyError, IndexError, ValueError) as e:
-                            logger.debug(f"Failed to extract price from history for {ticker}: {e}")
+                        except:
                             continue
                 except Exception as e:
                     continue
@@ -475,8 +447,7 @@ class Command(BaseCommand):
             if current_price is None and info:
                 try:
                     current_price = info.get('currentPrice') or info.get('regularMarketPrice') or info.get('regularMarketOpen')
-                except (KeyError, TypeError, AttributeError) as e:
-                    logger.debug(f"Failed to extract current price from info for {ticker}: {e}")
+                except:
                     pass
             
             # Approach 4: Try a simple quote request
@@ -486,115 +457,56 @@ class Command(BaseCommand):
                     if quote:
                         # If we can get quote type, symbol exists
                         pass
-                except (Exception, KeyError, AttributeError) as e:
-                    logger.debug(f"Failed to get quote type for {ticker}: {e}")
+                except:
                     pass
             
             # Determine if we have enough data to process
             has_data = hist is not None and not hist.empty
             has_info = info and isinstance(info, dict) and len(info) > 3
-            has_fast_info = fast_info is not None
             has_price = current_price is not None and not pd.isna(current_price)
             
-            if not has_data and not has_info and not has_fast_info:
+            if not has_data and not has_info:
                 self.stdout.write(f"[NO DATA] {symbol}: No data available")
                 return None
             
-            # Helper to map from fast_info when info is missing
-            def _map_from_fast_info(fi):
-                if not fi:
-                    return {}
-                def _get(names):
-                    for n in names:
-                        try:
-                            v = getattr(fi, n)
-                            if v is not None:
-                                return v
-                        except Exception:
-                            continue
-                    return None
-                day_low = _get(['day_low', 'low'])
-                day_high = _get(['day_high', 'high'])
-                volume = _get(['last_volume', 'volume'])
-                avg_vol_3m = _get(['three_month_average_volume', 'ten_day_average_volume'])
-                market_cap = _get(['market_cap'])
-                wk52_low = _get(['fifty_two_week_low', 'year_low'])
-                wk52_high = _get(['fifty_two_week_high', 'year_high'])
-                exch = _get(['exchange'])
-                name = _get(['short_name', 'long_name']) or symbol
-                return {
-                    'company_name': name,
-                    'name': name,
-                    'days_low': self._safe_decimal(day_low),
-                    'days_high': self._safe_decimal(day_high),
-                    'volume': self._safe_decimal(volume),
-                    'volume_today': self._safe_decimal(volume),
-                    'avg_volume_3mon': self._safe_decimal(avg_vol_3m),
-                    'market_cap': self._safe_decimal(market_cap),
-                    'one_year_target': None,
-                    'week_52_low': self._safe_decimal(wk52_low),
-                    'week_52_high': self._safe_decimal(wk52_high),
-                    'earnings_per_share': None,
-                    'book_value': None,
-                    'price_to_book': None,
-                    'exchange': exch,
-                }
-
             # Extract comprehensive data with better PE ratio and dividend yield handling
             stock_data = {
-                'ticker': symbol,  # Use ticker as the primary key
-                'symbol': symbol,   # Keep symbol for compatibility
-                'company_name': info.get('longName', info.get('shortName', symbol)) if info else (_map_from_fast_info(fast_info).get('company_name') or symbol),
-                'name': info.get('longName', info.get('shortName', symbol)) if info else (_map_from_fast_info(fast_info).get('name') or symbol),
+                'symbol': symbol,
+                'name': info.get('longName', info.get('shortName', symbol)) if info else symbol,
                 'current_price': self._safe_decimal(current_price) if current_price else None,
+                'previous_close': self._safe_decimal(info.get('previousClose')) if info else None,
+                'open_price': self._safe_decimal(info.get('regularMarketOpen')) if info else None,
+                'days_low': self._safe_decimal(info.get('dayLow')) if info else None,
+                'days_high': self._safe_decimal(info.get('dayHigh')) if info else None,
+                'volume': self._safe_decimal(info.get('volume')) if info else None,
+                'volume_today': self._safe_decimal(info.get('volume')) if info else None,
+                'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else None,
+                'market_cap': self._safe_decimal(info.get('marketCap')) if info else None,
+                'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
+                'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
+                'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else None,
+                'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else None,
+                'beta': self._safe_decimal(info.get('beta')) if info else None,
+                'exchange': info.get('exchange') if info else None,
+                'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else None,
+                'book_value': self._safe_decimal(info.get('bookValue')) if info else None,
+                'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else None,
+                'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else None,
                 'price_change_today': None,
+                'change_percent': None,
                 'price_change_week': None,
                 'price_change_month': None,
                 'price_change_year': None,
-                'change_percent': None,
+                'pe_change_3mon': None,
+                'market_cap_change_3mon': None,
                 'bid_price': None,
                 'ask_price': None,
-                'bid_ask_spread': '',  # Empty string instead of None for CharField
-                'days_range': '',  # Empty string instead of None for CharField
-                'days_low': self._safe_decimal(info.get('dayLow')) if info else _map_from_fast_info(fast_info).get('days_low'),
-                'days_high': self._safe_decimal(info.get('dayHigh')) if info else _map_from_fast_info(fast_info).get('days_high'),
-                'volume': self._safe_decimal(info.get('volume')) if info else _map_from_fast_info(fast_info).get('volume'),
-                'volume_today': self._safe_decimal(info.get('volume')) if info else _map_from_fast_info(fast_info).get('volume_today'),
-                'avg_volume_3mon': self._safe_decimal(info.get('averageVolume')) if info else _map_from_fast_info(fast_info).get('avg_volume_3mon'),
-                'dvav': None,
+                'bid_ask_spread': None,
                 'shares_available': None,
-                'market_cap': self._safe_decimal(info.get('marketCap')) if info else _map_from_fast_info(fast_info).get('market_cap'),
-                'market_cap_change_3mon': None,
-                'pe_ratio': self._safe_decimal(self._extract_pe_ratio(info)) if info else None,
-                'pe_change_3mon': None,
-                'dividend_yield': self._safe_decimal(self._extract_dividend_yield(info)) if info else None,
-                'one_year_target': self._safe_decimal(info.get('targetMeanPrice')) if info else _map_from_fast_info(fast_info).get('one_year_target'),
-                'week_52_low': self._safe_decimal(info.get('fiftyTwoWeekLow')) if info else _map_from_fast_info(fast_info).get('week_52_low'),
-                'week_52_high': self._safe_decimal(info.get('fiftyTwoWeekHigh')) if info else _map_from_fast_info(fast_info).get('week_52_high'),
-                'earnings_per_share': self._safe_decimal(info.get('trailingEps')) if info else _map_from_fast_info(fast_info).get('earnings_per_share'),
-                'book_value': self._safe_decimal(info.get('bookValue')) if info else _map_from_fast_info(fast_info).get('book_value'),
-                'price_to_book': self._safe_decimal(info.get('priceToBook')) if info else _map_from_fast_info(fast_info).get('price_to_book'),
-                'exchange': info.get('exchange') if info else _map_from_fast_info(fast_info).get('exchange'),
+                'dvav': None,
                 'last_updated': timezone.now(),
                 'created_at': timezone.now()
             }
-
-            # Compute market cap fallback if absent
-            try:
-                mc_val = stock_data.get('market_cap')
-                if mc_val is None or mc_val == 0:
-                    # Derive shares outstanding for fallback
-                    shares_outstanding = None
-                    try:
-                        if info:
-                            shares_outstanding = info.get('sharesOutstanding')
-                    except Exception:
-                        shares_outstanding = None
-                    mc_fb = compute_market_cap_fallback(current_price, shares_outstanding)
-                    if mc_fb:
-                        stock_data['market_cap'] = mc_fb
-            except Exception:
-                pass
             
             # Calculate price changes if historical data available
             if has_data and len(hist) > 1:
@@ -606,8 +518,7 @@ class Command(BaseCommand):
                         change_percent = (change / previous) * 100
                         stock_data['price_change_today'] = self._safe_decimal(change)
                         stock_data['change_percent'] = self._safe_decimal(change_percent)
-                except (IndexError, KeyError, ZeroDivisionError, TypeError) as e:
-                    logger.debug(f"Failed to calculate price changes for {ticker}: {e}")
+                except:
                     pass
             
             # Add volume analysis
@@ -615,8 +526,7 @@ class Command(BaseCommand):
                 try:
                     volume_ratio = stock_data['volume'] / stock_data['avg_volume_3mon']
                     stock_data['dvav'] = self._safe_decimal(volume_ratio)
-                except (ZeroDivisionError, TypeError, ValueError) as e:
-                    logger.debug(f"Failed to calculate volume ratio for {ticker}: {e}")
+                except:
                     pass
             
             # Save to database if not in test mode
@@ -624,7 +534,7 @@ class Command(BaseCommand):
                 try:
                     # Create or update Stock object
                     stock, created = Stock.objects.update_or_create(
-                        ticker=symbol,  # Use ticker as the lookup field
+                        symbol=symbol,
                         defaults=stock_data
                     )
                     
@@ -632,20 +542,22 @@ class Command(BaseCommand):
                     if stock_data.get('current_price'):
                         StockPrice.objects.create(
                             stock=stock,
-                            price=stock_data['current_price']
+                            price=stock_data['current_price'],
+                            volume=stock_data.get('volume_today'),
+                            date=timezone.now()
                         )
-                
+                    
+                    # Log successful data extraction (only every 50th success to reduce noise)
+                    if ticker_number % 50 == 0:
+                        pe_ratio = stock_data.get('pe_ratio', 'N/A')
+                        dividend_yield = stock_data.get('dividend_yield', 'N/A')
+                        self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
+                    
+                    return stock_data
+                    
                 except Exception as e:
-                    logger.error(f"Failed to save stock data for {symbol}: {e}")
-                    pass
-                
-                # Log successful data extraction (only every 50th success to reduce noise)
-                if ticker_number % 50 == 0:
-                    pe_ratio = stock_data.get('pe_ratio', 'N/A')
-                    dividend_yield = stock_data.get('dividend_yield', 'N/A')
-                    self.stdout.write(f"[SUCCESS] {symbol}: ${stock_data.get('current_price', 'N/A')} - {stock_data.get('name', 'N/A')} - PE: {pe_ratio} - Div: {dividend_yield}%")
-                
-                return stock_data
+                    self.stdout.write(f"[DB ERROR] {symbol}: {e}")
+                    return None
             else:
                 # Test mode - log the data without saving (only every 50th to reduce noise)
                 if ticker_number % 50 == 0:
@@ -686,9 +598,7 @@ class Command(BaseCommand):
             with ThreadPoolExecutor(max_workers=num_threads) as executor:
                 future_to_symbol = {}
                 for i, symbol in enumerate(symbols, 1):
-                    # Check shutdown flag before submitting each task
                     if shutdown_flag:
-                        self.stdout.write("Shutdown requested. Cancelling task submission...")
                         break
                     future = executor.submit(self.process_symbol, symbol, i, proxies, timeout, test_mode)
                     future_to_symbol[future] = symbol

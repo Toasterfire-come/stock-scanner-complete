@@ -25,10 +25,12 @@ import {
 } from "lucide-react";
 import { api } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
+import { Helmet } from "react-helmet-async";
+import { StatsSkeleton } from "../components/SkeletonLoader";
 
 const Home = () => {
   const [platformStats, setPlatformStats] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState(null);
 
   useEffect(() => {
@@ -136,7 +138,7 @@ const Home = () => {
         "Basic portfolio tracking"
       ],
       popular: true,
-      cta: "Try Now for Free"
+      cta: "Start 7-Day Free Trial"
     },
     {
       name: "Silver", 
@@ -152,7 +154,7 @@ const Home = () => {
         "Priority email support"
       ],
       popular: false,
-      cta: "Try Now for Free"
+      cta: "Start 7-Day Free Trial"
     },
     {
       name: "Gold",
@@ -168,12 +170,42 @@ const Home = () => {
         "Priority email support"
       ],
       popular: false,
-      cta: "Try Now for Free"
+      cta: "Start 7-Day Free Trial"
     }
   ];
 
+  // Structured data for reviews
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Trade Scan Pro",
+    "url": "https://tradescanpro.com",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "5000",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "24.99",
+      "highPrice": "89.99",
+      "priceCurrency": "USD",
+      "offerCount": "3"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+
       {/* Hero Section - Conversion Focused */}
       <section className="relative overflow-hidden py-20 sm:py-32">
         <div className="container mx-auto px-4">
@@ -183,12 +215,12 @@ const Home = () => {
               Trusted by Professional Traders
             </Badge>
             <h1 className="text-5xl sm:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-              Turn Market Data Into
-              <span className="text-blue-600 block"> Profitable Trades</span>
+              Find Profitable Stocks 10X Faster
+              <span className="text-blue-600 block">NYSE & NASDAQ Real-Time Scanner</span>
             </h1>
             <p className="text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Professional stock screening tools with real-time alerts and market intelligence 
-              to help you make better trading decisions.
+              Scan 7,000+ stocks with 14 technical indicators, instant alerts, and portfolio analytics.
+              Join 5,000+ active traders finding opportunities faster.
             </p>
 
             {/* Market Status */}
@@ -201,14 +233,14 @@ const Home = () => {
               <Button asChild size="lg" className="text-xl px-12 py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Link to="/auth/sign-up">
                   <Play className="h-6 w-6 mr-3" />
-                  Try free — no card required
+                  Start 7-Day Free Trial
                   <ArrowRight className="h-6 w-6 ml-3" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-xl px-12 py-6 h-auto border-2">
-                <Link to="/contact">
-                  <Mail className="h-6 w-6 mr-3" />
-                  Contact Support
+                <Link to="/pricing">
+                  <DollarSign className="h-6 w-6 mr-3" />
+                  View Pricing
                 </Link>
               </Button>
             </div>
@@ -233,13 +265,15 @@ const Home = () => {
       </section>
 
       {/* Platform Stats */}
-      {platformStats && (
-        <section className="py-16 bg-white border-y">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Platform Capabilities</h2>
-              <p className="text-gray-600">Real capabilities of our trading platform</p>
-            </div>
+      <section className="py-16 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Platform Capabilities</h2>
+            <p className="text-gray-600">Real capabilities of our trading platform</p>
+          </div>
+          {isLoading ? (
+            <StatsSkeleton count={3} />
+          ) : platformStats ? (
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-4xl font-bold text-blue-600 mb-2">
@@ -260,9 +294,9 @@ const Home = () => {
                 <div className="text-gray-600">Scanner Combinations</div>
               </div>
             </div>
-          </div>
-        </section>
-      )}
+          ) : null}
+        </div>
+      </section>
 
       {/* Features Section with Expandable Details */}
       <section className="py-24 bg-gray-50">

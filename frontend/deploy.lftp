@@ -1,0 +1,6 @@
+set sftp:auto-confirm yes
+open sftp://a1531117:'C2rt3rK#2010'@access-5018544625.webspace-host.com
+lcd build
+mrm -r *
+mirror -R --delete --verbose
+bye

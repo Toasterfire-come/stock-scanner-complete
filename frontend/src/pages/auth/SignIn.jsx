@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "../../context/SecureAuthContext";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -57,9 +58,13 @@ export default function SignIn() {
   const displayError = error || authError;
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
+    <>
+      <Helmet>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
         <p className="text-gray-600 mt-2 text-sm sm:text-base">
           Sign in to your Trade Scan Pro account
         </p>
@@ -141,5 +146,6 @@ export default function SignIn() {
         </div>
       </form>
     </div>
+    </>
   );
 }

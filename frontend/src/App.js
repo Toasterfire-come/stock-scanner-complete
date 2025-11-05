@@ -125,6 +125,8 @@ import DownloadHistory from "./pages/app/exports/DownloadHistory";
 
 // Error Boundary & Net Indicator
 import SystemErrorBoundary from "./components/SystemErrorBoundary";
+import CookieConsent from "./components/CookieConsent";
+import ExitIntentPopup from "./components/ExitIntentPopup";
 // import LatencyIndicator from "./components/LatencyIndicator";
 // hotkey for command palette
 function useGlobalHotkeys(setCmdOpen) {
@@ -510,6 +512,8 @@ function App() {
               <Toaster position="top-right" />
             </div>
           </SystemErrorBoundary>
+          <CookieConsent />
+          <ExitIntentPopup />
         </BrowserRouter>
       </AuthProvider>
     </BackendStatusProvider>
