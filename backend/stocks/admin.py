@@ -1,11 +1,12 @@
 from django.contrib import admin
 from .models import (
-    Stock, StockPrice, StockAlert, Membership,
+    Stock, StockPrice, StockAlert,
     UserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
     PortfolioFollowing, DiscountCode, UserDiscountUsage,
     RevenueTracking, MonthlyRevenueSummary
 )
+# Note: Membership model has been deprecated in favor of billing.models.Subscription
 
 # Basic models
 @admin.register(Stock)
@@ -27,11 +28,8 @@ class StockAlertAdmin(admin.ModelAdmin):
     list_filter = ['alert_type', 'is_active', 'created_at']
     search_fields = ['user__username', 'stock__ticker']
 
-@admin.register(Membership)
-class MembershipAdmin(admin.ModelAdmin):
-    list_display = ['user', 'plan', 'is_active', 'created_at', 'expires_at']
-    list_filter = ['plan', 'is_active', 'created_at']
-    search_fields = ['user__username']
+# Membership model has been deprecated - use billing.models.Subscription instead
+# To manage subscriptions, use the billing app admin interface
 
 # User Profile
 @admin.register(UserProfile)
