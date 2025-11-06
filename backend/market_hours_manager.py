@@ -68,9 +68,9 @@ class MarketHoursManager:
         
         # Component configurations - Individual services with specific restart intervals
         self.components = {
-            'enhanced_stock_retrieval': {
-                'script': 'enhanced_stock_retrieval_working.py',
-                'args': ['-save-to-db', '-combined'],  # Prefer combined tickers (NASDAQ + NYSE/AMEX)
+            'django_stock_updater': {
+                'command': [self.python_exe, 'manage.py', 'update_stocks_yfinance', '--schedule'],
+                'args': [],
                 'active_during': ['market'],
                 'restart_interval': 180,  # 3 minutes
                 'process': None,
