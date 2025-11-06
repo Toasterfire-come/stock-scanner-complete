@@ -292,8 +292,6 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
         'burst': '60/minute',
     }
-},
-    'DEFAULT_THROTTLE_CACHE': 'default',
 }
 
 CACHES = {
