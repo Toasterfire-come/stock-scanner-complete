@@ -3,11 +3,11 @@ import SEO from "../components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
-  Search, 
-  Bell, 
-  BarChart3, 
-  TrendingUp, 
-  Shield, 
+  Search,
+  Bell,
+  BarChart3,
+  TrendingUp,
+  Shield,
   Zap,
   Target,
   Eye,
@@ -15,7 +15,12 @@ import {
   Users,
   Cloud,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  LineChart,
+  Download,
+  Sliders,
+  Table2,
+  Gauge
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Link } from "react-router-dom";
@@ -95,6 +100,19 @@ const Features = () => {
         "Deviation alerts when price crosses fair value",
         `Drill-down to individual stock insights backed by ${marketingMetrics.testimonials.verifiedCaseStudies}+ verified case studies`
       ]
+    },
+    {
+      icon: <LineChart className="h-8 w-8" />,
+      title: "Advanced Charting & Visualization",
+      description: "Professional-grade charting with export functionality and customizable indicators.",
+      details: [
+        "Multi-chart type support: candlestick, line, area, and bar charts",
+        "4 professional themes optimized for different lighting conditions",
+        "Chart export in multiple formats: PNG (high DPI), SVG (vector), CSV (data), and Print-ready",
+        "10+ configurable technical indicators: RSI, MACD, Bollinger Bands, SMA, EMA, Stochastic, VWAP, and more",
+        "Fullscreen chart mode with customizable indicator settings (period, colors, line width)",
+        `Chart toolbar with theme switching and type selection powered by ${reliability.apiP50LatencyMs}ms P50 latency`
+      ]
     }
   ];
 
@@ -128,6 +146,64 @@ const Features = () => {
       icon: <BarChart3 className="h-6 w-6" />,
       title: "Exports",
       description: "Export screener and portfolio data to CSV in one click"
+    },
+    {
+      icon: <Table2 className="h-6 w-6" />,
+      title: "Enhanced Data Tables",
+      description: "Virtual scrolling for 10k+ rows with advanced sorting and filtering"
+    },
+    {
+      icon: <Download className="h-6 w-6" />,
+      title: "Multi-Format Export",
+      description: "Export charts as PNG, SVG, or CSV with high DPI support"
+    },
+    {
+      icon: <Sliders className="h-6 w-6" />,
+      title: "Indicator Customization",
+      description: "Full control over technical indicators with period, color, and line width settings"
+    },
+    {
+      icon: <Gauge className="h-6 w-6" />,
+      title: "Real-Time Performance",
+      description: `${reliability.dataFreshnessSeconds}s data freshness with ${reliability.apiP50LatencyMs}ms P50 API latency`
+    }
+  ];
+
+  const proModules = [
+    {
+      icon: <LineChart className="h-6 w-6" />,
+      title: "Professional Charting Suite",
+      points: [
+        "4 chart types: candlestick, line, area, bar",
+        "4 professional themes for any lighting",
+        "Export to PNG (high DPI), SVG (vector), CSV",
+        "Fullscreen mode with gesture controls",
+        "Custom indicator overlays and settings"
+      ]
+    },
+    {
+      icon: <Table2 className="h-6 w-6" />,
+      title: "Advanced Data Management",
+      points: [
+        "Virtual scrolling handles 10,000+ rows seamlessly",
+        "Column sorting with multi-level support",
+        "Global search and per-column filtering",
+        "Row selection (single/multi) with bulk actions",
+        "Sticky headers for easy navigation",
+        "Loading states and empty state messaging"
+      ]
+    },
+    {
+      icon: <Sliders className="h-6 w-6" />,
+      title: "Enhanced UI Components",
+      points: [
+        "Select components with search and grouping",
+        "Virtual scrolling for large option lists",
+        "Icons and badges support in dropdowns",
+        "Custom scrollbar styling",
+        "Mobile-responsive compact modes",
+        "Keyboard navigation support"
+      ]
     }
   ];
 

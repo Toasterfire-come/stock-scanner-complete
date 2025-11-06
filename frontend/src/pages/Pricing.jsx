@@ -84,7 +84,9 @@ const Pricing = () => {
         "Email alerts & notifications",
         `Real-time alerts (50 alerts/mo) with sub-${reliability.apiP95LatencyMs}ms delivery`,
         "2 Watchlists",
-        "No portfolios"
+        "No portfolios",
+        "Basic charting with 4 themes",
+        "Standard data export (CSV)"
       ],
       limitations: [],
       popular: true,
@@ -104,7 +106,10 @@ const Pricing = () => {
         "Custom watchlists (10)",
         `Real-time alerts (100 alerts/mo) with ${formatPercent(outcomes.averageDrawdownReductionPercent)} drawdown reduction`,
         "Portfolio tracking (1 portfolio)",
-        `Priority email support (${reliability.supportFirstResponseMinutes} min median reply)`
+        `Priority email support (${reliability.supportFirstResponseMinutes} min median reply)`,
+        "Advanced charting with 10+ indicators",
+        "Multi-format export (PNG, SVG, CSV)",
+        "Virtual scrolling for large datasets"
       ],
       limitations: [],
       popular: false,
@@ -123,7 +128,11 @@ const Pricing = () => {
         "All premium features",
         "Real-time alerts",
         "Full REST API access",
-        `Strategic support for ${formatNumber(enterprise.enterpriseClients)} enterprise accounts`
+        `Strategic support for ${formatNumber(enterprise.enterpriseClients)} enterprise accounts`,
+        "Full charting suite with customization",
+        "Premium export features (high DPI PNG, SVG vector)",
+        "White-label deployment options",
+        "Automated deployment support"
       ],
       limitations: [],
       popular: false,
