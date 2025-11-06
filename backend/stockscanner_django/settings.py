@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_extensions',
     'stocks',
+    'billing',
     'emails',
     'core',
     'news',
