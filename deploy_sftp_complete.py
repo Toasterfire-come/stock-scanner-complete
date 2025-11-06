@@ -28,6 +28,8 @@ import sys
 import subprocess
 import argparse
 import logging
+import platform
+import shutil
 from pathlib import Path
 from typing import List, Optional
 import paramiko
@@ -207,6 +209,7 @@ class GitManager:
     def __init__(self, repo_path: Path, dry_run: bool = False):
         self.repo_path = repo_path
         self.dry_run = dry_run
+        self.is_windows = platform.system() == 'Windows'
 
     def run_git_command(self, args: List[str]) -> str:
         """Run a git command and return output"""
@@ -218,13 +221,24 @@ class GitManager:
             return ""
 
         try:
-            result = subprocess.run(
-                cmd,
-                cwd=self.repo_path,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            # On Windows, we might need shell=True for git commands in some cases
+            if self.is_windows:
+                result = subprocess.run(
+                    cmd,
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    shell=True,
+                    check=True
+                )
+            else:
+                result = subprocess.run(
+                    cmd,
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
             raise DeploymentError(f"Git command failed: {e.stderr}")
@@ -260,6 +274,26 @@ class Builder:
         self.project_root = project_root
         self.frontend_dir = project_root / 'frontend'
         self.dry_run = dry_run
+        self.is_windows = platform.system() == 'Windows'
+
+        # Find npm executable
+        self.npm_cmd = self._find_npm()
+
+    def _find_npm(self) -> str:
+        """Find npm executable"""
+        if self.is_windows:
+            # On Windows, try to find npm.cmd or npm.bat
+            npm_path = shutil.which('npm.cmd') or shutil.which('npm.bat') or shutil.which('npm')
+            if npm_path:
+                return npm_path
+            # Fallback: just use 'npm' and rely on shell=True
+            return 'npm'
+        else:
+            # On Unix-like systems, just use 'npm'
+            npm_path = shutil.which('npm')
+            if npm_path:
+                return npm_path
+            return 'npm'
 
     def build_frontend(self):
         """Build frontend application"""
@@ -269,14 +303,76 @@ class Builder:
             logger.info("[DRY RUN] Would build frontend")
             return
 
+        # Verify npm is available
+        if not self._check_npm_available():
+            raise DeploymentError(
+                "npm is not installed or not in PATH. Please install Node.js and npm.\n"
+                "Download from: https://nodejs.org/"
+            )
+
         # Check if node_modules exists
         if not (self.frontend_dir / 'node_modules').exists():
             logger.info("node_modules not found, running npm install...")
-            self._run_command(['npm', 'install'], self.frontend_dir)
+            self._run_npm_command(['install'], self.frontend_dir)
 
         # Run build
-        self._run_command(['npm', 'run', 'build'], self.frontend_dir)
+        self._run_npm_command(['run', 'build'], self.frontend_dir)
         logger.info("Frontend build completed")
+
+    def _check_npm_available(self) -> bool:
+        """Check if npm is available"""
+        try:
+            if self.is_windows:
+                result = subprocess.run(
+                    ['npm', '--version'],
+                    capture_output=True,
+                    shell=True,
+                    timeout=10
+                )
+            else:
+                result = subprocess.run(
+                    [self.npm_cmd, '--version'],
+                    capture_output=True,
+                    timeout=10
+                )
+            return result.returncode == 0
+        except Exception as e:
+            logger.debug(f"npm check failed: {e}")
+            return False
+
+    def _run_npm_command(self, args: List[str], cwd: Path):
+        """Run an npm command with platform-specific handling"""
+        if self.is_windows:
+            # On Windows, use shell=True for npm commands
+            cmd_str = f'npm {" ".join(args)}'
+            logger.info(f"Running: {cmd_str}")
+
+            try:
+                result = subprocess.run(
+                    cmd_str,
+                    cwd=cwd,
+                    capture_output=True,
+                    text=True,
+                    shell=True,
+                    check=True
+                )
+                if result.stdout:
+                    # Only show last 20 lines to avoid overwhelming output
+                    lines = result.stdout.strip().split('\n')
+                    if len(lines) > 20:
+                        logger.info("... (truncated)")
+                        for line in lines[-20:]:
+                            logger.info(line)
+                    else:
+                        logger.info(result.stdout)
+                return result.stdout
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Command output: {e.stdout}")
+                logger.error(f"Command errors: {e.stderr}")
+                raise DeploymentError(f"npm command failed: {e.stderr}")
+        else:
+            # On Unix-like systems, use the npm executable directly
+            self._run_command([self.npm_cmd] + args, cwd)
 
     def _run_command(self, cmd: List[str], cwd: Path):
         """Run a shell command"""
