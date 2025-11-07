@@ -275,11 +275,25 @@ class Builder:
             logger.info("node_modules not found, running npm install...")
             self._run_command(['npm', 'install'], self.frontend_dir)
 
-        # Run build with environment variables to skip ESLint and Puppeteer
+        # Load environment variables from .env.production
         build_env = {
             'DISABLE_ESLINT_PLUGIN': 'true',
-            'PUPPETEER_SKIP_DOWNLOAD': 'true'
+            'PUPPETEER_SKIP_DOWNLOAD': 'true',
+            'NODE_ENV': 'production'
         }
+
+        # Read .env.production file if it exists
+        env_prod_file = self.frontend_dir / '.env.production'
+        if env_prod_file.exists():
+            logger.info("Loading environment from .env.production...")
+            with open(env_prod_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        build_env[key.strip()] = value.strip()
+                        logger.debug(f"Set {key.strip()}={value.strip()}")
+
         self._run_command(['npm', 'run', 'build'], self.frontend_dir, env=build_env)
         logger.info("Frontend build completed")
 
