@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_extensions',
     'stocks',
+    'billing',
     'emails',
     'core',
     'news',
@@ -292,8 +293,6 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
         'burst': '60/minute',
     }
-},
-    'DEFAULT_THROTTLE_CACHE': 'default',
 }
 
 CACHES = {
