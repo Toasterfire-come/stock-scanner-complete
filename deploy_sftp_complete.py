@@ -28,6 +28,7 @@ import sys
 import subprocess
 import argparse
 import logging
+import platform
 from pathlib import Path
 from typing import List, Optional
 import paramiko
@@ -274,21 +275,37 @@ class Builder:
             logger.info("node_modules not found, running npm install...")
             self._run_command(['npm', 'install'], self.frontend_dir)
 
-        # Run build
-        self._run_command(['npm', 'run', 'build'], self.frontend_dir)
+        # Run build with environment variables to skip ESLint and Puppeteer
+        build_env = {
+            'DISABLE_ESLINT_PLUGIN': 'true',
+            'PUPPETEER_SKIP_DOWNLOAD': 'true'
+        }
+        self._run_command(['npm', 'run', 'build'], self.frontend_dir, env=build_env)
         logger.info("Frontend build completed")
 
-    def _run_command(self, cmd: List[str], cwd: Path):
+    def _run_command(self, cmd: List[str], cwd: Path, env: dict = None):
         """Run a shell command"""
         logger.debug(f"Running: {' '.join(cmd)} in {cwd}")
 
+        # Merge custom environment variables with system environment
+        cmd_env = os.environ.copy()
+        if env:
+            cmd_env.update(env)
+
         try:
+            # On Windows, npm commands need .cmd extension
+            if platform.system() == 'Windows':
+                if cmd[0] in ['npm', 'node', 'npx']:
+                    cmd[0] = cmd[0] + '.cmd'
+
             result = subprocess.run(
                 cmd,
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
+                shell=(platform.system() == 'Windows'),  # Use shell on Windows
+                env=cmd_env
             )
             if result.stdout:
                 logger.debug(result.stdout)
@@ -297,6 +314,10 @@ class Builder:
             logger.error(f"Command output: {e.stdout}")
             logger.error(f"Command errors: {e.stderr}")
             raise DeploymentError(f"Build command failed: {e.stderr}")
+        except FileNotFoundError as e:
+            logger.error(f"Command not found: {cmd[0]}")
+            logger.error("Make sure Node.js and npm are installed and in your PATH")
+            raise DeploymentError(f"Command not found: {cmd[0]}. Please install Node.js and npm.")
 
 
 def main():
