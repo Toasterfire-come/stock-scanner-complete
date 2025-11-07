@@ -1,22 +1,48 @@
-# Force MIME types for static files
+# Enable MultiViews OFF to prevent Apache from trying to serve extensionless files
+Options -MultiViews +FollowSymLinks
+
+# Force MIME types for static files - CRITICAL for preventing text/html responses
 <IfModule mod_mime.c>
+  # Core web types
   AddType text/css .css
   AddType application/javascript .js
   AddType application/json .json
-  AddType image/svg+xml .svg
+  AddType text/html .html .htm
+
+  # Image types
+  AddType image/svg+xml .svg .svgz
   AddType image/webp .webp
   AddType image/avif .avif
   AddType image/png .png
   AddType image/jpeg .jpg .jpeg
+  AddType image/gif .gif
   AddType image/x-icon .ico
+
+  # Font types
   AddType font/woff .woff
   AddType font/woff2 .woff2
   AddType font/ttf .ttf
+  AddType font/otf .otf
+  AddType application/vnd.ms-fontobject .eot
+
+  # Other
   AddType text/plain .txt
+  AddType application/manifest+json .webmanifest
+  AddType text/cache-manifest .appcache
+
+  # Map files for source maps
+  AddType application/json .map
+
+  # Ensure proper charset
+  AddDefaultCharset UTF-8
+  <FilesMatch "\.(html|css|js|json|xml|txt)$">
+    AddCharset UTF-8 .html .css .js .json .xml .txt
+  </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteBase /
 
   # Canonical host: force non-www
   RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
@@ -27,8 +53,14 @@
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # CRITICAL: Do not rewrite existing static files
+  # CRITICAL: Serve static files directly without rewriting
   # This must come BEFORE the SPA fallback
+  # Match any file in /static/ directory
+  RewriteCond %{REQUEST_URI} ^/static/
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # Also handle root-level static assets (images, manifest, etc)
   RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
 

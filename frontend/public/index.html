@@ -55,14 +55,8 @@
         <!-- Plausible disabled due to DNS error; enable when DNS is available -->
         <!-- <script defer data-domain="tradescanpro.com" src="https://plausible.io/js/script.js"></script> -->
 
-        <!-- Preload hero image with proper fallback -->
-        <link rel="preload" href="/hero.avif" as="image" type="image/avif">
-        <link rel="preload" href="/hero.webp" as="image" type="image/webp">
-
-        <!-- Preload CSS to reduce render-blocking -->
-        <link rel="preload" href="/static/css/main.css" as="style" onload="this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="/static/css/main.css"></noscript>
-        <!-- CRA injects bundles; avoid manual script hints that can race-load -->
+        <!-- CRA automatically injects CSS and JS bundles with correct hashed filenames -->
+        <!-- Manual preload removed to prevent MIME type errors -->
         <!-- GA4 is loaded dynamically via environment (prefer runtime injection) -->
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <!--
