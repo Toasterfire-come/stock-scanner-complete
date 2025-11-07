@@ -13,9 +13,11 @@ The deployment process:
 
 - Python 3.6+
 - pip (Python package manager)
-- Node.js and npm (for building frontend)
+- Node.js and npm (for building frontend) - Download from https://nodejs.org/
 - Git
 - `paramiko` Python library (will be installed automatically)
+
+**Note**: The script automatically detects Windows and adjusts command execution accordingly.
 
 ## Quick Start
 
@@ -123,6 +125,23 @@ If you get an error about missing Python packages:
 pip3 install paramiko
 ```
 
+### Windows-Specific Issues
+
+**npm not found error:**
+- Make sure Node.js is installed from https://nodejs.org/
+- Restart your terminal/command prompt after installing Node.js
+- Verify npm is in PATH: `npm --version`
+
+**PowerShell execution policy:**
+If you get execution policy errors, run PowerShell as Administrator and execute:
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+**Path issues:**
+- Use forward slashes or double backslashes in paths
+- The script automatically handles Windows path conversions
+
 ### Build Failures
 
 If the frontend build fails:
@@ -150,7 +169,7 @@ If you can't connect to SFTP server:
 2. Check network connectivity
 3. Verify firewall isn't blocking port 22
 
-### Permission Errors
+### Permission Errors (Linux/Mac)
 
 If you get permission errors running scripts:
 
