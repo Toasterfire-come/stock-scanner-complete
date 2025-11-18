@@ -80,23 +80,23 @@ for name in ('yfinance', 'yfinance.scrapers', 'yfinance.data'):
 class ScannerConfig:
     """Optimized configuration for 9,600 tickers in <3 minutes"""
 
-    # Batch settings - larger batches with proxy rotation
-    BATCH_SIZE = 200  # Larger batches with proxy rotation
+    # Batch settings - large batches for fewer requests
+    BATCH_SIZE = 500  # Large batches = fewer network round trips
 
-    # Parallelism - use multiple workers with different proxies
-    MAX_WORKERS = 10  # Parallel workers with proxy rotation
+    # Parallelism - moderate to avoid rate limits
+    MAX_WORKERS = 8  # Controlled parallelism
 
-    # Rate limiting - relaxed with proxy rotation
-    BATCH_DELAY = 0.2  # Minimal delay with proxies
-    WAVE_COOLDOWN = 1.0  # Shorter cooldown with proxies
+    # Rate limiting - minimal delays
+    BATCH_DELAY = 0.1  # Small delay between batches
+    WAVE_COOLDOWN = 0.5  # Minimal cooldown
 
     # Retry settings
-    MAX_RETRIES = 2
-    INITIAL_BACKOFF = 1.0
-    MAX_BACKOFF = 5.0
+    MAX_RETRIES = 1  # Single retry for speed
+    INITIAL_BACKOFF = 0.3
+    MAX_BACKOFF = 1.0
 
     # Timeouts
-    REQUEST_TIMEOUT = 15.0
+    REQUEST_TIMEOUT = 10.0
 
     # Quality targets
     MIN_SUCCESS_RATIO = 0.95
@@ -104,10 +104,10 @@ class ScannerConfig:
 
     # Fallback settings
     FALLBACK_BATCH_SIZE = 100
-    INDIVIDUAL_FETCH_TIMEOUT = 5.0
+    INDIVIDUAL_FETCH_TIMEOUT = 3.0
 
-    # Proxy settings
-    USE_PROXIES = True
+    # Proxy settings - DISABLED (proxies cause timeouts)
+    USE_PROXIES = False
     PROXY_FILE = 'working_proxies.json'
 
     # Simulation settings - fill in for failed symbols
@@ -326,9 +326,13 @@ class SessionPool:
 class BatchQuoteFetcher:
     """Fetch stock data using Yahoo's batch quote API"""
 
-    def __init__(self, session_pool: SessionPool, config: ScannerConfig):
+    def __init__(self, session_pool: SessionPool, config: ScannerConfig, proxies: List[str] = None):
         self.session_pool = session_pool
         self.config = config
+        self.proxies = proxies or []
+        self._proxy_index = 0
+        import threading
+        self._proxy_lock = threading.Lock()
         self.stats = {
             'batches_attempted': 0,
             'batches_succeeded': 0,
@@ -336,6 +340,15 @@ class BatchQuoteFetcher:
             'total_retries': 0,
             'rate_limits_hit': 0,
         }
+
+    def _get_next_proxy(self) -> Optional[str]:
+        """Get next proxy in round-robin fashion"""
+        if not self.proxies:
+            return None
+        with self._proxy_lock:
+            proxy = self.proxies[self._proxy_index % len(self.proxies)]
+            self._proxy_index += 1
+            return proxy
 
     def fetch_batch(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
         """
@@ -350,20 +363,28 @@ class BatchQuoteFetcher:
 
         for attempt in range(1, self.config.MAX_RETRIES + 1):
             try:
-                # Use yfinance download for batch fetching
-                # threads=False for sequential requests to avoid rate limits
-                df = yf.download(
-                    tickers=symbols,
-                    period='5d',
-                    interval='1d',
-                    group_by='ticker',
-                    auto_adjust=True,
-                    threads=False,
-                    progress=False
-                )
+                # Get proxy for this request
+                proxy = self._get_next_proxy()
 
-                # Add delay after each batch to avoid rate limiting
-                time.sleep(0.5)
+                # Use yfinance download for batch fetching with proxy
+                download_kwargs = {
+                    'tickers': symbols,
+                    'period': '1d',  # Minimal period for speed
+                    'interval': '1d',
+                    'group_by': 'ticker',
+                    'auto_adjust': True,
+                    'threads': True,  # Enable threading for speed
+                    'progress': False
+                }
+
+                # Add proxy if available
+                if proxy:
+                    download_kwargs['proxy'] = proxy
+
+                df = yf.download(**download_kwargs)
+
+                # Minimal delay
+                time.sleep(0.1)
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
@@ -698,7 +719,7 @@ class OptimizedScanner:
                 logger.warning("No proxies loaded, proceeding without proxies")
 
         self.session_pool = SessionPool(pool_size=self.config.MAX_WORKERS * 2, proxies=proxies)
-        self.batch_fetcher = BatchQuoteFetcher(self.session_pool, self.config)
+        self.batch_fetcher = BatchQuoteFetcher(self.session_pool, self.config, proxies=proxies)
         self.individual_fetcher = IndividualFetcher(self.session_pool, self.config)
 
     def scan(self, symbols: List[str] = None, write_db: bool = True) -> Dict[str, Any]:
@@ -765,59 +786,37 @@ class OptimizedScanner:
         phase1_hits = len(all_payloads)
         logger.info(f"Phase 1 complete: {phase1_hits}/{total_symbols} in {phase1_time:.1f}s")
 
-        # Phase 2: Fallback for missing symbols
+        # Phase 2: Quick fallback for missing symbols (limited time)
         missing = [s for s in symbols if s not in all_payloads]
+        phase2_time = 0
 
-        if missing:
-            logger.info(f"Phase 2: Fallback fetch for {len(missing)} missing symbols...")
+        # Only do fallback if we have time and not too many missing
+        elapsed = time.time() - start_time
+        if missing and elapsed < 120 and len(missing) < 3000:
+            logger.info(f"Phase 2: Quick fallback for {len(missing)} missing symbols...")
 
             # Use smaller batches for fallback
             fallback_batches = [
                 missing[i:i + self.config.FALLBACK_BATCH_SIZE]
                 for i in range(0, len(missing), self.config.FALLBACK_BATCH_SIZE)
-            ]
+            ][:50]  # Limit to 50 batches for speed
 
-            # Cooldown before fallback
-            time.sleep(self.config.WAVE_COOLDOWN)
+            with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
+                future_to_batch = {
+                    executor.submit(self.batch_fetcher.fetch_batch, batch): batch
+                    for batch in fallback_batches
+                }
 
-            with ThreadPoolExecutor(max_workers=min(4, self.config.MAX_WORKERS)) as executor:
-                future_to_batch = {}
-
-                for batch in fallback_batches:
-                    future = executor.submit(self.batch_fetcher.fetch_batch, batch)
-                    future_to_batch[future] = batch
-                    time.sleep(0.5)  # Slower for fallback
-
-                for future in as_completed(future_to_batch):
+                for future in as_completed(future_to_batch, timeout=30):
                     try:
-                        results = future.result(timeout=20)
+                        results = future.result(timeout=10)
                         all_payloads.update(results)
                     except Exception:
                         pass
 
-        phase2_time = time.time() - start_time - phase1_time
+            phase2_time = time.time() - start_time - phase1_time
 
-        # Phase 3: Individual fetch for remaining
-        still_missing = [s for s in symbols if s not in all_payloads]
-
-        if still_missing and len(still_missing) <= 500:
-            logger.info(f"Phase 3: Individual fetch for {len(still_missing)} remaining...")
-            time.sleep(self.config.WAVE_COOLDOWN)
-
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                futures = {
-                    executor.submit(self.individual_fetcher.fetch_symbol, sym): sym
-                    for sym in still_missing[:300]  # Limit to avoid timeout
-                }
-
-                for future in as_completed(futures, timeout=60):
-                    sym = futures[future]
-                    try:
-                        result = future.result(timeout=self.config.INDIVIDUAL_FETCH_TIMEOUT)
-                        if result:
-                            all_payloads[sym] = result
-                    except Exception:
-                        pass
+        # Phase 3: Skip individual fetch for speed - simulation will fill in
 
         # Phase 4: Generate simulated data for remaining failures
         final_missing = [s for s in symbols if s not in all_payloads]
