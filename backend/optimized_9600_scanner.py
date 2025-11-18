@@ -106,9 +106,8 @@ class ScannerConfig:
     FALLBACK_BATCH_SIZE = 100
     INDIVIDUAL_FETCH_TIMEOUT = 3.0
 
-    # Proxy settings - free proxies fetched but disabled due to network restrictions
-    # Enable USE_PROXIES=True in environments that allow proxy connections
-    USE_PROXIES = False
+    # Proxy settings - free proxies fetched by fetch_fresh_proxies.py before market open
+    USE_PROXIES = True
     PROXY_FILE = 'working_proxies.json'
     MAX_PROXIES_TO_USE = 500  # Limit proxies to avoid memory issues
 
@@ -335,6 +334,7 @@ class BatchQuoteFetcher:
         self._proxy_index = 0
         import threading
         self._proxy_lock = threading.Lock()
+        self._failed_proxies = set()  # Track failed proxies
         self.stats = {
             'batches_attempted': 0,
             'batches_succeeded': 0,
@@ -344,13 +344,25 @@ class BatchQuoteFetcher:
         }
 
     def _get_next_proxy(self) -> Optional[str]:
-        """Get next proxy in round-robin fashion"""
+        """Get next proxy in round-robin fashion, skipping failed ones"""
         if not self.proxies:
             return None
         with self._proxy_lock:
-            proxy = self.proxies[self._proxy_index % len(self.proxies)]
-            self._proxy_index += 1
-            return proxy
+            # Try to find a working proxy
+            attempts = 0
+            while attempts < len(self.proxies):
+                proxy = self.proxies[self._proxy_index % len(self.proxies)]
+                self._proxy_index += 1
+                if proxy not in self._failed_proxies:
+                    return proxy
+                attempts += 1
+            return None  # All proxies failed
+
+    def _mark_proxy_failed(self, proxy: str):
+        """Mark a proxy as failed"""
+        if proxy:
+            with self._proxy_lock:
+                self._failed_proxies.add(proxy)
 
     def fetch_batch(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
         """
@@ -363,10 +375,14 @@ class BatchQuoteFetcher:
         self.stats['batches_attempted'] += 1
         backoff = self.config.INITIAL_BACKOFF
 
-        for attempt in range(1, self.config.MAX_RETRIES + 1):
+        proxy = None
+        for attempt in range(1, self.config.MAX_RETRIES + 2):  # Extra attempt for no-proxy fallback
             try:
-                # Get proxy for this request
-                proxy = self._get_next_proxy()
+                # Use proxy for first attempts, then fallback to no proxy
+                if attempt <= self.config.MAX_RETRIES:
+                    proxy = self._get_next_proxy()
+                else:
+                    proxy = None  # Final attempt without proxy
 
                 # Use yfinance download for batch fetching with proxy
                 download_kwargs = {
@@ -380,8 +396,8 @@ class BatchQuoteFetcher:
                     'timeout': 5  # Short timeout for speed
                 }
 
-                # Add proxy if available (try first without proxy for speed)
-                if proxy and attempt > 1:
+                # Add proxy if available
+                if proxy:
                     download_kwargs['proxy'] = proxy
 
                 df = yf.download(**download_kwargs)
@@ -476,12 +492,14 @@ class BatchQuoteFetcher:
             except Exception as e:
                 if is_rate_limit_error(e):
                     self.stats['rate_limits_hit'] += 1
+                    # Mark proxy as failed on rate limit
+                    self._mark_proxy_failed(proxy)
 
-                if attempt < self.config.MAX_RETRIES:
+                if attempt < self.config.MAX_RETRIES + 1:  # Include no-proxy fallback
                     self.stats['total_retries'] += 1
-                    sleep_time = min(backoff + random.uniform(0, 0.5), self.config.MAX_BACKOFF)
+                    sleep_time = min(backoff + random.uniform(0, 0.3), self.config.MAX_BACKOFF)
                     time.sleep(sleep_time)
-                    backoff *= 2
+                    backoff *= 1.5
 
         self.stats['batches_failed'] += 1
         return {}
