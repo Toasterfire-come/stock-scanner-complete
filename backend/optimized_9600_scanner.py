@@ -106,9 +106,11 @@ class ScannerConfig:
     FALLBACK_BATCH_SIZE = 100
     INDIVIDUAL_FETCH_TIMEOUT = 3.0
 
-    # Proxy settings - DISABLED (proxies cause timeouts)
+    # Proxy settings - free proxies fetched but disabled due to network restrictions
+    # Enable USE_PROXIES=True in environments that allow proxy connections
     USE_PROXIES = False
     PROXY_FILE = 'working_proxies.json'
+    MAX_PROXIES_TO_USE = 500  # Limit proxies to avoid memory issues
 
     # Simulation settings - fill in for failed symbols
     ENABLE_SIMULATION = True
@@ -374,17 +376,18 @@ class BatchQuoteFetcher:
                     'group_by': 'ticker',
                     'auto_adjust': True,
                     'threads': True,  # Enable threading for speed
-                    'progress': False
+                    'progress': False,
+                    'timeout': 5  # Short timeout for speed
                 }
 
-                # Add proxy if available
-                if proxy:
+                # Add proxy if available (try first without proxy for speed)
+                if proxy and attempt > 1:
                     download_kwargs['proxy'] = proxy
 
                 df = yf.download(**download_kwargs)
 
                 # Minimal delay
-                time.sleep(0.1)
+                time.sleep(0.05)
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
@@ -712,9 +715,12 @@ class OptimizedScanner:
         proxies = []
         if self.config.USE_PROXIES:
             proxy_file = os.path.join(os.path.dirname(__file__), self.config.PROXY_FILE)
-            proxies = load_proxies(proxy_file)
-            if proxies:
-                logger.info(f"Loaded {len(proxies)} proxies from {self.config.PROXY_FILE}")
+            all_proxies = load_proxies(proxy_file)
+            if all_proxies:
+                # Limit number of proxies to use
+                max_proxies = getattr(self.config, 'MAX_PROXIES_TO_USE', 500)
+                proxies = all_proxies[:max_proxies]
+                logger.info(f"Loaded {len(proxies)} proxies from {self.config.PROXY_FILE} (of {len(all_proxies)} total)")
             else:
                 logger.warning("No proxies loaded, proceeding without proxies")
 
