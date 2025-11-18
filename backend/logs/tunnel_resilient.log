@@ -226,3 +226,6 @@
 [2025-09-22 05:42:12] [INFO] Cloudflare tunnel started successfully (PID: 83981)
 [2025-09-22 05:42:12] [INFO] Starting Django server...
 [2025-09-22 05:42:15] [INFO] Django server started successfully (PID: 83986)
+[2025-11-18 14:49:25] [INFO] Shutting down services...
+[2025-11-18 14:49:27] [INFO] Windows sleep settings restored
+[2025-11-18 14:49:27] [INFO] All services stopped. Total restarts: 1
