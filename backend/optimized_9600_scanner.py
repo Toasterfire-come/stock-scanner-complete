@@ -109,7 +109,7 @@ class ScannerConfig:
     # Proxy settings - free proxies fetched by fetch_fresh_proxies.py before market open
     USE_PROXIES = True
     PROXY_FILE = 'working_proxies.json'
-    MAX_PROXIES_TO_USE = 50  # Use only fastest proxies (was 500)
+    MAX_PROXIES_TO_USE = None  # Use all available proxies (was 50)
 
     # Simulation settings - fill in for failed symbols
     ENABLE_SIMULATION = True
@@ -119,17 +119,40 @@ class ScannerConfig:
 
 # ==================== Utilities ====================
 
+def normalize_proxy(proxy: str) -> str:
+    """Normalize proxy string to proper format with protocol"""
+    if not proxy:
+        return ''
+
+    proxy = proxy.strip()
+
+    # If already has protocol, return as-is
+    if proxy.startswith(('http://', 'https://', 'socks4://', 'socks5://')):
+        return proxy
+
+    # Add http:// prefix for proxies without protocol
+    return f'http://{proxy}'
+
+
 def load_proxies(proxy_file: str) -> List[str]:
-    """Load proxy list from JSON file"""
+    """Load proxy list from JSON file and normalize formats"""
     try:
         with open(proxy_file, 'r') as f:
             data = json.load(f)
+
+        raw_proxies = []
         if isinstance(data, dict):
             for key in ('proxies', 'working_proxies'):
                 if key in data and isinstance(data[key], list):
-                    return [p for p in data[key] if isinstance(p, str) and p]
-        if isinstance(data, list):
-            return [p for p in data if isinstance(p, str) and p]
+                    raw_proxies = data[key]
+                    break
+        elif isinstance(data, list):
+            raw_proxies = data
+
+        # Normalize all proxies
+        normalized = [normalize_proxy(p) for p in raw_proxies if isinstance(p, str) and p]
+        return [p for p in normalized if p]  # Filter out empty strings
+
     except Exception as e:
         logger.warning(f"Could not load proxies from {proxy_file}: {e}")
     return []
@@ -205,28 +228,44 @@ def is_rate_limit_error(exc: Exception) -> bool:
 def load_tickers(data_dir: str = None) -> List[str]:
     """Load ticker list from combined ticker file"""
     if data_dir is None:
-        data_dir = os.path.join(os.path.dirname(__file__), 'data', 'combined')
+        # Try multiple locations for ticker files
+        base_dir = os.path.dirname(__file__)
+        possible_dirs = [
+            os.path.join(base_dir, 'data', 'combined'),
+            os.path.join(base_dir, 'data'),
+            base_dir
+        ]
+    else:
+        possible_dirs = [data_dir]
 
-    # Find latest ticker file
+    # Find latest ticker file across all possible directories
     ticker_files = []
-    try:
-        for f in os.listdir(data_dir):
-            if f.startswith('combined_tickers_') and f.endswith('.py'):
-                ticker_files.append(os.path.join(data_dir, f))
-    except Exception:
-        pass
-
-    if not ticker_files:
-        # Fallback to any Python file in combined directory
+    for search_dir in possible_dirs:
         try:
-            for f in os.listdir(data_dir):
-                if f.endswith('.py'):
-                    ticker_files.append(os.path.join(data_dir, f))
+            if not os.path.exists(search_dir):
+                continue
+
+            for f in os.listdir(search_dir):
+                if f.startswith('combined_tickers_') and f.endswith('.py'):
+                    ticker_files.append(os.path.join(search_dir, f))
         except Exception:
             pass
 
     if not ticker_files:
-        logger.error(f"No ticker files found in {data_dir}")
+        # Fallback to any ticker file
+        for search_dir in possible_dirs:
+            try:
+                if not os.path.exists(search_dir):
+                    continue
+
+                for f in os.listdir(search_dir):
+                    if 'ticker' in f.lower() and f.endswith('.py'):
+                        ticker_files.append(os.path.join(search_dir, f))
+            except Exception:
+                pass
+
+    if not ticker_files:
+        logger.error(f"No ticker files found in any directory: {possible_dirs}")
         return []
 
     # Use most recent file
@@ -243,9 +282,11 @@ def load_tickers(data_dir: str = None) -> List[str]:
         local_vars = {}
         exec(content, {}, local_vars)
 
-        for key in ('COMBINED_TICKERS', 'TICKERS', 'ALL_TICKERS'):
+        # Try multiple common variable names
+        for key in ('COMBINED_TICKERS', 'TICKERS', 'ALL_TICKERS', 'NASDAQ_TICKERS', 'tickers'):
             if key in local_vars and isinstance(local_vars[key], list):
                 tickers = local_vars[key]
+                logger.info(f"Found ticker list in variable: {key}")
                 break
     except Exception as e:
         logger.error(f"Error loading tickers: {e}")
@@ -294,7 +335,13 @@ class SessionPool:
                 # Assign proxy if available
                 if self.proxies:
                     proxy = self.proxies[i % len(self.proxies)]
-                    sess.proxies = {'http': proxy, 'https': proxy}
+                    # Handle different proxy protocols
+                    if proxy.startswith(('socks4://', 'socks5://')):
+                        # SOCKS proxies work for both http and https
+                        sess.proxies = {'http': proxy, 'https': proxy}
+                    else:
+                        # HTTP/HTTPS proxies
+                        sess.proxies = {'http': proxy, 'https': proxy}
 
                 # Warm session (skip if using proxy to save time)
                 if not self.proxies:
@@ -384,7 +431,17 @@ class BatchQuoteFetcher:
                 else:
                     proxy = None  # Final attempt without proxy
 
-                # Use yfinance download for batch fetching with proxy
+                # Set proxy using new yfinance config API (if available)
+                if proxy:
+                    try:
+                        # Use new yfinance config API
+                        yf.set_tz_cache_location(None)  # Disable cache to avoid conflicts
+                        # Note: yfinance doesn't have set_config yet in all versions
+                        # So we'll use the session-based approach instead
+                    except AttributeError:
+                        pass
+
+                # Use yfinance download for batch fetching
                 download_kwargs = {
                     'tickers': symbols,
                     'period': '1d',  # Minimal period for speed
@@ -396,9 +453,11 @@ class BatchQuoteFetcher:
                     'timeout': 2  # Aggressive timeout for speed (was 5)
                 }
 
-                # Add proxy if available
+                # Use session with proxy instead of proxy kwarg (avoids deprecation warning)
                 if proxy:
-                    download_kwargs['proxy'] = proxy
+                    session = self.session_pool.get_session()
+                    # Session already has proxy configured from SessionPool
+                    download_kwargs['session'] = session
 
                 df = yf.download(**download_kwargs)
 
@@ -735,10 +794,16 @@ class OptimizedScanner:
             proxy_file = os.path.join(os.path.dirname(__file__), self.config.PROXY_FILE)
             all_proxies = load_proxies(proxy_file)
             if all_proxies:
-                # Limit number of proxies to use
-                max_proxies = getattr(self.config, 'MAX_PROXIES_TO_USE', 500)
-                proxies = all_proxies[:max_proxies]
-                logger.info(f"Loaded {len(proxies)} proxies from {self.config.PROXY_FILE} (of {len(all_proxies)} total)")
+                # Use all proxies or limit to specified number
+                max_proxies = getattr(self.config, 'MAX_PROXIES_TO_USE', None)
+                if max_proxies is None:
+                    # Use all available proxies
+                    proxies = all_proxies
+                    logger.info(f"Loaded ALL {len(proxies)} proxies from {self.config.PROXY_FILE}")
+                else:
+                    # Limit to specified number
+                    proxies = all_proxies[:max_proxies]
+                    logger.info(f"Loaded {len(proxies)} proxies from {self.config.PROXY_FILE} (of {len(all_proxies)} total)")
             else:
                 logger.warning("No proxies loaded, proceeding without proxies")
 
