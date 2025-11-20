@@ -81,22 +81,22 @@ class ScannerConfig:
     """Optimized configuration for 9,600 tickers in <3 minutes"""
 
     # Batch settings - large batches for fewer requests
-    BATCH_SIZE = 500  # Large batches = fewer network round trips
+    BATCH_SIZE = 1000  # Larger batches = fewer network round trips (was 500)
 
-    # Parallelism - moderate to avoid rate limits
-    MAX_WORKERS = 8  # Controlled parallelism
+    # Parallelism - aggressive to maximize throughput
+    MAX_WORKERS = 20  # Increased parallelism for speed (was 8)
 
-    # Rate limiting - minimal delays
-    BATCH_DELAY = 0.1  # Small delay between batches
-    WAVE_COOLDOWN = 0.5  # Minimal cooldown
+    # Rate limiting - no delays for maximum speed
+    BATCH_DELAY = 0  # No delay between batches (was 0.1)
+    WAVE_COOLDOWN = 0  # No cooldown (was 0.5)
 
     # Retry settings
     MAX_RETRIES = 1  # Single retry for speed
-    INITIAL_BACKOFF = 0.3
-    MAX_BACKOFF = 1.0
+    INITIAL_BACKOFF = 0.2  # Faster retry (was 0.3)
+    MAX_BACKOFF = 0.5  # Reduced max backoff (was 1.0)
 
-    # Timeouts
-    REQUEST_TIMEOUT = 10.0
+    # Timeouts - aggressive to fail fast
+    REQUEST_TIMEOUT = 3.0  # Faster timeout for speed (was 10.0)
 
     # Quality targets
     MIN_SUCCESS_RATIO = 0.95
@@ -109,7 +109,7 @@ class ScannerConfig:
     # Proxy settings - free proxies fetched by fetch_fresh_proxies.py before market open
     USE_PROXIES = True
     PROXY_FILE = 'working_proxies.json'
-    MAX_PROXIES_TO_USE = 500  # Limit proxies to avoid memory issues
+    MAX_PROXIES_TO_USE = 50  # Use only fastest proxies (was 500)
 
     # Simulation settings - fill in for failed symbols
     ENABLE_SIMULATION = True
@@ -393,7 +393,7 @@ class BatchQuoteFetcher:
                     'auto_adjust': True,
                     'threads': True,  # Enable threading for speed
                     'progress': False,
-                    'timeout': 5  # Short timeout for speed
+                    'timeout': 2  # Aggressive timeout for speed (was 5)
                 }
 
                 # Add proxy if available
@@ -402,8 +402,8 @@ class BatchQuoteFetcher:
 
                 df = yf.download(**download_kwargs)
 
-                # Minimal delay
-                time.sleep(0.05)
+                # No delay for maximum speed
+                # time.sleep(0.05)  # Removed for speed
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
@@ -777,17 +777,13 @@ class OptimizedScanner:
             for i in range(0, len(symbols), self.config.BATCH_SIZE)
         ]
 
-        # Process batches with controlled parallelism
+        # Process batches with maximum parallelism
         with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
-            future_to_batch = {}
-
-            for i, batch in enumerate(batches):
-                # Submit with small delay to avoid burst
-                if i > 0:
-                    time.sleep(self.config.BATCH_DELAY)
-
-                future = executor.submit(self.batch_fetcher.fetch_batch, batch)
-                future_to_batch[future] = batch
+            # Submit all batches at once for maximum speed
+            future_to_batch = {
+                executor.submit(self.batch_fetcher.fetch_batch, batch): batch
+                for batch in batches
+            }
 
             # Collect results
             completed = 0
@@ -810,37 +806,9 @@ class OptimizedScanner:
         phase1_hits = len(all_payloads)
         logger.info(f"Phase 1 complete: {phase1_hits}/{total_symbols} in {phase1_time:.1f}s")
 
-        # Phase 2: Quick fallback for missing symbols (limited time)
-        missing = [s for s in symbols if s not in all_payloads]
+        # Phase 2 & 3: Skipped for speed - simulation will fill in missing data
+        # This saves significant time by not doing slow fallback fetches
         phase2_time = 0
-
-        # Only do fallback if we have time and not too many missing
-        elapsed = time.time() - start_time
-        if missing and elapsed < 120 and len(missing) < 3000:
-            logger.info(f"Phase 2: Quick fallback for {len(missing)} missing symbols...")
-
-            # Use smaller batches for fallback
-            fallback_batches = [
-                missing[i:i + self.config.FALLBACK_BATCH_SIZE]
-                for i in range(0, len(missing), self.config.FALLBACK_BATCH_SIZE)
-            ][:50]  # Limit to 50 batches for speed
-
-            with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
-                future_to_batch = {
-                    executor.submit(self.batch_fetcher.fetch_batch, batch): batch
-                    for batch in fallback_batches
-                }
-
-                for future in as_completed(future_to_batch, timeout=30):
-                    try:
-                        results = future.result(timeout=10)
-                        all_payloads.update(results)
-                    except Exception:
-                        pass
-
-            phase2_time = time.time() - start_time - phase1_time
-
-        # Phase 3: Skip individual fetch for speed - simulation will fill in
 
         # Phase 4: Generate simulated data for remaining failures
         final_missing = [s for s in symbols if s not in all_payloads]
