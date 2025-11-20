@@ -72,18 +72,17 @@ const refreshTokenIfNeeded = async () => {
           .then(response => {
             const newToken = response.data.token;
             secureStorage.set(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY, newToken);
+            tokenRefreshPromise = null; // Clear on success
             return newToken;
           })
           .catch(error => {
             console.error('Token refresh failed:', error);
+            tokenRefreshPromise = null; // Clear immediately on failure to allow retry
             // Force logout on refresh failure
             secureStorage.remove(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
             secureStorage.remove(security.SECURITY_CONFIG.USER_STORAGE_KEY);
             window.location.href = '/auth/sign-in?token_expired=true';
             throw error;
-          })
-          .finally(() => {
-            tokenRefreshPromise = null;
           });
       }
       return await tokenRefreshPromise;

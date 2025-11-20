@@ -16,19 +16,19 @@ from .models import Subscription, Payment, Invoice, PayPalWebhookEvent, PlanTier
 logger = logging.getLogger(__name__)
 
 
-# Plan pricing configuration
+# Plan pricing configuration - Base prices (discount applied at calculation time)
 PLAN_PRICING = {
     'bronze': {
         'monthly': Decimal('24.99'),
-        'annual': Decimal('254.99'),  # 15% discount
+        'annual': Decimal('299.99'),  # Base annual price (15% discount applied below)
     },
     'silver': {
         'monthly': Decimal('49.99'),
-        'annual': Decimal('509.99'),  # 15% discount
+        'annual': Decimal('599.99'),  # Base annual price (15% discount applied below)
     },
     'gold': {
         'monthly': Decimal('79.99'),
-        'annual': Decimal('815.99'),  # 15% discount
+        'annual': Decimal('959.99'),  # Base annual price (15% discount applied below)
     },
 }
 
@@ -63,13 +63,15 @@ def get_paypal_access_token():
         f'{base_url}/v1/oauth2/token',
         headers={'Accept': 'application/json', 'Accept-Language': 'en_US'},
         data={'grant_type': 'client_credentials'},
-        auth=(client_id, client_secret)
+        auth=(client_id, client_secret),
+        timeout=10  # 10 second timeout for PayPal API calls
     )
     
     if response.status_code == 200:
         return response.json()['access_token']
     else:
-        logger.error(f"PayPal auth failed: {response.text}")
+        # Log status code only, not sensitive response text
+        logger.error(f"PayPal auth failed: HTTP {response.status_code}")
         raise Exception("Failed to authenticate with PayPal")
 
 
@@ -101,8 +103,8 @@ def detect_state_from_ip(ip_address):
             data = response.json()
             if data.get('country_code') == 'US':
                 return data.get('region_code')
-    except:
-        pass
+    except (requests.RequestException, requests.Timeout, ValueError, KeyError) as e:
+        logger.debug(f"IP geolocation failed for {ip_address}: {e}")
     return None
 
 
@@ -125,12 +127,25 @@ def create_paypal_order(request):
         
         # Get base price
         amount = PLAN_PRICING[plan_type][billing_cycle]
-        
-        # Apply discount if provided
+
+        # Apply standard 15% annual discount
+        if billing_cycle == 'annual':
+            amount = (amount * Decimal('0.85')).quantize(Decimal('0.01'))
+
+        # Apply additional discount code if provided
         discount_percentage = 0
         if discount_code:
+            # Validate discount code format (alphanumeric, underscore, hyphen, max 50 chars)
+            import re
+            if not re.match(r'^[A-Z0-9_-]{1,50}$', discount_code.upper()):
+                logger.warning(f"Invalid discount code format: {discount_code[:20]}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid discount code format'
+                }, status=400)
+
             # Check for referral codes (50% off first month for monthly plans)
-            if discount_code.startswith('REF_') and billing_cycle == 'monthly':
+            if discount_code.upper().startswith('REF_') and billing_cycle == 'monthly':
                 discount_percentage = 50
                 amount = amount * Decimal('0.5')
             # Add more discount code logic here as needed
@@ -139,8 +154,21 @@ def create_paypal_order(request):
         ip_address = get_client_ip(request)
         state_code = detect_state_from_ip(ip_address)
         tax_amount, tax_rate = calculate_sales_tax(amount, state_code)
-        
+
         total_amount = amount + tax_amount
+
+        # Validate amount (minimum $0.50 for PayPal)
+        if total_amount < Decimal('0.50'):
+            logger.error(f"Total amount too low: {total_amount}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Transaction amount too low (minimum $0.50)'
+            }, status=400)
+
+        # Additional validation: reasonable max amount to prevent errors
+        if total_amount > Decimal('10000.00'):
+            logger.warning(f"Unusually high payment amount: {total_amount}")
+            # Allow but log for review
         
         # Create PayPal order
         access_token = get_paypal_access_token()
@@ -176,7 +204,8 @@ def create_paypal_order(request):
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {access_token}',
             },
-            json=order_data
+            json=order_data,
+            timeout=10  # 10 second timeout for PayPal API calls
         )
         
         if response.status_code in [200, 201]:
@@ -210,11 +239,12 @@ def create_paypal_order(request):
                 'state': state_code,
             })
         else:
-            logger.error(f"PayPal order creation failed: {response.text}")
+            # Log status code only, not sensitive details
+            logger.error(f"PayPal order creation failed: HTTP {response.status_code}")
             return JsonResponse({
                 'success': False,
                 'error': 'Failed to create PayPal order',
-                'details': response.json() if response.text else None
+                'error_code': 'PAYPAL_ORDER_FAILED'
             }, status=500)
             
     except Exception as e:
@@ -239,7 +269,34 @@ def capture_paypal_order(request):
             payment = Payment.objects.get(paypal_order_id=order_id, user=request.user)
         except Payment.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Payment not found'}, status=404)
-        
+
+        # Idempotency check - if already completed, return success (idempotent)
+        if payment.status == 'completed':
+            logger.info(f"Payment already captured (idempotent): {order_id}")
+            # Return success with existing data to make this call idempotent
+            return JsonResponse({
+                'success': True,
+                'message': 'Payment already captured',
+                'order_id': order_id,
+                'capture_id': payment.paypal_capture_id or '',
+                'status': 'completed',
+                'idempotent': True
+            })
+
+        if payment.status == 'failed':
+            logger.warning(f"Attempted to capture failed payment: {order_id}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Cannot capture failed payment'
+            }, status=400)
+
+        if payment.status != 'pending':
+            logger.warning(f"Invalid payment state for capture: {payment.status}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Invalid payment state: {payment.status}'
+            }, status=400)
+
         # Capture the order
         access_token = get_paypal_access_token()
         mode = getattr(settings, 'PAYPAL_MODE', 'sandbox')
@@ -250,7 +307,8 @@ def capture_paypal_order(request):
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {access_token}',
-            }
+            },
+            timeout=15  # 15 second timeout for capture (may take longer)
         )
         
         if response.status_code in [200, 201]:
@@ -317,13 +375,14 @@ def capture_paypal_order(request):
                     'error': f'Payment not completed: {capture_data.get("status")}'
                 }, status=400)
         else:
-            logger.error(f"PayPal capture failed: {response.text}")
+            # Log status code only, not sensitive details
+            logger.error(f"PayPal capture failed: HTTP {response.status_code}")
             payment.status = 'failed'
             payment.save()
             return JsonResponse({
                 'success': False,
                 'error': 'Failed to capture payment',
-                'details': response.json() if response.text else None
+                'error_code': 'CAPTURE_REQUEST_FAILED'
             }, status=500)
             
     except Exception as e:
@@ -345,6 +404,11 @@ def change_plan(request):
         if plan not in PLAN_PRICING:
             return JsonResponse({'success': False, 'error': 'Invalid plan'}, status=400)
         
+        # Calculate price with discount applied
+        plan_price = PLAN_PRICING[plan][billing_cycle]
+        if billing_cycle == 'annual':
+            plan_price = (plan_price * Decimal('0.85')).quantize(Decimal('0.01'))
+
         # Get or create subscription
         subscription, created = Subscription.objects.get_or_create(
             user=request.user,
@@ -352,7 +416,7 @@ def change_plan(request):
                 'plan_tier': plan,
                 'billing_cycle': billing_cycle,
                 'status': 'active',
-                'monthly_price': PLAN_PRICING[plan][billing_cycle],
+                'monthly_price': plan_price,
                 'discount_code': discount_code,
                 'paypal_subscription_id': subscription_id,
                 'current_period_start': timezone.now(),
@@ -364,7 +428,7 @@ def change_plan(request):
             subscription.plan_tier = plan
             subscription.billing_cycle = billing_cycle
             subscription.status = 'active'
-            subscription.monthly_price = PLAN_PRICING[plan][billing_cycle]
+            subscription.monthly_price = plan_price
             if discount_code:
                 subscription.discount_code = discount_code
             if subscription_id:
@@ -430,11 +494,14 @@ def get_plans_meta(request):
         plans_data = {}
         for plan_name, pricing in PLAN_PRICING.items():
             annual_discount = 15
+            annual_list_price = pricing['annual']
+            annual_final_price = (annual_list_price * Decimal('0.85')).quantize(Decimal('0.01'))
+
             plans_data[plan_name] = {
                 'name': plan_name.capitalize(),
                 'monthly_price': float(pricing['monthly']),
-                'annual_list_price': float(pricing['monthly'] * 12),
-                'annual_final_price': float(pricing['annual']),
+                'annual_list_price': float(annual_list_price),
+                'annual_final_price': float(annual_final_price),
                 'paypal_plan_ids': {
                     'monthly': getattr(settings, f'PAYPAL_PLAN_{plan_name.upper()}_MONTHLY', ''),
                     'annual': getattr(settings, f'PAYPAL_PLAN_{plan_name.upper()}_ANNUAL', ''),

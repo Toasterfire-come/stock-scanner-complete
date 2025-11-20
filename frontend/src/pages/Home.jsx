@@ -7,11 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
 import {
-  TrendingUp, 
-  Search, 
-  Bell, 
-  Shield, 
-  BarChart3, 
+  TrendingUp,
+  Search,
+  Bell,
+  Shield,
+  BarChart3,
   Zap,
   ArrowRight,
   Star,
@@ -23,7 +23,9 @@ import {
   Target,
   Clock,
   Award,
-  Mail
+  Mail,
+  LineChart,
+  Download
 } from "lucide-react";
 import { getMarketStatsSafe } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
@@ -171,6 +173,18 @@ const Home = () => {
       title: "Market Intelligence",
       description: "AI-powered insights and sentiment analysis from news and social media.",
       details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements."
+    },
+    {
+      icon: <LineChart className="h-6 w-6" />,
+      title: "Professional Charting",
+      description: "Advanced charting with 4 themes, 10+ indicators, and multi-format export capabilities.",
+      details: `Export publication-ready charts in PNG, SVG, or CSV. Switch between candlestick, line, area, and bar charts with one click. Customize 10+ technical indicators with full control over period, colors, and line width.`
+    },
+    {
+      icon: <Download className="h-6 w-6" />,
+      title: "Enhanced Data Management",
+      description: "Virtual scrolling handles 10,000+ rows with advanced sorting and filtering.",
+      details: `Built for speed and scale with ${reliability.dataFreshnessSeconds}s data freshness, ${reliability.apiP50LatencyMs}ms P50 API latency, and ${formatPercent(reliability.uptimePercent, 2)} uptime backed by ${reliability.incidentFreeDaysRolling} incident-free days.`
     }
   ];
 
