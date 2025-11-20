@@ -109,7 +109,7 @@ class ScannerConfig:
     # Proxy settings - free proxies fetched by fetch_fresh_proxies.py before market open
     USE_PROXIES = True
     PROXY_FILE = 'working_proxies.json'
-    MAX_PROXIES_TO_USE = None  # Use all available proxies (was 50)
+    MAX_PROXIES_TO_USE = 1000  # Use top 1000 tested working proxies (was None for all)
 
     # Simulation settings - fill in for failed symbols
     ENABLE_SIMULATION = True
@@ -425,23 +425,10 @@ class BatchQuoteFetcher:
         proxy = None
         for attempt in range(1, self.config.MAX_RETRIES + 2):  # Extra attempt for no-proxy fallback
             try:
-                # Use proxy for first attempts, then fallback to no proxy
-                if attempt <= self.config.MAX_RETRIES:
-                    proxy = self._get_next_proxy()
-                else:
-                    proxy = None  # Final attempt without proxy
-
-                # Set proxy using new yfinance config API (if available)
-                if proxy:
-                    try:
-                        # Use new yfinance config API
-                        yf.set_tz_cache_location(None)  # Disable cache to avoid conflicts
-                        # Note: yfinance doesn't have set_config yet in all versions
-                        # So we'll use the session-based approach instead
-                    except AttributeError:
-                        pass
-
                 # Use yfinance download for batch fetching
+                # Use longer timeout when using proxies to account for proxy latency
+                timeout = 5 if self.proxies else 3
+
                 download_kwargs = {
                     'tickers': symbols,
                     'period': '1d',  # Minimal period for speed
@@ -450,14 +437,19 @@ class BatchQuoteFetcher:
                     'auto_adjust': True,
                     'threads': True,  # Enable threading for speed
                     'progress': False,
-                    'timeout': 2  # Aggressive timeout for speed (was 5)
+                    'timeout': timeout
                 }
 
-                # Use session with proxy instead of proxy kwarg (avoids deprecation warning)
-                if proxy:
+                # Use session from pool for first attempts, create fresh session for fallback
+                if attempt <= self.config.MAX_RETRIES and self.proxies:
+                    # Use session with proxy from pool
                     session = self.session_pool.get_session()
-                    # Session already has proxy configured from SessionPool
                     download_kwargs['session'] = session
+                elif not self.proxies:
+                    # No proxies available, use session pool anyway
+                    session = self.session_pool.get_session()
+                    download_kwargs['session'] = session
+                # else: Final no-proxy fallback - let yfinance use default session
 
                 df = yf.download(**download_kwargs)
 
@@ -549,16 +541,23 @@ class BatchQuoteFetcher:
                     return results
 
             except Exception as e:
+                error_msg = str(e)
                 if is_rate_limit_error(e):
                     self.stats['rate_limits_hit'] += 1
-                    # Mark proxy as failed on rate limit
-                    self._mark_proxy_failed(proxy)
+
+                # Log first few errors for debugging
+                if self.stats['batches_failed'] < 5:
+                    logger.warning(f"Batch fetch attempt {attempt} failed: {error_msg[:100]}")
 
                 if attempt < self.config.MAX_RETRIES + 1:  # Include no-proxy fallback
                     self.stats['total_retries'] += 1
                     sleep_time = min(backoff + random.uniform(0, 0.3), self.config.MAX_BACKOFF)
                     time.sleep(sleep_time)
                     backoff *= 1.5
+                else:
+                    # Final attempt failed
+                    if self.stats['batches_failed'] < 3:
+                        logger.error(f"Batch completely failed after all retries: {error_msg[:150]}")
 
         self.stats['batches_failed'] += 1
         return {}
@@ -800,10 +799,14 @@ class OptimizedScanner:
                     # Use all available proxies
                     proxies = all_proxies
                     logger.info(f"Loaded ALL {len(proxies)} proxies from {self.config.PROXY_FILE}")
+                elif max_proxies >= len(all_proxies):
+                    # Want more than available, use all
+                    proxies = all_proxies
+                    logger.info(f"Loaded all {len(proxies)} available proxies from {self.config.PROXY_FILE}")
                 else:
-                    # Limit to specified number
+                    # Limit to specified number (use first N which are typically fastest/best)
                     proxies = all_proxies[:max_proxies]
-                    logger.info(f"Loaded {len(proxies)} proxies from {self.config.PROXY_FILE} (of {len(all_proxies)} total)")
+                    logger.info(f"Loaded top {len(proxies)} of {len(all_proxies)} tested proxies from {self.config.PROXY_FILE}")
             else:
                 logger.warning("No proxies loaded, proceeding without proxies")
 
