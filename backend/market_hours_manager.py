@@ -61,18 +61,18 @@ class MarketHoursManager:
         # Updates will only run during regular trading hours
         self.market_open = os.getenv('MARKET_OPEN', "09:30")      # 9:30 AM ET
         self.market_close = os.getenv('MARKET_CLOSE', "16:00")     # 4:00 PM ET
-        
-        # Disabled pre-market and post-market
-        # self.premarket_start = os.getenv('PREMARKET_START', "04:00")  # DISABLED
-        # self.postmarket_end = os.getenv('POSTMARKET_END', "20:00")   # DISABLED
+        self.pre_market_prep = os.getenv('PRE_MARKET_PREP', "09:00")  # 9:00 AM ET - fetch proxies
+
+        # Track if we've done pre-market prep today
+        self._last_proxy_fetch = None
         
         # Component configurations - Individual services with specific restart intervals
         self.components = {
-            'enhanced_stock_retrieval': {
-                'script': 'enhanced_stock_retrieval_working.py',
-                'args': ['-save-to-db', '-combined'],  # Prefer combined tickers (NASDAQ + NYSE/AMEX)
+            'optimized_stock_scanner': {
+                'script': 'optimized_9600_scanner.py',
+                'args': ['--workers', '8', '--batch-size', '500'],
                 'active_during': ['market'],
-                'restart_interval': 180,  # 3 minutes
+                'restart_interval': 180,  # 3 minutes - run every 3 minutes during market hours
                 'process': None,
                 'last_restart': 0
             },
@@ -319,6 +319,9 @@ class MarketHoursManager:
         """Setup scheduled tasks for component management"""
         # Component management every 1 minute
         schedule.every(1).minutes.do(self.manage_components)
+
+        # Pre-market preparation check every 5 minutes
+        schedule.every(5).minutes.do(self.check_pre_market_prep)
         
     def run_scheduler(self):
         """Run the scheduled tasks in a separate thread"""
@@ -385,6 +388,57 @@ class MarketHoursManager:
         finally:
             self.stop_all_components()
             logger.info("Market Hours Manager stopped")
+
+    def fetch_and_test_proxies(self):
+        """Fetch and test free proxies before market opens"""
+        logger.info("="*60)
+        logger.info("PRE-MARKET: Fetching and testing free proxies")
+        logger.info("="*60)
+
+        try:
+            # Run the proxy fetcher script
+            env = os.environ.copy()
+            env.setdefault('PYTHONIOENCODING', 'utf-8')
+            env.setdefault('LANG', 'C.UTF-8')
+            env.setdefault('LC_ALL', 'C.UTF-8')
+
+            result = subprocess.run([
+                self.python_exe,
+                os.path.join(self.project_root, 'fetch_fresh_proxies.py')
+            ], capture_output=True, text=True, timeout=600, env=env, cwd=self.project_root)
+
+            if result.returncode == 0:
+                logger.info("Proxy fetch completed successfully")
+                # Log some output
+                for line in result.stdout.split('\n')[-10:]:
+                    if line.strip():
+                        logger.info(f"  {line}")
+            else:
+                logger.error(f"Proxy fetch failed: {result.stderr}")
+
+        except subprocess.TimeoutExpired:
+            logger.error("Proxy fetch timed out after 10 minutes")
+        except Exception as e:
+            logger.error(f"Error fetching proxies: {e}")
+
+        self._last_proxy_fetch = datetime.now(self.eastern_tz).date()
+        logger.info("Pre-market proxy fetch complete")
+
+    def check_pre_market_prep(self):
+        """Check if we need to do pre-market preparation (fetch proxies)"""
+        now_et = datetime.now(self.eastern_tz)
+        current_time = now_et.strftime("%H:%M")
+        today = now_et.date()
+
+        # Check if it's a weekday
+        if now_et.weekday() >= 5:
+            return
+
+        # Check if we're in pre-market prep window (9:00 AM - 9:30 AM ET)
+        if self.pre_market_prep <= current_time < self.market_open:
+            # Check if we've already fetched proxies today
+            if self._last_proxy_fetch != today:
+                self.fetch_and_test_proxies()
 
     def handle_market_closed(self):
         """Handle market closed period - ensure fallback data is available"""

@@ -1,3 +1,20 @@
+# Force MIME types for static files
+<IfModule mod_mime.c>
+  AddType text/css .css
+  AddType application/javascript .js
+  AddType application/json .json
+  AddType image/svg+xml .svg
+  AddType image/webp .webp
+  AddType image/avif .avif
+  AddType image/png .png
+  AddType image/jpeg .jpg .jpeg
+  AddType image/x-icon .ico
+  AddType font/woff .woff
+  AddType font/woff2 .woff2
+  AddType font/ttf .ttf
+  AddType text/plain .txt
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
@@ -10,16 +27,18 @@
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # Serve existing files and directories
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  # CRITICAL: Do not rewrite existing static files
+  # This must come BEFORE the SPA fallback
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # Do not rewrite existing directories
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Do not rewrite index.html further
-  RewriteRule ^index\.html$ - [L]
-
-  # SPA fallback to index.html
-  RewriteRule . /index.html [L]
+  # SPA fallback to index.html ONLY for non-existing files
+  # This catches all other requests (HTML5 pushState URLs)
+  RewriteRule ^ /index.html [L]
 </IfModule>
 
 DirectoryIndex index.html
@@ -27,35 +46,23 @@ DirectoryIndex index.html
 # Custom 404
 ErrorDocument 404 /404.html
 
+# Security headers
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  # Enforce HTTPS (respect proxies)
-  RewriteCond %{HTTPS} !=on [OR]
-  RewriteCond %{HTTP:X-Forwarded-Proto} !https
-  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-  # Serve existing files and directories
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-  # SPA fallback to index.html
-  RewriteRule . /index.html [L]
-</IfModule>
-
-DirectoryIndex index.html
-
-# Compression & caching (safe defaults)
+# Compression
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
 </IfModule>
+
 <IfModule mod_brotli.c>
   AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
 </IfModule>
 
-# Leverage browser caching for static assets
+# Browser caching for static assets
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/css "access plus 7 days"
@@ -66,10 +73,4 @@ DirectoryIndex index.html
   ExpiresByType image/png "access plus 30 days"
   ExpiresByType image/jpeg "access plus 30 days"
   ExpiresDefault "access plus 1 day"
-</IfModule>
-
-# Security headers (minimal, host-safe)
-<IfModule mod_headers.c>
-  Header set X-Content-Type-Options "nosniff"
-  Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>

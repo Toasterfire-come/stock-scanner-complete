@@ -226,3 +226,16 @@
 [2025-09-22 05:42:12] [INFO] Cloudflare tunnel started successfully (PID: 83981)
 [2025-09-22 05:42:12] [INFO] Starting Django server...
 [2025-09-22 05:42:15] [INFO] Django server started successfully (PID: 83986)
+[2025-11-18 14:49:25] [INFO] Shutting down services...
+[2025-11-18 14:49:27] [INFO] Windows sleep settings restored
+[2025-11-18 14:49:27] [INFO] All services stopped. Total restarts: 1
+[2025-11-20 04:41:10] [INFO] Starting Stock Scanner Tunnel - Resilient Version
+[2025-11-20 04:41:10] [INFO] Using cloudflared command: /c/Stock-scanner-project/stock-scanner-complete/backend/cloudflared.exe
+[2025-11-20 04:41:11] [INFO] Fixing DNS configuration...
+[2025-11-20 04:41:12] [INFO] Skipping Windows DNS changes (admin privileges required).
+[2025-11-20 04:41:14] [INFO] DNS configuration refreshed
+[2025-11-20 04:41:14] [INFO] Windows sleep prevention activated
+[2025-11-20 04:41:14] [INFO] Starting Cloudflare tunnel (attempt 1/10)...
+[2025-11-20 04:41:25] [INFO] Cloudflare tunnel started successfully (PID: 182341)
+[2025-11-20 04:41:25] [INFO] Starting Django server...
+[2025-11-20 04:41:28] [INFO] Django server started successfully (PID: 182346)
