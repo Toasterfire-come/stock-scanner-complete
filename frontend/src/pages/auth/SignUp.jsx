@@ -72,8 +72,14 @@ const SignUp = () => {
             url.searchParams.set('ref', ref);
             window.history.replaceState({}, '', url.toString());
           }
-          try { setReferralCookie(st.discountCode); } catch {}
-        } catch {}
+          try {
+            setReferralCookie(st.discountCode);
+          } catch (error) {
+            console.warn('Failed to set referral cookie:', error);
+          }
+        } catch (error) {
+          console.warn('Failed to process discount code:', error);
+        }
       }
       if (st.emailPrefill && typeof st.emailPrefill === 'string') {
         setValue('email', st.emailPrefill);
@@ -85,7 +91,9 @@ const SignUp = () => {
           lastDerivedRef.current = derived;
         }
       }
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to process navigation state:', error);
+    }
   }, [location.state]);
 
   // Auto-suggest username from email while user hasn't edited username

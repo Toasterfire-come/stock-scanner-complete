@@ -63,13 +63,15 @@ def get_paypal_access_token():
         f'{base_url}/v1/oauth2/token',
         headers={'Accept': 'application/json', 'Accept-Language': 'en_US'},
         data={'grant_type': 'client_credentials'},
-        auth=(client_id, client_secret)
+        auth=(client_id, client_secret),
+        timeout=10  # 10 second timeout for PayPal API calls
     )
     
     if response.status_code == 200:
         return response.json()['access_token']
     else:
-        logger.error(f"PayPal auth failed: {response.text}")
+        # Log status code only, not sensitive response text
+        logger.error(f"PayPal auth failed: HTTP {response.status_code}")
         raise Exception("Failed to authenticate with PayPal")
 
 
@@ -133,8 +135,17 @@ def create_paypal_order(request):
         # Apply additional discount code if provided
         discount_percentage = 0
         if discount_code:
+            # Validate discount code format (alphanumeric, underscore, hyphen, max 50 chars)
+            import re
+            if not re.match(r'^[A-Z0-9_-]{1,50}$', discount_code.upper()):
+                logger.warning(f"Invalid discount code format: {discount_code[:20]}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid discount code format'
+                }, status=400)
+
             # Check for referral codes (50% off first month for monthly plans)
-            if discount_code.startswith('REF_') and billing_cycle == 'monthly':
+            if discount_code.upper().startswith('REF_') and billing_cycle == 'monthly':
                 discount_percentage = 50
                 amount = amount * Decimal('0.5')
             # Add more discount code logic here as needed
@@ -193,7 +204,8 @@ def create_paypal_order(request):
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {access_token}',
             },
-            json=order_data
+            json=order_data,
+            timeout=10  # 10 second timeout for PayPal API calls
         )
         
         if response.status_code in [200, 201]:
@@ -227,11 +239,12 @@ def create_paypal_order(request):
                 'state': state_code,
             })
         else:
-            logger.error(f"PayPal order creation failed: {response.text}")
+            # Log status code only, not sensitive details
+            logger.error(f"PayPal order creation failed: HTTP {response.status_code}")
             return JsonResponse({
                 'success': False,
                 'error': 'Failed to create PayPal order',
-                'details': response.json() if response.text else None
+                'error_code': 'PAYPAL_ORDER_FAILED'
             }, status=500)
             
     except Exception as e:
@@ -257,13 +270,18 @@ def capture_paypal_order(request):
         except Payment.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Payment not found'}, status=404)
 
-        # Validate payment state before capture
+        # Idempotency check - if already completed, return success (idempotent)
         if payment.status == 'completed':
-            logger.warning(f"Attempted to capture already completed payment: {order_id}")
+            logger.info(f"Payment already captured (idempotent): {order_id}")
+            # Return success with existing data to make this call idempotent
             return JsonResponse({
-                'success': False,
-                'error': 'Payment already captured'
-            }, status=400)
+                'success': True,
+                'message': 'Payment already captured',
+                'order_id': order_id,
+                'capture_id': payment.paypal_capture_id or '',
+                'status': 'completed',
+                'idempotent': True
+            })
 
         if payment.status == 'failed':
             logger.warning(f"Attempted to capture failed payment: {order_id}")
@@ -289,7 +307,8 @@ def capture_paypal_order(request):
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {access_token}',
-            }
+            },
+            timeout=15  # 15 second timeout for capture (may take longer)
         )
         
         if response.status_code in [200, 201]:
@@ -356,13 +375,14 @@ def capture_paypal_order(request):
                     'error': f'Payment not completed: {capture_data.get("status")}'
                 }, status=400)
         else:
-            logger.error(f"PayPal capture failed: {response.text}")
+            # Log status code only, not sensitive details
+            logger.error(f"PayPal capture failed: HTTP {response.status_code}")
             payment.status = 'failed'
             payment.save()
             return JsonResponse({
                 'success': False,
                 'error': 'Failed to capture payment',
-                'details': response.json() if response.text else None
+                'error_code': 'CAPTURE_REQUEST_FAILED'
             }, status=500)
             
     except Exception as e:
