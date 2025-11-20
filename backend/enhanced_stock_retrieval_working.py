@@ -423,8 +423,8 @@ def load_proxies_direct(proxy_file):
                 proxies = json.load(f)
                 if isinstance(proxies, list):
                     return [normalize_proxy_string(p) for p in proxies if normalize_proxy_string(p)]
-        except:
-            pass
+        except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
+            logger.error(f"Failed to reload proxy file after scraping: {e}")
         return []
     except Exception as e:
         logger.error(f"Error loading proxies: {e}")

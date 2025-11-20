@@ -104,10 +104,10 @@ export const AuthProvider = ({ children }) => {
           id: response.data.user_id,
           username: response.data.username,
           email: response.data.email,
-          name: response.data.first_name && response.data.last_name 
+          name: response.data.first_name && response.data.last_name
             ? `${response.data.first_name} ${response.data.last_name}`.trim()
             : response.data.username,
-          plan: (response.data.email && response.data.email.toLowerCase() === 'carter.kiefer2010@outlook.com') ? 'gold' : (response.data.plan || 'free'),
+          plan: response.data.plan || 'free',  // Trust backend plan assignment only
           isVerified: response.data.is_verified || false,
           joinDate: response.data.date_joined || new Date().toISOString(),
           lastLogin: new Date().toISOString()

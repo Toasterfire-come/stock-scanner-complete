@@ -25,7 +25,7 @@ import os
 from decimal import Decimal
 
 from .models import BillingHistory, NotificationSettings, UserProfile, UsageStats, UserPortfolio, UserWatchlist, Screener, StockAlert
-from .plan_limits import get_limits_for_user
+from .plan_limits import get_limits_for_user, DEFAULT_LIMITS_BY_PLAN
 from django.conf import settings
 from .security_utils import secure_api_endpoint
 from .authentication import CsrfExemptSessionAuthentication, BearerSessionAuthentication
@@ -88,16 +88,27 @@ def paypal_webhook_api(request):
         except Exception:
             pass
 
-        # Optional signature verification (if webhook ID/headers configured)
-        try:
-            webhook_id = getattr(settings, 'PAYPAL_WEBHOOK_ID', '')
-            tr_id = request.META.get('HTTP_PAYPAL_TRANSMISSION_ID')
-            tr_sig = request.META.get('HTTP_PAYPAL_TRANSMISSION_SIG')
-            tr_time = request.META.get('HTTP_PAYPAL_TRANSMISSION_TIME')
-            cert_url = request.META.get('HTTP_PAYPAL_CERT_URL')
-            algo = request.META.get('HTTP_PAYPAL_AUTH_ALGO')
-            # If configured, call PayPal verify endpoint
-            if webhook_id and tr_id and tr_sig and tr_time:
+        # Webhook signature verification (REQUIRED for security)
+        webhook_id = getattr(settings, 'PAYPAL_WEBHOOK_ID', '')
+        if not webhook_id:
+            logger.error("PAYPAL_WEBHOOK_ID not configured - webhook verification disabled (SECURITY RISK)")
+            # In production, this should return 403. For now, log error but allow.
+            # Uncomment the line below to enforce webhook verification:
+            # return JsonResponse({'success': False, 'error': 'Webhook verification not configured'}, status=403)
+
+        # If webhook ID is configured, verification is REQUIRED
+        if webhook_id:
+            try:
+                tr_id = request.META.get('HTTP_PAYPAL_TRANSMISSION_ID')
+                tr_sig = request.META.get('HTTP_PAYPAL_TRANSMISSION_SIG')
+                tr_time = request.META.get('HTTP_PAYPAL_TRANSMISSION_TIME')
+                cert_url = request.META.get('HTTP_PAYPAL_CERT_URL')
+                algo = request.META.get('HTTP_PAYPAL_AUTH_ALGO')
+
+                if not all([tr_id, tr_sig, tr_time, cert_url]):
+                    logger.error("Missing PayPal webhook signature headers")
+                    return JsonResponse({'success': False, 'error': 'Missing signature headers'}, status=400)
+
                 token = _paypal_get_access_token()
                 headers = { 'Authorization': f'Bearer {token}', 'Content-Type': 'application/json' }
                 verify_payload = {
@@ -111,10 +122,14 @@ def paypal_webhook_api(request):
                 }
                 v = requests.post(f"{_paypal_base_url()}/v1/notifications/verify-webhook-signature", headers=headers, json=verify_payload, timeout=15)
                 v.raise_for_status()
-                if (v.json() or {}).get('verification_status') != 'SUCCESS':
-                    return JsonResponse({'success': False, 'error': 'Invalid webhook signature'}, status=400)
-        except Exception as _sig_err:
-            logger.warning(f"PayPal webhook signature verification skipped/failed: {_sig_err}")
+                verification_result = (v.json() or {}).get('verification_status')
+                if verification_result != 'SUCCESS':
+                    logger.error(f"PayPal webhook signature verification failed: {verification_result}")
+                    return JsonResponse({'success': False, 'error': 'Invalid webhook signature'}, status=403)
+                logger.info("PayPal webhook signature verified successfully")
+            except Exception as _sig_err:
+                logger.error(f"PayPal webhook signature verification error: {_sig_err}")
+                return JsonResponse({'success': False, 'error': 'Signature verification failed'}, status=403)
 
         if event_type == 'PAYMENT.CAPTURE.COMPLETED':
             # Record revenue without requiring auth context
@@ -157,15 +172,9 @@ def paypal_webhook_api(request):
                         profile.billing_cycle = billing_cycle
                     days = 30 if profile.billing_cycle == 'monthly' else 365
                     profile.next_billing_date = timezone.now() + timedelta(days=days)
-                    plan_limits = {
-                        'free': 100,
-                        'basic': 1000,
-                        'bronze': 1500,
-                        'silver': 5000,
-                        'gold': 100000,
-                        'enterprise': 100000
-                    }
-                    profile.api_calls_limit = plan_limits.get(profile.plan_type or 'basic', 1000)
+                    # Use centralized plan limits
+                    plan_limits = DEFAULT_LIMITS_BY_PLAN.get(profile.plan_type or 'basic', DEFAULT_LIMITS_BY_PLAN['basic'])
+                    profile.api_calls_limit = plan_limits.get('monthly_api', 1000)
                     profile.save()
                 except Exception as e:
                     logger.error(f"Webhook plan activation failed: {e}")
@@ -598,16 +607,9 @@ def capture_paypal_order_api(request):
                 else:
                     days = 30 if profile.billing_cycle == 'monthly' else 365
                     profile.next_billing_date = timezone.now() + timedelta(days=days)
-                # Set sensible API limits
-                plan_limits = {
-                    'free': 100,
-                    'basic': 1000,
-                    'bronze': 1500,
-                    'silver': 5000,
-                    'gold': 100000,
-                    'enterprise': 100000
-                }
-                profile.api_calls_limit = plan_limits.get(plan_type, 1000)
+                # Use centralized plan limits
+                plan_limits = DEFAULT_LIMITS_BY_PLAN.get(plan_type, DEFAULT_LIMITS_BY_PLAN.get('basic', {}))
+                profile.api_calls_limit = plan_limits.get('monthly_api', 1000)
                 profile.save()
         except Exception as e:
             logger.error(f"Failed to activate plan after capture: {e}")
@@ -798,7 +800,7 @@ def download_invoice_api(request, invoice_id):
     """
     try:
         user = _effective_user(request)
-        
+
         # Get billing record
         try:
             if invoice_id.startswith('INV-'):
@@ -811,22 +813,78 @@ def download_invoice_api(request, invoice_id):
                 'error': 'Invoice not found',
                 'error_code': 'INVOICE_NOT_FOUND'
             }, status=404)
-        
-        # Generate PDF content (simplified for demo)
-        pdf_content = f"""
-        INVOICE {invoice_id}
-        
-        Date: {billing_record.created_at.strftime('%Y-%m-%d')}
-        Amount: ${getattr(billing_record, 'amount', 49.99):.2f}
-        Status: {getattr(billing_record, 'status', 'Paid')}
-        
-        Thank you for your business!
-        """
-        
-        response = HttpResponse(pdf_content.encode('utf-8'), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice_id}.pdf"'
-        return response
-        
+
+        # Generate real PDF using reportlab
+        try:
+            from reportlab.lib.pagesizes import letter
+            from reportlab.lib import colors
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from io import BytesIO
+
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            styles = getSampleStyleSheet()
+
+            # Title
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=colors.HexColor('#1e40af'),
+                spaceAfter=30,
+            )
+            elements.append(Paragraph("INVOICE", title_style))
+            elements.append(Spacer(1, 12))
+
+            # Invoice details
+            invoice_data = [
+                ['Invoice Number:', invoice_id],
+                ['Date:', billing_record.created_at.strftime('%Y-%m-%d')],
+                ['Customer:', user.email],
+                ['Status:', getattr(billing_record, 'status', 'Paid')],
+                ['Amount:', f"${getattr(billing_record, 'amount', 49.99):.2f}"],
+            ]
+
+            table = Table(invoice_data, colWidths=[150, 300])
+            table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+
+            # Footer
+            footer_text = Paragraph("Thank you for your business!", styles['Normal'])
+            elements.append(footer_text)
+
+            # Build PDF
+            doc.build(elements)
+            pdf_content = buffer.getvalue()
+            buffer.close()
+
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="invoice_{invoice_id}.pdf"'
+            return response
+
+        except ImportError:
+            # Fallback if reportlab not installed - return JSON with invoice data
+            logger.warning("reportlab not installed, returning JSON invoice data")
+            return JsonResponse({
+                'success': True,
+                'invoice': {
+                    'id': invoice_id,
+                    'date': billing_record.created_at.strftime('%Y-%m-%d'),
+                    'amount': float(getattr(billing_record, 'amount', 49.99)),
+                    'status': getattr(billing_record, 'status', 'Paid'),
+                    'customer': user.email,
+                },
+                'message': 'PDF generation unavailable - install reportlab package'
+            })
+
     except Exception as e:
         logger.error(f"Download invoice error: {str(e)}")
         return JsonResponse({
@@ -855,15 +913,9 @@ def current_plan_api(request):
             profile.plan_type = forced_plan
             profile.plan_name = forced_plan.title()
             profile.is_premium = forced_plan not in ['free', 'basic']
-            plan_limits = {
-                'free': 100,
-                'basic': 1000,
-                'bronze': 1500,
-                'silver': 5000,
-                'gold': 100000,
-                'enterprise': 100000
-            }
-            profile.api_calls_limit = plan_limits.get(forced_plan, 1000)
+            # Use centralized plan limits
+            plan_limits = DEFAULT_LIMITS_BY_PLAN.get(forced_plan, DEFAULT_LIMITS_BY_PLAN['free'])
+            profile.api_calls_limit = plan_limits.get('monthly_api', 100)
             profile.save()
         else:
             # Enterprise email whitelist override
@@ -941,15 +993,10 @@ def change_plan_api(request):
         profile.billing_cycle = billing_cycle
         profile.is_premium = new_plan != 'free'
         profile.plan_changed_at = timezone.now()
-        
-        # Set API limits based on plan
-        plan_limits = {
-            'free': 100,
-            'basic': 1000,
-            'pro': 10000,
-            'enterprise': 100000
-        }
-        profile.api_calls_limit = plan_limits.get(new_plan, 100)
+
+        # Use centralized plan limits
+        plan_limits = DEFAULT_LIMITS_BY_PLAN.get(new_plan, DEFAULT_LIMITS_BY_PLAN['free'])
+        profile.api_calls_limit = plan_limits.get('monthly_api', 100)
         
         profile.save()
         
