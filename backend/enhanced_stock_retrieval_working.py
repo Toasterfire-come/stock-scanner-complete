@@ -147,45 +147,73 @@ def normalize_proxy_string(proxy_str: str) -> str | None:
     return p
 
 
-# Build a per-proxy requests.Session configured for Yahoo endpoints
-def create_session_for_proxy(proxy: str | None, timeout_seconds: int) -> requests.Session:
-    """Create a session with proxy, UA headers, retries, and response hook.
+# Build a per-proxy curl_cffi.Session configured for Yahoo endpoints
+def create_session_for_proxy(proxy: str | None, timeout_seconds: int):
+    """Create a curl_cffi session with proxy support for yfinance.
 
-    yfinance supports passing a custom requests.Session to Ticker; we avoid
-    globally patching shared session to keep each thread isolated.
+    yfinance now requires curl_cffi sessions (not requests.Session) for proxy support.
     """
-    session = requests.Session()
+    try:
+        from curl_cffi.requests import Session as CurlSession
 
-    # Proxies if provided
-    if proxy:
-        session.proxies = {"http": proxy, "https": proxy}
+        # Create curl_cffi session
+        session = CurlSession()
 
-    # Reasonable browser-like headers
-    session.headers.update({
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/124.0.0.0 Safari/537.36"
-        ),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Connection": "keep-alive",
-    })
+        # Set proxy if provided
+        if proxy:
+            session.proxies = {"http": proxy, "https": proxy}
 
-    # Retry policy including 429/999 with backoff
-    retry = Retry(
-        total=3,
-        read=3,
-        connect=3,
-        status=3,
-        backoff_factor=0.4,
-        status_forcelist=(429, 500, 502, 503, 504, 520, 521, 522, 524, 999),
-        allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]),
-        raise_on_status=False,
-    )
-    adapter = HTTPAdapter(max_retries=retry, pool_connections=16, pool_maxsize=32)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
+        # Set headers
+        session.headers.update({
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Connection": "keep-alive",
+        })
+
+        return session
+
+    except ImportError:
+        # Fallback to requests.Session if curl_cffi not available
+        # Note: This will not work with proxies in newer yfinance versions
+        session = requests.Session()
+
+        # Proxies if provided
+        if proxy:
+            session.proxies = {"http": proxy, "https": proxy}
+
+        # Reasonable browser-like headers
+        session.headers.update({
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Connection": "keep-alive",
+        })
+
+        # Retry policy including 429/999 with backoff
+        retry = Retry(
+            total=3,
+            read=3,
+            connect=3,
+            status=3,
+            backoff_factor=0.4,
+            status_forcelist=(429, 500, 502, 503, 504, 520, 521, 522, 524, 999),
+            allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]),
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry, pool_connections=16, pool_maxsize=32)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+        return session
 
     # Default timeout injection for all requests made via this session
     _orig_request = session.request
