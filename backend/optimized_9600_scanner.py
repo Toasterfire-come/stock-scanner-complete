@@ -462,19 +462,11 @@ class BatchQuoteFetcher:
                     'progress': False,
                 }
 
-                # Use proxy via environment if available (yfinance will pick it up)
+                # Use yfinance's native proxy parameter (not environment vars)
                 if current_proxy and not current_proxy.startswith('socks'):
-                    import os
-                    os.environ['HTTP_PROXY'] = current_proxy
-                    os.environ['HTTPS_PROXY'] = current_proxy
+                    download_kwargs['proxy'] = current_proxy
 
                 df = yf.download(**download_kwargs)
-
-                # Clear proxy env vars
-                if current_proxy:
-                    import os
-                    os.environ.pop('HTTP_PROXY', None)
-                    os.environ.pop('HTTPS_PROXY', None)
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
