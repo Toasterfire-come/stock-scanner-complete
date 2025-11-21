@@ -90,10 +90,10 @@ class ScannerConfig:
     BATCH_DELAY = 0  # No delay
     WAVE_COOLDOWN = 0
 
-    # Retry settings - fast retries with different proxies
-    MAX_RETRIES = 2  # Two retries for balance of speed/accuracy (was 3)
-    INITIAL_BACKOFF = 0  # Instant retry on non-rate-limit errors (was 0.05)
-    MAX_BACKOFF = 0.05  # Minimal backoff (was 0.1)
+    # Retry settings - aggressive retries with different proxies
+    MAX_RETRIES = 4  # Four retries to maximize success (was 2)
+    INITIAL_BACKOFF = 0  # Instant retry on non-rate-limit errors
+    MAX_BACKOFF = 0.1  # Minimal backoff for non-rate-limit errors
 
     # Timeouts - aggressive to fail fast and move to next proxy
     REQUEST_TIMEOUT = 2.0  # Fast failure for speed (was 3.0)
@@ -388,12 +388,18 @@ class BatchQuoteFetcher:
         import threading
         self._proxy_lock = threading.Lock()
         self._failed_proxies = set()  # Track failed proxies
+        self.failed_symbols = {}  # Track failed symbols with reasons
+        self.retry_counts = {}  # Track retry counts per symbol
         self.stats = {
             'batches_attempted': 0,
             'batches_succeeded': 0,
             'batches_failed': 0,
             'total_retries': 0,
             'rate_limits_hit': 0,
+            'timeout_errors': 0,
+            'delisted_errors': 0,
+            'no_data_errors': 0,
+            'other_errors': 0,
         }
 
     def _get_next_proxy(self) -> Optional[str]:
@@ -551,12 +557,25 @@ class BatchQuoteFetcher:
                 error_msg = str(e)
                 is_rate_limited = is_rate_limit_error(e)
 
+                # Track retry counts for this batch
+                for sym in symbols:
+                    self.retry_counts[sym] = self.retry_counts.get(sym, 0) + 1
+
+                # Categorize error types
                 if is_rate_limited:
                     self.stats['rate_limits_hit'] += 1
                     # INSTANT retry with different proxy - no delay on rate limit!
                     if attempt < self.config.MAX_RETRIES + 1:
                         self.stats['total_retries'] += 1
                         continue  # Immediate retry with new proxy (no sleep)
+                elif 'timeout' in error_msg.lower():
+                    self.stats['timeout_errors'] += 1
+                elif 'delisted' in error_msg.lower():
+                    self.stats['delisted_errors'] += 1
+                elif 'no data found' in error_msg.lower():
+                    self.stats['no_data_errors'] += 1
+                else:
+                    self.stats['other_errors'] += 1
 
                 # Non-rate-limit errors - check if we should retry
                 if attempt < self.config.MAX_RETRIES + 1:
@@ -566,7 +585,11 @@ class BatchQuoteFetcher:
                         time.sleep(self.config.INITIAL_BACKOFF)
                     continue  # Retry with new proxy
 
-                # Final attempt failed - suppress common expected errors
+                # Final attempt failed - record failed symbols
+                for sym in symbols:
+                    self.failed_symbols[sym] = error_msg[:100]
+
+                # Suppress common expected errors in logs
                 if 'delisted' not in error_msg.lower() and 'no data found' not in error_msg.lower() and 'timeout' not in error_msg.lower():
                     if self.stats['batches_failed'] < 3:
                         logger.debug(f"Batch {symbols[:2] if len(symbols) > 2 else symbols} failed: {error_msg[:60]}")
@@ -950,6 +973,9 @@ class OptimizedScanner:
             'failed_symbols': [s for s in symbols if s not in all_payloads][:100],  # First 100
         }
 
+        # Analyze failed symbols
+        failed_symbols_analysis = self._analyze_failed_symbols()
+
         # Print summary
         logger.info("=" * 60)
         logger.info("SCAN COMPLETE")
@@ -960,13 +986,65 @@ class OptimizedScanner:
         logger.info(f"  - Simulated: {simulated_count} ({simulated_count/total_symbols*100:.1f}%)")
         logger.info(f"Failed: {failed_count} ({failed_count/total_symbols*100:.1f}%)")
         logger.info(f"Duration: {total_time:.2f}s ({rate_per_second:.1f}/sec)")
-        logger.info(f"Fetch stats: {self.batch_fetcher.stats['batches_succeeded']}/{self.batch_fetcher.stats['batches_attempted']} succeeded")
-        logger.info(f"Rate limits: {self.batch_fetcher.stats['rate_limits_hit']} (auto-switched proxies)")
-        logger.info(f"Quality target (>{self.config.MIN_SUCCESS_RATIO * 100}%): {'PASS' if quality_met else 'FAIL'}")
-        logger.info(f"Runtime target (<{self.config.MAX_RUNTIME_SECONDS}s): {'PASS' if runtime_met else 'FAIL'}")
+        logger.info("")
+        logger.info("FETCH STATISTICS:")
+        logger.info(f"  Batches: {self.batch_fetcher.stats['batches_succeeded']}/{self.batch_fetcher.stats['batches_attempted']} succeeded")
+        logger.info(f"  Total retries: {self.batch_fetcher.stats['total_retries']}")
+        logger.info(f"  Rate limits: {self.batch_fetcher.stats['rate_limits_hit']} (auto-switched proxies)")
+        logger.info(f"  Timeouts: {self.batch_fetcher.stats['timeout_errors']}")
+        logger.info(f"  Delisted: {self.batch_fetcher.stats['delisted_errors']}")
+        logger.info(f"  No data: {self.batch_fetcher.stats['no_data_errors']}")
+        logger.info(f"  Other errors: {self.batch_fetcher.stats['other_errors']}")
+        logger.info("")
+        logger.info("FAILURE ANALYSIS:")
+        for analysis_type, count in failed_symbols_analysis.items():
+            logger.info(f"  {analysis_type}: {count}")
+        logger.info("")
+        logger.info("TARGETS:")
+        logger.info(f"  Quality (>{self.config.MIN_SUCCESS_RATIO * 100}%): {'PASS' if quality_met else 'FAIL'}")
+        logger.info(f"  Runtime (<{self.config.MAX_RUNTIME_SECONDS}s): {'PASS' if runtime_met else 'FAIL'}")
         logger.info("=" * 60)
 
         return result
+
+    def _analyze_failed_symbols(self) -> Dict[str, int]:
+        """Analyze patterns in failed symbols to identify common issues"""
+        analysis = {
+            'Total failed': len(self.batch_fetcher.failed_symbols),
+            'With dots (e.g., BRK.A)': 0,
+            'With dashes (e.g., SPAC-U)': 0,
+            'Length > 5 chars': 0,
+            'Likely preferred shares (P suffix)': 0,
+            'Likely warrants (W suffix)': 0,
+            'Multiple retries (>2)': 0,
+            'Rate limited only': 0,
+        }
+
+        for symbol in self.batch_fetcher.failed_symbols.keys():
+            if '.' in symbol:
+                analysis['With dots (e.g., BRK.A)'] += 1
+            if '-' in symbol:
+                analysis['With dashes (e.g., SPAC-U)'] += 1
+            if len(symbol) > 5:
+                analysis['Length > 5 chars'] += 1
+            if symbol.endswith('P'):
+                analysis['Likely preferred shares (P suffix)'] += 1
+            if symbol.endswith(('W', 'WS', 'WT')):
+                analysis['Likely warrants (W suffix)'] += 1
+
+            # Check retry counts
+            if symbol in self.batch_fetcher.retry_counts:
+                if self.batch_fetcher.retry_counts[symbol] > 2:
+                    analysis['Multiple retries (>2)'] += 1
+
+        # Count rate-limited only symbols
+        rate_limited_only = sum(
+            1 for sym, reason in self.batch_fetcher.failed_symbols.items()
+            if 'rate limit' in reason.lower()
+        )
+        analysis['Rate limited only'] = rate_limited_only
+
+        return analysis
 
     def _filter_symbols(self, symbols: List[str]) -> List[str]:
         """Filter out invalid/non-standard symbols"""
