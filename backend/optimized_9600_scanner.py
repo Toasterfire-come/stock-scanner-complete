@@ -450,24 +450,31 @@ class BatchQuoteFetcher:
                     session = None
                     current_proxy = None
 
-                # Small batch fetching (optimized for speed and accuracy)
-                timeout = 2 if self.proxies else 1.5
-
+                # Let yfinance manage its own sessions for proper Yahoo auth
+                # Don't pass custom sessions - this causes "Invalid Crumb" errors
                 download_kwargs = {
-                    'tickers': symbols,  # 10 tickers per batch for optimal speed
+                    'tickers': symbols if len(symbols) > 1 else symbols[0],
                     'period': '1d',
                     'interval': '1d',
-                    'group_by': 'ticker',
+                    'group_by': 'ticker' if len(symbols) > 1 else 'column',
                     'auto_adjust': True,
-                    'threads': True,  # Enable threading for small batch efficiency
+                    'threads': False,  # yfinance handles its own threading
                     'progress': False,
-                    'timeout': timeout
                 }
 
-                if session:
-                    download_kwargs['session'] = session
+                # Use proxy via environment if available (yfinance will pick it up)
+                if current_proxy and not current_proxy.startswith('socks'):
+                    import os
+                    os.environ['HTTP_PROXY'] = current_proxy
+                    os.environ['HTTPS_PROXY'] = current_proxy
 
                 df = yf.download(**download_kwargs)
+
+                # Clear proxy env vars
+                if current_proxy:
+                    import os
+                    os.environ.pop('HTTP_PROXY', None)
+                    os.environ.pop('HTTPS_PROXY', None)
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
