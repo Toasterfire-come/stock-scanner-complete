@@ -80,20 +80,20 @@ for name in ('yfinance', 'yfinance.scrapers', 'yfinance.data'):
 class ScannerConfig:
     """Optimized configuration for 9,600 tickers in <3 minutes"""
 
-    # Batch settings - large batches for fewer requests
-    BATCH_SIZE = 1000  # Larger batches = fewer network round trips (was 500)
+    # Batch settings - moderate batches for better proxy rotation
+    BATCH_SIZE = 200  # Smaller batches = more proxy rotation (was 1000)
 
     # Parallelism - aggressive to maximize throughput
-    MAX_WORKERS = 20  # Increased parallelism for speed (was 8)
+    MAX_WORKERS = 30  # Increased parallelism to use more proxies (was 20)
 
-    # Rate limiting - no delays for maximum speed
-    BATCH_DELAY = 0  # No delay between batches (was 0.1)
+    # Rate limiting - minimal delays
+    BATCH_DELAY = 0.05  # Tiny delay to avoid overwhelming (was 0)
     WAVE_COOLDOWN = 0  # No cooldown (was 0.5)
 
-    # Retry settings
-    MAX_RETRIES = 1  # Single retry for speed
-    INITIAL_BACKOFF = 0.2  # Faster retry (was 0.3)
-    MAX_BACKOFF = 0.5  # Reduced max backoff (was 1.0)
+    # Retry settings - more retries with proxy rotation
+    MAX_RETRIES = 2  # Multiple retries with different proxies (was 1)
+    INITIAL_BACKOFF = 0.1  # Very fast retry (was 0.2)
+    MAX_BACKOFF = 0.3  # Quick backoff (was 0.5)
 
     # Timeouts - aggressive to fail fast
     REQUEST_TIMEOUT = 3.0  # Faster timeout for speed (was 10.0)
@@ -112,7 +112,7 @@ class ScannerConfig:
     MAX_PROXIES_TO_USE = 1000  # Use top 1000 tested working proxies (was None for all)
 
     # Simulation settings - fill in for failed symbols
-    ENABLE_SIMULATION = True
+    ENABLE_SIMULATION = False  # Disabled to show real data quality (was True)
     SIMULATION_PRICE_RANGE = (1.0, 500.0)
     SIMULATION_VOLUME_RANGE = (10000, 10000000)
 
@@ -306,7 +306,8 @@ class SessionPool:
     def __init__(self, pool_size: int = 10, proxies: List[str] = None):
         self.sessions: List[requests.Session] = []
         self.proxies = proxies or []
-        self._index = 0
+        self._session_index = 0
+        self._proxy_index = 0
         import threading
         self._lock = threading.Lock()
 
@@ -317,7 +318,7 @@ class SessionPool:
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
         ]
 
-        # Create sessions with proxy rotation
+        # Create sessions WITHOUT fixed proxies (we'll rotate them dynamically)
         for i in range(pool_size):
             try:
                 if cf_requests is not None:
@@ -332,41 +333,46 @@ class SessionPool:
                     'Connection': 'keep-alive',
                 })
 
-                # Assign proxy if available
-                if self.proxies:
-                    proxy = self.proxies[i % len(self.proxies)]
-                    # Handle different proxy protocols
-                    if proxy.startswith(('socks4://', 'socks5://')):
-                        # SOCKS proxies work for both http and https
-                        sess.proxies = {'http': proxy, 'https': proxy}
-                    else:
-                        # HTTP/HTTPS proxies
-                        sess.proxies = {'http': proxy, 'https': proxy}
-
-                # Warm session (skip if using proxy to save time)
-                if not self.proxies:
-                    try:
-                        sess.get('https://finance.yahoo.com', timeout=5)
-                    except Exception:
-                        pass
-
+                # Don't assign proxy here - we'll do it dynamically per request
                 self.sessions.append(sess)
             except Exception as e:
                 logger.warning(f"Failed to create session {i}: {e}")
 
-        proxy_info = f" with {len(self.proxies)} proxies" if self.proxies else " (no proxies)"
+        proxy_info = f" (will rotate through {len(self.proxies)} proxies)" if self.proxies else " (no proxies)"
         logger.info(f"Created session pool with {len(self.sessions)} sessions{proxy_info}")
 
-    def get_session(self) -> requests.Session:
-        """Get next session from pool (thread-safe round-robin)"""
+    def get_session_with_proxy(self) -> Tuple[requests.Session, Optional[str]]:
+        """Get next session and assign a fresh proxy (thread-safe round-robin)"""
         if not self.sessions:
-            if cf_requests is not None:
-                return cf_requests.Session()
-            return requests.Session()
+            sess = cf_requests.Session() if cf_requests is not None else requests.Session()
+            return sess, None
 
         with self._lock:
-            self._index = (self._index + 1) % len(self.sessions)
-            return self.sessions[self._index]
+            # Get next session
+            self._session_index = (self._session_index + 1) % len(self.sessions)
+            sess = self.sessions[self._session_index]
+
+            # Assign next proxy if available
+            if self.proxies:
+                self._proxy_index = (self._proxy_index + 1) % len(self.proxies)
+                proxy = self.proxies[self._proxy_index]
+
+                # Update session proxy
+                if proxy.startswith(('socks4://', 'socks5://')):
+                    sess.proxies = {'http': proxy, 'https': proxy}
+                else:
+                    sess.proxies = {'http': proxy, 'https': proxy}
+
+                return sess, proxy
+            else:
+                # Clear any existing proxy
+                sess.proxies = {}
+                return sess, None
+
+    def get_session(self) -> requests.Session:
+        """Get next session from pool (thread-safe round-robin) - legacy method"""
+        sess, _ = self.get_session_with_proxy()
+        return sess
 
 
 # ==================== Batch Quote Fetcher ====================
@@ -422,7 +428,7 @@ class BatchQuoteFetcher:
         self.stats['batches_attempted'] += 1
         backoff = self.config.INITIAL_BACKOFF
 
-        proxy = None
+        current_proxy = None
         for attempt in range(1, self.config.MAX_RETRIES + 2):  # Extra attempt for no-proxy fallback
             try:
                 # Use yfinance download for batch fetching
@@ -440,14 +446,14 @@ class BatchQuoteFetcher:
                     'timeout': timeout
                 }
 
-                # Use session from pool for first attempts, create fresh session for fallback
+                # Rotate to a new proxy for each attempt (better distribution)
                 if attempt <= self.config.MAX_RETRIES and self.proxies:
-                    # Use session with proxy from pool
-                    session = self.session_pool.get_session()
+                    # Get fresh session with new proxy
+                    session, current_proxy = self.session_pool.get_session_with_proxy()
                     download_kwargs['session'] = session
                 elif not self.proxies:
-                    # No proxies available, use session pool anyway
-                    session = self.session_pool.get_session()
+                    # No proxies available, use clean session
+                    session, _ = self.session_pool.get_session_with_proxy()
                     download_kwargs['session'] = session
                 # else: Final no-proxy fallback - let yfinance use default session
 
@@ -847,11 +853,13 @@ class OptimizedScanner:
 
         # Process batches with maximum parallelism
         with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
-            # Submit all batches at once for maximum speed
-            future_to_batch = {
-                executor.submit(self.batch_fetcher.fetch_batch, batch): batch
-                for batch in batches
-            }
+            # Submit batches with tiny delay for proxy rotation
+            future_to_batch = {}
+            for i, batch in enumerate(batches):
+                if i > 0 and self.config.BATCH_DELAY > 0:
+                    time.sleep(self.config.BATCH_DELAY)
+                future = executor.submit(self.batch_fetcher.fetch_batch, batch)
+                future_to_batch[future] = batch
 
             # Collect results
             completed = 0
@@ -936,10 +944,11 @@ class OptimizedScanner:
         logger.info("=" * 60)
         logger.info(f"Total symbols: {total_symbols}")
         logger.info(f"Success: {success_count} ({success_ratio * 100:.2f}%)")
-        logger.info(f"  - Real data: {success_count - simulated_count}")
-        logger.info(f"  - Simulated: {simulated_count}")
+        logger.info(f"  - Real data: {success_count - simulated_count} ({(success_count - simulated_count)/total_symbols*100:.1f}%)")
+        logger.info(f"  - Simulated: {simulated_count} ({simulated_count/total_symbols*100:.1f}%)")
         logger.info(f"Failed: {failed_count}")
         logger.info(f"Duration: {total_time:.2f}s ({rate_per_second:.1f}/sec)")
+        logger.info(f"Batch stats: {self.batch_fetcher.stats['batches_succeeded']}/{self.batch_fetcher.stats['batches_attempted']} succeeded")
         logger.info(f"Quality target (>{self.config.MIN_SUCCESS_RATIO * 100}%): {'PASS' if quality_met else 'FAIL'}")
         logger.info(f"Runtime target (<{self.config.MAX_RUNTIME_SECONDS}s): {'PASS' if runtime_met else 'FAIL'}")
         logger.info("=" * 60)
