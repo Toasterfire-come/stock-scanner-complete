@@ -80,23 +80,23 @@ for name in ('yfinance', 'yfinance.scrapers', 'yfinance.data'):
 class ScannerConfig:
     """Optimized configuration for 9,600 tickers in <3 minutes"""
 
-    # Batch settings - DISABLED, using individual fetching
-    BATCH_SIZE = 1  # Individual fetching (was 200)
+    # Batch settings - optimized sweet spot (not too big, not individual)
+    BATCH_SIZE = 10  # Small batches for speed without mass failures (was 1)
 
-    # Parallelism - moderate to control rate limiting
-    MAX_WORKERS = 50  # More workers for individual fetching (was 30)
+    # Parallelism - aggressive with many proxies available
+    MAX_WORKERS = 100  # High parallelism with 2000 proxies (was 50)
 
     # Rate limiting - no delays needed with proxy rotation
-    BATCH_DELAY = 0  # No delay needed
+    BATCH_DELAY = 0  # No delay
     WAVE_COOLDOWN = 0
 
-    # Retry settings - aggressive retries with different proxies
-    MAX_RETRIES = 3  # Try multiple proxies before giving up (was 2)
-    INITIAL_BACKOFF = 0.05  # Very fast retry with different proxy (was 0.1)
-    MAX_BACKOFF = 0.1  # Minimal backoff (was 0.3)
+    # Retry settings - fast retries with different proxies
+    MAX_RETRIES = 2  # Two retries for balance of speed/accuracy (was 3)
+    INITIAL_BACKOFF = 0  # Instant retry on non-rate-limit errors (was 0.05)
+    MAX_BACKOFF = 0.05  # Minimal backoff (was 0.1)
 
-    # Timeouts - aggressive to fail fast
-    REQUEST_TIMEOUT = 3.0  # Faster timeout for speed (was 10.0)
+    # Timeouts - aggressive to fail fast and move to next proxy
+    REQUEST_TIMEOUT = 2.0  # Fast failure for speed (was 3.0)
 
     # Quality targets
     MIN_SUCCESS_RATIO = 0.95
@@ -109,7 +109,7 @@ class ScannerConfig:
     # Proxy settings - free proxies fetched by fetch_fresh_proxies.py before market open
     USE_PROXIES = True
     PROXY_FILE = 'working_proxies.json'
-    MAX_PROXIES_TO_USE = 1000  # Use top 1000 tested working proxies (was None for all)
+    MAX_PROXIES_TO_USE = 2000  # Use top 2000 tested working proxies for better rotation (was 1000)
 
     # Simulation settings - fill in for failed symbols
     ENABLE_SIMULATION = False  # Disabled to show real data quality (was True)
@@ -444,16 +444,16 @@ class BatchQuoteFetcher:
                     session = None
                     current_proxy = None
 
-                # Individual stock fetching (faster proxy rotation)
-                timeout = 3 if self.proxies else 2
+                # Small batch fetching (optimized for speed and accuracy)
+                timeout = 2 if self.proxies else 1.5
 
                 download_kwargs = {
-                    'tickers': symbols,  # Will be 1 ticker for individual mode
+                    'tickers': symbols,  # 10 tickers per batch for optimal speed
                     'period': '1d',
                     'interval': '1d',
                     'group_by': 'ticker',
                     'auto_adjust': True,
-                    'threads': False,  # Disable threading for individual fetches
+                    'threads': True,  # Enable threading for small batch efficiency
                     'progress': False,
                     'timeout': timeout
                 }
@@ -554,20 +554,22 @@ class BatchQuoteFetcher:
                 if is_rate_limited:
                     self.stats['rate_limits_hit'] += 1
                     # INSTANT retry with different proxy - no delay on rate limit!
-                    # The proxy rotation happens at top of loop
                     if attempt < self.config.MAX_RETRIES + 1:
                         self.stats['total_retries'] += 1
-                        # NO SLEEP - instant retry with new proxy
-                        continue
+                        continue  # Immediate retry with new proxy (no sleep)
 
-                # Non-rate-limit errors get minimal backoff
+                # Non-rate-limit errors - check if we should retry
                 if attempt < self.config.MAX_RETRIES + 1:
                     self.stats['total_retries'] += 1
-                    time.sleep(self.config.INITIAL_BACKOFF)  # Minimal delay
-                else:
-                    # Final attempt failed - only log if not common errors
-                    if self.stats['batches_failed'] < 5 and not ('delisted' in error_msg.lower() or 'no data found' in error_msg.lower()):
-                        logger.warning(f"Symbol {symbols[0] if symbols else 'unknown'} failed: {error_msg[:80]}")
+                    # Only sleep if configured backoff > 0
+                    if self.config.INITIAL_BACKOFF > 0:
+                        time.sleep(self.config.INITIAL_BACKOFF)
+                    continue  # Retry with new proxy
+
+                # Final attempt failed - suppress common expected errors
+                if 'delisted' not in error_msg.lower() and 'no data found' not in error_msg.lower() and 'timeout' not in error_msg.lower():
+                    if self.stats['batches_failed'] < 3:
+                        logger.debug(f"Batch {symbols[:2] if len(symbols) > 2 else symbols} failed: {error_msg[:60]}")
 
         self.stats['batches_failed'] += 1
         return {}
@@ -855,34 +857,36 @@ class OptimizedScanner:
             for i in range(0, len(symbols), self.config.BATCH_SIZE)
         ]
 
-        # Process individual stocks with maximum parallelism
-        logger.info(f"Fetching {len(batches)} stocks individually with {self.config.MAX_WORKERS} workers...")
+        # Process batches with maximum parallelism
+        logger.info(f"Fetching {total_symbols} stocks in {len(batches)} batches of {self.config.BATCH_SIZE} with {self.config.MAX_WORKERS} workers...")
 
         with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
-            # Submit all stocks at once (batches are size 1)
-            future_to_symbol = {
-                executor.submit(self.batch_fetcher.fetch_batch, batch): batch[0] if batch else None
-                for batch in batches
+            # Submit all batches at once
+            future_to_batch = {
+                executor.submit(self.batch_fetcher.fetch_batch, batch): i
+                for i, batch in enumerate(batches)
             }
 
-            # Collect results with progress
+            # Collect results with frequent progress updates
             completed = 0
-            for future in as_completed(future_to_symbol):
+            for future in as_completed(future_to_batch):
                 try:
-                    results = future.result(timeout=15)  # Shorter timeout for individual
+                    results = future.result(timeout=10)  # Timeout for batch processing
                     all_payloads.update(results)
                 except Exception:
                     pass  # Already logged in fetch_batch
 
                 completed += 1
-                # Progress every 500 stocks
-                if completed % 500 == 0:
+                # Progress every 100 batches (1000 stocks with batch_size=10)
+                if completed % 100 == 0 or completed == len(batches):
                     elapsed = time.time() - start_time
-                    success_rate = len(all_payloads) / completed * 100 if completed > 0 else 0
+                    stocks_processed = completed * self.config.BATCH_SIZE
+                    success_rate = len(all_payloads) / stocks_processed * 100 if stocks_processed > 0 else 0
+                    rate_per_sec = stocks_processed / elapsed if elapsed > 0 else 0
                     logger.info(
-                        f"Progress: {completed}/{len(batches)} stocks, "
+                        f"Progress: {completed}/{len(batches)} batches ({stocks_processed}/{total_symbols} stocks), "
                         f"{len(all_payloads)} succeeded ({success_rate:.1f}%), "
-                        f"{elapsed:.1f}s elapsed, "
+                        f"{rate_per_sec:.1f} stocks/sec, "
                         f"{self.batch_fetcher.stats['rate_limits_hit']} rate limits"
                     )
 
