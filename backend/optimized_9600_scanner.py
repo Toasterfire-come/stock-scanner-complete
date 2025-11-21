@@ -374,6 +374,15 @@ class SessionPool:
         sess, _ = self.get_session_with_proxy()
         return sess
 
+    def get_next_proxy(self) -> Optional[str]:
+        """Get next proxy in rotation (thread-safe round-robin)"""
+        if not self.proxies:
+            return None
+
+        with self._lock:
+            self._proxy_index = (self._proxy_index + 1) % len(self.proxies)
+            return self.proxies[self._proxy_index]
+
 
 # ==================== Batch Quote Fetcher ====================
 
@@ -439,15 +448,10 @@ class BatchQuoteFetcher:
             try:
                 # Rotate to NEW proxy for each attempt (instant switch on rate limit)
                 if attempt <= self.config.MAX_RETRIES and self.proxies:
-                    # Get fresh session with NEW proxy for each retry
-                    session, current_proxy = self.session_pool.get_session_with_proxy()
-                elif not self.proxies:
-                    # No proxies available, use clean session
-                    session, _ = self.session_pool.get_session_with_proxy()
-                    current_proxy = None
-                else:
-                    # Final no-proxy fallback
-                    session = None
+                    # Get fresh proxy for each retry - rotating through proxy pool
+                    current_proxy = self.session_pool.get_next_proxy()
+                elif attempt == self.config.MAX_RETRIES + 1:
+                    # Final attempt: try without proxy as fallback
                     current_proxy = None
 
                 # Let yfinance manage its own sessions for proper Yahoo auth
@@ -462,11 +466,19 @@ class BatchQuoteFetcher:
                     'progress': False,
                 }
 
-                # Use yfinance's native proxy parameter (not environment vars)
+                # Set proxy via environment variables (proxy parameter doesn't work reliably)
+                # yfinance will pick up HTTP_PROXY/HTTPS_PROXY from environment
                 if current_proxy and not current_proxy.startswith('socks'):
-                    download_kwargs['proxy'] = current_proxy
+                    os.environ['HTTP_PROXY'] = current_proxy
+                    os.environ['HTTPS_PROXY'] = current_proxy
 
-                df = yf.download(**download_kwargs)
+                try:
+                    df = yf.download(**download_kwargs)
+                finally:
+                    # Always clean up proxy environment variables
+                    if current_proxy:
+                        os.environ.pop('HTTP_PROXY', None)
+                        os.environ.pop('HTTPS_PROXY', None)
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
