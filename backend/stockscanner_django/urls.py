@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
 from core.views import homepage, health_check
-from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', homepage, name='homepage'),
@@ -10,7 +9,5 @@ urlpatterns = [
     path('api/', include('stocks.urls')),
     path('api/billing/', include('billing.urls')),
     path('', include('core.urls')),
-    path('pricing/', TemplateView.as_view(template_name='core/pricing.html'), name='pricing'),
-    path('login/', TemplateView.as_view(template_name='core/login.html'), name='login'),
-    path('register/', TemplateView.as_view(template_name='core/register.html'), name='register'),
+    # Note: /login/, /register/, /pricing/ are handled by React frontend SPA
 ]
