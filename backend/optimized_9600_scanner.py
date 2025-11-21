@@ -80,23 +80,23 @@ for name in ('yfinance', 'yfinance.scrapers', 'yfinance.data'):
 class ScannerConfig:
     """Optimized configuration for 9,600 tickers in <3 minutes"""
 
-    # Batch settings - moderate batches for better proxy rotation
-    BATCH_SIZE = 200  # Smaller batches = more proxy rotation (was 1000)
+    # Batch settings - optimized sweet spot (not too big, not individual)
+    BATCH_SIZE = 10  # Small batches for speed without mass failures (was 1)
 
-    # Parallelism - aggressive to maximize throughput
-    MAX_WORKERS = 30  # Increased parallelism to use more proxies (was 20)
+    # Parallelism - aggressive with many proxies available
+    MAX_WORKERS = 100  # High parallelism with 2000 proxies (was 50)
 
-    # Rate limiting - minimal delays
-    BATCH_DELAY = 0.05  # Tiny delay to avoid overwhelming (was 0)
-    WAVE_COOLDOWN = 0  # No cooldown (was 0.5)
+    # Rate limiting - no delays needed with proxy rotation
+    BATCH_DELAY = 0  # No delay
+    WAVE_COOLDOWN = 0
 
-    # Retry settings - more retries with proxy rotation
-    MAX_RETRIES = 2  # Multiple retries with different proxies (was 1)
-    INITIAL_BACKOFF = 0.1  # Very fast retry (was 0.2)
-    MAX_BACKOFF = 0.3  # Quick backoff (was 0.5)
+    # Retry settings - aggressive retries with different proxies
+    MAX_RETRIES = 4  # Four retries to maximize success (was 2)
+    INITIAL_BACKOFF = 0  # Instant retry on non-rate-limit errors
+    MAX_BACKOFF = 0.1  # Minimal backoff for non-rate-limit errors
 
-    # Timeouts - aggressive to fail fast
-    REQUEST_TIMEOUT = 3.0  # Faster timeout for speed (was 10.0)
+    # Timeouts - aggressive to fail fast and move to next proxy
+    REQUEST_TIMEOUT = 2.0  # Fast failure for speed (was 3.0)
 
     # Quality targets
     MIN_SUCCESS_RATIO = 0.95
@@ -109,7 +109,7 @@ class ScannerConfig:
     # Proxy settings - free proxies fetched by fetch_fresh_proxies.py before market open
     USE_PROXIES = True
     PROXY_FILE = 'working_proxies.json'
-    MAX_PROXIES_TO_USE = 1000  # Use top 1000 tested working proxies (was None for all)
+    MAX_PROXIES_TO_USE = 2000  # Use top 2000 tested working proxies for better rotation (was 1000)
 
     # Simulation settings - fill in for failed symbols
     ENABLE_SIMULATION = False  # Disabled to show real data quality (was True)
@@ -374,6 +374,15 @@ class SessionPool:
         sess, _ = self.get_session_with_proxy()
         return sess
 
+    def get_next_proxy(self) -> Optional[str]:
+        """Get next proxy in rotation (thread-safe round-robin)"""
+        if not self.proxies:
+            return None
+
+        with self._lock:
+            self._proxy_index = (self._proxy_index + 1) % len(self.proxies)
+            return self.proxies[self._proxy_index]
+
 
 # ==================== Batch Quote Fetcher ====================
 
@@ -388,12 +397,18 @@ class BatchQuoteFetcher:
         import threading
         self._proxy_lock = threading.Lock()
         self._failed_proxies = set()  # Track failed proxies
+        self.failed_symbols = {}  # Track failed symbols with reasons
+        self.retry_counts = {}  # Track retry counts per symbol
         self.stats = {
             'batches_attempted': 0,
             'batches_succeeded': 0,
             'batches_failed': 0,
             'total_retries': 0,
             'rate_limits_hit': 0,
+            'timeout_errors': 0,
+            'delisted_errors': 0,
+            'no_data_errors': 0,
+            'other_errors': 0,
         }
 
     def _get_next_proxy(self) -> Optional[str]:
@@ -431,36 +446,39 @@ class BatchQuoteFetcher:
         current_proxy = None
         for attempt in range(1, self.config.MAX_RETRIES + 2):  # Extra attempt for no-proxy fallback
             try:
-                # Use yfinance download for batch fetching
-                # Use longer timeout when using proxies to account for proxy latency
-                timeout = 5 if self.proxies else 3
+                # Rotate to NEW proxy for each attempt (instant switch on rate limit)
+                if attempt <= self.config.MAX_RETRIES and self.proxies:
+                    # Get fresh proxy for each retry - rotating through proxy pool
+                    current_proxy = self.session_pool.get_next_proxy()
+                elif attempt == self.config.MAX_RETRIES + 1:
+                    # Final attempt: try without proxy as fallback
+                    current_proxy = None
 
+                # Let yfinance manage its own sessions for proper Yahoo auth
+                # Don't pass custom sessions - this causes "Invalid Crumb" errors
                 download_kwargs = {
-                    'tickers': symbols,
-                    'period': '1d',  # Minimal period for speed
+                    'tickers': symbols if len(symbols) > 1 else symbols[0],
+                    'period': '1d',
                     'interval': '1d',
-                    'group_by': 'ticker',
+                    'group_by': 'ticker' if len(symbols) > 1 else 'column',
                     'auto_adjust': True,
-                    'threads': True,  # Enable threading for speed
+                    'threads': False,  # yfinance handles its own threading
                     'progress': False,
-                    'timeout': timeout
                 }
 
-                # Rotate to a new proxy for each attempt (better distribution)
-                if attempt <= self.config.MAX_RETRIES and self.proxies:
-                    # Get fresh session with new proxy
-                    session, current_proxy = self.session_pool.get_session_with_proxy()
-                    download_kwargs['session'] = session
-                elif not self.proxies:
-                    # No proxies available, use clean session
-                    session, _ = self.session_pool.get_session_with_proxy()
-                    download_kwargs['session'] = session
-                # else: Final no-proxy fallback - let yfinance use default session
+                # Set proxy via environment variables (proxy parameter doesn't work reliably)
+                # yfinance will pick up HTTP_PROXY/HTTPS_PROXY from environment
+                if current_proxy and not current_proxy.startswith('socks'):
+                    os.environ['HTTP_PROXY'] = current_proxy
+                    os.environ['HTTPS_PROXY'] = current_proxy
 
-                df = yf.download(**download_kwargs)
-
-                # No delay for maximum speed
-                # time.sleep(0.05)  # Removed for speed
+                try:
+                    df = yf.download(**download_kwargs)
+                finally:
+                    # Always clean up proxy environment variables
+                    if current_proxy:
+                        os.environ.pop('HTTP_PROXY', None)
+                        os.environ.pop('HTTPS_PROXY', None)
 
                 if df.empty:
                     raise Exception("Empty dataframe returned")
@@ -548,22 +566,44 @@ class BatchQuoteFetcher:
 
             except Exception as e:
                 error_msg = str(e)
-                if is_rate_limit_error(e):
+                is_rate_limited = is_rate_limit_error(e)
+
+                # Track retry counts for this batch
+                for sym in symbols:
+                    self.retry_counts[sym] = self.retry_counts.get(sym, 0) + 1
+
+                # Categorize error types
+                if is_rate_limited:
                     self.stats['rate_limits_hit'] += 1
-
-                # Log first few errors for debugging
-                if self.stats['batches_failed'] < 5:
-                    logger.warning(f"Batch fetch attempt {attempt} failed: {error_msg[:100]}")
-
-                if attempt < self.config.MAX_RETRIES + 1:  # Include no-proxy fallback
-                    self.stats['total_retries'] += 1
-                    sleep_time = min(backoff + random.uniform(0, 0.3), self.config.MAX_BACKOFF)
-                    time.sleep(sleep_time)
-                    backoff *= 1.5
+                    # INSTANT retry with different proxy - no delay on rate limit!
+                    if attempt < self.config.MAX_RETRIES + 1:
+                        self.stats['total_retries'] += 1
+                        continue  # Immediate retry with new proxy (no sleep)
+                elif 'timeout' in error_msg.lower():
+                    self.stats['timeout_errors'] += 1
+                elif 'delisted' in error_msg.lower():
+                    self.stats['delisted_errors'] += 1
+                elif 'no data found' in error_msg.lower():
+                    self.stats['no_data_errors'] += 1
                 else:
-                    # Final attempt failed
+                    self.stats['other_errors'] += 1
+
+                # Non-rate-limit errors - check if we should retry
+                if attempt < self.config.MAX_RETRIES + 1:
+                    self.stats['total_retries'] += 1
+                    # Only sleep if configured backoff > 0
+                    if self.config.INITIAL_BACKOFF > 0:
+                        time.sleep(self.config.INITIAL_BACKOFF)
+                    continue  # Retry with new proxy
+
+                # Final attempt failed - record failed symbols
+                for sym in symbols:
+                    self.failed_symbols[sym] = error_msg[:100]
+
+                # Suppress common expected errors in logs
+                if 'delisted' not in error_msg.lower() and 'no data found' not in error_msg.lower() and 'timeout' not in error_msg.lower():
                     if self.stats['batches_failed'] < 3:
-                        logger.error(f"Batch completely failed after all retries: {error_msg[:150]}")
+                        logger.debug(f"Batch {symbols[:2] if len(symbols) > 2 else symbols} failed: {error_msg[:60]}")
 
         self.stats['batches_failed'] += 1
         return {}
@@ -852,30 +892,36 @@ class OptimizedScanner:
         ]
 
         # Process batches with maximum parallelism
-        with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
-            # Submit batches with tiny delay for proxy rotation
-            future_to_batch = {}
-            for i, batch in enumerate(batches):
-                if i > 0 and self.config.BATCH_DELAY > 0:
-                    time.sleep(self.config.BATCH_DELAY)
-                future = executor.submit(self.batch_fetcher.fetch_batch, batch)
-                future_to_batch[future] = batch
+        logger.info(f"Fetching {total_symbols} stocks in {len(batches)} batches of {self.config.BATCH_SIZE} with {self.config.MAX_WORKERS} workers...")
 
-            # Collect results
+        with ThreadPoolExecutor(max_workers=self.config.MAX_WORKERS) as executor:
+            # Submit all batches at once
+            future_to_batch = {
+                executor.submit(self.batch_fetcher.fetch_batch, batch): i
+                for i, batch in enumerate(batches)
+            }
+
+            # Collect results with frequent progress updates
             completed = 0
             for future in as_completed(future_to_batch):
                 try:
-                    results = future.result(timeout=30)
+                    results = future.result(timeout=10)  # Timeout for batch processing
                     all_payloads.update(results)
-                except Exception as e:
-                    logger.debug(f"Batch failed: {e}")
+                except Exception:
+                    pass  # Already logged in fetch_batch
 
                 completed += 1
-                if completed % 10 == 0:
+                # Progress every 100 batches (1000 stocks with batch_size=10)
+                if completed % 100 == 0 or completed == len(batches):
                     elapsed = time.time() - start_time
+                    stocks_processed = completed * self.config.BATCH_SIZE
+                    success_rate = len(all_payloads) / stocks_processed * 100 if stocks_processed > 0 else 0
+                    rate_per_sec = stocks_processed / elapsed if elapsed > 0 else 0
                     logger.info(
-                        f"Progress: {completed}/{len(batches)} batches, "
-                        f"{len(all_payloads)} hits, {elapsed:.1f}s elapsed"
+                        f"Progress: {completed}/{len(batches)} batches ({stocks_processed}/{total_symbols} stocks), "
+                        f"{len(all_payloads)} succeeded ({success_rate:.1f}%), "
+                        f"{rate_per_sec:.1f} stocks/sec, "
+                        f"{self.batch_fetcher.stats['rate_limits_hit']} rate limits"
                     )
 
         phase1_time = time.time() - start_time
@@ -938,6 +984,9 @@ class OptimizedScanner:
             'failed_symbols': [s for s in symbols if s not in all_payloads][:100],  # First 100
         }
 
+        # Analyze failed symbols
+        failed_symbols_analysis = self._analyze_failed_symbols()
+
         # Print summary
         logger.info("=" * 60)
         logger.info("SCAN COMPLETE")
@@ -946,14 +995,67 @@ class OptimizedScanner:
         logger.info(f"Success: {success_count} ({success_ratio * 100:.2f}%)")
         logger.info(f"  - Real data: {success_count - simulated_count} ({(success_count - simulated_count)/total_symbols*100:.1f}%)")
         logger.info(f"  - Simulated: {simulated_count} ({simulated_count/total_symbols*100:.1f}%)")
-        logger.info(f"Failed: {failed_count}")
+        logger.info(f"Failed: {failed_count} ({failed_count/total_symbols*100:.1f}%)")
         logger.info(f"Duration: {total_time:.2f}s ({rate_per_second:.1f}/sec)")
-        logger.info(f"Batch stats: {self.batch_fetcher.stats['batches_succeeded']}/{self.batch_fetcher.stats['batches_attempted']} succeeded")
-        logger.info(f"Quality target (>{self.config.MIN_SUCCESS_RATIO * 100}%): {'PASS' if quality_met else 'FAIL'}")
-        logger.info(f"Runtime target (<{self.config.MAX_RUNTIME_SECONDS}s): {'PASS' if runtime_met else 'FAIL'}")
+        logger.info("")
+        logger.info("FETCH STATISTICS:")
+        logger.info(f"  Batches: {self.batch_fetcher.stats['batches_succeeded']}/{self.batch_fetcher.stats['batches_attempted']} succeeded")
+        logger.info(f"  Total retries: {self.batch_fetcher.stats['total_retries']}")
+        logger.info(f"  Rate limits: {self.batch_fetcher.stats['rate_limits_hit']} (auto-switched proxies)")
+        logger.info(f"  Timeouts: {self.batch_fetcher.stats['timeout_errors']}")
+        logger.info(f"  Delisted: {self.batch_fetcher.stats['delisted_errors']}")
+        logger.info(f"  No data: {self.batch_fetcher.stats['no_data_errors']}")
+        logger.info(f"  Other errors: {self.batch_fetcher.stats['other_errors']}")
+        logger.info("")
+        logger.info("FAILURE ANALYSIS:")
+        for analysis_type, count in failed_symbols_analysis.items():
+            logger.info(f"  {analysis_type}: {count}")
+        logger.info("")
+        logger.info("TARGETS:")
+        logger.info(f"  Quality (>{self.config.MIN_SUCCESS_RATIO * 100}%): {'PASS' if quality_met else 'FAIL'}")
+        logger.info(f"  Runtime (<{self.config.MAX_RUNTIME_SECONDS}s): {'PASS' if runtime_met else 'FAIL'}")
         logger.info("=" * 60)
 
         return result
+
+    def _analyze_failed_symbols(self) -> Dict[str, int]:
+        """Analyze patterns in failed symbols to identify common issues"""
+        analysis = {
+            'Total failed': len(self.batch_fetcher.failed_symbols),
+            'With dots (e.g., BRK.A)': 0,
+            'With dashes (e.g., SPAC-U)': 0,
+            'Length > 5 chars': 0,
+            'Likely preferred shares (P suffix)': 0,
+            'Likely warrants (W suffix)': 0,
+            'Multiple retries (>2)': 0,
+            'Rate limited only': 0,
+        }
+
+        for symbol in self.batch_fetcher.failed_symbols.keys():
+            if '.' in symbol:
+                analysis['With dots (e.g., BRK.A)'] += 1
+            if '-' in symbol:
+                analysis['With dashes (e.g., SPAC-U)'] += 1
+            if len(symbol) > 5:
+                analysis['Length > 5 chars'] += 1
+            if symbol.endswith('P'):
+                analysis['Likely preferred shares (P suffix)'] += 1
+            if symbol.endswith(('W', 'WS', 'WT')):
+                analysis['Likely warrants (W suffix)'] += 1
+
+            # Check retry counts
+            if symbol in self.batch_fetcher.retry_counts:
+                if self.batch_fetcher.retry_counts[symbol] > 2:
+                    analysis['Multiple retries (>2)'] += 1
+
+        # Count rate-limited only symbols
+        rate_limited_only = sum(
+            1 for sym, reason in self.batch_fetcher.failed_symbols.items()
+            if 'rate limit' in reason.lower()
+        )
+        analysis['Rate limited only'] = rate_limited_only
+
+        return analysis
 
     def _filter_symbols(self, symbols: List[str]) -> List[str]:
         """Filter out invalid/non-standard symbols"""

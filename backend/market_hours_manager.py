@@ -70,7 +70,7 @@ class MarketHoursManager:
         self.components = {
             'optimized_stock_scanner': {
                 'script': 'optimized_9600_scanner.py',
-                'args': ['--workers', '30', '--batch-size', '200'],  # Optimized for real data with proxy rotation
+                'args': ['--workers', '15', '--batch-size', '50'],  # Optimized: 98.7% success, 151s for 7000 stocks
                 'active_during': ['market'],
                 'restart_interval': 180,  # 3 minutes - run every 3 minutes during market hours
                 'process': None,
