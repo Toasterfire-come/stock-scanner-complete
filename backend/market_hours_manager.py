@@ -68,9 +68,9 @@ class MarketHoursManager:
         
         # Component configurations - Individual services with specific restart intervals
         self.components = {
-            'django_stock_updater': {
-                'command': [self.python_exe, 'manage.py', 'update_stocks_yfinance', '--schedule'],
-                'args': [],
+            'optimized_stock_updater': {
+                'script': 'optimized_stock_updater.py',
+                'args': ['--schedule'],
                 'active_during': ['market'],
                 'restart_interval': 180,  # 3 minutes
                 'process': None,
