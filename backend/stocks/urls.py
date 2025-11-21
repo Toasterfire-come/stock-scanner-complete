@@ -239,15 +239,14 @@ urlpatterns = [
     # News endpoints
     path('news/', include('stocks.news_urls')),
     path('sms/', include('stocks.sms_urls')),
-    
+
     # Revenue and discount endpoints
     path('revenue/', include('stocks.revenue_urls')),
     path('billing/validate-discount/', revenue_views.validate_discount_code, name='validate_discount_code_alt'),
     path('billing/apply-discount/', revenue_views.apply_discount_code, name='apply_discount_code_alt'),
 
-    # Billing management
-    path('billing/cancel', cancel_subscription_api, name='cancel_subscription'),
-    path('billing/plans-meta/', paypal_plans_meta_api, name='paypal_plans_meta'),
+    # Billing and subscription management (PayPal, history, payment methods)
+    path('billing/', include('stocks.billing_urls')),
 
     # Custom Indicators CRUD
     path('indicators/', indicators_api.list_indicators, name='indicators_list'),
