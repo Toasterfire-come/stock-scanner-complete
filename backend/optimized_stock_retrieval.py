@@ -89,85 +89,63 @@ def load_combined_tickers() -> List[str]:
     return unique_tickers
 
 
-def batch_download_tickers(symbols: List[str], period: str = '5d',
-                           timeout: int = 30) -> Dict[str, Dict[str, Any]]:
+def fetch_single_ticker(symbol: str, timeout: int = 1) -> Optional[Dict[str, Any]]:
     """
-    Download data for multiple tickers at once using yf.download
-    Returns dict mapping symbol -> data dict
+    Fetch data for a single ticker using yfinance Ticker object
+    Target: <500ms per ticker
+    Returns dict with stock data or None if failed
     """
-    results = {}
-
     try:
-        # Download batch data
-        df = yf.download(
-            tickers=symbols,
-            period=period,
-            interval='1d',
-            group_by='ticker',
-            auto_adjust=False,
-            progress=False,
-            threads=False,
-            timeout=timeout
-        )
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-        if df is None or df.empty:
-            return results
+            # Create ticker object
+            ticker = yf.Ticker(symbol)
 
-        # Handle multi-ticker response
-        is_multi = isinstance(df.columns, pd.MultiIndex)
+            # Get recent history (last 2 days for change calculation)
+            hist = ticker.history(period='2d', timeout=timeout)
 
-        for symbol in symbols:
-            try:
-                if is_multi:
-                    if symbol not in df.columns.get_level_values(0):
-                        continue
-                    ticker_df = df[symbol]
-                else:
-                    ticker_df = df
+            if hist is None or hist.empty:
+                return None
 
-                if ticker_df is None or ticker_df.empty:
-                    continue
+            # Get latest data
+            last_row = hist.iloc[-1]
 
-                # Get last valid row
-                last_row = ticker_df.iloc[-1]
+            # Extract OHLCV data
+            close = last_row.get('Close')
+            high = last_row.get('High')
+            low = last_row.get('Low')
+            volume = last_row.get('Volume')
 
-                # Extract OHLCV data
-                close = last_row.get('Close')
-                high = last_row.get('High')
-                low = last_row.get('Low')
-                volume = last_row.get('Volume')
+            if pd.isna(close) or pd.isna(volume):
+                return None
 
-                if pd.isna(close) or pd.isna(volume):
-                    continue
+            # Calculate change if we have previous close
+            change_percent = None
+            if len(hist) >= 2:
+                try:
+                    prev_close = hist.iloc[-2]['Close']
+                    if not pd.isna(prev_close) and float(prev_close) != 0:
+                        change_percent = ((float(close) - float(prev_close)) / float(prev_close)) * 100.0
+                except Exception:
+                    pass
 
-                # Calculate change if we have previous close
-                change_percent = None
-                if len(ticker_df) >= 2:
-                    try:
-                        prev_close = ticker_df.iloc[-2]['Close']
-                        if not pd.isna(prev_close) and float(prev_close) != 0:
-                            change_percent = ((float(close) - float(prev_close)) / float(prev_close)) * 100.0
-                    except Exception:
-                        pass
+            result = {
+                'ticker': symbol,
+                'symbol': symbol,
+                'current_price': safe_decimal(close),
+                'days_high': safe_decimal(high),
+                'days_low': safe_decimal(low),
+                'volume': int(volume) if not pd.isna(volume) else None,
+                'change_percent': safe_decimal(change_percent),
+            }
 
-                results[symbol] = {
-                    'ticker': symbol,
-                    'symbol': symbol,
-                    'current_price': safe_decimal(close),
-                    'days_high': safe_decimal(high),
-                    'days_low': safe_decimal(low),
-                    'volume': int(volume) if not pd.isna(volume) else None,
-                    'change_percent': safe_decimal(change_percent),
-                }
-
-            except Exception as e:
-                logger.debug(f"Error processing {symbol}: {e}")
-                continue
+            return result
 
     except Exception as e:
-        logger.error(f"Batch download failed for {len(symbols)} symbols: {e}")
-
-    return results
+        logger.debug(f"Failed to fetch {symbol}: {e}")
+        return None
 
 
 def enrich_with_fast_info(symbol: str, base_data: Dict[str, Any], timeout: int = 5) -> Dict[str, Any]:
@@ -231,47 +209,18 @@ def enrich_with_fast_info(symbol: str, base_data: Dict[str, Any], timeout: int =
     return base_data
 
 
-def process_batch(symbols: List[str], batch_id: int, enrich: bool = True) -> Tuple[int, Dict[str, Dict[str, Any]]]:
-    """Process a batch of symbols"""
-    logger.info(f"Batch {batch_id}: Processing {len(symbols)} symbols")
-
-    # Download batch data
-    results = batch_download_tickers(symbols, period='5d', timeout=30)
-    logger.info(f"Batch {batch_id}: Downloaded data for {len(results)}/{len(symbols)} symbols")
-
-    # Enrich with fast_info if requested
-    if enrich and results:
-        enriched_count = 0
-        for symbol in list(results.keys()):
-            try:
-                results[symbol] = enrich_with_fast_info(symbol, results[symbol])
-                enriched_count += 1
-            except Exception as e:
-                logger.debug(f"Enrichment failed for {symbol}: {e}")
-        logger.info(f"Batch {batch_id}: Enriched {enriched_count} symbols")
-
-    return batch_id, results
-
-
-def retry_failed_symbols(symbols: List[str], max_retries: int = 2) -> Dict[str, Dict[str, Any]]:
-    """Retry failed symbols individually with multiple attempts"""
-    results = {}
-
-    for symbol in symbols:
-        for attempt in range(max_retries):
-            try:
-                # Try batch download for single symbol
-                batch_result = batch_download_tickers([symbol], period='1d', timeout=10)
-                if symbol in batch_result:
-                    # Enrich with fast_info
-                    results[symbol] = enrich_with_fast_info(symbol, batch_result[symbol], timeout=5)
-                    break
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    logger.debug(f"Failed to retrieve {symbol} after {max_retries} attempts: {e}")
-                time.sleep(0.5)
-
-    return results
+def fetch_ticker_with_retry(symbol: str, max_retries: int = 3, timeout: int = 2) -> Optional[Dict[str, Any]]:
+    """
+    Fetch a single ticker with retry logic
+    Target: <1s per attempt on average
+    """
+    for attempt in range(max_retries):
+        result = fetch_single_ticker(symbol, timeout=timeout)
+        if result is not None:
+            return result
+        if attempt < max_retries - 1:
+            time.sleep(0.2)  # Brief pause before retry
+    return None
 
 
 def run_optimized_scan(symbols: List[str], batch_size: int = 250,
@@ -289,53 +238,55 @@ def run_optimized_scan(symbols: List[str], batch_size: int = 250,
         Dict with results and statistics
     """
     start_time = time.time()
-
-    # Split into batches
-    batches = [symbols[i:i+batch_size] for i in range(0, len(symbols), batch_size)]
-    logger.info(f"Split {len(symbols)} symbols into {len(batches)} batches of ~{batch_size}")
-
-    # Process batches in parallel
     all_results = {}
-    batch_success = 0
 
+    logger.info(f"Processing {len(symbols)} symbols with {max_workers} workers")
+    logger.info(f"Target: <500ms per ticker, ≥95% success rate, ≤180s total")
+
+    # Process all symbols in parallel with ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(process_batch, batch, i, enrich): i
-                   for i, batch in enumerate(batches)}
+        # Submit all symbols for processing
+        future_to_symbol = {
+            executor.submit(fetch_ticker_with_retry, symbol, max_retries=3, timeout=2): symbol
+            for symbol in symbols
+        }
 
-        for future in as_completed(futures):
-            batch_id = futures[future]
+        # Collect results as they complete
+        completed = 0
+        for future in as_completed(future_to_symbol):
+            symbol = future_to_symbol[future]
             try:
-                _, results = future.result(timeout=90)
-                all_results.update(results)
-                batch_success += 1
-                logger.info(f"Completed batch {batch_id}: Total results = {len(all_results)}")
+                result = future.result(timeout=8)  # 8s max per ticker (including 3 retries with delays)
+                if result is not None:
+                    all_results[symbol] = result
+                completed += 1
+
+                # Log progress every 500 symbols
+                if completed % 500 == 0:
+                    elapsed = time.time() - start_time
+                    rate = completed / elapsed if elapsed > 0 else 0
+                    logger.info(f"Progress: {completed}/{len(symbols)} ({completed/len(symbols)*100:.1f}%) - {rate:.1f} symbols/sec")
+
             except Exception as e:
-                logger.error(f"Batch {batch_id} failed: {e}")
+                logger.debug(f"Failed to process {symbol}: {e}")
+                completed += 1
 
-    elapsed = time.time() - start_time
-    success_rate = len(all_results) / len(symbols) * 100 if symbols else 0
-
-    logger.info(f"\nBatch processing complete:")
-    logger.info(f"  Time: {elapsed:.2f}s")
-    logger.info(f"  Success: {len(all_results)}/{len(symbols)} ({success_rate:.1f}%)")
-
-    # Retry failed symbols if success rate is below target
-    failed_symbols = [s for s in symbols if s not in all_results]
-    if failed_symbols and success_rate < 95:
-        logger.info(f"\nRetrying {len(failed_symbols)} failed symbols...")
-        retry_start = time.time()
-        retry_results = retry_failed_symbols(failed_symbols, max_retries=2)
-        all_results.update(retry_results)
-        retry_elapsed = time.time() - retry_start
-        logger.info(f"Retry complete: {len(retry_results)} recovered in {retry_elapsed:.2f}s")
-
+    # Final statistics
     total_elapsed = time.time() - start_time
     final_success_rate = len(all_results) / len(symbols) * 100 if symbols else 0
+    processing_rate = len(symbols) / total_elapsed if total_elapsed > 0 else 0
 
-    # Calculate data quality metrics
-    complete_records = sum(1 for r in all_results.values()
-                          if r.get('current_price') and r.get('volume') and r.get('market_cap'))
-    quality_rate = complete_records / len(all_results) * 100 if all_results else 0
+    # Calculate quality rate (symbols with all key fields populated)
+    quality_count = sum(1 for data in all_results.values()
+                       if data.get('current_price') and
+                          data.get('volume'))
+    quality_rate = quality_count / len(all_results) * 100 if all_results else 0
+
+    logger.info(f"\nProcessing complete:")
+    logger.info(f"  Time: {total_elapsed:.2f}s")
+    logger.info(f"  Success: {len(all_results)}/{len(symbols)} ({final_success_rate:.1f}%)")
+    logger.info(f"  Quality: {quality_count}/{len(all_results)} ({quality_rate:.1f}%)")
+    logger.info(f"  Rate: {processing_rate:.2f} symbols/sec")
 
     stats = {
         'total_symbols': len(symbols),
@@ -343,9 +294,9 @@ def run_optimized_scan(symbols: List[str], batch_size: int = 250,
         'failed': len(symbols) - len(all_results),
         'success_rate': round(final_success_rate, 2),
         'quality_rate': round(quality_rate, 2),
-        'complete_records': complete_records,
+        'complete_records': quality_count,
         'elapsed_seconds': round(total_elapsed, 2),
-        'rate_per_second': round(len(symbols) / total_elapsed, 2) if total_elapsed > 0 else 0,
+        'rate_per_second': round(processing_rate, 2),
         'batch_size': batch_size,
         'max_workers': max_workers,
     }
