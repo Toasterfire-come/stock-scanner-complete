@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stock_scanner_backend.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stockscanner_django.settings")
 
 import django
 django.setup()

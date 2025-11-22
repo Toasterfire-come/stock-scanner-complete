@@ -19,7 +19,7 @@ from statistics import mean, median, stdev
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stock_scanner_backend.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stockscanner_django.settings")
 
 import django
 django.setup()
