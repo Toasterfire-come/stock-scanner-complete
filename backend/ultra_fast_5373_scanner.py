@@ -45,7 +45,8 @@ from django.utils import timezone
 from stocks.models import Stock
 
 # Import existing infrastructure
-from stock_retrieval.session_factory import ProxyPool, create_session_with_proxy
+from stock_retrieval.session_factory import ProxyPool, create_requests_session
+from stock_retrieval.config import StockRetrievalConfig
 from stock_retrieval.ticker_loader import load_combined_tickers
 from stock_retrieval.quality_gate import validate_data_quality
 
@@ -269,7 +270,9 @@ class SmartProxyPool:
     """Enhanced proxy pool with performance tracking"""
 
     def __init__(self, max_proxies: int = 100):
-        self.base_pool = ProxyPool()
+        # Create config and load proxy pool
+        config = StockRetrievalConfig()
+        self.base_pool = ProxyPool.from_config(config)
         self.max_proxies = max_proxies
         self.proxy_performance = defaultdict(lambda: {'success': 0, 'failure': 0, 'avg_time': 0.0})
         self.lock = threading.Lock()
@@ -458,7 +461,7 @@ def fetch_with_retry(ticker: str, worker_id: int, proxy: Optional[str]) -> Optio
     for attempt in range(CONFIG.max_retries_per_ticker):
         try:
             # Create session with proxy
-            session = create_session_with_proxy(
+            session = create_requests_session(
                 proxy=proxy,
                 timeout=CONFIG.request_timeout
             )
