@@ -48,24 +48,24 @@ class Config:
     TARGET_RUNTIME: int = 180  # seconds
     MIN_SUCCESS_RATE: float = 0.90  # 90%
 
-    # Concurrency - BALANCED FOR SPEED & RELIABILITY
-    MAX_WORKERS: int = 100  # Sweet spot between speed and reliability
-    WORKER_STARTUP_STAGGER: float = 0.02  # Balanced startup
+    # Concurrency - OPTIMIZED FOR NO-PROXY MODE
+    MAX_WORKERS: int = 50  # Reduced to avoid rate limiting without proxies
+    WORKER_STARTUP_STAGGER: float = 0.1  # Slower startup to spread load
 
     # Proxy management
-    MIN_PROXIES: int = 20
+    MIN_PROXIES: int = 0  # Allow running without proxies
     MAX_PROXIES: int = 100
     PROXY_ROTATION_INTERVAL: int = 100  # requests
     PROXY_MAX_CONSECUTIVE_FAILURES: int = 3
 
-    # Rate limiting - BALANCED
-    BASE_DELAY: float = 0.01  # 10ms base delay
-    MAX_DELAY: float = 0.8    # 800ms max delay
-    REQUEST_TIMEOUT: int = 5  # seconds
+    # Rate limiting - CONSERVATIVE FOR NO-PROXY
+    BASE_DELAY: float = 0.05  # 50ms base delay (conservative)
+    MAX_DELAY: float = 2.0    # 2s max delay
+    REQUEST_TIMEOUT: int = 8  # seconds (longer for reliability)
 
-    # Retry logic - FAST BUT RELIABLE
-    MAX_RETRIES: int = 1  # Single retry
-    BACKOFF_BASE: float = 0.2  # Quick retry
+    # Retry logic - MINIMAL RETRIES
+    MAX_RETRIES: int = 0  # No retries to save time
+    BACKOFF_BASE: float = 0.5  # Not used with 0 retries
 
     # Paths
     TICKER_FILE: str = '/home/user/stock-scanner-complete/backend/data/combined_tickers_20251105_145319.csv'
@@ -164,10 +164,13 @@ class ProxyPoolManager:
         if len(self.proxies) < self.config.MIN_PROXIES:
             self.proxies.extend(unique_proxies[test_count:test_count + 50])
 
-        if len(self.proxies) < 10:
-            self.logger.warning(f"Only {len(self.proxies)} proxies available")
-            self.logger.warning("Script will run without proxies (may be rate limited)")
-            return True  # Continue without proxies
+        if len(self.proxies) < self.config.MIN_PROXIES:
+            self.logger.warning(f"Only {len(self.proxies)} proxies available (min: {self.config.MIN_PROXIES})")
+            if self.config.MIN_PROXIES == 0:
+                self.logger.info("Running in NO-PROXY mode (conservative rate limiting enabled)")
+            else:
+                self.logger.warning("Script will run with limited proxies (may be rate limited)")
+            return True  # Continue anyway
 
         self.logger.info(f"✓ {len(self.proxies)} proxies ready")
         return True
@@ -445,7 +448,8 @@ class YFinanceDataFetcher:
 
             data = {'ticker': ticker, 'timestamp': time.time()}
 
-            # TIER 1: Try fast_info first
+            # OPTIMIZED: Use ONLY fast_info for maximum speed
+            # This is 3-5x faster than info() and reduces API load
             try:
                 fast_info = yf_ticker.fast_info
                 data.update({
@@ -455,41 +459,16 @@ class YFinanceDataFetcher:
                     'pe_ratio': getattr(fast_info, 'trailing_pe', None),
                     'days_low': getattr(fast_info, 'day_low', None),
                     'days_high': getattr(fast_info, 'day_high', None),
+                    'week_52_low': getattr(fast_info, 'fifty_two_week_low', None),
+                    'week_52_high': getattr(fast_info, 'fifty_two_week_high', None),
                 })
 
-                # If we have critical fields, return early
-                if data.get('current_price') and data.get('volume'):
+                # Return if we have price (primary field)
+                if data.get('current_price'):
                     return self._clean_data(data)
 
             except Exception as e:
                 self.logger.debug(f"fast_info failed for {ticker}: {e}")
-
-            # TIER 2: Try full info
-            try:
-                info = yf_ticker.info
-                if info:
-                    data.update(self._extract_from_info(info))
-
-                    if data.get('current_price'):
-                        return self._clean_data(data)
-
-            except Exception as e:
-                self.logger.debug(f"info failed for {ticker}: {e}")
-
-            # TIER 3: Try history (only if both fast_info and info failed)
-            # This is slower, so only use as last resort
-            try:
-                hist = yf_ticker.history(period='1d')  # Reduced from 5d to 1d for speed
-                if not hist.empty:
-                    data.update({
-                        'current_price': float(hist['Close'].iloc[-1]),
-                        'volume': int(hist['Volume'].iloc[-1]),
-                    })
-                    # Return even with minimal data
-                    return self._clean_data(data)
-
-            except Exception as e:
-                self.logger.debug(f"history failed for {ticker}: {e}")
 
             return None
 
