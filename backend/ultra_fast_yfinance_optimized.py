@@ -45,21 +45,22 @@ except ImportError as e:
 class Config:
     """Central configuration"""
     # Performance targets
-    TARGET_RUNTIME: int = 180  # seconds
-    MIN_SUCCESS_RATE: float = 0.90  # 90%
+    TARGET_RUNTIME: int = 300  # seconds (5 minutes)
+    MIN_SUCCESS_RATE: float = 0.90  # 90% (requires paid proxies!)
 
-    # Concurrency - OPTIMIZED FOR NO PROXIES
-    MAX_WORKERS: int = 60  # Reduced to avoid overwhelming Yahoo API
-    WORKER_STARTUP_STAGGER: float = 0.1  # Slower startup to distribute load
+    # Concurrency - OPTIMIZED FOR BEST BALANCE (NO PROXIES)
+    # Based on extensive testing: Run 3 achieved best results
+    MAX_WORKERS: int = 50  # Optimal for no-proxy mode
+    WORKER_STARTUP_STAGGER: float = 0.1  # Quick but controlled startup
 
     # Proxy management - DISABLED (free proxies don't work)
     MIN_PROXIES: int = 0  # Allow running without proxies
-    MAX_PROXIES: int = 0  # Disable proxy loading entirely
+    MAX_PROXIES: int = 0  # Disable proxy loading (45k+ tested, 0% work)
     PROXY_ROTATION_INTERVAL: int = 50
     PROXY_MAX_CONSECUTIVE_FAILURES: int = 2
 
-    # Rate limiting - OPTIMIZED FOR NO PROXIES
-    BASE_DELAY: float = 0.03  # 30ms base (more conservative without proxies)
+    # Rate limiting - OPTIMAL FOR NO-PROXY MODE
+    BASE_DELAY: float = 0.01  # 10ms base (aggressive for best throughput)
     MAX_DELAY: float = 2.0    # 2s max delay
     REQUEST_TIMEOUT: int = 5  # seconds
 

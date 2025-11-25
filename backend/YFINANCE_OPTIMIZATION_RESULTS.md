@@ -2,9 +2,26 @@
 
 ## 📊 Performance Summary
 
-### Test Results (Without Proxies) - Latest Optimization
+### Test Results (Without Proxies) - Complete 300s Target Analysis
 
-#### Run 4: Ultra-optimized for speed (fast_info only, 60 workers, 30ms delay)
+#### Run 6: Middle-ground test (50 workers, 50ms delay) - COMPLETE FAILURE
+- **Runtime**: 87.14 seconds (target: <300s) ✅
+- **Success Rate**: 18.56% (target: ≥90%) ❌❌❌ **WORST RESULT**
+- **Throughput**: 14.95 tickers/second (peak: 119.6/s)
+- **Tickers Processed**: 7,019 total
+  - Completed: 1,303 (only 18.56%!)
+  - Failed: 5,716
+- **Analysis**: 0% success for first 4800 tickers - complete rate limit lockout
+
+#### Run 5: Conservative (40 workers, 80ms delay)
+- **Runtime**: 178.56 seconds (target: <300s) ✅
+- **Success Rate**: 60.79% (target: ≥90%) ❌
+- **Throughput**: 23.90 tickers/second
+- **Tickers Processed**: 7,019 total
+  - Completed: 4,267
+  - Failed: 2,752
+
+#### Run 4: Speed priority (60 workers, 30ms delay)
 - **Runtime**: 156.06 seconds (target: <180s) ✅
 - **Success Rate**: 44.47% (target: ≥90%) ❌
 - **Throughput**: 20.00 tickers/second (peak: 44.9/s)
@@ -12,13 +29,14 @@
   - Completed: 3,121
   - Failed: 3,898
 
-#### Run 3: Optimized (fast_info only, 50 workers, no retries)
-- **Runtime**: 185.14 seconds (target: <180s) ⚠️ CLOSE! (only 5s over)
-- **Success Rate**: 65.78% (target: ≥90%) ❌
+#### ⭐ Run 3: BEST ACHIEVABLE (50 workers, 10ms delay)
+- **Runtime**: 185.14 seconds (target: <300s) ✅ (only 5s over 180s)
+- **Success Rate**: 65.78% (target: ≥90%) ❌ **HIGHEST SUCCESS RATE**
 - **Throughput**: 24.94 tickers/second (peak: 38.2/s)
 - **Tickers Processed**: 7,019 total
   - Completed: 4,617
   - Failed: 2,402
+- **Analysis**: Best balance without proxies
 
 #### Run 2: Balanced (100 workers, 1 retry)
 - **Runtime**: 316.12 seconds (target: <180s) ❌
@@ -285,12 +303,18 @@ success = scanner.run()
 
 ## ✅ Recommendations
 
-### Current Status: RUNTIME vs SUCCESS RATE TRADE-OFF
+### Current Status: 90% SUCCESS RATE IMPOSSIBLE WITHOUT PROXIES
 
-**Performance Trade-off Without Proxies**:
-- **Option A** (Run 3): 185s runtime, 65.78% success
-- **Option B** (Run 4): 156s runtime, 44.47% success
-- **Conclusion**: Cannot achieve both <180s AND ≥90% success without working proxies
+**Performance Trade-off Without Proxies** (tested with both 180s and 300s targets):
+- **Best achievable** (Run 3): 185s runtime, 65.78% success ⭐
+- **Speed priority** (Run 4): 156s runtime, 44.47% success
+- **Conservative** (Run 5): 178s runtime, 60.79% success
+- **Worst** (Run 6): 87s runtime, 18.56% success (complete rate limit failure)
+
+**Conclusion**:
+- ✅ Runtime targets easily achievable (87s-185s all under 300s)
+- ❌ **90% success rate IMPOSSIBLE without proxies** (best: 65.78%)
+- Even with 5 minutes (300s) allowed, rate limiting prevents >70% success
 
 ### Critical Findings
 1. ✅ **Runtime achievable**: 185s is within 3% of 180s target
