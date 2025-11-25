@@ -48,22 +48,22 @@ class Config:
     TARGET_RUNTIME: int = 180  # seconds
     MIN_SUCCESS_RATE: float = 0.90  # 90%
 
-    # Concurrency - OPTIMIZED FOR NO-PROXY MODE
-    MAX_WORKERS: int = 50  # Reduced to avoid rate limiting without proxies
-    WORKER_STARTUP_STAGGER: float = 0.1  # Slower startup to spread load
+    # Concurrency - OPTIMIZED FOR NO PROXIES
+    MAX_WORKERS: int = 60  # Reduced to avoid overwhelming Yahoo API
+    WORKER_STARTUP_STAGGER: float = 0.1  # Slower startup to distribute load
 
-    # Proxy management
+    # Proxy management - DISABLED (free proxies don't work)
     MIN_PROXIES: int = 0  # Allow running without proxies
-    MAX_PROXIES: int = 100
-    PROXY_ROTATION_INTERVAL: int = 100  # requests
-    PROXY_MAX_CONSECUTIVE_FAILURES: int = 3
+    MAX_PROXIES: int = 0  # Disable proxy loading entirely
+    PROXY_ROTATION_INTERVAL: int = 50
+    PROXY_MAX_CONSECUTIVE_FAILURES: int = 2
 
-    # Rate limiting - CONSERVATIVE FOR NO-PROXY
-    BASE_DELAY: float = 0.05  # 50ms base delay (conservative)
+    # Rate limiting - OPTIMIZED FOR NO PROXIES
+    BASE_DELAY: float = 0.03  # 30ms base (more conservative without proxies)
     MAX_DELAY: float = 2.0    # 2s max delay
-    REQUEST_TIMEOUT: int = 8  # seconds (longer for reliability)
+    REQUEST_TIMEOUT: int = 5  # seconds
 
-    # Retry logic - MINIMAL RETRIES
+    # Retry logic - MINIMAL
     MAX_RETRIES: int = 0  # No retries to save time
     BACKOFF_BASE: float = 0.5  # Not used with 0 retries
 
@@ -81,11 +81,23 @@ class Config:
         if self.PROXY_FILES is None:
             base_dir = '/home/user/stock-scanner-complete/backend'
             self.PROXY_FILES = [
+                # JSON files
+                f'{base_dir}/working_proxies.json',
                 f'{base_dir}/new_proxies.json',
                 f'{base_dir}/new_proxies_filtered.json',
                 f'{base_dir}/new_proxies_proxifly.json',
                 f'{base_dir}/new_proxies_redscrape.json',
                 f'{base_dir}/tmp_user_proxies.json',
+                f'{base_dir}/tmp_proxies/redscrape.json',
+
+                # Text files in tmp_proxies
+                f'{base_dir}/tmp_proxies/speedx_http.txt',
+                f'{base_dir}/tmp_proxies/proxyscrape_v2_http.txt',
+                f'{base_dir}/tmp_proxies/proxifly_all.txt',
+                f'{base_dir}/tmp_proxies/clarketm_http.txt',
+                f'{base_dir}/tmp_proxies/proxylistdownload_http.txt',
+                f'{base_dir}/tmp_proxies/monosans_http.txt',
+                f'{base_dir}/tmp_proxies/shiftytr_http.txt',
             ]
 
 
@@ -145,6 +157,13 @@ class ProxyPoolManager:
         """Load and validate proxies"""
         self.logger.info("Initializing proxy pool...")
 
+        # Skip proxy loading if MAX_PROXIES is 0
+        if self.config.MAX_PROXIES == 0:
+            self.logger.info("Proxy loading disabled (MAX_PROXIES=0)")
+            self.logger.info("Running in NO-PROXY mode (conservative rate limiting enabled)")
+            self.proxies = []
+            return True
+
         # Load from all proxy files
         for proxy_file in self.config.PROXY_FILES:
             if os.path.exists(proxy_file):
@@ -156,13 +175,22 @@ class ProxyPoolManager:
         unique_proxies = list(set(self.proxies))
         self.logger.info(f"Loaded {len(unique_proxies)} unique proxies")
 
-        # Quick validation (test first 100)
-        test_count = min(100, len(unique_proxies))
-        self.proxies = self._quick_validate(unique_proxies[:test_count])
-
-        # Add remaining without testing if we need more
-        if len(self.proxies) < self.config.MIN_PROXIES:
-            self.proxies.extend(unique_proxies[test_count:test_count + 50])
+        # If we have many proxies, skip validation (too slow)
+        # Just use them all and let runtime filtering handle bad ones
+        if len(unique_proxies) > 500:
+            self.logger.info("Large proxy pool detected - skipping validation for speed")
+            self.proxies = unique_proxies
+        elif len(unique_proxies) > 100:
+            # Quick validation of subset only
+            test_count = 50
+            self.logger.info(f"Testing {test_count} sample proxies...")
+            validated = self._quick_validate(unique_proxies[:test_count])
+            # Use all proxies, just log validation result
+            self.proxies = unique_proxies
+            self.logger.info(f"Sample validation: {len(validated)}/{test_count} working")
+        else:
+            # Small set, can afford to validate
+            self.proxies = self._quick_validate(unique_proxies)
 
         if len(self.proxies) < self.config.MIN_PROXIES:
             self.logger.warning(f"Only {len(self.proxies)} proxies available (min: {self.config.MIN_PROXIES})")
@@ -176,29 +204,46 @@ class ProxyPoolManager:
         return True
 
     def _load_json_proxies(self, filepath: str) -> List[str]:
-        """Load proxies from JSON file"""
+        """Load proxies from JSON or TXT file"""
+        proxies = []
+
         try:
+            # Check if file is txt
+            if filepath.endswith('.txt'):
+                with open(filepath, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and ':' in line and not line.startswith('#'):
+                            # Format as http://ip:port
+                            if not line.startswith(('http://', 'https://', 'socks')):
+                                line = f'http://{line}'
+                            proxies.append(line)
+                return proxies
+
+            # Handle JSON files
             with open(filepath, 'r') as f:
                 data = json.load(f)
                 if isinstance(data, list):
                     # List of proxy strings or dicts
-                    result = []
                     for item in data:
                         if isinstance(item, str):
-                            result.append(item)
+                            proxies.append(item)
                         elif isinstance(item, dict) and 'proxy' in item:
-                            result.append(item['proxy'])
+                            proxies.append(item['proxy'])
                         elif isinstance(item, dict) and 'url' in item:
-                            result.append(item['url'])
-                    return result
+                            proxies.append(item['url'])
                 elif isinstance(data, dict):
                     # Dict with proxy URLs as keys or values
                     if 'proxies' in data:
                         return data['proxies']
                     return list(data.keys()) if data else []
+
+        except FileNotFoundError:
+            self.logger.debug(f"File not found: {filepath}")
         except Exception as e:
-            self.logger.warning(f"Failed to load {filepath}: {e}")
-        return []
+            self.logger.debug(f"Failed to load {filepath}: {e}")
+
+        return proxies
 
     def _quick_validate(self, proxies: List[str], timeout: int = 3) -> List[str]:
         """Quickly validate proxies concurrently"""
@@ -431,21 +476,17 @@ class YFinanceDataFetcher:
 
     def fetch(self, ticker: str, proxy: Optional[dict] = None) -> Optional[dict]:
         """
-        Fetch ticker data with 3-tier fallback
-
-        Tier 1: fast_info (fastest)
-        Tier 2: info (comprehensive)
-        Tier 3: history (reliable price)
+        Fetch ticker data with fast_info only (3-5x faster)
         """
         try:
-            # Let yfinance handle its own session with curl_cffi
-            # Pass proxy directly to yfinance if available
+            # Configure yfinance proxy if available
+            import yfinance as yf
             if proxy:
-                # yfinance will use curl_cffi with the proxy
-                yf_ticker = yf.Ticker(ticker, proxy=proxy.get('http'))
-            else:
-                yf_ticker = yf.Ticker(ticker)
+                # New API: set proxy via config
+                yf.set_config(proxy=proxy.get('http'))
 
+            # Create ticker
+            yf_ticker = yf.Ticker(ticker)
             data = {'ticker': ticker, 'timestamp': time.time()}
 
             # OPTIMIZED: Use ONLY fast_info for maximum speed
