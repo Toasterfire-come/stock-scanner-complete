@@ -1,7 +1,7 @@
 // Course Catalog Component - Phase 7
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getApiClient } from '../../api/client';
+import { api } from '../../api/client';
 
 const CourseCatalog = () => {
   const [courses, setCourses] = useState([]);
@@ -32,7 +32,6 @@ const CourseCatalog = () => {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const api = getApiClient();
       let url = '/api/education/courses/';
       const params = [];
       
