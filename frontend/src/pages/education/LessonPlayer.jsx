@@ -1,4 +1,4 @@
-// app/frontend/src/components/education/LessonPlayer.jsx
+// app/frontend/src/pages/education/LessonPlayer.jsx
 /**
  * Lesson Player Component
  * Phase 7 Implementation - TradeScanPro
@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../../api/client';
 import ReactMarkdown from 'react-markdown';
 import InfoTooltip from './InfoTooltip';
 
@@ -39,7 +39,7 @@ const LessonPlayer = () => {
 
   const fetchLesson = async () => {
     try {
-      const response = await axios.get(`/api/education/lessons/${lessonSlug}/`);
+      const response = await api.get(`/api/education/lessons/${lessonSlug}/`);
       setLesson(response.data);
       
       // Initialize quiz answers
