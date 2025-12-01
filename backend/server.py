@@ -5,10 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-# Set Django settings module - MUST be set before any Django imports
-os.environ['DJANGO_SETTINGS_MODULE'] = 'stockscanner_django.settings_local_sqlite'
-
-# Add backend to path
+# Add backend to path first
 ROOT_DIR = Path(__file__).parent
 sys.path.insert(0, str(ROOT_DIR))
 
@@ -18,6 +15,10 @@ try:
     load_dotenv(ROOT_DIR / '.env')
 except ImportError:
     pass
+
+# Set Django settings module - MUST be set before any Django imports
+# Use environment variable or default to SQLite local settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings_local_sqlite')
 
 # Configure PyMySQL (if needed, but we use SQLite)
 try:
