@@ -79,10 +79,10 @@ import TopMovers from "./pages/app/TopMovers";
 import PreAfterMarket from "./pages/app/PreAfterMarket";
 import EconomicCalendar from "./pages/app/EconomicCalendar";
 
-// News (Protected)
-import NewsFeed from "./pages/app/NewsFeed";
-import NewsPreferences from "./pages/app/NewsPreferences";
-import NewsSubscribe from "./pages/app/NewsSubscribe";
+// News (REMOVED per MVP spec - Phase 1)
+// import NewsFeed from "./pages/app/NewsFeed";
+// import NewsPreferences from "./pages/app/NewsPreferences";
+// import NewsSubscribe from "./pages/app/NewsSubscribe";
 
 // Alerts & Signals (Protected)
 import Alerts from "./pages/app/Alerts";
