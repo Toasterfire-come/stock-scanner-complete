@@ -283,4 +283,15 @@ urlpatterns = [
     path('valuation/<str:ticker>/', valuation_api.get_stock_valuation, name='stock_valuation'),
     path('valuation/<str:ticker>/quick/', valuation_api.get_quick_valuation, name='quick_valuation'),
     path('screener/undervalued/', valuation_api.get_undervalued_screener, name='undervalued_screener'),
+    
+    # Additional Valuation endpoints (Phase 2)
+    path('fundamentals/<str:ticker>/sync/', valuation_endpoints.sync_stock_fundamentals, name='sync_fundamentals'),
+    path('valuation/sectors/', valuation_endpoints.get_sector_analysis, name='sector_analysis'),
+    path('valuation/top-value/', valuation_endpoints.get_top_value_stocks, name='top_value_stocks'),
+    path('valuation/compare/', valuation_endpoints.get_value_comparison, name='value_comparison'),
+    
+    # Charting endpoints (Phase 3)
+    path('chart/<str:ticker>/', charting_api.get_chart_data, name='chart_data'),
+    path('chart/<str:ticker>/indicators/', charting_api.get_chart_indicators, name='chart_indicators'),
+    path('chart/timeframes/', charting_api.get_available_timeframes, name='chart_timeframes'),
 ]
