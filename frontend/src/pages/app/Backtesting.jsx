@@ -1,0 +1,739 @@
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Badge } from "../../components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Progress } from "../../components/ui/progress";
+import { 
+  Brain, 
+  Play, 
+  TrendingUp, 
+  TrendingDown, 
+  Target, 
+  Clock, 
+  DollarSign,
+  BarChart3,
+  LineChart,
+  Trophy,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Sparkles,
+  History,
+  Zap,
+  ChevronRight
+} from "lucide-react";
+import { toast } from "sonner";
+import { 
+  createBacktest, 
+  runBacktest, 
+  getBacktest, 
+  listBacktests, 
+  getBaselineStrategies 
+} from "../../api/client";
+import { 
+  LineChart as RechartsLineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Area,
+  AreaChart
+} from "recharts";
+import SEO from "../../components/SEO";
+
+// Baseline strategy templates
+const BASELINE_STRATEGIES = {
+  day_trading: [
+    { id: 1, name: "Opening Range Breakout (ORB)", description: "Buy when price breaks above the first 15-minute high, sell at end of day or when price breaks below the opening range low." },
+    { id: 2, name: "VWAP Bounce", description: "Buy when price pulls back to VWAP and bounces with increasing volume. Exit when price reaches 1% profit or falls 0.5% below entry." },
+    { id: 3, name: "Gap and Go", description: "Buy stocks gapping up 3%+ at market open with high volume. Sell when momentum fades or at 2% profit target." },
+    { id: 4, name: "Red to Green Move", description: "Buy when a stock goes from red to green for the day with volume confirmation. Exit at prior day high or 3% profit." },
+    { id: 5, name: "9 EMA Scalping", description: "Buy when price crosses above 9 EMA on 5-min chart. Sell when price closes below 9 EMA." },
+    { id: 6, name: "High of Day Breakout", description: "Buy when price breaks to new intraday high with volume. Sell at 1.5% profit or end of day." },
+    { id: 7, name: "Support/Resistance Reversal", description: "Buy at key support levels when price shows rejection. Sell at nearest resistance or 2% profit." },
+  ],
+  swing_trading: [
+    { id: 8, name: "20/50 EMA Crossover", description: "Buy when 20 EMA crosses above 50 EMA. Sell when 20 EMA crosses below 50 EMA." },
+    { id: 9, name: "RSI Oversold Bounce", description: "Buy when RSI drops below 30 and then rises back above 30. Sell when RSI reaches 70 or after 5 days." },
+    { id: 10, name: "Cup and Handle Pattern", description: "Buy on breakout above handle resistance with volume. Sell at measured move target or 10% stop loss." },
+    { id: 11, name: "Bollinger Band Squeeze", description: "Buy when price breaks above upper band after a squeeze. Sell when price touches middle band or 8% profit." },
+    { id: 12, name: "MACD Histogram Reversal", description: "Buy when MACD histogram turns positive after being negative. Sell when histogram turns negative again." },
+    { id: 13, name: "Weekly Breakout", description: "Buy when price breaks above the prior week's high. Sell when price breaks below prior week's low." },
+    { id: 14, name: "Mean Reversion to 50 SMA", description: "Buy when price is 10%+ below 50 SMA. Sell when price returns to 50 SMA." },
+  ],
+  long_term: [
+    { id: 15, name: "Graham Value Investing", description: "Buy stocks with P/E below 15, P/B below 1.5, and debt-to-equity below 0.5. Hold for 1 year minimum." },
+    { id: 16, name: "Dividend Growth Strategy", description: "Buy stocks with 10+ years of consecutive dividend increases and yield above 2%. Hold indefinitely." },
+    { id: 17, name: "Growth at Reasonable Price (GARP)", description: "Buy stocks with PEG ratio below 1 and earnings growth above 15%. Hold until PEG exceeds 2." },
+    { id: 18, name: "Dogs of the Dow", description: "Buy the 10 highest-yielding Dow stocks at year start. Rebalance annually." },
+    { id: 19, name: "Momentum Factor Strategy", description: "Buy top 10% of stocks by 12-month momentum. Rebalance monthly." },
+    { id: 20, name: "Small Cap Value", description: "Buy small cap stocks (market cap under $2B) with lowest P/E ratios. Hold for 1 year." },
+  ],
+};
+
+const CATEGORY_LABELS = {
+  day_trading: "Day Trading",
+  swing_trading: "Swing Trading",
+  long_term: "Long-Term"
+};
+
+// Metric Card Component
+const MetricCard = ({ title, value, subtitle, icon: Icon, trend, color = "blue" }) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-600 border-blue-200",
+    green: "bg-green-50 text-green-600 border-green-200",
+    red: "bg-red-50 text-red-600 border-red-200",
+    yellow: "bg-yellow-50 text-yellow-600 border-yellow-200",
+    purple: "bg-purple-50 text-purple-600 border-purple-200",
+  };
+
+  return (
+    <Card className={`${colorClasses[color]} border`}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium opacity-80">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+            {subtitle && <p className="text-xs opacity-60">{subtitle}</p>}
+          </div>
+          <div className="p-3 rounded-full bg-white/50">
+            <Icon className="h-6 w-6" />
+          </div>
+        </div>
+        {trend !== undefined && (
+          <div className="mt-2 flex items-center text-sm">
+            {trend >= 0 ? (
+              <TrendingUp className="h-4 w-4 mr-1 text-green-500" />
+            ) : (
+              <TrendingDown className="h-4 w-4 mr-1 text-red-500" />
+            )}
+            <span className={trend >= 0 ? "text-green-600" : "text-red-600"}>
+              {trend >= 0 ? "+" : ""}{trend.toFixed(2)}%
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Strategy Card Component
+const StrategyCard = ({ strategy, onSelect, selected }) => (
+  <Card 
+    className={`cursor-pointer transition-all hover:shadow-md ${
+      selected ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"
+    }`}
+    onClick={() => onSelect(strategy)}
+  >
+    <CardContent className="p-4">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h4 className="font-semibold text-sm">{strategy.name}</h4>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{strategy.description}</p>
+        </div>
+        {selected && <CheckCircle className="h-5 w-5 text-blue-500 flex-shrink-0 ml-2" />}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Backtest History Item
+const BacktestHistoryItem = ({ backtest, onView }) => {
+  const statusColors = {
+    completed: "bg-green-100 text-green-700",
+    pending: "bg-yellow-100 text-yellow-700",
+    processing: "bg-blue-100 text-blue-700",
+    failed: "bg-red-100 text-red-700"
+  };
+
+  return (
+    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onView(backtest)}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-semibold">{backtest.name}</h4>
+            <p className="text-sm text-gray-500">{CATEGORY_LABELS[backtest.category]}</p>
+          </div>
+          <div className="text-right">
+            <Badge className={statusColors[backtest.status]}>{backtest.status}</Badge>
+            {backtest.total_return !== null && (
+              <p className={`text-lg font-bold mt-1 ${backtest.total_return >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {backtest.total_return >= 0 ? "+" : ""}{backtest.total_return?.toFixed(2)}%
+              </p>
+            )}
+          </div>
+        </div>
+        {backtest.composite_score !== null && (
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500">Score</span>
+              <span className="font-medium">{backtest.composite_score?.toFixed(1)}/100</span>
+            </div>
+            <Progress value={backtest.composite_score} className="h-2 mt-1" />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default function Backtesting() {
+  const [activeTab, setActiveTab] = useState("create");
+  const [category, setCategory] = useState("swing_trading");
+  const [strategyText, setStrategyText] = useState("");
+  const [selectedBaseline, setSelectedBaseline] = useState(null);
+  const [symbols, setSymbols] = useState("AAPL");
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 1);
+    return d.toISOString().split("T")[0];
+  });
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [initialCapital, setInitialCapital] = useState("10000");
+  const [backtestName, setBacktestName] = useState("");
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [currentBacktest, setCurrentBacktest] = useState(null);
+  const [backtestHistory, setBacktestHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Load backtest history
+  useEffect(() => {
+    loadBacktestHistory();
+  }, []);
+
+  const loadBacktestHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await listBacktests();
+      if (response.success) {
+        setBacktestHistory(response.backtests || []);
+      }
+    } catch (error) {
+      console.error("Failed to load backtest history:", error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleSelectBaseline = (strategy) => {
+    setSelectedBaseline(strategy);
+    setStrategyText(strategy.description);
+    setBacktestName(strategy.name);
+  };
+
+  const handleCreateAndRun = async () => {
+    if (!strategyText.trim()) {
+      toast.error("Please describe your trading strategy");
+      return;
+    }
+    if (!symbols.trim()) {
+      toast.error("Please enter at least one symbol");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Create backtest
+      const createResponse = await createBacktest({
+        name: backtestName || "Custom Strategy",
+        strategy_text: strategyText,
+        category: category,
+        symbols: symbols.split(",").map(s => s.trim().toUpperCase()),
+        start_date: startDate,
+        end_date: endDate,
+        initial_capital: parseFloat(initialCapital)
+      });
+
+      if (!createResponse.success) {
+        toast.error(createResponse.error || "Failed to create backtest");
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success("Backtest created! Running AI analysis...");
+      setIsRunning(true);
+
+      // Run backtest
+      const runResponse = await runBacktest(createResponse.backtest_id);
+
+      if (!runResponse.success) {
+        toast.error(runResponse.error || "Backtest failed");
+        setIsRunning(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get full results
+      const resultResponse = await getBacktest(createResponse.backtest_id);
+      
+      if (resultResponse.success) {
+        setCurrentBacktest(resultResponse.backtest);
+        setActiveTab("results");
+        toast.success("Backtest completed!");
+        loadBacktestHistory();
+      }
+
+    } catch (error) {
+      console.error("Backtest error:", error);
+      toast.error(error.response?.data?.error || "An error occurred");
+    } finally {
+      setIsLoading(false);
+      setIsRunning(false);
+    }
+  };
+
+  const handleViewBacktest = async (backtest) => {
+    try {
+      const response = await getBacktest(backtest.id);
+      if (response.success) {
+        setCurrentBacktest(response.backtest);
+        setActiveTab("results");
+      }
+    } catch (error) {
+      toast.error("Failed to load backtest details");
+    }
+  };
+
+  // Format equity curve for chart
+  const equityCurveData = currentBacktest?.equity_curve?.map((value, index) => ({
+    day: index,
+    equity: value
+  })) || [];
+
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-7xl" data-testid="backtesting-page">
+      <SEO 
+        title="AI Backtesting | Trade Scan Pro" 
+        description="Test your trading strategies with AI-powered backtesting"
+      />
+
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+            <Brain className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">AI Backtesting</h1>
+            <p className="text-gray-500">Test your trading strategies with AI-powered analysis</p>
+          </div>
+        </div>
+        <Badge variant="outline" className="mt-2">
+          <Sparkles className="h-3 w-3 mr-1" />
+          Powered by Groq AI
+        </Badge>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="create" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Create Strategy
+          </TabsTrigger>
+          <TabsTrigger value="results" className="flex items-center gap-2" disabled={!currentBacktest}>
+            <BarChart3 className="h-4 w-4" />
+            Results
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            History
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Create Strategy Tab */}
+        <TabsContent value="create" className="space-y-6">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Column - Strategy Input */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-blue-500" />
+                    Describe Your Strategy
+                  </CardTitle>
+                  <CardDescription>
+                    Write your trading strategy in plain English. Our AI will convert it to executable code.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="strategy-name">Strategy Name</Label>
+                    <Input
+                      id="strategy-name"
+                      placeholder="My Trading Strategy"
+                      value={backtestName}
+                      onChange={(e) => setBacktestName(e.target.value)}
+                      data-testid="strategy-name-input"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger data-testid="category-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="day_trading">Day Trading</SelectItem>
+                        <SelectItem value="swing_trading">Swing Trading</SelectItem>
+                        <SelectItem value="long_term">Long-Term Investing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="strategy-text">Strategy Description</Label>
+                    <Textarea
+                      id="strategy-text"
+                      placeholder="Example: Buy when the 20-day EMA crosses above the 50-day EMA. Sell when the 20-day EMA crosses below the 50-day EMA. Use a 5% stop-loss."
+                      value={strategyText}
+                      onChange={(e) => setStrategyText(e.target.value)}
+                      rows={6}
+                      className="resize-none"
+                      data-testid="strategy-text-input"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Include entry conditions, exit conditions, stop-loss, and take-profit rules.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="symbols">Symbols</Label>
+                      <Input
+                        id="symbols"
+                        placeholder="AAPL, MSFT, GOOGL"
+                        value={symbols}
+                        onChange={(e) => setSymbols(e.target.value)}
+                        data-testid="symbols-input"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Comma-separated</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="capital">Initial Capital ($)</Label>
+                      <Input
+                        id="capital"
+                        type="number"
+                        value={initialCapital}
+                        onChange={(e) => setInitialCapital(e.target.value)}
+                        data-testid="capital-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="start-date">Start Date</Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        data-testid="start-date-input"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="end-date">End Date</Label>
+                      <Input
+                        id="end-date"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        data-testid="end-date-input"
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleCreateAndRun}
+                    disabled={isLoading || isRunning}
+                    data-testid="run-backtest-btn"
+                  >
+                    {isLoading || isRunning ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        {isRunning ? "Running Backtest..." : "Creating..."}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-5 w-5 mr-2" />
+                        Run Backtest
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column - Baseline Strategies */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    Baseline Strategies
+                  </CardTitle>
+                  <CardDescription>
+                    Choose a pre-built strategy as a starting point
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-gray-700">{CATEGORY_LABELS[category]}</h4>
+                    {BASELINE_STRATEGIES[category]?.map((strategy) => (
+                      <StrategyCard
+                        key={strategy.id}
+                        strategy={strategy}
+                        selected={selectedBaseline?.id === strategy.id}
+                        onSelect={handleSelectBaseline}
+                      />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Results Tab */}
+        <TabsContent value="results" className="space-y-6">
+          {currentBacktest ? (
+            <>
+              {/* Results Header */}
+              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold">{currentBacktest.name}</h2>
+                      <p className="text-gray-600">{CATEGORY_LABELS[currentBacktest.category]}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline">{currentBacktest.symbols?.join(", ")}</Badge>
+                        <Badge variant="outline">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {currentBacktest.start_date} to {currentBacktest.end_date}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold">
+                        <span className={currentBacktest.results?.composite_score >= 50 ? "text-green-600" : "text-red-600"}>
+                          {currentBacktest.results?.composite_score?.toFixed(1) || 0}
+                        </span>
+                        <span className="text-lg text-gray-400">/100</span>
+                      </div>
+                      <p className="text-sm text-gray-500">Composite Score</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <MetricCard
+                  title="Total Return"
+                  value={`${currentBacktest.results?.total_return >= 0 ? "+" : ""}${currentBacktest.results?.total_return?.toFixed(2) || 0}%`}
+                  icon={TrendingUp}
+                  color={currentBacktest.results?.total_return >= 0 ? "green" : "red"}
+                />
+                <MetricCard
+                  title="Sharpe Ratio"
+                  value={currentBacktest.results?.sharpe_ratio?.toFixed(2) || "0.00"}
+                  subtitle="Risk-adjusted"
+                  icon={Target}
+                  color="blue"
+                />
+                <MetricCard
+                  title="Max Drawdown"
+                  value={`${currentBacktest.results?.max_drawdown?.toFixed(2) || 0}%`}
+                  icon={TrendingDown}
+                  color="red"
+                />
+                <MetricCard
+                  title="Win Rate"
+                  value={`${currentBacktest.results?.win_rate?.toFixed(1) || 0}%`}
+                  subtitle={`${currentBacktest.results?.winning_trades || 0}/${currentBacktest.results?.total_trades || 0} trades`}
+                  icon={Trophy}
+                  color={currentBacktest.results?.win_rate >= 50 ? "green" : "yellow"}
+                />
+                <MetricCard
+                  title="Profit Factor"
+                  value={currentBacktest.results?.profit_factor?.toFixed(2) || "0.00"}
+                  icon={DollarSign}
+                  color={currentBacktest.results?.profit_factor >= 1 ? "green" : "red"}
+                />
+              </div>
+
+              {/* Equity Curve Chart */}
+              {equityCurveData.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <LineChart className="h-5 w-5 text-blue-500" />
+                      Equity Curve
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={equityCurveData}>
+                          <defs>
+                            <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <XAxis 
+                            dataKey="day" 
+                            stroke="#9CA3AF"
+                            tick={{ fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#9CA3AF"
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                          />
+                          <Tooltip 
+                            formatter={(value) => [`$${value.toFixed(2)}`, "Portfolio Value"]}
+                            contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="equity" 
+                            stroke="#3B82F6" 
+                            strokeWidth={2}
+                            fill="url(#equityGradient)" 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Trade History */}
+              {currentBacktest.trades?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Trade History</CardTitle>
+                    <CardDescription>{currentBacktest.trades.length} trades executed</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 px-3 font-medium text-gray-500">Entry Date</th>
+                            <th className="text-left py-2 px-3 font-medium text-gray-500">Exit Date</th>
+                            <th className="text-right py-2 px-3 font-medium text-gray-500">Entry Price</th>
+                            <th className="text-right py-2 px-3 font-medium text-gray-500">Exit Price</th>
+                            <th className="text-right py-2 px-3 font-medium text-gray-500">Return</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentBacktest.trades.slice(0, 20).map((trade, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-50">
+                              <td className="py-2 px-3">{trade.entry_date?.split("T")[0]}</td>
+                              <td className="py-2 px-3">{trade.exit_date?.split("T")[0]}</td>
+                              <td className="py-2 px-3 text-right">${trade.entry_price?.toFixed(2)}</td>
+                              <td className="py-2 px-3 text-right">${trade.exit_price?.toFixed(2)}</td>
+                              <td className={`py-2 px-3 text-right font-medium ${trade.return_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {trade.return_pct >= 0 ? "+" : ""}{trade.return_pct?.toFixed(2)}%
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Generated Code (collapsible) */}
+              {currentBacktest.generated_code && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-purple-500" />
+                      AI-Generated Strategy Code
+                    </CardTitle>
+                    <CardDescription>Python code generated by Groq AI</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+                      <code>{currentBacktest.generated_code}</code>
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          ) : (
+            <Card className="p-12 text-center">
+              <BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No Results Yet</h3>
+              <p className="text-gray-500 mt-1">Create and run a backtest to see results here</p>
+              <Button className="mt-4" onClick={() => setActiveTab("create")}>
+                Create Strategy
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Backtest History</CardTitle>
+              <CardDescription>View your past backtest results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : backtestHistory.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {backtestHistory.map((backtest) => (
+                    <BacktestHistoryItem
+                      key={backtest.id}
+                      backtest={backtest}
+                      onView={handleViewBacktest}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-8">
+                  <History className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900">No History Yet</h3>
+                  <p className="text-gray-500 mt-1">Your backtest history will appear here</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* AI Disclaimer */}
+      <Alert className="mt-6 bg-blue-50 border-blue-200">
+        <AlertCircle className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-700">
+          <strong>Disclaimer:</strong> Backtesting results are based on historical data and do not guarantee future performance. 
+          AI-generated strategies should be reviewed carefully before live trading.
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+}
