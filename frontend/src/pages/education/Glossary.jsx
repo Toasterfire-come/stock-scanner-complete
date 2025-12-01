@@ -1,7 +1,7 @@
 // Trading Glossary Component - Phase 7
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getApiClient } from '../../api/client';
+import { api } from '../../api/client';
 
 const Glossary = () => {
   const { termSlug } = useParams();
@@ -46,7 +46,6 @@ const Glossary = () => {
 
   const fetchTerms = async () => {
     try {
-      const api = getApiClient();
       const response = await api.get('/api/education/glossary/');
       setTerms(response.data || []);
       setLoading(false);
@@ -59,7 +58,6 @@ const Glossary = () => {
 
   const fetchTermDetail = async (slug) => {
     try {
-      const api = getApiClient();
       const response = await api.get(`/api/education/glossary/${slug}/`);
       setSelectedTerm(response.data);
       
