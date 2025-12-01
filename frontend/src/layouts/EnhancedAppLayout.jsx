@@ -50,7 +50,12 @@ import {
   Zap,
   ChevronDown,
   Brain,
-  Wallet
+  Wallet,
+  LineChart,
+  BookOpen,
+  Calculator,
+  Share2,
+  Users,
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import CommandPalette from "../components/CommandPalette";
