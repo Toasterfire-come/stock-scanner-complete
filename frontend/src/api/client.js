@@ -1203,3 +1203,54 @@ export async function getUsageSummary() {
     return { success: false, error: error?.response?.data?.message || 'Failed to load usage summary' };
   }
 }
+// ====================
+// AI BACKTESTING (Phase 4)
+// ====================
+export async function createBacktest(backtestData) {
+  const { data } = await api.post('/backtesting/create/', backtestData);
+  return data;
+}
+
+export async function runBacktest(backtestId) {
+  const { data } = await api.post(`/backtesting/${backtestId}/run/`);
+  return data;
+}
+
+export async function getBacktest(backtestId) {
+  const { data } = await api.get(`/backtesting/${backtestId}/`);
+  return data;
+}
+
+export async function listBacktests(category = null) {
+  const params = category ? { category } : {};
+  const { data } = await api.get('/backtesting/list/', { params });
+  return data;
+}
+
+export async function getBaselineStrategies() {
+  const { data } = await api.get('/backtesting/baseline-strategies/');
+  return data;
+}
+
+// ====================
+// VALUE HUNTER (Phase 5)
+// ====================
+export async function getValueHunterCurrentWeek() {
+  const { data } = await api.get('/value-hunter/current/');
+  return data;
+}
+
+export async function getValueHunterWeek(year, weekNumber) {
+  const { data } = await api.get(`/value-hunter/${year}/${weekNumber}/`);
+  return data;
+}
+
+export async function listValueHunterWeeks() {
+  const { data } = await api.get('/value-hunter/list/');
+  return data;
+}
+
+export async function getValueHunterTopStocks() {
+  const { data } = await api.get('/value-hunter/top-stocks/');
+  return data;
+}
