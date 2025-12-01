@@ -57,6 +57,9 @@ const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Por
 const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
+// AI Backtesting (Phase 4)
+const Backtesting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Backtesting"));
+
 // Developer Tools (Gold Plan)
 import DeveloperDashboard from "./pages/app/developer/DeveloperDashboard";
 import ApiKeyManagement from "./pages/app/developer/ApiKeyManagement";
