@@ -22,6 +22,9 @@ import {
   Download
 } from "lucide-react";
 import { useAuth } from "../../context/SecureAuthContext";
+import { useTradingMode } from "../../context/TradingModeContext";
+import TradingModeToggle from "../../components/TradingModeToggle";
+import ScreenerPresets from "../../components/ScreenerPresets";
 import { 
   getTrendingSafe, 
   getMarketStatsSafe, 
