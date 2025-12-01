@@ -1,6 +1,6 @@
 // Strategy Ranking Leaderboard Component - Phase 6
 import React, { useState, useEffect } from 'react';
-import { getApiClient } from '../../api/client';
+import { api } from '../../api/client';
 
 const StrategyLeaderboard = () => {
   const [strategies, setStrategies] = useState([]);
@@ -19,7 +19,6 @@ const StrategyLeaderboard = () => {
 
   const fetchCategories = async () => {
     try {
-      const api = getApiClient();
       const response = await api.get('/api/strategy-ranking/categories/');
       if (response.data.success) {
         setCategories(response.data.data.categories);
@@ -32,7 +31,6 @@ const StrategyLeaderboard = () => {
   const fetchLeaderboard = async () => {
     setLoading(true);
     try {
-      const api = getApiClient();
       const params = new URLSearchParams({
         category: selectedCategory,
         timeframe: selectedTimeframe,
@@ -58,7 +56,6 @@ const StrategyLeaderboard = () => {
 
   const fetchStrategyDetail = async (strategyId) => {
     try {
-      const api = getApiClient();
       const response = await api.get(`/api/strategy-ranking/${strategyId}/`);
       if (response.data.success) {
         setSelectedStrategy(response.data.data);
@@ -70,7 +67,6 @@ const StrategyLeaderboard = () => {
 
   const handleCloneStrategy = async (strategyId) => {
     try {
-      const api = getApiClient();
       await api.post(`/api/strategy-ranking/${strategyId}/clone/`, {
         keep_symbols: true,
         keep_timeframe: true,
