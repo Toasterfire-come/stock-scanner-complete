@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'emails',
     'core',
     'news',
+    'education',
 ]
 
 MIDDLEWARE = [
