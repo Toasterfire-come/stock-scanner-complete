@@ -1,0 +1,9 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="48" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <g transform="translate(12,10)">
+    <path d="M0 14h6l6-12 8 20 6-12h10" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="60" y="22" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" fill="#0F172A">Trade Scan Pro</text>
+  <text x="60" y="36" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" fill="#475569">Market Data</text>
+</svg>
+
