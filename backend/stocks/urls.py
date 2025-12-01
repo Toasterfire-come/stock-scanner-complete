@@ -55,6 +55,8 @@ from . import partner_analytics_api
 from . import valuation_api
 from . import valuation_endpoints
 from . import charting_api
+from . import backtesting_api
+from . import value_hunter_api
 
 
 
