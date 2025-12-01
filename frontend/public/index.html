@@ -2,9 +2,69 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="A product of emergent.sh" />
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#1d4ed8" />
+        <meta name="application-name" content="Trade Scan Pro" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Trade Scan Pro" />
+        
+        <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+        <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+        <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(self)" />
+        <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload" />
+        <meta name="robots" content="index,follow" />
+        <meta property="og:title" content="Trade Scan Pro" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://tradescanpro.com" />
+        <meta property="og:description" content="Trade Scan Pro is a real-time stock market scanner for NYSE & NASDAQ with advanced screeners, portfolio analytics, and instant alerts to help traders find opportunities faster." />
+        <meta property="og:image" content="/icon-512x512.png" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+        <meta name="description" content="Real-time stock market scanner for NYSE & NASDAQ with advanced screeners, portfolio analytics, and instant alerts. Find high-probability trades faster with Trade Scan Pro." />
+        <!-- Google Search Console Verification is injected via SEO.jsx when REACT_APP_GSC_VERIFICATION is set -->
+        <!-- canonical is set dynamically per page via SEO.jsx -->
+        <!-- Twitter (X) Cards -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@TradeScanProLLC" />
+        <meta name="twitter:creator" content="@TradeScanProLLC" />
+        <meta name="twitter:title" content="Trade Scan Pro | Real-Time Stock Scanner for NYSE & NASDAQ" />
+        <meta name="twitter:description" content="Advanced screeners, instant alerts, and portfolio analytics to help traders act faster and smarter." />
+        <meta name="twitter:image" content="/icon-512x512.png" />
+        <meta name="twitter:image:alt" content="Trade Scan Pro logo" />
+        <link rel="me" href="https://x.com/TradeScanProLLC" />
+        <link rel="preconnect" href="https://api.tradescanpro.com" crossorigin>
+        <link rel="preconnect" href="https://www.paypal.com" crossorigin>
+        <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
+        <link rel="preconnect" href="https://o.sentry.io" crossorigin>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" crossorigin>
+
+        <link rel="dns-prefetch" href="//api.tradescanpro.com">
+        <link rel="dns-prefetch" href="//www.paypal.com">
+        <link rel="dns-prefetch" href="//www.paypalobjects.com">
+        <link rel="dns-prefetch" href="//o.sentry.io">
+        <!-- Plausible disabled due to DNS error; enable when DNS is available -->
+        <!-- <script defer data-domain="tradescanpro.com" src="https://plausible.io/js/script.js"></script> -->
+
+        <!-- Preload hero image with proper fallback -->
+        <link rel="preload" href="/hero.avif" as="image" type="image/avif">
+        <link rel="preload" href="/hero.webp" as="image" type="image/webp">
+
+        <!-- Preload CSS to reduce render-blocking -->
+        <link rel="preload" href="/static/css/main.css" as="style" onload="this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/static/css/main.css"></noscript>
+        <!-- CRA injects bundles; avoid manual script hints that can race-load -->
+        <!-- GA4 is loaded dynamically via environment (prefer runtime injection) -->
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -18,12 +78,44 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-        <title>Emergent | Fullstack App</title>
-        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+        <title>Trade Scan Pro | Professional Stock Market Scanner</title>
+
+        <!-- Structured Data Base (Organization, Website, Software) -->
+        <script type="application/ld+json" id="jsonld-base-organization">
+        {"@context":"https://schema.org","@type":"Organization","name":"Trade Scan Pro","url":"https://tradescanpro.com","logo":"https://tradescanpro.com/icon-512x512.png","sameAs":["https://x.com/TradeScanPro","https://www.linkedin.com/company/tradescanpro/"]}
+        </script>
+        <!-- Local Business Schema -->
+        <script type="application/ld+json" id="jsonld-local-business">
+        {"@context":"https://schema.org","@type":"LocalBusiness","@id":"https://tradescanpro.com/#localbusiness","name":"Trade Scan Pro LLC","url":"https://tradescanpro.com","sameAs":["https://x.com/TradeScanProLLC","https://www.linkedin.com/company/tradescanpro/"],"image":"https://tradescanpro.com/icon-512x512.png","priceRange":"$$","areaServed":"US","address":{"@type":"PostalAddress","addressCountry":"US"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"17:00"}]}
+        </script>
+        <script type="application/ld+json" id="jsonld-base-website">
+        {"@context":"https://schema.org","@type":"WebSite","name":"Trade Scan Pro","url":"https://tradescanpro.com","potentialAction":{"@type":"SearchAction","target":"https://tradescanpro.com/search?q={query}","query-input":"required name=query"}}
+        </script>
+        <script type="application/ld+json" id="jsonld-base-software">
+        {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Trade Scan Pro","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+        </script>
+        
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
+        <footer style="margin:40px auto;max-width:960px;padding:0 16px;color:#64748b;font-size:14px">
+          <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0"/>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <a href="/scanner">Scanner</a>
+            <a href="/screener">Screener</a>
+            <a href="/insiders">Insiders</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/alerts">Alerts</a>
+            <a href="/stock-filter">Stock Filter</a>
+            <a href="/market-scan">Market Scan</a>
+            <a href="/resources">Resources</a>
+            <a href="/widgets">Widgets</a>
+            <a href="/badges">Badges</a>
+            <a href="/press">Press</a>
+            <a href="/partners">Partners</a>
+          </div>
+        </footer>
         <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
@@ -34,119 +126,6 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-        <a
-            id="emergent-badge"
-            target="_blank"
-            href="https://app.emergent.sh/?utm_source=emergent-badge"
-            style="
-                display: flex !important;
-                align-items: center !important;
-                position: fixed !important;
-                bottom: 20px;
-                right: 20px;
-                text-decoration: none;
-                padding: 6px 10px;
-                font-family: -apple-system, BlinkMacSystemFont,
-                    &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, Cantarell,
-                    &quot;Open Sans&quot;, &quot;Helvetica Neue&quot;,
-                    sans-serif !important;
-                font-size: 12px !important;
-                z-index: 9999 !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-                border-radius: 8px !important;
-                background-color: #ffffff !important;
-                border: 1px solid rgba(255, 255, 255, 0.25) !important;
-            "
-        >
-            <div
-                style="display: flex; flex-direction: row; align-items: center"
-            >
-                <img
-                    style="width: 20px; height: 20px; margin-right: 8px"
-                    src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4"
-                />
-                <p
-                    style="
-                        color: #000000;
-                        font-family: -apple-system, BlinkMacSystemFont,
-                            &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu,
-                            Cantarell, &quot;Open Sans&quot;,
-                            &quot;Helvetica Neue&quot;, sans-serif !important;
-                        font-size: 12px !important;
-                        align-items: center;
-                        margin-bottom: 0;
-                    "
-                >
-                    Made with Emergent
-                </p>
-            </div>
-        </a>
-        <script>
-            !(function (t, e) {
-                var o, n, p, r;
-                e.__SV ||
-                    ((window.posthog = e),
-                    (e._i = []),
-                    (e.init = function (i, s, a) {
-                        function g(t, e) {
-                            var o = e.split(".");
-                            2 == o.length && ((t = t[o[0]]), (e = o[1])),
-                                (t[e] = function () {
-                                    t.push(
-                                        [e].concat(
-                                            Array.prototype.slice.call(
-                                                arguments,
-                                                0,
-                                            ),
-                                        ),
-                                    );
-                                });
-                        }
-                        ((p = t.createElement("script")).type =
-                            "text/javascript"),
-                            (p.crossOrigin = "anonymous"),
-                            (p.async = !0),
-                            (p.src =
-                                s.api_host.replace(
-                                    ".i.posthog.com",
-                                    "-assets.i.posthog.com",
-                                ) + "/static/array.js"),
-                            (r =
-                                t.getElementsByTagName(
-                                    "script",
-                                )[0]).parentNode.insertBefore(p, r);
-                        var u = e;
-                        for (
-                            void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
-                                u.people = u.people || [],
-                                u.toString = function (t) {
-                                    var e = "posthog";
-                                    return (
-                                        "posthog" !== a && (e += "." + a),
-                                        t || (e += " (stub)"),
-                                        e
-                                    );
-                                },
-                                u.people.toString = function () {
-                                    return u.toString(1) + ".people (stub)";
-                                },
-                                o =
-                                    "init me ws ys ps bs capture je Di ks register register_once register_for_session unregister unregister_for_session Ps getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Es $s createPersonProfile Is opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing Ss debug xs getPageViewId captureTraceFeedback captureTraceMetric".split(
-                                        " ",
-                                    ),
-                                n = 0;
-                            n < o.length;
-                            n++
-                        )
-                            g(u, o[n]);
-                        e._i.push([i, s, a]);
-                    }),
-                    (e.__SV = 1));
-            })(document, window.posthog || []);
-            posthog.init("phc_yJW1VjHGGwmCbbrtczfqqNxgBDbhlhOWcdzcIJEOTFE", {
-                api_host: "https://us.i.posthog.com",
-                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
-            });
-        </script>
+        
     </body>
 </html>
