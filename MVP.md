@@ -35,7 +35,6 @@ The backtesting system uses **Groq AI** (llama-3.3-70b-versatile) to:
 
 ### Environment Configuration
 ```
-GROQ_API_KEY=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
 ```
 
 ### AI Service Architecture
