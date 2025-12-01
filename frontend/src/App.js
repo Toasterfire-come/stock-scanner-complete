@@ -324,6 +324,27 @@ function App() {
                     </ProtectedRoute>
                   } />
 
+                  {/* Custom Indicator Builder - Protected (Phase 9) */}
+                  <Route path="/app/indicators" element={
+                    <ProtectedRoute>
+                      <IndicatorBuilder />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Trading Journal - Protected (Phase 9) */}
+                  <Route path="/app/journal" element={
+                    <ProtectedRoute>
+                      <TradingJournal />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Tax Reporting - Protected (Phase 9) */}
+                  <Route path="/app/tax-reporting" element={
+                    <ProtectedRoute>
+                      <TaxReporting />
+                    </ProtectedRoute>
+                  } />
+
                   {/* Screener Suite - Protected */}
                   <Route path="/app/screeners" element={
                     <ProtectedRoute>
