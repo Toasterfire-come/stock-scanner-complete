@@ -931,3 +931,188 @@ class UsageStats(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.date} - {self.api_calls} calls"
+
+
+# ============================================================================
+# PHASE 4: AI BACKTESTING SYSTEM
+# ============================================================================
+
+class BacktestRun(models.Model):
+    """AI-powered backtesting with natural language strategy input"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('day_trading', 'Day Trading'),
+        ('swing_trading', 'Swing Trading'),
+        ('long_term', 'Long Term'),
+    ]
+    
+    # User & Strategy
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='backtest_runs')
+    name = models.CharField(max_length=200, help_text="Strategy name")
+    strategy_text = models.TextField(help_text="Natural language strategy description")
+    generated_code = models.TextField(blank=True, help_text="AI-generated Python code")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='day_trading')
+    
+    # Backtest Parameters
+    symbols = models.JSONField(help_text="List of symbols to test")
+    start_date = models.DateField(help_text="Backtest start date")
+    end_date = models.DateField(help_text="Backtest end date")
+    initial_capital = models.DecimalField(max_digits=15, decimal_places=2, default=10000.00)
+    
+    # Execution
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    error_message = models.TextField(blank=True)
+    
+    # Results
+    total_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Total return percentage")
+    annualized_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    sharpe_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    max_drawdown = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    win_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Percentage of winning trades")
+    profit_factor = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    total_trades = models.IntegerField(null=True, blank=True)
+    winning_trades = models.IntegerField(null=True, blank=True)
+    losing_trades = models.IntegerField(null=True, blank=True)
+    
+    # Composite Score (0-100)
+    composite_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, 
+                                         help_text="Overall strategy score 0-100")
+    
+    # Trade Details
+    trades_data = models.JSONField(null=True, blank=True, help_text="Individual trade records")
+    equity_curve = models.JSONField(null=True, blank=True, help_text="Portfolio value over time")
+    
+    # Visibility & Sharing
+    is_public = models.BooleanField(default=False)
+    is_baseline = models.BooleanField(default=False, help_text="Official baseline strategy")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['category', '-composite_score']),
+            models.Index(fields=['-composite_score']),
+            models.Index(fields=['is_baseline']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} by {self.user.username} - {self.status}"
+
+
+class BaselineStrategy(models.Model):
+    """Pre-built baseline strategies for comparison"""
+    CATEGORY_CHOICES = BacktestRun.CATEGORY_CHOICES
+    
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    strategy_code = models.TextField(help_text="Python strategy implementation")
+    
+    # Average Results (pre-computed)
+    avg_total_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    avg_sharpe_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    avg_max_drawdown = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['category', 'name']
+        verbose_name_plural = "Baseline strategies"
+    
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+
+# ============================================================================
+# PHASE 5: VALUE HUNTER PORTFOLIO
+# ============================================================================
+
+class ValueHunterWeek(models.Model):
+    """Weekly Value Hunter portfolio performance"""
+    week_number = models.IntegerField(help_text="ISO week number")
+    year = models.IntegerField()
+    week_start = models.DateField(help_text="Monday of the week")
+    week_end = models.DateField(help_text="Friday of the week")
+    
+    # Capital
+    starting_capital = models.DecimalField(max_digits=15, decimal_places=2, default=10000.00)
+    ending_capital = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    
+    # Returns
+    weekly_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, 
+                                       help_text="Weekly return percentage")
+    cumulative_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                          help_text="Cumulative return since inception")
+    
+    # Benchmark Comparison (S&P 500)
+    benchmark_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    alpha = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                               help_text="Weekly alpha vs benchmark")
+    
+    # Status
+    status = models.CharField(max_length=20, default='pending', 
+                            choices=[('pending', 'Pending'), ('active', 'Active'), 
+                                   ('completed', 'Completed')])
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    executed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-year', '-week_number']
+        unique_together = ['year', 'week_number']
+        indexes = [
+            models.Index(fields=['-year', '-week_number']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Value Hunter Week {self.week_number} {self.year}"
+
+
+class ValueHunterPosition(models.Model):
+    """Individual stock positions in Value Hunter portfolio"""
+    week = models.ForeignKey(ValueHunterWeek, on_delete=models.CASCADE, related_name='positions')
+    symbol = models.CharField(max_length=10, db_index=True)
+    stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Selection Criteria
+    valuation_score = models.DecimalField(max_digits=5, decimal_places=2, 
+                                         help_text="Valuation score at selection")
+    rank = models.IntegerField(help_text="Rank in top 10 (1-10)")
+    
+    # Position Details
+    shares = models.DecimalField(max_digits=15, decimal_places=4)
+    entry_price = models.DecimalField(max_digits=15, decimal_places=4)
+    exit_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    
+    # Entry/Exit Times
+    entry_datetime = models.DateTimeField(help_text="Entry time (Monday 9:35 AM ET)")
+    exit_datetime = models.DateTimeField(null=True, blank=True, help_text="Exit time (Friday 3:55 PM ET)")
+    
+    # Performance
+    return_percent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    return_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['week', 'rank']
+        unique_together = ['week', 'symbol']
+        indexes = [
+            models.Index(fields=['week', 'rank']),
+            models.Index(fields=['symbol']),
+        ]
+    
+    def __str__(self):
+        return f"{self.symbol} - Week {self.week.week_number} {self.week.year} (Rank #{self.rank})"
