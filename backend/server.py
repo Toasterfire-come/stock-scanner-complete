@@ -5,8 +5,8 @@ import os
 import sys
 from pathlib import Path
 
-# Set Django settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings_local_sqlite')
+# Set Django settings module - MUST be set before any Django imports
+os.environ['DJANGO_SETTINGS_MODULE'] = 'stockscanner_django.settings_local_sqlite'
 
 # Add backend to path
 ROOT_DIR = Path(__file__).parent
