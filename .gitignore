@@ -145,3 +145,4 @@ ht_*.log
 !COMPLETE_SETUP_GUIDE.md
 !PACKAGE_MANIFEST.md
 !INSTALLATION_CHECKLIST.md
+frontend/node_modules/.cache/default-development/0.pack
