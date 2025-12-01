@@ -51,3 +51,5 @@ passlib>=1.7.4
 
 # ===== AI INTEGRATION =====
 groq>=0.36.0
+emergentintegrations==0.1.0
+python-dotenv==1.2.1
