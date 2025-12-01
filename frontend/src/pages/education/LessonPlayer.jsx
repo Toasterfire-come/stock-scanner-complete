@@ -56,7 +56,7 @@ const LessonPlayer = () => {
 
   const startLesson = async () => {
     try {
-      await axios.post(`/api/education/lessons/${lessonSlug}/start/`);
+      await api.post(`/api/education/lessons/${lessonSlug}/start/`);
     } catch (error) {
       console.error('Error starting lesson:', error);
     }
@@ -66,7 +66,7 @@ const LessonPlayer = () => {
     if (timeSpent === 0) return;
     
     try {
-      await axios.patch(`/api/education/lessons/${lessonSlug}/update-progress/`, {
+      await api.patch(`/api/education/lessons/${lessonSlug}/update-progress/`, {
         time_spent_seconds: timeSpent
       });
     } catch (error) {
@@ -76,7 +76,7 @@ const LessonPlayer = () => {
 
   const handleCompleteLesson = async () => {
     try {
-      await axios.post(`/api/education/lessons/${lessonSlug}/complete/`);
+      await api.post(`/api/education/lessons/${lessonSlug}/complete/`);
       
       // Navigate to next lesson if available
       if (lesson.next_lesson) {
@@ -91,7 +91,7 @@ const LessonPlayer = () => {
 
   const handleQuizSubmit = async () => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         `/api/education/lessons/${lessonSlug}/submit-quiz/`,
         { answers: quizAnswers }
       );
