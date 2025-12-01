@@ -1,4 +1,4 @@
-// app/frontend/src/components/education/CourseDetail.jsx
+// app/frontend/src/pages/education/CourseDetail.jsx
 /**
  * Course Detail Component
  * Phase 7 Implementation - TradeScanPro
@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../../api/client';
 
 const CourseDetail = () => {
   const { courseSlug } = useParams();
@@ -22,7 +22,7 @@ const CourseDetail = () => {
 
   const fetchCourse = async () => {
     try {
-      const response = await axios.get(`/api/education/courses/${courseSlug}/`);
+      const response = await api.get(`/api/education/courses/${courseSlug}/`);
       setCourse(response.data);
       setLoading(false);
     } catch (error) {
@@ -34,7 +34,7 @@ const CourseDetail = () => {
   const handleEnroll = async () => {
     setEnrolling(true);
     try {
-      const response = await axios.post(`/api/education/courses/${courseSlug}/enroll/`);
+      const response = await api.post(`/api/education/courses/${courseSlug}/enroll/`);
       if (response.data.first_lesson_slug) {
         navigate(`/learn/lesson/${response.data.first_lesson_slug}`);
       }
