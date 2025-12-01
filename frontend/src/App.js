@@ -63,7 +63,13 @@ const TaxReporting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/
 const SharedWatchlist = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedWatchlist"));
 const SharedPortfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedPortfolio"));
 const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/PublicProfile"));
+const StrategyLeaderboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StrategyLeaderboard"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
+
+// Education Pages (Phase 7)
+const CourseCatalog = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/CourseCatalog"));
+const Glossary = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/Glossary"));
+const ProgressDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/ProgressDashboard"));
 
 // Developer Tools (Gold Plan)
 import DeveloperDashboard from "./pages/app/developer/DeveloperDashboard";
