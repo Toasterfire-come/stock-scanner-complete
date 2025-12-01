@@ -302,6 +302,13 @@ function App() {
                     </ProtectedRoute>
                   } />
 
+                  {/* AI Backtesting - Protected (Premium) */}
+                  <Route path="/app/backtesting" element={
+                    <ProtectedRoute>
+                      <Backtesting />
+                    </ProtectedRoute>
+                  } />
+
                   {/* Screener Suite - Protected */}
                   <Route path="/app/screeners" element={
                     <ProtectedRoute>
