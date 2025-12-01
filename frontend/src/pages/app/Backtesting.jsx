@@ -309,7 +309,7 @@ export default function Backtesting() {
             {/* Example Prompts */}
             {messages.length <= 2 && (
               <div className="px-4 pb-2">
-                <p className="text-xs text-gray-500 mb-2">Try an example:</p>
+                  <p className="text-xs text-gray-500 mb-2">Try an example:</p>
                 <div className="flex flex-wrap gap-2">
                   {EXAMPLE_PROMPTS.slice(0, 2).map((prompt, idx) => (
                     <button
