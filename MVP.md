@@ -234,7 +234,7 @@ python daily_data_scheduler.py
 
 ---
 
-# PHASE 4: AI BACKTESTING SYSTEM ⏳ PENDING
+# PHASE 4: AI BACKTESTING SYSTEM 🔄 IN PROGRESS (60%)
 
 ## 4.1 AI Strategy Generation (Groq Integration)
 
@@ -245,24 +245,40 @@ python daily_data_scheduler.py
 4. Backtest engine executes strategy against historical data
 5. Results are displayed with metrics
 
-### AI Prompt Template
+### Environment Configuration
 ```
-You are a quantitative trading strategy developer. Convert the following 
-natural language trading strategy into executable Python code.
-
-Strategy Description: {user_strategy_text}
-
-Requirements:
-1. Define entry_condition(data, index) function returning True/False
-2. Define exit_condition(data, index, entry_price) function returning True/False
-3. Use pandas DataFrame with columns: open, high, low, close, volume
-4. Include position sizing logic
-5. Include stop-loss and take-profit logic if mentioned
-
-Output format: Pure Python code only, no explanations.
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
-## 4.2 Backtest Models
+### AI Service Architecture
+```
+User Strategy Text → Groq AI → Python Code → Backtest Engine → Results
+```
+
+## 4.2 Backend Implementation Status
+
+### ✅ Completed (Backend)
+- [x] `BacktestRun` model with all fields (models.py)
+- [x] `BaselineStrategy` model for preset strategies
+- [x] `BacktestingService` class with Groq AI integration
+- [x] Strategy code generation via AI
+- [x] Backtest execution engine
+- [x] Performance metrics calculation (Sharpe, drawdown, win rate, etc.)
+- [x] API endpoints registered:
+  - POST `/api/backtesting/create/` - Create new backtest
+  - POST `/api/backtesting/{id}/run/` - Execute backtest
+  - GET `/api/backtesting/{id}/` - Get backtest results
+  - GET `/api/backtesting/list/` - List all backtests
+  - GET `/api/backtesting/baseline-strategies/` - List preset strategies
+
+### ❌ Pending (Frontend)
+- [ ] Backtesting UI page
+- [ ] Strategy input form (natural language)
+- [ ] Results visualization (equity curve, metrics)
+- [ ] Baseline strategies selector
+- [ ] Backtest history view
+
+## 4.3 Backtest Models
 ```python
 class BacktestRun:
     user: ForeignKey(User)
@@ -283,9 +299,11 @@ class BacktestRun:
     profit_factor: DecimalField
     total_trades: IntegerField
     composite_score: DecimalField
+    trades_data: JSONField
+    equity_curve: JSONField
 ```
 
-## 4.3 20 Baseline Strategies
+## 4.4 20 Baseline Strategies
 
 ### Day Trading (7)
 1. Opening Range Breakout (ORB)
