@@ -56,6 +56,7 @@ const Stocks = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Stocks
 const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Portfolio"));
 const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
 const Backtesting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Backtesting"));
+const ValueHunter = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/ValueHunter"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
 // Developer Tools (Gold Plan)
