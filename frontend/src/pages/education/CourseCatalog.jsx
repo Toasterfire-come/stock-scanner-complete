@@ -1,7 +1,13 @@
-// Course Catalog Component - Phase 7
+// app/frontend/src/components/education/CourseCatalog.jsx
+/**
+ * Course Catalog Component
+ * Phase 7 Implementation - TradeScanPro
+ * TradingView-inspired design
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../../api/client';
+import axios from 'axios';
 
 const CourseCatalog = () => {
   const [courses, setCourses] = useState([]);
@@ -46,11 +52,10 @@ const CourseCatalog = () => {
         url += '?' + params.join('&');
       }
 
-      const response = await api.get(url);
-      setCourses(response.data || []);
+      const response = await axios.get(url);
+      setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
-      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -79,7 +84,7 @@ const CourseCatalog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#131722] text-[#D1D4DC]" data-testid="course-catalog">
+    <div className="min-h-screen bg-[#131722] text-[#D1D4DC]">
       {/* Header */}
       <div className="bg-[#1E222D] border-b border-[#2A2E39] py-8">
         <div className="max-w-7xl mx-auto px-4">
@@ -93,6 +98,7 @@ const CourseCatalog = () => {
       {/* Filters */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-wrap gap-4 mb-8">
+          {/* Category Filter */}
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm text-[#787B86] mb-2">Category</label>
             <select
@@ -101,7 +107,6 @@ const CourseCatalog = () => {
               className="w-full bg-[#1E222D] border border-[#2A2E39] rounded-lg px-4 py-2
                        text-[#D1D4DC] focus:outline-none focus:border-[#2962FF]
                        hover:border-[#3A3E49] transition-colors"
-              data-testid="category-filter"
             >
               {categories.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -111,6 +116,7 @@ const CourseCatalog = () => {
             </select>
           </div>
 
+          {/* Difficulty Filter */}
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm text-[#787B86] mb-2">Difficulty</label>
             <select
@@ -119,7 +125,6 @@ const CourseCatalog = () => {
               className="w-full bg-[#1E222D] border border-[#2A2E39] rounded-lg px-4 py-2
                        text-[#D1D4DC] focus:outline-none focus:border-[#2962FF]
                        hover:border-[#3A3E49] transition-colors"
-              data-testid="difficulty-filter"
             >
               {difficulties.map((diff) => (
                 <option key={diff.value} value={diff.value}>
@@ -143,7 +148,7 @@ const CourseCatalog = () => {
           </div>
         ) : courses.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#787B86]">No courses available yet. Check back soon!</p>
+            <p className="text-[#787B86]">No courses found matching your filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -152,12 +157,12 @@ const CourseCatalog = () => {
                 key={course.id}
                 to={`/learn/${course.slug}`}
                 className="block"
-                data-testid={`course-card-${course.slug}`}
               >
                 <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-6
                               hover:border-[#3A3E49] hover:shadow-lg
                               transition-all duration-200 cursor-pointer
                               hover:-translate-y-1">
+                  {/* Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-[#D1D4DC] mb-1">
@@ -178,15 +183,18 @@ const CourseCatalog = () => {
                     </div>
                   </div>
 
+                  {/* Description */}
                   <p className="text-sm text-[#787B86] mb-4 line-clamp-2">
                     {course.description}
                   </p>
 
+                  {/* Stats */}
                   <div className="flex items-center justify-between text-sm text-[#787B86] mb-4">
-                    <span>📚 {course.lesson_count || 0} lessons</span>
+                    <span>📚 {course.lesson_count} lessons</span>
                     <span>⏱️ {formatDuration(course.duration_minutes)}</span>
                   </div>
 
+                  {/* Progress Bar */}
                   {course.completion_percentage > 0 && (
                     <div className="mb-2">
                       <div className="flex justify-between text-xs text-[#787B86] mb-1">
@@ -202,6 +210,7 @@ const CourseCatalog = () => {
                     </div>
                   )}
 
+                  {/* CTA */}
                   <button className="w-full mt-4 bg-[#2962FF] text-white py-2 rounded-lg
                                    hover:bg-[#1E53E5] transition-colors duration-150
                                    font-medium">

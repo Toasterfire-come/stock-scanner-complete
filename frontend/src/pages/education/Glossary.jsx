@@ -1,7 +1,13 @@
-// Trading Glossary Component - Phase 7
+// app/frontend/src/components/education/Glossary.jsx
+/**
+ * Trading Glossary Component
+ * Phase 7 Implementation - TradeScanPro
+ * TradingView-inspired A-Z directory
+ */
+
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { api } from '../../api/client';
+import { useParams, Link } from 'react-router-dom';
+import axios from 'axios';
 
 const Glossary = () => {
   const { termSlug } = useParams();
@@ -46,23 +52,22 @@ const Glossary = () => {
 
   const fetchTerms = async () => {
     try {
-      const response = await api.get('/api/education/glossary/');
-      setTerms(response.data || []);
+      const response = await axios.get('/api/education/glossary/');
+      setTerms(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching glossary:', error);
-      setTerms([]);
       setLoading(false);
     }
   };
 
   const fetchTermDetail = async (slug) => {
     try {
-      const response = await api.get(`/api/education/glossary/${slug}/`);
+      const response = await axios.get(`/api/education/glossary/${slug}/`);
       setSelectedTerm(response.data);
       
       // Track view
-      await api.post(`/api/education/glossary/${slug}/track_view/`);
+      await axios.post(`/api/education/glossary/${slug}/track-view/`);
     } catch (error) {
       console.error('Error fetching term detail:', error);
     }
@@ -71,6 +76,7 @@ const Glossary = () => {
   const filterTerms = () => {
     let filtered = [...terms];
 
+    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(term =>
         term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -78,10 +84,12 @@ const Glossary = () => {
       );
     }
 
+    // Category filter
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(term => term.category === selectedCategory);
     }
 
+    // Letter filter
     if (selectedLetter !== 'all') {
       filtered = filtered.filter(term =>
         term.term.toUpperCase().startsWith(selectedLetter)
@@ -116,22 +124,23 @@ const Glossary = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#131722]" data-testid="glossary-page">
+    <div className="min-h-screen bg-[#131722]">
       {/* Header */}
       <div className="bg-[#1E222D] border-b border-[#2A2E39] py-8">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-3xl font-bold text-[#D1D4DC] mb-2">Trading Glossary</h1>
           <p className="text-[#787B86]">
-            Learn the language of trading with {terms.length}+ terms and definitions
+            Learn the language of trading with 200+ terms and definitions
           </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Sidebar */}
+          {/* Left Sidebar - Filters & Term List */}
           <div className="lg:col-span-1">
             <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-4 sticky top-4">
+              {/* Search */}
               <div className="mb-4">
                 <input
                   type="text"
@@ -141,10 +150,10 @@ const Glossary = () => {
                   className="w-full bg-[#131722] border border-[#2A2E39] rounded-lg px-4 py-2
                            text-[#D1D4DC] placeholder-[#545861]
                            focus:outline-none focus:border-[#2962FF]"
-                  data-testid="glossary-search"
                 />
               </div>
 
+              {/* Category Filter */}
               <div className="mb-4">
                 <label className="block text-sm text-[#787B86] mb-2">Category</label>
                 <select
@@ -161,6 +170,7 @@ const Glossary = () => {
                 </select>
               </div>
 
+              {/* Alphabet Navigation */}
               <div className="mb-4">
                 <label className="block text-sm text-[#787B86] mb-2">Jump to Letter</label>
                 <div className="flex flex-wrap gap-1">
@@ -190,6 +200,7 @@ const Glossary = () => {
                 </div>
               </div>
 
+              {/* Term Count */}
               <p className="text-sm text-[#787B86]">
                 {filteredTerms.length} term{filteredTerms.length !== 1 ? 's' : ''} found
               </p>
@@ -199,6 +210,7 @@ const Glossary = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {selectedTerm ? (
+              /* Term Detail View */
               <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-8">
                 <button
                   onClick={() => {
@@ -238,8 +250,29 @@ const Glossary = () => {
                     </p>
                   </div>
                 )}
+
+                {selectedTerm.related_terms && selectedTerm.related_terms.length > 0 && (
+                  <div className="pt-6 border-t border-[#2A2E39]">
+                    <h3 className="text-sm font-semibold text-[#787B86] mb-3 uppercase">
+                      Related Terms
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedTerm.related_terms.map((relatedTerm) => (
+                        <button
+                          key={relatedTerm.id}
+                          onClick={() => fetchTermDetail(relatedTerm.slug)}
+                          className="p-3 bg-[#2A2E39] text-[#D1D4DC] rounded-lg text-left
+                                   hover:bg-[#3A3E49] transition-colors"
+                        >
+                          {relatedTerm.term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
+              /* Term List View */
               <div className="space-y-8">
                 {Object.keys(groupedTerms).sort().map((letter) => (
                   <div key={letter} id={`letter-${letter}`}>
@@ -255,7 +288,6 @@ const Glossary = () => {
                           className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-4
                                    hover:border-[#3A3E49] hover:bg-[#2A2E39]
                                    transition-all text-left group"
-                          data-testid={`term-${term.slug}`}
                         >
                           <h3 className="text-lg font-semibold text-[#D1D4DC] mb-1
                                        group-hover:text-[#2962FF]">

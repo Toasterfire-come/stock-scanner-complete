@@ -1,7 +1,13 @@
-// User Progress Dashboard Component - Phase 7
+// app/frontend/src/components/education/ProgressDashboard.jsx
+/**
+ * User Progress Dashboard Component
+ * Phase 7 Implementation - TradeScanPro
+ * Shows user's learning statistics and progress
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../../api/client';
+import axios from 'axios';
 
 const ProgressDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -17,7 +23,7 @@ const ProgressDashboard = () => {
 
   const fetchUserStats = async () => {
     try {
-      const response = await api.get('/api/education/user-stats/overview/');
+      const response = await axios.get('/api/education/user-stats/overview/');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -28,8 +34,8 @@ const ProgressDashboard = () => {
 
   const fetchRecentProgress = async () => {
     try {
-      const response = await api.get('/api/education/user-stats/progress/');
-      setRecentProgress((response.data || []).slice(0, 5));
+      const response = await axios.get('/api/education/user-stats/progress/');
+      setRecentProgress(response.data.slice(0, 5));
     } catch (error) {
       console.error('Error fetching progress:', error);
     }
@@ -37,8 +43,8 @@ const ProgressDashboard = () => {
 
   const fetchCertificates = async () => {
     try {
-      const response = await api.get('/api/education/user-stats/certificates/');
-      setCertificates(response.data || []);
+      const response = await axios.get('/api/education/user-stats/certificates/');
+      setCertificates(response.data);
     } catch (error) {
       console.error('Error fetching certificates:', error);
     }
@@ -53,7 +59,7 @@ const ProgressDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#131722]" data-testid="progress-dashboard">
+    <div className="min-h-screen bg-[#131722]">
       {/* Header */}
       <div className="bg-[#1E222D] border-b border-[#2A2E39] py-8">
         <div className="max-w-7xl mx-auto px-4">
@@ -65,6 +71,7 @@ const ProgressDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Courses Completed */}
           <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">📚</span>
@@ -78,6 +85,7 @@ const ProgressDashboard = () => {
             </p>
           </div>
 
+          {/* Lessons Completed */}
           <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">✓</span>
@@ -89,6 +97,7 @@ const ProgressDashboard = () => {
             <p className="text-sm text-[#787B86]">Lessons completed</p>
           </div>
 
+          {/* Time Spent */}
           <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">⏱️</span>
@@ -100,6 +109,7 @@ const ProgressDashboard = () => {
             <p className="text-sm text-[#787B86]">Learning time</p>
           </div>
 
+          {/* Learning Streak */}
           <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">🔥</span>
@@ -156,6 +166,7 @@ const ProgressDashboard = () => {
                         )}
                       </div>
                       
+                      {/* Progress Bar */}
                       <div className="mt-3">
                         <div className="flex justify-between text-xs text-[#787B86] mb-1">
                           <span>Progress</span>
@@ -169,6 +180,7 @@ const ProgressDashboard = () => {
                         </div>
                       </div>
 
+                      {/* Quiz Score */}
                       {progress.quiz_score !== null && (
                         <div className="mt-2 flex items-center gap-2">
                           <span className="text-xs text-[#787B86]">Quiz:</span>
@@ -241,6 +253,9 @@ const ProgressDashboard = () => {
                           </span>
                         </div>
                       </div>
+                      <button className="text-[#2962FF] hover:underline text-xs">
+                        Download PDF
+                      </button>
                     </div>
 
                     <div className="mt-2 pt-2 border-t border-[#2A2E39]">
@@ -254,6 +269,57 @@ const ProgressDashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Performance Overview */}
+        {stats && stats.average_quiz_score > 0 && (
+          <div className="mt-8 bg-[#1E222D] border border-[#2A2E39] rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-[#D1D4DC] mb-6">
+              Performance Overview
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Average Quiz Score */}
+              <div>
+                <p className="text-sm text-[#787B86] mb-2">Average Quiz Score</p>
+                <div className="flex items-end gap-2">
+                  <p className="text-3xl font-bold text-[#D1D4DC]">
+                    {stats.average_quiz_score.toFixed(1)}%
+                  </p>
+                  <span className={`text-sm mb-1 ${
+                    stats.average_quiz_score >= 80 ? 'text-[#089981]' : 'text-[#FF9800]'
+                  }`}>
+                    {stats.average_quiz_score >= 80 ? 'Excellent' : 'Good'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Completion Rate */}
+              <div>
+                <p className="text-sm text-[#787B86] mb-2">Course Completion Rate</p>
+                <div className="flex items-end gap-2">
+                  <p className="text-3xl font-bold text-[#D1D4DC]">
+                    {stats.total_courses_started > 0
+                      ? Math.round((stats.total_courses_completed / stats.total_courses_started) * 100)
+                      : 0}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Daily Average */}
+              <div>
+                <p className="text-sm text-[#787B86] mb-2">Daily Average</p>
+                <div className="flex items-end gap-2">
+                  <p className="text-3xl font-bold text-[#D1D4DC]">
+                    {stats.current_streak > 0
+                      ? Math.round(stats.total_lessons_completed / stats.current_streak)
+                      : 0}
+                  </p>
+                  <span className="text-sm text-[#787B86] mb-1">lessons/day</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Call to Action */}
         <div className="mt-8 text-center">
