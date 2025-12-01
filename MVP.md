@@ -271,12 +271,25 @@ User Strategy Text → Groq AI → Python Code → Backtest Engine → Results
   - GET `/api/backtesting/list/` - List all backtests
   - GET `/api/backtesting/baseline-strategies/` - List preset strategies
 
-### ❌ Pending (Frontend)
-- [ ] Backtesting UI page
-- [ ] Strategy input form (natural language)
-- [ ] Results visualization (equity curve, metrics)
-- [ ] Baseline strategies selector
-- [ ] Backtest history view
+### ✅ Completed (Frontend)
+- [x] Backtesting UI page (`/app/frontend/src/pages/app/Backtesting.jsx`)
+- [x] Strategy input form (natural language)
+- [x] Category selector (Day Trading, Swing Trading, Long-Term)
+- [x] Symbol and date range inputs
+- [x] Initial capital configuration
+- [x] 20 baseline strategy templates (7 day trading, 7 swing, 6 long-term)
+- [x] Results visualization:
+  - Performance metrics cards (Return, Sharpe, Drawdown, Win Rate, Profit Factor)
+  - Equity curve chart (Recharts AreaChart)
+  - Trade history table
+  - Composite score display
+  - AI-generated code viewer
+- [x] Backtest history tab
+- [x] Navigation link added to sidebar
+- [x] Route registered at `/app/backtesting`
+
+### ⚠️ Requires Configuration
+- [ ] GROQ_API_KEY environment variable must be set for AI to work
 
 ## 4.3 Backtest Models
 ```python
