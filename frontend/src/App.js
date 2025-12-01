@@ -248,8 +248,9 @@ function App() {
                   <Route path="/partners" element={<Partners />} />
                   
                   {/* Public Share Pages */}
-                  <Route path="/w/:slug" element={<PlaceholderPage title="Shared Watchlist" />} />
-                  <Route path="/p/:slug" element={<PlaceholderPage title="Shared Portfolio" />} />
+                  <Route path="/w/:slug" element={<SharedWatchlist />} />
+                  <Route path="/p/:slug" element={<SharedPortfolio />} />
+                  <Route path="/u/:username" element={<PublicProfile />} />
 
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />
