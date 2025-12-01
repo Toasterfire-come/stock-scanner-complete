@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+import { TradingModeProvider } from "./context/TradingModeContext";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
