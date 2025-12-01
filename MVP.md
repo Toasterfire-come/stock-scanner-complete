@@ -331,13 +331,13 @@ class BacktestRun:
 5. Momentum Factor Strategy
 6. Small Cap Value
 
-## 4.4 Plan Limits
+## 4.5 Plan Limits
 - Basic ($15): No backtesting
 - Premium ($25): 5 backtests/month
 
 ---
 
-# PHASE 5: VALUE HUNTER PORTFOLIO ⏳ PENDING
+# PHASE 5: VALUE HUNTER PORTFOLIO 🔄 IN PROGRESS (70%)
 
 ## 5.1 Concept
 Automated weekly portfolio that:
@@ -345,9 +345,34 @@ Automated weekly portfolio that:
 - Sells Friday at 3:55 PM ET
 - Selects top 10 undervalued stocks by valuation score
 
-## 5.2 Models
+## 5.2 Backend Implementation Status
+
+### ✅ Completed (Backend)
+- [x] `ValueHunterWeek` model with all fields
+- [x] `ValueHunterPosition` model for individual positions
+- [x] `ValueHunterService` class with full logic
+- [x] Stock selection algorithm (top 10 by valuation score)
+- [x] Entry/exit execution functions
+- [x] Performance tracking (weekly return, alpha, cumulative)
+- [x] API endpoints registered:
+  - GET `/api/value-hunter/current/` - Get current week
+  - GET `/api/value-hunter/{year}/{week}/` - Get specific week
+  - GET `/api/value-hunter/list/` - List all weeks
+  - POST `/api/value-hunter/entry/` - Execute portfolio entry
+  - POST `/api/value-hunter/exit/` - Execute portfolio exit
+  - GET `/api/value-hunter/top-stocks/` - Get current top 10 stocks
+
+### ❌ Pending (Frontend)
+- [ ] Value Hunter dashboard page
+- [ ] Current week portfolio display
+- [ ] Historical performance chart
+- [ ] Top stocks preview
+
+## 5.3 Models
 ```python
 class ValueHunterWeek:
+    year: IntegerField
+    week_number: IntegerField
     week_start: DateField
     week_end: DateField
     starting_capital: DecimalField
@@ -356,6 +381,7 @@ class ValueHunterWeek:
     benchmark_return: DecimalField
     alpha: DecimalField
     cumulative_return: DecimalField
+    status: CharField  # pending, active, completed
 
 class ValueHunterPosition:
     week: ForeignKey(ValueHunterWeek)
