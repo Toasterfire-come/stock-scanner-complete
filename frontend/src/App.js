@@ -405,6 +405,13 @@ function App() {
                     </ProtectedRoute>
                   } />
 
+                  {/* AI Backtesting - Protected (Phase 4) */}
+                  <Route path="/app/backtesting" element={
+                    <ProtectedRoute>
+                      <Backtesting />
+                    </ProtectedRoute>
+                  } />
+
                   {/* Developer Tools - Protected (Gold Plan) */}
                   <Route path="/app/developer" element={
                     <ProtectedRoute>
