@@ -1,7 +1,7 @@
 // User Progress Dashboard Component - Phase 7
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getApiClient } from '../../api/client';
+import { api } from '../../api/client';
 
 const ProgressDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -17,7 +17,6 @@ const ProgressDashboard = () => {
 
   const fetchUserStats = async () => {
     try {
-      const api = getApiClient();
       const response = await api.get('/api/education/user-stats/overview/');
       setStats(response.data);
     } catch (error) {
@@ -29,7 +28,6 @@ const ProgressDashboard = () => {
 
   const fetchRecentProgress = async () => {
     try {
-      const api = getApiClient();
       const response = await api.get('/api/education/user-stats/progress/');
       setRecentProgress((response.data || []).slice(0, 5));
     } catch (error) {
@@ -39,7 +37,6 @@ const ProgressDashboard = () => {
 
   const fetchCertificates = async () => {
     try {
-      const api = getApiClient();
       const response = await api.get('/api/education/user-stats/certificates/');
       setCertificates(response.data || []);
     } catch (error) {
