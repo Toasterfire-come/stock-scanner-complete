@@ -48,7 +48,8 @@ import {
   HelpCircle,
   Building,
   Zap,
-  ChevronDown
+  ChevronDown,
+  Brain
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import CommandPalette from "../components/CommandPalette";
