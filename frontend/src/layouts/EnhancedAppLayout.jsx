@@ -109,7 +109,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
         { name: "Backtesting", href: "/app/backtesting", icon: Brain, description: "AI-powered strategy testing" },
         { name: "Value Hunter", href: "/app/value-hunter", icon: Target, description: "Weekly undervalued stocks" },
         { name: "Watchlists", href: "/app/watchlists", icon: Eye, description: "Monitor favorites" },
-        { name: "Portfolio", href: "/app/portfolio", icon: Target, description: "Track performance" },
+        { name: "Portfolio", href: "/app/portfolio", icon: Wallet, description: "Track performance" },
         { name: "Alerts", href: "/app/alerts", icon: AlertCircle, description: "Price & volume alerts" },
         { name: "News", href: "/app/news", icon: Activity, description: "Latest market news" },
         { name: "Exports", href: "/app/exports", icon: FileText, description: "Data exports" },
