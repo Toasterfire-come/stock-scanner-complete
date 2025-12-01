@@ -57,6 +57,12 @@ const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Por
 const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
 const Backtesting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Backtesting"));
 const ValueHunter = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/ValueHunter"));
+const IndicatorBuilder = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/IndicatorBuilder"));
+const TradingJournal = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/TradingJournal"));
+const TaxReporting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/TaxReporting"));
+const SharedWatchlist = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedWatchlist"));
+const SharedPortfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedPortfolio"));
+const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/PublicProfile"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
 // Developer Tools (Gold Plan)
