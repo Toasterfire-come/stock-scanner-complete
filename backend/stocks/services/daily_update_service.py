@@ -10,6 +10,7 @@ Real-time data (price, volume, intraday charts) is handled by frontend.
 """
 import yfinance as yf
 import logging
+import decimal
 from decimal import Decimal
 from typing import Dict, Optional, Any, List
 from django.utils import timezone
