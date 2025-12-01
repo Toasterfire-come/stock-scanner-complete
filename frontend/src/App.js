@@ -360,7 +360,7 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* News - Protected */}
+                  {/* News - REMOVED per MVP spec Phase 1
                   <Route path="/app/news" element={
                     <ProtectedRoute>
                       <NewsFeed />
@@ -376,6 +376,7 @@ function App() {
                       <NewsSubscribe />
                     </ProtectedRoute>
                   } />
+                  */}
 
                   {/* Alerts & Signals - Protected */}
                   <Route path="/app/alerts" element={
