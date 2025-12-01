@@ -310,6 +310,13 @@ function App() {
                     </ProtectedRoute>
                   } />
 
+                  {/* Value Hunter Portfolio - Protected (Premium) */}
+                  <Route path="/app/value-hunter" element={
+                    <ProtectedRoute>
+                      <ValueHunter />
+                    </ProtectedRoute>
+                  } />
+
                   {/* Screener Suite - Protected */}
                   <Route path="/app/screeners" element={
                     <ProtectedRoute>
