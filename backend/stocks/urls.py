@@ -276,4 +276,9 @@ urlpatterns = [
     # Partner analytics (auth required + gating)
     path('partner/analytics/summary', partner_analytics_api.partner_analytics_summary_api, name='partner_analytics_summary'),
     path('partner/analytics/timeseries', partner_analytics_api.partner_analytics_timeseries_api, name='partner_analytics_timeseries'),
+    
+    # Valuation endpoints
+    path('valuation/<str:ticker>/', valuation_api.get_stock_valuation, name='stock_valuation'),
+    path('valuation/<str:ticker>/quick/', valuation_api.get_quick_valuation, name='quick_valuation'),
+    path('screener/undervalued/', valuation_api.get_undervalued_screener, name='undervalued_screener'),
 ]
