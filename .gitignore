@@ -1,0 +1,150 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# IDE and editors
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Production builds
+/build
+dist/
+dist
+
+# Environment files (comprehensive coverage)
+.env
+*token.json*
+*credentials.json*
+
+# Logs and debug files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb
+celery.log
+beat.log
+caddy.log
+
+# System files
+.DS_Store
+Thumbs.db
+*.pem
+*.key
+*.crt
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.sqlite3
+
+# Development tools
+chainlit.md
+.chainlit
+.ipynb_checkpoints/
+.ac
+
+# Deployment
+.vercel
+
+# Data and databases
+agenthub/agents/youtube/db
+stock_data_export.json
+staticfiles/
+
+# Archive files and large assets
+**/*.zip
+**/*.tar.gz
+**/*.tar
+**/*.tgz
+*.pack
+*.deb
+*.dylib
+
+# Build caches
+.cache/
+
+# Mobile development
+android-sdk/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Local development
+local/
+development/
+logs/
+logs_archive/
+deployment_old/
+
+# Webpack
+/static/webpack_bundles/
+/static/dist/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Caddy
+Caddyfile.local
+
+# Stock retrieval test outputs and scans
+test_*.csv
+*_test*.csv
+*_scan_*.csv
+production_scan_*.csv
+improved_scan_*.csv
+optimized_scan_*.csv
+ultra_fast_scan_*.csv
+stock_scan_*.csv
+scan_*.csv
+ht_*.csv
+high_throughput_*.csv
+scheduled_scan_*.csv
+*_test.log
+*_test*.log
+ht_*.log
+
+# Keep important files
+!.env.sample
+!.env.example
+!requirements*.txt
+!README.md
+!**/README.md
+!COMPLETE_SETUP_GUIDE.md
+!PACKAGE_MANIFEST.md
+!INSTALLATION_CHECKLIST.md
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/2.pack
+frontend/node_modules/.cache/default-development/1.pack
