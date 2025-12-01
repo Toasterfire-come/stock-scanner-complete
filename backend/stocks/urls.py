@@ -57,6 +57,7 @@ from . import valuation_endpoints
 from . import charting_api
 from . import backtesting_api
 from . import value_hunter_api
+from . import strategy_ranking_api
 
 
 
