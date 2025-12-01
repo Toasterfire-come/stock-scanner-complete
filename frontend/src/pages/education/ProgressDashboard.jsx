@@ -1,4 +1,4 @@
-// app/frontend/src/components/education/ProgressDashboard.jsx
+// app/frontend/src/pages/education/ProgressDashboard.jsx
 /**
  * User Progress Dashboard Component
  * Phase 7 Implementation - TradeScanPro
@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../../api/client';
 
 const ProgressDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -23,7 +23,7 @@ const ProgressDashboard = () => {
 
   const fetchUserStats = async () => {
     try {
-      const response = await axios.get('/api/education/user-stats/overview/');
+      const response = await api.get('/api/education/user-stats/overview/');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -34,8 +34,8 @@ const ProgressDashboard = () => {
 
   const fetchRecentProgress = async () => {
     try {
-      const response = await axios.get('/api/education/user-stats/progress/');
-      setRecentProgress(response.data.slice(0, 5));
+      const response = await api.get('/api/education/user-stats/progress/');
+      setRecentProgress((response.data || []).slice(0, 5));
     } catch (error) {
       console.error('Error fetching progress:', error);
     }
@@ -43,8 +43,8 @@ const ProgressDashboard = () => {
 
   const fetchCertificates = async () => {
     try {
-      const response = await axios.get('/api/education/user-stats/certificates/');
-      setCertificates(response.data);
+      const response = await api.get('/api/education/user-stats/certificates/');
+      setCertificates(response.data || []);
     } catch (error) {
       console.error('Error fetching certificates:', error);
     }
