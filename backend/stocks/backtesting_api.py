@@ -1,5 +1,6 @@
 """
 API endpoints for AI Backtesting (Phase 4)
+Enhanced with AI Chat for Strategy Refinement
 """
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +11,142 @@ from datetime import datetime, timedelta
 import json
 from .models import BacktestRun, BaselineStrategy
 from .services.backtesting_service import BacktestingService
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def chat_refine_strategy(request):
+    """
+    AI Chat endpoint for strategy refinement
+    
+    POST data:
+    - message: str (user's message)
+    - conversation_history: list (previous messages)
+    - category: str (day_trading, swing_trading, long_term)
+    """
+    try:
+        from .services.ai_chat_service import SyncAIStrategyService
+        
+        data = json.loads(request.body)
+        message = data.get('message', '')
+        conversation_history = data.get('conversation_history', [])
+        category = data.get('category', 'day_trading')
+        
+        if not message:
+            return JsonResponse({
+                'success': False,
+                'error': 'Message is required'
+            }, status=400)
+        
+        ai_service = SyncAIStrategyService()
+        response = ai_service.refine_strategy(message, conversation_history, category)
+        
+        return JsonResponse({
+            'success': True,
+            'response': response,
+            'timestamp': timezone.now().isoformat()
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def generate_strategy_code_api(request):
+    """
+    Generate strategy code from description
+    
+    POST data:
+    - strategy_description: str
+    - category: str
+    """
+    try:
+        from .services.ai_chat_service import SyncAIStrategyService
+        
+        data = json.loads(request.body)
+        strategy_description = data.get('strategy_description', '')
+        category = data.get('category', 'day_trading')
+        
+        if not strategy_description:
+            return JsonResponse({
+                'success': False,
+                'error': 'Strategy description is required'
+            }, status=400)
+        
+        ai_service = SyncAIStrategyService()
+        code, error = ai_service.generate_strategy_code(strategy_description, category)
+        
+        if error:
+            return JsonResponse({
+                'success': False,
+                'error': error
+            }, status=400)
+        
+        return JsonResponse({
+            'success': True,
+            'generated_code': code
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def summarize_strategy_api(request):
+    """
+    Summarize strategy from conversation history
+    
+    POST data:
+    - conversation_history: list
+    """
+    try:
+        from .services.ai_chat_service import SyncAIStrategyService
+        
+        data = json.loads(request.body)
+        conversation_history = data.get('conversation_history', [])
+        
+        if not conversation_history:
+            return JsonResponse({
+                'success': False,
+                'error': 'Conversation history is required'
+            }, status=400)
+        
+        ai_service = SyncAIStrategyService()
+        summary = ai_service.summarize_strategy(conversation_history)
+        
+        return JsonResponse({
+            'success': True,
+            'summary': summary
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @csrf_exempt

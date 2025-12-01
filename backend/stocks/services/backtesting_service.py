@@ -1,6 +1,6 @@
 """
-AI-Powered Backtesting Service using Groq AI
-Phase 4 Implementation
+AI-Powered Backtesting Service
+Phase 4 Implementation - Enhanced with Emergent LLM Integration
 """
 import os
 import json
@@ -9,86 +9,33 @@ import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
-from groq import Groq
 import yfinance as yf
 from django.conf import settings
 from ..models import BacktestRun, BaselineStrategy
+from .ai_chat_service import SyncAIStrategyService
 
 
 class BacktestingService:
     """Service for AI-powered strategy backtesting"""
     
     def __init__(self):
-        api_key = os.environ.get('GROQ_API_KEY')
-        if not api_key:
-            raise ValueError("GROQ_API_KEY environment variable not set")
-        self.groq_client = Groq(api_key=api_key)
-        self.model = "llama-3.3-70b-versatile"
+        try:
+            self.ai_service = SyncAIStrategyService()
+        except ValueError as e:
+            print(f"Warning: AI service not available: {e}")
+            self.ai_service = None
     
     def generate_strategy_code(self, strategy_text: str, category: str) -> Tuple[str, str]:
         """
-        Use Groq AI to convert natural language strategy to Python code
+        Use AI to convert natural language strategy to Python code
         
         Returns:
             Tuple of (generated_code, error_message)
         """
-        prompt = self._build_prompt(strategy_text, category)
+        if not self.ai_service:
+            return "", "AI service not available. Please check EMERGENT_LLM_KEY configuration."
         
-        try:
-            response = self.groq_client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert quantitative trading strategy developer. Generate clean, executable Python code only. No explanations, no markdown formatting, just pure Python code."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                model=self.model,
-                temperature=0.3,
-                max_tokens=2000,
-            )
-            
-            code = response.choices[0].message.content.strip()
-            # Remove markdown code blocks if present
-            if code.startswith('```python'):
-                code = code.replace('```python', '').replace('```', '').strip()
-            elif code.startswith('```'):
-                code = code.replace('```', '').strip()
-            
-            return code, ""
-        
-        except Exception as e:
-            return "", f"AI code generation failed: {str(e)}"
-    
-    def _build_prompt(self, strategy_text: str, category: str) -> str:
-        """Build the prompt for Groq AI"""
-        return f"""Convert the following {category} trading strategy into executable Python code.
-
-Strategy Description: {strategy_text}
-
-Requirements:
-1. Define entry_condition(data, index) function returning True/False
-2. Define exit_condition(data, index, entry_price, entry_index) function returning True/False
-3. Use pandas DataFrame with columns: Date, Open, High, Low, Close, Volume
-4. Include position sizing logic (default: 100% of available capital per trade)
-5. Include stop-loss and take-profit logic if mentioned in strategy
-6. Use technical indicators from pandas_ta or calculate manually
-7. Handle edge cases (insufficient data, NaN values)
-
-Output format: Pure Python code only, no explanations.
-
-Example structure:
-def entry_condition(data, index):
-    # Your entry logic
-    return True/False
-
-def exit_condition(data, index, entry_price, entry_index):
-    # Your exit logic
-    return True/False
-"""
+        return self.ai_service.generate_strategy_code(strategy_text, category)
     
     def run_backtest(self, backtest_run: BacktestRun) -> Dict:
         """
@@ -138,7 +85,6 @@ def exit_condition(data, index, entry_price, entry_index):
         """Fetch historical price data for symbols"""
         try:
             # For simplicity, use first symbol only
-            # In production, you'd implement multi-symbol logic
             symbol = symbols[0] if isinstance(symbols, list) else symbols
             
             ticker = yf.Ticker(symbol)
@@ -285,15 +231,16 @@ def exit_condition(data, index, entry_price, entry_index):
         # Annualized return (assume 252 trading days per year)
         days = len(equity_curve)
         years = days / 252
-        annualized_return = (((final_capital / initial_capital) ** (1 / years)) - 1) * 100 if years > 0 else total_return
+        annualized_return = (((final_capital / initial_capital) ** (1 / max(years, 0.01))) - 1) * 100 if years > 0 else total_return
         
         # Sharpe ratio
         returns = pd.Series(equity_curve).pct_change().dropna()
-        sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252) if returns.std() > 0 else 0
+        sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252) if len(returns) > 0 and returns.std() > 0 else 0
         
         # Max drawdown
-        peak = np.maximum.accumulate(equity_curve)
-        drawdown = (equity_curve - peak) / peak
+        equity_arr = np.array(equity_curve)
+        peak = np.maximum.accumulate(equity_arr)
+        drawdown = (equity_arr - peak) / peak
         max_drawdown = np.min(drawdown) * 100
         
         # Win rate
@@ -302,9 +249,9 @@ def exit_condition(data, index, entry_price, entry_index):
         win_rate = (len(winning_trades) / len(trades)) * 100
         
         # Profit factor
-        gross_profit = sum(t['profit'] for t in winning_trades)
-        gross_loss = abs(sum(t['profit'] for t in losing_trades))
-        profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
+        gross_profit = sum(t['profit'] for t in winning_trades) if winning_trades else 0
+        gross_loss = abs(sum(t['profit'] for t in losing_trades)) if losing_trades else 0
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else (999 if gross_profit > 0 else 0)
         
         # Composite score (weighted average)
         score = (
@@ -318,7 +265,7 @@ def exit_condition(data, index, entry_price, entry_index):
         return {
             'total_return': round(total_return, 2),
             'annualized_return': round(annualized_return, 2),
-            'sharpe_ratio': round(sharpe_ratio, 4),
+            'sharpe_ratio': round(float(sharpe_ratio), 4),
             'max_drawdown': round(max_drawdown, 2),
             'win_rate': round(win_rate, 2),
             'profit_factor': round(profit_factor, 4),
