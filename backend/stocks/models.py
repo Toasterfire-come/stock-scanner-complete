@@ -123,6 +123,112 @@ class Stock(models.Model):
                 return f"${self.market_cap:,}"
         return "N/A"
 
+
+class StockFundamentals(models.Model):
+    """
+    Comprehensive fundamental data model for stock valuation (Phase 2 MVP).
+    Stores 50+ dedicated fields for valuation analysis.
+    """
+    stock = models.OneToOneField(Stock, on_delete=models.CASCADE, related_name='fundamentals', primary_key=True)
+    
+    # Price & Valuation Metrics
+    pe_ratio = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price to Earnings ratio")
+    forward_pe = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Forward P/E ratio")
+    peg_ratio = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="PEG ratio")
+    price_to_sales = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price to Sales ratio")
+    price_to_book = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price to Book ratio")
+    ev_to_revenue = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Enterprise Value to Revenue")
+    ev_to_ebitda = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Enterprise Value to EBITDA")
+    enterprise_value = models.BigIntegerField(null=True, blank=True, help_text="Enterprise Value")
+    
+    # Profitability Metrics
+    gross_margin = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Gross profit margin")
+    operating_margin = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Operating margin")
+    profit_margin = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Net profit margin")
+    roe = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Return on Equity")
+    roa = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Return on Assets")
+    roic = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Return on Invested Capital")
+    
+    # Growth Metrics
+    revenue_growth_yoy = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="YoY revenue growth")
+    revenue_growth_3y = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="3-year revenue CAGR")
+    revenue_growth_5y = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="5-year revenue CAGR")
+    earnings_growth_yoy = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="YoY earnings growth")
+    earnings_growth_5y = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="5-year EPS CAGR")
+    fcf_growth_yoy = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="YoY free cash flow growth")
+    
+    # Financial Health Metrics
+    current_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Current ratio")
+    quick_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Quick ratio")
+    debt_to_equity = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Debt to equity ratio")
+    debt_to_assets = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Debt to assets ratio")
+    interest_coverage = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Interest coverage ratio")
+    altman_z_score = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Altman Z-Score")
+    piotroski_f_score = models.IntegerField(null=True, blank=True, help_text="Piotroski F-Score (0-9)")
+    
+    # Cash Flow Metrics
+    operating_cash_flow = models.BigIntegerField(null=True, blank=True, help_text="Operating cash flow")
+    free_cash_flow = models.BigIntegerField(null=True, blank=True, help_text="Free cash flow")
+    fcf_per_share = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="FCF per share")
+    fcf_yield = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="FCF yield")
+    cash_conversion = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Cash conversion ratio")
+    
+    # Dividend Metrics
+    dividend_yield = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Dividend yield")
+    dividend_payout_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Dividend payout ratio")
+    years_dividend_growth = models.IntegerField(null=True, blank=True, help_text="Consecutive years of dividend growth")
+    
+    # Calculated Valuations (Fair Values)
+    dcf_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="DCF fair value")
+    epv_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="EPV fair value")
+    graham_number = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Graham Number")
+    peg_fair_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="PEG-based fair value")
+    relative_value_score = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Relative value vs sector")
+    
+    # Composite Scores
+    valuation_score = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Composite valuation score (0-100)")
+    valuation_status = models.CharField(max_length=50, blank=True, help_text="Status: significantly_undervalued, undervalued, fair_value, etc.")
+    recommendation = models.CharField(max_length=20, blank=True, help_text="STRONG BUY, BUY, HOLD, SELL, STRONG SELL")
+    confidence = models.CharField(max_length=10, blank=True, help_text="high, medium, low")
+    strength_score = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Financial strength score (0-100)")
+    strength_grade = models.CharField(max_length=2, blank=True, help_text="Strength grade: A, B, C, D, F")
+    
+    # Metadata
+    sector = models.CharField(max_length=100, blank=True, help_text="Company sector")
+    industry = models.CharField(max_length=100, blank=True, help_text="Company industry")
+    last_updated = models.DateTimeField(auto_now=True)
+    data_quality = models.CharField(max_length=20, default='complete', help_text="Data quality: complete, partial, insufficient")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['valuation_score']),
+            models.Index(fields=['valuation_status']),
+            models.Index(fields=['strength_score']),
+            models.Index(fields=['sector']),
+            models.Index(fields=['last_updated']),
+        ]
+        verbose_name_plural = "Stock fundamentals"
+    
+    def __str__(self):
+        return f'{self.stock.ticker} - Fundamentals'
+    
+    @property
+    def is_undervalued(self):
+        """Check if stock is undervalued (score >= 55)"""
+        return self.valuation_score and self.valuation_score >= 55
+    
+    @property
+    def margin_of_safety(self):
+        """Calculate margin of safety based on fair values"""
+        if not self.stock.current_price:
+            return None
+        fair_values = [v for v in [self.dcf_value, self.epv_value, self.graham_number, self.peg_fair_value] if v]
+        if not fair_values:
+            return None
+        avg_fair = sum(fair_values) / len(fair_values)
+        return ((avg_fair / float(self.stock.current_price)) - 1) * 100
+
+
 class StockPrice(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, db_index=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
