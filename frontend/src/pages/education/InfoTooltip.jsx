@@ -1,4 +1,4 @@
-// app/frontend/src/components/education/InfoTooltip.jsx
+// app/frontend/src/pages/education/InfoTooltip.jsx
 /**
  * Info Tooltip Component
  * Phase 7 Implementation - TradeScanPro
@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '../../api/client';
 
 const InfoTooltip = ({ term, children }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,15 +36,15 @@ const InfoTooltip = ({ term, children }) => {
         setTermData(term);
         
         // Track tooltip hover
-        await axios.post(`/api/education/glossary/${term.slug}/track-tooltip/`);
+        await api.post(`/api/education/glossary/${term.slug}/track-tooltip/`);
       } else {
         // If term is a string, fetch it
         const slug = term.toLowerCase().replace(/\s+/g, '-');
-        const response = await axios.get(`/api/education/glossary/${slug}/`);
+        const response = await api.get(`/api/education/glossary/${slug}/`);
         setTermData(response.data);
         
         // Track tooltip hover
-        await axios.post(`/api/education/glossary/${slug}/track-tooltip/`);
+        await api.post(`/api/education/glossary/${slug}/track-tooltip/`);
       }
     } catch (error) {
       console.error('Error fetching term:', error);
