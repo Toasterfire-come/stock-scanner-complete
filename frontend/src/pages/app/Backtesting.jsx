@@ -239,7 +239,7 @@ export default function Backtesting() {
             AI Strategy Backtester
           </h1>
           <p className="text-gray-600 mt-1">
-            Describe your trading strategy in plain English. I'll help you refine it and test it against historical data.
+            Describe your trading strategy in plain English. I&apos;ll help you refine it and test it against historical data.
           </p>
         </div>
 
