@@ -16,9 +16,9 @@ try:
 except ImportError:
     pass
 
-# Set Django settings module - MUST be set before any Django imports
-# Use environment variable or default to SQLite local settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stockscanner_django.settings_local_sqlite')
+# Set Django settings module - Force SQLite for local development
+# This MUST be set before any Django imports
+os.environ['DJANGO_SETTINGS_MODULE'] = 'stockscanner_django.settings_local_sqlite'
 
 # Configure PyMySQL (if needed, but we use SQLite)
 try:
