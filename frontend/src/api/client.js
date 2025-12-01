@@ -1254,3 +1254,109 @@ export async function getValueHunterTopStocks() {
   const { data } = await api.get('/value-hunter/top-stocks/');
   return data;
 }
+
+
+// ====================
+// CUSTOM INDICATORS (Phase 9)
+// ====================
+export async function listIndicators(params = {}) {
+  const { data } = await api.get('/indicators/', { params });
+  return data;
+}
+
+export async function createIndicator(indicatorData) {
+  const { data } = await api.post('/indicators/create/', indicatorData);
+  return data;
+}
+
+export async function getIndicator(indicatorId) {
+  const { data } = await api.get(`/indicators/${indicatorId}/`);
+  return data;
+}
+
+export async function updateIndicator(indicatorId, indicatorData) {
+  const { data } = await api.put(`/indicators/${indicatorId}/`, indicatorData);
+  return data;
+}
+
+export async function deleteIndicator(indicatorId) {
+  const { data } = await api.delete(`/indicators/${indicatorId}/`);
+  return data;
+}
+
+// ====================
+// TRADING JOURNAL (Phase 9)
+// ====================
+export async function listJournalEntries(params = {}) {
+  const { data } = await api.get('/journal/', { params });
+  return data;
+}
+
+export async function createJournalEntry(entryData) {
+  const { data } = await api.post('/journal/create/', entryData);
+  return data;
+}
+
+export async function getJournalEntry(entryId) {
+  const { data } = await api.get(`/journal/${entryId}/`);
+  return data;
+}
+
+export async function updateJournalEntry(entryId, entryData) {
+  const { data } = await api.put(`/journal/${entryId}/`, entryData);
+  return data;
+}
+
+export async function deleteJournalEntry(entryId) {
+  const { data } = await api.delete(`/journal/${entryId}/`);
+  return data;
+}
+
+export async function getJournalStats(params = {}) {
+  const { data } = await api.get('/journal/stats/', { params });
+  return data;
+}
+
+// ====================
+// TAX REPORTING (Phase 9)
+// ====================
+export async function getTaxSummary(year) {
+  const { data } = await api.get(`/tax/summary/${year}/`);
+  return data;
+}
+
+export async function getTaxTransactions(year, params = {}) {
+  const { data } = await api.get(`/tax/transactions/${year}/`, { params });
+  return data;
+}
+
+export async function exportTaxReport(year, format = 'csv') {
+  const response = await api.get(`/tax/export/${year}/`, { 
+    params: { format },
+    responseType: 'blob' 
+  });
+  return response.data;
+}
+
+// ====================
+// SOCIAL SHARING (Phase 8)
+// ====================
+export async function shareBacktest(backtestId) {
+  const { data } = await api.post(`/share/backtests/${backtestId}/create`);
+  return data;
+}
+
+export async function getSharedBacktest(slug) {
+  const { data } = await api.get(`/share/backtests/${encodeURIComponent(slug)}/`);
+  return data;
+}
+
+export async function getPublicProfile(username) {
+  const { data } = await api.get(`/user/public/${encodeURIComponent(username)}/`);
+  return data;
+}
+
+export async function updatePublicProfile(profileData) {
+  const { data } = await api.post('/user/public/update/', profileData);
+  return data;
+}
