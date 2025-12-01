@@ -1,4 +1,4 @@
-// app/frontend/src/components/education/CourseCatalog.jsx
+// app/frontend/src/pages/education/CourseCatalog.jsx
 /**
  * Course Catalog Component
  * Phase 7 Implementation - TradeScanPro
@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../../api/client';
 
 const CourseCatalog = () => {
   const [courses, setCourses] = useState([]);
@@ -52,10 +52,11 @@ const CourseCatalog = () => {
         url += '?' + params.join('&');
       }
 
-      const response = await axios.get(url);
-      setCourses(response.data);
+      const response = await api.get(url);
+      setCourses(response.data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setCourses([]);
     } finally {
       setLoading(false);
     }
