@@ -94,7 +94,6 @@ export default function LightweightPriceChart({
       mainSeriesRef.current = null;
       overlaySeriesRefs.current = [];
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [height, theme]);
 
   // Update main data when input changes
