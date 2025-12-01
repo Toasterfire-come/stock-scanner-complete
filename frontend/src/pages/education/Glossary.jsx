@@ -1,4 +1,4 @@
-// app/frontend/src/components/education/Glossary.jsx
+// app/frontend/src/pages/education/Glossary.jsx
 /**
  * Trading Glossary Component
  * Phase 7 Implementation - TradeScanPro
@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../../api/client';
 
 const Glossary = () => {
   const { termSlug } = useParams();
@@ -52,22 +52,23 @@ const Glossary = () => {
 
   const fetchTerms = async () => {
     try {
-      const response = await axios.get('/api/education/glossary/');
-      setTerms(response.data);
+      const response = await api.get('/api/education/glossary/');
+      setTerms(response.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching glossary:', error);
+      setTerms([]);
       setLoading(false);
     }
   };
 
   const fetchTermDetail = async (slug) => {
     try {
-      const response = await axios.get(`/api/education/glossary/${slug}/`);
+      const response = await api.get(`/api/education/glossary/${slug}/`);
       setSelectedTerm(response.data);
       
       // Track view
-      await axios.post(`/api/education/glossary/${slug}/track-view/`);
+      await api.post(`/api/education/glossary/${slug}/track-view/`);
     } catch (error) {
       console.error('Error fetching term detail:', error);
     }
