@@ -185,6 +185,7 @@ function App() {
   return (
     <BackendStatusProvider>
       <AuthProvider>
+        <TradingModeProvider>
         <BrowserRouter>
           {/* LatencyIndicator removed per request */}
           <SystemErrorBoundary>
