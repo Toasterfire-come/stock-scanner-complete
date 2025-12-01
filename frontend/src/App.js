@@ -513,6 +513,7 @@ function App() {
             </div>
           </SystemErrorBoundary>
         </BrowserRouter>
+        </TradingModeProvider>
       </AuthProvider>
     </BackendStatusProvider>
   );
