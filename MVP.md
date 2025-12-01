@@ -182,6 +182,57 @@ relative_value_score, valuation_score, strength_score
 
 ---
 
+# DATA UPDATE STRATEGY
+
+## Daily Backend Updates (Once per day at market close)
+
+### Fundamental Data
+- All 50+ valuation metrics (PE, PEG, margins, ratios, etc.)
+- DCF, EPV, Graham Number, PEG Fair Value calculations
+- Composite valuation scores and recommendations
+- Strength scores and grades
+- Market cap, 52-week ranges, average volume
+- Dividend data, growth metrics, cash flow metrics
+
+### Technical Data (Daily Timeframe)
+- Daily moving averages (SMA, EMA)
+- Daily RSI, MACD, Bollinger Bands
+- Other daily technical indicators
+
+### Update Methods
+```bash
+# Manual update
+python manage.py update_daily_data
+
+# Cron job (recommended)
+0 17 * * * cd /app/backend && python manage.py update_daily_data
+
+# Scheduler daemon
+python daily_data_scheduler.py
+```
+
+## Real-time Frontend Updates (via browser)
+
+### Price Data
+- Current price and price changes
+- Bid/Ask prices
+- Day's range (high/low)
+- Current volume
+
+### Chart Data
+- Intraday charts (1m, 5m, 15m, 30m, 1H)
+- Real-time technical indicators (intraday timeframes)
+- Chart drawing tools and overlays
+
+### API Endpoints
+- `/api/chart/{ticker}/` - Chart data (OHLCV)
+- `/api/chart/{ticker}/indicators/` - Technical indicators
+- `/api/valuation/{ticker}/` - Valuation data (cached from daily updates)
+
+**See `DAILY_DATA_UPDATE_README.md` for full documentation.**
+
+---
+
 # PHASE 4: AI BACKTESTING SYSTEM ⏳ PENDING
 
 ## 4.1 AI Strategy Generation (Groq Integration)
