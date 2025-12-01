@@ -49,7 +49,8 @@ import {
   Building,
   Zap,
   ChevronDown,
-  Brain
+  Brain,
+  Wallet
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import CommandPalette from "../components/CommandPalette";
