@@ -294,4 +294,19 @@ urlpatterns = [
     path('chart/<str:ticker>/', charting_api.get_chart_data, name='chart_data'),
     path('chart/<str:ticker>/indicators/', charting_api.get_chart_indicators, name='chart_indicators'),
     path('chart/timeframes/', charting_api.get_available_timeframes, name='chart_timeframes'),
+    
+    # AI Backtesting endpoints (Phase 4)
+    path('backtesting/create/', backtesting_api.create_backtest, name='create_backtest'),
+    path('backtesting/<int:backtest_id>/run/', backtesting_api.run_backtest, name='run_backtest'),
+    path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
+    path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
+    path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
+    
+    # Value Hunter endpoints (Phase 5)
+    path('value-hunter/current/', value_hunter_api.get_current_week, name='vh_current_week'),
+    path('value-hunter/<int:year>/<int:week_number>/', value_hunter_api.get_week, name='vh_get_week'),
+    path('value-hunter/list/', value_hunter_api.list_all_weeks, name='vh_list_weeks'),
+    path('value-hunter/entry/', value_hunter_api.execute_entry, name='vh_execute_entry'),
+    path('value-hunter/exit/', value_hunter_api.execute_exit, name='vh_execute_exit'),
+    path('value-hunter/top-stocks/', value_hunter_api.get_top_stocks, name='vh_top_stocks'),
 ]
