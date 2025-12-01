@@ -298,6 +298,9 @@ urlpatterns = [
     path('chart/timeframes/', charting_api.get_available_timeframes, name='chart_timeframes'),
     
     # AI Backtesting endpoints (Phase 4)
+    path('backtesting/chat/', backtesting_api.chat_refine_strategy, name='backtesting_chat'),
+    path('backtesting/generate-code/', backtesting_api.generate_strategy_code_api, name='backtesting_generate_code'),
+    path('backtesting/summarize/', backtesting_api.summarize_strategy_api, name='backtesting_summarize'),
     path('backtesting/create/', backtesting_api.create_backtest, name='create_backtest'),
     path('backtesting/<int:backtest_id>/run/', backtesting_api.run_backtest, name='run_backtest'),
     path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
