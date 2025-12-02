@@ -273,12 +273,12 @@ const Features = () => {
 
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-8 leading-tight">
               Powerful Features for
-              <span className="text-blue-600 block">Serious Traders</span>
+              <span className="text-blue-600 block">Long-Term Investors</span>
             </h1>
 
             <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
-              Ship decisions faster with the same toolkit powering {formatNumber(usage.totalScreenersRunMonthly)} monthly screeners,
-              {formatNumber(usage.alertsDeliveredMonthly)} alerts, and {formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} customer retention.
+              Build wealth with professional-grade fundamental analysis, AI-powered backtesting,
+              and comprehensive educational resources trusted by {formatNumber(usage.activeAccounts)} investors.
             </p>
 
             <Button asChild size="lg" className="text-xl px-12 py-6 h-auto">
