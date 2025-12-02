@@ -151,15 +151,27 @@ const Home = () => {
 
   const features = [
     {
+      icon: <Target className="h-6 w-6" />,
+      title: "Value Hunter - Fair Value Analysis",
+      description: "Find undervalued stocks using professional DCF models and intrinsic value calculations.",
+      details: "Our Value Hunter analyzes financials to calculate fair value using discounted cash flow models. Identify stocks trading below their intrinsic value with detailed margin of safety metrics."
+    },
+    {
+      icon: <LineChart className="h-6 w-6" />,
+      title: "AI-Powered Backtesting",
+      description: "Test your investment strategies against historical data with AI-enhanced analysis.",
+      details: "Backtest any strategy with our AI engine that explains WHY it works. Get actionable insights on risk-adjusted returns, maximum drawdowns, and optimal position sizing."
+    },
+    {
       icon: <Search className="h-6 w-6" />,
-      title: "Advanced Stock Screening",
-      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with 14+ technical and fundamental criteria.`,
+      title: "Fundamental Stock Screening",
+      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} using fundamental and technical criteria.`,
       details: `Teams run ${formatNumber(usage.totalScreenersRunMonthly)}+ screeners every month and reach their first repeatable setup in under ${usage.medianTimeToFirstScreenerMinutes} minutes.`
     },
     {
       icon: <Bell className="h-6 w-6" />,
       title: "Real-Time Alerts",
-      description: "Never miss a trading opportunity with instant price and volume alerts.",
+      description: "Never miss an investment opportunity with instant price and volume alerts.",
       details: `${formatNumber(usage.alertsDeliveredMonthly)} alerts are delivered every month with consistent sub-${reliability.apiP95LatencyMs}ms delivery from our infrastructure.`
     },
     {
