@@ -611,10 +611,10 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 sm:mb-20">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-              Everything You Need to Dominate the Markets
+              Everything You Need for Long-Term Investing Success
             </h2>
             <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto">
-              Professional-grade tools that give you the competitive edge
+              Professional tools for fundamental analysis and data-driven investment decisions
             </p>
           </div>
           
