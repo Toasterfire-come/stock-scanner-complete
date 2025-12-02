@@ -26,17 +26,55 @@
 
 ---
 
+# NEXT STEPS TO COMPLETE MVP
+
+## Critical Path Items (Priority Order)
+
+### 1. Environment Configuration
+- [ ] Configure `GROQ_API_KEY` for AI backtesting functionality
+- [ ] Verify all API endpoints are responding correctly
+- [ ] Test database migrations are up to date
+
+### 2. Data Population
+- [ ] Populate education database with course content from `course_content.json`
+- [ ] Load glossary terms from `glossary_terms.json`
+- [ ] Seed baseline strategies for backtesting
+
+### 3. Integration Testing
+- [ ] Test Backtesting flow end-to-end (create → run → view results)
+- [ ] Test Value Hunter portfolio display with live data
+- [ ] Test Strategy Leaderboard filtering and sorting
+- [ ] Test Education module (courses → lessons → progress tracking)
+- [ ] Test Social features (sharing, referrals)
+
+### 4. UI/UX Polish (Phase 10)
+- [ ] Mobile responsiveness audit
+- [ ] Animation system implementation
+- [ ] Loading states and error handling
+- [ ] Accessibility review
+
+---
+
 # RECENT UPDATES (December 2024)
 
+## December 2 Update - Full Codebase Review
+After comprehensive review, the actual completion status was found to be significantly higher than documented:
+
+### Phases 6-9 - MAJOR PROGRESS DISCOVERED
+- **Strategy Ranking (Phase 6)**: Backend API complete (18KB), Frontend complete (StrategyLeaderboard.jsx - 385 lines)
+- **Education (Phase 7)**: Full model set, API endpoints, 6 frontend pages complete
+- **Social Features (Phase 8)**: Referral system, public profiles, shared portfolios all implemented
+- **Retention (Phase 9)**: Trading Journal (603 lines), Tax Reporting (551 lines), Indicator Builder (499 lines) all complete
+
 ## Phases 4 & 5 - COMPLETED
-- **Backtesting.jsx** - Full frontend implementation with:
+- **Backtesting.jsx** - Full frontend implementation (31KB) with:
   - Strategy input form (natural language)
   - Category selection (Day Trading, Swing Trading, Long-Term)
   - 20 baseline strategy templates
   - Results visualization (metrics, equity curve, trade history)
   - AI-generated code viewer
   
-- **ValueHunter.jsx** - Full frontend implementation with:
+- **ValueHunter.jsx** - Full frontend implementation (24KB) with:
   - Current week portfolio display
   - Top 10 stocks preview
   - Historical performance chart
@@ -46,7 +84,7 @@
 
 ---
 
-# AI INTEGRATION (NEW)
+# AI INTEGRATION
 
 ## Groq AI Integration for Backtesting
 
@@ -58,6 +96,7 @@ The backtesting system uses **Groq AI** (llama-3.3-70b-versatile) to:
 
 ### Environment Configuration
 ```
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
 ### AI Service Architecture
