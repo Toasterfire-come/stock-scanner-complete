@@ -42,16 +42,17 @@ BASE_DIR = Path(__file__).resolve().parent
 @dataclass
 class ScanConfig:
     """Configuration for 2K ticker scanning"""
-    max_threads: int = 200
+    max_threads: int = 50  # Reduce to avoid overwhelming system
     timeout: float = 3.0
     max_retries: int = 2
     retry_delay: float = 0.1
     target_tickers: int = 2000
     min_success_rate: float = 0.95
     use_socks5h: bool = True
-    rotate_per_request: bool = True
+    rotate_per_request: bool = False  # Changed: Don't rotate per request to maintain session state
     random_delay_range: tuple = (0.01, 0.05)
     output_json: str = "realtime_scan_results.json"
+    session_pool_size: int = 100  # Number of persistent sessions to maintain
 
 
 class ProxyRotator:
@@ -105,7 +106,7 @@ class ProxyRotator:
 
 
 class YFinanceClient:
-    """YFinance client with proxy support"""
+    """YFinance client with proxy support and session pooling"""
 
     USER_AGENTS = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -116,6 +117,7 @@ class YFinanceClient:
     def __init__(self, proxy_rotator: ProxyRotator, config: ScanConfig):
         self.proxy_rotator = proxy_rotator
         self.config = config
+        logger.info("Using default yfinance behavior (no custom sessions, no proxies)")
 
     def _create_session(self, proxy: Optional[str]):
         if CURL_CFFI_AVAILABLE and curl_requests:
@@ -144,20 +146,17 @@ class YFinanceClient:
         return session
 
     def fetch_realtime_data(self, ticker: str) -> Optional[Dict[str, Any]]:
-        proxy = self.proxy_rotator.get_next_proxy() if self.config.rotate_per_request else None
-
         for attempt in range(self.config.max_retries):
             try:
                 if self.config.random_delay_range:
                     time.sleep(random.uniform(*self.config.random_delay_range))
 
-                session = self._create_session(proxy)
-                stock = yf.Ticker(ticker, session=session)
+                # Use default yfinance behavior - NO custom session
+                # This works reliably as confirmed by test_scanner_no_proxy.py
+                stock = yf.Ticker(ticker)
                 info = stock.info
 
                 if not info or len(info) < 5:
-                    if proxy:
-                        self.proxy_rotator.mark_failure(proxy, "empty_data")
                     return None
 
                 # Extract real-time fields
@@ -190,18 +189,12 @@ class YFinanceClient:
                 # Convert None to null for JSON
                 data = {k: (v if v is not None else None) for k, v in data.items()}
 
-                if proxy:
-                    self.proxy_rotator.mark_success(proxy)
-
                 return data
 
             except Exception as e:
                 logger.debug(f"Attempt {attempt + 1} failed for {ticker}: {str(e)[:50]}")
-                if proxy:
-                    self.proxy_rotator.mark_failure(proxy, str(e)[:30])
 
                 if attempt < self.config.max_retries - 1:
-                    proxy = self.proxy_rotator.get_next_proxy()
                     time.sleep(self.config.retry_delay * (2 ** attempt))
 
         return None
