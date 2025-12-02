@@ -1,0 +1,18 @@
+# =========================================================================
+# Enhanced Proxy Requirements for Rate Limit Bypass
+# =========================================================================
+
+# Core yfinance data collection
+yfinance>=0.2.25
+requests>=2.31.0
+urllib3>=2.0.0
+
+# SOCKS5h proxy support (prevents DNS leakage)
+PySocks>=1.7.1
+requests[socks]>=2.31.0
+
+# Advanced TLS fingerprinting to mimic real browsers
+curl_cffi>=0.6.0
+
+# Additional utilities
+python-dotenv>=1.0.0

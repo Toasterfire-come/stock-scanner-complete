@@ -1,0 +1,22 @@
+{
+  "proxies": [
+    "socks5://username:password@proxy1.example.com:1080",
+    "socks5://username:password@proxy2.example.com:1080"
+  ],
+  "notes": {
+    "format": "socks5://[username:password@]host:port",
+    "dns_protection": "Use socks5:// prefix - the scripts will automatically convert to socks5h:// for DNS protection",
+    "recommended_providers": [
+      "Bright Data (formerly Luminati) - Residential SOCKS5 proxies",
+      "Smartproxy - SOCKS5 residential proxies",
+      "Oxylabs - Premium SOCKS5 proxies",
+      "IPRoyal - Affordable SOCKS5 proxies",
+      "Soax - Rotating residential SOCKS5 proxies"
+    ],
+    "free_alternatives": [
+      "Note: Free SOCKS5 proxies are generally unreliable and rate-limited",
+      "Use HTTP proxies from working_proxies.json for free options",
+      "Consider mixing HTTP and SOCKS5 for better results"
+    ]
+  }
+}
