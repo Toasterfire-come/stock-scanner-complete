@@ -98,10 +98,23 @@ const StrategyLeaderboard = () => {
       {/* Header */}
       <div className="bg-[#1E222D] border-b border-[#2A2E39] py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-2">Strategy Leaderboard</h1>
-          <p className="text-[#787B86]">
-            Discover and clone top-performing trading strategies
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Strategy Leaderboard</h1>
+              <p className="text-[#787B86]">
+                Discover and clone top-performing trading strategies
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <SubmitStrategyForm onSuccess={fetchLeaderboard} />
+              <SocialShareButtons
+                title="Check out the Strategy Leaderboard on Trade Scan Pro"
+                description="Discover top-performing trading strategies"
+                hashtags="trading,strategies,investing"
+                variant="ghost"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
