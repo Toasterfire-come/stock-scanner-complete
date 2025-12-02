@@ -1,0 +1,412 @@
+{
+  "glossary_terms": [
+    {
+      "term": "Ask Price",
+      "slug": "ask-price",
+      "category": "order_types",
+      "definition": "The lowest price at which a seller is willing to sell a stock. Also known as the 'offer' price.",
+      "example": "If the ask price is $50.25, you'll pay at least $50.25 per share when buying with a market order.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Bid Price",
+      "slug": "bid-price",
+      "category": "order_types",
+      "definition": "The highest price a buyer is willing to pay for a stock.",
+      "example": "If the bid price is $50.20 and ask is $50.25, the spread is $0.05.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Spread",
+      "slug": "spread",
+      "category": "order_types",
+      "definition": "The difference between the bid and ask price. Tighter spreads indicate higher liquidity.",
+      "example": "A spread of $0.01 means high liquidity, while $0.50 indicates lower liquidity and higher trading costs.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Market Order",
+      "slug": "market-order",
+      "category": "order_types",
+      "definition": "An order to buy or sell immediately at the current market price. Guarantees execution but not price.",
+      "example": "Using a market order when stock is at $100 might fill at $100.05 in a fast-moving market.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Limit Order",
+      "slug": "limit-order",
+      "category": "order_types",
+      "definition": "An order to buy or sell at a specific price or better. Provides price control but execution is not guaranteed.",
+      "example": "Setting a buy limit at $95 when stock is at $100 means you'll only buy if price drops to $95 or lower.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Stop-Loss Order",
+      "slug": "stop-loss-order",
+      "category": "order_types",
+      "definition": "An order that triggers a market sell when price drops to a specified level, used to limit losses.",
+      "example": "Buying at $100 with a stop-loss at $95 limits your maximum loss to $5 per share.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Support",
+      "slug": "support",
+      "category": "technical",
+      "definition": "A price level where a stock tends to find buying interest, preventing further decline.",
+      "example": "If a stock repeatedly bounces at $50, that level acts as support.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Resistance",
+      "slug": "resistance",
+      "category": "technical",
+      "definition": "A price level where selling pressure tends to emerge, preventing further price increases.",
+      "example": "If a stock repeatedly fails to break above $100, that level acts as resistance.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Breakout",
+      "slug": "breakout",
+      "category": "technical",
+      "definition": "When price moves above resistance or below support, often signaling the start of a new trend.",
+      "example": "A stock breaking above $100 resistance on high volume may continue moving higher.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "RSI",
+      "slug": "rsi",
+      "category": "technical",
+      "definition": "Relative Strength Index - a momentum oscillator ranging from 0-100. Below 30 suggests oversold, above 70 suggests overbought.",
+      "example": "RSI at 25 might indicate the stock is oversold and due for a bounce.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "MACD",
+      "slug": "macd",
+      "category": "technical",
+      "definition": "Moving Average Convergence Divergence - a trend-following momentum indicator showing the relationship between two moving averages.",
+      "example": "A bullish MACD crossover occurs when the MACD line crosses above the signal line.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Moving Average",
+      "slug": "moving-average",
+      "category": "technical",
+      "definition": "The average price of a stock over a specified period, smoothing out short-term fluctuations to reveal trends.",
+      "example": "The 50-day moving average shows the average closing price over the last 50 days.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Volume",
+      "slug": "volume",
+      "category": "technical",
+      "definition": "The number of shares traded during a given period. High volume confirms price moves.",
+      "example": "A breakout on 3x normal volume is more reliable than one on low volume.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Candlestick",
+      "slug": "candlestick",
+      "category": "technical",
+      "definition": "A charting method showing open, high, low, and close prices for a period. Green/white = up, red/black = down.",
+      "example": "A long green candlestick shows strong buying pressure during that period.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Trend",
+      "slug": "trend",
+      "category": "technical",
+      "definition": "The general direction of price movement. Can be uptrend (higher highs/lows), downtrend (lower highs/lows), or sideways.",
+      "example": "An uptrend is confirmed when price makes successive higher highs and higher lows.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "P/E Ratio",
+      "slug": "pe-ratio",
+      "category": "fundamental",
+      "definition": "Price-to-Earnings ratio - current stock price divided by earnings per share. Measures relative valuation.",
+      "example": "A P/E of 20 means investors pay $20 for every $1 of annual earnings.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "EPS",
+      "slug": "eps",
+      "category": "fundamental",
+      "definition": "Earnings Per Share - a company's net profit divided by number of outstanding shares.",
+      "example": "If a company earns $100M with 20M shares, EPS is $5.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Market Cap",
+      "slug": "market-cap",
+      "category": "fundamental",
+      "definition": "Total market value of a company's outstanding shares. Price per share × total shares outstanding.",
+      "example": "A stock at $100 with 10M shares has a $1B market cap.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Dividend",
+      "slug": "dividend",
+      "category": "fundamental",
+      "definition": "A portion of company profits distributed to shareholders, typically paid quarterly.",
+      "example": "A stock paying $2 annual dividend with $100 price has a 2% dividend yield.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Dividend Yield",
+      "slug": "dividend-yield",
+      "category": "fundamental",
+      "definition": "Annual dividend payment divided by current stock price, expressed as a percentage.",
+      "example": "A $4 annual dividend on a $100 stock = 4% yield.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Bull Market",
+      "slug": "bull-market",
+      "category": "market_structure",
+      "definition": "A market condition characterized by rising prices and investor optimism, typically a 20%+ rise from recent lows.",
+      "example": "The 2009-2020 period was one of the longest bull markets in history.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Bear Market",
+      "slug": "bear-market",
+      "category": "market_structure",
+      "definition": "A market condition with falling prices and pessimism, typically a 20%+ decline from recent highs.",
+      "example": "The 2022 market decline qualified as a bear market when major indices fell over 20%.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Volatility",
+      "slug": "volatility",
+      "category": "risk_management",
+      "definition": "The degree of price variation over time. High volatility means larger price swings.",
+      "example": "A stock moving 5-10% daily has high volatility compared to one moving 0.5% daily.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Liquidity",
+      "slug": "liquidity",
+      "category": "market_structure",
+      "definition": "How easily a stock can be bought or sold without affecting its price. High volume = high liquidity.",
+      "example": "Large-cap stocks like Apple have high liquidity, allowing easy entry and exit.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Gap",
+      "slug": "gap",
+      "category": "technical",
+      "definition": "When a stock opens significantly higher or lower than the previous close, leaving a price gap on the chart.",
+      "example": "A stock closing at $50 and opening at $55 creates a $5 gap up.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Day Trading",
+      "slug": "day-trading",
+      "category": "general",
+      "definition": "Buying and selling stocks within the same trading day, closing all positions before market close.",
+      "example": "A day trader buys stock at 10 AM and sells by 3 PM, never holding overnight.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Swing Trading",
+      "slug": "swing-trading",
+      "category": "general",
+      "definition": "Holding stocks for several days to weeks to profit from expected price moves or 'swings'.",
+      "example": "Buying at support and selling at resistance over a 5-10 day period.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Position Trading",
+      "slug": "position-trading",
+      "category": "general",
+      "definition": "Long-term trading strategy holding positions for months to years based on fundamental analysis.",
+      "example": "Buying quality companies and holding through market fluctuations for long-term growth.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Margin",
+      "slug": "margin",
+      "category": "risk_management",
+      "definition": "Borrowed money from your broker to buy stocks, amplifying both gains and losses.",
+      "example": "With 2:1 margin, $10,000 cash lets you control $20,000 in stocks.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Margin Call",
+      "slug": "margin-call",
+      "category": "risk_management",
+      "definition": "A broker's demand for additional funds when account equity falls below maintenance requirements.",
+      "example": "If your margin position loses value, you must deposit more cash or sell positions.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Short Selling",
+      "slug": "short-selling",
+      "category": "general",
+      "definition": "Borrowing shares to sell, hoping to buy them back cheaper and profit from the decline.",
+      "example": "Shorting at $100 and covering at $80 yields $20 profit per share.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Short Squeeze",
+      "slug": "short-squeeze",
+      "category": "market_structure",
+      "definition": "Rapid price increase forcing short sellers to cover, creating more buying pressure.",
+      "example": "GameStop's 2021 short squeeze saw the stock rise from $20 to over $400.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Float",
+      "slug": "float",
+      "category": "fundamental",
+      "definition": "The number of shares available for public trading, excluding insider and restricted shares.",
+      "example": "A low float stock (under 20M shares) can be more volatile due to limited supply.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Average True Range",
+      "slug": "atr",
+      "category": "technical",
+      "definition": "ATR measures volatility by calculating average range between high and low over a period.",
+      "example": "An ATR of $5 means the stock typically moves $5 per day.",
+      "difficulty": "advanced"
+    },
+    {
+      "term": "Bollinger Bands",
+      "slug": "bollinger-bands",
+      "category": "technical",
+      "definition": "Volatility bands plotted at standard deviations above and below a moving average.",
+      "example": "Price touching the lower band may indicate oversold conditions.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Fibonacci Retracement",
+      "slug": "fibonacci-retracement",
+      "category": "technical",
+      "definition": "Horizontal lines indicating potential support/resistance at key Fibonacci levels (38.2%, 50%, 61.8%).",
+      "example": "After a rally, a pullback to the 61.8% level often provides support.",
+      "difficulty": "advanced"
+    },
+    {
+      "term": "VWAP",
+      "slug": "vwap",
+      "category": "technical",
+      "definition": "Volume-Weighted Average Price - average price weighted by volume, used by institutions.",
+      "example": "Price above VWAP indicates buyers in control for the day.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Sector Rotation",
+      "slug": "sector-rotation",
+      "category": "market_structure",
+      "definition": "The movement of investment capital from one industry sector to another as economic cycles change.",
+      "example": "Money rotating from tech to energy during inflation concerns.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Blue Chip",
+      "slug": "blue-chip",
+      "category": "fundamental",
+      "definition": "Large, established companies with history of stability, reliability, and dividend payments.",
+      "example": "Companies like Johnson & Johnson, Coca-Cola, and Microsoft are blue chips.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Penny Stock",
+      "slug": "penny-stock",
+      "category": "market_structure",
+      "definition": "Low-priced stocks (typically under $5) with small market caps, often highly speculative.",
+      "example": "Penny stocks are risky due to low liquidity and potential manipulation.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "IPO",
+      "slug": "ipo",
+      "category": "market_structure",
+      "definition": "Initial Public Offering - when a private company first sells shares to the public.",
+      "example": "Airbnb's IPO in 2020 allowed public investors to buy shares for the first time.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Stock Split",
+      "slug": "stock-split",
+      "category": "market_structure",
+      "definition": "Dividing existing shares into multiple shares to lower per-share price. Total value unchanged.",
+      "example": "A 2-for-1 split converts each $100 share into two $50 shares.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Reverse Stock Split",
+      "slug": "reverse-stock-split",
+      "category": "market_structure",
+      "definition": "Combining multiple shares into fewer shares to increase per-share price, often done to avoid delisting.",
+      "example": "A 1-for-10 reverse split converts ten $1 shares into one $10 share.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Earnings Report",
+      "slug": "earnings-report",
+      "category": "fundamental",
+      "definition": "Quarterly financial statements companies release showing revenue, profit, and other key metrics.",
+      "example": "Missing earnings expectations can cause significant stock price drops.",
+      "difficulty": "beginner"
+    },
+    {
+      "term": "Guidance",
+      "slug": "guidance",
+      "category": "fundamental",
+      "definition": "Company's forecast of future earnings, often provided during earnings calls.",
+      "example": "Lowering guidance typically causes stock price to decline.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Ex-Dividend Date",
+      "slug": "ex-dividend-date",
+      "category": "fundamental",
+      "definition": "The date by which you must own the stock to receive the upcoming dividend payment.",
+      "example": "Buying one day before ex-dividend date entitles you to the dividend.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Options",
+      "slug": "options",
+      "category": "options",
+      "definition": "Contracts giving the right (not obligation) to buy or sell stock at a specific price by a certain date.",
+      "example": "A call option gives you the right to buy stock at the strike price.",
+      "difficulty": "advanced"
+    },
+    {
+      "term": "Call Option",
+      "slug": "call-option",
+      "category": "options",
+      "definition": "An option contract giving the holder the right to buy stock at a specified price.",
+      "example": "Buying a $100 call means you can buy the stock at $100 regardless of market price.",
+      "difficulty": "advanced"
+    },
+    {
+      "term": "Put Option",
+      "slug": "put-option",
+      "category": "options",
+      "definition": "An option contract giving the holder the right to sell stock at a specified price.",
+      "example": "Buying a $100 put protects you if stock falls below $100.",
+      "difficulty": "advanced"
+    },
+    {
+      "term": "Risk/Reward Ratio",
+      "slug": "risk-reward-ratio",
+      "category": "risk_management",
+      "definition": "The potential profit of a trade compared to the potential loss.",
+      "example": "Risking $1 to make $3 is a 1:3 risk/reward ratio.",
+      "difficulty": "intermediate"
+    },
+    {
+      "term": "Position Size",
+      "slug": "position-size",
+      "category": "risk_management",
+      "definition": "The dollar amount or number of shares allocated to a single trade, critical for risk management.",
+      "example": "Never risk more than 1-2% of your account on a single trade.",
+      "difficulty": "intermediate"
+    }
+  ]
+}
