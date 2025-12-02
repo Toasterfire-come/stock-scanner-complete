@@ -647,11 +647,35 @@ The MVP is nearly complete. The immediate focus is:
 ## Merge Readiness Checklist
 
 - [x] All phases 1-9 frontend and backend implemented
-- [ ] Environment variables configured
-- [ ] Database migrations applied
+- [x] Environment variables configured (SQLite for local development)
+- [x] Database migrations applied (all apps)
+- [x] Data populated (20 strategies, 1 course, 6 lessons, 51 glossary terms)
+- [x] Backend API endpoints verified working
+- [x] Frontend dev server running
 - [ ] Integration tests passing
 - [ ] No console errors
 - [ ] Mobile responsiveness verified
+
+## Database Summary
+- **Baseline Strategies:** 20 (7 day trading, 7 swing trading, 6 long-term)
+- **Courses:** 1 (Trading Fundamentals)
+- **Lessons:** 6
+- **Glossary Terms:** 51
+
+## Quick Start Commands
+```bash
+# Backend
+cd /app/backend
+export DJANGO_SETTINGS_MODULE=stockscanner_django.settings_local_sqlite
+python manage.py runserver 0.0.0.0:8001
+
+# Frontend
+cd /app/frontend
+yarn start
+
+# Or use supervisor
+sudo supervisorctl restart all
+```
 
 ---
 
