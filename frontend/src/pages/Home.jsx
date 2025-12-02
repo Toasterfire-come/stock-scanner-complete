@@ -413,7 +413,7 @@ const Home = () => {
           <div className="text-center max-w-5xl mx-auto">
             <Badge variant="secondary" className="mb-6 text-base sm:text-lg px-4 py-2">
               <Award className="h-4 w-4 mr-2" />
-              Trusted by {formatNumber(usage.activeAccounts)} Long-Term Investors
+              Trusted by {formatNumber(usage.activeAccounts)} Active Traders & Investors
             </Badge>
 
             <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
