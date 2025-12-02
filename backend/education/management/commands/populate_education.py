@@ -62,7 +62,9 @@ class Command(BaseCommand):
             with open(glossary_file, 'r') as f:
                 terms_data = json.load(f)
             
-            for term_data in terms_data.get('terms', []):
+            # Handle both 'terms' and 'glossary_terms' keys
+            terms_list = terms_data.get('terms', terms_data.get('glossary_terms', []))
+            for term_data in terms_list:
                 term, created = GlossaryTerm.objects.update_or_create(
                     term=term_data['term'],
                     defaults={
