@@ -31,14 +31,14 @@
 ## Critical Path Items (Priority Order)
 
 ### 1. Environment Configuration
-- [ ] Configure `GROQ_API_KEY` for AI backtesting functionality
-- [ ] Verify all API endpoints are responding correctly
-- [ ] Test database migrations are up to date
+- [x] Configure SQLite for local development (settings_local_sqlite.py)
+- [ ] Configure `GROQ_API_KEY` for AI backtesting functionality (optional - skip for now)
+- [x] Test database migrations are up to date
 
-### 2. Data Population
-- [ ] Populate education database with course content from `course_content.json`
-- [ ] Load glossary terms from `glossary_terms.json`
-- [ ] Seed baseline strategies for backtesting
+### 2. Data Population ✅ COMPLETE
+- [x] Populate education database with course content from `course_content.json` (1 course, 6 lessons)
+- [x] Load glossary terms from `glossary_terms.json` (51 terms)
+- [x] Seed baseline strategies for backtesting (20 strategies: 7 day trading, 7 swing, 6 long-term)
 
 ### 3. Integration Testing
 - [ ] Test Backtesting flow end-to-end (create → run → view results)
