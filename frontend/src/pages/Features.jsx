@@ -257,7 +257,7 @@ const Features = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
-        title="Features | Stock Filter & Market Scan Tools"
+        title="Features | Value Investing Tools & Fundamental Analysis"
         description="Powerful stock filter and market scan: build filters by price, volume, RSI, insider buys; run real-time scans with alerts and watchlists."
         url="https://tradescanpro.com/features"
         jsonLdUrls={["/structured/features.jsonld"]}
