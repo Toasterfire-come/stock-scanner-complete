@@ -284,6 +284,10 @@ export default function TradingJournal() {
               <Plus className="h-4 w-4" />
               {editingEntry ? "Edit Entry" : "New Entry"}
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2">
+              <PieChart className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
           </TabsList>
 
           {activeTab === "entries" && (
@@ -313,6 +317,11 @@ export default function TradingJournal() {
             </div>
           )}
         </div>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics">
+          <JournalAnalytics entries={entries} />
+        </TabsContent>
 
         {/* Entries Tab */}
         <TabsContent value="entries" className="space-y-4">
