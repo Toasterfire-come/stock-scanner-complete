@@ -639,4 +639,20 @@ The MVP is nearly complete. The immediate focus is:
 
 ---
 
-*Last Updated: December 1, 2024*
+# REPOSITORY INFORMATION
+
+**Branch:** v2mvp2.05  
+**Repository:** https://github.com/Toasterfire-come/stock-scanner-complete
+
+## Merge Readiness Checklist
+
+- [x] All phases 1-9 frontend and backend implemented
+- [ ] Environment variables configured
+- [ ] Database migrations applied
+- [ ] Integration tests passing
+- [ ] No console errors
+- [ ] Mobile responsiveness verified
+
+---
+
+*Last Updated: December 2, 2024*
