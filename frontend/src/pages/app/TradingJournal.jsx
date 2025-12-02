@@ -30,11 +30,13 @@ import {
   XCircle,
   Clock,
   FileText,
+  PieChart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { api } from "../../api/client";
 import SEO from "../../components/SEO";
+import { JournalAnalytics } from "../../components/JournalAnalytics";
 
 // Trading Journal - Phase 9 Retention Feature
 export default function TradingJournal() {
