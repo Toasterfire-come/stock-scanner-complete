@@ -51,26 +51,54 @@ const Features = () => {
 
   const mainFeatures = [
     {
+      icon: <Target className="h-8 w-8" />,
+      title: "Value Hunter - Fair Value Analysis",
+      description: "Find undervalued stocks using professional DCF models and intrinsic value calculations.",
+      details: [
+        "Discounted Cash Flow (DCF) valuation for any stock",
+        "Intrinsic value calculation with customizable growth assumptions",
+        "Margin of Safety scoring - know how much discount you're getting",
+        "Historical fair value trends and price comparison",
+        "Automated undervaluation alerts",
+        "Portfolio-wide fair value analysis"
+      ],
+      highlight: true
+    },
+    {
+      icon: <LineChart className="h-8 w-8" />,
+      title: "AI-Powered Strategy Backtesting",
+      description: "Test your investment strategies against historical data with AI-enhanced insights.",
+      details: [
+        "Backtest any strategy with 5+ years of historical data",
+        "AI explains WHY your strategy works (or doesn't)",
+        "Risk-adjusted return metrics (Sharpe, Sortino, Max Drawdown)",
+        "Compare multiple strategies side-by-side",
+        "Monte Carlo simulation for probability analysis",
+        "Export detailed backtest reports"
+      ],
+      highlight: true
+    },
+    {
       icon: <Search className="h-8 w-8" />,
-      title: "Global Equity Screening",
-      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with 14+ technical and fundamental filters.`,
+      title: "Fundamental Stock Screening",
+      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with fundamental and technical filters.`,
       details: [
         `Complete coverage across ${usage.coverageVenues.join(", ")} (${formatNumber(usage.coverageUniverse)}+ tickers)`,
-        "Technical: RSI, MACD, Moving Averages (5/20/50/200), Bollinger, Stochastic, VWAP, Price/Volume",
-        "Fundamental: Market Cap, P/E, EPS Growth, Revenue Growth, Dividend Yield, Beta, 52‑week range",
-        `Saved presets, shareable screeners, and one-click re-run across ${formatNumber(usage.teamsOnPlatform)} teams`,
+        "Fundamental: P/E, P/B, EPS Growth, Revenue Growth, Dividend Yield, ROE, Debt/Equity",
+        "Technical: RSI, MACD, Moving Averages, Bollinger Bands, Volume analysis",
+        `Saved presets and shareable screeners across ${formatNumber(usage.teamsOnPlatform)} teams`,
         "Near real-time updates with efficient caching",
         "Quick export to CSV for deeper analysis"
       ]
     },
     {
       icon: <Bell className="h-8 w-8" />,
-      title: "Real-Time Alerts",
-      description: "Never miss a trading opportunity with instant notifications.",
+      title: "Investment Alerts",
+      description: "Never miss an investment opportunity with smart notifications.",
       details: [
         `Price movement alerts (% change or absolute) with sub-${reliability.apiP95LatencyMs}ms delivery`,
-        "Volume spike notifications",
-        "Technical indicator breakouts",
+        "Fair value threshold alerts - know when stocks become undervalued",
+        "Fundamental changes (earnings surprises, dividend announcements)",
         `Email and push notification delivery (${formatNumber(usage.alertsDeliveredMonthly)}+ alerts/mo)`,
         "Custom alert conditions",
         "Alert history and management"
