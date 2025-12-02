@@ -1,0 +1,81 @@
+{
+  "residential_proxies": [
+    {
+      "name": "Account_1",
+      "proxy_url": "http://username1:password1@proxy1.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 1"
+    },
+    {
+      "name": "Account_2",
+      "proxy_url": "http://username2:password2@proxy2.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 2"
+    },
+    {
+      "name": "Account_3",
+      "proxy_url": "http://username3:password3@proxy3.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 3"
+    },
+    {
+      "name": "Account_4",
+      "proxy_url": "http://username4:password4@proxy4.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 4"
+    },
+    {
+      "name": "Account_5",
+      "proxy_url": "http://username5:password5@proxy5.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 5"
+    },
+    {
+      "name": "Account_6",
+      "proxy_url": "http://username6:password6@proxy6.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 6"
+    },
+    {
+      "name": "Account_7",
+      "proxy_url": "http://username7:password7@proxy7.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 7"
+    },
+    {
+      "name": "Account_8",
+      "proxy_url": "http://username8:password8@proxy8.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 8"
+    },
+    {
+      "name": "Account_9",
+      "proxy_url": "http://username9:password9@proxy9.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 9"
+    },
+    {
+      "name": "Account_10",
+      "proxy_url": "http://username10:password10@proxy10.provider.com:port",
+      "enabled": true,
+      "max_bandwidth_mb": 1024,
+      "notes": "Free residential proxy account 10"
+    }
+  ],
+  "settings": {
+    "rotate_strategy": "round_robin",
+    "tickers_per_proxy": 520,
+    "retry_failed_proxies": true,
+    "max_retries_per_proxy": 3,
+    "cooldown_seconds": 30
+  }
+}

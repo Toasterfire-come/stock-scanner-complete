@@ -48,7 +48,7 @@ from stocks.models import Stock
 from stock_retrieval.session_factory import ProxyPool, create_requests_session
 from stock_retrieval.config import StockRetrievalConfig
 from stock_retrieval.ticker_loader import load_combined_tickers
-from stock_retrieval.quality_gate import validate_data_quality
+from stock_retrieval.quality_gate import QualityGate
 
 # =====================================================
 # CONFIGURATION
@@ -58,9 +58,9 @@ from stock_retrieval.quality_gate import validate_data_quality
 class ScannerConfig:
     """Configuration for ultra-fast scanner"""
     # Performance settings
-    max_workers: int = 25  # Concurrent workers
+    max_workers: int = 50  # Concurrent workers (increased for no-proxy mode)
     target_runtime_seconds: int = 180  # 3 minutes
-    request_timeout: int = 4  # Seconds per request
+    request_timeout: int = 6  # Seconds per request (increased for reliability)
 
     # Rate limiting strategy
     min_delay_between_calls: float = 0.01  # 10ms minimum spacing
@@ -270,20 +270,21 @@ class SmartProxyPool:
     """Enhanced proxy pool with performance tracking"""
 
     def __init__(self, max_proxies: int = 100):
+        # TEMPORARILY DISABLED PROXIES - SSL certificate issues
         # Create config and load proxy pool
-        config = StockRetrievalConfig()
-        self.base_pool = ProxyPool.from_config(config)
+        # config = StockRetrievalConfig()
+        # self.base_pool = ProxyPool.from_config(config)
         self.max_proxies = max_proxies
         self.proxy_performance = defaultdict(lambda: {'success': 0, 'failure': 0, 'avg_time': 0.0})
         self.lock = threading.Lock()
 
-        # Load and filter to fastest proxies
-        all_proxies = self.base_pool.proxies
-        logger.info(f"Loaded {len(all_proxies)} proxies from pool")
+        # DISABLED: Load and filter to fastest proxies
+        # all_proxies = self.base_pool.proxies
+        logger.info(f"PROXIES DISABLED - Running without proxies due to SSL issues")
 
-        # Use top N proxies
-        self.active_proxies = all_proxies[:max_proxies] if len(all_proxies) > max_proxies else all_proxies
-        logger.info(f"Using top {len(self.active_proxies)} proxies for scanning")
+        # Use NO proxies
+        self.active_proxies = []
+        logger.info(f"Using direct connections (no proxies)")
 
         self.current_index = 0
 
@@ -406,7 +407,7 @@ def extract_data_from_info(ticker_obj, ticker: str) -> Optional[Dict]:
 # CORE FETCHING LOGIC
 # =====================================================
 
-def fetch_ticker_data(ticker: str, worker_id: int, session) -> Optional[Dict]:
+def fetch_ticker_data(ticker: str, worker_id: int) -> Optional[Dict]:
     """
     Fetch data for a single ticker using smart strategy:
     1. Try fast_info first (faster)
@@ -416,8 +417,8 @@ def fetch_ticker_data(ticker: str, worker_id: int, session) -> Optional[Dict]:
     metrics.record_attempt()
 
     try:
-        # Create ticker object with session
-        ticker_obj = yf.Ticker(ticker, session=session)
+        # Create ticker object (yfinance handles session internally with curl_cffi)
+        ticker_obj = yf.Ticker(ticker)
 
         # Strategy 1: Try fast_info first (3-5x faster)
         if CONFIG.use_fast_info_first:
@@ -460,11 +461,8 @@ def fetch_with_retry(ticker: str, worker_id: int, proxy: Optional[str]) -> Optio
 
     for attempt in range(CONFIG.max_retries_per_ticker):
         try:
-            # Create session with proxy
-            session = create_requests_session(
-                proxy=proxy,
-                timeout=CONFIG.request_timeout
-            )
+            # NOTE: Not using custom session - yfinance requires curl_cffi
+            # We let yfinance handle session creation internally
 
             # Adaptive rate limiting
             if CONFIG.adaptive_delay_enabled and attempt > 0:
@@ -473,7 +471,7 @@ def fetch_with_retry(ticker: str, worker_id: int, proxy: Optional[str]) -> Optio
 
             # Fetch data
             start = time.time()
-            data = fetch_ticker_data(ticker, worker_id, session)
+            data = fetch_ticker_data(ticker, worker_id)
             duration = time.time() - start
 
             if data:
@@ -614,7 +612,9 @@ def run_ultra_fast_scan(max_tickers: Optional[int] = None):
 
     # Load tickers
     logger.info("Loading tickers...")
-    tickers = load_combined_tickers(max_tickers=max_tickers)
+    config = StockRetrievalConfig()
+    ticker_result = load_combined_tickers(config)
+    tickers = ticker_result.tickers[:max_tickers] if max_tickers else ticker_result.tickers
     logger.info(f"Loaded {len(tickers)} tickers")
 
     if len(tickers) == 0:

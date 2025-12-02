@@ -228,6 +228,19 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'Authorization',
     'x-api-key',
     'X-API-Key',
+    'X-Referral-Code',
+    'X-Client-Version',
+    'X-Client-Environment',
+]
+# Cache CORS preflight requests for 24 hours
+CORS_PREFLIGHT_MAX_AGE = 86400
+# Expose headers that frontend may need to read
+CORS_EXPOSE_HEADERS = [
+    'Content-Type',
+    'X-CSRFToken',
+    'X-RateLimit-Limit',
+    'X-RateLimit-Remaining',
+    'X-RateLimit-Reset',
 ]
 
 # Enterprise/Premium overrides

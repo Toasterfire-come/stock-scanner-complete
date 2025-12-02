@@ -1,0 +1,17 @@
+{
+  "runtime_seconds": 218.94,
+  "runtime_minutes": 3.65,
+  "total_attempted": 5193,
+  "fast_info_success": 2298,
+  "info_success": 113,
+  "history_success": 591,
+  "total_success": 3002,
+  "failures": 2191,
+  "success_rate": 57.81,
+  "throughput": 23.72,
+  "complete_records": 2247,
+  "partial_records": 755,
+  "rate_limits": 0,
+  "final_workers": 40,
+  "written_to_db": 2559
+}

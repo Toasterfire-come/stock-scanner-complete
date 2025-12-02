@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Performance Tuning Helper for Ultra-Fast Scanner
 
@@ -18,6 +19,12 @@ import random
 from statistics import mean, median, stdev
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Set UTF-8 encoding for Windows console
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stockscanner_django.settings")
 
@@ -35,7 +42,7 @@ from stock_retrieval.ticker_loader import load_combined_tickers
 
 def measure_fast_info_timing(sample_tickers, proxy=None, num_samples=20):
     """Measure fast_info call timing"""
-    print(f"\n📊 Measuring fast_info timing ({num_samples} samples)...")
+    print(f"\n[*] Measuring fast_info timing ({num_samples} samples)...")
 
     times = []
     successes = 0
@@ -72,7 +79,7 @@ def measure_fast_info_timing(sample_tickers, proxy=None, num_samples=20):
 
 def measure_info_timing(sample_tickers, proxy=None, num_samples=20):
     """Measure info call timing"""
-    print(f"\n📊 Measuring info timing ({num_samples} samples)...")
+    print(f"\n[*] Measuring info timing ({num_samples} samples)...")
 
     times = []
     successes = 0
@@ -113,7 +120,7 @@ def measure_info_timing(sample_tickers, proxy=None, num_samples=20):
 
 def test_concurrency_level(tickers, num_workers, proxy_pool, test_size=100):
     """Test throughput at different concurrency levels"""
-    print(f"\n🔄 Testing {num_workers} workers with {test_size} tickers...")
+    print(f"\n[*] Testing {num_workers} workers with {test_size} tickers...")
 
     start_time = time.time()
     successes = 0
@@ -184,7 +191,7 @@ def test_single_ticker(ticker, proxy):
 
 def test_proxy_pool(proxy_pool, num_tests=10):
     """Test proxy pool health"""
-    print(f"\n🌐 Testing proxy pool ({num_tests} proxies)...")
+    print(f"\n[*] Testing proxy pool ({num_tests} proxies)...")
 
     results = []
     test_ticker = "AAPL"
@@ -204,7 +211,7 @@ def test_proxy_pool(proxy_pool, num_tests=10):
                 'status': 'working',
                 'duration': duration
             })
-            print(f"  ✓ {proxy}: {duration:.3f}s")
+            print(f"  [OK] {proxy}: {duration:.3f}s")
 
         except Exception as e:
             results.append({
@@ -212,7 +219,7 @@ def test_proxy_pool(proxy_pool, num_tests=10):
                 'status': 'failed',
                 'error': str(e)
             })
-            print(f"  ✗ {proxy}: {e}")
+            print(f"  [FAIL] {proxy}: {e}")
 
     working = [r for r in results if r['status'] == 'working']
     return {
@@ -230,7 +237,7 @@ def test_proxy_pool(proxy_pool, num_tests=10):
 def calculate_optimal_config(total_tickers, target_seconds, fast_info_stats, info_stats):
     """Calculate optimal configuration to meet targets"""
 
-    print(f"\n🎯 Calculating optimal configuration...")
+    print(f"\n[*] Calculating optimal configuration...")
     print(f"   Target: {total_tickers} tickers in {target_seconds}s")
 
     # Use fast_info as primary (faster)
@@ -291,7 +298,7 @@ def calculate_optimal_config(total_tickers, target_seconds, fast_info_stats, inf
     achievable = expected_runtime <= target_seconds
     margin = ((target_seconds - expected_runtime) / target_seconds * 100) if achievable else 0
 
-    print(f"   Target achievable: {'✓ YES' if achievable else '✗ NO'}")
+    print(f"   Target achievable: {'[YES]' if achievable else '[NO]'}")
     if achievable:
         print(f"   Margin: {margin:.1f}%")
 
@@ -321,8 +328,10 @@ def run_performance_tuning(target_tickers=5373, target_seconds=180):
     print("=" * 70)
 
     # Load sample tickers
-    print("\n📦 Loading sample tickers...")
-    all_tickers = load_combined_tickers()
+    print("\n[*] Loading sample tickers...")
+    config = StockRetrievalConfig()
+    ticker_result = load_combined_tickers(config)
+    all_tickers = ticker_result.tickers
     print(f"   Loaded {len(all_tickers)} tickers")
 
     # Random sample for testing
@@ -331,8 +340,7 @@ def run_performance_tuning(target_tickers=5373, target_seconds=180):
     print(f"   Using {sample_size} random samples for testing")
 
     # Load proxy pool
-    print("\n🌐 Loading proxy pool...")
-    config = StockRetrievalConfig()
+    print("\n[*] Loading proxy pool...")
     proxy_pool = ProxyPool.from_config(config)
     print(f"   Loaded {len(proxy_pool.proxies)} proxies")
 
@@ -444,10 +452,10 @@ CONFIG = ScannerConfig(
 
         # Save to file
         config_file = f"recommended_config_{target_tickers}tickers.py"
-        with open(config_file, 'w') as f:
+        with open(config_file, 'w', encoding='utf-8') as f:
             f.write(config_code)
 
-        print(f"\n✓ Configuration saved to: {config_file}")
+        print(f"\n[OK] Configuration saved to: {config_file}")
 
         # Performance prediction
         print("\n" + "=" * 70)
@@ -457,10 +465,10 @@ CONFIG = ScannerConfig(
         print(f"Expected throughput: {optimal_config['required_throughput']:.1f} tickers/sec")
 
         if optimal_config['achievable']:
-            print(f"✓ Target achievable with {optimal_config['margin_percent']:.1f}% margin")
+            print(f"[OK] Target achievable with {optimal_config['margin_percent']:.1f}% margin")
         else:
             shortfall = optimal_config['expected_runtime_seconds'] - target_seconds
-            print(f"✗ Target NOT achievable (need {shortfall:.1f}s improvement)")
+            print(f"[WARN] Target NOT achievable (need {shortfall:.1f}s improvement)")
             print("\nSuggestions:")
             print("  1. Increase max_workers further")
             print("  2. Reduce request_timeout")
@@ -481,10 +489,10 @@ CONFIG = ScannerConfig(
         }
 
         report_file = f"tuning_report_{int(time.time())}.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2)
 
-        print(f"\n✓ Full report saved to: {report_file}")
+        print(f"\n[OK] Full report saved to: {report_file}")
 
         print("\n" + "=" * 70)
         print("TUNING COMPLETE")
@@ -493,7 +501,7 @@ CONFIG = ScannerConfig(
         return optimal_config
 
     else:
-        print("\n✗ Could not measure timing stats - check proxy connectivity")
+        print("\n[ERROR] Could not measure timing stats - check proxy connectivity")
         return None
 
 # =====================================================

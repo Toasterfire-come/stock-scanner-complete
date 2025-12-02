@@ -1,0 +1,113 @@
+{
+  "total_tests": 36,
+  "methods_tested": 4,
+  "timestamp": "2025-11-30T11:42:28.712505",
+  "methods": {
+    "standard_requests": {
+      "total_tests": 9,
+      "successes": 0,
+      "failures": 9,
+      "success_rate": 0.0,
+      "avg_duration": 0,
+      "min_duration": 0,
+      "max_duration": 0,
+      "avg_data_quality": 0,
+      "error_types": [
+        "Yahoo API requires curl_cffi session not <class 'requests.sessions.Session'>. Solution: stop setting session, let YF handle."
+      ]
+    },
+    "header_rotation": {
+      "total_tests": 9,
+      "successes": 0,
+      "failures": 9,
+      "success_rate": 0.0,
+      "avg_duration": 0,
+      "min_duration": 0,
+      "max_duration": 0,
+      "avg_data_quality": 0,
+      "error_types": [
+        "Yahoo API requires curl_cffi session not <class 'requests.sessions.Session'>. Solution: stop setting session, let YF handle."
+      ]
+    },
+    "no_proxy_baseline": {
+      "total_tests": 9,
+      "successes": 9,
+      "failures": 0,
+      "success_rate": 1.0,
+      "avg_duration": 0.2922946082221137,
+      "min_duration": 0.19856524467468262,
+      "max_duration": 0.6822803020477295,
+      "avg_data_quality": 1.0,
+      "error_types": []
+    },
+    "custom_session_factory": {
+      "total_tests": 9,
+      "successes": 9,
+      "failures": 0,
+      "success_rate": 1.0,
+      "avg_duration": 0.2891398006015354,
+      "min_duration": 0.22171354293823242,
+      "max_duration": 0.3954601287841797,
+      "avg_data_quality": 1.0,
+      "error_types": []
+    }
+  },
+  "ranked_methods": [
+    {
+      "method": "custom_session_factory",
+      "score": 2.569770551493813,
+      "total_tests": 9,
+      "successes": 9,
+      "failures": 0,
+      "success_rate": 1.0,
+      "avg_duration": 0.2891398006015354,
+      "min_duration": 0.22171354293823242,
+      "max_duration": 0.3954601287841797,
+      "avg_data_quality": 1.0,
+      "error_types": []
+    },
+    {
+      "method": "no_proxy_baseline",
+      "score": 2.549104624537202,
+      "total_tests": 9,
+      "successes": 9,
+      "failures": 0,
+      "success_rate": 1.0,
+      "avg_duration": 0.2922946082221137,
+      "min_duration": 0.19856524467468262,
+      "max_duration": 0.6822803020477295,
+      "avg_data_quality": 1.0,
+      "error_types": []
+    },
+    {
+      "method": "standard_requests",
+      "score": 0.0,
+      "total_tests": 9,
+      "successes": 0,
+      "failures": 9,
+      "success_rate": 0.0,
+      "avg_duration": 0,
+      "min_duration": 0,
+      "max_duration": 0,
+      "avg_data_quality": 0,
+      "error_types": [
+        "Yahoo API requires curl_cffi session not <class 'requests.sessions.Session'>. Solution: stop setting session, let YF handle."
+      ]
+    },
+    {
+      "method": "header_rotation",
+      "score": 0.0,
+      "total_tests": 9,
+      "successes": 0,
+      "failures": 9,
+      "success_rate": 0.0,
+      "avg_duration": 0,
+      "min_duration": 0,
+      "max_duration": 0,
+      "avg_data_quality": 0,
+      "error_types": [
+        "Yahoo API requires curl_cffi session not <class 'requests.sessions.Session'>. Solution: stop setting session, let YF handle."
+      ]
+    }
+  ]
+}
