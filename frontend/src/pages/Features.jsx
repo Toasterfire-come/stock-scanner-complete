@@ -305,10 +305,10 @@ const Features = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Core Features
+              Core Investment Tools
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Built by traders, for traders. Every feature is designed to give you an edge in the markets.
+              Built for value investors. Every feature helps you make smarter, data-driven investment decisions.
             </p>
           </div>
           
@@ -316,14 +316,17 @@ const Features = () => {
             {mainFeatures.map((feature, index) => (
               <div key={index} className={`flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                 <div className="lg:w-1/2">
-                  <Card className="hover:shadow-2xl transition-shadow duration-300">
+                  <Card className={`hover:shadow-2xl transition-shadow duration-300 ${feature.highlight ? 'border-2 border-blue-500 bg-blue-50/30' : ''}`}>
                     <CardHeader>
                       <div className="flex items-center space-x-4 mb-4">
-                        <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${feature.highlight ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
                           {feature.icon}
                         </div>
                         <div>
-                          <CardTitle className="text-3xl">{feature.title}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-3xl">{feature.title}</CardTitle>
+                            {feature.highlight && <Badge className="bg-blue-600">Featured</Badge>}
+                          </div>
                           <CardDescription className="text-lg text-gray-600 mt-2">
                             {feature.description}
                           </CardDescription>
