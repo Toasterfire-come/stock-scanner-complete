@@ -390,29 +390,28 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
-        title="Trade Scan Pro | Professional Stock Market Scanner"
-        description="Advanced stock screening, stock filter and market scan tools, real-time alerts, portfolios, insider trading and fair value insights."
+        title="Trade Scan Pro | Build Long-Term Wealth Through Smart Stock Selection"
+        description="Professional stock valuation tools, fundamental analysis, AI-powered backtesting, and educational resources for long-term investors. Learn value investing principles."
         url="https://tradescanpro.com/"
         jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
       />
-      {/* Hero Section - Conversion Focused with Interactive Chart */}
+      {/* Hero Section - Value Investing Focus */}
       <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-5xl mx-auto">
             <Badge variant="secondary" className="mb-6 text-base sm:text-lg px-4 py-2">
               <Award className="h-4 w-4 mr-2" />
-              Analytics from {timeframeCopy()}
+              Trusted by {formatNumber(usage.activeAccounts)} Long-Term Investors
             </Badge>
 
             <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
-              Find High-Conviction Setups Faster
-              <span className="text-blue-600 block">Powered by Real-Time Screeners</span>
+              Build Long-Term Wealth
+              <span className="text-blue-600 block">Through Smart Stock Selection</span>
             </h1>
 
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
-              Join {formatNumber(usage.activeAccounts)} traders who cut research time to under {usage.medianTimeToFirstScreenerMinutes} minutes,
-              convert {formatPercent(outcomes.trialToPaidConversionPercent)} of trials into paying accounts,
-              and maintain {formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} retention through day 90.
+              Master value investing with professional-grade fundamental analysis, AI-powered strategy backtesting,
+              and comprehensive educational courses. Make informed decisions based on real data, not speculation.
             </p>
             
             {/* Market Status */}
@@ -426,7 +425,7 @@ const Home = () => {
                 <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                   <Link to="/auth/sign-up" onClick={() => { try { trackEvent('select_content', { content_type: 'cta', location: 'home_hero', label: 'try_free' }); } catch {} }}>
                     <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-                    Try free - no card required
+                    Start Learning Free
                     <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
                   </Link>
                 </Button>
