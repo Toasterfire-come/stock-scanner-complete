@@ -32,8 +32,7 @@ def generate_signals(data):
         elif data.iloc[i]['close'] < or_low:
             signals.append({'type': 'sell', 'index': i})
     return signals
-""",
-        "default_params": {"timeframe": "15m", "holding_period": "1 day"}
+"""
     },
     {
         "name": "VWAP Bounce",
@@ -48,8 +47,7 @@ def generate_signals(data):
             if data.iloc[i]['volume'] > data.iloc[i-1]['volume']:
                 signals.append({'type': 'buy', 'index': i, 'target': 1.01, 'stop': 0.995})
     return signals
-""",
-        "default_params": {"profit_target": 0.01, "stop_loss": 0.005}
+"""
     },
     {
         "name": "Gap and Go",
@@ -63,8 +61,7 @@ def generate_signals(data):
     if gap_pct >= 0.03:
         signals.append({'type': 'buy', 'index': 1, 'target': 1.02})
     return signals
-""",
-        "default_params": {"min_gap": 0.03, "profit_target": 0.02}
+"""
     },
     {
         "name": "Red to Green Move",
@@ -78,8 +75,7 @@ def generate_signals(data):
         if data.iloc[i-1]['close'] < prev_close and data.iloc[i]['close'] > prev_close:
             signals.append({'type': 'buy', 'index': i, 'target': 1.03})
     return signals
-""",
-        "default_params": {"profit_target": 0.03}
+"""
     },
     {
         "name": "9 EMA Scalping",
@@ -95,8 +91,37 @@ def generate_signals(data):
         elif data.iloc[i-1]['close'] > ema9.iloc[i-1] and data.iloc[i]['close'] < ema9.iloc[i]:
             signals.append({'type': 'sell', 'index': i})
     return signals
-""",
-        "default_params": {"ema_period": 9, "timeframe": "5m"}
+"""
+    },
+    {
+        "name": "High of Day Breakout",
+        "category": "day_trading",
+        "description": "Buy when price breaks to new intraday high with volume. Sell at 1.5% profit or end of day.",
+        "strategy_code": """
+def generate_signals(data):
+    signals = []
+    for i in range(1, len(data)):
+        if data.iloc[i]['high'] > data.iloc[:i]['high'].max():
+            if data.iloc[i]['volume'] > data.iloc[i-1]['volume'] * 1.5:
+                signals.append({'type': 'buy', 'index': i, 'target': 1.015})
+    return signals
+"""
+    },
+    {
+        "name": "Support/Resistance Reversal",
+        "category": "day_trading",
+        "description": "Buy at key support levels when price shows rejection. Sell at nearest resistance or 2% profit.",
+        "strategy_code": """
+def generate_signals(data):
+    signals = []
+    support = data['low'].rolling(20).min()
+    resistance = data['high'].rolling(20).max()
+    for i in range(20, len(data)):
+        if data.iloc[i]['low'] <= support.iloc[i] * 1.005:
+            if data.iloc[i]['close'] > data.iloc[i]['open']:
+                signals.append({'type': 'buy', 'index': i, 'target': 1.02})
+    return signals
+"""
     },
     
     # Swing Trading Strategies
@@ -115,8 +140,7 @@ def generate_signals(data):
         elif ema20.iloc[i-1] > ema50.iloc[i-1] and ema20.iloc[i] < ema50.iloc[i]:
             signals.append({'type': 'sell', 'index': i})
     return signals
-""",
-        "default_params": {"fast_ema": 20, "slow_ema": 50}
+"""
     },
     {
         "name": "RSI Oversold Bounce",
@@ -139,8 +163,25 @@ def generate_signals(data):
         elif rsi.iloc[i] >= 70:
             signals.append({'type': 'sell', 'index': i})
     return signals
-""",
-        "default_params": {"rsi_period": 14, "oversold": 30, "overbought": 70}
+"""
+    },
+    {
+        "name": "Cup and Handle Pattern",
+        "category": "swing_trading",
+        "description": "Buy on breakout above handle resistance with volume. Sell at measured move target or 10% stop loss.",
+        "strategy_code": """
+def generate_signals(data):
+    signals = []
+    # Simplified pattern detection
+    for i in range(60, len(data)):
+        cup_high = data.iloc[i-60:i-30]['high'].max()
+        cup_low = data.iloc[i-45:i-15]['low'].min()
+        handle_high = data.iloc[i-10:i]['high'].max()
+        
+        if data.iloc[i]['close'] > handle_high and data.iloc[i]['close'] > cup_high:
+            signals.append({'type': 'buy', 'index': i, 'stop': 0.90})
+    return signals
+"""
     },
     {
         "name": "Bollinger Band Squeeze",
@@ -155,13 +196,12 @@ def generate_signals(data):
     band_width = (upper - lower) / sma
     
     signals = []
-    for i in range(1, len(data)):
-        if band_width.iloc[i-1] < band_width.iloc[i-5:i-1].mean() * 0.8:  # Squeeze
+    for i in range(5, len(data)):
+        if band_width.iloc[i-1] < band_width.iloc[i-5:i-1].mean() * 0.8:
             if data.iloc[i]['close'] > upper.iloc[i]:
                 signals.append({'type': 'buy', 'index': i, 'target': 1.08})
     return signals
-""",
-        "default_params": {"bb_period": 20, "bb_std": 2, "profit_target": 0.08}
+"""
     },
     {
         "name": "MACD Histogram Reversal",
@@ -182,8 +222,42 @@ def generate_signals(data):
         elif histogram.iloc[i-1] > 0 and histogram.iloc[i] < 0:
             signals.append({'type': 'sell', 'index': i})
     return signals
-""",
-        "default_params": {"fast": 12, "slow": 26, "signal": 9}
+"""
+    },
+    {
+        "name": "Weekly Breakout",
+        "category": "swing_trading",
+        "description": "Buy when price breaks above the prior week's high. Sell when price breaks below prior week's low.",
+        "strategy_code": """
+def generate_signals(data):
+    signals = []
+    weekly_high = data['high'].rolling(5).max().shift(1)
+    weekly_low = data['low'].rolling(5).min().shift(1)
+    
+    for i in range(6, len(data)):
+        if data.iloc[i]['close'] > weekly_high.iloc[i]:
+            signals.append({'type': 'buy', 'index': i})
+        elif data.iloc[i]['close'] < weekly_low.iloc[i]:
+            signals.append({'type': 'sell', 'index': i})
+    return signals
+"""
+    },
+    {
+        "name": "Mean Reversion to 50 SMA",
+        "category": "swing_trading",
+        "description": "Buy when price is 10%+ below 50 SMA. Sell when price returns to 50 SMA.",
+        "strategy_code": """
+def generate_signals(data):
+    sma50 = data['close'].rolling(50).mean()
+    signals = []
+    for i in range(50, len(data)):
+        deviation = (data.iloc[i]['close'] - sma50.iloc[i]) / sma50.iloc[i]
+        if deviation < -0.10:
+            signals.append({'type': 'buy', 'index': i})
+        elif deviation > -0.02 and i > 0:
+            signals.append({'type': 'sell', 'index': i})
+    return signals
+"""
     },
     
     # Long-Term Strategies
@@ -201,8 +275,7 @@ def generate_signals(data, fundamentals):
     if pe < 15 and pb < 1.5 and de < 0.5:
         signals.append({'type': 'buy', 'hold_days': 365})
     return signals
-""",
-        "default_params": {"max_pe": 15, "max_pb": 1.5, "max_de": 0.5, "hold_period": 365}
+"""
     },
     {
         "name": "Dividend Growth Strategy",
@@ -217,8 +290,7 @@ def generate_signals(data, fundamentals):
     if div_years >= 10 and div_yield >= 0.02:
         signals.append({'type': 'buy', 'hold': 'indefinite'})
     return signals
-""",
-        "default_params": {"min_div_years": 10, "min_yield": 0.02}
+"""
     },
     {
         "name": "Growth at Reasonable Price (GARP)",
@@ -235,8 +307,22 @@ def generate_signals(data, fundamentals):
     elif peg > 2:
         signals.append({'type': 'sell'})
     return signals
-""",
-        "default_params": {"max_peg": 1, "min_growth": 0.15, "sell_peg": 2}
+"""
+    },
+    {
+        "name": "Dogs of the Dow",
+        "category": "long_term",
+        "description": "Buy the 10 highest-yielding Dow stocks at year start. Rebalance annually.",
+        "strategy_code": """
+def generate_signals(data, fundamentals):
+    signals = []
+    div_yield = fundamentals.get('dividend_yield', 0)
+    is_dow = fundamentals.get('is_dow_component', False)
+    
+    if is_dow and div_yield > 0.03:
+        signals.append({'type': 'buy', 'rebalance': 'yearly'})
+    return signals
+"""
     },
     {
         "name": "Momentum Factor Strategy",
@@ -248,11 +334,25 @@ def generate_signals(data):
         return []
     momentum_12m = (data.iloc[-1]['close'] - data.iloc[-252]['close']) / data.iloc[-252]['close']
     signals = []
-    if momentum_12m > 0.20:  # Top performer threshold
+    if momentum_12m > 0.20:
         signals.append({'type': 'buy', 'rebalance': 'monthly'})
     return signals
-""",
-        "default_params": {"lookback": 252, "top_percentile": 10, "rebalance": "monthly"}
+"""
+    },
+    {
+        "name": "Small Cap Value",
+        "category": "long_term",
+        "description": "Buy small cap stocks (market cap under $2B) with lowest P/E ratios. Hold for 1 year.",
+        "strategy_code": """
+def generate_signals(data, fundamentals):
+    signals = []
+    market_cap = fundamentals.get('market_cap', 999e9)
+    pe = fundamentals.get('pe_ratio', 999)
+    
+    if market_cap < 2e9 and pe < 12 and pe > 0:
+        signals.append({'type': 'buy', 'hold_days': 365})
+    return signals
+"""
     },
 ]
 
@@ -273,7 +373,6 @@ def populate_strategies():
                 'category': strategy_data['category'],
                 'description': strategy_data['description'],
                 'strategy_code': strategy_data['strategy_code'],
-                'default_params': strategy_data['default_params'],
                 'is_active': True,
             }
         )
