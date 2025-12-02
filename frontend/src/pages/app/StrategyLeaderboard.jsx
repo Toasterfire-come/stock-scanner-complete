@@ -1,6 +1,8 @@
 // Strategy Ranking Leaderboard Component - Phase 6
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
+import { SubmitStrategyForm } from '../../components/SubmitStrategyForm';
+import { SocialShareButtons } from '../../components/SocialShareButtons';
 
 const StrategyLeaderboard = () => {
   const [strategies, setStrategies] = useState([]);
