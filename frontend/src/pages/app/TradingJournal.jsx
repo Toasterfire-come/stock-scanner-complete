@@ -274,6 +274,12 @@ export default function TradingJournal() {
         </Card>
       </div>
 
+      {/* Export Actions */}
+      <div className="flex items-center gap-3 justify-end">
+        <TaxReportExporter entries={entries} />
+        <DataExporter data={entries} filename="trading_journal" title="Export All" />
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <TabsList>
