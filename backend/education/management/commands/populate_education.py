@@ -70,8 +70,8 @@ class Command(BaseCommand):
                     defaults={
                         'definition': term_data['definition'],
                         'category': term_data.get('category', 'general'),
-                        'related_terms': term_data.get('related_terms', []),
                         'example': term_data.get('example', ''),
+                        'difficulty': term_data.get('difficulty', 'beginner'),
                     }
                 )
                 action = 'Created' if created else 'Updated'
