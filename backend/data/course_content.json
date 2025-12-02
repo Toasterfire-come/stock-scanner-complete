@@ -1,0 +1,281 @@
+{
+  "courses": [
+    {
+      "category": "fundamentals",
+      "title": "Trading Fundamentals",
+      "slug": "trading-fundamentals",
+      "description": "Learn the essential basics of trading stocks, from understanding quotes to placing your first order. Perfect for complete beginners.",
+      "thumbnail_url": "/images/courses/fundamentals.jpg",
+      "difficulty": "beginner",
+      "duration_minutes": 30,
+      "is_premium": false,
+      "lessons": [
+        {
+          "title": "What is a Stock?",
+          "slug": "what-is-a-stock",
+          "content_type": "mixed",
+          "order": 1,
+          "duration_minutes": 5,
+          "content": "# What is a Stock?\n\nA **stock** represents ownership in a company. When you buy a stock (also called a share or equity), you become a partial owner of that company.\n\n## Key Concepts\n\n### Ownership\nEach share represents a small piece of the company. If a company has 1 million shares and you own 1,000 shares, you own 0.1% of the company.\n\n### Why Companies Issue Stock\nCompanies sell stock to raise money (capital) for growth, expansion, or operations. Instead of taking loans, they sell ownership stakes to investors.\n\n### How You Make Money\n\nThere are two main ways to profit from stocks:\n\n1. **Price Appreciation**: Buy low, sell high. If you buy a stock at $50 and it rises to $75, you've made $25 per share.\n\n2. **Dividends**: Some companies share profits with shareholders through quarterly dividend payments.\n\n## Stock Exchanges\n\nStocks are bought and sold on exchanges like:\n- **NYSE** (New York Stock Exchange)\n- **NASDAQ**\n- **Other global exchanges**\n\nThese exchanges provide a regulated marketplace where buyers and sellers meet.",
+          "video_url": "https://www.youtube.com/embed/example-stock-basics",
+          "key_takeaways": [
+            "A stock represents ownership in a company",
+            "You profit through price appreciation or dividends",
+            "Stocks are traded on regulated exchanges like NYSE and NASDAQ",
+            "More shares owned = larger ownership stake in the company"
+          ],
+          "quiz_questions": [
+            {
+              "question": "What does owning a stock represent?",
+              "options": [
+                "Ownership in a company",
+                "A loan to a company",
+                "Insurance for a company",
+                "A donation to a company"
+              ],
+              "correct": 0,
+              "explanation": "A stock represents partial ownership (equity) in a company."
+            },
+            {
+              "question": "What are the two main ways to profit from stocks?",
+              "options": [
+                "Dividends and interest payments",
+                "Price appreciation and dividends",
+                "Taxes and fees",
+                "Loans and bonds"
+              ],
+              "correct": 1,
+              "explanation": "You profit through price appreciation (selling higher than you bought) and dividend payments from company profits."
+            },
+            {
+              "question": "Where are stocks bought and sold?",
+              "options": [
+                "Banks",
+                "Post offices",
+                "Stock exchanges",
+                "Government offices"
+              ],
+              "correct": 2,
+              "explanation": "Stocks are traded on regulated stock exchanges like the NYSE and NASDAQ."
+            }
+          ]
+        },
+        {
+          "title": "Order Types Explained",
+          "slug": "order-types-explained",
+          "content_type": "mixed",
+          "order": 2,
+          "duration_minutes": 6,
+          "content": "# Order Types Explained\n\nWhen buying or selling stocks, you need to specify what type of order you want to place. Understanding order types is crucial for controlling your trades.\n\n## Market Orders\n\nA **market order** executes immediately at the current market price.\n\n### Advantages\n- Guaranteed execution\n- Fast - fills instantly\n- Simple to use\n\n### Disadvantages\n- Price may vary from what you see on screen\n- Slippage in volatile markets\n- May get unfavorable price during gaps\n\n**When to use**: When you need to enter or exit quickly and price is less important than execution.\n\n## Limit Orders\n\nA **limit order** only executes at your specified price or better.\n\n### Buy Limit Order\nSets the maximum price you're willing to pay.\n\nExample: Stock is at $100. You set a buy limit at $95. Your order only fills if the price drops to $95 or lower.\n\n### Sell Limit Order\nSets the minimum price you're willing to accept.\n\nExample: You own stock at $100. You set a sell limit at $110. Your order only fills if the price rises to $110 or higher.\n\n### Advantages\n- Price control\n- No slippage\n- Can set and forget\n\n### Disadvantages\n- May never execute\n- Can miss moves if price doesn't reach your limit\n\n## Stop Orders\n\nA **stop order** becomes a market order when a trigger price is reached.\n\n### Stop-Loss Order\nUsed to limit losses. Triggers a sell when price drops to your stop level.\n\nExample: You buy stock at $100. You set a stop-loss at $90. If price drops to $90, a market sell order triggers.\n\n### Stop-Limit Order\nCombines stop and limit orders. When stop price hits, it becomes a limit order (not market).\n\n## Time in Force\n\n- **Day Order**: Expires at market close if not filled\n- **Good Till Canceled (GTC)**: Stays active until filled or manually canceled (usually up to 90 days)\n- **Immediate or Cancel (IOC)**: Fill immediately or cancel\n- **Fill or Kill (FOK)**: Fill entire order immediately or cancel",
+          "video_url": "https://www.youtube.com/embed/example-order-types",
+          "key_takeaways": [
+            "Market orders execute immediately at current price",
+            "Limit orders give you price control but may not fill",
+            "Stop orders help protect profits and limit losses",
+            "Different order types serve different trading strategies"
+          ],
+          "quiz_questions": [
+            {
+              "question": "What is the main advantage of a market order?",
+              "options": [
+                "Best price guaranteed",
+                "Guaranteed execution",
+                "No fees",
+                "Can't lose money"
+              ],
+              "correct": 1,
+              "explanation": "Market orders guarantee execution but not price. They fill immediately at the current market price."
+            },
+            {
+              "question": "If you want to buy a stock only if it drops to $50 or lower, which order type should you use?",
+              "options": [
+                "Market order",
+                "Sell limit order",
+                "Buy limit order",
+                "Stop-loss order"
+              ],
+              "correct": 2,
+              "explanation": "A buy limit order sets the maximum price you're willing to pay."
+            },
+            {
+              "question": "What is the purpose of a stop-loss order?",
+              "options": [
+                "To guarantee profits",
+                "To limit potential losses",
+                "To increase position size",
+                "To avoid taxes"
+              ],
+              "correct": 1,
+              "explanation": "Stop-loss orders help limit losses by automatically selling when price drops to a specified level."
+            }
+          ]
+        },
+        {
+          "title": "Market Hours & Sessions",
+          "slug": "market-hours-sessions",
+          "content_type": "text",
+          "order": 3,
+          "duration_minutes": 4,
+          "content": "# Market Hours & Sessions\n\nUnderstanding when markets are open and the characteristics of different trading sessions is essential for timing your trades.\n\n## Regular Trading Hours (US Markets)\n\n**9:30 AM - 4:00 PM EST** (Monday - Friday)\n\nThis is when the NYSE and NASDAQ are fully open for trading. Most volume and liquidity occurs during these hours.\n\n## Pre-Market Trading\n\n**4:00 AM - 9:30 AM EST**\n\n### Characteristics\n- Lower volume\n- Wider spreads\n- More volatility\n- Reacts to overnight news\n\n### Why Trade Pre-Market?\n- React to earnings reports (usually released before market open)\n- News events from overseas markets\n- Economic data releases\n\n### Risks\n- Limited liquidity can cause price gaps\n- Wider bid-ask spreads = higher costs\n- Not all brokers offer pre-market access\n\n## After-Hours Trading\n\n**4:00 PM - 8:00 PM EST**\n\n### Characteristics\n- Similar to pre-market: lower volume, wider spreads\n- Reacts to late-day earnings releases\n- Continuation of regular session trends\n\n## Key Trading Sessions\n\n### Opening Bell (9:30 AM - 10:00 AM)\n- Highest volume of the day\n- Most volatility\n- Professional traders active\n- Overnight gaps are resolved\n\n**Strategy**: Many traders avoid first 15-30 minutes, waiting for \"opening range\" to form.\n\n### Mid-Day (11:00 AM - 2:00 PM)\n- Lower volume (\"lunch hour\")\n- Slower price action\n- Less volatility\n\n**Strategy**: Often called the \"chop zone\" - many day traders take break.\n\n### Power Hour (3:00 PM - 4:00 PM)\n- Volume increases\n- Institutional positioning\n- Day traders close positions\n- Can see large moves\n\n**Strategy**: Popular time for momentum trades and closing positions.\n\n## Market Holidays\n\nUS markets are closed on:\n- New Year's Day\n- Martin Luther King Jr. Day\n- Presidents' Day\n- Good Friday\n- Memorial Day\n- Independence Day\n- Labor Day\n- Thanksgiving Day\n- Christmas Day\n\n## International Markets\n\nDifferent countries have different trading hours:\n\n- **London**: 3:00 AM - 11:30 AM EST\n- **Tokyo**: 7:00 PM - 1:00 AM EST (previous day)\n- **Hong Kong**: 9:30 PM - 4:00 AM EST (previous day)\n\n**Overlap Trading**: When multiple major markets are open simultaneously, global stocks see increased volume.",
+          "key_takeaways": [
+            "Regular US market hours: 9:30 AM - 4:00 PM EST",
+            "Pre-market and after-hours have lower liquidity and higher volatility",
+            "Opening bell (first 30 min) is most volatile",
+            "Power hour (last hour) sees increased volume and momentum"
+          ],
+          "quiz_questions": [
+            {
+              "question": "What are regular US stock market hours (EST)?",
+              "options": [
+                "8:00 AM - 5:00 PM",
+                "9:30 AM - 4:00 PM",
+                "9:00 AM - 5:00 PM",
+                "10:00 AM - 4:00 PM"
+              ],
+              "correct": 1,
+              "explanation": "Regular trading hours for US markets are 9:30 AM to 4:00 PM Eastern Time."
+            },
+            {
+              "question": "Which trading session typically has the highest volume?",
+              "options": [
+                "Pre-market",
+                "Mid-day",
+                "Opening bell",
+                "After-hours"
+              ],
+              "correct": 2,
+              "explanation": "The opening bell (9:30-10:00 AM) typically sees the highest volume and volatility."
+            }
+          ]
+        },
+        {
+          "title": "Reading Stock Quotes",
+          "slug": "reading-stock-quotes",
+          "content_type": "mixed",
+          "order": 4,
+          "duration_minutes": 5,
+          "content": "# Reading Stock Quotes\n\nA stock quote contains crucial information about a stock's current price and trading activity. Learning to read quotes is fundamental to making informed decisions.\n\n## Key Components of a Stock Quote\n\n### Ticker Symbol\nThe unique abbreviation identifying the stock (e.g., AAPL for Apple, MSFT for Microsoft).\n\n### Current Price (Last)\nThe most recent trade price.\n\n### Change & Change %\nHow much the stock has moved since yesterday's close.\n\nExample:\n- **Change**: +$2.50\n- **Change %**: +1.67%\n\n### Bid & Ask\n\n**Bid**: Highest price buyers are willing to pay\n**Ask**: Lowest price sellers are willing to accept\n**Spread**: Difference between bid and ask\n\nExample:\n- Bid: $100.00 (x500 shares)\n- Ask: $100.05 (x300 shares)\n- Spread: $0.05\n\n**Tighter spreads** = more liquid, lower trading costs\n**Wider spreads** = less liquid, higher trading costs\n\n### Volume\nNumber of shares traded today.\n\nExample: 5.2M means 5,200,000 shares traded\n\n**High volume** = more liquidity, easier to buy/sell\n**Low volume** = less liquidity, potentially larger price swings\n\n### Average Volume\nTypical daily trading volume over past 3 months.\n\nCompare today's volume to average:\n- **Above average**: Unusual activity, news, or momentum\n- **Below average**: Normal or slow trading day\n\n### Market Cap\nTotal value of all shares: **Share Price × Total Shares Outstanding**\n\nCategories:\n- **Large Cap**: $10B+\n- **Mid Cap**: $2B - $10B\n- **Small Cap**: $300M - $2B\n- **Micro Cap**: <$300M\n\n### Day Range (High/Low)\nToday's highest and lowest trade prices.\n\nExample: $99.50 - $101.25\n\nShows volatility during the trading session.\n\n### 52-Week Range\nHighest and lowest prices over the past year.\n\nExample: $75.00 - $105.00\n\nHelps identify if stock is near highs, lows, or middle of range.\n\n### P/E Ratio\n**Price-to-Earnings Ratio**: Current price ÷ Annual earnings per share\n\nExample: $100 price ÷ $5 EPS = P/E of 20\n\n- **High P/E**: Stock may be expensive (or high growth expected)\n- **Low P/E**: Stock may be cheap (or concerns about future)\n\n### Dividend Yield\nAnnual dividend ÷ Current stock price\n\nExample: $2 annual dividend ÷ $100 price = 2% yield\n\n## Understanding Pre-Market Indicators\n\n- **Pre**: Pre-market price\n- **Change (Pre)**: Pre-market move vs previous close\n- **Volume (Pre)**: Pre-market trading volume\n\n## Real-Time vs Delayed Quotes\n\n**Real-time**: Current prices (usually requires brokerage account or subscription)\n**Delayed**: Prices delayed 15-20 minutes (free on most websites)\n\nFor active trading, real-time data is essential.",
+          "video_url": "https://www.youtube.com/embed/example-stock-quotes",
+          "key_takeaways": [
+            "Bid/ask spread shows liquidity and trading costs",
+            "High volume indicates strong interest and liquidity",
+            "52-week range shows stock's price history context",
+            "Market cap categorizes company size"
+          ],
+          "quiz_questions": [
+            {
+              "question": "What does the bid-ask spread indicate?",
+              "options": [
+                "How much money you can make",
+                "The stock's value",
+                "Liquidity and trading costs",
+                "Company profits"
+              ],
+              "correct": 2,
+              "explanation": "A narrow bid-ask spread indicates high liquidity and lower trading costs."
+            },
+            {
+              "question": "If a stock has unusually high volume today, what might this indicate?",
+              "options": [
+                "Nothing important",
+                "The stock will definitely go up",
+                "Unusual activity, possibly due to news",
+                "The company is bankrupt"
+              ],
+              "correct": 2,
+              "explanation": "High volume compared to average often indicates significant news, earnings, or momentum."
+            }
+          ]
+        },
+        {
+          "title": "Understanding Volume",
+          "slug": "understanding-volume",
+          "content_type": "text",
+          "order": 5,
+          "duration_minutes": 4,
+          "content": "# Understanding Volume\n\nVolume is one of the most important indicators in trading. It shows the level of interest and activity in a stock.\n\n## What is Volume?\n\n**Volume** = Total number of shares traded during a specific period (usually one day or one bar on a chart).\n\nExample: If volume is 2 million, it means 2 million shares changed hands between buyers and sellers.\n\n## Why Volume Matters\n\n### 1. Confirms Price Moves\n\n**High volume + price increase** = Strong buying interest (bullish confirmation)\n**High volume + price decrease** = Strong selling pressure (bearish confirmation)\n**Low volume + price move** = Weak move, likely to reverse\n\n### 2. Indicates Liquidity\n\n**High volume stocks**:\n- Easy to buy/sell\n- Narrow bid-ask spreads\n- Less slippage\n\n**Low volume stocks**:\n- Harder to enter/exit\n- Wider bid-ask spreads\n- More slippage risk\n\n### 3. Shows Market Sentiment\n\nSudden volume spikes often precede significant price moves:\n- Earnings announcements\n- News events\n- Analyst upgrades/downgrades\n- Sector rotation\n\n## Volume Patterns to Watch\n\n### Volume Climax\nExtreme volume spike, often marking exhaustion:\n- **Buying climax**: Heavy volume at top = potential reversal down\n- **Selling climax**: Heavy volume at bottom = potential reversal up\n\n### Decreasing Volume\nVolume declining during a trend:\n- **In uptrend**: May signal weakening momentum\n- **In downtrend**: May signal selling exhaustion\n\n### Increasing Volume\nVolume expanding with trend:\n- **In uptrend**: Confirms strength\n- **In downtrend**: Confirms weakness\n\n## Relative Volume\n\n**Relative Volume (RVOL)** = Current volume ÷ Average volume\n\n- **RVOL > 2.0**: Very high activity (2x normal)\n- **RVOL 1.0 - 2.0**: Above average\n- **RVOL < 1.0**: Below average\n\n## Volume by Time of Day\n\n**Morning (9:30-11:00 AM)**: Highest volume\n**Mid-day (11:00 AM-2:00 PM)**: Lowest volume\n**Afternoon (2:00-4:00 PM)**: Increasing volume\n\n## Volume-Weighted Average Price (VWAP)\n\nA volume-weighted average of all trades during the day.\n\nInstitutional traders use VWAP to:\n- Measure execution quality\n- Determine fair value\n- Time large orders\n\n**Above VWAP** = Buyers in control\n**Below VWAP** = Sellers in control\n\n## Common Mistakes\n\n❌ **Ignoring volume**: Trading based on price alone\n❌ **Trading low volume stocks**: Higher risk, less liquidity\n❌ **Not comparing to average**: Is today's volume unusual?\n\n✅ **Watch for volume confirmation**: Validate price moves with volume\n✅ **Trade liquid stocks**: Minimum 500K-1M daily volume for day trading\n✅ **Use RVOL**: Identify unusual activity",
+          "key_takeaways": [
+            "Volume confirms the strength of price moves",
+            "High volume = high liquidity and easier trading",
+            "Volume spikes often precede significant price moves",
+            "Compare today's volume to average to spot unusual activity"
+          ],
+          "quiz_questions": [
+            {
+              "question": "What does high volume during a price increase indicate?",
+              "options": [
+                "The move is weak",
+                "Strong buying interest and confirmation",
+                "The stock will crash",
+                "Nothing important"
+              ],
+              "correct": 1,
+              "explanation": "High volume during a price increase confirms strong buying interest and validates the move."
+            },
+            {
+              "question": "Why is volume important for liquidity?",
+              "options": [
+                "It predicts future prices",
+                "It makes stocks cheaper",
+                "High volume means easier to buy/sell",
+                "Volume doesn't affect liquidity"
+              ],
+              "correct": 2,
+              "explanation": "High volume stocks have more liquidity, making it easier to enter and exit positions with minimal slippage."
+            }
+          ]
+        },
+        {
+          "title": "Long vs Short Positions",
+          "slug": "long-vs-short-positions",
+          "content_type": "mixed",
+          "order": 6,
+          "duration_minutes": 6,
+          "content": "# Long vs Short Positions\n\nIn trading, you can profit whether prices go up OR down. Understanding both long and short positions is essential.\n\n## Long Positions (Going Long)\n\n**Definition**: Buying a stock with the expectation that its price will increase.\n\nThis is the traditional \"buy low, sell high\" strategy.\n\n### How It Works\n\n1. Buy stock at $50\n2. Price increases to $75\n3. Sell stock\n4. Profit = $25 per share\n\n### When to Go Long\n\n- Bullish outlook on company\n- Uptrend forming\n- Positive news or earnings\n- Technical breakout\n\n### Advantages\n\n✅ Unlimited upside potential\n✅ Receive dividends (if any)\n✅ Can hold indefinitely\n✅ Lower risk than short selling\n\n### Risks\n\n⚠️ Stock can drop to $0 (100% loss)\n⚠️ Capital tied up\n⚠️ Opportunity cost\n\n## Short Positions (Going Short)\n\n**Definition**: Selling borrowed shares with the expectation that price will decrease, then buying them back cheaper.\n\n### How It Works\n\n1. Borrow 100 shares at $50 (total value $5,000)\n2. Sell borrowed shares for $5,000\n3. Price drops to $30\n4. Buy back 100 shares for $3,000\n5. Return shares to lender\n6. Profit = $2,000\n\n### When to Short\n\n- Bearish outlook\n- Downtrend forming\n- Negative news\n- Technical breakdown\n- Overvalued stock\n\n### Advantages\n\n✅ Profit from declining prices\n✅ Hedge long positions\n✅ More tools in your toolbox\n\n### Risks\n\n🚨 **UNLIMITED RISK**: Stock can rise infinitely\n🚨 **Margin requirements**: Need margin account\n🚨 **Short squeeze**: Forced buying if price rises\n🚨 **Borrow costs**: Pay interest to borrow shares\n🚨 **Dividend payments**: Must pay dividends to lender\n\n## Key Differences\n\n| Aspect | Long Position | Short Position |\n|--------|---------------|----------------|\n| Direction | Profit from rise | Profit from fall |\n| Max Profit | Unlimited | Limited to stock hitting $0 |\n| Max Loss | Stock goes to $0 (100%) | Unlimited |\n| Time Limit | None | Pay borrow fees |\n| Dividends | Receive them | Pay them |\n| Account Type | Cash or margin | Margin required |\n\n## Short Squeezes\n\nA **short squeeze** occurs when:\n\n1. Stock with high short interest starts rising\n2. Short sellers panic and buy to cover\n3. Buying pressure pushes price higher\n4. More shorts forced to cover\n5. Vicious cycle creates explosive upward move\n\n**Famous examples**: GameStop (GME), AMC Entertainment\n\n### Warning Signs\n- High short interest (>20% of float)\n- Decreasing available shares to borrow\n- Sudden price spike on high volume\n\n## Margin Requirements\n\nTo short sell, you need a **margin account**:\n\n- **Initial margin**: Typically 150% of short position value\n- **Maintenance margin**: Must maintain 125-150%\n- **Margin call**: If equity falls below maintenance, must add funds or close position\n\n## Best Practices\n\n### For Long Positions\n- Use stop-losses\n- Don't chase rallies\n- Buy quality companies\n- Be patient\n\n### For Short Positions\n- Use tight stop-losses (critical!)\n- Don't short strong uptrends\n- Watch for short squeeze signals\n- Cover quickly if wrong\n- Start small - higher risk\n\n## Psychology\n\n**Going long**: \"I hope this goes up!\"\n**Going short**: \"I hope this goes down!\"\n\nMost traders are more comfortable going long because:\n- Market has long-term upward bias\n- Unlimited upside vs limited downside\n- Feels more \"natural\"\n\nShort selling requires:\n- Different mindset\n- Faster reactions\n- Higher risk tolerance\n- More experience",
+          "video_url": "https://www.youtube.com/embed/example-long-short",
+          "key_takeaways": [
+            "Long = buy expecting price increase, short = sell expecting decrease",
+            "Long has unlimited upside, short has unlimited risk",
+            "Short selling requires a margin account",
+            "Short squeezes can cause extreme losses for short sellers"
+          ],
+          "quiz_questions": [
+            {
+              "question": "What is the maximum loss on a long position?",
+              "options": [
+                "Unlimited",
+                "200% of investment",
+                "100% of investment",
+                "50% of investment"
+              ],
+              "correct": 2,
+              "explanation": "The maximum loss on a long position is 100% if the stock goes to $0."
+            },
+            {
+              "question": "What is a short squeeze?",
+              "options": [
+                "When shorts make a lot of money",
+                "When rising prices force shorts to cover, pushing price higher",
+                "When a stock splits",
+                "When dividends are paid"
+              ],
+              "correct": 1,
+              "explanation": "A short squeeze occurs when rising prices force short sellers to buy back shares, creating more buying pressure."
+            },
+            {
+              "question": "What type of account do you need to short sell?",
+              "options": [
+                "Cash account",
+                "Savings account",
+                "Margin account",
+                "Retirement account"
+              ],
+              "correct": 2,
+              "explanation": "Short selling requires a margin account because you're borrowing shares."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
