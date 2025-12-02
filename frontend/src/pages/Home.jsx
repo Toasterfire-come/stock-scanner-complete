@@ -226,25 +226,25 @@ const Home = () => {
   const testimonials = [
     {
       name: "Sarah Chen",
-      role: "Professional Day Trader",
-      company: "Peak Capital Trading",
-      content: "Trade Scan Pro has completely transformed my trading workflow. I surface viable momentum setups in under ten minutes and automate the rest.",
+      role: "Value Investor",
+      company: "Peak Capital Partners",
+      content: "The Value Hunter has completely transformed my investment process. I can now identify undervalued companies in minutes and make data-driven decisions with confidence.",
       rating: 5,
-      profit: `+${formatPercent(marketingMetrics.outcomes.averagePortfolioLiftPercent)} net lift`
+      profit: `+${formatPercent(marketingMetrics.outcomes.averagePortfolioLiftPercent)} portfolio growth`
     },
     {
       name: "Michael Rodriguez",
       role: "Portfolio Manager",
       company: "Evergreen Investments",
-      content: "The real-time alerts have saved me from multiple significant losses even on high-volatility days. Platform latency stays below 500ms when it matters most.",
+      content: "The AI backtesting feature helped me validate my long-term strategies with historical data. The insights on why strategies work are invaluable for client presentations.",
       rating: 5,
-      profit: `${formatPercent(marketingMetrics.outcomes.averageDrawdownReductionPercent)} drawdown reduction`
+      profit: `${formatPercent(marketingMetrics.outcomes.averageDrawdownReductionPercent)} risk reduction`
     },
     {
       name: "Jennifer Park",
       role: "Investment Advisor",
       company: "Wealth Strategies LLC",
-      content: "My clients love the detailed reports and easy-to-understand visualizations. It shows up in every quarterly review.",
+      content: "The educational courses helped me understand value investing principles deeply. My clients appreciate the well-researched stock picks backed by fundamental analysis.",
       rating: 5,
       profit: `${marketingMetrics.outcomes.analystHoursSavedWeekly.toFixed(1)} hours saved weekly`
     }
