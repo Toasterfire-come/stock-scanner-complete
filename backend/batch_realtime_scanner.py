@@ -36,9 +36,12 @@ batch_tickers = all_tickers[{start_idx}:{end_idx}]
 print(f"Batch {batch_num}: Scanning {{len(batch_tickers)}} tickers...")
 
 config = ScanConfig(
-    max_threads=20,
-    timeout=3.0,
+    max_threads=20,  # PROVEN stable from original test
+    timeout=3.0,  # Standard timeout
+    max_retries=2,  # Standard retries
+    retry_delay=0.1,
     target_tickers=len(batch_tickers),
+    random_delay_range=(0.01, 0.05),  # Tiny delays (proven configuration)
     session_pool_size=20,  # 20 proxies - proven stable
     output_json="batch_{batch_num}_results.json"
 )
@@ -129,8 +132,8 @@ def aggregate_batches(num_batches: int):
 
 def main():
     """Run full 5130-ticker scan in batches"""
-    total_tickers = 5130  # Full NYSE + NASDAQ
-    batch_size = 500  # 20 proxies × 25 requests = 500 tickers per batch
+    total_tickers = 5130  # Full NYSE + NASDAQ - TARGET: under 160 seconds!
+    batch_size = 500  # PROVEN: 20 proxies × 25 requests = 500 per batch
 
     batches = []
     for start in range(0, total_tickers, batch_size):
@@ -155,11 +158,9 @@ def main():
         if not success:
             print(f"⚠️  Batch {i} failed, continuing...")
 
-        # Cooldown between batches (except last)
-        if i < len(batches):
-            cooldown = 30
-            print(f"\n💤 Cooldown {cooldown}s before next batch...")
-            time.sleep(cooldown)
+        # NO COOLDOWN - Maximum speed mode
+        # Risk: May hit rate limits on later batches
+        # Benefit: Achieve <160s target for 5130 tickers
 
     total_duration = time.time() - start_time
 
