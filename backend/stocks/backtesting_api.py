@@ -324,3 +324,52 @@ def list_baseline_strategies(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_backtest_limits(request):
+    """Get user's backtest limits and usage"""
+    try:
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'tier': 'free',
+                    'limit': BACKTEST_LIMITS['free'],
+                    'used': 0,
+                    'remaining': BACKTEST_LIMITS['free'],
+                    'unlimited': False
+                }
+            })
+        
+        limit = get_user_backtest_limit(request.user)
+        used = get_user_backtests_this_month(request.user)
+        unlimited = limit == -1
+        remaining = -1 if unlimited else max(0, limit - used)
+        
+        # Get tier name
+        try:
+            from billing.models import Subscription
+            subscription = Subscription.objects.get(user=request.user, status='active')
+            tier = subscription.plan_tier
+        except:
+            tier = 'free'
+        
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'tier': tier,
+                'limit': limit,
+                'used': used,
+                'remaining': remaining,
+                'unlimited': unlimited,
+                'reset_date': timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + timedelta(days=32)
+            }
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
