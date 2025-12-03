@@ -144,7 +144,7 @@ class SubscriptionEnforcementMiddleware:
                 'message': 'Subscribe to access premium features and unlock unlimited potential.'
             }
         except Exception as e:
-            logger.exception(f\"Error checking subscription status: {e}\")
+            logger.exception(f"Error checking subscription status: {e}")
             # Fail open in case of errors (don't block users)
             return {
                 'has_active_subscription': True,
