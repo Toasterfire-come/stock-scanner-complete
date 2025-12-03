@@ -36,7 +36,7 @@ class ScanConfig:
     timeout: float = 5.0
     max_retries: int = 2
     retry_delay: float = 0.1
-    target_tickers: int = 100
+    target_tickers: int = 100  # Optimal: 20 proxies × 5 requests = 100 tickers @ 99% success
     random_delay_range: tuple = (0.01, 0.05)
     output_json: str = "daily_scan_results.json"
     session_pool_size: int = 20
@@ -106,14 +106,21 @@ class SessionPool:
             session_info["request_count"] += 1
 
             old_index = self.current_index
+            old_proxy = self.sessions[old_index]["proxy"]
             self.current_index = (self.current_index + 1) % len(self.sessions)
+            new_proxy = self.sessions[self.current_index]["proxy"]
 
             if self.current_index == 0:
                 self.rotation_count += 1
                 logger.info(f"🔄 Completed rotation #{self.rotation_count} through all {len(self.sessions)} sessions")
 
-            if self.request_count % 20 == 0:
-                logger.info(f"📊 Request #{self.request_count}: session[{old_index}] → session[{self.current_index}]")
+            # Log every 50 requests with proxy details
+            if self.request_count % 50 == 0:
+                logger.info(f"📊 Request #{self.request_count}: session[{old_index}] ({old_proxy}) → session[{self.current_index}] ({new_proxy})")
+
+            # Log at key milestones with full stats
+            if self.request_count in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
+                logger.warning(f"🎯 MILESTONE {self.request_count}: Using session {old_index} with proxy {old_proxy}")
 
             return session_info["session"], session_info["proxy"], session_info["index"]
 
@@ -211,6 +218,7 @@ def calculate_daily_metrics(hist_df: pd.DataFrame) -> Dict[str, Any]:
 def fetch_daily_data(ticker: str, session_pool: SessionPool, config: ScanConfig) -> Optional[Dict[str, Any]]:
     """Fetch daily historical data for a ticker"""
     session, proxy, session_idx = session_pool.get_session()
+    request_num = session_pool.request_count  # Capture current request number
 
     for attempt in range(config.max_retries):
         try:
@@ -250,7 +258,8 @@ def fetch_daily_data(ticker: str, session_pool: SessionPool, config: ScanConfig)
                 "market_cap": market_cap,
                 **daily_metrics,
                 "timestamp": datetime.now().isoformat(),
-                "_session_idx": session_idx
+                "_session_idx": session_idx,
+                "_request_num": request_num
             }
 
             logger.info(f"✓ {ticker}: ${daily_metrics.get('close', 'N/A')} "
@@ -261,7 +270,7 @@ def fetch_daily_data(ticker: str, session_pool: SessionPool, config: ScanConfig)
         except Exception as e:
             error_msg = str(e)
             if "401" in error_msg or "Unauthorized" in error_msg:
-                logger.error(f"HTTP Error 401: {error_msg[:100]}")
+                logger.error(f"❌ [Request #{request_num}] HTTP 401 for {ticker} on session {session_idx} ({proxy}): {error_msg[:100]}")
             else:
                 logger.debug(f"Attempt {attempt + 1} failed for {ticker}: {error_msg[:100]}")
 
@@ -269,6 +278,7 @@ def fetch_daily_data(ticker: str, session_pool: SessionPool, config: ScanConfig)
                 time.sleep(config.retry_delay * (attempt + 1))
             continue
 
+    logger.warning(f"❌ [Request #{request_num}] Failed all retries for {ticker} on session {session_idx}")
     return None
 
 
