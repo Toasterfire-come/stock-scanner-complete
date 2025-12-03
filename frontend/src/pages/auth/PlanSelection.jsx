@@ -9,8 +9,8 @@ import { Check, Crown, Zap, ArrowRight } from "lucide-react";
 const plans = [
   {
     id: "bronze",
-    name: "Bronze",
-    price: "$24.99",
+    name: "Basic",
+    price: "$15",
     period: "month",
     trialPrice: "free",
     description: "Great for individual traders",
@@ -36,8 +36,8 @@ const plans = [
   },
   {
     id: "silver",
-    name: "Silver",
-    price: "$49.99",
+    name: "Plus",
+    price: "$25",
     period: "month",
     trialPrice: "free",
     description: "Perfect for professional traders",

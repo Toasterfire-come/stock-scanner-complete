@@ -74,10 +74,10 @@ const Pricing = () => {
   const plans = [
     {
       id: "bronze",
-      name: "Bronze",
+      name: "Basic",
       icon: <Award className="h-6 w-6" />,
       description: "Perfect for swing traders and long-term investors",
-      price: { monthly: 24.99, annual: null },
+      price: { monthly: 15, annual: null },
       features: [
         "150 API calls per day, 1,500/month",
         `Screeners with ${usage.medianTimeToFirstScreenerMinutes} min median time-to-first insight`,
@@ -97,10 +97,10 @@ const Pricing = () => {
     },
     {
       id: "silver",
-      name: "Silver",
+      name: "Plus",
       icon: <Crown className="h-6 w-6" />,
       description: "Perfect for day traders - ALL timeframes including 1m, 5m",
-      price: { monthly: 49.99, annual: null },
+      price: { monthly: 25, annual: null },
       features: [
         "500 API calls per day, 5000/month",
         `Advanced filtering & screening across ${formatNumber(usage.coverageUniverse)}+ equities`,

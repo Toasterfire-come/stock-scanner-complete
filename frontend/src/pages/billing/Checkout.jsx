@@ -155,8 +155,8 @@ export default function Checkout() {
             discounts: { annual_percent: pct },
             plans: {
               bronze: {
-                name: 'Bronze',
-                monthly_price: 24.99,
+                name: 'Basic',
+                monthly_price: 15,
                 annual_list_price: bronzeAnnual,
                 annual_final_price: discountAnnual(bronzeAnnual),
                 paypal_plan_ids: {
@@ -165,8 +165,8 @@ export default function Checkout() {
                 },
               },
               silver: {
-                name: 'Silver',
-                monthly_price: 49.99,
+                name: 'Plus',
+                monthly_price: 25,
                 annual_list_price: silverAnnual,
                 annual_final_price: discountAnnual(silverAnnual),
                 paypal_plan_ids: {
