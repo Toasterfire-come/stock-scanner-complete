@@ -58,6 +58,12 @@ from . import charting_api
 from . import backtesting_api
 from . import value_hunter_api
 from . import strategy_ranking_api
+# NEW MVP Feature APIs
+from . import ai_chat_api
+from . import enhanced_screener_api
+from . import fast_chart_api
+from . import valuation_display_api
+from . import grouping_api
 
 
 
