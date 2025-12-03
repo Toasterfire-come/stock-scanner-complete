@@ -1,6 +1,6 @@
 """
-AI-Powered Backtesting Service using Groq AI
-Phase 4 Implementation
+AI-Powered Backtesting Service with Static/Mock AI
+Phase 4 Implementation - No API Keys Required
 """
 import os
 import json
@@ -9,86 +9,241 @@ import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
-from groq import Groq
 import yfinance as yf
 from django.conf import settings
 from ..models import BacktestRun, BaselineStrategy
+import re
 
 
 class BacktestingService:
-    """Service for AI-powered strategy backtesting"""
+    """Service for AI-powered strategy backtesting with static implementation"""
     
     def __init__(self):
-        api_key = os.environ.get('GROQ_API_KEY')
-        if not api_key:
-            raise ValueError("GROQ_API_KEY environment variable not set")
-        self.groq_client = Groq(api_key=api_key)
-        self.model = "llama-3.3-70b-versatile"
+        # Static mode - no API key required
+        self.static_mode = True
     
-    def generate_strategy_code(self, strategy_text: str, category: str) -> Tuple[str, str]:
+    def parse_strategy_with_static_ai(self, strategy_text: str, category: str) -> Dict:
         """
-        Use Groq AI to convert natural language strategy to Python code
+        Parse natural language strategy using rule-based AI (no API key needed)
         
         Returns:
-            Tuple of (generated_code, error_message)
+            Dict with parsed strategy components and AI understanding
         """
-        prompt = self._build_prompt(strategy_text, category)
+        strategy_lower = strategy_text.lower()
         
-        try:
-            response = self.groq_client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert quantitative trading strategy developer. Generate clean, executable Python code only. No explanations, no markdown formatting, just pure Python code."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                model=self.model,
-                temperature=0.3,
-                max_tokens=2000,
-            )
-            
-            code = response.choices[0].message.content.strip()
-            # Remove markdown code blocks if present
-            if code.startswith('```python'):
-                code = code.replace('```python', '').replace('```', '').strip()
-            elif code.startswith('```'):
-                code = code.replace('```', '').strip()
-            
-            return code, ""
+        # Extract key components
+        parsed = {
+            'indicators': [],
+            'entry_conditions': [],
+            'exit_conditions': [],
+            'stop_loss': None,
+            'take_profit': None,
+            'position_sizing': '100% per trade',
+            'understood': True,
+            'clarifications_needed': []
+        }
         
-        except Exception as e:
-            return "", f"AI code generation failed: {str(e)}"
+        # Detect indicators
+        if 'rsi' in strategy_lower:
+            parsed['indicators'].append('RSI')
+            # Extract RSI threshold
+            rsi_match = re.search(r'rsi.*?(\d+)', strategy_lower)
+            if rsi_match:
+                threshold = int(rsi_match.group(1))
+                if threshold < 40:
+                    parsed['entry_conditions'].append(f'RSI below {threshold} (oversold)')
+                elif threshold > 60:
+                    parsed['exit_conditions'].append(f'RSI above {threshold} (overbought)')
+        
+        if 'macd' in strategy_lower:
+            parsed['indicators'].append('MACD')
+            if 'cross' in strategy_lower:
+                parsed['entry_conditions'].append('MACD bullish crossover')
+                parsed['exit_conditions'].append('MACD bearish crossover')
+        
+        if 'moving average' in strategy_lower or 'ma' in strategy_lower:
+            parsed['indicators'].append('Moving Average')
+            if '50' in strategy_text and '200' in strategy_text:
+                parsed['entry_conditions'].append('Golden Cross (50 MA crosses above 200 MA)')
+                parsed['exit_conditions'].append('Death Cross (50 MA crosses below 200 MA)')
+            elif 'cross above' in strategy_lower:
+                parsed['entry_conditions'].append('Price crosses above MA')
+        
+        if 'bollinger' in strategy_lower:
+            parsed['indicators'].append('Bollinger Bands')
+            parsed['entry_conditions'].append('Price touches lower Bollinger Band')
+            parsed['exit_conditions'].append('Price touches upper Bollinger Band')
+        
+        if 'volume' in strategy_lower:
+            parsed['indicators'].append('Volume')
+            if 'spike' in strategy_lower or 'high' in strategy_lower:
+                parsed['entry_conditions'].append('High volume confirmation')
+        
+        # Detect stop loss
+        stop_loss_match = re.search(r'stop.*?loss.*?(\d+)%', strategy_lower)
+        if stop_loss_match:
+            parsed['stop_loss'] = f"{stop_loss_match.group(1)}%"
+        elif 'stop' in strategy_lower:
+            parsed['stop_loss'] = "5% (default)"
+        
+        # Detect take profit
+        take_profit_match = re.search(r'take.*?profit.*?(\d+)%', strategy_lower)
+        if take_profit_match:
+            parsed['take_profit'] = f"{take_profit_match.group(1)}%"
+        elif 'profit' in strategy_lower and 'target' in strategy_lower:
+            parsed['take_profit'] = "10% (default)"
+        
+        # Check if we need clarifications
+        if not parsed['entry_conditions']:
+            parsed['clarifications_needed'].append('What specific conditions should trigger a BUY?')
+            parsed['understood'] = False
+        
+        if not parsed['exit_conditions']:
+            parsed['clarifications_needed'].append('What conditions should trigger a SELL?')
+            parsed['understood'] = False
+        
+        return parsed
     
-    def _build_prompt(self, strategy_text: str, category: str) -> str:
-        """Build the prompt for Groq AI"""
-        return f"""Convert the following {category} trading strategy into executable Python code.
+    def generate_strategy_code(self, strategy_text: str, category: str) -> Tuple[str, str, Dict]:
+        """
+        Use static AI to convert natural language strategy to Python code
+        
+        Returns:
+            Tuple of (generated_code, error_message, ai_understanding)
+        """
+        # Parse strategy with static AI
+        ai_understanding = self.parse_strategy_with_static_ai(strategy_text, category)
+        
+        # If clarifications needed, return error
+        if not ai_understanding['understood']:
+            clarifications = '\n'.join(f"- {c}" for c in ai_understanding['clarifications_needed'])
+            return "", f"Strategy needs clarification:\n{clarifications}", ai_understanding
+        
+        # Generate code based on parsed strategy
+        code = self._generate_code_from_parsed_strategy(ai_understanding, category)
+        
+        return code, "", ai_understanding
+    
+    def _generate_code_from_parsed_strategy(self, parsed: Dict, category: str) -> str:
+        """
+        Generate Python code from parsed strategy components
+        """
+        # Default template-based code generation
+        code_parts = []
+        
+        # Add imports and indicator calculations
+        code_parts.append("""
+import pandas as pd
+import numpy as np
 
-Strategy Description: {strategy_text}
+# Calculate technical indicators
+def calculate_indicators(data):
+    df = data.copy()
+    
+    # RSI
+    delta = df['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
+    df['RSI'] = 100 - (100 / (1 + rs))
+    
+    # Moving Averages
+    df['MA_50'] = df['Close'].rolling(window=50).mean()
+    df['MA_200'] = df['Close'].rolling(window=200).mean()
+    
+    # MACD
+    exp1 = df['Close'].ewm(span=12, adjust=False).mean()
+    exp2 = df['Close'].ewm(span=26, adjust=False).mean()
+    df['MACD'] = exp1 - exp2
+    df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    
+    # Bollinger Bands
+    df['BB_Middle'] = df['Close'].rolling(window=20).mean()
+    bb_std = df['Close'].rolling(window=20).std()
+    df['BB_Upper'] = df['BB_Middle'] + (bb_std * 2)
+    df['BB_Lower'] = df['BB_Middle'] - (bb_std * 2)
+    
+    # Volume MA
+    df['Volume_MA'] = df['Volume'].rolling(window=20).mean()
+    
+    return df
 
-Requirements:
-1. Define entry_condition(data, index) function returning True/False
-2. Define exit_condition(data, index, entry_price, entry_index) function returning True/False
-3. Use pandas DataFrame with columns: Date, Open, High, Low, Close, Volume
-4. Include position sizing logic (default: 100% of available capital per trade)
-5. Include stop-loss and take-profit logic if mentioned in strategy
-6. Use technical indicators from pandas_ta or calculate manually
-7. Handle edge cases (insufficient data, NaN values)
-
-Output format: Pure Python code only, no explanations.
-
-Example structure:
+data = calculate_indicators(data)
+""")
+        
+        # Generate entry condition
+        entry_logic = []
+        if 'RSI' in parsed['indicators']:
+            entry_logic.append("data.iloc[index]['RSI'] < 30")
+        if 'MACD' in parsed['indicators']:
+            entry_logic.append("data.iloc[index]['MACD'] > data.iloc[index]['MACD_Signal']")
+            entry_logic.append("data.iloc[index-1]['MACD'] <= data.iloc[index-1]['MACD_Signal']")
+        if 'Moving Average' in parsed['indicators']:
+            entry_logic.append("data.iloc[index]['MA_50'] > data.iloc[index]['MA_200']")
+        if 'Bollinger Bands' in parsed['indicators']:
+            entry_logic.append("data.iloc[index]['Close'] <= data.iloc[index]['BB_Lower']")
+        if 'Volume' in parsed['indicators']:
+            entry_logic.append("data.iloc[index]['Volume'] > data.iloc[index]['Volume_MA'] * 1.5")
+        
+        entry_condition = " and \n        ".join(entry_logic) if entry_logic else "data.iloc[index]['RSI'] < 30"
+        
+        code_parts.append(f"""
 def entry_condition(data, index):
-    # Your entry logic
-    return True/False
-
+    if index < 200:  # Need enough data for indicators
+        return False
+    
+    try:
+        return ({entry_condition})
+    except (KeyError, IndexError):
+        return False
+""")
+        
+        # Generate exit condition
+        exit_logic = []
+        if 'RSI' in parsed['indicators']:
+            exit_logic.append("data.iloc[index]['RSI'] > 70")
+        if 'MACD' in parsed['indicators']:
+            exit_logic.append("data.iloc[index]['MACD'] < data.iloc[index]['MACD_Signal']")
+        if 'Moving Average' in parsed['indicators']:
+            exit_logic.append("data.iloc[index]['MA_50'] < data.iloc[index]['MA_200']")
+        if 'Bollinger Bands' in parsed['indicators']:
+            exit_logic.append("data.iloc[index]['Close'] >= data.iloc[index]['BB_Upper']")
+        
+        # Add stop loss and take profit
+        stop_loss_pct = 5
+        take_profit_pct = 10
+        if parsed['stop_loss']:
+            match = re.search(r'(\d+)', parsed['stop_loss'])
+            if match:
+                stop_loss_pct = int(match.group(1))
+        if parsed['take_profit']:
+            match = re.search(r'(\d+)', parsed['take_profit'])
+            if match:
+                take_profit_pct = int(match.group(1))
+        
+        exit_condition = " or \n        ".join(exit_logic) if exit_logic else "data.iloc[index]['RSI'] > 70"
+        
+        code_parts.append(f"""
 def exit_condition(data, index, entry_price, entry_index):
-    # Your exit logic
-    return True/False
-"""
+    try:
+        current_price = data.iloc[index]['Close']
+        price_change_pct = ((current_price - entry_price) / entry_price) * 100
+        
+        # Stop loss
+        if price_change_pct <= -{stop_loss_pct}:
+            return True
+        
+        # Take profit
+        if price_change_pct >= {take_profit_pct}:
+            return True
+        
+        # Technical exit conditions
+        return ({exit_condition})
+    except (KeyError, IndexError):
+        return False
+""")
+        
+        return "\n".join(code_parts)
     
     def run_backtest(self, backtest_run: BacktestRun) -> Dict:
         """
@@ -103,12 +258,12 @@ def exit_condition(data, index, entry_price, entry_index):
         try:
             # Generate code if not already generated
             if not backtest_run.generated_code:
-                code, error = self.generate_strategy_code(
+                code, error, ai_understanding = self.generate_strategy_code(
                     backtest_run.strategy_text,
                     backtest_run.category
                 )
                 if error:
-                    return {"error": error}
+                    return {"error": error, "ai_understanding": ai_understanding}
                 backtest_run.generated_code = code
                 backtest_run.save()
             
