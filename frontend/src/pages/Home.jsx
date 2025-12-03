@@ -1,0 +1,817 @@
+import React, { useState, useEffect, Suspense, lazy } from "react";
+import { trackEvent, trackPageView } from "../lib/analytics";
+import SEO from "../components/SEO";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../components/ui/collapsible";
+import {
+  TrendingUp,
+  Search,
+  Bell,
+  Shield,
+  BarChart3,
+  Zap,
+  ArrowRight,
+  Star,
+  Users,
+  CheckCircle,
+  ChevronDown,
+  Play,
+  DollarSign,
+  Target,
+  Clock,
+  Award,
+  Mail,
+  LineChart,
+  Download
+} from "lucide-react";
+import { getMarketStatsSafe } from "../api/client";
+import MarketStatus from "../components/MarketStatus";
+import { toast } from "sonner";
+import LightweightPriceChart from "../components/LightweightPriceChart";
+import { computeIndicatorsInWorker } from "../lib/indicatorsWorkerClient";
+import {
+  marketingMetrics,
+  formatNumber,
+  formatPercent,
+  timeframeCopy,
+} from "../data/marketingMetrics";
+const QuickMiniFAQ = lazy(() => import("../components/home/QuickMiniFAQ"));
+const ScreenerDemo = lazy(() => import("../components/home/ScreenerDemo"));
+const TestimonialsSection = lazy(() => import("../components/home/TestimonialsSection"));
+const HomeFAQ = lazy(() => import("../components/home/HomeFAQ"));
+
+function useExitIntent(callback, enabled = true) {
+  useEffect(() => {
+    if (!enabled) return;
+    let triggered = false;
+    const onMouseLeave = (e) => {
+      if (triggered) return;
+      if (e.clientY <= 0) {
+        triggered = true;
+        callback();
+      }
+    };
+    document.addEventListener('mouseleave', onMouseLeave);
+    return () => document.removeEventListener('mouseleave', onMouseLeave);
+  }, [callback, enabled]);
+}
+
+const Home = () => {
+  const navigate = useNavigate();
+  const [marketStats, setMarketStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [showExitIntent, setShowExitIntent] = useState(false);
+  const [heroData, setHeroData] = useState([]);
+  const [heroOverlays, setHeroOverlays] = useState([]);
+  const { usage, outcomes, reliability } = marketingMetrics;
+  const exitIntentKey = React.useMemo(() => {
+    try {
+      const uid = JSON.parse(localStorage.getItem('secure_user') || '{}')?.id || 'anon';
+      return `exit-intent-shown-v1:${uid}`;
+    } catch { return 'exit-intent-shown-v1:anon'; }
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const statsResponse = await getMarketStatsSafe();
+        if (statsResponse.success && !statsResponse.fallback) {
+          setMarketStats(statsResponse.data);
+        }
+        // If using fallback data, don't show stats
+      } catch (error) {
+        console.error("Failed to fetch market data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    // Prepare lightweight demo chart data for hero (synthetic, fast)
+    (async () => {
+      const now = Date.now();
+      const points = 240;
+      let price = 150;
+      const data = [];
+      for (let i = points - 1; i >= 0; i--) {
+        const t = now - i * 5 * 60 * 1000; // 5 min bars
+        const open = price;
+        const high = open * (1 + Math.random() * 0.004);
+        const low = open * (1 - Math.random() * 0.004);
+        const close = low + Math.random() * (high - low);
+        price = close;
+        data.push({ time: Math.floor(t / 1000), open, high, low, close, volume: Math.floor(200000 + Math.random() * 800000) });
+      }
+      setHeroData(data);
+      const closes = data.map(d => d.close);
+      const res = await computeIndicatorsInWorker([
+        { name: 'sma', period: 20 },
+        { name: 'ema', period: 12 },
+      ], { closes });
+      const toSeries = (arr) => (arr || []).map((v, i) => v == null ? null : ({ time: data[i].time, value: Number(v) })).filter(Boolean);
+      const overlays = [];
+      if (res?.output?.sma20) overlays.push({ name: 'SMA20', color: '#3b82f6', values: toSeries(res.output.sma20) });
+      if (res?.output?.ema12) overlays.push({ name: 'EMA12', color: '#f59e0b', values: toSeries(res.output.ema12) });
+      setHeroOverlays(overlays);
+    })();
+    try { trackPageView('/'); } catch {}
+    // First-time onboarding tooltips (simple toasts)
+    try {
+      const uid = JSON.parse(localStorage.getItem('secure_user') || '{}')?.id || 'anon';
+      const tipKey = `onboarding-tooltips-v1:${uid}`;
+      const seen = localStorage.getItem(tipKey) === '1';
+      if (!seen) {
+        setTimeout(() => {
+          try { toast.info('Tip: Create your first screener', { description: 'Go to Screeners > New to find trade setups.' }); } catch {}
+        }, 800);
+        setTimeout(() => {
+          try { toast.info('Tip: Add to watchlist', { description: 'Use the star/bookmark buttons across the app.' }); } catch {}
+        }, 2000);
+        localStorage.setItem(tipKey, '1');
+      }
+    } catch {}
+  }, []);
+
+  // Exit intent modal toggle
+  useExitIntent(() => {
+    try {
+      const shown = localStorage.getItem(exitIntentKey) === '1';
+      if (shown) return;
+      localStorage.setItem(exitIntentKey, '1');
+      setShowExitIntent(true);
+    } catch {
+      setShowExitIntent(true);
+    }
+  }, true);
+
+  const features = [
+    {
+      icon: <Target className="h-6 w-6" />,
+      title: "Value Hunter - Fair Value Analysis",
+      description: "Find undervalued stocks using professional DCF models and intrinsic value calculations.",
+      details: "Our Value Hunter analyzes financials to calculate fair value using discounted cash flow models. Identify stocks trading below their intrinsic value with detailed margin of safety metrics."
+    },
+    {
+      icon: <LineChart className="h-6 w-6" />,
+      title: "AI-Powered Backtesting",
+      description: "Test your investment strategies against historical data with AI-enhanced analysis.",
+      details: "Backtest any strategy with our AI engine that explains WHY it works. Get actionable insights on risk-adjusted returns, maximum drawdowns, and optimal position sizing."
+    },
+    {
+      icon: <Search className="h-6 w-6" />,
+      title: "Fundamental Stock Screening",
+      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} using fundamental and technical criteria.`,
+      details: `Teams run ${formatNumber(usage.totalScreenersRunMonthly)}+ screeners every month and reach their first repeatable setup in under ${usage.medianTimeToFirstScreenerMinutes} minutes.`
+    },
+    {
+      icon: <Bell className="h-6 w-6" />,
+      title: "Real-Time Alerts",
+      description: "Never miss an investment opportunity with instant price and volume alerts.",
+      details: `${formatNumber(usage.alertsDeliveredMonthly)} alerts are delivered every month with consistent sub-${reliability.apiP95LatencyMs}ms delivery from our infrastructure.`
+    },
+    {
+      icon: <BarChart3 className="h-6 w-6" />,
+      title: "Portfolio Analytics",
+      description: "Track performance with institutional-grade portfolio management tools.",
+      details: "Advanced risk metrics, performance attribution, sector allocation analysis, and detailed profit/loss tracking with tax reporting."
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      title: "Market Intelligence",
+      description: "AI-powered insights and sentiment analysis from news and social media.",
+      details: "Our machine learning algorithms analyze thousands of news articles and social media posts to gauge market sentiment and predict price movements."
+    },
+    {
+      icon: <LineChart className="h-6 w-6" />,
+      title: "Professional Charting",
+      description: "Advanced charting with 4 themes, 10+ indicators, and multi-format export capabilities.",
+      details: `Export publication-ready charts in PNG, SVG, or CSV. Switch between candlestick, line, area, and bar charts with one click. Customize 10+ technical indicators with full control over period, colors, and line width.`
+    },
+    {
+      icon: <Download className="h-6 w-6" />,
+      title: "Enhanced Data Management",
+      description: "Virtual scrolling handles 10,000+ rows with advanced sorting and filtering.",
+      details: `Built for speed and scale with ${reliability.dataFreshnessSeconds}s data freshness, ${reliability.apiP50LatencyMs}ms P50 API latency, and ${formatPercent(reliability.uptimePercent, 2)} uptime backed by ${reliability.incidentFreeDaysRolling} incident-free days.`
+    }
+  ];
+
+  const heroStats = [
+    {
+      icon: <TrendingUp className="h-5 w-5" />,
+      value: `${formatNumber(usage.totalScreenersRunMonthly)}+`,
+      label: "screeners run each month",
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      value: formatNumber(usage.activeAccounts),
+      label: `${formatNumber(usage.teamsOnPlatform)} teams active worldwide`,
+    },
+    {
+      icon: <Bell className="h-5 w-5" />,
+      value: `${formatNumber(usage.alertsDeliveredMonthly)}+`,
+      label: "alerts delivered monthly",
+    },
+    {
+      icon: <Target className="h-5 w-5" />,
+      value: formatPercent(outcomes.trialToPaidConversionPercent),
+      label: "trial-to-paid conversion rate",
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Chen",
+      role: "Value Investor",
+      company: "Peak Capital Partners",
+      content: "The Value Hunter has completely transformed my investment process. I can now identify undervalued companies in minutes and make data-driven decisions with confidence.",
+      rating: 5,
+      profit: `+${formatPercent(marketingMetrics.outcomes.averagePortfolioLiftPercent)} portfolio growth`
+    },
+    {
+      name: "Michael Rodriguez",
+      role: "Portfolio Manager",
+      company: "Evergreen Investments",
+      content: "The AI backtesting feature helped me validate my long-term strategies with historical data. The insights on why strategies work are invaluable for client presentations.",
+      rating: 5,
+      profit: `${formatPercent(marketingMetrics.outcomes.averageDrawdownReductionPercent)} risk reduction`
+    },
+    {
+      name: "Jennifer Park",
+      role: "Investment Advisor",
+      company: "Wealth Strategies LLC",
+      content: "The educational courses helped me understand value investing principles deeply. My clients appreciate the well-researched stock picks backed by fundamental analysis.",
+      rating: 5,
+      profit: `${marketingMetrics.outcomes.analystHoursSavedWeekly.toFixed(1)} hours saved weekly`
+    }
+  ];
+
+  const faqs = [
+    {
+      question: "How accurate is your market data?",
+      answer: "Our data is sourced directly from major exchanges and updated in real-time. We maintain 99.9% uptime and ensure data accuracy through multiple validation layers."
+    },
+    {
+      question: "Can I cancel my subscription anytime?",
+      answer: "Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees. Your subscription will remain active until the end of your current billing period."
+    },
+    {
+      question: "Do you offer API access?",
+      answer: "Yes! Our Silver and Gold plans include full REST API access, allowing you to integrate our data into your own applications and trading systems."
+    },
+    {
+      question: "What's the difference between plans?",
+      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+    },
+    {
+      question: "How does the API call counting work?",
+      answer: "Different operations consume different amounts of API calls: listing all stocks (5 calls), single stock data (1 call), running screeners (2 calls), creating alerts (2 calls), loading market data (2 calls), and making watchlists (2 calls)."
+    }
+  ];
+
+  const marketOverviewStats =
+    marketStats?.market_overview && !isLoading
+      ? [
+          {
+            label: "Stocks Analyzed Today",
+            value: Number(marketStats.market_overview.total_stocks ?? 0).toLocaleString(),
+            tone: "text-blue-600",
+          },
+          {
+            label: "Winning Opportunities",
+            value: Number(marketStats.market_overview.gainers ?? 0).toLocaleString(),
+            tone: "text-green-600",
+          },
+          {
+            label: "Stocks Covered",
+            value: `${formatNumber(usage.coverageUniverse)}+`,
+            tone: "text-purple-600",
+          },
+          {
+            label: "Platform Uptime",
+            value: formatPercent(reliability.uptimePercent, 2),
+            tone: "text-orange-600",
+          },
+        ]
+      : [
+          {
+            label: "Screeners Run Monthly",
+            value: `${formatNumber(usage.totalScreenersRunMonthly)}+`,
+            tone: "text-blue-600",
+          },
+          {
+            label: "Alerts Delivered Monthly",
+            value: `${formatNumber(usage.alertsDeliveredMonthly)}+`,
+            tone: "text-green-600",
+          },
+          {
+            label: "Teams On Platform",
+            value: formatNumber(usage.teamsOnPlatform),
+            tone: "text-purple-600",
+          },
+          {
+            label: "Platform Uptime",
+            value: formatPercent(reliability.uptimePercent, 2),
+            tone: "text-orange-600",
+          },
+        ];
+
+  const pricingPlans = [
+    {
+      name: "Free",
+      price: "$0",
+      period: "/forever",
+      description: "Perfect for getting started",
+      features: [
+        "30 API calls per month",
+        "Basic stock data access",
+        "1 Basic stock screener",
+        "1 Portfolio",
+        "Community support"
+      ],
+      popular: false,
+      cta: "Get Started Free",
+      isFree: true
+    },
+    {
+      name: "Bronze",
+      price: "$24.99",
+      period: "/month",
+      annualPrice: "$254.99",
+      description: "Enhanced features for active traders",
+      features: [
+        "1500 API calls per month",
+        "10 Screeners",
+        "50 Alerts per month",
+        "2 Watchlists",
+        "No portfolios",
+        "Professional stock data access",
+        "Real-time market information",
+        "High Quality News and Sentiment Analysis",
+        "Email support"
+      ],
+      popular: true,
+      cta: "Try for free"
+    },
+    {
+      name: "Silver", 
+      price: "$49.99",
+      period: "/month",
+      annualPrice: "$509.99",
+      description: "Professional tools for serious traders",
+      features: [
+        "5000 API calls per month",
+        "20 Screeners",
+        "100 Alerts per month",
+        "10 Watchlists",
+        "1 Portfolio",
+        "Portfolio Analytics",
+        "Advanced Screener Tools (JSON input/output)",
+        "Advanced Watchlist Tools",
+        "Historical data access",
+        "Priority support"
+      ],
+      popular: false,
+      cta: "Try for free"
+    },
+    {
+      name: "Gold",
+      price: "$79.99", 
+      period: "/month",
+      annualPrice: "$814.99",
+      description: "Ultimate trading experience",
+      features: [
+        "Unlimited Everything",
+        "Professional stock data access",
+        "Highest Limits",
+        "Portfolio tracking (unlimited)",
+        "All Screener and Watchlist Tools",
+        "API Key Access",
+        "Real-time market data",
+        "Professional reporting"
+      ],
+      popular: false,
+      cta: "Try for free"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
+      <SEO
+        title="Trade Scan Pro | Build Long-Term Wealth Through Smart Stock Selection"
+        description="Professional stock valuation tools, fundamental analysis, AI-powered backtesting, and educational resources for long-term investors. Learn value investing principles."
+        url="https://tradescanpro.com/"
+        jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
+      />
+      {/* Hero Section - Value Investing Focus */}
+      <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-5xl mx-auto">
+            <Badge variant="secondary" className="mb-6 text-base sm:text-lg px-4 py-2">
+              <Award className="h-4 w-4 mr-2" />
+              Trusted by {formatNumber(usage.activeAccounts)} Active Traders & Investors
+            </Badge>
+
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
+              Professional Stock Analysis
+              <span className="text-blue-600 block">For Every Trading Style</span>
+            </h1>
+
+            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed">
+              Advanced charting, real-time screeners, and powerful analytics for day traders, swing traders, and long-term investors. 
+              Trade with confidence using institutional-grade tools and AI-powered insights.
+            </p>
+            
+            {/* Market Status */}
+            <div className="mb-6 sm:mb-8 flex justify-center">
+              <MarketStatus showNotice={true} />
+            </div>
+
+            {/* Primary CTA + Inline Email Capture */}
+            <div className="flex flex-col items-center gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                  <Link to="/auth/sign-up" onClick={() => { try { trackEvent('select_content', { content_type: 'cta', location: 'home_hero', label: 'try_free' }); } catch {} }}>
+                    <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                    Start Learning Free
+                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
+                  </Link>
+                </Button>
+              </div>
+              <form
+                className="w-full max-w-md flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const email = (e.currentTarget.elements.namedItem('hero_email')?.value || '').toString();
+                  if (!email) return;
+                  // Navigate and prefill email
+                  try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+                  try { trackEvent('generate_lead', { method: 'email_capture', location: 'home_hero' }); } catch {}
+                  navigate('/auth/sign-up', { state: { emailPrefill: email } });
+                }}
+              >
+                <input
+                  type="email"
+                  name="hero_email"
+                  required
+                  placeholder="Enter your email"
+                  className="flex-1 px-4 py-3 rounded-md border border-gray-300"
+                />
+                <Button type="submit" className="px-5">Start</Button>
+              </form>
+              <div className="text-xs text-gray-500">Cancel anytime - Trial free until next 1st</div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+              {heroStats.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3 text-left bg-white/80 backdrop-blur-sm rounded-lg border px-4 py-3">
+                  <div className="mt-1 text-blue-600">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="text-xl font-semibold text-gray-900">{item.value}</div>
+                    <div className="text-sm text-gray-600 leading-snug">{item.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mb-10">Source: {timeframeCopy("platform analytics")}</p>
+
+            {/* Interactive Chart Hero */}
+            <div className="mx-auto max-w-5xl rounded-xl border bg-white shadow-sm">
+              <LightweightPriceChart data={heroData} overlays={heroOverlays} height={320} />
+            </div>
+
+            {/* Logos / Social Proof */}
+            <div className="mt-4 text-xs sm:text-sm text-gray-500 flex flex-wrap justify-center gap-4">
+              <span>As seen on</span>
+              <span className="font-medium">TradingView</span>
+              <span className="font-medium">Finviz</span>
+              <span className="font-medium">Product Hunt</span>
+              <span className="font-medium">Medium</span>
+              <Link to="/stock-filter" className="underline hover:no-underline">Stock Filter</Link>
+              <Link to="/market-scan" className="underline hover:no-underline">Market Scan</Link>
+              <a href="/endpoint-status" className="underline hover:no-underline">Status & Uptime</a>
+            </div>
+
+            {/* Quick FAQ near hero */}
+            <Suspense fallback={null}>
+              <QuickMiniFAQ />
+            </Suspense>
+
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm sm:text-lg text-gray-600">
+              <div className="flex items-center">
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2 sm:mr-3" />
+                {formatPercent(reliability.uptimePercent, 2)} uptime (last {reliability.incidentFreeDaysRolling} days)
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 mr-2 sm:mr-3" />
+                {reliability.supportFirstResponseMinutes} min median support reply
+              </div>
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3" />
+                {formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} 90-day retention
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Sticky Mobile CTA */}
+      <div className="fixed bottom-4 left-0 right-0 z-40 block sm:hidden">
+        <div className="mx-4 rounded-xl shadow-lg bg-white border flex items-center justify-between px-4 py-3">
+          <div className="text-sm text-gray-700">
+            Try free - no card required
+          </div>
+          <Button asChild size="sm" className="ml-3 bg-blue-600 hover:bg-blue-700">
+            <Link to="/auth/sign-up">Try Free</Link>
+          </Button>
+        </div>
+      </div>
+      {/* Sticky Desktop CTA */}
+      <div className="hidden sm:block">
+        <div className="fixed bottom-6 right-6 z-40">
+          <Button asChild size="lg" className="shadow-lg bg-blue-600 hover:bg-blue-700">
+            <Link to="/auth/sign-up">Try free - no card required</Link>
+          </Button>
+        </div>
+      </div>
+      {/* Testimonial Snippet */}
+      <section className="py-6 sm:py-8 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto bg-gray-50 border rounded-lg p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-gray-900 text-base sm:text-lg font-medium mb-1">"{testimonials[0].content}"</p>
+                <p className="text-sm text-gray-600">{testimonials[0].name} - {testimonials[0].role}</p>
+              </div>
+              <div className="text-sm text-green-700 font-semibold">{testimonials[0].profit}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sample Results */}
+      <section className="py-10 sm:py-14 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Sample Screener Results</h2>
+            <p className="text-gray-600">Why these tickers matched today</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
+            {[{t:'AAPL',r:'50DMA crossover + volume > 1.5x avg'}, {t:'MSFT',r:'RSI 60-70 with positive price action'}, {t:'NVDA',r:'Momentum continuation; MACD bullish'}].map((s, i) => (
+              <div key={i} className="bg-white rounded-lg border p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-lg font-semibold text-gray-900">{s.t}</div>
+                  <span className="text-xs text-gray-500">NYSE/NASDAQ</span>
+                </div>
+                <p className="text-sm text-gray-700">{s.r}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Screener Demo */}
+      <Suspense fallback={null}>
+        <ScreenerDemo />
+      </Suspense>
+
+      {/* Social Proof Stats */}
+      <section className="py-12 sm:py-16 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Platform Performance Snapshot</h2>
+            <p className="text-gray-600">
+              {marketStats?.market_overview && !isLoading
+                ? "Real-time data refreshed continuously"
+                : `Derived from ${timeframeCopy("platform analytics")}`}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            {marketOverviewStats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className={`text-2xl sm:text-4xl font-bold mb-2 ${stat.tone}`}>
+                  {stat.value}
+                </div>
+                <div className="text-sm sm:text-base text-gray-600">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section with Expandable Details */}
+      <section className="py-16 sm:py-24 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+              Everything You Need for Long-Term Investing Success
+            </h2>
+            <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto">
+              Professional tools for fundamental analysis and data-driven investment decisions
+            </p>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12">
+            {features.map((feature, index) => (
+              <Collapsible key={index} className="group">
+                <Card className="hover:shadow-2xl transition-all duration-300 border-l-4 border-l-blue-500">
+                  <CollapsibleTrigger className="w-full text-left">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                            {feature.icon}
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg sm:text-2xl mb-2">{feature.title}</CardTitle>
+                            <CardDescription className="text-base sm:text-lg text-gray-600">
+                              {feature.description}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <ChevronDown className="h-6 w-6 text-gray-400 group-data-[state=open]:rotate-180 transition-transform" />
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <p className="text-gray-700 text-base sm:text-lg leading-relaxed pl-16 sm:pl-20">
+                        {feature.details}
+                      </p>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section (lazy) */}
+      <Suspense fallback={null}>
+        <TestimonialsSection testimonials={testimonials} />
+      </Suspense>
+
+      {/* Pricing Section */}
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-blue-900 to-blue-800 text-white">
+        <div className="container mx-auto px-4">
+          {/* Trial banner */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-full font-bold text-lg">
+              <Zap className="h-5 w-5 mr-2" />
+              Trial: Free until the next 1st of the month
+            </div>
+          </div>
+          
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">
+              Start Your Trading Journey Today
+            </h2>
+            <p className="text-xl sm:text-2xl text-blue-100 mb-6 sm:mb-8">
+              Choose the plan that fits your trading style
+            </p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <Card key={index} className={`relative hover:scale-105 transition-transform duration-300 ${plan.popular ? 'ring-4 ring-yellow-400 scale-105' : ''} ${plan.isFree ? 'order-last lg:order-none' : ''}`}>
+                {plan.popular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-yellow-900 px-4 py-1">
+                    Most Popular
+                  </Badge>
+                )}
+                <CardContent className="p-6 sm:p-8 text-center text-gray-900">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4">{plan.name}</h3>
+                  <div className="mb-4">
+                    <span className="text-3xl sm:text-5xl font-bold">{plan.price}</span>
+                    <span className="text-gray-600">{plan.period}</span>
+                  </div>
+                  <p className="text-gray-600 mb-6 sm:mb-8">{plan.description}</p>
+                  
+                  <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8 text-left">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center">
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
+                        <span className="text-sm sm:text-base">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Button asChild className="w-full text-base sm:text-lg py-4 sm:py-6 bg-blue-600 hover:bg-blue-700">
+                    <Link to="/auth/sign-up">
+                      {plan.cta}
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
+                    </Link>
+                  </Button>
+                  
+                  {!plan.isFree && (
+                    <p className="text-xs text-gray-500 text-center mt-3">
+                      Trial: Free until the next 1st of the month
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section (lazy) */}
+      <Suspense fallback={null}>
+        <HomeFAQ faqs={faqs} />
+      </Suspense>
+
+      {/* Final CTA Section */}
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-green-600 to-green-700 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-5xl font-bold mb-6 sm:mb-8">
+            Ready to Transform Your Trading?
+          </h2>
+          <p className="text-xl sm:text-2xl text-green-100 mb-8 sm:mb-12 max-w-3xl mx-auto">
+            Screen 10,500+ NYSE & NASDAQ stocks with professional tools.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
+            <Button asChild size="lg" variant="secondary" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-white text-green-700 hover:bg-gray-100">
+              <Link to="/auth/sign-up">
+                <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                Try Now for Free
+                <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto border-white text-white hover:bg-white hover:text-green-700">
+              <Link to="/pricing">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                View All Plans
+              </Link>
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-base sm:text-lg">
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              No Setup Fees
+            </div>
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              Cancel Anytime
+            </div>
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              Email Support
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Exit Intent Modal */}
+      {showExitIntent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Before you go - get free trading tips</h3>
+              <button
+                aria-label="Close"
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => setShowExitIntent(false)}
+              >
+                ?
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">Get a free screener template and onboarding tips.</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const email = (e.currentTarget.elements.namedItem('exit_email')?.value || '').toString();
+                if (!email) return;
+                try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+                setShowExitIntent(false);
+                window.location.assign(`/auth/sign-up?email=${encodeURIComponent(email)}`);
+              }}
+              className="flex gap-2"
+            >
+              <input
+                type="email"
+                name="exit_email"
+                placeholder="Enter your email"
+                required
+                className="flex-1 px-4 py-3 rounded-md border border-gray-300"
+              />
+              <Button type="submit" className="px-5">Get Started</Button>
+            </form>
+            <p className="text-xs text-gray-500 mt-3">No spam. Unsubscribe anytime.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Home;
