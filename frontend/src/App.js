@@ -52,6 +52,7 @@ import Checkout from "./pages/billing/Checkout";
 const AppDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/AppDashboard"));
 const Markets = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Markets"));
 const StockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StockDetail"));
+const EnhancedStockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/EnhancedStockDetail"));
 const Stocks = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Stocks"));
 const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Portfolio"));
 const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
