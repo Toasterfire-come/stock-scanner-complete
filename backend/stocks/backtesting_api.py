@@ -9,7 +9,11 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import json
 from .models import BacktestRun, BaselineStrategy
-from .services.backtesting_service import BacktestingService
+# Use Groq-powered service instead of static
+try:
+    from .services.groq_backtesting_service import GroqBacktestingService as BacktestingService
+except ImportError:
+    from .services.backtesting_service import BacktestingService
 
 # Backtest limits per tier (NO FREE PLAN)
 BACKTEST_LIMITS = {
