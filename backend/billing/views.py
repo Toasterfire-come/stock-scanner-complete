@@ -734,10 +734,25 @@ def paypal_webhook(request):
 
         # Signature verified - process event
         
-        # Process event
+        # FIXED: Process PAYMENT.CAPTURE.COMPLETED webhook
         if event_type == 'PAYMENT.CAPTURE.COMPLETED':
-            # Payment successful
-            pass
+            resource = payload.get('resource', {})
+            capture_id = resource.get('id')
+            
+            if capture_id:
+                try:
+                    # Find payment by capture_id
+                    payment = Payment.objects.get(paypal_capture_id=capture_id)
+                    
+                    # Ensure subscription is still active
+                    if payment.subscription and payment.subscription.status != 'active':
+                        payment.subscription.status = 'active'
+                        payment.subscription.save()
+                        logger.info(f"Subscription reactivated via webhook for payment {payment.id}")
+                    
+                except Payment.DoesNotExist:
+                    logger.warning(f"Payment not found for capture_id: {capture_id}")
+                    
         elif event_type == 'BILLING.SUBSCRIPTION.CANCELLED':
             # Subscription cancelled
             resource = payload.get('resource', {})
