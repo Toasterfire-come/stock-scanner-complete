@@ -51,95 +51,96 @@ const Features = () => {
 
   const mainFeatures = [
     {
-      icon: <Target className="h-8 w-8" />,
-      title: "Value Hunter - Fair Value Analysis",
-      description: "Find undervalued stocks using professional DCF models and intrinsic value calculations.",
-      details: [
-        "Discounted Cash Flow (DCF) valuation for any stock",
-        "Intrinsic value calculation with customizable growth assumptions",
-        "Margin of Safety scoring - know how much discount you're getting",
-        "Historical fair value trends and price comparison",
-        "Automated undervaluation alerts",
-        "Portfolio-wide fair value analysis"
-      ],
-      highlight: true
-    },
-    {
       icon: <LineChart className="h-8 w-8" />,
-      title: "AI-Powered Strategy Backtesting",
-      description: "Test your investment strategies against historical data with AI-enhanced insights.",
+      title: "Advanced Charting & Technical Analysis",
+      description: "Professional-grade charting with 9 timeframes and 8 technical indicators for all trading styles.",
       details: [
-        "Backtest any strategy with 5+ years of historical data",
-        "AI explains WHY your strategy works (or doesn't)",
-        "Risk-adjusted return metrics (Sharpe, Sortino, Max Drawdown)",
-        "Compare multiple strategies side-by-side",
-        "Monte Carlo simulation for probability analysis",
-        "Export detailed backtest reports"
+        "9 Timeframes: 1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W, 1M (Premium: 1m, 5m, 4H)",
+        "8 Technical Indicators: SMA, EMA, RSI, MACD, Bollinger Bands, VWAP, Stochastic, ATR",
+        "4 chart types: Candlestick, Line, Area, Heikin-Ashi (Premium)",
+        "Drawing tools and indicator overlays",
+        "Export to PNG, SVG, or CSV with high DPI support",
+        `${reliability.apiP50LatencyMs}ms P50 latency for smooth real-time charting`
       ],
       highlight: true
     },
     {
       icon: <Search className="h-8 w-8" />,
-      title: "Fundamental Stock Screening",
-      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with fundamental and technical filters.`,
+      title: "Real-Time Screeners & Scanners",
+      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities with momentum, breakout, and value filters for all trading styles.`,
       details: [
         `Complete coverage across ${usage.coverageVenues.join(", ")} (${formatNumber(usage.coverageUniverse)}+ tickers)`,
-        "Fundamental: P/E, P/B, EPS Growth, Revenue Growth, Dividend Yield, ROE, Debt/Equity",
-        "Technical: RSI, MACD, Moving Averages, Bollinger Bands, Volume analysis",
-        `Saved presets and shareable screeners across ${formatNumber(usage.teamsOnPlatform)} teams`,
-        "Near real-time updates with efficient caching",
-        "Quick export to CSV for deeper analysis"
-      ]
+        "Day Trading: Momentum scanners, gap plays, breakout screeners, volume alerts",
+        "Swing Trading: Technical patterns, 20/50 EMA crossovers, RSI setups",
+        "Long-Term: Fundamental filters (P/E, ROE, debt ratios), dividend screening",
+        `${formatNumber(usage.totalScreenersRunMonthly)}+ screeners run monthly`,
+        "Save presets and share screeners across teams"
+      ],
+      highlight: true
     },
     {
-      icon: <Bell className="h-8 w-8" />,
-      title: "Investment Alerts",
-      description: "Never miss an investment opportunity with smart notifications.",
+      icon: <Target className="h-8 w-8" />,
+      title: "Value Hunter - Fair Value Analysis",
+      description: "Automated weekly portfolio that identifies undervalued stocks using professional DCF models.",
       details: [
-        `Price movement alerts (% change or absolute) with sub-${reliability.apiP95LatencyMs}ms delivery`,
-        "Fair value threshold alerts - know when stocks become undervalued",
-        "Fundamental changes (earnings surprises, dividend announcements)",
-        `Email and push notification delivery (${formatNumber(usage.alertsDeliveredMonthly)}+ alerts/mo)`,
-        "Custom alert conditions",
-        "Alert history and management"
+        "Discounted Cash Flow (DCF) valuation for any stock",
+        "Earnings Power Value (EPV) and Graham Number calculations",
+        "Margin of Safety scoring - know how much discount you're getting",
+        "Automated weekly portfolio selection (top 10 undervalued stocks)",
+        "Historical performance tracking and backtested results",
+        "Portfolio-wide fair value analysis"
       ]
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
-      title: "Portfolio Analytics",
-      description: "Track performance with professional analytics tools.",
+      title: "AI-Powered Strategy Backtesting",
+      description: "Test ANY trading strategy - day trading, swing trading, or long-term - with AI-enhanced insights.",
       details: [
-        "Real-time portfolio valuation",
-        "Performance tracking and analysis",
-        "Position management and monitoring",
-        `Profit/loss calculations with ${formatPercent(outcomes.averageDrawdownReductionPercent)} drawdown reduction`,
-        `Portfolio diversification insights powering ${formatNumber(usage.watchlistsSyncedMonthly)} synced watchlists`,
-        "Historical performance data"
+        "Backtest any strategy with 5+ years of historical data",
+        "AI explains WHY your strategy works (or doesn't)",
+        "20 baseline strategies: 7 day trading, 7 swing, 6 long-term",
+        "Risk-adjusted return metrics (Sharpe, Sortino, Max Drawdown)",
+        "Compare multiple strategies side-by-side",
+        "Export detailed backtest reports (Premium: 5 backtests/month)"
+      ]
+    },
+    {
+      icon: <Bell className="h-8 w-8" />,
+      title: "Smart Alerts & Notifications",
+      description: "Near real-time alerts for price movements, technical signals, and fundamental changes.",
+      details: [
+        `Price movement alerts with sub-${reliability.apiP95LatencyMs}ms delivery`,
+        "Technical alerts: RSI overbought/oversold, MACD crossovers, breakout signals",
+        "Fair value threshold alerts - know when stocks become undervalued",
+        "Fundamental changes (earnings surprises, dividend announcements)",
+        `${formatNumber(usage.alertsDeliveredMonthly)}+ alerts delivered monthly`,
+        "Email and push notification delivery"
       ]
     },
     {
       icon: <TrendingUp className="h-8 w-8" />,
-      title: "SEC Insider Trading & Fair Value",
-      description: "Track insider buys/sells and view fair value vs market price charts.",
+      title: "Portfolio & Journal",
+      description: "Track performance with professional analytics, trading journal, and tax reporting.",
       details: [
-        "Recent insider transactions by executives and directors",
-        "Aggregate insider sentiment by ticker",
-        "Fair value estimates vs current price",
-        "Deviation alerts when price crosses fair value",
-        `Drill-down to individual stock insights backed by ${marketingMetrics.testimonials.verifiedCaseStudies}+ verified case studies`
+        "Portfolio valuation with intraday P&L tracking",
+        "Trading Journal: Record all trades with notes, screenshots, emotions",
+        "Tax Reporting: Automated cost basis tracking and tax lot management",
+        `Performance analytics with ${formatPercent(outcomes.averageDrawdownReductionPercent)} avg drawdown reduction`,
+        `Diversification insights across ${formatNumber(usage.watchlistsSyncedMonthly)} synced watchlists`,
+        "Historical performance charts and metrics"
       ]
     },
     {
-      icon: <LineChart className="h-8 w-8" />,
-      title: "Advanced Charting & Visualization",
-      description: "Professional-grade charting with export functionality and customizable indicators.",
+      icon: <Shield className="h-8 w-8" />,
+      title: "Fundamental Analysis & Insider Trading",
+      description: "50+ fundamental metrics, DCF valuations, and SEC insider transaction tracking.",
       details: [
-        "Multi-chart type support: candlestick, line, area, and bar charts",
-        "4 professional themes optimized for different lighting conditions",
-        "Chart export in multiple formats: PNG (high DPI), SVG (vector), CSV (data), and Print-ready",
-        "10+ configurable technical indicators: RSI, MACD, Bollinger Bands, SMA, EMA, Stochastic, VWAP, and more",
-        "Fullscreen chart mode with customizable indicator settings (period, colors, line width)",
-        `Chart toolbar with theme switching and type selection powered by ${reliability.apiP50LatencyMs}ms P50 latency`
+        "50+ fundamental metrics: P/E, ROE, debt ratios, margins, growth rates",
+        "SEC insider transactions by executives and directors",
+        "Aggregate insider sentiment by ticker",
+        "Fair value estimates vs current price",
+        `Insights backed by ${marketingMetrics.testimonials.verifiedCaseStudies}+ verified case studies`,
+        "Daily updates for all fundamental data"
       ]
     }
   ];

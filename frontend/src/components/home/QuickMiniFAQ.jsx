@@ -2,7 +2,7 @@ import React from "react";
 
 const QuickMiniFAQ = () => {
   const items = [
-    { q: "Is data real-time?", a: "Yes, key endpoints update in real time with >99.9% uptime." },
+    { q: "How fresh is the data?", a: "Intraday price data for charts, daily updates for fundamentals. >99.9% uptime." },
     { q: "Can I cancel anytime?", a: "Yes. Manage your plan in Account → Plan & Billing." },
     { q: "Are sources reliable?", a: "We aggregate from major exchanges and validated providers." },
   ];

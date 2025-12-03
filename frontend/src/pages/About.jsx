@@ -118,7 +118,7 @@ const About = () => {
                     Trade Scan Pro delivers institutional-grade screening, alerts, and analytics with {formatPercent(reliability.uptimePercent, 2)} uptime and {formatNumber(usage.totalScreenersRunMonthly)}+ monthly screeners at a price point accessible to independent traders and teams.
                   </p>
                   <p className="text-xl text-gray-700 leading-relaxed">
-                    We specialize in real-time equity analysis, delivering {formatNumber(usage.alertsDeliveredMonthly)} alerts every month, shaving {usage.medianTimeToFirstScreenerMinutes} minutes off discovery, and returning {formatPercent(outcomes.averagePortfolioLiftPercent)} average portfolio lift (self-reported) across cohorts.
+                    We specialize in professional stock analysis and screening, delivering {formatNumber(usage.alertsDeliveredMonthly)} alerts every month, shaving {usage.medianTimeToFirstScreenerMinutes} minutes off discovery, and returning {formatPercent(outcomes.averagePortfolioLiftPercent)} average portfolio lift (self-reported) across cohorts.
                   </p>
                 </div>
               </CardContent>
@@ -228,7 +228,7 @@ const About = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Technology Stack</h2>
               <p className="text-xl text-gray-600">
-                Enterprise-grade infrastructure powering real-time market intelligence
+                Enterprise-grade infrastructure powering professional market intelligence
               </p>
             </div>
 

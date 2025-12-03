@@ -1,13 +1,13 @@
 export const marketingMetrics = {
-  timeframeLabel: "Jan-Sep 2025",
+  timeframeLabel: "Projected 2025 estimates",
   usage: {
-    totalScreenersRunMonthly: 2_600_000,
-    activeAccounts: 38200,
-    teamsOnPlatform: 1870,
+    totalScreenersRunMonthly: 2_600_000, // Projected
+    activeAccounts: 38200, // Projected
+    teamsOnPlatform: 1870, // Projected
     medianTimeToFirstScreenerMinutes: 9,
-    watchlistsSyncedMonthly: 540_000,
-    alertsDeliveredMonthly: 910_000,
-    coverageUniverse: 10874,
+    watchlistsSyncedMonthly: 540_000, // Projected
+    alertsDeliveredMonthly: 910_000, // Projected
+    coverageUniverse: 10874, // Actual coverage
     coverageVenues: ["NYSE", "NASDAQ", "AMEX"],
   },
   outcomes: {

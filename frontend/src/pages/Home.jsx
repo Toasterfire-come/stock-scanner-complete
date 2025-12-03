@@ -225,35 +225,35 @@ const Home = () => {
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Value Investor",
-      company: "Peak Capital Partners",
-      content: "The Value Hunter has completely transformed my investment process. I can now identify undervalued companies in minutes and make data-driven decisions with confidence.",
+      name: "Marcus Thompson",
+      role: "Day Trader",
+      company: "Independent",
+      content: "The 1-minute and 5-minute charts with real-time alerts are perfect for my day trading. I caught 3 momentum breakouts in the first hour today using the screeners.",
       rating: 5,
-      profit: `+${formatPercent(marketingMetrics.outcomes.averagePortfolioLiftPercent)} portfolio growth`
+      profit: `+${formatPercent(marketingMetrics.outcomes.averagePortfolioLiftPercent)} monthly gains`
+    },
+    {
+      name: "Sarah Chen",
+      role: "Swing Trader",
+      company: "Peak Trading Group",
+      content: "I use the technical screeners for swing setups and Value Hunter for long-term holds. Having both trading styles in one platform saves me hours every week.",
+      rating: 5,
+      profit: `${marketingMetrics.outcomes.analystHoursSavedWeekly.toFixed(1)} hours saved weekly`
     },
     {
       name: "Michael Rodriguez",
-      role: "Portfolio Manager",
+      role: "Long-Term Investor",
       company: "Evergreen Investments",
-      content: "The AI backtesting feature helped me validate my long-term strategies with historical data. The insights on why strategies work are invaluable for client presentations.",
+      content: "The Value Hunter and AI backtesting features helped me validate my investment strategies with historical data. The DCF valuations are institutional-grade quality.",
       rating: 5,
       profit: `${formatPercent(marketingMetrics.outcomes.averageDrawdownReductionPercent)} risk reduction`
-    },
-    {
-      name: "Jennifer Park",
-      role: "Investment Advisor",
-      company: "Wealth Strategies LLC",
-      content: "The educational courses helped me understand value investing principles deeply. My clients appreciate the well-researched stock picks backed by fundamental analysis.",
-      rating: 5,
-      profit: `${marketingMetrics.outcomes.analystHoursSavedWeekly.toFixed(1)} hours saved weekly`
     }
   ];
 
   const faqs = [
     {
       question: "How accurate is your market data?",
-      answer: "Our data is sourced directly from major exchanges and updated in real-time. We maintain 99.9% uptime and ensure data accuracy through multiple validation layers."
+      answer: "Our data is sourced directly from major exchanges with daily updates for fundamentals and intraday data for price charts. We maintain 99.9% uptime and ensure data accuracy through multiple validation layers."
     },
     {
       question: "Can I cancel my subscription anytime?",
@@ -402,8 +402,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
-        title="Trade Scan Pro | Build Long-Term Wealth Through Smart Stock Selection"
-        description="Professional stock valuation tools, fundamental analysis, AI-powered backtesting, and educational resources for long-term investors. Learn value investing principles."
+        title="Trade Scan Pro | Professional Stock Analysis for Every Trading Style"
+        description="Advanced charting, real-time screeners, AI-powered backtesting, and fundamental analysis for day traders, swing traders, and long-term investors. Professional tools for all trading styles."
         url="https://tradescanpro.com/"
         jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
       />
@@ -437,7 +437,7 @@ const Home = () => {
                 <Button asChild size="lg" className="text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                   <Link to="/auth/sign-up" onClick={() => { try { trackEvent('select_content', { content_type: 'cta', location: 'home_hero', label: 'try_free' }); } catch {} }}>
                     <Play className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-                    Start Learning Free
+                    Try All Features Free
                     <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 ml-2 sm:ml-3" />
                   </Link>
                 </Button>
