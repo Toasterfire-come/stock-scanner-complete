@@ -37,7 +37,7 @@ class ScanConfig:
     timeout: float = 3.0
     max_retries: int = 2
     retry_delay: float = 0.1
-    target_tickers: int = 2000
+    target_tickers: int = 50  # Test with 50 first to verify rotation
     min_success_rate: float = 0.95
     random_delay_range: tuple = (0.01, 0.05)
     output_json: str = "realtime_scan_proxy_results.json"
@@ -103,15 +103,23 @@ class ProxyManager:
         """Get current proxy (rotates every N requests)"""
         with self.lock:
             self.request_count += 1
+            previous_index = self.current_index
+
+            # Debug: Log every request to see if this is being called
+            if self.request_count <= 10 or self.request_count % 10 == 0:
+                logger.info(f"📊 Request #{self.request_count}, Current proxy index: {self.current_index}")
 
             # Rotate proxy every N requests
             if self.request_count % self.rotation_interval == 0:
                 self.current_index = (self.current_index + 1) % len(self.proxies)
                 current = self.proxies[self.current_index]
                 if current:
-                    logger.debug(f"Rotating to proxy: {current}")
+                    logger.info(f"🔄 PROXY ROTATION #{self.request_count}: Switching from proxy {previous_index} to proxy {self.current_index}: {current}")
+                    # Add small delay to allow clean handoff
+                    time.sleep(0.1)
 
-            return self.proxies[self.current_index]
+            current_proxy = self.proxies[self.current_index]
+            return current_proxy
 
     def get_user_agent(self) -> str:
         """Get random user agent"""
