@@ -320,4 +320,41 @@ urlpatterns = [
     path('strategy-ranking/<int:strategy_id>/', strategy_ranking_api.get_strategy_detail, name='strategy_detail'),
     path('strategy-ranking/<int:strategy_id>/clone/', strategy_ranking_api.clone_strategy, name='clone_strategy'),
     path('strategy-ranking/<int:strategy_id>/rate/', strategy_ranking_api.rate_strategy, name='rate_strategy'),
+    
+    # ============================================================================
+    # NEW MVP FEATURES
+    # ============================================================================
+    
+    # Feature 1: AI Backtester with Groq Chat Integration
+    path('backtesting/chat/', ai_chat_api.chat_strategy, name='ai_chat_strategy'),
+    path('backtesting/understand/', ai_chat_api.understand_strategy, name='ai_understand_strategy'),
+    path('backtesting/generate-code/', ai_chat_api.generate_code, name='ai_generate_code'),
+    path('backtesting/ai-status/', ai_chat_api.check_ai_status, name='ai_status'),
+    
+    # Feature 2: Enhanced Screener - Filter ALL fields
+    path('screener/fields/', enhanced_screener_api.get_filter_fields, name='screener_fields'),
+    path('screener/filter/', enhanced_screener_api.advanced_filter, name='screener_filter'),
+    path('screener/presets/', enhanced_screener_api.get_presets, name='screener_presets'),
+    
+    # Feature 3: Fast Charting with Quick Updates
+    path('chart/<str:ticker>/quote/', fast_chart_api.get_fast_quote, name='fast_quote'),
+    path('chart/<str:ticker>/intraday/', fast_chart_api.get_intraday_data, name='intraday_chart'),
+    path('chart/<str:ticker>/latest/', fast_chart_api.get_latest_candle, name='latest_candle'),
+    path('chart/<str:ticker>/full/', fast_chart_api.get_chart_with_indicators, name='full_chart'),
+    path('chart/batch-quotes/', fast_chart_api.batch_quotes, name='batch_quotes'),
+    
+    # Feature 4: Aesthetic Valuation Display
+    path('valuation/<str:ticker>/display/', valuation_display_api.get_valuation_display, name='valuation_display'),
+    path('valuation/display/compare/', valuation_display_api.get_valuation_comparison, name='valuation_comparison'),
+    path('valuation/sector/<str:sector>/', valuation_display_api.get_sector_valuation, name='sector_valuation'),
+    
+    # Feature 5: Stock Grouping
+    path('groups/create/', grouping_api.create_stock_group, name='create_group'),
+    path('groups/<str:group_id>/', grouping_api.get_stock_group, name='get_group'),
+    path('groups/<str:group_id>/chart/', grouping_api.get_group_chart, name='group_chart'),
+    
+    # Feature 6: Stock/Group Comparison
+    path('compare/stocks/', grouping_api.compare_stocks, name='compare_stocks'),
+    path('compare/groups/', grouping_api.compare_groups, name='compare_groups'),
+    path('compare/chart/', grouping_api.get_comparison_chart, name='comparison_chart'),
 ]
