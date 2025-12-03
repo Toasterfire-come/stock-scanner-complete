@@ -84,6 +84,8 @@ import CreateScreener from "./pages/app/screeners/CreateScreener";
 import EditScreener from "./pages/app/screeners/EditScreener";
 import ScreenerResults from "./pages/app/screeners/ScreenerResults";
 import ScreenerDetail from "./pages/app/screeners/ScreenerDetail";
+import EnhancedCreateScreener from "./pages/app/screeners/EnhancedCreateScreener";
+import EnhancedScreenerResults from "./pages/app/screeners/EnhancedScreenerResults";
 import Templates from "./pages/app/Templates";
 
 // Market Overview (Protected)
