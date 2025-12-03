@@ -34,7 +34,7 @@ const PricingPro = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [plans, setPlans] = useState({});
-  const [currentPlan, setCurrentPlan] = useState('free');
+  const [currentPlan, setCurrentPlan] = useState(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const location = useLocation();
@@ -43,7 +43,7 @@ const PricingPro = () => {
   useEffect(() => {
     // static page: no backend calls here
     setPlans(getDefaultPlans());
-    setCurrentPlan('free');
+    setCurrentPlan(null);
     try { trackPageView('/pricing'); } catch {}
   }, []);
 
@@ -78,68 +78,39 @@ const PricingPro = () => {
   // fetchPlans removed to keep pricing fully static
 
   const getDefaultPlans = () => ({
-    // Free plan removed
-    bronze: {
-      name: 'Bronze Plan', 
-      price: 24.99,
-      price_yearly: 254.99,
+    // Free plan removed - 2 plan setup: Basic and Plus
+    basic: {
+      name: 'Basic',
+      price: 29.99,
+      price_yearly: 305.99,
       popular: false,
       limits: {
-        api_calls: 1500,
-        screeners: 10,
-        alerts: 50,
-        watchlists: 2, 
-        portfolios: 0,
-      },
-      features: [
-        'Professional stock data access',
-        '1,500 API calls per month',
-        '10 Screeners',
-        '100 Email Alerts per month',
-        '2 Watchlists',
-        'Real-time market information',
-        'Basic stock screener',
-        'Email alerts & notifications',
-        'Portfolio tracking',
-        'High Quality News and Sentiment Analysis',
-        'Email support',
-        'Advanced screener filters',
-        'Custom watchlists',
-        'Priority support'
-      ]
-    },
-    silver: {
-      name: 'Silver Plan',
-      price: 49.99,
-      price_yearly: 509.99,
-      popular: true,
-      limits: {
-        api_calls: 5000,
-        screeners: 20,
-        alerts: 100,
-        watchlists: 10,
+        api_calls: 2500,
+        screeners: 15,
+        alerts: 75,
+        watchlists: 5,
         portfolios: 1,
       },
       features: [
-        'All Bronze features',
-        '5,000 API calls per month',
-        '20 Screeners',
-        '500 Alerts per month',
+        '2,500 API calls per month',
+        '15 Custom Screeners',
+        '75 Real-time Alerts per month',
         '5 Watchlists',
-        'Portfolio Analytics',
-        'Advanced Screener Tools (JSON input/output)',
-        'Advanced Watchlist Tools (JSON input/output)',
-        'Historical data access',
-        'Custom Portfolios',
-        'Data Export (CSV, JSON)',
-        'Priority support'
+        '1 Portfolio with tracking',
+        'Real-time market data',
+        'Basic stock screener',
+        'Email alerts & notifications',
+        'Standard charting with 4 themes',
+        'High quality news feed',
+        'Standard data export (CSV)',
+        'Email support'
       ]
     },
-    gold: {
-      name: 'Gold Plan',
-      price: 79.99,
-      price_yearly: 814.99,
-      popular: false,
+    plus: {
+      name: 'Plus',
+      price: 59.99,
+      price_yearly: 611.99,
+      popular: true,
       limits: {
         api_calls: -1,
         screeners: -1,
@@ -148,37 +119,39 @@ const PricingPro = () => {
         portfolios: -1,
       },
       features: [
-        'Everything in Silver',
+        'Everything in Basic',
         'Unlimited API calls',
-        'Unlimited everything',
-        'API Key Access',
-        'Developer Tools',
-        'White-label Solutions',
-        'Custom Reports',
-        'Real-time market data',
-        'Professional analytics',
-        'Advanced export options',
-        'Premium support'
+        'Unlimited Screeners',
+        'Unlimited Real-time Alerts',
+        'Unlimited Watchlists',
+        'Unlimited Portfolios',
+        'Advanced screener tools (JSON input/output)',
+        'Advanced watchlist tools (JSON input/output)',
+        'Historical data access',
+        'Portfolio analytics & performance tracking',
+        'Advanced charting with 10+ indicators',
+        'Multi-format export (PNG, SVG, CSV, JSON)',
+        'Priority support',
+        'API key access',
+        'Developer tools',
+        'Custom reports',
+        'Virtual scrolling for large datasets'
       ]
     }
   });
 
   const getPlanIcon = (planKey) => {
     switch (planKey) {
-      case 'free': return <Zap className="h-6 w-6" />;
-      case 'bronze': return <Award className="h-6 w-6" />;
-      case 'silver': return <Shield className="h-6 w-6" />;
-      case 'gold': return <Crown className="h-6 w-6" />;
+      case 'basic': return <Award className="h-6 w-6" />;
+      case 'plus': return <Crown className="h-6 w-6" />;
       default: return <Zap className="h-6 w-6" />;
     }
   };
 
   const getPlanColor = (planKey) => {
     switch (planKey) {
-      case 'free': return 'text-gray-600 border-gray-200';
-      case 'bronze': return 'text-orange-600 border-orange-200 bg-orange-50';
-      case 'silver': return 'text-blue-600 border-blue-200 bg-blue-50';
-      case 'gold': return 'text-yellow-600 border-yellow-200 bg-yellow-50';
+      case 'basic': return 'text-blue-600 border-blue-200 bg-blue-50';
+      case 'plus': return 'text-purple-600 border-purple-200 bg-purple-50';
       default: return 'text-gray-600 border-gray-200';
     }
   };
@@ -288,7 +261,7 @@ const PricingPro = () => {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
         {Object.entries(plans).map(([planKey, plan]) => {
           const savings = getAnnualSavings(plan.price);
           
@@ -380,7 +353,7 @@ const PricingPro = () => {
                         : 'bg-gray-900 hover:bg-gray-800'
                     }`}
                     onClick={() => handleSubscribe(planKey)}
-                    disabled={isLoading || currentPlan === planKey || planKey === 'free'}
+                    disabled={isLoading || currentPlan === planKey}
                   >
                     {isLoading ? (
                       <div className="flex items-center space-x-2">
@@ -389,28 +362,14 @@ const PricingPro = () => {
                       </div>
                     ) : currentPlan === planKey ? (
                       'Current Plan'
-                    ) : planKey === 'free' ? (
-                      'Get Started Free'
                     ) : (
-                      planKey === 'free' ? ctaLabel : `Upgrade to ${plan.name}`
+                      `Start with ${plan.name}`
                     )}
                   </Button>
                   {/* Trial / Referral note under CTAs */}
-                  {planKey !== 'free' && (
-                    <p className="text-xs text-gray-500 text-center">
-                      Trial free until next 1st • 50% off 1st month with referral code
-                    </p>
-                  )}
-                  
-                  {planKey === 'free' && !isAuthenticated && (
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => navigate('/auth/sign-up')}
-                    >
-                      Create Free Account
-                    </Button>
-                  )}
+                  <p className="text-xs text-gray-500 text-center">
+                    Trial free until next 1st • 50% off 1st month with referral code
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -423,22 +382,35 @@ const PricingPro = () => {
       {/* Which plan is right for me? */}
       <div className="max-w-4xl mx-auto mb-16">
         <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Which plan is right for me?</h2>
-        <div className="grid sm:grid-cols-2 gap-4 text-sm">
-          <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Free</p>
-            <p className="text-gray-600">Trying the platform; basic lookup and 1 portfolio.</p>
+        <div className="grid sm:grid-cols-2 gap-6 text-sm">
+          <div className="bg-white border-2 border-blue-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-2 mb-2">
+              <Award className="h-5 w-5 text-blue-600" />
+              <p className="font-bold text-gray-900 text-lg">Basic</p>
+            </div>
+            <p className="text-gray-600 mb-3">Perfect for individual traders getting started with professional tools.</p>
+            <ul className="text-xs text-gray-500 space-y-1">
+              <li>• 15 screeners & 75 alerts/month</li>
+              <li>• 5 watchlists & 1 portfolio</li>
+              <li>• Real-time market data</li>
+              <li>• Email support</li>
+            </ul>
           </div>
-          <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Bronze</p>
-            <p className="text-gray-600">Casual trader; 10 screeners, 2 watchlists, 50 alerts/month.</p>
-          </div>
-          <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Silver</p>
-            <p className="text-gray-600">Active trader; 20 screeners, 10 watchlists, 100 alerts, 1 portfolio.</p>
-          </div>
-          <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Gold</p>
-            <p className="text-gray-600">Power user/team; unlimited limits and premium support.</p>
+          <div className="bg-white border-2 border-purple-200 rounded-lg p-6 hover:shadow-lg transition-shadow relative">
+            <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600">
+              Most Popular
+            </Badge>
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className="h-5 w-5 text-purple-600" />
+              <p className="font-bold text-gray-900 text-lg">Plus</p>
+            </div>
+            <p className="text-gray-600 mb-3">For serious traders who need unlimited access and advanced features.</p>
+            <ul className="text-xs text-gray-500 space-y-1">
+              <li>• Unlimited everything</li>
+              <li>• Advanced analytics & tools</li>
+              <li>• API access & developer tools</li>
+              <li>• Priority support</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -509,7 +481,7 @@ const PricingPro = () => {
           <AccordionItem value="item-4">
             <AccordionTrigger>How much do I save with annual billing?</AccordionTrigger>
             <AccordionContent>
-              Annual plans save you 15% compared to monthly billing. For example, Bronze saves $44.89/year, Silver saves $89.89/year, and Gold saves $144.89/year.
+              Annual plans save you 15% compared to monthly billing. For example, Basic saves approximately $54/year, and Plus saves approximately $108/year.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-5">
