@@ -304,6 +304,7 @@ urlpatterns = [
     path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
     path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
     path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
+    path('backtesting/limits/', backtesting_api.get_backtest_limits, name='backtest_limits'),
     
     # Value Hunter endpoints (Phase 5)
     path('value-hunter/current/', value_hunter_api.get_current_week, name='vh_current_week'),
