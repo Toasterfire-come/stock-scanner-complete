@@ -11,12 +11,11 @@ import json
 from .models import BacktestRun, BaselineStrategy
 from .services.backtesting_service import BacktestingService
 
-# Backtest limits per tier
+# Backtest limits per tier (NO FREE PLAN)
 BACKTEST_LIMITS = {
-    'free': 1,  # 1 trial backtest
-    'bronze': 2,  # 2 backtests per month (Basic plan)
-    'silver': -1,  # Unlimited (Plus plan)
-    'gold': -1,  # Unlimited (Plus plan)
+    'bronze': 2,  # 2 backtests per month (Basic plan - $24.99)
+    'silver': -1,  # Unlimited (Plus plan - $49.99)
+    'gold': -1,  # Unlimited (Plus plan - $79.99)
 }
 
 
@@ -26,9 +25,9 @@ def get_user_backtest_limit(user):
         from billing.models import Subscription
         subscription = Subscription.objects.get(user=user, status='active')
         tier = subscription.plan_tier
-        return BACKTEST_LIMITS.get(tier, BACKTEST_LIMITS['free'])
+        return BACKTEST_LIMITS.get(tier, 0)  # Return 0 if no valid subscription
     except Subscription.DoesNotExist:
-        return BACKTEST_LIMITS['free']
+        return 0  # No subscription = no backtests allowed
 
 
 def get_user_backtests_this_month(user):
