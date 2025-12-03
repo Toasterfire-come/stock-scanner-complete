@@ -310,6 +310,11 @@ function App() {
                   } />
                   <Route path="/app/stocks/:symbol" element={
                     <ProtectedRoute>
+                      <EnhancedStockDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/stocks/:symbol/classic" element={
+                    <ProtectedRoute>
                       <StockDetail />
                     </ProtectedRoute>
                   } />
