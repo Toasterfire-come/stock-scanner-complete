@@ -366,7 +366,12 @@ function App() {
                   } />
                   <Route path="/app/screeners/new" element={
                     <ProtectedRoute>
-                      <CreateScreener />
+                      <EnhancedCreateScreener />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/results" element={
+                    <ProtectedRoute>
+                      <EnhancedScreenerResults />
                     </ProtectedRoute>
                   } />
                   <Route path="/app/screeners/:id/edit" element={
