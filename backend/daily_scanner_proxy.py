@@ -36,10 +36,10 @@ class ScanConfig:
     timeout: float = 5.0
     max_retries: int = 2
     retry_delay: float = 0.1
-    target_tickers: int = 100  # Optimal: 20 proxies × 5 requests = 100 tickers @ 99% success
+    target_tickers: int = 2000  # With 100 proxies: 2000/100 = 20 requests per proxy
     random_delay_range: tuple = (0.01, 0.05)
-    output_json: str = "daily_scan_results.json"
-    session_pool_size: int = 20
+    output_json: str = "daily_scan_2000_results.json"
+    session_pool_size: int = 100  # 100 proxies = each used ~20 times (well under 30 limit)
     history_period: str = "5d"  # Last 5 days for trend analysis
 
 

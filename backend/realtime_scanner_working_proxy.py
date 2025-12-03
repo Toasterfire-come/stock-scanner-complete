@@ -37,8 +37,8 @@ class ScanConfig:
     retry_delay: float = 0.1
     target_tickers: int = 2000  # Full production scan
     random_delay_range: tuple = (0.01, 0.05)
-    output_json: str = "realtime_scan_working_proxy_results.json"
-    session_pool_size: int = 20  # 20 sessions = each proxy used ~100 times for 2K tickers
+    output_json: str = "realtime_scan_2000_results.json"
+    session_pool_size: int = 100  # 100 proxies = each used ~20 times for 2K tickers (well under 30 limit)
 
 
 class SessionPool:
