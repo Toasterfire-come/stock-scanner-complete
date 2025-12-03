@@ -11,6 +11,34 @@ import json
 from .models import BacktestRun, BaselineStrategy
 from .services.backtesting_service import BacktestingService
 
+# Backtest limits per tier
+BACKTEST_LIMITS = {
+    'free': 1,  # 1 trial backtest
+    'bronze': 2,  # 2 backtests per month (Basic plan)
+    'silver': -1,  # Unlimited (Plus plan)
+    'gold': -1,  # Unlimited (Plus plan)
+}
+
+
+def get_user_backtest_limit(user):
+    """Get user's monthly backtest limit based on subscription tier"""
+    try:
+        from billing.models import Subscription
+        subscription = Subscription.objects.get(user=user, status='active')
+        tier = subscription.plan_tier
+        return BACKTEST_LIMITS.get(tier, BACKTEST_LIMITS['free'])
+    except Subscription.DoesNotExist:
+        return BACKTEST_LIMITS['free']
+
+
+def get_user_backtests_this_month(user):
+    """Count user's backtests created this month"""
+    start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    return BacktestRun.objects.filter(
+        user=user,
+        created_at__gte=start_of_month
+    ).count()
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -35,6 +63,22 @@ def create_backtest(request):
         if not user:
             from django.contrib.auth.models import User
             user, _ = User.objects.get_or_create(username='anonymous')
+        
+        # Check backtest limit for authenticated users
+        if request.user.is_authenticated:
+            limit = get_user_backtest_limit(request.user)
+            current_count = get_user_backtests_this_month(request.user)
+            
+            if limit > 0 and current_count >= limit:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Monthly backtest limit reached',
+                    'error_code': 'LIMIT_REACHED',
+                    'current_count': current_count,
+                    'limit': limit,
+                    'message': f'You have used all {limit} backtests for this month. Upgrade to Plus plan for unlimited backtests.',
+                    'upgrade_url': '/pricing'
+                }, status=403)
         
         # Validate required fields
         required_fields = ['name', 'strategy_text', 'category', 'symbols', 'start_date', 'end_date']
@@ -62,10 +106,18 @@ def create_backtest(request):
             status='pending'
         )
         
+        # Get remaining backtests for this month
+        remaining = -1  # Unlimited
+        if request.user.is_authenticated:
+            limit = get_user_backtest_limit(request.user)
+            if limit > 0:
+                remaining = limit - current_count - 1
+        
         return JsonResponse({
             'success': True,
             'backtest_id': backtest.id,
-            'status': backtest.status
+            'status': backtest.status,
+            'backtests_remaining': remaining
         })
     
     except json.JSONDecodeError:
