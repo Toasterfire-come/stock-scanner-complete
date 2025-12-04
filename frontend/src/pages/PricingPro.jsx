@@ -161,6 +161,29 @@ const PricingPro = () => {
     return limit.toLocaleString();
   };
 
+  // Get appropriate icon for feature
+  const getFeatureIcon = (feature) => {
+    const lowerFeature = feature.toLowerCase();
+    if (lowerFeature.includes('api') || lowerFeature.includes('calls')) {
+      return <BarChart3 className="h-4 w-4 text-blue-500" />;
+    } else if (lowerFeature.includes('screener') || lowerFeature.includes('filter')) {
+      return <TrendingUp className="h-4 w-4 text-green-500" />;
+    } else if (lowerFeature.includes('alert') || lowerFeature.includes('notification')) {
+      return <Bell className="h-4 w-4 text-orange-500" />;
+    } else if (lowerFeature.includes('watchlist')) {
+      return <Star className="h-4 w-4 text-yellow-500" />;
+    } else if (lowerFeature.includes('portfolio')) {
+      return <Users className="h-4 w-4 text-purple-500" />;
+    } else if (lowerFeature.includes('support') || lowerFeature.includes('priority')) {
+      return <Mail className="h-4 w-4 text-indigo-500" />;
+    } else if (lowerFeature.includes('export') || lowerFeature.includes('data')) {
+      return <Shield className="h-4 w-4 text-cyan-500" />;
+    } else if (lowerFeature.includes('unlimited') || lowerFeature.includes('everything')) {
+      return <Zap className="h-4 w-4 text-amber-500" />;
+    }
+    return <Check className="h-4 w-4 text-green-500" />;
+  };
+
   // 15% annual discount, rounded to nearest price ending with 9.99
   const roundToNearest9_99 = (value) => {
     if (!value || value <= 0) return 0;
@@ -234,18 +257,29 @@ const PricingPro = () => {
         
         {/* Billing Toggle */}
         <div className="flex items-center justify-center space-x-4 mb-8">
-          <Label htmlFor="billing-toggle" className={isAnnual ? "text-gray-600" : "text-gray-900 font-medium"}>
+          <Label
+            htmlFor="billing-toggle"
+            className={`transition-all duration-200 cursor-pointer ${
+              isAnnual ? "text-gray-600" : "text-gray-900 font-medium"
+            }`}
+          >
             Monthly
           </Label>
           <Switch
             id="billing-toggle"
             checked={isAnnual}
             onCheckedChange={setIsAnnual}
+            className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
           />
-          <Label htmlFor="billing-toggle" className={isAnnual ? "text-gray-900 font-medium" : "text-gray-600"}>
+          <Label
+            htmlFor="billing-toggle"
+            className={`transition-all duration-200 cursor-pointer ${
+              isAnnual ? "text-gray-900 font-medium" : "text-gray-600"
+            }`}
+          >
             Annual
           </Label>
-          <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2">
+          <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2 transition-all hover:scale-105">
             Save 15%
           </Badge>
         </div>
@@ -262,11 +296,17 @@ const PricingPro = () => {
 
       {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
-        {Object.entries(plans).map(([planKey, plan]) => {
+        {Object.entries(plans).map(([planKey, plan], index) => {
           const savings = getAnnualSavings(plan.price);
-          
+
           return (
-            <Card key={planKey} className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${getPlanColor(planKey)}`}>
+            <Card
+              key={planKey}
+              className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${getPlanColor(planKey)}
+                transition-all duration-300 hover:shadow-xl hover:scale-[1.02]
+                animate-fade-in-up`}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               {plan.popular && (
                 <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white">
                   Most Popular
@@ -293,12 +333,30 @@ const PricingPro = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Show strikethrough for referral discount */}
+                  {referralCode && !isAnnual && plan.price > 0 && (
+                    <div className="mt-1">
+                      <span className="text-lg text-gray-500 line-through">
+                        ${plan.price}/month
+                      </span>
+                    </div>
+                  )}
+
                   {isAnnual && plan.price > 0 && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600">{(savings.yearly / 12).toFixed(2)}/month billed annually</p>
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 mt-1">
-                        Save ${savings.amount.toFixed(2)} ({savings.percentage}%)
-                      </Badge>
+                    <div className="mt-2 space-y-1">
+                      <p className="text-base font-semibold text-blue-600">
+                        ${(savings.yearly / 12).toFixed(2)}/month
+                      </p>
+                      <p className="text-xs text-gray-500">billed ${savings.yearly}/year</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 line-through">
+                          ${(plan.price * 12).toFixed(2)}/year
+                        </span>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Save ${savings.amount.toFixed(2)}
+                        </Badge>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -330,14 +388,17 @@ const PricingPro = () => {
                 {/* Features List */}
                 <ul className="space-y-3 mb-8">
                   {plan.features.slice(0, 6).map((feature, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <li key={index} className="flex items-start space-x-3 group">
+                      <div className="mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110">
+                        {getFeatureIcon(feature)}
+                      </div>
                       <span className="text-sm text-gray-700">{feature}</span>
                     </li>
                   ))}
                   {plan.features.length > 6 && (
-                    <li className="text-sm text-gray-500">
-                      + {plan.features.length - 6} more features
+                    <li className="flex items-center space-x-2 text-sm text-gray-500">
+                      <Zap className="h-4 w-4 text-gray-400" />
+                      <span>+ {plan.features.length - 6} more features</span>
                     </li>
                   )}
                 </ul>
@@ -345,13 +406,15 @@ const PricingPro = () => {
                 {/* CTA Button */}
                 <div className="space-y-3">
                   <Button
-                    className={`w-full ${
-                      plan.popular
-                        ? 'bg-blue-600 hover:bg-blue-700'
-                        : currentPlan === planKey
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-gray-900 hover:bg-gray-800'
-                    }`}
+                    className={`w-full transition-all duration-200
+                      focus:ring-4 focus:ring-offset-2
+                      ${
+                        plan.popular
+                          ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-300'
+                          : currentPlan === planKey
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-gray-900 hover:bg-gray-800 focus:ring-gray-300'
+                      }`}
                     onClick={() => handleSubscribe(planKey)}
                     disabled={isLoading || currentPlan === planKey}
                   >
