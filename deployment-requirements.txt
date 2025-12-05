@@ -1,2 +1,0 @@
-# Python requirements for SFTP deployment script
-paramiko>=2.7.2
