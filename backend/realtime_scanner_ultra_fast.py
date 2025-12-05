@@ -71,7 +71,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ScanConfig:
     """Configuration for ultra-fast scanning"""
-    max_threads: int = 200  # Optimized for 5000+ tickers in <160s (~32 tickers/sec needed)
+    max_threads: int = 20  # Optimal for curl_cffi stability (balanced throughput)
     timeout: float = 3.0  # Slightly longer for reliability
     max_retries: int = 2  # Minimal retries
     retry_delay: float = 0.1  # Fast retry
@@ -79,40 +79,50 @@ class ScanConfig:
     min_success_rate: float = 0.95  # 95% minimum
     use_socks5h: bool = True  # Use SOCKS5h to prevent DNS leakage
     rotate_per_request: bool = True  # Rotate proxy every request
-    random_delay_range: tuple = (0.005, 0.02)  # Minimal delay between requests
+    random_delay_range: tuple = None  # No delays - maximizes speed
+    proxy_pool_size: int = 200  # Use 200 proxies for better load distribution
 
 
 class ProxyRotator:
-    """Thread-safe proxy rotator with health monitoring"""
+    """Thread-safe proxy rotator with health monitoring and smart retry"""
 
-    def __init__(self, proxies: List[str], use_socks5h: bool = True):
-        self.proxies = proxies
+    def __init__(self, proxies: List[str], use_socks5h: bool = True, max_proxies: int = 200):
+        # Limit to max_proxies for better distribution
+        self.proxies = proxies[:max_proxies] if len(proxies) > max_proxies else proxies
         self.use_socks5h = use_socks5h
         self.current_index = 0
         self.lock = threading.Lock()
         self.failures = {}  # Track failures per proxy
         self.successes = {}  # Track successes per proxy
         self.last_used = {}  # Track last usage time
+        self.auth_failed = set()  # Track proxies with auth failures (don't retry)
 
-        logger.info(f"Initialized ProxyRotator with {len(proxies)} proxies (SOCKS5h: {use_socks5h})")
+        logger.info(f"Initialized ProxyRotator with {len(self.proxies)} proxies (SOCKS5h: {use_socks5h}, max: {max_proxies})")
 
-    def get_next_proxy(self) -> Optional[str]:
-        """Get next proxy in rotation"""
+    def get_next_proxy(self, exclude_proxy: str = None) -> Optional[str]:
+        """Get next proxy in rotation, optionally excluding a specific proxy"""
         if not self.proxies:
             return None
 
         with self.lock:
-            # Find least recently used healthy proxy
+            # Find healthy proxies (not auth-failed, not excluded, not too many failures)
             available_proxies = [
                 p for p in self.proxies
-                if self.failures.get(p, 0) < 5  # Skip proxies with 5+ failures
+                if p not in self.auth_failed
+                and p != exclude_proxy
+                and self.failures.get(p, 0) < 5  # Skip proxies with 5+ failures
             ]
 
             if not available_proxies:
-                # Reset failures if all proxies are marked as failed
-                logger.warning("All proxies failed, resetting failure counts")
+                # If all proxies exhausted, reset failures and try again
+                logger.warning("All proxies failed or excluded, resetting failure counts")
                 self.failures.clear()
-                available_proxies = self.proxies
+                available_proxies = [p for p in self.proxies if p not in self.auth_failed and p != exclude_proxy]
+
+                if not available_proxies:
+                    # Even auth-failed proxies are better than nothing
+                    logger.warning("Using auth-failed proxies as last resort")
+                    available_proxies = [p for p in self.proxies if p != exclude_proxy] or self.proxies
 
             # Round-robin selection
             proxy = available_proxies[self.current_index % len(available_proxies)]
@@ -130,22 +140,31 @@ class ProxyRotator:
                 self.failures[proxy] -= 1
 
     def mark_failure(self, proxy: str, reason: str = ""):
-        """Mark proxy as failed"""
+        """Mark proxy as failed, with special handling for auth failures"""
         with self.lock:
-            self.failures[proxy] = self.failures.get(proxy, 0) + 1
-            logger.debug(f"Proxy {proxy} failed ({reason}): {self.failures[proxy]} failures")
+            is_auth_failure = "401" in reason or "Unauthorized" in reason
+
+            if is_auth_failure:
+                # Permanent failure - don't retry this proxy
+                self.auth_failed.add(proxy)
+                logger.warning(f"Proxy {proxy} marked as auth-failed (permanent): {reason[:50]}")
+            else:
+                self.failures[proxy] = self.failures.get(proxy, 0) + 1
+                logger.debug(f"Proxy {proxy} failed ({reason[:30]}): {self.failures[proxy]} failures")
 
     def get_stats(self) -> Dict[str, Any]:
         """Get proxy statistics"""
         with self.lock:
             total_successes = sum(self.successes.values())
             total_failures = sum(self.failures.values())
+            healthy_count = len([p for p in self.proxies if p not in self.auth_failed and self.failures.get(p, 0) < 5])
             return {
                 "total_proxies": len(self.proxies),
                 "total_successes": total_successes,
                 "total_failures": total_failures,
                 "success_rate": total_successes / (total_successes + total_failures) if (total_successes + total_failures) > 0 else 0,
-                "healthy_proxies": len([p for p in self.proxies if self.failures.get(p, 0) < 5])
+                "healthy_proxies": healthy_count,
+                "auth_failed_proxies": len(self.auth_failed)
             }
 
 
@@ -200,15 +219,13 @@ class YFinanceClient:
         return session
 
     def fetch_realtime_data(self, ticker: str) -> Optional[Dict[str, Any]]:
-        """Fetch real-time data for a single ticker (17 fields)"""
+        """Fetch real-time data for a single ticker with smart retry logic"""
         proxy = self.proxy_rotator.get_next_proxy() if self.config.rotate_per_request else None
+        failed_proxy = None  # Track failed proxy for smart retry
 
         for attempt in range(self.config.max_retries):
             try:
-                # Random delay to avoid pattern detection
-                if self.config.random_delay_range:
-                    delay = random.uniform(*self.config.random_delay_range)
-                    time.sleep(delay)
+                # NO delays - maximize speed
 
                 # Create session with proxy
                 session = self._create_session(proxy)
@@ -267,14 +284,29 @@ class YFinanceClient:
                 return data
 
             except Exception as e:
-                logger.debug(f"Attempt {attempt + 1} failed for {ticker}: {str(e)[:50]}")
-                if proxy:
-                    self.proxy_rotator.mark_failure(proxy, str(e)[:30])
+                error_msg = str(e)
+                is_auth_failure = "401" in error_msg or "Unauthorized" in error_msg
+
+                if is_auth_failure:
+                    logger.debug(f"Auth failure for {ticker} on proxy {proxy}: {error_msg[:50]}")
+                    if proxy:
+                        # Mark proxy as permanently failed
+                        self.proxy_rotator.mark_failure(proxy, error_msg[:30])
+                        failed_proxy = proxy
+                else:
+                    logger.debug(f"Attempt {attempt + 1} failed for {ticker}: {error_msg[:50]}")
+                    if proxy:
+                        self.proxy_rotator.mark_failure(proxy, error_msg[:30])
 
                 if attempt < self.config.max_retries - 1:
-                    # Get new proxy for retry
-                    proxy = self.proxy_rotator.get_next_proxy()
-                    time.sleep(self.config.retry_delay * (2 ** attempt))
+                    # Get new proxy for retry (exclude failed one if auth failure)
+                    if is_auth_failure and failed_proxy:
+                        proxy = self.proxy_rotator.get_next_proxy(exclude_proxy=failed_proxy)
+                    else:
+                        proxy = self.proxy_rotator.get_next_proxy()
+                    # Minimal retry delay only for non-auth failures
+                    if not is_auth_failure:
+                        time.sleep(self.config.retry_delay * (attempt + 1))
 
         return None
 
@@ -395,7 +427,7 @@ def run_ultra_fast_scan():
 
     # Load proxies
     proxies = load_proxies()
-    proxy_rotator = ProxyRotator(proxies, use_socks5h=config.use_socks5h)
+    proxy_rotator = ProxyRotator(proxies, use_socks5h=config.use_socks5h, max_proxies=config.proxy_pool_size)
 
     # Create YFinance client
     client = YFinanceClient(proxy_rotator, config)

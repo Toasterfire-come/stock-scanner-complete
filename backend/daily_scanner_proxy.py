@@ -34,19 +34,22 @@ BASE_DIR = Path(__file__).resolve().parent
 @dataclass
 class ScanConfig:
     """Configuration for daily scanner"""
-    max_threads: int = 15  # Increased for better performance
+    max_threads: int = 20  # Optimal for curl_cffi stability
     timeout: float = 5.0
     max_retries: int = 2
     retry_delay: float = 0.1
     target_tickers: int = 5000  # Scan all tickers (will load from combined list)
-    random_delay_range: tuple = (0.005, 0.02)  # Reduced delay for faster scanning
+    random_delay_range: tuple = None  # No random delays - using calculated spread delay
     output_json: str = "daily_scan_results.json"
-    session_pool_size: int = 100  # 100 proxies = each used ~50 times (still under limit)
+    session_pool_size: int = 200  # 200 proxies for better load distribution
     history_period: str = "5d"  # Last 5 days for trend analysis
     # Market timing (Eastern Time)
     daily_start_hour: int = 0  # 12:00 AM ET
     daily_end_hour: int = 9  # 9:00 AM ET (before market open at 9:30 AM)
     daily_end_minute: int = 30  # Market opens at 9:30 AM
+    # Spread scanning over full window minus 30 min buffer
+    target_duration_minutes: int = 540  # 9.5 hours - 30 min = 540 min (preserve yfinance connection)
+    use_spread_delay: bool = True  # Spread requests over target duration
 
 
 class SessionPool:
@@ -58,6 +61,8 @@ class SessionPool:
         self.current_index = 0
         self.request_count = 0
         self.rotation_count = 0
+        self.failed_sessions = set()  # Track sessions with auth failures
+        self.session_failures = defaultdict(int)  # Count failures per session
 
         # Create pool of sessions with different proxies
         available_proxies = proxies[proxy_offset:] if proxy_offset < len(proxies) else proxies
@@ -103,10 +108,24 @@ class SessionPool:
                     "request_count": 0
                 })
 
-    def get_session(self):
-        """Get next session using round-robin rotation"""
+    def get_session(self, exclude_index: int = None):
+        """Get next session using round-robin rotation, optionally excluding a specific index"""
         with self.lock:
             self.request_count += 1
+
+            # Skip to next available session (not in failed set and not excluded)
+            attempts = 0
+            while attempts < len(self.sessions):
+                if self.current_index not in self.failed_sessions and self.current_index != exclude_index:
+                    break
+                self.current_index = (self.current_index + 1) % len(self.sessions)
+                attempts += 1
+
+            # If all sessions failed, reset and try again
+            if attempts >= len(self.sessions):
+                logger.warning("All sessions marked as failed, resetting failure tracking")
+                self.failed_sessions.clear()
+                self.current_index = 0
 
             session_info = self.sessions[self.current_index]
             session_info["request_count"] += 1
@@ -114,21 +133,29 @@ class SessionPool:
             old_index = self.current_index
             old_proxy = self.sessions[old_index]["proxy"]
             self.current_index = (self.current_index + 1) % len(self.sessions)
-            new_proxy = self.sessions[self.current_index]["proxy"]
+
+            # Skip failed sessions in rotation
+            while self.current_index in self.failed_sessions and len(self.failed_sessions) < len(self.sessions):
+                self.current_index = (self.current_index + 1) % len(self.sessions)
 
             if self.current_index == 0:
                 self.rotation_count += 1
                 logger.info(f"🔄 Completed rotation #{self.rotation_count} through all {len(self.sessions)} sessions")
 
-            # Log every 50 requests with proxy details
-            if self.request_count % 50 == 0:
-                logger.info(f"📊 Request #{self.request_count}: session[{old_index}] ({old_proxy}) → session[{self.current_index}] ({new_proxy})")
-
-            # Log at key milestones with full stats
-            if self.request_count in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
-                logger.warning(f"🎯 MILESTONE {self.request_count}: Using session {old_index} with proxy {old_proxy}")
+            # Log every 100 requests with proxy details
+            if self.request_count % 100 == 0:
+                healthy_sessions = len(self.sessions) - len(self.failed_sessions)
+                logger.info(f"📊 Request #{self.request_count}: session[{old_index}] | Healthy: {healthy_sessions}/{len(self.sessions)}")
 
             return session_info["session"], session_info["proxy"], session_info["index"]
+
+    def mark_session_failed(self, session_index: int, reason: str = ""):
+        """Mark a session as failed (e.g., auth failure)"""
+        with self.lock:
+            self.session_failures[session_index] += 1
+            if "401" in reason or "Unauthorized" in reason or self.session_failures[session_index] >= 3:
+                self.failed_sessions.add(session_index)
+                logger.warning(f"🚫 Session {session_index} marked as failed: {reason} (total failures: {self.session_failures[session_index]})")
 
     def get_stats(self):
         """Get session pool statistics"""
@@ -136,6 +163,8 @@ class SessionPool:
             return {
                 "total_requests": self.request_count,
                 "total_sessions": len(self.sessions),
+                "failed_sessions": len(self.failed_sessions),
+                "healthy_sessions": len(self.sessions) - len(self.failed_sessions),
                 "completed_rotations": self.rotation_count,
                 "requests_per_session": [s["request_count"] for s in self.sessions]
             }
@@ -222,9 +251,10 @@ def calculate_daily_metrics(hist_df: pd.DataFrame) -> Dict[str, Any]:
 
 
 def fetch_daily_data(ticker: str, session_pool: SessionPool, config: ScanConfig) -> Optional[Dict[str, Any]]:
-    """Fetch daily historical data for a ticker"""
+    """Fetch daily historical data for a ticker with smart retry logic"""
     session, proxy, session_idx = session_pool.get_session()
     request_num = session_pool.request_count  # Capture current request number
+    failed_session_idx = None  # Track failed session for retry avoidance
 
     for attempt in range(config.max_retries):
         try:
@@ -275,26 +305,52 @@ def fetch_daily_data(ticker: str, session_pool: SessionPool, config: ScanConfig)
 
         except Exception as e:
             error_msg = str(e)
-            if "401" in error_msg or "Unauthorized" in error_msg:
-                logger.error(f"❌ [Request #{request_num}] HTTP 401 for {ticker} on session {session_idx} ({proxy}): {error_msg[:100]}")
+            is_auth_failure = "401" in error_msg or "Unauthorized" in error_msg
+
+            if is_auth_failure:
+                # Mark session as failed and don't retry with same proxy
+                session_pool.mark_session_failed(session_idx, error_msg[:100])
+                failed_session_idx = session_idx
+                logger.error(f"❌ [Request #{request_num}] HTTP 401 for {ticker} on session {session_idx} ({proxy})")
             else:
                 logger.debug(f"Attempt {attempt + 1} failed for {ticker}: {error_msg[:100]}")
 
+            # Retry with a different session (exclude the failed one)
             if attempt < config.max_retries - 1:
-                time.sleep(config.retry_delay * (attempt + 1))
+                if is_auth_failure:
+                    # Get a different session, excluding the failed one
+                    session, proxy, session_idx = session_pool.get_session(exclude_index=failed_session_idx)
+                    logger.debug(f"Retrying {ticker} with different session {session_idx}")
+                else:
+                    time.sleep(config.retry_delay * (attempt + 1))
             continue
 
-    logger.warning(f"❌ [Request #{request_num}] Failed all retries for {ticker} on session {session_idx}")
+    logger.warning(f"❌ Failed all retries for {ticker}")
     return None
 
 
 def scan_tickers(tickers: List[str], session_pool: SessionPool, config: ScanConfig) -> Dict[str, Any]:
-    """Scan tickers with daily data collection"""
+    """Scan tickers with daily data collection and spread delay"""
     results = []
     failed_tickers = []
     start_time = time.time()
 
+    # Calculate spread delay to reach target duration
+    spread_delay = 0.0
+    if config.use_spread_delay and config.target_duration_minutes > 0:
+        target_seconds = config.target_duration_minutes * 60
+        estimated_time_per_ticker = 5.0  # Estimated 5 seconds per ticker on average
+        estimated_total_time = (len(tickers) / config.max_threads) * estimated_time_per_ticker
+
+        if target_seconds > estimated_total_time:
+            # Calculate delay needed per completed ticker to spread to target duration
+            spread_delay = (target_seconds - estimated_total_time) / len(tickers)
+            logger.info(f"Spread delay calculated: {spread_delay:.2f}s per ticker to reach {config.target_duration_minutes} min target")
+        else:
+            logger.info(f"No spread delay needed - estimated time ({estimated_total_time:.0f}s) >= target ({target_seconds}s)")
+
     logger.info(f"Starting scan of {len(tickers)} tickers...")
+    logger.info(f"Target duration: {config.target_duration_minutes} minutes | Spread delay: {spread_delay:.2f}s/ticker")
     logger.info("-" * 80)
 
     with ThreadPoolExecutor(max_workers=config.max_threads) as executor:
@@ -323,12 +379,13 @@ def scan_tickers(tickers: List[str], session_pool: SessionPool, config: ScanConf
                 elapsed = time.time() - start_time
                 rate = completed / elapsed if elapsed > 0 else 0
                 success_rate = len(results) / completed * 100 if completed > 0 else 0
+                estimated_remaining = (len(tickers) - completed) * (elapsed / completed) if completed > 0 else 0
                 logger.info(f"Progress: {completed}/{len(tickers)} ({completed/len(tickers)*100:.1f}%) | "
-                          f"Success: {success_rate:.1f}% | Rate: {rate:.1f}/sec")
+                          f"Success: {success_rate:.1f}% | Rate: {rate:.1f}/sec | ETA: {estimated_remaining/60:.1f} min")
 
-            # Random delay
-            if config.random_delay_range:
-                time.sleep(random.uniform(*config.random_delay_range))
+            # Apply spread delay (if configured)
+            if spread_delay > 0:
+                time.sleep(spread_delay)
 
     duration = time.time() - start_time
     success_count = len(results)
