@@ -59,6 +59,7 @@ class MarketHoursManager:
         
         # Market hours configuration - ONLY REGULAR MARKET HOURS
         # Updates will only run during regular trading hours
+        self.daily_start = os.getenv('DAILY_START', "00:00")       # 12:00 AM ET - daily scanner starts
         self.market_open = os.getenv('MARKET_OPEN', "09:30")      # 9:30 AM ET
         self.market_close = os.getenv('MARKET_CLOSE', "16:00")     # 4:00 PM ET
         self.pre_market_prep = os.getenv('PRE_MARKET_PREP', "09:00")  # 9:00 AM ET - fetch proxies
@@ -68,10 +69,18 @@ class MarketHoursManager:
         
         # Component configurations - Individual services with specific restart intervals
         self.components = {
-            'optimized_stock_scanner': {
-                'script': 'optimized_9600_scanner.py',
-                'args': ['--workers', '20', '--batch-size', '1000'],  # Optimized for <3min runtime
-                'active_during': ['market'],
+            'daily_scanner': {
+                'script': 'daily_scanner_proxy.py',
+                'args': [],
+                'active_during': ['daily'],  # 12:00 AM - 9:30 AM ET
+                'restart_interval': 28800,  # 8 hours - run once during daily window (window is 9.5 hours)
+                'process': None,
+                'last_restart': 0
+            },
+            'realtime_scanner': {
+                'script': 'realtime_scanner_ultra_fast.py',
+                'args': [],
+                'active_during': ['market'],  # 9:30 AM - 4:00 PM ET
                 'restart_interval': 180,  # 3 minutes - run every 3 minutes during market hours
                 'process': None,
                 'last_restart': 0
@@ -130,19 +139,28 @@ class MarketHoursManager:
         
     def get_current_market_phase(self):
         """Determine current market phase based on Eastern Time
-        ONLY recognizes regular market hours (9:30 AM - 4:00 PM ET)"""
+        Recognizes three phases:
+        - daily: 12:00 AM - 9:30 AM ET (daily scanner)
+        - market: 9:30 AM - 4:00 PM ET (realtime scanner)
+        - closed: Outside these hours or weekends
+        """
         now_et = datetime.now(self.eastern_tz)
         current_time = now_et.strftime("%H:%M")
-        
+
         # Check if it's a weekday (Monday=0, Sunday=6)
         if now_et.weekday() >= 5:  # Saturday or Sunday
             return 'closed'
-            
-        # Only check for regular market hours
+
+        # Check for daily scanner window (12:00 AM - 9:30 AM ET)
+        if self.daily_start <= current_time < self.market_open:
+            return 'daily'  # Daily scanner active
+
+        # Check for regular market hours (9:30 AM - 4:00 PM ET)
         if self.market_open <= current_time < self.market_close:
             return 'market'  # Regular trading hours
-        else:
-            return 'closed'  # Outside regular hours
+
+        # Outside all active hours
+        return 'closed'
             
     def is_component_active(self, component_name, market_phase):
         """Check if component should be active during current market phase"""
