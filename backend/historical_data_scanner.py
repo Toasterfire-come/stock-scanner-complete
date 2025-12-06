@@ -50,8 +50,12 @@ class HistoricalConfig:
     session_pool_size: int = 200  # 200 proxies for better load distribution
     output_dir: str = "historical_data"  # Directory to store historical data
 
+    # Spread scanning over 12 hours to reduce throttling
+    target_duration_hours: int = 12  # Spread requests over 12 hours to avoid throttling
+    use_spread_delay: bool = True  # Enable spread delay
+
     # Timeframe configurations (interval: max_period)
-    # yfinance limits: 1m=7d, 5m=60d, 15m=60d, 30m=60d, 1h=730d, 4h/1d=unlimited
+    # yfinance limits: 1m=7d, 5m=60d, 15m=60d, 30m=60d, 1h=730d, 4h/12h/1d=unlimited
     timeframes: Dict[str, str] = None
 
     def __post_init__(self):
@@ -63,6 +67,7 @@ class HistoricalConfig:
                 "30m": "60d",    # 30-minute: max 60 days
                 "1h": "730d",    # 1-hour: max 730 days (2 years)
                 "4h": "max",     # 4-hour: maximum available
+                "12h": "max",    # 12-hour: maximum available (added to reduce throttling)
                 "1d": "max",     # 1-day: maximum available
             }
 
@@ -271,15 +276,31 @@ def save_historical_data(ticker: str, timeframe_data: Dict[str, pd.DataFrame], c
 
 
 def scan_historical_data(tickers: List[str], session_pool: SessionPool, config: HistoricalConfig):
-    """Scan all tickers for historical data across all timeframes"""
+    """Scan all tickers for historical data across all timeframes with spread delay"""
     total_tickers = len(tickers)
     completed = 0
     successful = 0
     failed = 0
     start_time = time.time()
 
+    # Calculate spread delay to reach target duration (12 hours)
+    spread_delay = 0.0
+    if config.use_spread_delay and config.target_duration_hours > 0:
+        target_seconds = config.target_duration_hours * 3600  # Convert hours to seconds
+        # Estimate: ~10 seconds per ticker (fetching multiple timeframes)
+        estimated_time_per_ticker = 10.0
+        estimated_total_time = (total_tickers / config.max_threads) * estimated_time_per_ticker
+
+        if target_seconds > estimated_total_time:
+            # Calculate delay needed per completed ticker
+            spread_delay = (target_seconds - estimated_total_time) / total_tickers
+            logger.info(f"Spread delay calculated: {spread_delay:.2f}s per ticker to reach {config.target_duration_hours}h target")
+        else:
+            logger.info(f"No spread delay needed - estimated time ({estimated_total_time/3600:.1f}h) >= target ({config.target_duration_hours}h)")
+
     logger.info(f"Starting historical data scan for {total_tickers} tickers...")
     logger.info(f"Timeframes: {', '.join(config.timeframes.keys())}")
+    logger.info(f"Target duration: {config.target_duration_hours} hours | Spread delay: {spread_delay:.2f}s/ticker")
     logger.info("-" * 80)
 
     with ThreadPoolExecutor(max_workers=config.max_threads) as executor:
@@ -314,12 +335,16 @@ def scan_historical_data(tickers: List[str], session_pool: SessionPool, config: 
                 elapsed = time.time() - start_time
                 rate = completed / elapsed if elapsed > 0 else 0
                 success_rate = (successful / completed * 100) if completed > 0 else 0
-                eta_seconds = (total_tickers - completed) / rate if rate > 0 else 0
+                eta_seconds = (total_tickers - completed) * (elapsed / completed) if completed > 0 else 0
 
                 logger.info(
                     f"Progress: {completed}/{total_tickers} ({completed/total_tickers*100:.1f}%) | "
-                    f"Success: {success_rate:.1f}% | Rate: {rate:.2f}/sec | ETA: {eta_seconds/60:.1f} min"
+                    f"Success: {success_rate:.1f}% | Rate: {rate:.2f}/sec | ETA: {eta_seconds/3600:.1f} hours"
                 )
+
+            # Apply spread delay (if configured)
+            if spread_delay > 0:
+                time.sleep(spread_delay)
 
     duration = time.time() - start_time
 
