@@ -25,6 +25,11 @@ if USE_XAMPP and IS_XAMPP_AVAILABLE:
 SECRET_KEY = os.environ.get('SECRET_KEY') or os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-development-key')
 _debug_raw = os.environ.get('DEBUG', os.environ.get('DJANGO_DEBUG', 'True'))
 DEBUG = str(_debug_raw).lower() == 'true'
+print(f"DEBUG MODE: {DEBUG} (raw value: {_debug_raw})")
+
+# Disable SSL redirect in DEBUG mode for local development
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
 
 # Allow configuration of ALLOWED_HOSTS via environment variables
 # Prefer DJANGO_ALLOWED_HOSTS (comma-separated), fallback to ALLOWED_HOSTS, then defaults
@@ -276,6 +281,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  # Security: Require auth
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'stocks.authentication.BearerSessionAuthentication',  # Bearer token auth
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
@@ -294,6 +300,13 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
         'burst': '60/minute',
     }
+}
+
+# API Configuration
+API_CONFIG = {
+    'MAX_PAGE_SIZE': 100,
+    'MARKET_CAP_LARGE': 10_000_000_000,  # $10B
+    'MARKET_CAP_SMALL': 2_000_000_000,    # $2B
 }
 
 CACHES = {
@@ -345,6 +358,9 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# Debug: Print final SECURE_SSL_REDIRECT value
+print(f"SECURE_SSL_REDIRECT = {globals().get('SECURE_SSL_REDIRECT', 'NOT SET')}")
 
 # Logging
 LOGGING = {

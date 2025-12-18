@@ -153,6 +153,27 @@ def google_oauth_callback(request):
                 candidate = f"{base_username[:18]}{idx:02d}"
                 idx += 1
             user = User.objects.create_user(username=candidate, email=email, password=User.objects.make_random_password())
+
+            # VIP AUTO-UPGRADE: Check if this is a VIP email that should get Plus unlimited
+            VIP_EMAILS = ['hamzashehata3000@gmail.com', 'carter.kiefer2010@outlook.com']
+            if email.lower() in [e.lower() for e in VIP_EMAILS]:
+                try:
+                    from billing.models import Subscription, PlanTier, BillingCycle
+                    from decimal import Decimal
+                    from datetime import timedelta
+
+                    Subscription.objects.create(
+                        user=user,
+                        plan_tier=PlanTier.PLUS,
+                        billing_cycle=BillingCycle.ANNUAL,
+                        status='active',
+                        monthly_price=Decimal('0.00'),
+                        current_period_start=timezone.now(),
+                        current_period_end=timezone.now() + timedelta(days=3650)
+                    )
+                    logger.info(f"VIP account created via Google OAuth with Plus unlimited: {email}")
+                except Exception as e_vip:
+                    logger.error(f"Failed to create VIP subscription for {email}: {str(e_vip)}")
         return _login_user_and_response(request, user)
     except Exception as e:
         logger.error(f"google_oauth_callback error: {e}")
@@ -201,6 +222,27 @@ def google_onetap_exchange(request):
                 candidate = f"{base_username[:18]}{idx:02d}"
                 idx += 1
             user = User.objects.create_user(username=candidate, email=email, password=User.objects.make_random_password())
+
+            # VIP AUTO-UPGRADE: Check if this is a VIP email that should get Plus unlimited
+            VIP_EMAILS = ['hamzashehata3000@gmail.com', 'carter.kiefer2010@outlook.com']
+            if email.lower() in [e.lower() for e in VIP_EMAILS]:
+                try:
+                    from billing.models import Subscription, PlanTier, BillingCycle
+                    from decimal import Decimal
+                    from datetime import timedelta
+
+                    Subscription.objects.create(
+                        user=user,
+                        plan_tier=PlanTier.PLUS,
+                        billing_cycle=BillingCycle.ANNUAL,
+                        status='active',
+                        monthly_price=Decimal('0.00'),
+                        current_period_start=timezone.now(),
+                        current_period_end=timezone.now() + timedelta(days=3650)
+                    )
+                    logger.info(f"VIP account created via Google One Tap with Plus unlimited: {email}")
+                except Exception as e_vip:
+                    logger.error(f"Failed to create VIP subscription for {email}: {str(e_vip)}")
         return _login_user_and_response(request, user)
     except Exception as e:
         logger.error(f"google_onetap_exchange error: {e}")
@@ -259,6 +301,27 @@ def apple_callback(request):
                 candidate = f"{base_username[:18]}{idx:02d}"
                 idx += 1
             user = User.objects.create_user(username=candidate, email=email, password=User.objects.make_random_password())
+
+            # VIP AUTO-UPGRADE: Check if this is a VIP email that should get Plus unlimited
+            VIP_EMAILS = ['hamzashehata3000@gmail.com', 'carter.kiefer2010@outlook.com']
+            if email.lower() in [e.lower() for e in VIP_EMAILS]:
+                try:
+                    from billing.models import Subscription, PlanTier, BillingCycle
+                    from decimal import Decimal
+                    from datetime import timedelta
+
+                    Subscription.objects.create(
+                        user=user,
+                        plan_tier=PlanTier.PLUS,
+                        billing_cycle=BillingCycle.ANNUAL,
+                        status='active',
+                        monthly_price=Decimal('0.00'),
+                        current_period_start=timezone.now(),
+                        current_period_end=timezone.now() + timedelta(days=3650)
+                    )
+                    logger.info(f"VIP account created via Apple Sign-In with Plus unlimited: {email}")
+                except Exception as e_vip:
+                    logger.error(f"Failed to create VIP subscription for {email}: {str(e_vip)}")
         return _login_user_and_response(request, user)
     except Exception as e:
         logger.error(f"apple_callback error: {e}")
@@ -362,6 +425,29 @@ def register_api(request):
                 )
                 # Ensure a profile exists
                 profile, _ = UserProfile.objects.get_or_create(user=user)
+
+                # VIP AUTO-UPGRADE: Check if this is a VIP email that should get Plus unlimited
+                VIP_EMAILS = ['hamzashehata3000@gmail.com', 'carter.kiefer2010@outlook.com']
+                if email.lower() in [e.lower() for e in VIP_EMAILS]:
+                    try:
+                        from billing.models import Subscription, PlanTier, BillingCycle
+                        from decimal import Decimal
+                        from datetime import timedelta
+
+                        # Create Plus unlimited subscription for VIP account
+                        Subscription.objects.create(
+                            user=user,
+                            plan_tier=PlanTier.PLUS,
+                            billing_cycle=BillingCycle.ANNUAL,
+                            status='active',
+                            monthly_price=Decimal('0.00'),  # Complimentary
+                            current_period_start=timezone.now(),
+                            current_period_end=timezone.now() + timedelta(days=3650)  # 10 years
+                        )
+                        logger.info(f"VIP account created with Plus unlimited: {email}")
+                    except Exception as e:
+                        logger.error(f"Failed to create VIP subscription for {email}: {str(e)}")
+
                 # Optional referral: apply 50% off first month and attach usage record
                 # Accept from body, query, cookie, or X-Referral-Code header
                 ref = (data.get('ref') or request.GET.get('ref') or request.COOKIES.get('ref') or request.META.get('HTTP_X_REFERRAL_CODE') or '').strip()

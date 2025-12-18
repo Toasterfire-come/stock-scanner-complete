@@ -15,11 +15,11 @@ try:
 except ImportError:
     from .services.backtesting_service import BacktestingService
 
-# Backtest limits per tier (NO FREE PLAN)
+# Backtest limits per tier (NO FREE PLAN - Subscription Required)
 BACKTEST_LIMITS = {
-    'bronze': 2,  # 2 backtests per month (Basic plan - $24.99)
-    'silver': -1,  # Unlimited (Plus plan - $49.99)
-    'gold': -1,  # Unlimited (Plus plan - $79.99)
+    'basic': 2,  # 2 backtests per month (Basic plan - $14.99/mo)
+    'plus': -1,  # Unlimited (Plus plan - $24.99/mo)
+    # Note: No free tier - subscription required to use backtesting
 }
 
 
@@ -336,29 +336,35 @@ def get_backtest_limits(request):
     try:
         if not request.user.is_authenticated:
             return JsonResponse({
-                'success': True,
-                'data': {
-                    'tier': 'free',
-                    'limit': BACKTEST_LIMITS['free'],
-                    'used': 0,
-                    'remaining': BACKTEST_LIMITS['free'],
-                    'unlimited': False
-                }
-            })
-        
+                'success': False,
+                'error': 'Authentication required. Subscribe to Basic or Plus plan to access backtesting.',
+                'message': 'Backtesting is only available for subscribed users. Please upgrade to access this feature.',
+                'upgrade_url': '/pricing'
+            }, status=403)
+
         limit = get_user_backtest_limit(request.user)
         used = get_user_backtests_this_month(request.user)
+
+        # Check if user has no subscription
+        if limit == 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Subscription required. Subscribe to Basic or Plus plan to access backtesting.',
+                'message': 'You need an active subscription to use backtesting. Basic plan: 2 backtests/month, Plus plan: Unlimited.',
+                'upgrade_url': '/pricing'
+            }, status=403)
+
         unlimited = limit == -1
         remaining = -1 if unlimited else max(0, limit - used)
-        
+
         # Get tier name
         try:
             from billing.models import Subscription
             subscription = Subscription.objects.get(user=request.user, status='active')
             tier = subscription.plan_tier
         except:
-            tier = 'free'
-        
+            tier = 'none'
+
         return JsonResponse({
             'success': True,
             'data': {
@@ -367,12 +373,12 @@ def get_backtest_limits(request):
                 'used': used,
                 'remaining': remaining,
                 'unlimited': unlimited,
-                'reset_date': timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + timedelta(days=32)
+                'reset_date': (timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + timedelta(days=32)).replace(day=1).isoformat()
             }
         })
-    
+
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': f'Error retrieving backtest limits: {str(e)}'
         }, status=500)

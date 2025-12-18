@@ -6,9 +6,8 @@ import uuid
 
 class PlanTier(models.TextChoices):
     FREE = 'free', 'Free'
-    BRONZE = 'bronze', 'Bronze'
-    SILVER = 'silver', 'Silver'
-    GOLD = 'gold', 'Gold'
+    BASIC = 'basic', 'Basic'
+    PLUS = 'plus', 'Plus'
 
 
 class BillingCycle(models.TextChoices):

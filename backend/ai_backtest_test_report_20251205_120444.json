@@ -1,0 +1,174 @@
+{
+  "test_date": "2025-12-05T12:04:44.170201",
+  "api_url": "http://localhost:8000/api",
+  "summary": {
+    "total": 23,
+    "passed": 18,
+    "failed": 4,
+    "warnings": 1,
+    "pass_rate": "78.3%"
+  },
+  "results": [
+    {
+      "category": "Authentication",
+      "test_name": "VIP Login",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "3.676s"
+    },
+    {
+      "category": "AI Status",
+      "test_name": "AI Status Check",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.043s"
+    },
+    {
+      "category": "AI Status",
+      "test_name": "AI Available",
+      "status": "WARN",
+      "details": "AI not available - GROQ_API_KEY may not be configured",
+      "response_time": "N/A"
+    },
+    {
+      "category": "AI Chat",
+      "test_name": "Chat - Initial Message",
+      "status": "FAIL",
+      "details": "Expected 200, got 503: AI service not available. Please check GROQ_API_KEY.",
+      "response_time": "2.042s"
+    },
+    {
+      "category": "AI Chat",
+      "test_name": "Chat - Follow-up",
+      "status": "FAIL",
+      "details": "Expected 200, got 503: AI service not available. Please check GROQ_API_KEY.",
+      "response_time": "2.043s"
+    },
+    {
+      "category": "AI Chat",
+      "test_name": "Chat - Empty Message",
+      "status": "PASS",
+      "details": "Status 400",
+      "response_time": "2.063s"
+    },
+    {
+      "category": "Strategy Understanding",
+      "test_name": "Understand - Simple RSI Strategy",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.025s"
+    },
+    {
+      "category": "Strategy Understanding",
+      "test_name": "Simple RSI Strategy - Parsed",
+      "status": "PASS",
+      "details": "Indicators: RSI...",
+      "response_time": "N/A"
+    },
+    {
+      "category": "Strategy Understanding",
+      "test_name": "Understand - MACD Crossover",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.041s"
+    },
+    {
+      "category": "Strategy Understanding",
+      "test_name": "MACD Crossover - Parsed",
+      "status": "PASS",
+      "details": "Indicators: MACD...",
+      "response_time": "N/A"
+    },
+    {
+      "category": "Strategy Understanding",
+      "test_name": "Understand - Moving Average Cross",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.042s"
+    },
+    {
+      "category": "Strategy Understanding",
+      "test_name": "Moving Average Cross - Parsed",
+      "status": "PASS",
+      "details": "Indicators: SMA...",
+      "response_time": "N/A"
+    },
+    {
+      "category": "Code Generation",
+      "test_name": "Generate Code - RSI Strategy",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.033s"
+    },
+    {
+      "category": "Code Generation",
+      "test_name": "RSI Strategy - Code Quality",
+      "status": "PASS",
+      "details": "Generated 1775 chars with all required functions",
+      "response_time": "N/A"
+    },
+    {
+      "category": "Code Generation",
+      "test_name": "Generate Code - Invalid Strategy",
+      "status": "FAIL",
+      "details": "Expected 400, got 200: ",
+      "response_time": "2.029s"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "Create Backtest",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.065s"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "Backtest Created",
+      "status": "PASS",
+      "details": "ID: 1, Status: pending, Remaining: -1",
+      "response_time": "N/A"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "List Backtests",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.042s"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "List Baseline Strategies",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.063s"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "Get Backtest Details",
+      "status": "PASS",
+      "details": "Status 200",
+      "response_time": "2.037s"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "Backtest Details Retrieved",
+      "status": "PASS",
+      "details": "Name: Test RSI Strategy, Status: pending",
+      "response_time": "N/A"
+    },
+    {
+      "category": "Backtest Management",
+      "test_name": "Create Backtest - Missing Fields",
+      "status": "PASS",
+      "details": "Status 400",
+      "response_time": "2.032s"
+    },
+    {
+      "category": "Backtest Limits",
+      "test_name": "Get Backtest Limits",
+      "status": "FAIL",
+      "details": "Expected 200, got 500: 'free'",
+      "response_time": "2.031s"
+    }
+  ]
+}

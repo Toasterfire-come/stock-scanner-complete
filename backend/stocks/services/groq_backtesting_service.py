@@ -522,22 +522,55 @@ def exit_condition(data, index, entry_price, entry_index):
         return code
     
     def _fetch_historical_data(self, symbols: List[str], start_date, end_date) -> pd.DataFrame:
-        """Fetch historical price data"""
+        """Fetch historical price data with robust error handling"""
         try:
             symbol = symbols[0] if isinstance(symbols, list) else symbols
+            print(f"Fetching historical data for {symbol} from {start_date} to {end_date}")
+
             ticker = yf.Ticker(symbol)
-            df = ticker.history(start=start_date, end=end_date)
-            
+            df = ticker.history(start=start_date, end=end_date, auto_adjust=True, actions=False)
+
             if df.empty:
+                print(f"No data returned for {symbol}")
                 return pd.DataFrame()
-            
+
+            # Reset index to make Date a column
             df = df.reset_index()
-            df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']
-            df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-            
+
+            # Ensure we have all required columns
+            required_cols = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+
+            # yfinance may return different column names, standardize them
+            if 'Datetime' in df.columns:
+                df.rename(columns={'Datetime': 'Date'}, inplace=True)
+
+            # Check for missing columns
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            if missing_cols:
+                print(f"Missing columns: {missing_cols}")
+                return pd.DataFrame()
+
+            # Select only required columns
+            df = df[required_cols].copy()
+
+            # Convert Date to datetime if it isn't already
+            df['Date'] = pd.to_datetime(df['Date'])
+
+            # Remove any rows with NaN values in critical columns
+            df = df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'])
+
+            # Ensure proper data types
+            for col in ['Open', 'High', 'Low', 'Close']:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+            df['Volume'] = pd.to_numeric(df['Volume'], errors='coerce').fillna(0).astype(int)
+
+            print(f"Successfully fetched {len(df)} rows of data for {symbol}")
             return df
+
         except Exception as e:
-            print(f"Error fetching data: {e}")
+            print(f"Error fetching data for {symbol}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return pd.DataFrame()
     
     def _execute_strategy(self, code: str, data: pd.DataFrame, initial_capital: float) -> Dict:

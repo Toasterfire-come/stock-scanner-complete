@@ -1471,8 +1471,6 @@ def stock_insiders_api(request, ticker: str):
 def export_stocks_csv_api(request):
     try:
         qs = Stock.objects.order_by('ticker')[:1000]
-        buf = []
-        writer = csv.writer(buf := [])  # type: ignore
         # Build CSV in memory
         output = io.StringIO()
         writer = csv.writer(output)

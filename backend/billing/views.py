@@ -16,19 +16,15 @@ from .models import Subscription, Payment, Invoice, PayPalWebhookEvent, PlanTier
 logger = logging.getLogger(__name__)
 
 
-# Plan pricing configuration - Base prices (discount applied at calculation time)
+# Plan pricing configuration - Updated December 2024
 PLAN_PRICING = {
-    'bronze': {
+    'basic': {
+        'monthly': Decimal('14.99'),
+        'annual': Decimal('149.99'),
+    },
+    'plus': {
         'monthly': Decimal('24.99'),
-        'annual': Decimal('299.99'),  # Base annual price (15% discount applied below)
-    },
-    'silver': {
-        'monthly': Decimal('49.99'),
-        'annual': Decimal('599.99'),  # Base annual price (15% discount applied below)
-    },
-    'gold': {
-        'monthly': Decimal('79.99'),
-        'annual': Decimal('959.99'),  # Base annual price (15% discount applied below)
+        'annual': Decimal('249.99'),
     },
 }
 
@@ -125,12 +121,8 @@ def create_paypal_order(request):
         if billing_cycle not in ['monthly', 'annual']:
             return JsonResponse({'success': False, 'error': 'Invalid billing cycle'}, status=400)
         
-        # Get base price
+        # Get base price (already includes any discounts)
         amount = PLAN_PRICING[plan_type][billing_cycle]
-
-        # Apply standard 15% annual discount
-        if billing_cycle == 'annual':
-            amount = (amount * Decimal('0.85')).quantize(Decimal('0.01'))
 
         # Apply additional discount code if provided
         discount_percentage = 0
@@ -404,10 +396,8 @@ def change_plan(request):
         if plan not in PLAN_PRICING:
             return JsonResponse({'success': False, 'error': 'Invalid plan'}, status=400)
         
-        # Calculate price with discount applied
+        # Get plan price
         plan_price = PLAN_PRICING[plan][billing_cycle]
-        if billing_cycle == 'annual':
-            plan_price = (plan_price * Decimal('0.85')).quantize(Decimal('0.01'))
 
         # Get or create subscription
         subscription, created = Subscription.objects.get_or_create(
@@ -493,15 +483,10 @@ def get_plans_meta(request):
     try:
         plans_data = {}
         for plan_name, pricing in PLAN_PRICING.items():
-            annual_discount = 15
-            annual_list_price = pricing['annual']
-            annual_final_price = (annual_list_price * Decimal('0.85')).quantize(Decimal('0.01'))
-
             plans_data[plan_name] = {
                 'name': plan_name.capitalize(),
                 'monthly_price': float(pricing['monthly']),
-                'annual_list_price': float(annual_list_price),
-                'annual_final_price': float(annual_final_price),
+                'annual_price': float(pricing['annual']),
                 'paypal_plan_ids': {
                     'monthly': getattr(settings, f'PAYPAL_PLAN_{plan_name.upper()}_MONTHLY', ''),
                     'annual': getattr(settings, f'PAYPAL_PLAN_{plan_name.upper()}_ANNUAL', ''),
@@ -512,10 +497,7 @@ def get_plans_meta(request):
             'success': True,
             'data': {
                 'currency': 'USD',
-                'plans': plans_data,
-                'discounts': {
-                    'annual_percent': 15
-                }
+                'plans': plans_data
             }
         })
     except Exception as e:
