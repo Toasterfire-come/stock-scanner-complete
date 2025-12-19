@@ -1,7 +1,12 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /api/auth/
-Disallow: /api/billing/
+# TradeScanPro API - Robots Configuration
+# This is an API backend - all endpoints should be excluded from search engines
 
-Sitemap: https://api.tradescanpro.com/sitemap.xml
+User-agent: *
+Disallow: /
+
+# Explicitly block all API endpoints
+Disallow: /api/
+Disallow: /admin/
+Disallow: /health/
+
+# No sitemap for API-only backend

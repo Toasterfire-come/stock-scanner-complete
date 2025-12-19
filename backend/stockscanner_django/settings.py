@@ -100,11 +100,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'stockscanner_django.urls'
 
+# Minimal template configuration - only for Django admin
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'DIRS': [],  # No custom templates - API-only backend
+        'APP_DIRS': True,  # Allow Django admin templates
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',

@@ -1,20 +1,25 @@
-from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 import json
 
 def homepage(request):
-    """Homepage view with API information"""
-    context = {
-        'title': 'Stock Scanner - NASDAQ Data API',
-        'version': '1.0.0',
-        'endpoints': [
-            {'url': '/admin/', 'description': 'Django Admin Panel'},
-            {'url': '/api/stocks/', 'description': 'Stock Data API'},
-            {'url': '/api/wordpress/', 'description': 'WordPress Integration API'},
-        ]
-    }
-    return render(request, 'core/homepage.html', context)
+    """API-only backend - return API information as JSON"""
+    return JsonResponse({
+        'name': 'TradeScanPro API',
+        'version': '2.0',
+        'description': 'Stock Scanner - NASDAQ Data API',
+        'endpoints': {
+            'admin': '/admin/',
+            'stocks': '/api/stocks/',
+            'auth': '/api/auth/',
+            'billing': '/api/billing/',
+            'backtesting': '/api/backtesting/',
+            'education': '/api/education/',
+            'health': '/health/'
+        },
+        'frontend_url': 'https://tradescanpro.com',
+        'note': 'This is an API-only backend. Please use the React frontend for UI.'
+    })
 
 @csrf_exempt
 def health_check(request):
@@ -53,33 +58,35 @@ PREDEFINED_SCREENERS = {
 }
 
 def screeners_list(request):
-    """List available screeners with a run link for each."""
+    """Return available screeners as JSON"""
     screeners = []
     for key, data in PREDEFINED_SCREENERS.items():
         screeners.append({
             'key': key,
             'title': data.get('title', key.replace('-', ' ').title()),
             'filters': data.get('filters', {}),
-            'detail_url': f"/screeners/{key}/"
+            'api_url': f"/api/market/filter/"
         })
-    return render(request, 'screeners.html', {'screeners': screeners})
+    return JsonResponse({'screeners': screeners})
 
 def screener_detail(request, key):
-    """Detail page for a screener that displays the title and filters and auto-runs on load."""
+    """Return screener config as JSON"""
     config = PREDEFINED_SCREENERS.get(key)
     if not config:
-        raise Http404('Screener not found')
-    context = {
+        return JsonResponse({'error': 'Screener not found'}, status=404)
+
+    return JsonResponse({
         'screener_key': key,
         'title': config.get('title', key.replace('-', ' ').title()),
         'filters': config.get('filters', {}),
         'api_url': '/api/market/filter/'
-    }
-    return render(request, 'screener_detail.html', context)
+    })
 
 def stock_detail_page(request, ticker: str):
+    """Return stock detail info as JSON"""
     ticker = (ticker or '').upper()
-    return render(request, 'core/stock_detail.html', {
-        'title': f"{ticker} • Stock Detail",
+    return JsonResponse({
         'ticker': ticker,
+        'api_url': f'/api/stocks/{ticker}/',
+        'note': 'Use the frontend at https://tradescanpro.com for full stock details'
     })
