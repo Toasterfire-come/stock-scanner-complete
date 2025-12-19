@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
+import { TradingModeProvider } from "./context/TradingModeContext";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -51,10 +52,25 @@ import Checkout from "./pages/billing/Checkout";
 const AppDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/AppDashboard"));
 const Markets = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Markets"));
 const StockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StockDetail"));
+const EnhancedStockDetail = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/EnhancedStockDetail"));
 const Stocks = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Stocks"));
 const Portfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Portfolio"));
 const Watchlists = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Watchlists"));
+const Backtesting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/Backtesting"));
+const ValueHunter = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/ValueHunter"));
+const IndicatorBuilder = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/IndicatorBuilder"));
+const TradingJournal = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/TradingJournal"));
+const TaxReporting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/TaxReporting"));
+const SharedWatchlist = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedWatchlist"));
+const SharedPortfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedPortfolio"));
+const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/PublicProfile"));
+const StrategyLeaderboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StrategyLeaderboard"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
+
+// Education Pages (Phase 7)
+const CourseCatalog = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/CourseCatalog"));
+const Glossary = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/Glossary"));
+const ProgressDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/education/ProgressDashboard"));
 
 // Developer Tools (Gold Plan)
 import DeveloperDashboard from "./pages/app/developer/DeveloperDashboard";
@@ -69,6 +85,8 @@ import CreateScreener from "./pages/app/screeners/CreateScreener";
 import EditScreener from "./pages/app/screeners/EditScreener";
 import ScreenerResults from "./pages/app/screeners/ScreenerResults";
 import ScreenerDetail from "./pages/app/screeners/ScreenerDetail";
+import EnhancedCreateScreener from "./pages/app/screeners/EnhancedCreateScreener";
+import EnhancedScreenerResults from "./pages/app/screeners/EnhancedScreenerResults";
 import Templates from "./pages/app/Templates";
 
 // Market Overview (Protected)
@@ -78,10 +96,10 @@ import TopMovers from "./pages/app/TopMovers";
 import PreAfterMarket from "./pages/app/PreAfterMarket";
 import EconomicCalendar from "./pages/app/EconomicCalendar";
 
-// News (Protected)
-import NewsFeed from "./pages/app/NewsFeed";
-import NewsPreferences from "./pages/app/NewsPreferences";
-import NewsSubscribe from "./pages/app/NewsSubscribe";
+// News (REMOVED per MVP spec - Phase 1)
+// import NewsFeed from "./pages/app/NewsFeed";
+// import NewsPreferences from "./pages/app/NewsPreferences";
+// import NewsSubscribe from "./pages/app/NewsSubscribe";
 
 // Alerts & Signals (Protected)
 import Alerts from "./pages/app/Alerts";
@@ -184,6 +202,7 @@ function App() {
   return (
     <BackendStatusProvider>
       <AuthProvider>
+        <TradingModeProvider>
         <BrowserRouter>
           {/* LatencyIndicator removed per request */}
           <SystemErrorBoundary>
@@ -238,8 +257,9 @@ function App() {
                   <Route path="/partners" element={<Partners />} />
                   
                   {/* Public Share Pages */}
-                  <Route path="/w/:slug" element={<PlaceholderPage title="Shared Watchlist" />} />
-                  <Route path="/p/:slug" element={<PlaceholderPage title="Shared Portfolio" />} />
+                  <Route path="/w/:slug" element={<SharedWatchlist />} />
+                  <Route path="/p/:slug" element={<SharedPortfolio />} />
+                  <Route path="/u/:username" element={<PublicProfile />} />
 
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />
@@ -290,12 +310,52 @@ function App() {
                   } />
                   <Route path="/app/stocks/:symbol" element={
                     <ProtectedRoute>
+                      <EnhancedStockDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/stocks/:symbol/classic" element={
+                    <ProtectedRoute>
                       <StockDetail />
                     </ProtectedRoute>
                   } />
                   <Route path="/app/portfolio" element={
                     <ProtectedRoute>
                       <Portfolio />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* AI Backtesting - Protected (Premium) */}
+                  <Route path="/app/backtesting" element={
+                    <ProtectedRoute>
+                      <Backtesting />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Value Hunter Portfolio - Protected (Premium) */}
+                  <Route path="/app/value-hunter" element={
+                    <ProtectedRoute>
+                      <ValueHunter />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Custom Indicator Builder - Protected (Phase 9) */}
+                  <Route path="/app/indicators" element={
+                    <ProtectedRoute>
+                      <IndicatorBuilder />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Trading Journal - Protected (Phase 9) */}
+                  <Route path="/app/journal" element={
+                    <ProtectedRoute>
+                      <TradingJournal />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Tax Reporting - Protected (Phase 9) */}
+                  <Route path="/app/tax-reporting" element={
+                    <ProtectedRoute>
+                      <TaxReporting />
                     </ProtectedRoute>
                   } />
 
@@ -312,7 +372,12 @@ function App() {
                   } />
                   <Route path="/app/screeners/new" element={
                     <ProtectedRoute>
-                      <CreateScreener />
+                      <EnhancedCreateScreener />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/app/screeners/results" element={
+                    <ProtectedRoute>
+                      <EnhancedScreenerResults />
                     </ProtectedRoute>
                   } />
                   <Route path="/app/screeners/:id/edit" element={
@@ -358,7 +423,7 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* News - Protected */}
+                  {/* News - REMOVED per MVP spec Phase 1
                   <Route path="/app/news" element={
                     <ProtectedRoute>
                       <NewsFeed />
@@ -374,6 +439,7 @@ function App() {
                       <NewsSubscribe />
                     </ProtectedRoute>
                   } />
+                  */}
 
                   {/* Alerts & Signals - Protected */}
                   <Route path="/app/alerts" element={
@@ -511,6 +577,7 @@ function App() {
             </div>
           </SystemErrorBoundary>
         </BrowserRouter>
+        </TradingModeProvider>
       </AuthProvider>
     </BackendStatusProvider>
   );

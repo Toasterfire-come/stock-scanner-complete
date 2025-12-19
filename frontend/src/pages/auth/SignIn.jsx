@@ -130,6 +130,20 @@ export default function SignIn() {
           Sign In
         </Button>
 
+        {/* Social Sign-In Options */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+          </div>
+        </div>
+
+        <div id="google-signin-button" className="w-full">
+          {/* Google One Tap will render here */}
+        </div>
+
         <div className="text-center text-sm">
           Don't have an account?{" "}
           <Link

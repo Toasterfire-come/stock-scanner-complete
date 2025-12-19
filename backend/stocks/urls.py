@@ -52,6 +52,18 @@ from django.utils import timezone
 import hashlib
 from django.shortcuts import redirect
 from . import partner_analytics_api
+from . import valuation_api
+from . import valuation_endpoints
+from . import charting_api
+from . import backtesting_api
+from . import value_hunter_api
+from . import strategy_ranking_api
+# NEW MVP Feature APIs
+from . import ai_chat_api
+from . import enhanced_screener_api
+from . import fast_chart_api
+from . import valuation_display_api
+from . import grouping_api
 
 
 
@@ -275,4 +287,80 @@ urlpatterns = [
     # Partner analytics (auth required + gating)
     path('partner/analytics/summary', partner_analytics_api.partner_analytics_summary_api, name='partner_analytics_summary'),
     path('partner/analytics/timeseries', partner_analytics_api.partner_analytics_timeseries_api, name='partner_analytics_timeseries'),
+    
+    # Valuation endpoints
+    path('valuation/<str:ticker>/', valuation_api.get_stock_valuation, name='stock_valuation'),
+    path('valuation/<str:ticker>/quick/', valuation_api.get_quick_valuation, name='quick_valuation'),
+    path('screener/undervalued/', valuation_api.get_undervalued_screener, name='undervalued_screener'),
+    
+    # Additional Valuation endpoints (Phase 2)
+    path('fundamentals/<str:ticker>/sync/', valuation_endpoints.sync_stock_fundamentals, name='sync_fundamentals'),
+    path('valuation/sectors/', valuation_endpoints.get_sector_analysis, name='sector_analysis'),
+    path('valuation/top-value/', valuation_endpoints.get_top_value_stocks, name='top_value_stocks'),
+    path('valuation/compare/', valuation_endpoints.get_value_comparison, name='value_comparison'),
+    
+    # Charting endpoints (Phase 3)
+    path('chart/<str:ticker>/', charting_api.get_chart_data, name='chart_data'),
+    path('chart/<str:ticker>/indicators/', charting_api.get_chart_indicators, name='chart_indicators'),
+    path('chart/timeframes/', charting_api.get_available_timeframes, name='chart_timeframes'),
+    
+    # AI Backtesting endpoints (Phase 4)
+    path('backtesting/create/', backtesting_api.create_backtest, name='create_backtest'),
+    path('backtesting/<int:backtest_id>/run/', backtesting_api.run_backtest, name='run_backtest'),
+    path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
+    path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
+    path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
+    path('backtesting/limits/', backtesting_api.get_backtest_limits, name='backtest_limits'),
+    
+    # Value Hunter endpoints (Phase 5)
+    path('value-hunter/current/', value_hunter_api.get_current_week, name='vh_current_week'),
+    path('value-hunter/<int:year>/<int:week_number>/', value_hunter_api.get_week, name='vh_get_week'),
+    path('value-hunter/list/', value_hunter_api.list_all_weeks, name='vh_list_weeks'),
+    path('value-hunter/entry/', value_hunter_api.execute_entry, name='vh_execute_entry'),
+    path('value-hunter/exit/', value_hunter_api.execute_exit, name='vh_execute_exit'),
+    path('value-hunter/top-stocks/', value_hunter_api.get_top_stocks, name='vh_top_stocks'),
+    
+    # Strategy Ranking endpoints (Phase 6)
+    path('strategy-ranking/leaderboard/', strategy_ranking_api.get_strategy_leaderboard, name='strategy_leaderboard'),
+    path('strategy-ranking/categories/', strategy_ranking_api.get_leaderboard_categories, name='leaderboard_categories'),
+    path('strategy-ranking/<int:strategy_id>/', strategy_ranking_api.get_strategy_detail, name='strategy_detail'),
+    path('strategy-ranking/<int:strategy_id>/clone/', strategy_ranking_api.clone_strategy, name='clone_strategy'),
+    path('strategy-ranking/<int:strategy_id>/rate/', strategy_ranking_api.rate_strategy, name='rate_strategy'),
+    
+    # ============================================================================
+    # NEW MVP FEATURES
+    # ============================================================================
+    
+    # Feature 1: AI Backtester with Groq Chat Integration
+    path('backtesting/chat/', ai_chat_api.chat_strategy, name='ai_chat_strategy'),
+    path('backtesting/understand/', ai_chat_api.understand_strategy, name='ai_understand_strategy'),
+    path('backtesting/generate-code/', ai_chat_api.generate_code, name='ai_generate_code'),
+    path('backtesting/ai-status/', ai_chat_api.check_ai_status, name='ai_status'),
+    
+    # Feature 2: Enhanced Screener - Filter ALL fields
+    path('screener/fields/', enhanced_screener_api.get_filter_fields, name='screener_fields'),
+    path('screener/filter/', enhanced_screener_api.advanced_filter, name='screener_filter'),
+    path('screener/presets/', enhanced_screener_api.get_presets, name='screener_presets'),
+    
+    # Feature 3: Fast Charting with Quick Updates
+    path('chart/<str:ticker>/quote/', fast_chart_api.get_fast_quote, name='fast_quote'),
+    path('chart/<str:ticker>/intraday/', fast_chart_api.get_intraday_data, name='intraday_chart'),
+    path('chart/<str:ticker>/latest/', fast_chart_api.get_latest_candle, name='latest_candle'),
+    path('chart/<str:ticker>/full/', fast_chart_api.get_chart_with_indicators, name='full_chart'),
+    path('chart/batch-quotes/', fast_chart_api.batch_quotes, name='batch_quotes'),
+    
+    # Feature 4: Aesthetic Valuation Display
+    path('valuation/<str:ticker>/display/', valuation_display_api.get_valuation_display, name='valuation_display'),
+    path('valuation/display/compare/', valuation_display_api.get_valuation_comparison, name='valuation_comparison'),
+    path('valuation/sector/<str:sector>/', valuation_display_api.get_sector_valuation, name='sector_valuation'),
+    
+    # Feature 5: Stock Grouping
+    path('groups/create/', grouping_api.create_stock_group, name='create_group'),
+    path('groups/<str:group_id>/', grouping_api.get_stock_group, name='get_group'),
+    path('groups/<str:group_id>/chart/', grouping_api.get_group_chart, name='group_chart'),
+    
+    # Feature 6: Stock/Group Comparison
+    path('compare/stocks/', grouping_api.compare_stocks, name='compare_stocks'),
+    path('compare/groups/', grouping_api.compare_groups, name='compare_groups'),
+    path('compare/chart/', grouping_api.get_comparison_chart, name='comparison_chart'),
 ]

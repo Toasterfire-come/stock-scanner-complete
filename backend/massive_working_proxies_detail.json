@@ -1,0 +1,2434 @@
+[
+  {
+    "proxy": "18.188.141.177:13",
+    "latency": 3.2138352000620216,
+    "status": 200,
+    "text_len": 403,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:45:54.844945"
+  },
+  {
+    "proxy": "18.226.170.181:30028",
+    "latency": 3.979974600020796,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:19.030591"
+  },
+  {
+    "proxy": "18.202.158.161:80",
+    "latency": 3.98572689993307,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:16.661383"
+  },
+  {
+    "proxy": "152.26.229.52:9443",
+    "latency": 4.05570530006662,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:44:58.771031"
+  },
+  {
+    "proxy": "205.237.104.203:3128",
+    "latency": 4.056941200047731,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:39.160773"
+  },
+  {
+    "proxy": "46.161.6.165:8080",
+    "latency": 4.189679299946874,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:45:16.668283"
+  },
+  {
+    "proxy": "195.225.109.132:3128",
+    "latency": 4.346707999939099,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:47:18.401283"
+  },
+  {
+    "proxy": "65.108.203.35:18080",
+    "latency": 4.411443599965423,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:51:12.142507"
+  },
+  {
+    "proxy": "181.57.183.26:8080",
+    "latency": 4.467626000056043,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:56.864800"
+  },
+  {
+    "proxy": "195.123.209.48:3128",
+    "latency": 4.535090700024739,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:57.420550"
+  },
+  {
+    "proxy": "38.123.220.173:999",
+    "latency": 4.5386780998669565,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:46:28.633510"
+  },
+  {
+    "proxy": "35.183.64.191:29715",
+    "latency": 4.570624499814585,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:45:30.286131"
+  },
+  {
+    "proxy": "52.203.62.58:80",
+    "latency": 4.611226600129157,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:43:53.302872"
+  },
+  {
+    "proxy": "91.238.104.172:2024",
+    "latency": 4.721093399915844,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:02.222727"
+  },
+  {
+    "proxy": "201.174.239.25:8080",
+    "latency": 4.7533645001240075,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:32.500634"
+  },
+  {
+    "proxy": "38.188.247.12:999",
+    "latency": 4.9882391998544335,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:01.159066"
+  },
+  {
+    "proxy": "120.92.212.16:8890",
+    "latency": 5.152441400103271,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:17.274902"
+  },
+  {
+    "proxy": "162.240.154.26:3128",
+    "latency": 5.1543771000579,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:44.091290"
+  },
+  {
+    "proxy": "128.199.121.61:9090",
+    "latency": 5.325406699907035,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:15.004562"
+  },
+  {
+    "proxy": "45.70.236.194:999",
+    "latency": 5.350706800119951,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:54.427879"
+  },
+  {
+    "proxy": "35.152.252.253:8080",
+    "latency": 5.381268800003454,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:47:57.809172"
+  },
+  {
+    "proxy": "68.183.180.48:8080",
+    "latency": 5.388553499942645,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:50:27.582455"
+  },
+  {
+    "proxy": "3.122.235.189:6868",
+    "latency": 5.400817699963227,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:48:51.809052"
+  },
+  {
+    "proxy": "197.218.16.16:3128",
+    "latency": 5.402013799874112,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:23.600059"
+  },
+  {
+    "proxy": "54.199.199.66:3128",
+    "latency": 5.5244308998808265,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:46:05.257666"
+  },
+  {
+    "proxy": "206.189.88.243:8080",
+    "latency": 5.542813899926841,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:44:19.266013"
+  },
+  {
+    "proxy": "101.251.204.174:8080",
+    "latency": 5.606208499986678,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:20.281984"
+  },
+  {
+    "proxy": "144.125.164.222:8081",
+    "latency": 5.620790800079703,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:55.819190"
+  },
+  {
+    "proxy": "103.106.219.171:8081",
+    "latency": 5.626076600048691,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:44:44.204328"
+  },
+  {
+    "proxy": "103.178.86.86:8080",
+    "latency": 5.684723699931055,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:28.900874"
+  },
+  {
+    "proxy": "68.183.179.119:8888",
+    "latency": 5.6906403000466526,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:47:12.983223"
+  },
+  {
+    "proxy": "54.173.77.49:8080",
+    "latency": 5.69186279992573,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:48:54.953099"
+  },
+  {
+    "proxy": "128.199.113.85:9090",
+    "latency": 5.703485800186172,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:59.418785"
+  },
+  {
+    "proxy": "52.87.167.25:80",
+    "latency": 5.7529180001001805,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:29.632298"
+  },
+  {
+    "proxy": "103.178.2.120:8181",
+    "latency": 5.765083899954334,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:46:39.434214"
+  },
+  {
+    "proxy": "54.154.27.41:4263",
+    "latency": 5.781879700021818,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:49.767338"
+  },
+  {
+    "proxy": "18.188.141.177:8834",
+    "latency": 5.837465400109068,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:26.884167"
+  },
+  {
+    "proxy": "47.89.184.18:3128",
+    "latency": 5.8504061999265105,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:43:44.584090"
+  },
+  {
+    "proxy": "45.236.112.9:60399",
+    "latency": 5.867949099978432,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:14.378038"
+  },
+  {
+    "proxy": "187.102.219.32:999",
+    "latency": 5.91344239981845,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:41.021086"
+  },
+  {
+    "proxy": "60.249.94.59:3128",
+    "latency": 5.93548099999316,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:44:34.208527"
+  },
+  {
+    "proxy": "45.166.93.113:999",
+    "latency": 5.966022299835458,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:51:10.368300"
+  },
+  {
+    "proxy": "103.153.38.105:8083",
+    "latency": 5.980702299857512,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:43:09.737797"
+  },
+  {
+    "proxy": "41.223.119.156:3128",
+    "latency": 6.008107799803838,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:44.301562"
+  },
+  {
+    "proxy": "187.190.114.57:999",
+    "latency": 6.083290599985048,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:33.623734"
+  },
+  {
+    "proxy": "139.159.97.82:10900",
+    "latency": 6.135710499947891,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:50:50.599646"
+  },
+  {
+    "proxy": "13.212.182.108:3128",
+    "latency": 6.145860599819571,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:49:17.669560"
+  },
+  {
+    "proxy": "176.126.103.194:44214",
+    "latency": 6.155813599936664,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:42:17.993529"
+  },
+  {
+    "proxy": "103.10.231.189:8080",
+    "latency": 6.177967099938542,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:43:44.706832"
+  },
+  {
+    "proxy": "104.129.194.43:10336",
+    "latency": 6.22664609993808,
+    "status": 200,
+    "text_len": 16187,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:54.388308"
+  },
+  {
+    "proxy": "38.156.72.10:8080",
+    "latency": 6.273167199920863,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:49.251942"
+  },
+  {
+    "proxy": "185.191.236.162:3128",
+    "latency": 6.2736954998690635,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:48:39.643695"
+  },
+  {
+    "proxy": "39.185.41.193:5911",
+    "latency": 6.309690499911085,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:49:39.583832"
+  },
+  {
+    "proxy": "103.67.162.208:60001",
+    "latency": 6.332323600072414,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:28.484400"
+  },
+  {
+    "proxy": "159.223.32.95:8080",
+    "latency": 6.339506099931896,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:48:15.073905"
+  },
+  {
+    "proxy": "18.143.165.238:13040",
+    "latency": 6.351895699976012,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:41:18.501230"
+  },
+  {
+    "proxy": "128.140.113.110:3128",
+    "latency": 6.43696069996804,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:48:01.201723"
+  },
+  {
+    "proxy": "61.91.162.126:8080",
+    "latency": 6.46050460007973,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:16.824303"
+  },
+  {
+    "proxy": "165.225.113.220:10829",
+    "latency": 6.471021499950439,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:43:57.207896"
+  },
+  {
+    "proxy": "41.254.48.190:1976",
+    "latency": 6.4796021999791265,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:41:54.381583"
+  },
+  {
+    "proxy": "200.26.232.82:3128",
+    "latency": 6.504678300116211,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:46:04.734301"
+  },
+  {
+    "proxy": "31.7.70.215:3128",
+    "latency": 6.526209899922833,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:42:14.807602"
+  },
+  {
+    "proxy": "36.110.143.55:8080",
+    "latency": 6.593424999853596,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:40.279709"
+  },
+  {
+    "proxy": "120.92.212.16:7890",
+    "latency": 6.60417370009236,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:51:11.951081"
+  },
+  {
+    "proxy": "89.46.249.252:5080",
+    "latency": 6.640496599953622,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:49.879137"
+  },
+  {
+    "proxy": "208.87.243.199:7878",
+    "latency": 6.6414486998692155,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:47:22.928208"
+  },
+  {
+    "proxy": "43.252.107.102:7777",
+    "latency": 6.667730800108984,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:46:32.810001"
+  },
+  {
+    "proxy": "146.190.80.158:9090",
+    "latency": 6.673638999927789,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:54.656556"
+  },
+  {
+    "proxy": "113.177.204.26:8080",
+    "latency": 6.720966900000349,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:11.417992"
+  },
+  {
+    "proxy": "159.65.11.208:8080",
+    "latency": 6.733308200025931,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:38.748286"
+  },
+  {
+    "proxy": "206.189.133.22:80",
+    "latency": 6.781845999881625,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:43:02.335124"
+  },
+  {
+    "proxy": "116.203.139.209:3128",
+    "latency": 6.801188600016758,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:42:49.172527"
+  },
+  {
+    "proxy": "34.39.246.220:3128",
+    "latency": 6.831846600165591,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:48:08.009045"
+  },
+  {
+    "proxy": "128.140.113.110:5153",
+    "latency": 6.875087399967015,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:44:22.792491"
+  },
+  {
+    "proxy": "157.10.97.101:8181",
+    "latency": 6.8771853998769075,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:46:00.431860"
+  },
+  {
+    "proxy": "171.100.254.137:8080",
+    "latency": 6.8939287001267076,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:42:58.207843"
+  },
+  {
+    "proxy": "54.199.199.66:29733",
+    "latency": 7.082805700134486,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:57.366501"
+  },
+  {
+    "proxy": "210.223.44.230:3128",
+    "latency": 7.0896719000302255,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:20.945218"
+  },
+  {
+    "proxy": "45.168.49.2:8080",
+    "latency": 7.127514900173992,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:00.364711"
+  },
+  {
+    "proxy": "38.183.146.229:8060",
+    "latency": 7.1677423000801355,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:32.221016"
+  },
+  {
+    "proxy": "103.187.162.75:8085",
+    "latency": 7.179639299865812,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:50:27.408539"
+  },
+  {
+    "proxy": "216.229.112.25:8080",
+    "latency": 7.22567389998585,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:49:59.905794"
+  },
+  {
+    "proxy": "8.213.151.128:3128",
+    "latency": 7.260236600181088,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:46:17.111753"
+  },
+  {
+    "proxy": "172.212.68.37:3128",
+    "latency": 7.312928500119597,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:40:34.051175"
+  },
+  {
+    "proxy": "138.0.228.123:8080",
+    "latency": 7.336930500110611,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:43:30.954217"
+  },
+  {
+    "proxy": "120.28.194.248:8282",
+    "latency": 7.3474866999313235,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:42:33.467970"
+  },
+  {
+    "proxy": "177.234.247.234:999",
+    "latency": 7.354902500053868,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:42:52.824794"
+  },
+  {
+    "proxy": "103.156.16.191:8080",
+    "latency": 7.393581799929962,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:42:19.089735"
+  },
+  {
+    "proxy": "45.174.94.26:999",
+    "latency": 7.404545400058851,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:49:54.579207"
+  },
+  {
+    "proxy": "117.74.65.207:80",
+    "latency": 7.461156100034714,
+    "status": 200,
+    "text_len": 17761,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:43:01.780128"
+  },
+  {
+    "proxy": "81.201.56.208:8080",
+    "latency": 7.47617520019412,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:40:50.566918"
+  },
+  {
+    "proxy": "188.132.221.8:8080",
+    "latency": 7.507962499978021,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:26.213872"
+  },
+  {
+    "proxy": "70.63.90.245:8080",
+    "latency": 7.537488200003281,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:46:32.814947"
+  },
+  {
+    "proxy": "103.155.167.25:1111",
+    "latency": 7.538821700029075,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:32.114285"
+  },
+  {
+    "proxy": "103.168.44.210:8088",
+    "latency": 7.588464299915358,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:42:32.924003"
+  },
+  {
+    "proxy": "187.245.214.11:999",
+    "latency": 7.592477899976075,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:43.230064"
+  },
+  {
+    "proxy": "103.229.185.154:8080",
+    "latency": 7.694530799984932,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:42:47.117621"
+  },
+  {
+    "proxy": "18.226.170.181:36970",
+    "latency": 7.751929699908942,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:50:34.330862"
+  },
+  {
+    "proxy": "185.200.38.213:8080",
+    "latency": 7.7899180999957025,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:42:16.103012"
+  },
+  {
+    "proxy": "177.234.194.30:999",
+    "latency": 7.806635600049049,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:14.812733"
+  },
+  {
+    "proxy": "190.242.157.215:8080",
+    "latency": 7.8155394999776036,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:43.693254"
+  },
+  {
+    "proxy": "45.171.111.255:999",
+    "latency": 7.872983299894258,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:38.924847"
+  },
+  {
+    "proxy": "103.139.99.194:8080",
+    "latency": 7.893416800070554,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:46:31.692368"
+  },
+  {
+    "proxy": "200.174.198.32:8888",
+    "latency": 7.901507099857554,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:39:29.407761"
+  },
+  {
+    "proxy": "81.0.239.103:3128",
+    "latency": 7.944413600023836,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:50:49.596013"
+  },
+  {
+    "proxy": "92.124.132.106:3128",
+    "latency": 7.97209950000979,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:40:38.358541"
+  },
+  {
+    "proxy": "59.153.19.170:1120",
+    "latency": 7.980025700060651,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:43:46.520400"
+  },
+  {
+    "proxy": "103.175.240.87:8090",
+    "latency": 8.013422699877992,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:47.583955"
+  },
+  {
+    "proxy": "100.27.183.62:8080",
+    "latency": 8.021331999916583,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:39:05.355381"
+  },
+  {
+    "proxy": "43.208.129.50:5020",
+    "latency": 8.033222700003535,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:00.866300"
+  },
+  {
+    "proxy": "59.153.16.167:1120",
+    "latency": 8.103257100097835,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:58.345058"
+  },
+  {
+    "proxy": "103.18.77.25:1111",
+    "latency": 8.193059300072491,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:52.896619"
+  },
+  {
+    "proxy": "203.128.75.196:8080",
+    "latency": 8.228384000016376,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:41:41.444690"
+  },
+  {
+    "proxy": "103.219.8.29:80",
+    "latency": 8.253691799938679,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:50:31.174200"
+  },
+  {
+    "proxy": "13.212.81.49:3464",
+    "latency": 8.315077000064775,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:41:24.025956"
+  },
+  {
+    "proxy": "120.28.214.157:8080",
+    "latency": 8.320585399866104,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:50:07.248992"
+  },
+  {
+    "proxy": "8.243.68.11:8080",
+    "latency": 8.413437299896032,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:39:06.807053"
+  },
+  {
+    "proxy": "110.167.122.2:9000",
+    "latency": 8.466781900031492,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:50.629237"
+  },
+  {
+    "proxy": "8.242.212.220:999",
+    "latency": 8.485816299915314,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:36.292400"
+  },
+  {
+    "proxy": "218.89.134.230:3333",
+    "latency": 8.49132820009254,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:47:03.969167"
+  },
+  {
+    "proxy": "211.230.49.122:3128",
+    "latency": 8.572002300061285,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:45:51.317143"
+  },
+  {
+    "proxy": "181.143.181.35:8080",
+    "latency": 8.600727999815717,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:41:57.216019"
+  },
+  {
+    "proxy": "182.160.110.154:9898",
+    "latency": 8.759804799919948,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:51:16.245468"
+  },
+  {
+    "proxy": "103.25.195.69:8181",
+    "latency": 8.775624200003222,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:50:10.406543"
+  },
+  {
+    "proxy": "223.25.100.236:8080",
+    "latency": 8.83424250013195,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:22.411850"
+  },
+  {
+    "proxy": "103.184.167.66:8080",
+    "latency": 8.848712099948898,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:04.906318"
+  },
+  {
+    "proxy": "8.222.175.80:6128",
+    "latency": 8.899664900032803,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:39:57.374501"
+  },
+  {
+    "proxy": "165.225.113.220:10018",
+    "latency": 8.940651800017804,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:40:21.632823"
+  },
+  {
+    "proxy": "103.230.63.66:1120",
+    "latency": 9.033863299991935,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:41:24.761216"
+  },
+  {
+    "proxy": "165.225.113.220:11243",
+    "latency": 9.038016700185835,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:40:12.804259"
+  },
+  {
+    "proxy": "1.179.231.130:8080",
+    "latency": 9.109737599967048,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:48:17.701207"
+  },
+  {
+    "proxy": "94.101.187.3:3128",
+    "latency": 9.135611099889502,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:41:47.801935"
+  },
+  {
+    "proxy": "141.136.63.126:8080",
+    "latency": 9.136151199927554,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:37.623191"
+  },
+  {
+    "proxy": "104.129.194.44:10336",
+    "latency": 9.160870700143278,
+    "status": 200,
+    "text_len": 16187,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:43:58.717031"
+  },
+  {
+    "proxy": "43.225.148.210:1120",
+    "latency": 9.193847199901938,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:44:22.528196"
+  },
+  {
+    "proxy": "202.169.229.139:53281",
+    "latency": 9.194322800030932,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:41:08.860251"
+  },
+  {
+    "proxy": "43.208.240.77:12587",
+    "latency": 9.209242300130427,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:16.403399"
+  },
+  {
+    "proxy": "45.4.3.6:999",
+    "latency": 9.270232900045812,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:51:15.367168"
+  },
+  {
+    "proxy": "103.114.25.81:8088",
+    "latency": 9.319400500040501,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:43:33.078908"
+  },
+  {
+    "proxy": "59.6.25.118:3128",
+    "latency": 9.370761099969968,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:38:59.068012"
+  },
+  {
+    "proxy": "45.225.207.183:999",
+    "latency": 9.378310299944133,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:48.570546"
+  },
+  {
+    "proxy": "109.234.38.35:3128",
+    "latency": 9.394062699982896,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:38:39.112408"
+  },
+  {
+    "proxy": "163.61.55.103:1234",
+    "latency": 9.398120699916035,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:12.917634"
+  },
+  {
+    "proxy": "62.133.63.236:1111",
+    "latency": 9.40710509987548,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:42:00.845389"
+  },
+  {
+    "proxy": "177.234.217.44:999",
+    "latency": 9.422191899968311,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:42:29.820586"
+  },
+  {
+    "proxy": "116.203.139.209:999",
+    "latency": 9.42572130006738,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:38:53.186509"
+  },
+  {
+    "proxy": "45.4.202.170:999",
+    "latency": 9.448084200033918,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:45:27.715347"
+  },
+  {
+    "proxy": "202.191.122.106:1121",
+    "latency": 9.629442699952051,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:43:08.475388"
+  },
+  {
+    "proxy": "34.236.148.220:10081",
+    "latency": 9.66326030017808,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:38:54.926758"
+  },
+  {
+    "proxy": "36.95.245.7:8090",
+    "latency": 9.702033400069922,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:11.357260"
+  },
+  {
+    "proxy": "54.180.143.12:1267",
+    "latency": 9.803654399933293,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:48:49.450600"
+  },
+  {
+    "proxy": "115.147.25.14:8081",
+    "latency": 9.80387010006234,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:42:32.578810"
+  },
+  {
+    "proxy": "221.202.27.194:10811",
+    "latency": 9.825865499908105,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:48:39.403343"
+  },
+  {
+    "proxy": "104.248.243.244:3128",
+    "latency": 9.833978599868715,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:38:59.060121"
+  },
+  {
+    "proxy": "103.154.170.249:8080",
+    "latency": 9.882368999999017,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:44:26.922066"
+  },
+  {
+    "proxy": "199.66.157.89:8080",
+    "latency": 9.910050099948421,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:49:45.716578"
+  },
+  {
+    "proxy": "181.78.95.98:999",
+    "latency": 9.96554429992102,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:31.000277"
+  },
+  {
+    "proxy": "49.229.100.235:8080",
+    "latency": 9.99094510008581,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:04.041385"
+  },
+  {
+    "proxy": "203.172.225.227:8080",
+    "latency": 10.032020000042394,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:45:22.558492"
+  },
+  {
+    "proxy": "222.127.76.123:8082",
+    "latency": 10.13206179998815,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:51:19.074091"
+  },
+  {
+    "proxy": "181.129.147.163:8080",
+    "latency": 10.278680799994618,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:45:05.752247"
+  },
+  {
+    "proxy": "45.65.137.218:999",
+    "latency": 10.283526299986988,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:39:01.160079"
+  },
+  {
+    "proxy": "144.125.164.222:8080",
+    "latency": 10.304426799993962,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:39:12.442906"
+  },
+  {
+    "proxy": "114.141.50.211:8080",
+    "latency": 10.333167399978265,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:49.265532"
+  },
+  {
+    "proxy": "40.192.27.104:8080",
+    "latency": 10.369327599881217,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:12.779202"
+  },
+  {
+    "proxy": "38.183.145.232:8080",
+    "latency": 10.395666599972174,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:45:41.435283"
+  },
+  {
+    "proxy": "179.49.113.230:999",
+    "latency": 10.398191399872303,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:38.870531"
+  },
+  {
+    "proxy": "181.209.108.226:999",
+    "latency": 10.414860100019723,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:41:42.135250"
+  },
+  {
+    "proxy": "103.147.246.184:3127",
+    "latency": 10.499554099980742,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:43:03.803463"
+  },
+  {
+    "proxy": "103.193.144.16:8080",
+    "latency": 10.514729300048202,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:39:49.889741"
+  },
+  {
+    "proxy": "119.18.145.50:8585",
+    "latency": 10.523011999903247,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:38:48.347779"
+  },
+  {
+    "proxy": "101.128.93.144:8090",
+    "latency": 10.535291299922392,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:46:50.181133"
+  },
+  {
+    "proxy": "212.1.86.225:81",
+    "latency": 10.758432400180027,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:49:21.580031"
+  },
+  {
+    "proxy": "103.157.79.82:1111",
+    "latency": 10.790880100103095,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:50:49.791913"
+  },
+  {
+    "proxy": "165.225.113.220:10087",
+    "latency": 10.806027999846265,
+    "status": 200,
+    "text_len": 22301,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:50:14.755846"
+  },
+  {
+    "proxy": "103.189.254.18:8080",
+    "latency": 10.813557799905539,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:50:01.552463"
+  },
+  {
+    "proxy": "166.108.197.69:12308",
+    "latency": 10.884682699805126,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:39.459281"
+  },
+  {
+    "proxy": "103.81.64.89:8080",
+    "latency": 10.91310409992002,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:39:26.144016"
+  },
+  {
+    "proxy": "89.208.104.34:3128",
+    "latency": 11.065771399997175,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:38:49.592606"
+  },
+  {
+    "proxy": "103.105.76.65:8080",
+    "latency": 11.112051599891856,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:45:10.491929"
+  },
+  {
+    "proxy": "89.110.80.195:10149",
+    "latency": 11.15711610019207,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:51:14.773309"
+  },
+  {
+    "proxy": "59.153.19.30:1120",
+    "latency": 11.22403350006789,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:43:04.638406"
+  },
+  {
+    "proxy": "181.79.234.90:999",
+    "latency": 11.228718699887395,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:40:10.995966"
+  },
+  {
+    "proxy": "43.135.36.240:2764",
+    "latency": 11.257683999836445,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:52.046843"
+  },
+  {
+    "proxy": "52.188.28.218:3128",
+    "latency": 11.25939349993132,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:46:19.607158"
+  },
+  {
+    "proxy": "160.22.221.2:8080",
+    "latency": 11.293533599935472,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:46:58.342516"
+  },
+  {
+    "proxy": "186.67.47.230:999",
+    "latency": 11.316630200017244,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:07.203536"
+  },
+  {
+    "proxy": "217.150.43.249:8080",
+    "latency": 11.317526299972087,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:38:39.948715"
+  },
+  {
+    "proxy": "49.145.125.122:9999",
+    "latency": 11.349290099926293,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:50:44.713533"
+  },
+  {
+    "proxy": "164.92.148.68:3128",
+    "latency": 11.441907900152728,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:45:28.081796"
+  },
+  {
+    "proxy": "103.180.122.60:8081",
+    "latency": 11.48100720020011,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:40:21.658805"
+  },
+  {
+    "proxy": "8.243.163.39:999",
+    "latency": 11.483934300020337,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:20.460101"
+  },
+  {
+    "proxy": "71.168.71.12:8890",
+    "latency": 11.52349379984662,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:45.958396"
+  },
+  {
+    "proxy": "157.175.84.251:1080",
+    "latency": 11.535126500064507,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:43:59.321923"
+  },
+  {
+    "proxy": "103.48.71.50:83",
+    "latency": 11.566926300060004,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:26.011936"
+  },
+  {
+    "proxy": "218.152.130.48:3128",
+    "latency": 11.623480600072071,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:48:18.212156"
+  },
+  {
+    "proxy": "165.225.113.220:11213",
+    "latency": 11.660675799939781,
+    "status": 200,
+    "text_len": 16214,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:10.753578"
+  },
+  {
+    "proxy": "173.249.205.117:8888",
+    "latency": 11.692290799925104,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:49:48.785770"
+  },
+  {
+    "proxy": "118.179.151.57:5020",
+    "latency": 11.751352099934593,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:41:38.955964"
+  },
+  {
+    "proxy": "165.225.113.220:11267",
+    "latency": 11.775336799910292,
+    "status": 200,
+    "text_len": 22353,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:46:53.948813"
+  },
+  {
+    "proxy": "177.19.167.242:80",
+    "latency": 11.823992299847305,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:47:03.217843"
+  },
+  {
+    "proxy": "77.37.244.119:8080",
+    "latency": 11.859362500021234,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:22.865185"
+  },
+  {
+    "proxy": "203.150.113.178:8080",
+    "latency": 11.893032599939033,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:42:26.392987"
+  },
+  {
+    "proxy": "165.225.113.220:10114",
+    "latency": 11.93056569993496,
+    "status": 200,
+    "text_len": 16133,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:09.212528"
+  },
+  {
+    "proxy": "181.119.103.237:999",
+    "latency": 12.075939900008962,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:43:56.078221"
+  },
+  {
+    "proxy": "165.225.113.220:11233",
+    "latency": 12.099275900050998,
+    "status": 200,
+    "text_len": 22351,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:29.945809"
+  },
+  {
+    "proxy": "45.173.12.141:1994",
+    "latency": 12.126104900147766,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:48:14.898980"
+  },
+  {
+    "proxy": "165.225.113.220:10619",
+    "latency": 12.134728600038216,
+    "status": 200,
+    "text_len": 22343,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:58.481485"
+  },
+  {
+    "proxy": "150.136.153.231:80",
+    "latency": 12.197121399920434,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:09.524163"
+  },
+  {
+    "proxy": "94.182.146.250:8080",
+    "latency": 12.227647599996999,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:35.163571"
+  },
+  {
+    "proxy": "36.147.78.166:443",
+    "latency": 12.262439399957657,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:23.667411"
+  },
+  {
+    "proxy": "185.218.202.182:8080",
+    "latency": 12.299847500165924,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:38:56.804697"
+  },
+  {
+    "proxy": "165.225.113.220:11743",
+    "latency": 12.424207200063393,
+    "status": 200,
+    "text_len": 22256,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:41:42.887342"
+  },
+  {
+    "proxy": "211.217.231.234:8080",
+    "latency": 12.433396899839863,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:02.201704"
+  },
+  {
+    "proxy": "165.225.113.220:10201",
+    "latency": 12.46732319984585,
+    "status": 200,
+    "text_len": 22351,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:41.271195"
+  },
+  {
+    "proxy": "103.25.111.246:8080",
+    "latency": 12.509672899963334,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:28.997613"
+  },
+  {
+    "proxy": "103.103.3.6:8080",
+    "latency": 12.520291900029406,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:22.567682"
+  },
+  {
+    "proxy": "165.225.113.220:10441",
+    "latency": 12.582906400086358,
+    "status": 200,
+    "text_len": 22320,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:49:52.007211"
+  },
+  {
+    "proxy": "103.156.75.132:8181",
+    "latency": 12.608825899893418,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:21.868731"
+  },
+  {
+    "proxy": "36.67.114.94:8187",
+    "latency": 12.741519500035793,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:47:36.911712"
+  },
+  {
+    "proxy": "165.225.113.220:22222",
+    "latency": 12.836526700062677,
+    "status": 200,
+    "text_len": 22308,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:45:08.291839"
+  },
+  {
+    "proxy": "103.75.84.237:8080",
+    "latency": 12.852603999897838,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:43:42.852649"
+  },
+  {
+    "proxy": "220.197.44.36:3128",
+    "latency": 12.934019400039688,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:49:20.786479"
+  },
+  {
+    "proxy": "38.51.207.184:999",
+    "latency": 13.07176429987885,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:20.132114"
+  },
+  {
+    "proxy": "185.200.37.242:8080",
+    "latency": 13.076140299905092,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:51:11.697306"
+  },
+  {
+    "proxy": "213.169.33.7:4000",
+    "latency": 13.238409199984744,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:44:17.482242"
+  },
+  {
+    "proxy": "103.146.170.193:83",
+    "latency": 13.250030600000173,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:14.327718"
+  },
+  {
+    "proxy": "116.212.182.74:8081",
+    "latency": 13.25263680005446,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:39:24.706560"
+  },
+  {
+    "proxy": "210.201.86.72:8080",
+    "latency": 13.256601099856198,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:49:45.168285"
+  },
+  {
+    "proxy": "76.169.128.104:8080",
+    "latency": 13.2758998000063,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:39:48.020117"
+  },
+  {
+    "proxy": "187.86.59.122:80",
+    "latency": 13.293754999991506,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:51:10.826015"
+  },
+  {
+    "proxy": "121.233.233.238:3712",
+    "latency": 13.31930120009929,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:47:48.716346"
+  },
+  {
+    "proxy": "165.225.113.220:10012",
+    "latency": 13.403576399898157,
+    "status": 200,
+    "text_len": 22321,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:40:43.748842"
+  },
+  {
+    "proxy": "43.224.119.194:1120",
+    "latency": 13.491946500027552,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:53.944632"
+  },
+  {
+    "proxy": "103.78.98.74:8888",
+    "latency": 13.67458359990269,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:48:50.673649"
+  },
+  {
+    "proxy": "45.236.215.111:60955",
+    "latency": 13.723352800123394,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:17.935075"
+  },
+  {
+    "proxy": "158.101.113.18:80",
+    "latency": 13.78895640000701,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:40:39.121990"
+  },
+  {
+    "proxy": "59.153.18.174:1120",
+    "latency": 13.927444399800152,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:48:06.998027"
+  },
+  {
+    "proxy": "103.245.109.57:39355",
+    "latency": 13.977401799988002,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:41:02.217884"
+  },
+  {
+    "proxy": "159.69.214.139:3128",
+    "latency": 14.037050100043416,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:38:42.546121"
+  },
+  {
+    "proxy": "160.19.110.130:8082",
+    "latency": 14.045632399851456,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:42.959728"
+  },
+  {
+    "proxy": "221.202.27.194:10809",
+    "latency": 14.190062399953604,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:50:52.784722"
+  },
+  {
+    "proxy": "103.148.195.22:8080",
+    "latency": 14.195317500038072,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:47:04.311285"
+  },
+  {
+    "proxy": "38.194.246.34:999",
+    "latency": 14.2069930001162,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:43:26.613838"
+  },
+  {
+    "proxy": "45.204.208.22:60002",
+    "latency": 14.241169500164688,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:52.008511"
+  },
+  {
+    "proxy": "38.156.72.6:8080",
+    "latency": 14.355504400096834,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:42:11.316976"
+  },
+  {
+    "proxy": "114.141.54.100:8080",
+    "latency": 14.484285899903625,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:50:18.427667"
+  },
+  {
+    "proxy": "213.149.182.98:8080",
+    "latency": 14.648494699969888,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:39:54.201066"
+  },
+  {
+    "proxy": "157.15.139.138:8080",
+    "latency": 14.6485943000298,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:41:21.853919"
+  },
+  {
+    "proxy": "45.184.103.110:999",
+    "latency": 14.681857400108129,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:50:46.463814"
+  },
+  {
+    "proxy": "94.25.85.100:8123",
+    "latency": 14.709631300065666,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:39:02.763004"
+  },
+  {
+    "proxy": "103.250.69.42:1120",
+    "latency": 14.760544200195,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:40:20.924983"
+  },
+  {
+    "proxy": "36.88.141.105:8080",
+    "latency": 14.78907800000161,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:43:30.271602"
+  },
+  {
+    "proxy": "91.236.74.10:8080",
+    "latency": 14.846083899959922,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:29.915518"
+  },
+  {
+    "proxy": "103.175.238.106:8082",
+    "latency": 14.847804900025949,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:49:51.284505"
+  },
+  {
+    "proxy": "103.133.26.75:8181",
+    "latency": 15.056701999856159,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:41:24.295050"
+  },
+  {
+    "proxy": "103.211.26.94:80",
+    "latency": 15.205292999977246,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:46.576480"
+  },
+  {
+    "proxy": "110.49.34.126:32650",
+    "latency": 15.394849800039083,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:46:14.900923"
+  },
+  {
+    "proxy": "181.209.82.203:999",
+    "latency": 15.593786000041291,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:44:21.746889"
+  },
+  {
+    "proxy": "122.185.198.242:7999",
+    "latency": 15.60865049995482,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:45:47.263751"
+  },
+  {
+    "proxy": "202.191.125.42:1120",
+    "latency": 15.651193199912086,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:39:30.387959"
+  },
+  {
+    "proxy": "103.194.175.51:7777",
+    "latency": 15.663266999879852,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:31.572410"
+  },
+  {
+    "proxy": "147.45.219.101:3129",
+    "latency": 15.672134299995378,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:49:12.214421"
+  },
+  {
+    "proxy": "160.19.41.60:80",
+    "latency": 15.91537499986589,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:46:46.608102"
+  },
+  {
+    "proxy": "103.191.165.146:8090",
+    "latency": 15.983339100144804,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:42:58.901960"
+  },
+  {
+    "proxy": "162.223.89.83:3128",
+    "latency": 16.043452200014144,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:10.907953"
+  },
+  {
+    "proxy": "103.191.155.130:3125",
+    "latency": 16.266839399933815,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:42:32.507819"
+  },
+  {
+    "proxy": "41.128.72.132:1976",
+    "latency": 16.2825341001153,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:41:53.472521"
+  },
+  {
+    "proxy": "62.193.108.140:1981",
+    "latency": 16.305382899940014,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:40:19.546829"
+  },
+  {
+    "proxy": "103.81.158.130:8080",
+    "latency": 16.82467499980703,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:46:10.231239"
+  },
+  {
+    "proxy": "200.95.184.58:999",
+    "latency": 16.89917550003156,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:41:39.138478"
+  },
+  {
+    "proxy": "131.72.69.209:8080",
+    "latency": 16.953011499950662,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:46.955841"
+  },
+  {
+    "proxy": "186.250.29.225:8080",
+    "latency": 17.07181689981371,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:48:56.027057"
+  },
+  {
+    "proxy": "124.217.66.16:8082",
+    "latency": 17.083937600022182,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:40:35.153093"
+  },
+  {
+    "proxy": "165.225.113.220:10679",
+    "latency": 17.290532500017434,
+    "status": 200,
+    "text_len": 22371,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:36.050205"
+  },
+  {
+    "proxy": "12.218.209.130:53281",
+    "latency": 17.35164640005678,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:49:44.504675"
+  },
+  {
+    "proxy": "203.76.220.126:16464",
+    "latency": 17.377023299923167,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:40:41.812837"
+  },
+  {
+    "proxy": "45.119.113.62:83",
+    "latency": 17.387409700080752,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:44:41.422106"
+  },
+  {
+    "proxy": "103.210.35.182:8080",
+    "latency": 17.54623950016685,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:47:12.044230"
+  },
+  {
+    "proxy": "103.194.175.181:7777",
+    "latency": 17.81483820010908,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:46:59.183086"
+  },
+  {
+    "proxy": "102.210.106.1:83",
+    "latency": 17.906698999926448,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:45:42.338640"
+  },
+  {
+    "proxy": "103.159.46.125:82",
+    "latency": 18.04605979984626,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:49:53.971902"
+  },
+  {
+    "proxy": "103.245.206.70:1120",
+    "latency": 18.53996569989249,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:39:57.127187"
+  },
+  {
+    "proxy": "165.225.113.220:10021",
+    "latency": 18.54203170002438,
+    "status": 200,
+    "text_len": 22302,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:39:25.103863"
+  },
+  {
+    "proxy": "45.249.77.145:83",
+    "latency": 18.661436499794945,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:49:09.279271"
+  },
+  {
+    "proxy": "157.20.244.77:8080",
+    "latency": 18.76572659984231,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:51:09.044987"
+  },
+  {
+    "proxy": "103.156.75.124:1111",
+    "latency": 18.79434600006789,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:43:19.755356"
+  },
+  {
+    "proxy": "45.225.184.206:999",
+    "latency": 19.054855900118127,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:47.252772"
+  },
+  {
+    "proxy": "188.168.88.69:8080",
+    "latency": 19.148378999903798,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:39:44.953040"
+  },
+  {
+    "proxy": "200.48.35.124:999",
+    "latency": 19.158424800029024,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:46:56.220765"
+  },
+  {
+    "proxy": "154.159.247.119:8080",
+    "latency": 19.37749749980867,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:48:40.851185"
+  },
+  {
+    "proxy": "217.217.254.94:8080",
+    "latency": 19.807161399861798,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:09.397977"
+  },
+  {
+    "proxy": "103.147.134.121:8080",
+    "latency": 19.922976200003177,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:46:56.759774"
+  },
+  {
+    "proxy": "177.234.217.45:999",
+    "latency": 20.173180899815634,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:50:51.067316"
+  },
+  {
+    "proxy": "113.160.214.209:8080",
+    "latency": 20.459614400053397,
+    "status": 200,
+    "text_len": 151,
+    "symbol_tested": "GOOGL.US",
+    "timestamp": "2025-12-12T17:48:12.518378"
+  },
+  {
+    "proxy": "187.86.132.233:3129",
+    "latency": 20.537718000123277,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:40:01.276428"
+  },
+  {
+    "proxy": "102.212.45.34:12354",
+    "latency": 20.588251299923286,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:42:30.027828"
+  },
+  {
+    "proxy": "36.95.155.74:3126",
+    "latency": 20.758910399861634,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:45:56.140782"
+  },
+  {
+    "proxy": "220.89.218.209:8880",
+    "latency": 21.28134229988791,
+    "status": 200,
+    "text_len": 148,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:43:22.022272"
+  },
+  {
+    "proxy": "47.243.92.199:3128",
+    "latency": 21.33695140015334,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:49:37.043227"
+  },
+  {
+    "proxy": "191.53.112.170:45619",
+    "latency": 21.550171799957752,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "MSFT.US",
+    "timestamp": "2025-12-12T17:51:12.791130"
+  },
+  {
+    "proxy": "82.115.24.134:9090",
+    "latency": 23.565141799859703,
+    "status": 200,
+    "text_len": 147,
+    "symbol_tested": "AAPL.US",
+    "timestamp": "2025-12-12T17:39:08.215867"
+  },
+  {
+    "proxy": "194.87.77.22:80",
+    "latency": 27.748079999815673,
+    "status": 200,
+    "text_len": 154,
+    "symbol_tested": "AMZN.US",
+    "timestamp": "2025-12-12T17:40:42.551264"
+  },
+  {
+    "proxy": "165.225.113.220:10347",
+    "latency": 29.032991599990055,
+    "status": 200,
+    "text_len": 16168,
+    "symbol_tested": "TSLA.US",
+    "timestamp": "2025-12-12T17:44:11.459400"
+  }
+]

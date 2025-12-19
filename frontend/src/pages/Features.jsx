@@ -51,26 +51,54 @@ const Features = () => {
 
   const mainFeatures = [
     {
+      icon: <Target className="h-8 w-8" />,
+      title: "Value Hunter - Fair Value Analysis",
+      description: "Find undervalued stocks using professional DCF models and intrinsic value calculations.",
+      details: [
+        "Discounted Cash Flow (DCF) valuation for any stock",
+        "Intrinsic value calculation with customizable growth assumptions",
+        "Margin of Safety scoring - know how much discount you're getting",
+        "Historical fair value trends and price comparison",
+        "Automated undervaluation alerts",
+        "Portfolio-wide fair value analysis"
+      ],
+      highlight: true
+    },
+    {
+      icon: <LineChart className="h-8 w-8" />,
+      title: "AI-Powered Strategy Backtesting",
+      description: "Test your investment strategies against historical data with AI-enhanced insights.",
+      details: [
+        "Backtest any strategy with 5+ years of historical data",
+        "AI explains WHY your strategy works (or doesn't)",
+        "Risk-adjusted return metrics (Sharpe, Sortino, Max Drawdown)",
+        "Compare multiple strategies side-by-side",
+        "Monte Carlo simulation for probability analysis",
+        "Export detailed backtest reports"
+      ],
+      highlight: true
+    },
+    {
       icon: <Search className="h-8 w-8" />,
-      title: "Global Equity Screening",
-      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with 14+ technical and fundamental filters.`,
+      title: "Fundamental Stock Screening",
+      description: `Screen ${formatNumber(usage.coverageUniverse)}+ equities across ${usage.coverageVenues.join(", ")} with fundamental and technical filters.`,
       details: [
         `Complete coverage across ${usage.coverageVenues.join(", ")} (${formatNumber(usage.coverageUniverse)}+ tickers)`,
-        "Technical: RSI, MACD, Moving Averages (5/20/50/200), Bollinger, Stochastic, VWAP, Price/Volume",
-        "Fundamental: Market Cap, P/E, EPS Growth, Revenue Growth, Dividend Yield, Beta, 52‑week range",
-        `Saved presets, shareable screeners, and one-click re-run across ${formatNumber(usage.teamsOnPlatform)} teams`,
+        "Fundamental: P/E, P/B, EPS Growth, Revenue Growth, Dividend Yield, ROE, Debt/Equity",
+        "Technical: RSI, MACD, Moving Averages, Bollinger Bands, Volume analysis",
+        `Saved presets and shareable screeners across ${formatNumber(usage.teamsOnPlatform)} teams`,
         "Near real-time updates with efficient caching",
         "Quick export to CSV for deeper analysis"
       ]
     },
     {
       icon: <Bell className="h-8 w-8" />,
-      title: "Real-Time Alerts",
-      description: "Never miss a trading opportunity with instant notifications.",
+      title: "Investment Alerts",
+      description: "Never miss an investment opportunity with smart notifications.",
       details: [
         `Price movement alerts (% change or absolute) with sub-${reliability.apiP95LatencyMs}ms delivery`,
-        "Volume spike notifications",
-        "Technical indicator breakouts",
+        "Fair value threshold alerts - know when stocks become undervalued",
+        "Fundamental changes (earnings surprises, dividend announcements)",
         `Email and push notification delivery (${formatNumber(usage.alertsDeliveredMonthly)}+ alerts/mo)`,
         "Custom alert conditions",
         "Alert history and management"
@@ -229,7 +257,7 @@ const Features = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
-        title="Features | Stock Filter & Market Scan Tools"
+        title="Features | Value Investing Tools & Fundamental Analysis"
         description="Powerful stock filter and market scan: build filters by price, volume, RSI, insider buys; run real-time scans with alerts and watchlists."
         url="https://tradescanpro.com/features"
         jsonLdUrls={["/structured/features.jsonld"]}
@@ -245,12 +273,12 @@ const Features = () => {
 
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-8 leading-tight">
               Powerful Features for
-              <span className="text-blue-600 block">Serious Traders</span>
+              <span className="text-blue-600 block">Long-Term Investors</span>
             </h1>
 
             <p className="text-2xl text-gray-700 mb-12 leading-relaxed">
-              Ship decisions faster with the same toolkit powering {formatNumber(usage.totalScreenersRunMonthly)} monthly screeners,
-              {formatNumber(usage.alertsDeliveredMonthly)} alerts, and {formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} customer retention.
+              Build wealth with professional-grade fundamental analysis, AI-powered backtesting,
+              and comprehensive educational resources trusted by {formatNumber(usage.activeAccounts)} investors.
             </p>
 
             <Button asChild size="lg" className="text-xl px-12 py-6 h-auto">
@@ -277,10 +305,10 @@ const Features = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Core Features
+              Core Investment Tools
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Built by traders, for traders. Every feature is designed to give you an edge in the markets.
+              Built for value investors. Every feature helps you make smarter, data-driven investment decisions.
             </p>
           </div>
           
@@ -288,14 +316,17 @@ const Features = () => {
             {mainFeatures.map((feature, index) => (
               <div key={index} className={`flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                 <div className="lg:w-1/2">
-                  <Card className="hover:shadow-2xl transition-shadow duration-300">
+                  <Card className={`hover:shadow-2xl transition-shadow duration-300 ${feature.highlight ? 'border-2 border-blue-500 bg-blue-50/30' : ''}`}>
                     <CardHeader>
                       <div className="flex items-center space-x-4 mb-4">
-                        <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${feature.highlight ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
                           {feature.icon}
                         </div>
                         <div>
-                          <CardTitle className="text-3xl">{feature.title}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-3xl">{feature.title}</CardTitle>
+                            {feature.highlight && <Badge className="bg-blue-600">Featured</Badge>}
+                          </div>
                           <CardDescription className="text-lg text-gray-600 mt-2">
                             {feature.description}
                           </CardDescription>

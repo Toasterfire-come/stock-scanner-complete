@@ -8,9 +8,10 @@ import { Check, Crown, Zap, ArrowRight } from "lucide-react";
 
 const plans = [
   {
-    id: "bronze",
-    name: "Bronze",
-    price: "$24.99",
+    id: "basic",
+    name: "Basic",
+    price: "$14.99",
+    annualPrice: "$149.99",
     period: "month",
     trialPrice: "free",
     description: "Great for individual traders",
@@ -31,13 +32,14 @@ const plans = [
       portfolios: 0,
     },
     icon: Zap,
-    color: "orange",
+    color: "blue",
     popular: true,
   },
   {
-    id: "silver",
-    name: "Silver",
-    price: "$49.99",
+    id: "plus",
+    name: "Plus",
+    price: "$24.99",
+    annualPrice: "$249.99",
     period: "month",
     trialPrice: "free",
     description: "Perfect for professional traders",
@@ -59,52 +61,16 @@ const plans = [
       portfolios: 1,
     },
     icon: Crown,
-    color: "blue",
+    color: "purple",
   },
-  {
-    id: "gold",
-    name: "Gold",
-    price: "$89.99",
-    period: "month",
-    trialPrice: "free",
-    description: "For trading teams and institutions",
-    features: [
-      "Unlimited API calls",
-      "Unlimited daily calls",
-      "All premium features",
-      "Custom integrations",
-      "Dedicated support",
-      "Team collaboration",
-      "Advanced analytics & reporting"
-    ],
-    limits: {
-      api_calls: -1,
-      screeners: -1,
-      alerts: -1,
-      watchlists: -1,
-      portfolios: -1,
-    },
-    icon: Crown,
-    color: "yellow",
-  },
-  // Removed free plan per new trial model
 ];
 
 export default function PlanSelection() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, updateUser } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState("bronze");
+  const [selectedPlan, setSelectedPlan] = useState("basic");
   const [isAnnual, setIsAnnual] = useState(false);
-
-  // 15% annual discount rounded to nearest price ending in 9.99
-  const roundToNearest9_99 = (value) => {
-    if (!value || value <= 0) return 0;
-    const base = Math.floor(value / 10) * 10 + 9.99;
-    const higher = base + 10;
-    return Number((Math.abs(value - base) <= Math.abs(higher - value) ? base : higher).toFixed(2));
-  };
-  const computeAnnual = (monthly) => roundToNearest9_99(parseFloat(String(monthly).replace('$','')) * 12 * 0.85);
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if this is from the signup flow

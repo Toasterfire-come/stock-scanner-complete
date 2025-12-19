@@ -48,7 +48,14 @@ import {
   HelpCircle,
   Building,
   Zap,
-  ChevronDown
+  ChevronDown,
+  Brain,
+  Wallet,
+  LineChart,
+  BookOpen,
+  Calculator,
+  Share2,
+  Users,
 } from "lucide-react";
 import MarketStatus from "../components/MarketStatus";
 import CommandPalette from "../components/CommandPalette";
@@ -104,10 +111,15 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
         { name: "Stocks", href: "/app/stocks", icon: Activity, description: "Stock analysis" },
         { name: "Markets", href: "/app/markets", icon: TrendingUp, description: "Market overview" },
         { name: "Screeners", href: "/app/screeners", icon: Search, description: "Find trading opportunities" },
+        { name: "Backtesting", href: "/app/backtesting", icon: Brain, description: "AI-powered strategy testing" },
+        { name: "Value Hunter", href: "/app/value-hunter", icon: Target, description: "Weekly undervalued stocks" },
         { name: "Watchlists", href: "/app/watchlists", icon: Eye, description: "Monitor favorites" },
-        { name: "Portfolio", href: "/app/portfolio", icon: Target, description: "Track performance" },
+        { name: "Portfolio", href: "/app/portfolio", icon: Wallet, description: "Track performance" },
         { name: "Alerts", href: "/app/alerts", icon: AlertCircle, description: "Price & volume alerts" },
-        { name: "News", href: "/app/news", icon: Activity, description: "Latest market news" },
+        { name: "Journal", href: "/app/journal", icon: BookOpen, description: "Trade journal & notes" },
+        { name: "Indicators", href: "/app/indicators", icon: LineChart, description: "Custom indicators" },
+        { name: "Tax Report", href: "/app/tax-reporting", icon: Calculator, description: "Tax reporting" },
+        { name: "Referrals", href: "/app/referrals", icon: Users, description: "Referral program" },
         { name: "Exports", href: "/app/exports", icon: FileText, description: "Data exports" },
         // Developer tools gated by plan; hidden when not available
         ...(user?.plan && user.plan !== 'free' ? [

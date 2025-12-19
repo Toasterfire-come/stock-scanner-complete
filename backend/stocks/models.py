@@ -123,6 +123,112 @@ class Stock(models.Model):
                 return f"${self.market_cap:,}"
         return "N/A"
 
+
+class StockFundamentals(models.Model):
+    """
+    Comprehensive fundamental data model for stock valuation (Phase 2 MVP).
+    Stores 50+ dedicated fields for valuation analysis.
+    """
+    stock = models.OneToOneField(Stock, on_delete=models.CASCADE, related_name='fundamentals', primary_key=True)
+    
+    # Price & Valuation Metrics
+    pe_ratio = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price to Earnings ratio")
+    forward_pe = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Forward P/E ratio")
+    peg_ratio = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="PEG ratio")
+    price_to_sales = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price to Sales ratio")
+    price_to_book = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Price to Book ratio")
+    ev_to_revenue = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Enterprise Value to Revenue")
+    ev_to_ebitda = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Enterprise Value to EBITDA")
+    enterprise_value = models.BigIntegerField(null=True, blank=True, help_text="Enterprise Value")
+    
+    # Profitability Metrics
+    gross_margin = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Gross profit margin")
+    operating_margin = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Operating margin")
+    profit_margin = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Net profit margin")
+    roe = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Return on Equity")
+    roa = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Return on Assets")
+    roic = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Return on Invested Capital")
+    
+    # Growth Metrics
+    revenue_growth_yoy = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="YoY revenue growth")
+    revenue_growth_3y = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="3-year revenue CAGR")
+    revenue_growth_5y = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="5-year revenue CAGR")
+    earnings_growth_yoy = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="YoY earnings growth")
+    earnings_growth_5y = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="5-year EPS CAGR")
+    fcf_growth_yoy = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="YoY free cash flow growth")
+    
+    # Financial Health Metrics
+    current_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Current ratio")
+    quick_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Quick ratio")
+    debt_to_equity = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Debt to equity ratio")
+    debt_to_assets = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Debt to assets ratio")
+    interest_coverage = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Interest coverage ratio")
+    altman_z_score = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Altman Z-Score")
+    piotroski_f_score = models.IntegerField(null=True, blank=True, help_text="Piotroski F-Score (0-9)")
+    
+    # Cash Flow Metrics
+    operating_cash_flow = models.BigIntegerField(null=True, blank=True, help_text="Operating cash flow")
+    free_cash_flow = models.BigIntegerField(null=True, blank=True, help_text="Free cash flow")
+    fcf_per_share = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="FCF per share")
+    fcf_yield = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="FCF yield")
+    cash_conversion = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Cash conversion ratio")
+    
+    # Dividend Metrics
+    dividend_yield = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Dividend yield")
+    dividend_payout_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Dividend payout ratio")
+    years_dividend_growth = models.IntegerField(null=True, blank=True, help_text="Consecutive years of dividend growth")
+    
+    # Calculated Valuations (Fair Values)
+    dcf_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="DCF fair value")
+    epv_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="EPV fair value")
+    graham_number = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="Graham Number")
+    peg_fair_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True, help_text="PEG-based fair value")
+    relative_value_score = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True, help_text="Relative value vs sector")
+    
+    # Composite Scores
+    valuation_score = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Composite valuation score (0-100)")
+    valuation_status = models.CharField(max_length=50, blank=True, help_text="Status: significantly_undervalued, undervalued, fair_value, etc.")
+    recommendation = models.CharField(max_length=20, blank=True, help_text="STRONG BUY, BUY, HOLD, SELL, STRONG SELL")
+    confidence = models.CharField(max_length=10, blank=True, help_text="high, medium, low")
+    strength_score = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Financial strength score (0-100)")
+    strength_grade = models.CharField(max_length=2, blank=True, help_text="Strength grade: A, B, C, D, F")
+    
+    # Metadata
+    sector = models.CharField(max_length=100, blank=True, help_text="Company sector")
+    industry = models.CharField(max_length=100, blank=True, help_text="Company industry")
+    last_updated = models.DateTimeField(auto_now=True)
+    data_quality = models.CharField(max_length=20, default='complete', help_text="Data quality: complete, partial, insufficient")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['valuation_score']),
+            models.Index(fields=['valuation_status']),
+            models.Index(fields=['strength_score']),
+            models.Index(fields=['sector']),
+            models.Index(fields=['last_updated']),
+        ]
+        verbose_name_plural = "Stock fundamentals"
+    
+    def __str__(self):
+        return f'{self.stock.ticker} - Fundamentals'
+    
+    @property
+    def is_undervalued(self):
+        """Check if stock is undervalued (score >= 55)"""
+        return self.valuation_score and self.valuation_score >= 55
+    
+    @property
+    def margin_of_safety(self):
+        """Calculate margin of safety based on fair values"""
+        if not self.stock.current_price:
+            return None
+        fair_values = [v for v in [self.dcf_value, self.epv_value, self.graham_number, self.peg_fair_value] if v]
+        if not fair_values:
+            return None
+        avg_fair = sum(fair_values) / len(fair_values)
+        return ((avg_fair / float(self.stock.current_price)) - 1) * 100
+
+
 class StockPrice(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, db_index=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -825,3 +931,188 @@ class UsageStats(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.date} - {self.api_calls} calls"
+
+
+# ============================================================================
+# PHASE 4: AI BACKTESTING SYSTEM
+# ============================================================================
+
+class BacktestRun(models.Model):
+    """AI-powered backtesting with natural language strategy input"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('day_trading', 'Day Trading'),
+        ('swing_trading', 'Swing Trading'),
+        ('long_term', 'Long Term'),
+    ]
+    
+    # User & Strategy
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='backtest_runs')
+    name = models.CharField(max_length=200, help_text="Strategy name")
+    strategy_text = models.TextField(help_text="Natural language strategy description")
+    generated_code = models.TextField(blank=True, help_text="AI-generated Python code")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='day_trading')
+    
+    # Backtest Parameters
+    symbols = models.JSONField(help_text="List of symbols to test")
+    start_date = models.DateField(help_text="Backtest start date")
+    end_date = models.DateField(help_text="Backtest end date")
+    initial_capital = models.DecimalField(max_digits=15, decimal_places=2, default=10000.00)
+    
+    # Execution
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    error_message = models.TextField(blank=True)
+    
+    # Results
+    total_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Total return percentage")
+    annualized_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    sharpe_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    max_drawdown = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    win_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Percentage of winning trades")
+    profit_factor = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    total_trades = models.IntegerField(null=True, blank=True)
+    winning_trades = models.IntegerField(null=True, blank=True)
+    losing_trades = models.IntegerField(null=True, blank=True)
+    
+    # Composite Score (0-100)
+    composite_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, 
+                                         help_text="Overall strategy score 0-100")
+    
+    # Trade Details
+    trades_data = models.JSONField(null=True, blank=True, help_text="Individual trade records")
+    equity_curve = models.JSONField(null=True, blank=True, help_text="Portfolio value over time")
+    
+    # Visibility & Sharing
+    is_public = models.BooleanField(default=False)
+    is_baseline = models.BooleanField(default=False, help_text="Official baseline strategy")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['category', '-composite_score']),
+            models.Index(fields=['-composite_score']),
+            models.Index(fields=['is_baseline']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} by {self.user.username} - {self.status}"
+
+
+class BaselineStrategy(models.Model):
+    """Pre-built baseline strategies for comparison"""
+    CATEGORY_CHOICES = BacktestRun.CATEGORY_CHOICES
+    
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    strategy_code = models.TextField(help_text="Python strategy implementation")
+    
+    # Average Results (pre-computed)
+    avg_total_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    avg_sharpe_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    avg_max_drawdown = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['category', 'name']
+        verbose_name_plural = "Baseline strategies"
+    
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+
+# ============================================================================
+# PHASE 5: VALUE HUNTER PORTFOLIO
+# ============================================================================
+
+class ValueHunterWeek(models.Model):
+    """Weekly Value Hunter portfolio performance"""
+    week_number = models.IntegerField(help_text="ISO week number")
+    year = models.IntegerField()
+    week_start = models.DateField(help_text="Monday of the week")
+    week_end = models.DateField(help_text="Friday of the week")
+    
+    # Capital
+    starting_capital = models.DecimalField(max_digits=15, decimal_places=2, default=10000.00)
+    ending_capital = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    
+    # Returns
+    weekly_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, 
+                                       help_text="Weekly return percentage")
+    cumulative_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                          help_text="Cumulative return since inception")
+    
+    # Benchmark Comparison (S&P 500)
+    benchmark_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    alpha = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                               help_text="Weekly alpha vs benchmark")
+    
+    # Status
+    status = models.CharField(max_length=20, default='pending', 
+                            choices=[('pending', 'Pending'), ('active', 'Active'), 
+                                   ('completed', 'Completed')])
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    executed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-year', '-week_number']
+        unique_together = ['year', 'week_number']
+        indexes = [
+            models.Index(fields=['-year', '-week_number']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Value Hunter Week {self.week_number} {self.year}"
+
+
+class ValueHunterPosition(models.Model):
+    """Individual stock positions in Value Hunter portfolio"""
+    week = models.ForeignKey(ValueHunterWeek, on_delete=models.CASCADE, related_name='positions')
+    symbol = models.CharField(max_length=10, db_index=True)
+    stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Selection Criteria
+    valuation_score = models.DecimalField(max_digits=5, decimal_places=2, 
+                                         help_text="Valuation score at selection")
+    rank = models.IntegerField(help_text="Rank in top 10 (1-10)")
+    
+    # Position Details
+    shares = models.DecimalField(max_digits=15, decimal_places=4)
+    entry_price = models.DecimalField(max_digits=15, decimal_places=4)
+    exit_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    
+    # Entry/Exit Times
+    entry_datetime = models.DateTimeField(help_text="Entry time (Monday 9:35 AM ET)")
+    exit_datetime = models.DateTimeField(null=True, blank=True, help_text="Exit time (Friday 3:55 PM ET)")
+    
+    # Performance
+    return_percent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    return_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['week', 'rank']
+        unique_together = ['week', 'symbol']
+        indexes = [
+            models.Index(fields=['week', 'rank']),
+            models.Index(fields=['symbol']),
+        ]
+    
+    def __str__(self):
+        return f"{self.symbol} - Week {self.week.week_number} {self.week.year} (Rank #{self.rank})"
