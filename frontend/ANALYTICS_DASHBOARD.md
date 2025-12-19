@@ -9,7 +9,7 @@ Complete partner analytics dashboard for tracking referral performance, commissi
 ### Whitelisted Partner Email
 - **Email**: `hamzashehata3000@gmail.com`
 - **Partner Code**: `ADAM50`
-- **Commission**: 50% on first payment
+- **Commission**: 50% on all payments (recurring)
 
 ### How It Works
 1. User logs in with whitelisted email
