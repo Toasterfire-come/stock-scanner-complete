@@ -31,7 +31,7 @@ def create_test_data():
             'is_active': True,
             'max_uses': 1000,
             'times_used': 0,
-            'description': 'Partner referral code - 50% off first payment'
+            'description': 'Partner referral code - 50% off all payments'
         }
     )
     if created:
