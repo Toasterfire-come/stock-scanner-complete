@@ -1,0 +1,56 @@
+# =========================================================================
+# TradeScanPro - Production Requirements
+# =========================================================================
+# Clean, consolidated requirements for production deployment
+
+# Core Framework
+Django==4.2.11
+djangorestframework==3.15.2
+django-cors-headers==4.3.1
+django-extensions==3.2.3
+
+# Database & ORM
+dj-database-url==2.1.0
+PyMySQL==1.1.0
+
+# Stock Data & Real-time Scanners
+yfinance==0.2.38
+requests==2.31.0
+urllib3==2.2.0
+websocket-client==1.7.0
+
+# Data Processing
+numpy==1.26.4
+pandas==2.2.1
+
+# Task Scheduling
+schedule==1.2.1
+pytz==2024.1
+
+# Security & Authentication
+cryptography==42.0.5
+pyjwt==2.8.0
+passlib==1.7.4
+
+# Payment Processing
+stripe==8.7.0
+
+# Utilities
+python-dotenv==1.0.1
+python-json-logger==2.0.7
+psutil==5.9.8
+
+# Web Scraping & News
+beautifulsoup4==4.12.3
+lxml==5.1.0
+feedparser==6.0.11
+
+# NLP for Sentiment
+textblob==0.18.0
+
+# Production Server
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Monitoring (optional)
+sentry-sdk==1.43.0

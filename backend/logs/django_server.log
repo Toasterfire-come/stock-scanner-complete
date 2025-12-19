@@ -52488,3 +52488,304 @@ Quit the server with CTRL-BREAK.
 [02/Dec/2025 13:53:06] "GET /health/ HTTP/1.1" 301 0
 [02/Dec/2025 13:53:26] "GET /health/ HTTP/1.1" 301 0
 [02/Dec/2025 13:53:47] "GET /health/ HTTP/1.1" 301 0
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-18 18:31:20,615] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 18, 2025 - 18:31:25
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[18/Dec/2025 18:31:39] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:32:00] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:32:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:32:42] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:33:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:33:24] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:33:45] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:34:06] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:34:27] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:34:48] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:35:10] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:35:30] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:35:51] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:36:12] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:36:33] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:36:54] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:37:16] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:37:36] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:37:57] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:38:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:38:39] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:39:00] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:39:22] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:39:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:40:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:40:25] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:40:45] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:41:06] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:41:27] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:41:48] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:42:09] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:42:31] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:42:52] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:43:13] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:43:35] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:43:55] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:44:16] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:44:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:44:58] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:45:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:45:40] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:46:01] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:46:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:46:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:47:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:47:24] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:47:46] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:48:07] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:48:28] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:48:49] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:49:10] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:49:30] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:49:52] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:50:12] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:50:33] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:50:54] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:51:15] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:51:36] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:51:58] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:52:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:52:39] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:53:01] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:53:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:53:42] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:54:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:54:24] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:54:44] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:55:06] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:55:27] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:55:48] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:56:09] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:56:30] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:56:51] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:57:12] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:57:33] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:57:53] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:58:15] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:58:35] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:58:56] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:59:18] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:59:39] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 18:59:59] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:00:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:00:41] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:01:02] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:01:23] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:01:44] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:02:04] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:02:26] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:02:47] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:03:07] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:03:29] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:03:50] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:04:10] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:04:31] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:04:52] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:05:13] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:05:34] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:05:55] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:06:16] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:06:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:06:58] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:07:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:07:40] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:08:01] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:08:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:08:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:09:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:09:24] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:09:46] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:10:06] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:10:27] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:10:48] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:11:09] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:11:29] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:11:51] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:12:11] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:12:32] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:12:53] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:13:15] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:13:36] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:13:57] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:14:17] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:14:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:14:59] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:15:20] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:15:40] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:16:02] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:16:23] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:16:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:17:05] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:17:26] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:17:46] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:18:07] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:18:28] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:18:49] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:19:10] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:19:31] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:19:52] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:20:13] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:20:34] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:20:55] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:21:16] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:21:37] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:21:57] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:22:18] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:22:39] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:23:00] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:23:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:23:42] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:24:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:24:24] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:24:45] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:25:05] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:25:27] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:25:47] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:26:08] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:26:29] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:26:50] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:27:11] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:27:32] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:27:53] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:28:13] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:28:35] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:28:55] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:29:16] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:29:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:29:58] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:30:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:30:40] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:31:01] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:31:22] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:31:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:32:04] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:32:25] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:32:46] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:33:07] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:33:27] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:33:49] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:34:10] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:34:31] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:34:53] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:35:14] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:35:35] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:35:57] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:36:17] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:36:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:37:00] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:37:20] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:37:41] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:38:02] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:38:23] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:38:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:39:05] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:39:26] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:39:47] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:40:08] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:40:29] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:40:50] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:41:11] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:41:32] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:41:52] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:42:14] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:42:34] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:42:55] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:43:16] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:43:37] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:43:58] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:44:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:44:40] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:45:01] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:45:22] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:45:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:46:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:46:25] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:46:45] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:47:06] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:47:28] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:47:48] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:48:09] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:48:30] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:48:50] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:49:11] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:49:32] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:49:53] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:50:14] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:50:35] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:50:56] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:51:17] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:51:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:51:59] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:52:19] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:52:40] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:53:01] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:53:22] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:53:43] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:54:04] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:54:25] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:54:47] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:55:07] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:55:28] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:55:49] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:56:10] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:56:30] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:56:52] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:57:12] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:57:33] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:57:55] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:58:15] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:58:36] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:58:57] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:59:18] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 19:59:38] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:00:00] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:00:21] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:00:42] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:01:03] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:01:24] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:01:45] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:02:07] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:02:29] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:02:50] "GET /health/ HTTP/1.1" 301 0
+[2025-12-18 20:03:09,930] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stockscanner_django\urls.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-18 20:03:18,373] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 18, 2025 - 20:03:25
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[18/Dec/2025 20:03:36] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:03:56] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:04:18] "GET /health/ HTTP/1.1" 301 0
+[18/Dec/2025 20:04:38] "GET /health/ HTTP/1.1" 301 0

@@ -1,7 +1,7 @@
 User-agent: *
-Disallow: /admin/
-Disallow: /api/
-Disallow: /health/
 Allow: /
+Disallow: /admin/
+Disallow: /api/auth/
+Disallow: /api/billing/
 
-Sitemap: https://tradescanpro.com/sitemap.xml
+Sitemap: https://api.tradescanpro.com/sitemap.xml
