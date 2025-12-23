@@ -1,0 +1,20 @@
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-23 12:15:01,387] INFO test_aggressive: ================================================================================
+[2025-12-23 12:15:01,387] INFO test_aggressive: AGGRESSIVE SCANNER CONFIGURATION TEST
+[2025-12-23 12:15:01,387] INFO test_aggressive: ================================================================================
+[2025-12-23 12:15:01,388] INFO test_aggressive: Start time: 12:15:01 PM
+[2025-12-23 12:15:01,388] INFO test_aggressive: 
+[2025-12-23 12:15:01,388] INFO test_aggressive: ================================================================================
+[2025-12-23 12:15:01,388] INFO test_aggressive: TEST: Daily Scanner (0.488 t/s) - 1000 tickers
+[2025-12-23 12:15:01,388] INFO test_aggressive: ================================================================================
+[2025-12-23 12:15:04,882] INFO test_aggressive: Testing with 1000 tickers
+[2025-12-23 12:15:04,882] INFO test_aggressive: Expected time: 2049.2s (34.2 min)
+[2025-12-23 12:15:04,882] INFO test_aggressive: Target rate: 0.488 t/s
+[2025-12-23 12:15:04,882] INFO test_aggressive: Threads: 20
+[2025-12-23 12:15:04,882] INFO test_aggressive: 
+[2025-12-23 12:15:04,883] INFO daily_proxies: Loaded 304 proxies from http_proxies.txt
+[2025-12-23 12:15:04,883] INFO test_aggressive: Loaded 304 proxies
+[2025-12-23 12:15:04,883] INFO test_aggressive: 
+[2025-12-23 12:18:32,251] INFO test_aggressive: Progress: 100/1000 (10%) | Success: 0% | Proxy: 0% | Rate: 0.48 t/s

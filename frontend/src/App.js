@@ -113,6 +113,9 @@ import BillingHistory from "./pages/account/BillingHistory";
 import CurrentPlan from "./pages/account/CurrentPlan";
 import Settings from "./pages/account/Settings";
 
+// Partner Analytics (Protected - whitelisted emails only)
+import PartnerAnalyticsRoute from "./routes/PartnerAnalyticsRoute";
+
 // System Pages
 import EndpointStatus from "./pages/system/EndpointStatus";
 
@@ -291,6 +294,9 @@ function App() {
                       <ReferralSystem />
                     </ProtectedRoute>
                   } />
+
+                  {/* Partner Analytics - Protected (whitelisted emails only) */}
+                  <Route path="/partner/analytics" element={<PartnerAnalyticsRoute />} />
 
                   {/* User Pages - ONLY accessible to signed-in users */}
                   <Route path="/app/dashboard" element={

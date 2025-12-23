@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-1-Minute Hybrid Scanner - WebSocket Prices Only
-================================================
-Runs every minute to update prices via WebSocket streaming
+1-Minute Hybrid Scanner - WebSocket Prices and Volume
+======================================================
+Runs every minute to update prices and volume via WebSocket streaming
 
 Features:
-- WebSocket for real-time prices (NO rate limits)
-- Updates: current_price, price_change, price_change_percent
+- WebSocket for real-time data (NO rate limits)
+- Updates: current_price, price_change, price_change_percent, volume
 - Runs continuously every 60 seconds
 - Fast execution (<60s for 8782 tickers)
 """
@@ -42,13 +42,21 @@ class OneMinuteScanner:
         return list(Stock.objects.values_list('ticker', flat=True))
 
     def websocket_message_handler(self, message):
-        """Handle WebSocket messages - store price updates"""
+        """Handle WebSocket messages - store price and volume updates"""
         ticker = message.get('id', '')
         if ticker:
+            # Extract volume from day_volume field (Yahoo's actual field name)
+            day_volume_str = message.get('day_volume', '0')
+            try:
+                volume = int(day_volume_str) if day_volume_str else None
+            except (ValueError, TypeError):
+                volume = None
+
             self.websocket_updates[ticker] = {
                 'current_price': message.get('price'),
                 'price_change': message.get('change'),
                 'price_change_percent': message.get('change_percent'),
+                'volume': volume,  # Properly extracted from day_volume
                 'timestamp': datetime.now()
             }
 
@@ -85,13 +93,15 @@ class OneMinuteScanner:
             try:
                 stock = Stock.objects.get(ticker=ticker)
 
-                # Update from WebSocket data (real-time prices)
+                # Update from WebSocket data (real-time prices and volume)
                 if ws_data.get('current_price'):
                     stock.current_price = ws_data['current_price']
                 if ws_data.get('price_change') is not None:
                     stock.price_change = ws_data['price_change']
                 if ws_data.get('price_change_percent') is not None:
                     stock.price_change_percent = ws_data['price_change_percent']
+                if ws_data.get('volume') is not None:
+                    stock.volume = ws_data['volume']
 
                 stock.last_updated = datetime.now()
                 stock.save()

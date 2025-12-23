@@ -7,6 +7,15 @@ import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
+// TESTING MODE: Whitelist of allowed users
+const WHITELISTED_USERS = [
+  'hamzashehata3000@gmail.com',
+  'carter.kiefer2010@outlook.com',
+  'admin',
+  'testuser',
+  // Add more test users as needed
+];
+
 export default function SignIn() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -32,6 +41,19 @@ export default function SignIn() {
 
     if (!formData.username || !formData.password) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    // TESTING MODE: Check whitelist before attempting login
+    const username = formData.username.toLowerCase().trim();
+    const isWhitelisted = WHITELISTED_USERS.some(
+      user => user.toLowerCase() === username
+    );
+
+    if (!isWhitelisted) {
+      setError(
+        "Access restricted during testing phase. This platform is currently in beta testing and only available to authorized test users. Please contact support if you believe you should have access."
+      );
       return;
     }
 
@@ -64,6 +86,13 @@ export default function SignIn() {
           Sign in to your Trade Scan Pro account
         </p>
       </div>
+
+      {/* Testing Mode Banner */}
+      <Alert className="border-amber-500 bg-amber-50">
+        <AlertDescription className="text-amber-800 text-sm">
+          <strong>Beta Testing:</strong> Access is currently restricted to authorized test users only.
+        </AlertDescription>
+      </Alert>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {displayError && (

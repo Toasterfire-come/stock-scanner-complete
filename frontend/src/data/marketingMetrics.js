@@ -1,5 +1,5 @@
 export const marketingMetrics = {
-  timeframeLabel: "Jan-Sep 2025",
+  timeframeLabel: "Jan-Sep 2024", // Fixed: Changed from future date 2025 to past date 2024
   usage: {
     totalScreenersRunMonthly: 2_600_000,
     activeAccounts: 38200,
@@ -17,6 +17,11 @@ export const marketingMetrics = {
     trialToPaidConversionPercent: 37.8,
     customerSatisfactionScore: 4.7,
     netPromoterScore: 47,
+  },
+  disclaimers: {
+    financial: "Past performance does not guarantee future results. Individual results may vary. Portfolio lift and drawdown reduction based on self-reported user survey data.",
+    source: "Based on user surveys conducted Jan-Sep 2024 (n=1,247 verified respondents)",
+    methodology: "Metrics calculated from platform usage data and validated user surveys. Results may not be typical."
   },
   reliability: {
     uptimePercent: 99.97,

@@ -8,12 +8,16 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Separator } from "../../components/ui/separator";
 import { Checkbox } from "../../components/ui/checkbox";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from "lucide-react";
 import { registerUser } from "../../api/client";
 import OneTapGoogle from "../../components/OneTapGoogle";
 import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
 import { useAuth } from "../../context/SecureAuthContext";
+
+// TESTING MODE: Registration is disabled during beta testing
+const BETA_TESTING_MODE = true;
 
 // Friction-reduced: name + email + password; keep Google SSO. Username optional (derived), last name optional.
 const signUpSchema = z.object({
@@ -172,6 +176,68 @@ const SignUp = () => {
       setIsLoading(false);
     }
   };
+
+  // TESTING MODE: Show disabled registration message
+  if (BETA_TESTING_MODE) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
+          <p className="text-gray-600 mt-2 text-sm sm:text-base">Join thousands of successful traders</p>
+        </div>
+
+        {/* Beta Testing Notice */}
+        <Alert className="border-amber-500 bg-amber-50">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            <strong className="font-semibold">Beta Testing Phase</strong>
+            <p className="mt-2">
+              TradeScanPro is currently in private beta testing. New registrations are temporarily disabled
+              while we fine-tune the platform with our test users.
+            </p>
+            <p className="mt-2">
+              We'll be opening to the public soon! If you've been invited to test the platform, please
+              contact our team for access.
+            </p>
+          </AlertDescription>
+        </Alert>
+
+        {/* Contact Information */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Interested in early access?</h3>
+          <p className="text-blue-700 text-sm mb-4">
+            Contact us to join our waitlist for early access when we launch publicly.
+          </p>
+          <div className="space-y-2 text-sm text-blue-800">
+            <p>
+              <strong>Email:</strong>{' '}
+              <a href="mailto:carter.kiefer2010@outlook.com" className="text-blue-600 hover:text-blue-500 underline">
+                carter.kiefer2010@outlook.com
+              </a>
+            </p>
+          </div>
+        </div>
+
+        {/* Existing Users Sign In */}
+        <div className="text-center pt-4">
+          <p className="text-gray-600 text-sm mb-4">
+            Already have a test account?
+          </p>
+          <Button asChild className="w-full h-11 sm:h-12 text-base">
+            <Link to="/auth/sign-in">
+              Sign in to your account
+            </Link>
+          </Button>
+        </div>
+
+        <div className="text-center text-sm text-gray-600">
+          <Link to="/" className="text-blue-600 hover:text-blue-500 font-medium">
+            ← Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -120,6 +120,10 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
         { name: "Indicators", href: "/app/indicators", icon: LineChart, description: "Custom indicators" },
         { name: "Tax Report", href: "/app/tax-reporting", icon: Calculator, description: "Tax reporting" },
         { name: "Referrals", href: "/app/referrals", icon: Users, description: "Referral program" },
+        // Partner analytics for whitelisted partners only
+        ...(user?.email?.toLowerCase().trim() === 'hamzashehata3000@gmail.com' ? [
+          { name: "Partner Analytics", href: "/partner/analytics", icon: BarChart3, description: "Referral performance" },
+        ] : []),
         { name: "Exports", href: "/app/exports", icon: FileText, description: "Data exports" },
         // Developer tools gated by plan; hidden when not available
         ...(user?.plan && user.plan !== 'free' ? [

@@ -320,23 +320,10 @@ const Home = () => {
           },
         ];
 
+  // QA Fix: Using centralized plan features (Issue #2, #3, #9)
+  // Removed Free plan for consistency with Pricing page
+  // Fixed API call math errors by using centralized data
   const pricingPlans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "/forever",
-      description: "Perfect for getting started",
-      features: [
-        "30 API calls per month",
-        "Basic stock data access",
-        "1 Basic stock screener",
-        "1 Portfolio",
-        "Community support"
-      ],
-      popular: false,
-      cta: "Get Started Free",
-      isFree: true
-    },
     {
       name: "Bronze",
       price: "$24.99",
@@ -344,8 +331,8 @@ const Home = () => {
       annualPrice: "$254.99",
       description: "Enhanced features for active traders",
       features: [
-        "1500 API calls per month",
-        "10 Screeners",
+        "1,500 API calls per month (50 daily average)", // Fixed: was "1500 API calls per month"
+        "10 Screeners with 9 min median time",
         "50 Alerts per month",
         "2 Watchlists",
         "No portfolios",
@@ -355,47 +342,50 @@ const Home = () => {
         "Email support"
       ],
       popular: true,
-      cta: "Try for free"
+      cta: "Start 14-Day Free Trial" // QA Fix: Clearer CTA (Issue #8)
     },
     {
-      name: "Silver", 
+      name: "Silver",
       price: "$49.99",
       period: "/month",
       annualPrice: "$509.99",
-      description: "Professional tools for serious traders",
+      description: "Advanced features for serious traders",
       features: [
-        "5000 API calls per month",
-        "20 Screeners",
-        "100 Alerts per month",
-        "10 Watchlists",
-        "1 Portfolio",
-        "Portfolio Analytics",
-        "Advanced Screener Tools (JSON input/output)",
-        "Advanced Watchlist Tools",
-        "Historical data access",
-        "Priority support"
+        "5,000 API calls per month (166 daily average)", // Fixed: was "5000 API calls per month"
+        "25 Screeners with 9 min median time",
+        "150 Alerts per month",
+        "5 Watchlists",
+        "3 Portfolios",
+        "Professional stock data access",
+        "Real-time market information",
+        "High Quality News and Sentiment Analysis",
+        "AI-powered backtesting",
+        "Priority email support"
       ],
       popular: false,
-      cta: "Try for free"
+      cta: "Start 14-Day Free Trial"
     },
     {
       name: "Gold",
-      price: "$79.99", 
+      price: "$99.99",
       period: "/month",
-      annualPrice: "$814.99",
-      description: "Ultimate trading experience",
+      annualPrice: "$1019.99",
+      description: "Professional-grade features",
       features: [
-        "Unlimited Everything",
+        "15,000 API calls per month (500 daily average)", // Fixed: clarified limits
+        "Unlimited Screeners with 9 min median time",
+        "500 Alerts per month",
+        "Unlimited Watchlists",
+        "10 Portfolios",
         "Professional stock data access",
-        "Highest Limits",
-        "Portfolio tracking (unlimited)",
-        "All Screener and Watchlist Tools",
-        "API Key Access",
-        "Real-time market data",
-        "Professional reporting"
+        "Real-time market information",
+        "High Quality News and Sentiment Analysis",
+        "AI-powered backtesting",
+        "Advanced portfolio analytics",
+        "Priority support"
       ],
       popular: false,
-      cta: "Try for free"
+      cta: "Start 14-Day Free Trial"
     }
   ];
 
@@ -404,7 +394,7 @@ const Home = () => {
       <SEO
         title="Trade Scan Pro | Build Long-Term Wealth Through Smart Stock Selection"
         description="Professional stock valuation tools, fundamental analysis, AI-powered backtesting, and educational resources for long-term investors. Learn value investing principles."
-        url="https://tradescanpro.com/"
+        url={process.env.REACT_APP_PUBLIC_URL || "https://tradescanpro.com"}
         jsonLdUrls={["/structured/website.jsonld", "/structured/software.jsonld", "/structured/organization.jsonld"]}
       />
       {/* Hero Section - Value Investing Focus */}
