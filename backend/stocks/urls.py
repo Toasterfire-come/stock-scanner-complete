@@ -51,6 +51,7 @@ from . import paper_trading_api
 from . import sms_alert_api
 from . import twofa_api
 from . import options_api
+from . import news_sentiment_api
 from django.conf import settings
 from django.utils import timezone
 import hashlib
@@ -464,6 +465,35 @@ urlpatterns = [
     path('options/watchlist/', options_api.options_watchlist, name='options_watchlist'),
     path('options/watchlist/<int:watchlist_id>/', options_api.delete_watchlist, name='delete_options_watchlist'),
     path('options/watchlist/<int:watchlist_id>/items/', options_api.watchlist_items, name='options_watchlist_items'),
+
+    # ============================================================================
+    # NEWS & SENTIMENT SYSTEM (MVP2 v3.4)
+    # ============================================================================
+
+    # News Feed & Articles
+    path('news/feed/', news_sentiment_api.get_news_feed, name='news_feed'),
+    path('news/trending/', news_sentiment_api.get_trending_news, name='trending_news'),
+    path('news/article/<int:article_id>/', news_sentiment_api.get_article_detail, name='article_detail'),
+    path('news/article/<int:article_id>/click/', news_sentiment_api.track_article_click, name='track_article_click'),
+
+    # Stock-Specific News
+    path('news/stock/<str:ticker>/', news_sentiment_api.get_stock_news, name='stock_news'),
+    path('news/stock/<str:ticker>/sentiment/', news_sentiment_api.get_sentiment_summary, name='stock_sentiment_summary'),
+    path('news/stock/<str:ticker>/sentiment/timeseries/', news_sentiment_api.get_sentiment_timeseries, name='sentiment_timeseries'),
+
+    # User Feed Settings
+    path('news/feed/settings/', news_sentiment_api.news_feed_settings, name='news_feed_settings'),
+
+    # News Alerts
+    path('news/alerts/', news_sentiment_api.news_alerts, name='news_alerts'),
+    path('news/alerts/<int:alert_id>/read/', news_sentiment_api.mark_alert_read, name='mark_alert_read'),
+
+    # News Sources
+    path('news/sources/', news_sentiment_api.list_news_sources, name='news_sources'),
+
+    # Admin/Pro Operations
+    path('news/fetch/trigger/', news_sentiment_api.trigger_news_fetch, name='trigger_news_fetch'),
+    path('news/sentiment/analyze/', news_sentiment_api.trigger_sentiment_analysis, name='trigger_sentiment_analysis'),
 
 
 ]

@@ -9,7 +9,8 @@ from .models import (
     SMSAlertRule, SMSAlertCondition, SMSAlertHistory, SMSAlertQuota, TextBeltConfig,
     TwoFactorAuth, TwoFactorCode, TrustedDevice, TwoFactorAuditLog,
     OptionsChain, OptionsContract, ImpliedVolatilitySurface,
-    OptionsScreenerResult, OptionsAnalytics, OptionsWatchlist, OptionsWatchlistItem
+    OptionsScreenerResult, OptionsAnalytics, OptionsWatchlist, OptionsWatchlistItem,
+    NewsSource, NewsArticle, SentimentAnalysis, NewsFeed, NewsAlert, SentimentTimeseries
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
 
@@ -694,5 +695,200 @@ class OptionsWatchlistItemAdmin(admin.ModelAdmin):
         }),
         ('Timestamps', {
             'fields': ('added_at',)
+        }),
+    )
+
+
+# ============================================================================
+# News & Sentiment System Admin
+# ============================================================================
+
+@admin.register(NewsSource)
+class NewsSourceAdmin(admin.ModelAdmin):
+    list_display = ['name', 'source_type', 'is_active', 'is_premium', 'reliability_score', 'total_articles_fetched', 'last_successful_fetch']
+    list_filter = ['source_type', 'is_active', 'is_premium']
+    search_fields = ['name', 'base_url']
+    readonly_fields = ['total_articles_fetched', 'total_fetch_errors', 'last_request_at', 'last_successful_fetch', 'created_at', 'updated_at']
+
+    fieldsets = (
+        ('Source Info', {
+            'fields': ('name', 'source_type', 'base_url')
+        }),
+        ('API Configuration', {
+            'fields': ('api_key_required', 'api_key'),
+            'classes': ('collapse',)
+        }),
+        ('Scraping Configuration', {
+            'fields': ('scraping_rules',),
+            'classes': ('collapse',)
+        }),
+        ('Quality & Settings', {
+            'fields': ('reliability_score', 'requests_per_hour')
+        }),
+        ('Statistics', {
+            'fields': ('total_articles_fetched', 'total_fetch_errors', 'last_request_at', 'last_successful_fetch')
+        }),
+        ('Status', {
+            'fields': ('is_active', 'is_premium')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(NewsArticle)
+class NewsArticleAdmin(admin.ModelAdmin):
+    list_display = ['title_short', 'source', 'published_at', 'is_processed', 'view_count', 'click_count']
+    list_filter = ['source', 'is_processed', 'category', 'published_at']
+    search_fields = ['title', 'summary', 'author', 'mentioned_tickers']
+    readonly_fields = ['content_hash', 'view_count', 'click_count', 'created_at', 'updated_at']
+    filter_horizontal = ['stocks']
+
+    def title_short(self, obj):
+        return obj.title[:60] + '...' if len(obj.title) > 60 else obj.title
+    title_short.short_description = 'Title'
+
+    fieldsets = (
+        ('Article Info', {
+            'fields': ('source', 'external_id', 'url')
+        }),
+        ('Content', {
+            'fields': ('title', 'summary', 'content', 'author')
+        }),
+        ('Publication', {
+            'fields': ('published_at',)
+        }),
+        ('Related Entities', {
+            'fields': ('stocks', 'mentioned_tickers')
+        }),
+        ('Classification', {
+            'fields': ('category', 'tags')
+        }),
+        ('Engagement', {
+            'fields': ('view_count', 'click_count')
+        }),
+        ('Processing', {
+            'fields': ('is_processed', 'processing_errors', 'content_hash')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(SentimentAnalysis)
+class SentimentAnalysisAdmin(admin.ModelAdmin):
+    list_display = ['article_title', 'stock', 'sentiment_label', 'sentiment_score', 'confidence', 'analysis_engine', 'analyzed_at']
+    list_filter = ['sentiment_label', 'analysis_engine', 'analyzed_at']
+    search_fields = ['article__title', 'stock__ticker']
+    readonly_fields = ['analyzed_at']
+
+    def article_title(self, obj):
+        return obj.article.title[:50] + '...' if len(obj.article.title) > 50 else obj.article.title
+    article_title.short_description = 'Article'
+
+    fieldsets = (
+        ('Analysis Target', {
+            'fields': ('article', 'stock')
+        }),
+        ('Sentiment Scores', {
+            'fields': ('sentiment_label', 'sentiment_score', 'confidence')
+        }),
+        ('Detailed Scores', {
+            'fields': ('positive_score', 'negative_score', 'neutral_score'),
+            'classes': ('collapse',)
+        }),
+        ('Analysis Engine', {
+            'fields': ('analysis_engine', 'engine_version')
+        }),
+        ('Advanced Analysis', {
+            'fields': ('aspect_sentiments', 'entities_mentioned', 'key_phrases'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamp', {
+            'fields': ('analyzed_at',)
+        }),
+    )
+
+
+@admin.register(NewsFeed)
+class NewsFeedAdmin(admin.ModelAdmin):
+    list_display = ['user', 'notification_frequency', 'email_notifications', 'sms_notifications', 'created_at']
+    list_filter = ['notification_frequency', 'email_notifications', 'sms_notifications']
+    search_fields = ['user__username']
+    readonly_fields = ['created_at', 'updated_at']
+    filter_horizontal = ['followed_stocks', 'followed_sources']
+
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('Followed Entities', {
+            'fields': ('followed_stocks', 'followed_sources')
+        }),
+        ('Preferences', {
+            'fields': ('enabled_categories', 'min_sentiment_score', 'exclude_neutral')
+        }),
+        ('Notifications', {
+            'fields': ('email_notifications', 'sms_notifications', 'notification_frequency')
+        }),
+        ('Alert Thresholds', {
+            'fields': ('alert_on_very_positive', 'alert_on_very_negative')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(NewsAlert)
+class NewsAlertAdmin(admin.ModelAdmin):
+    list_display = ['user', 'stock', 'alert_type', 'sentiment_score', 'is_read', 'email_sent', 'sms_sent', 'created_at']
+    list_filter = ['alert_type', 'is_read', 'email_sent', 'sms_sent', 'created_at']
+    search_fields = ['user__username', 'stock__ticker', 'message']
+    readonly_fields = ['created_at', 'read_at']
+
+    fieldsets = (
+        ('Alert Info', {
+            'fields': ('user', 'stock', 'article', 'alert_type')
+        }),
+        ('Message', {
+            'fields': ('message',)
+        }),
+        ('Trigger Data', {
+            'fields': ('sentiment_score', 'trigger_data')
+        }),
+        ('Delivery Status', {
+            'fields': ('is_read', 'email_sent', 'sms_sent')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'read_at')
+        }),
+    )
+
+
+@admin.register(SentimentTimeseries)
+class SentimentTimeseriesAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'interval', 'period_start', 'avg_sentiment_score', 'total_articles', 'positive_articles', 'negative_articles']
+    list_filter = ['interval', 'period_start']
+    search_fields = ['stock__ticker']
+    readonly_fields = ['created_at']
+
+    fieldsets = (
+        ('Timeseries Info', {
+            'fields': ('stock', 'interval', 'period_start', 'period_end')
+        }),
+        ('Sentiment Metrics', {
+            'fields': ('avg_sentiment_score', 'weighted_sentiment', 'sentiment_std_dev')
+        }),
+        ('Article Counts', {
+            'fields': ('total_articles', 'positive_articles', 'negative_articles', 'neutral_articles')
+        }),
+        ('Volume Metrics', {
+            'fields': ('article_volume_change',)
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',)
         }),
     )

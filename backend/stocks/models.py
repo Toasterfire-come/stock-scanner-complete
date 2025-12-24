@@ -2392,3 +2392,319 @@ class OptionsWatchlistItem(models.Model):
 
     def __str__(self):
         return f"{self.watchlist.name} - {self.contract.contract_symbol}"
+
+
+# ============================================================================
+# News & Sentiment System (MVP2 v3.4)
+# ============================================================================
+
+class NewsSource(models.Model):
+    """
+    News source configuration and tracking.
+    Manages different news providers (RSS, API, scraping).
+    """
+    SOURCE_TYPES = [
+        ('rss', 'RSS Feed'),
+        ('api', 'REST API'),
+        ('scraper', 'Web Scraper'),
+    ]
+
+    name = models.CharField(max_length=100, unique=True, help_text="Source name (e.g., Reuters, Bloomberg)")
+    source_type = models.CharField(max_length=20, choices=SOURCE_TYPES)
+    base_url = models.URLField(help_text="Base URL for the source")
+
+    # API Configuration
+    api_key_required = models.BooleanField(default=False)
+    api_key = models.CharField(max_length=255, blank=True, help_text="Encrypted API key")
+
+    # Scraping Configuration
+    scraping_rules = models.JSONField(default=dict, blank=True,
+                                     help_text="CSS selectors and extraction rules")
+
+    # Source Quality
+    reliability_score = models.DecimalField(max_digits=3, decimal_places=2, default=1.0,
+                                           help_text="0.0-1.0 reliability rating")
+
+    # Rate Limiting
+    requests_per_hour = models.IntegerField(default=100)
+    last_request_at = models.DateTimeField(null=True, blank=True)
+
+    # Statistics
+    total_articles_fetched = models.IntegerField(default=0)
+    total_fetch_errors = models.IntegerField(default=0)
+    last_successful_fetch = models.DateTimeField(null=True, blank=True)
+
+    # Status
+    is_active = models.BooleanField(default=True)
+    is_premium = models.BooleanField(default=False, help_text="Requires Pro subscription")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_source_type_display()})"
+
+
+class NewsArticle(models.Model):
+    """
+    News article with content and metadata.
+    Supports multiple stocks per article.
+    """
+    # Article Identification
+    source = models.ForeignKey(NewsSource, on_delete=models.CASCADE, related_name='articles')
+    external_id = models.CharField(max_length=255, blank=True,
+                                   help_text="External ID from source")
+    url = models.URLField(unique=True, help_text="Article URL")
+
+    # Content
+    title = models.CharField(max_length=500)
+    summary = models.TextField(blank=True, help_text="Article summary/snippet")
+    content = models.TextField(blank=True, help_text="Full article content")
+
+    # Metadata
+    author = models.CharField(max_length=200, blank=True)
+    published_at = models.DateTimeField(help_text="Original publication time")
+
+    # Related Entities
+    stocks = models.ManyToManyField('Stock', related_name='news_articles', blank=True)
+    mentioned_tickers = models.JSONField(default=list,
+                                        help_text="List of ticker symbols mentioned")
+
+    # Categories & Tags
+    category = models.CharField(max_length=50, blank=True,
+                               help_text="earnings, merger, lawsuit, etc.")
+    tags = models.JSONField(default=list, help_text="Article tags/keywords")
+
+    # Engagement Metrics
+    view_count = models.IntegerField(default=0)
+    click_count = models.IntegerField(default=0)
+
+    # Processing Status
+    is_processed = models.BooleanField(default=False,
+                                      help_text="Whether sentiment analysis is complete")
+    processing_errors = models.TextField(blank=True)
+
+    # Content Hash (for deduplication)
+    content_hash = models.CharField(max_length=64, db_index=True,
+                                   help_text="SHA-256 hash for duplicate detection")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_at']
+        indexes = [
+            models.Index(fields=['-published_at', 'is_processed']),
+            models.Index(fields=['content_hash']),
+            models.Index(fields=['source', '-published_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.title[:50]}... ({self.source.name})"
+
+
+class SentimentAnalysis(models.Model):
+    """
+    NLP sentiment analysis results for news articles.
+    Supports multiple sentiment engines and aspect-based sentiment.
+    """
+    SENTIMENT_CHOICES = [
+        ('very_positive', 'Very Positive'),
+        ('positive', 'Positive'),
+        ('neutral', 'Neutral'),
+        ('negative', 'Negative'),
+        ('very_negative', 'Very Negative'),
+    ]
+
+    ANALYSIS_ENGINES = [
+        ('vader', 'VADER (NLTK)'),
+        ('textblob', 'TextBlob'),
+        ('transformers', 'HuggingFace Transformers'),
+        ('finbert', 'FinBERT (Financial)'),
+    ]
+
+    article = models.ForeignKey(NewsArticle, on_delete=models.CASCADE, related_name='sentiments')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='news_sentiments',
+                             null=True, blank=True, help_text="Stock-specific sentiment")
+
+    # Sentiment Scores
+    sentiment_label = models.CharField(max_length=20, choices=SENTIMENT_CHOICES)
+    sentiment_score = models.DecimalField(max_digits=5, decimal_places=4,
+                                         help_text="Score from -1.0 (negative) to +1.0 (positive)")
+    confidence = models.DecimalField(max_digits=5, decimal_places=4,
+                                    help_text="Confidence in analysis (0.0-1.0)")
+
+    # Detailed Scores (for engines that provide them)
+    positive_score = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    negative_score = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    neutral_score = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+
+    # Analysis Engine
+    analysis_engine = models.CharField(max_length=30, choices=ANALYSIS_ENGINES, default='vader')
+    engine_version = models.CharField(max_length=20, blank=True)
+
+    # Aspect-Based Sentiment (JSON structure)
+    # Example: {"revenue": 0.8, "earnings": 0.6, "guidance": -0.3}
+    aspect_sentiments = models.JSONField(default=dict, blank=True,
+                                        help_text="Sentiment for specific aspects")
+
+    # Entity Recognition
+    entities_mentioned = models.JSONField(default=list, blank=True,
+                                         help_text="Named entities (people, companies, etc.)")
+
+    # Keywords & Themes
+    key_phrases = models.JSONField(default=list, blank=True,
+                                  help_text="Important phrases extracted")
+
+    analyzed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-analyzed_at']
+        indexes = [
+            models.Index(fields=['stock', '-analyzed_at']),
+            models.Index(fields=['sentiment_label', '-analyzed_at']),
+        ]
+        unique_together = ['article', 'stock', 'analysis_engine']
+
+    def __str__(self):
+        stock_info = f" - {self.stock.ticker}" if self.stock else ""
+        return f"{self.article.title[:40]}{stock_info} [{self.sentiment_label}]"
+
+
+class NewsFeed(models.Model):
+    """
+    User's personalized news feed configuration.
+    Controls which sources, categories, and stocks to track.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='news_feed')
+
+    # Followed Entities
+    followed_stocks = models.ManyToManyField('Stock', related_name='news_followers', blank=True)
+    followed_sources = models.ManyToManyField(NewsSource, related_name='followers', blank=True)
+
+    # Category Preferences
+    enabled_categories = models.JSONField(default=list,
+                                         help_text="List of enabled news categories")
+
+    # Sentiment Filters
+    min_sentiment_score = models.DecimalField(max_digits=5, decimal_places=4, default=-1.0,
+                                             help_text="Filter out articles below this score")
+    exclude_neutral = models.BooleanField(default=False)
+
+    # Notification Settings
+    email_notifications = models.BooleanField(default=False)
+    sms_notifications = models.BooleanField(default=False)
+    notification_frequency = models.CharField(max_length=20, default='realtime',
+                                             choices=[
+                                                 ('realtime', 'Real-time'),
+                                                 ('hourly', 'Hourly Digest'),
+                                                 ('daily', 'Daily Digest'),
+                                             ])
+
+    # Alert Thresholds
+    alert_on_very_positive = models.BooleanField(default=True)
+    alert_on_very_negative = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s News Feed"
+
+
+class NewsAlert(models.Model):
+    """
+    News-based alerts for significant sentiment changes or breaking news.
+    """
+    ALERT_TYPES = [
+        ('breaking', 'Breaking News'),
+        ('sentiment_spike', 'Sentiment Spike'),
+        ('sentiment_drop', 'Sentiment Drop'),
+        ('high_volume', 'High Article Volume'),
+        ('keyword_match', 'Keyword Match'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_alerts')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='news_alerts')
+    article = models.ForeignKey(NewsArticle, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Alert Details
+    alert_type = models.CharField(max_length=30, choices=ALERT_TYPES)
+    message = models.TextField(help_text="Alert message text")
+
+    # Trigger Data
+    sentiment_score = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    trigger_data = models.JSONField(default=dict,
+                                   help_text="Additional data about what triggered the alert")
+
+    # Delivery
+    is_read = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False)
+    sms_sent = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read', '-created_at']),
+            models.Index(fields=['stock', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.stock.ticker} - {self.get_alert_type_display()}"
+
+
+class SentimentTimeseries(models.Model):
+    """
+    Aggregated sentiment over time for a stock.
+    Pre-calculated for performance (1-hour, 1-day intervals).
+    """
+    INTERVAL_CHOICES = [
+        ('1h', '1 Hour'),
+        ('4h', '4 Hours'),
+        ('1d', '1 Day'),
+        ('1w', '1 Week'),
+    ]
+
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='sentiment_timeseries')
+    interval = models.CharField(max_length=10, choices=INTERVAL_CHOICES)
+
+    # Time Period
+    period_start = models.DateTimeField()
+    period_end = models.DateTimeField()
+
+    # Aggregated Sentiment
+    avg_sentiment_score = models.DecimalField(max_digits=5, decimal_places=4)
+    weighted_sentiment = models.DecimalField(max_digits=5, decimal_places=4,
+                                            help_text="Weighted by source reliability")
+
+    # Article Counts
+    total_articles = models.IntegerField(default=0)
+    positive_articles = models.IntegerField(default=0)
+    negative_articles = models.IntegerField(default=0)
+    neutral_articles = models.IntegerField(default=0)
+
+    # Sentiment Distribution
+    sentiment_std_dev = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True,
+                                           help_text="Standard deviation of sentiment scores")
+
+    # Volume Metrics
+    article_volume_change = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True,
+                                               help_text="% change in article volume vs previous period")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-period_start']
+        indexes = [
+            models.Index(fields=['stock', 'interval', '-period_start']),
+        ]
+        unique_together = ['stock', 'interval', 'period_start']
+
+    def __str__(self):
+        return f"{self.stock.ticker} - {self.get_interval_display()} - {self.period_start.date()}"
