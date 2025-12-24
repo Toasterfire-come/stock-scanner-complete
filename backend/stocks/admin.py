@@ -7,7 +7,9 @@ from .models import (
     RevenueTracking, MonthlyRevenueSummary,
     PaperTradingAccount, PaperTrade, PaperTradePerformance,
     SMSAlertRule, SMSAlertCondition, SMSAlertHistory, SMSAlertQuota, TextBeltConfig,
-    TwoFactorAuth, TwoFactorCode, TrustedDevice, TwoFactorAuditLog
+    TwoFactorAuth, TwoFactorCode, TrustedDevice, TwoFactorAuditLog,
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface,
+    OptionsScreenerResult, OptionsAnalytics, OptionsWatchlist, OptionsWatchlistItem
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
 
@@ -501,3 +503,196 @@ class TwoFactorAuditLogAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         # Audit logs should be immutable
         return False
+
+
+# ============================================================================
+# Options Analytics System Admin
+# ============================================================================
+
+@admin.register(OptionsChain)
+class OptionsChainAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'snapshot_date', 'underlying_price', 'total_contracts', 'snapshot_time']
+    list_filter = ['snapshot_date', 'is_current']
+    search_fields = ['stock__ticker']
+    readonly_fields = ['snapshot_time', 'total_contracts', 'created_at', 'updated_at']
+
+    fieldsets = (
+        ('Chain Info', {
+            'fields': ('stock', 'snapshot_date', 'underlying_price', 'total_contracts', 'expirations_count')
+        }),
+        ('Data Source', {
+            'fields': ('data_source', 'is_current')
+        }),
+        ('Timestamps', {
+            'fields': ('snapshot_time', 'created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(OptionsContract)
+class OptionsContractAdmin(admin.ModelAdmin):
+    list_display = ['contract_symbol', 'contract_type', 'strike', 'expiration', 'dte', 'last_price', 'implied_volatility', 'in_the_money']
+    list_filter = ['contract_type', 'in_the_money', 'expiration']
+    search_fields = ['contract_symbol', 'chain__stock__ticker', 'stock__ticker']
+    readonly_fields = ['created_at']
+
+    fieldsets = (
+        ('Contract Details', {
+            'fields': ('chain', 'stock', 'contract_symbol', 'contract_type', 'strike', 'expiration', 'dte')
+        }),
+        ('Pricing', {
+            'fields': ('last_price', 'bid', 'ask', 'mark')
+        }),
+        ('Volume & OI', {
+            'fields': ('volume', 'open_interest')
+        }),
+        ('Implied Volatility', {
+            'fields': ('implied_volatility',)
+        }),
+        ('Greeks', {
+            'fields': ('delta', 'gamma', 'theta', 'vega', 'rho')
+        }),
+        ('Moneyness', {
+            'fields': ('in_the_money', 'intrinsic_value', 'extrinsic_value', 'break_even', 'probability_itm')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',)
+        }),
+    )
+
+
+@admin.register(ImpliedVolatilitySurface)
+class ImpliedVolatilitySurfaceAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'snapshot_date', 'underlying_price', 'avg_iv', 'atm_iv', 'put_call_iv_ratio']
+    list_filter = ['snapshot_date']
+    search_fields = ['stock__ticker']
+    readonly_fields = ['snapshot_time', 'created_at']
+
+    fieldsets = (
+        ('Surface Info', {
+            'fields': ('stock', 'snapshot_date', 'underlying_price')
+        }),
+        ('Surface Data', {
+            'fields': ('surface_data',),
+            'description': 'JSON grid of IV values by strike and expiration'
+        }),
+        ('Statistics', {
+            'fields': ('avg_iv', 'min_iv', 'max_iv', 'atm_iv', 'put_call_iv_ratio')
+        }),
+        ('Timestamps', {
+            'fields': ('snapshot_time', 'created_at')
+        }),
+    )
+
+
+@admin.register(OptionsScreenerResult)
+class OptionsScreenerResultAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'screener_type', 'score', 'scan_date', 'rank']
+    list_filter = ['screener_type', 'scan_date']
+    search_fields = ['stock__ticker']
+    readonly_fields = ['scan_time', 'created_at']
+
+    fieldsets = (
+        ('Screener Info', {
+            'fields': ('stock', 'contract', 'screener_type', 'scan_date')
+        }),
+        ('Ranking', {
+            'fields': ('score', 'rank')
+        }),
+        ('Metrics', {
+            'fields': ('trigger_metrics',),
+            'description': 'JSON metrics that triggered this result'
+        }),
+        ('Timestamps', {
+            'fields': ('scan_time', 'created_at')
+        }),
+    )
+
+
+@admin.register(OptionsAnalytics)
+class OptionsAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'date', 'total_call_volume', 'total_put_volume', 'put_call_volume_ratio']
+    list_filter = ['date', 'unusual_call_volume', 'unusual_put_volume', 'iv_spike']
+    search_fields = ['stock__ticker']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('Daily Analytics', {
+            'fields': ('stock', 'date')
+        }),
+        ('Volume Metrics', {
+            'fields': ('total_call_volume', 'total_put_volume', 'put_call_volume_ratio')
+        }),
+        ('Open Interest', {
+            'fields': ('total_call_oi', 'total_put_oi', 'put_call_oi_ratio')
+        }),
+        ('Implied Volatility', {
+            'fields': ('avg_call_iv', 'avg_put_iv', 'iv_30_day', 'iv_rank', 'iv_percentile')
+        }),
+        ('Popular Strikes', {
+            'fields': ('most_active_call_strike', 'most_active_put_strike')
+        }),
+        ('Unusual Activity Flags', {
+            'fields': ('unusual_call_volume', 'unusual_put_volume', 'iv_spike')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(OptionsWatchlist)
+class OptionsWatchlistAdmin(admin.ModelAdmin):
+    list_display = ['user', 'name', 'is_default', 'items_count', 'created_at']
+    list_filter = ['is_default', 'created_at']
+    search_fields = ['user__username', 'name']
+    readonly_fields = ['created_at', 'updated_at', 'items_count']
+
+    def items_count(self, obj):
+        return obj.items.count()
+    items_count.short_description = 'Items'
+
+    fieldsets = (
+        ('Watchlist Info', {
+            'fields': ('user', 'name', 'is_default')
+        }),
+        ('Statistics', {
+            'fields': ('items_count',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(OptionsWatchlistItem)
+class OptionsWatchlistItemAdmin(admin.ModelAdmin):
+    list_display = ['watchlist', 'contract_symbol', 'contract_type', 'strike', 'expiration', 'added_at']
+    list_filter = ['added_at']
+    search_fields = ['watchlist__name', 'contract__contract_symbol', 'contract__chain__stock__ticker']
+    readonly_fields = ['added_at', 'contract_symbol', 'contract_type', 'strike', 'expiration']
+
+    def contract_symbol(self, obj):
+        return obj.contract.contract_symbol
+    contract_symbol.short_description = 'Contract'
+
+    def contract_type(self, obj):
+        return obj.contract.contract_type
+    contract_type.short_description = 'Type'
+
+    def strike(self, obj):
+        return obj.contract.strike
+    strike.short_description = 'Strike'
+
+    def expiration(self, obj):
+        return obj.contract.expiration
+    expiration.short_description = 'Expiration'
+
+    fieldsets = (
+        ('Watchlist Item', {
+            'fields': ('watchlist', 'contract', 'notes')
+        }),
+        ('Timestamps', {
+            'fields': ('added_at',)
+        }),
+    )

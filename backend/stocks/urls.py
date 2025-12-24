@@ -50,6 +50,7 @@ from . import matomo_proxy
 from . import paper_trading_api
 from . import sms_alert_api
 from . import twofa_api
+from . import options_api
 from django.conf import settings
 from django.utils import timezone
 import hashlib
@@ -443,7 +444,26 @@ urlpatterns = [
     
     # Login Helper (No Auth Required)
     path('2fa/check-required/', twofa_api.check_2fa_required, name='check_2fa_required'),
-    
-    
-    
+
+    # ============================================================================
+    # OPTIONS ANALYTICS SYSTEM (MVP2 v3.4 - Pro Tier)
+    # ============================================================================
+
+    # Options Chain & Data
+    path('options/<str:ticker>/chain/', options_api.get_options_chain, name='options_chain'),
+    path('options/<str:ticker>/expirations/', options_api.expirations_list, name='options_expirations'),
+
+    # Greeks & Analytics
+    path('options/<str:ticker>/iv-surface/', options_api.get_iv_surface, name='options_iv_surface'),
+    path('options/<str:ticker>/analytics/', options_api.get_options_analytics, name='options_analytics'),
+
+    # Options Screener
+    path('options/screener/<str:screener_type>/', options_api.options_screener, name='options_screener'),
+
+    # Watchlist Management
+    path('options/watchlist/', options_api.options_watchlist, name='options_watchlist'),
+    path('options/watchlist/<int:watchlist_id>/', options_api.delete_watchlist, name='delete_options_watchlist'),
+    path('options/watchlist/<int:watchlist_id>/items/', options_api.watchlist_items, name='options_watchlist_items'),
+
+
 ]

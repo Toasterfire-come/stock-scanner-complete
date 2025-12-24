@@ -2073,3 +2073,322 @@ class TwoFactorAuditLog(models.Model):
     def __str__(self):
         status = "✓" if self.success else "✗"
         return f"{status} {self.user.username} - {self.get_event_type_display()} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
+
+
+
+# ============================================================================
+# OPTIONS ANALYTICS MODELS (MVP2 v3.4 - Pro Tier)
+# Append this to stocks/models.py
+# Intraday options chains, Greeks, and IV surfaces
+# ============================================================================
+
+from django.db import models
+from django.utils import timezone
+from decimal import Decimal
+
+
+class OptionsChain(models.Model):
+    """
+    Options chain snapshot for a stock.
+    Stores calls and puts for all available expirations.
+    """
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='options_chains')
+
+    # Chain Details
+    snapshot_date = models.DateField(help_text="Date of this chain snapshot")
+    snapshot_time = models.DateTimeField(help_text="Exact time of snapshot")
+    underlying_price = models.DecimalField(max_digits=15, decimal_places=4,
+                                          help_text="Stock price at snapshot time")
+
+    # Data Source
+    data_source = models.CharField(max_length=50, default='yfinance',
+                                   help_text="Source of options data")
+
+    # Metadata
+    total_contracts = models.IntegerField(default=0, help_text="Total number of contracts")
+    expirations_count = models.IntegerField(default=0, help_text="Number of expiration dates")
+
+    # Update Tracking
+    is_current = models.BooleanField(default=True, help_text="Whether this is the most recent chain")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-snapshot_time']
+        indexes = [
+            models.Index(fields=['stock', '-snapshot_time']),
+            models.Index(fields=['stock', 'is_current']),
+            models.Index(fields=['snapshot_date']),
+        ]
+        unique_together = ['stock', 'snapshot_time']
+
+    def __str__(self):
+        return f"{self.stock.ticker} Options Chain - {self.snapshot_time.strftime('%Y-%m-%d %H:%M')}"
+
+
+class OptionsContract(models.Model):
+    """
+    Individual options contract with pricing and Greeks.
+    """
+    CONTRACT_TYPES = [
+        ('call', 'Call'),
+        ('put', 'Put'),
+    ]
+
+    chain = models.ForeignKey(OptionsChain, on_delete=models.CASCADE, related_name='contracts')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
+
+    # Contract Identification
+    contract_symbol = models.CharField(max_length=50, unique=True,
+                                      help_text="OCC option symbol")
+    contract_type = models.CharField(max_length=10, choices=CONTRACT_TYPES)
+    strike = models.DecimalField(max_digits=15, decimal_places=4, help_text="Strike price")
+    expiration = models.DateField(help_text="Expiration date")
+
+    # Days to Expiration
+    dte = models.IntegerField(help_text="Days to expiration")
+
+    # Pricing
+    last_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    bid = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    ask = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    mark = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                              help_text="Mid price (bid + ask) / 2")
+
+    # Volume & Interest
+    volume = models.BigIntegerField(null=True, blank=True, help_text="Trading volume")
+    open_interest = models.BigIntegerField(null=True, blank=True)
+
+    # Implied Volatility
+    implied_volatility = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True,
+                                            help_text="IV as decimal (e.g., 0.25 = 25%)")
+
+    # Greeks
+    delta = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    gamma = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    theta = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    vega = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    rho = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+
+    # Moneyness
+    in_the_money = models.BooleanField(default=False)
+    intrinsic_value = models.DecimalField(max_digits=15, decimal_places=4, default=0)
+    extrinsic_value = models.DecimalField(max_digits=15, decimal_places=4, default=0,
+                                         help_text="Time value")
+
+    # Calculated Fields
+    break_even = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    probability_itm = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True,
+                                         help_text="Probability of being in-the-money at expiration")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['expiration', 'strike']
+        indexes = [
+            models.Index(fields=['chain', 'contract_type', 'expiration']),
+            models.Index(fields=['stock', 'expiration', 'strike']),
+            models.Index(fields=['contract_symbol']),
+            models.Index(fields=['expiration', 'strike']),
+        ]
+
+    def __str__(self):
+        return f"{self.stock.ticker} ${self.strike} {self.contract_type.upper()} {self.expiration}"
+
+
+class ImpliedVolatilitySurface(models.Model):
+    """
+    IV Surface data for visualization.
+    Stores IV values across strikes and expirations.
+    """
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='iv_surfaces')
+
+    # Surface Details
+    snapshot_date = models.DateField()
+    snapshot_time = models.DateTimeField()
+    underlying_price = models.DecimalField(max_digits=15, decimal_places=4)
+
+    # Surface Data (JSON format for flexibility)
+    # Structure: {
+    #   'expirations': [date1, date2, ...],
+    #   'strikes': [strike1, strike2, ...],
+    #   'call_iv': [[iv11, iv12, ...], [iv21, iv22, ...], ...],
+    #   'put_iv': [[iv11, iv12, ...], [iv21, iv22, ...], ...]
+    # }
+    surface_data = models.JSONField(help_text="IV surface grid data")
+
+    # Statistics
+    avg_iv = models.DecimalField(max_digits=8, decimal_places=6, help_text="Average IV across surface")
+    min_iv = models.DecimalField(max_digits=8, decimal_places=6, help_text="Minimum IV")
+    max_iv = models.DecimalField(max_digits=8, decimal_places=6, help_text="Maximum IV")
+
+    # IV Skew Metrics
+    atm_iv = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True,
+                                 help_text="At-the-money IV")
+    put_call_iv_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True,
+                                           help_text="Ratio of put IV to call IV")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-snapshot_time']
+        indexes = [
+            models.Index(fields=['stock', '-snapshot_time']),
+            models.Index(fields=['snapshot_date']),
+        ]
+
+    def __str__(self):
+        return f"{self.stock.ticker} IV Surface - {self.snapshot_time.strftime('%Y-%m-%d %H:%M')}"
+
+
+class OptionsScreenerResult(models.Model):
+    """
+    Saved options screener results.
+    Pre-calculated unusual options activity, high IV, etc.
+    """
+    SCREENER_TYPES = [
+        ('unusual_volume', 'Unusual Volume'),
+        ('high_iv', 'High Implied Volatility'),
+        ('iv_rank_high', 'IV Rank > 80%'),
+        ('cheap_options', 'Low Premium Options'),
+        ('high_gamma', 'High Gamma'),
+        ('earnings_plays', 'Earnings Plays'),
+    ]
+
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='options_screener_results')
+    contract = models.ForeignKey(OptionsContract, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Screener Details
+    screener_type = models.CharField(max_length=30, choices=SCREENER_TYPES)
+    scan_date = models.DateField()
+    scan_time = models.DateTimeField()
+
+    # Metrics that triggered the screener
+    trigger_metrics = models.JSONField(default=dict,
+                                      help_text="Metrics that caused this to appear in screener")
+
+    # Score (0-100)
+    score = models.DecimalField(max_digits=5, decimal_places=2,
+                               help_text="Screener relevance score")
+
+    # Ranking
+    rank = models.IntegerField(help_text="Rank within this screener type")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-scan_time', '-score']
+        indexes = [
+            models.Index(fields=['screener_type', '-scan_time']),
+            models.Index(fields=['stock', 'screener_type']),
+            models.Index(fields=['-score']),
+        ]
+
+    def __str__(self):
+        return f"{self.stock.ticker} - {self.get_screener_type_display()} (Score: {self.score})"
+
+
+class OptionsAnalytics(models.Model):
+    """
+    Aggregated options analytics for a stock.
+    Daily summary of options activity and metrics.
+    """
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, related_name='options_analytics')
+
+    # Date
+    date = models.DateField()
+
+    # Volume Metrics
+    total_call_volume = models.BigIntegerField(default=0)
+    total_put_volume = models.BigIntegerField(default=0)
+    put_call_volume_ratio = models.DecimalField(max_digits=8, decimal_places=4, default=0,
+                                                help_text="Put volume / Call volume")
+
+    # Open Interest Metrics
+    total_call_oi = models.BigIntegerField(default=0, help_text="Total call open interest")
+    total_put_oi = models.BigIntegerField(default=0, help_text="Total put open interest")
+    put_call_oi_ratio = models.DecimalField(max_digits=8, decimal_places=4, default=0)
+
+    # IV Metrics
+    avg_call_iv = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    avg_put_iv = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    iv_30_day = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True,
+                                   help_text="30-day implied volatility")
+    iv_rank = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True,
+                                  help_text="IV Rank (0-100)")
+    iv_percentile = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Popular Strikes
+    most_active_call_strike = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    most_active_put_strike = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+
+    # Unusual Activity Flags
+    unusual_call_volume = models.BooleanField(default=False)
+    unusual_put_volume = models.BooleanField(default=False)
+    iv_spike = models.BooleanField(default=False, help_text="Significant IV increase")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+        unique_together = ['stock', 'date']
+        indexes = [
+            models.Index(fields=['stock', '-date']),
+            models.Index(fields=['-put_call_volume_ratio']),
+            models.Index(fields=['-iv_rank']),
+        ]
+
+    def __str__(self):
+        return f"{self.stock.ticker} Options Analytics - {self.date}"
+
+
+class OptionsWatchlist(models.Model):
+    """
+    User watchlist for specific options contracts.
+    Track specific strikes/expirations of interest.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='options_watchlists')
+    name = models.CharField(max_length=100, default='My Options Watchlist')
+
+    # Settings
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+
+
+class OptionsWatchlistItem(models.Model):
+    """
+    Individual options contract in watchlist.
+    """
+    watchlist = models.ForeignKey(OptionsWatchlist, on_delete=models.CASCADE, related_name='items')
+    contract = models.ForeignKey(OptionsContract, on_delete=models.CASCADE)
+
+    # Tracking
+    added_at = models.DateTimeField(auto_now_add=True)
+    added_price = models.DecimalField(max_digits=15, decimal_places=4,
+                                     help_text="Contract price when added")
+    added_iv = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True,
+                                  help_text="IV when added")
+
+    # Alerts
+    target_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    alert_on_volume = models.BooleanField(default=False)
+    alert_on_iv_change = models.BooleanField(default=False)
+
+    # Notes
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-added_at']
+        unique_together = ['watchlist', 'contract']
+
+    def __str__(self):
+        return f"{self.watchlist.name} - {self.contract.contract_symbol}"
