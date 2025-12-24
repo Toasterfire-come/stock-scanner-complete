@@ -6,7 +6,8 @@ from .models import (
     PortfolioFollowing, DiscountCode, UserDiscountUsage,
     RevenueTracking, MonthlyRevenueSummary,
     PaperTradingAccount, PaperTrade, PaperTradePerformance,
-    SMSAlertRule, SMSAlertCondition, SMSAlertHistory, SMSAlertQuota, TextBeltConfig
+    SMSAlertRule, SMSAlertCondition, SMSAlertHistory, SMSAlertQuota, TextBeltConfig,
+    TwoFactorAuth, TwoFactorCode, TrustedDevice, TwoFactorAuditLog
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
 
@@ -374,4 +375,129 @@ class TextBeltConfigAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         # Don't allow deletion of config
+        return False
+
+
+# ============================================================================
+# Two-Factor Authentication Admin
+# ============================================================================
+
+@admin.register(TwoFactorAuth)
+class TwoFactorAuthAdmin(admin.ModelAdmin):
+    list_display = ['user', 'is_enabled', 'phone_number', 'backup_codes_count', 'total_verifications', 'is_locked']
+    list_filter = ['is_enabled', 'require_on_login', 'trusted_devices_enabled', 'is_locked']
+    search_fields = ['user__username', 'phone_number']
+    readonly_fields = ['verified_at', 'total_verifications', 'failed_attempts', 'last_verified_at', 'last_failed_at', 'locked_until', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('2FA Status', {
+            'fields': ('is_enabled', 'phone_number', 'verified_at')
+        }),
+        ('Backup Codes', {
+            'fields': ('backup_codes_count',),
+            'description': 'Backup codes are hashed and cannot be viewed'
+        }),
+        ('Security Settings', {
+            'fields': ('require_on_login', 'require_on_sensitive', 'trusted_devices_enabled')
+        }),
+        ('Statistics', {
+            'fields': ('total_verifications', 'failed_attempts', 'last_verified_at', 'last_failed_at')
+        }),
+        ('Lockout Protection', {
+            'fields': ('is_locked', 'locked_until', 'consecutive_failures'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(TwoFactorCode)
+class TwoFactorCodeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'code_type', 'code', 'is_used', 'expires_at', 'sms_sent', 'created_at']
+    list_filter = ['code_type', 'is_used', 'sms_sent', 'created_at']
+    search_fields = ['user__username', 'code', 'phone_number']
+    readonly_fields = ['used_at', 'sms_sent_at', 'created_at']
+    
+    fieldsets = (
+        ('Code Details', {
+            'fields': ('user', 'code_type', 'code')
+        }),
+        ('Validity', {
+            'fields': ('expires_at', 'is_used', 'used_at')
+        }),
+        ('Delivery', {
+            'fields': ('phone_number', 'sms_sent', 'sms_sent_at', 'textbelt_id')
+        }),
+        ('Security', {
+            'fields': ('verification_attempts', 'max_attempts', 'ip_address')
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',)
+        }),
+    )
+
+
+@admin.register(TrustedDevice)
+class TrustedDeviceAdmin(admin.ModelAdmin):
+    list_display = ['user', 'device_name', 'ip_address', 'is_active', 'last_used_at', 'trust_expires_at']
+    list_filter = ['is_active', 'trust_expires_at', 'created_at']
+    search_fields = ['user__username', 'device_name', 'ip_address', 'device_fingerprint']
+    readonly_fields = ['last_used_at', 'total_uses', 'created_at']
+    
+    fieldsets = (
+        ('Device Info', {
+            'fields': ('user', 'device_name', 'device_fingerprint')
+        }),
+        ('Details', {
+            'fields': ('user_agent', 'ip_address', 'location')
+        }),
+        ('Trust Status', {
+            'fields': ('is_active', 'trust_expires_at')
+        }),
+        ('Usage', {
+            'fields': ('last_used_at', 'total_uses')
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',)
+        }),
+    )
+
+
+@admin.register(TwoFactorAuditLog)
+class TwoFactorAuditLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'event_type', 'success', 'ip_address', 'created_at']
+    list_filter = ['event_type', 'success', 'created_at']
+    search_fields = ['user__username', 'event_description', 'ip_address']
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('Event', {
+            'fields': ('user', 'twofa', 'event_type', 'success')
+        }),
+        ('Details', {
+            'fields': ('event_description',)
+        }),
+        ('Context', {
+            'fields': ('ip_address', 'user_agent', 'device_fingerprint')
+        }),
+        ('Metadata', {
+            'fields': ('metadata',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        # Audit logs should only be created by system
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Audit logs should be immutable
         return False

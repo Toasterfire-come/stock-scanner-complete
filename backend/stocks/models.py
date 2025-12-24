@@ -1815,3 +1815,261 @@ class TextBeltConfig(models.Model):
         """Get or create singleton config"""
         config, created = cls.objects.get_or_create(pk=1)
         return config
+
+
+
+# ============================================================================
+# TWO-FACTOR AUTHENTICATION (2FA) SYSTEM MODELS
+# Append this to stocks/models.py
+# SMS-based 2FA using TextBelt integration
+# ============================================================================
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
+import secrets
+import string
+
+
+class TwoFactorAuth(models.Model):
+    """
+    Two-Factor Authentication configuration per user.
+    SMS-based 2FA using TextBelt.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='twofa')
+
+    # 2FA Status
+    is_enabled = models.BooleanField(default=False, help_text="Whether 2FA is enabled")
+    phone_number = models.CharField(max_length=20, help_text="Phone number for 2FA (E.164 format)")
+    verified_at = models.DateTimeField(null=True, blank=True, help_text="When phone was verified")
+
+    # Backup Codes
+    backup_codes = models.JSONField(default=list, help_text="List of backup codes (hashed)")
+    backup_codes_count = models.IntegerField(default=10, help_text="Number of unused backup codes")
+
+    # Security Settings
+    require_on_login = models.BooleanField(default=True, help_text="Require 2FA on every login")
+    require_on_sensitive = models.BooleanField(default=True,
+                                              help_text="Require 2FA for sensitive operations")
+    trusted_devices_enabled = models.BooleanField(default=True,
+                                                  help_text="Allow trusted device feature")
+
+    # Statistics
+    total_verifications = models.IntegerField(default=0)
+    failed_attempts = models.IntegerField(default=0)
+    last_verified_at = models.DateTimeField(null=True, blank=True)
+    last_failed_at = models.DateTimeField(null=True, blank=True)
+
+    # Lockout Protection
+    is_locked = models.BooleanField(default=False)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    consecutive_failures = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Two-Factor Authentication"
+        verbose_name_plural = "Two-Factor Authentication"
+
+    def __str__(self):
+        status = "Enabled" if self.is_enabled else "Disabled"
+        return f"{self.user.username} - 2FA {status}"
+
+    def is_locked_out(self):
+        """Check if account is currently locked"""
+        if not self.is_locked:
+            return False
+        if self.locked_until and timezone.now() < self.locked_until:
+            return True
+        # Auto-unlock if time passed
+        self.is_locked = False
+        self.locked_until = None
+        self.consecutive_failures = 0
+        self.save()
+        return False
+
+    def lock_account(self, duration_minutes=30):
+        """Lock account due to too many failed attempts"""
+        self.is_locked = True
+        self.locked_until = timezone.now() + timedelta(minutes=duration_minutes)
+        self.save()
+
+
+class TwoFactorCode(models.Model):
+    """
+    Generated 2FA codes sent via SMS.
+    Short-lived codes (5 minutes) for verification.
+    """
+    CODE_TYPES = [
+        ('login', 'Login Verification'),
+        ('enable', 'Enable 2FA'),
+        ('disable', 'Disable 2FA'),
+        ('sensitive', 'Sensitive Operation'),
+        ('recovery', 'Account Recovery'),
+    ]
+
+    twofa = models.ForeignKey(TwoFactorAuth, on_delete=models.CASCADE, related_name='codes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, help_text="Redundant for quick queries")
+
+    # Code Details
+    code = models.CharField(max_length=10, help_text="6-digit verification code")
+    code_type = models.CharField(max_length=20, choices=CODE_TYPES, default='login')
+
+    # Validity
+    expires_at = models.DateTimeField(help_text="Code expiration time")
+    is_used = models.BooleanField(default=False)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    # Delivery
+    phone_number = models.CharField(max_length=20)
+    sms_sent = models.BooleanField(default=False)
+    sms_sent_at = models.DateTimeField(null=True, blank=True)
+    textbelt_id = models.CharField(max_length=100, blank=True)
+
+    # Attempt Tracking
+    verification_attempts = models.IntegerField(default=0)
+    max_attempts = models.IntegerField(default=3)
+
+    # IP Tracking
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_used', '-created_at']),
+            models.Index(fields=['code', 'is_used']),
+            models.Index(fields=['-expires_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.code_type} - {'Used' if self.is_used else 'Active'}"
+
+    def is_valid(self):
+        """Check if code is still valid"""
+        if self.is_used:
+            return False
+        if timezone.now() > self.expires_at:
+            return False
+        if self.verification_attempts >= self.max_attempts:
+            return False
+        return True
+
+    def mark_used(self):
+        """Mark code as used"""
+        self.is_used = True
+        self.used_at = timezone.now()
+        self.save()
+
+    @staticmethod
+    def generate_code(length=6):
+        """Generate random numeric code"""
+        return ''.join(secrets.choice(string.digits) for _ in range(length))
+
+
+class TrustedDevice(models.Model):
+    """
+    Trusted devices that don't require 2FA for a period.
+    """
+    twofa = models.ForeignKey(TwoFactorAuth, on_delete=models.CASCADE, related_name='trusted_devices')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # Device Identification
+    device_name = models.CharField(max_length=200, help_text="User-friendly device name")
+    device_fingerprint = models.CharField(max_length=64, unique=True,
+                                         help_text="Hashed device fingerprint")
+
+    # Device Details
+    user_agent = models.TextField(help_text="Browser user agent")
+    ip_address = models.GenericIPAddressField()
+    location = models.CharField(max_length=200, blank=True, help_text="Approximate location")
+
+    # Trust Settings
+    is_active = models.BooleanField(default=True)
+    trust_expires_at = models.DateTimeField(help_text="When trust expires (default 30 days)")
+
+    # Usage Tracking
+    last_used_at = models.DateTimeField(auto_now=True)
+    total_uses = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-last_used_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['device_fingerprint']),
+            models.Index(fields=['-trust_expires_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.device_name}"
+
+    def is_trusted(self):
+        """Check if device is still trusted"""
+        if not self.is_active:
+            return False
+        if timezone.now() > self.trust_expires_at:
+            # Auto-expire
+            self.is_active = False
+            self.save()
+            return False
+        return True
+
+    def extend_trust(self, days=30):
+        """Extend trust period"""
+        self.trust_expires_at = timezone.now() + timedelta(days=days)
+        self.save()
+
+
+class TwoFactorAuditLog(models.Model):
+    """
+    Audit log for all 2FA activities.
+    Tracks all authentication attempts and configuration changes.
+    """
+    EVENT_TYPES = [
+        ('enabled', '2FA Enabled'),
+        ('disabled', '2FA Disabled'),
+        ('code_sent', 'Code Sent'),
+        ('code_verified', 'Code Verified'),
+        ('code_failed', 'Code Verification Failed'),
+        ('backup_used', 'Backup Code Used'),
+        ('backup_generated', 'Backup Codes Generated'),
+        ('device_trusted', 'Device Trusted'),
+        ('device_revoked', 'Device Trust Revoked'),
+        ('account_locked', 'Account Locked'),
+        ('account_unlocked', 'Account Unlocked'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='twofa_audit_log')
+    twofa = models.ForeignKey(TwoFactorAuth, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Event Details
+    event_type = models.CharField(max_length=30, choices=EVENT_TYPES)
+    event_description = models.TextField(blank=True)
+    success = models.BooleanField(default=True)
+
+    # Context
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    device_fingerprint = models.CharField(max_length=64, blank=True)
+
+    # Additional Data
+    metadata = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['event_type', '-created_at']),
+            models.Index(fields=['success', '-created_at']),
+        ]
+
+    def __str__(self):
+        status = "✓" if self.success else "✗"
+        return f"{status} {self.user.username} - {self.get_event_type_display()} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"

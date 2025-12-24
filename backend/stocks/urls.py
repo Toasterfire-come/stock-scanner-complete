@@ -49,6 +49,7 @@ from . import admin_api
 from . import matomo_proxy
 from . import paper_trading_api
 from . import sms_alert_api
+from . import twofa_api
 from django.conf import settings
 from django.utils import timezone
 import hashlib
@@ -410,6 +411,39 @@ urlpatterns = [
     
     # Cron Endpoint (Internal - should be protected)
     path('sms-alerts/cron/check/', sms_alert_api.check_alerts_cron, name='check_alerts_cron'),
+
+    # ============================================================================
+    # TWO-FACTOR AUTHENTICATION (2FA) - SMS-BASED
+    # ============================================================================
+    
+    # 2FA Status & Configuration
+    path('2fa/status/', twofa_api.twofa_status, name='twofa_status'),
+    path('2fa/settings/', twofa_api.update_settings, name='twofa_settings'),
+    
+    # Enable/Disable 2FA
+    path('2fa/enable/', twofa_api.enable_twofa, name='enable_twofa'),
+    path('2fa/enable/verify/', twofa_api.verify_enable_twofa, name='verify_enable_twofa'),
+    path('2fa/disable/', twofa_api.disable_twofa, name='disable_twofa'),
+    
+    # Code Management
+    path('2fa/code/send/', twofa_api.send_code, name='send_2fa_code'),
+    path('2fa/code/verify/', twofa_api.verify_code, name='verify_2fa_code'),
+    
+    # Backup Codes
+    path('2fa/backup/verify/', twofa_api.verify_backup_code, name='verify_backup_code'),
+    path('2fa/backup/regenerate/', twofa_api.regenerate_backup_codes, name='regenerate_backup_codes'),
+    
+    # Trusted Devices
+    path('2fa/devices/', twofa_api.trusted_devices, name='trusted_devices'),
+    path('2fa/devices/trust/', twofa_api.trust_current_device, name='trust_device'),
+    path('2fa/devices/<int:device_id>/revoke/', twofa_api.revoke_device, name='revoke_device'),
+    
+    # Audit & Monitoring
+    path('2fa/audit/', twofa_api.audit_log, name='twofa_audit_log'),
+    
+    # Login Helper (No Auth Required)
+    path('2fa/check-required/', twofa_api.check_2fa_required, name='check_2fa_required'),
+    
     
     
 ]

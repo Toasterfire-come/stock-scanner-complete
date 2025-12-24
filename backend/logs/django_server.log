@@ -10415,3 +10415,116 @@ Starting development server at http://0.0.0.0:8000/
 Quit the server with CTRL-BREAK.
 
 [24/Dec/2025 08:35:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:36:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:36:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:36:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:37:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:37:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:38:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:38:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:38:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:39:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:39:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:39:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:40:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:40:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:40:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:41:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:41:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:41:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:42:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:42:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:42:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:43:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:43:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:44:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:44:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:44:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:45:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:45:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:45:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:46:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:46:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:46:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:47:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:47:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:47:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:48:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:48:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:48:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:49:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:49:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:49:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:50:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:50:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:50:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:51:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:51:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:52:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:52:22] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 08:52:30,071] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\models.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 08:52:38,118] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 08:52:42
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 08:52:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:53:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:53:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:53:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:54:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:54:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:54:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:55:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:55:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:55:55] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 08:55:55,669] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 08:55:59,256] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+
+You have 1 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): stocks.
+Run 'python manage.py migrate' to apply them.
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 08:56:03
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 08:56:15] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 08:56:32,508] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 08:56:36,442] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+
+You have 1 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): stocks.
+Run 'python manage.py migrate' to apply them.
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 08:56:40
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 08:57:01] "GET /health/ HTTP/1.1" 301 0
