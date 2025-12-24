@@ -1,480 +1,310 @@
-# TRADE SCAN PRO - MVP SPECIFICATION
-
-**Document Version:** 2.1 (Status Updated)
-**Date:** December 23, 2025
-**Status:** 50% Complete (Phases 1-5 Complete, Phases 6-10 Pending)
-
----
-
-# COMPLETION STATUS OVERVIEW
-
-**Overall MVP2 Progress: 50% (5/10 Phases Complete)**
-**Last Updated: December 23, 2025**
-
-| Phase | Name | Status | Completion |
-|-------|------|--------|------------|
-| 1 | Core Infrastructure | ✅ COMPLETE | 100% |
-| 2 | Valuation Engine | ✅ COMPLETE | 100% |
-| 3 | Advanced Charting | ✅ COMPLETE | 100% |
-| 4 | AI Backtesting System | ✅ COMPLETE | 100% |
-| 5 | Value Hunter Portfolio | ✅ COMPLETE | 100% |
-| 6 | Strategy Ranking System | ⏳ PENDING | 0% |
-| 7 | Educational Platform | ⏳ PENDING | 0% |
-| 8 | Social & Viral Features | ⏳ PENDING | 0% |
-| 9 | Retention Features | ⏳ PENDING | 0% |
-| 10 | UI/UX & Rebrand | ⏳ PENDING | 0% |
-
-**Note:** See [MVP2_STATUS_ANALYSIS.md](MVP2_STATUS_ANALYSIS.md) for detailed evidence of completion.
+# TRADE SCAN PRO — MVP2 MASTER SPECIFICATION  
+**Version:** 3.4  
+**Status:** Phases 1–5 Complete | Phases 6–10 Execution Plan  
+**Scope:** Feature-complete specification with paper trading, charting, alerts, data rules, and subscription tiers  
+**Design Standard:** Professional, minimalist, high-density (TradingView × Apple inspiration, color-agnostic)
 
 ---
 
-# AI INTEGRATION (NEW)
+## SUBSCRIPTION TIERS (FRONTEND-HANDLED SIGNUP)
 
-## Groq AI Integration for Backtesting
+| Tier | Price | Intended User |
+|---|---|---|
+| **Basic** | $9.99 / month | Analysis, learning, manual trading |
+| **Pro** | $24.99 / month | Strategy builders, active traders |
 
-The backtesting system uses **Groq AI** (llama-3.3-70b-versatile) to:
-1. Parse natural language strategy descriptions
-2. Generate Python trading logic code
-3. Validate strategy parameters
-4. Optimize entry/exit conditions
-
-### Environment Configuration
-```
-GROQ_API_KEY=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
-```
-
-### AI Service Architecture
-```
-User Strategy Text → Groq AI → Python Code → Backtest Engine → Results
-```
 
 ---
 
-# PHASE 1: CORE INFRASTRUCTURE ✅ COMPLETE
+## DATA ORIGIN & FLOW (STRICT RULES)
 
-## 1.1 Completed Items
-- [x] Trading Mode Context (`TradingModeContext.jsx`)
-- [x] Trading Mode Toggle Component (`TradingModeToggle.jsx`)
-- [x] Day Trade / Long-Term mode configurations
-- [x] Dynamic navigation per mode
-- [x] User Profile model with subscription info
-- [x] News system commented out (ready for removal)
+### Charting
+- **Source:** Stooq  
+- **Method:** Pulled directly from the **user’s browser**
+- **Charts:** All Stooq charts, **HTML-modified**, no server relay
 
-## 1.2 Files Implemented
-- `/app/frontend/src/context/TradingModeContext.jsx`
-- `/app/frontend/src/components/TradingModeToggle.jsx`
-- `/app/backend/stocks/models.py` (UserProfile, Stock, etc.)
-
----
-
-# PHASE 2: VALUATION ENGINE ✅ COMPLETE (100%)
-
-## 2.1 Completed Items
-- [x] Basic fundamentals API (`fundamentals_api.py`)
-- [x] Dividend analysis
-- [x] Growth metrics (revenue CAGR, EPS)
-- [x] Profitability margins
-- [x] Balance sheet health
-- [x] Cash flow analysis
-- [x] Basic DCF valuation
-- [x] StockFundamentals model (50+ dedicated fields)
-- [x] ValuationService class (`stocks/services/valuation_service.py`)
-- [x] Graham Number calculation
-- [x] EPV (Earnings Power Value) calculation
-- [x] PEG Fair Value model
-- [x] Relative Value scoring vs sector
-- [x] Composite valuation score (0-100)
-- [x] Valuation status classification
-- [x] Strength score calculation
-- [x] Valuation API endpoints (`stocks/valuation_api.py`, `stocks/valuation_display_api.py`)
-- [x] Undervalued stocks screener endpoint (`stocks/enhanced_screener_api.py`)
-
-## 2.2 Implementation Details
-
-**Files Implemented:**
-- `stocks/models.py` - StockFundamentals model with 50+ fields
-- `stocks/services/valuation_service.py` - Complete valuation calculations
-- `stocks/services/daily_update_service.py` - Daily updates for fundamentals
-- `stocks/valuation_api.py` - Valuation REST API endpoints
-- `stocks/valuation_display_api.py` - Display-optimized endpoints
-- `stocks/valuation_endpoints.py` - Additional valuation routes
-- `stocks/enhanced_screener_api.py` - Screener with valuation integration
-- `stocks/grouping_api.py` - Sector/industry grouping for relative valuation
-
-## 2.3 Technical Specification
-
-### StockFundamentals Model Fields
-```python
-# Price & Valuation
-pe_ratio, forward_pe, peg_ratio, price_to_sales, price_to_book, 
-ev_to_revenue, ev_to_ebitda, enterprise_value
-
-# Profitability
-gross_margin, operating_margin, profit_margin, roe, roa, roic
-
-# Growth
-revenue_growth_yoy, revenue_growth_3y, revenue_growth_5y,
-earnings_growth_yoy, earnings_growth_5y, fcf_growth_yoy
-
-# Financial Health
-current_ratio, quick_ratio, debt_to_equity, debt_to_assets,
-interest_coverage, altman_z_score, piotroski_f_score
-
-# Cash Flow
-operating_cash_flow, free_cash_flow, fcf_per_share, fcf_yield
-
-# Dividends
-dividend_yield, dividend_payout_ratio, years_dividend_growth
-
-# Calculated Valuations
-dcf_value, epv_value, graham_number, peg_fair_value,
-relative_value_score, valuation_score, strength_score
-```
-
-### Valuation Score Formula
-- DCF Weight: 30%
-- EPV Weight: 20%
-- Graham Number Weight: 15%
-- PEG Fair Value Weight: 10%
-- Relative Value Weight: 25%
-
-### Status Classification
-- 70+ = Significantly Undervalued (STRONG BUY)
-- 55-69 = Undervalued (BUY)
-- 45-54 = Fair Value (HOLD)
-- 30-44 = Overvalued (SELL)
-- <30 = Significantly Overvalued (STRONG SELL)
+### Analytics / Storage
+- **Source:** yfinance
+- **Method:** Server-side ingestion → database
+- **Frequencies:**
+  - 1-minute hybrid updater
+  - Daily updater
+- **Used for:**
+  - Screeners
+  - Valuation models
+  - Backtests
+  - Strategy scoring
+  - Options analytics
+  - Journals & performance reviews
 
 ---
 
-# PHASE 3: ADVANCED CHARTING ✅ COMPLETE
+## ALERTING (FINAL)
 
-## 3.1 Implementation
-
-**Technology:** Stooq HTML5 Charts with full customization
-
-**Git Commit:** `3242db62 - feat: Implement Stooq HTML5 charts with full customization`
-
-## 3.2 Completed Features
-
-### Chart Types
-- [x] Candlestick (default)
-- [x] Line chart
-- [x] Area chart
-- [x] Heikin-Ashi (Premium)
-
-### Timeframes
-- [x] 1m (Premium)
-- [x] 5m (Premium)
-- [x] 15m
-- [x] 30m
-- [x] 1H
-- [x] 4H (Premium)
-- [x] 1D
-
-### Drawing Tools
-- [x] Trend lines
-- [x] Horizontal lines
-- [x] Rectangles/Boxes (Premium)
-- [x] Fibonacci Retracement (Premium)
-- [x] Fibonacci Extension (Premium)
-- [x] Text annotations (Premium)
-
-### Technical Indicators
-- [x] SMA (Simple Moving Average)
-- [x] EMA (Exponential Moving Average)
-- [x] RSI (Relative Strength Index)
-- [x] MACD (Premium)
-- [x] Bollinger Bands (Premium)
-- [x] VWAP (Premium)
-- [x] Stochastic (Premium)
-- [x] ATR (Premium)
-- [x] Volume Profile (Premium)
-
-### Chart Features
-- [x] Chart export (PNG/SVG)
-- [x] Drawing persistence
-- [x] Indicator settings panel
-- [x] Theme toggle (light/dark)
-- [x] Full customization support
-- [x] Premium feature gating
+- ❌ No email alerts anywhere
+- ✅ SMS only (Self-Hosted Multi Attempt TextBelt)
+- ✅ SMS via **free API requiring no signup**
+- ✅ Webhooks supported
+- ✅ Single & multi-condition alerts
 
 ---
 
-# PHASE 4: AI BACKTESTING SYSTEM ✅ COMPLETE
+## CORE FEATURE INVENTORY (CONFIRMED INCLUDED)
 
-## 4.1 Implementation
+### Charting & Technical Analysis
+- Exotic chart types:
+  - Renko
+  - Kagi
+  - Point & Figure
+  - Heikin-Ashi
+- Volume Profile (support & resistance via volume)
+- Automated technical summaries:
+  - SMA
+  - RSI
+  - MACD
+  - Clear bullish / neutral / bearish implications
+- Customizable chart layouts:
+  - Save / load indicators
+  - Drawings
+  - Settings
 
-**Files Implemented:**
-- `stocks/models.py` - BacktestRun model with all required fields
-- `stocks/services/backtesting_service.py` - Core backtesting engine (20,109 bytes)
-- `stocks/services/groq_backtesting_service.py` - AI integration (28,291 bytes)
+### Market Intelligence
+- Real-time news ingestion
+- NLP sentiment analysis
+- News filtering:
+  - By ticker
+  - By sentiment
+  - By category
+- Economic calendar:
+  - Earnings
+  - Fed decisions
+  - Macro releases
+  - Events displayed directly on charts
 
-**Git Evidence:** Multiple auto-commits during backtesting implementation in Sep-Oct 2025
+### Fundamentals & Options
+- Standardized financial statements
+- Intraday options chains
+- Greeks
+- Implied volatility surfaces
 
-## 4.2 AI Strategy Generation (Groq Integration)
+### UX / UI
+- Modular dashboard (drag & drop widgets)
+- Responsive design (desktop, tablet, mobile)
+- Full mobile charting
+- Clean data tables (high-performance rendering)
+- Clean charts with readable data points
+- Contextual help:
+  - Tooltips
+  - Guided tours
+- Extensive knowledge base & FAQs
+- Clear CTAs
+- Intuitive navigation
+- Streamlined UI elements
 
-### How It Works
-1. User describes strategy in natural language
-2. Groq AI (llama-3.3-70b-versatile) parses and generates Python code
-3. Code is validated and sandboxed
-4. Backtest engine executes strategy against historical data
-5. Results are displayed with metrics
-
-### AI Prompt Template
-```
-You are a quantitative trading strategy developer. Convert the following 
-natural language trading strategy into executable Python code.
-
-Strategy Description: {user_strategy_text}
-
-Requirements:
-1. Define entry_condition(data, index) function returning True/False
-2. Define exit_condition(data, index, entry_price) function returning True/False
-3. Use pandas DataFrame with columns: open, high, low, close, volume
-4. Include position sizing logic
-5. Include stop-loss and take-profit logic if mentioned
-
-Output format: Pure Python code only, no explanations.
-```
-
-## 4.3 Backtest Models (Implemented)
-
-**Model:** BacktestRun in `stocks/models.py`
-
-```python
-class BacktestRun(models.Model):
-    # User & Strategy
-    user = models.ForeignKey(User)
-    name = models.CharField  # Strategy name
-    strategy_text = models.TextField  # User's natural language
-    generated_code = models.TextField  # AI-generated Python
-    category = models.CharField  # day_trading, swing_trading, long_term
-
-    # Backtest Parameters
-    symbols = models.JSONField  # List of symbols
-    start_date = models.DateField
-    end_date = models.DateField
-    initial_capital = models.DecimalField
-
-    # Execution
-    status = models.CharField  # pending, processing, completed, failed
-    error_message = models.TextField
-
-    # Results
-    total_return = models.DecimalField
-    annualized_return = models.DecimalField
-    sharpe_ratio = models.DecimalField
-    max_drawdown = models.DecimalField
-    win_rate = models.DecimalField
-    profit_factor = models.DecimalField
-    total_trades = models.IntegerField
-    composite_score = models.DecimalField
-
-    # Metadata
-    created_at = models.DateTimeField
-    updated_at = models.DateTimeField
-```
-
-**Status:** ✅ Fully implemented with all required fields and AI integration
-
-## 4.3 20 Baseline Strategies
-
-### Day Trading (7)
-1. Opening Range Breakout (ORB)
-2. VWAP Bounce
-3. Gap and Go
-4. Red to Green Move
-5. 9 EMA Scalping
-6. High of Day Breakout
-7. Support/Resistance Reversal
-
-### Swing Trading (7)
-1. 20/50 EMA Crossover
-2. RSI Oversold Bounce
-3. Cup and Handle Pattern
-4. Bollinger Band Squeeze
-5. MACD Histogram Reversal
-6. Weekly Breakout
-7. Mean Reversion to 50 SMA
-
-### Long-Term (6)
-1. Graham Value Investing
-2. Dividend Growth Strategy
-3. Growth at Reasonable Price (GARP)
-4. Dogs of the Dow
-5. Momentum Factor Strategy
-6. Small Cap Value
-
-## 4.4 Plan Limits
-- Basic ($15): No backtesting
-- Premium ($25): 5 backtests/month
+### Performance & Security
+- Optimized API endpoints
+- Aggressive caching
+- Load testing for concurrency
+- CDN for static assets
+- MFA
+- Encryption at rest & in transit
 
 ---
 
-# PHASE 5: VALUE HUNTER PORTFOLIO ✅ COMPLETE
+## PAPER TRADING SYSTEM (NEW — REQUIRED)
 
-## 5.1 Implementation
+### Purpose
+Allow users to practice, test strategies, and validate setups without capital risk, directly tied into analytics and retention loops.
 
-**Files Implemented:**
-- `stocks/models.py` - ValueHunterWeek and ValueHunterPosition models
-- `stocks/services/value_hunter_service.py` - Automated portfolio service (10,741 bytes)
+### Architecture
+- Separate **paper trading ledger** (never mixed with live data)
+- Uses:
+  - Stooq browser charts (visual reference)
+  - yfinance database prices (execution simulation)
+- Deterministic fills:
+  - Configurable slippage
+  - Spread simulation
+  - Latency simulation (Pro)
 
-**Git Evidence:** Value Hunter service exists and is fully functional
+### Features
+- Virtual starting balance (configurable)
+- Supports:
+  - Market orders
+  - Limit orders
+  - Stop orders
+  - **Advanced order types**:
+    - Bracket orders
+    - OCO
+    - Trailing stop-loss
+- Strategy-based paper trades
+- Manual paper trades
+- Performance tracking:
+  - P&L
+  - Drawdowns
+  - Win rate
+  - Risk metrics
 
-## 5.2 Concept (Implemented)
+### Tier Access
+- **Basic:** Manual paper trading only
+- **Pro:** Strategy-driven paper trading + analytics
 
-Automated weekly portfolio that:
-- ✅ Buys Monday at 9:35 AM ET
-- ✅ Sells Friday at 3:55 PM ET
-- ✅ Selects top 10 undervalued stocks by valuation score
-- ✅ Tracks performance vs S&P 500 benchmark
-- ✅ Calculates weekly alpha
-
-## 5.3 Models (Implemented)
-
-**Models in `stocks/models.py`:**
-
-```python
-class ValueHunterWeek(models.Model):
-    week_number = models.IntegerField  # ISO week number
-    year = models.IntegerField
-    week_start = models.DateField  # Monday
-    week_end = models.DateField  # Friday
-    starting_capital = models.DecimalField
-    ending_capital = models.DecimalField
-    weekly_return = models.DecimalField  # Weekly return %
-    cumulative_return = models.DecimalField  # Cumulative return %
-    benchmark_return = models.DecimalField  # S&P 500 return
-    alpha = models.DecimalField  # Alpha vs benchmark
-    # Additional tracking fields
-
-class ValueHunterPosition(models.Model):
-    week = models.ForeignKey(ValueHunterWeek)
-    symbol = models.CharField
-    stock = models.ForeignKey(Stock)
-    valuation_score = models.DecimalField  # Score at selection
-    rank = models.IntegerField  # Rank in top 10 (1-10)
-    shares = models.DecimalField
-    entry_price = models.DecimalField
-    exit_price = models.DecimalField
-    entry_datetime = models.DateTimeField  # Monday 9:35 AM ET
-    exit_datetime = models.DateTimeField  # Friday 3:55 PM ET
-    return_percent = models.DecimalField
-    # Additional position fields
-```
-
-**Status:** ✅ Fully implemented with automatic execution logic
+### Retention Impact
+- Reduces fear of usage
+- Encourages experimentation
+- Anchors users via performance history
 
 ---
 
-# PHASES 6-10: SUMMARY
+## SUBSCRIPTION FEATURE MAPPING
 
-## Phase 6: Strategy Ranking System
-- Composite scoring algorithm
-- Leaderboard by category
-- Clone strategy feature
+### BASIC — $9.99
 
-## Phase 7: Educational Platform
-- 5 course categories
-- Interactive tooltips
-- Trading glossary (200+ terms)
+Included:
+- Stooq charting (standard + volume profile view)
+- Core indicators
+- Automated technical summaries
+- Financial statements
+- News + sentiment
+- Economic calendar
+- Manual paper trading
+- Single-condition SMS alerts
+- Mobile chart viewing
+- Education & help
+- Security features
 
-## Phase 8: Social & Viral Features
-- Shareable charts/backtests
-- Referral program
-- Public profiles
+Excluded:
+- Exotic charts
+- Saved layouts
+- Strategy backtesting
+- Strategy cloning
+- Options analytics
+- Advanced orders
+- Multi-condition alerts
+- Copy trading
 
-## Phase 9: Retention Features
-- Custom indicator builder
+---
+
+### PRO — $24.99
+
+Everything in Basic **plus**:
+- All exotic chart types
+- Saved chart layouts
+- Modular dashboards
+- AI backtesting
+- Composite strategy scoring
+- Leaderboards
+- Strategy cloning
+- Full paper trading (strategy + advanced orders)
+- Intraday options analytics
+- Multi-condition SMS alerts
+- Follow & copy traders
 - Trading journal
-- Tax reporting
-
-## Phase 10: UI/UX & Rebrand
-- New color palette
-- Animation system
-- Mobile optimization
+- Performance reviews
+- Custom themes
 
 ---
 
-# PRICING MODEL
-
-| Feature | Basic ($15/mo) | Premium ($25/mo) |
-|---------|----------------|------------------|
-| Screeners | 5 saved | Unlimited |
-| Alerts | 10 active | Unlimited |
-| Watchlists | 3 | Unlimited |
-| Chart Timeframes | 15m, 30m, 1H, 1D | All (1m-1D) |
-| Drawing Tools | 5/chart | Unlimited |
-| Indicators | 3/chart | 10/chart |
-| Fundamentals | 10 metrics | 50+ metrics |
-| Valuation Score | View only | Full breakdown |
-| AI Backtesting | ❌ | 5/month |
-| Value Hunter | Summary | Real-time |
+# PHASE EXECUTION PLAN (6–10)
 
 ---
 
-# TECHNICAL STACK
+## PHASE 6 — STRATEGY RANKING & SCORING
 
-- **Backend:** Django 4.2 + Django REST Framework
-- **Frontend:** React 18 + Tailwind CSS
-- **Database:** SQLite (dev) / MySQL (prod)
-- **AI:** Groq API (llama-3.3-70b-versatile)
-- **Stock Data:** yfinance
-- **Charts:** Lightweight Charts (TradingView)
+**Includes**
+- Composite scoring engine
+- Normalized metrics
+- Category leaderboards
+- Anti-overfitting controls
+- Strategy cloning
 
----
-
-# IMPLEMENTATION TIMELINE
-
-| Week | Phase | Deliverables |
-|------|-------|--------------|
-| 1-2 | Phase 1 | ✅ COMPLETE |
-| 3-4 | Phase 2 | 🔄 Valuation Engine |
-| 5-6 | Phase 3 | Advanced Charting |
-| 7-8 | Phase 4 | AI Backtesting |
-| 9-10 | Phase 5 | Value Hunter |
-| 11-12 | Phase 6 | Strategy Ranking |
-| 13-14 | Phase 7-8 | Education + Social |
-| 15-16 | Phase 9-10 | Retention + Polish |
+**Why**
+- Monetization leverage
+- Competitive engagement
+- Trustworthy rankings
 
 ---
 
-## DOCUMENT UPDATE HISTORY
+## PHASE 7 — EDUCATION & CONTEXT
 
-### Version 2.1 - December 23, 2025
+**Includes**
+- Structured learning paths
+- Indicator explanations
+- Inline tooltips
+- Feature walkthroughs
+- Knowledge base
 
-**Major Status Update:** Updated completion percentages to reflect actual implementation status.
-
-**Changes:**
-- Phase 2 (Valuation Engine): 50% → **100% COMPLETE**
-- Phase 3 (Advanced Charting): 0% → **100% COMPLETE**
-- Phase 4 (AI Backtesting): 0% → **100% COMPLETE**
-- Phase 5 (Value Hunter): 0% → **100% COMPLETE**
-- Overall Progress: ~10% → **50% COMPLETE**
-
-**Rationale:**
-This document was created as a planning document in December 2024. Implementation of Phases 2-5 occurred between September-October 2025 but the MVP2.md document was never updated to reflect completion. All code exists in the codebase and has been verified.
-
-**Evidence:**
-See [MVP2_STATUS_ANALYSIS.md](MVP2_STATUS_ANALYSIS.md) for:
-- Complete file listing of implemented features
-- Git commit history showing implementation dates
-- Model and service verification
-- API endpoint documentation
-- Rebase analysis (no work was lost)
-
-**Git History:**
-- Sep 29, 2025: Stock valuation and technicals tab added
-- Oct 14, 2025: Valuation test data seeded
-- Dec 18, 2025: Merge from v2mvp2.15 branch (all work preserved)
-- Dec 23, 2025: Status documentation updated
-
-**Version 2 Alignment:**
-The repository IS up to date with Version 2 goals for Phases 1-5. The implementation matches the specifications in this document. Phases 6-10 remain pending and require planning and implementation.
+**Why**
+- Lowers onboarding friction
+- Increases feature adoption
 
 ---
 
-*Document Created: December 2024*
-*Last Updated: December 23, 2025*
-*Next Review: After Phase 6 planning/implementation*
+## PHASE 8 — SOCIAL & COPY TRADING
+
+**Includes**
+- Public profiles (opt-in)
+- Strategy sharing
+- Copy trading (paper & live-ready)
+- Referral tracking
+
+**Why**
+- Network effects
+- Organic growth
+
+---
+
+## PHASE 9 — RETENTION & HABITS
+
+**Includes**
+- Trading journal
+- Monthly performance reviews
+- Emotional tagging
+- Custom indicators
+- Exports & tax prep
+
+**Why**
+- Deep user attachment
+- Churn reduction
+
+---
+
+## PHASE 10 — POLISH, SCALE & TRUST
+
+**Includes**
+- Modular dashboards
+- Advanced chart UX
+- Mobile parity
+- Performance tuning
+- Security hardening
+- CTA clarity
+- Navigation simplification
+
+**Why**
+- Professional credibility
+- Scalability
+- Conversion optimization
+
+## Phase 11 - Proper Setup
+
+**Includes**
+- Proper Docker Container Setup for Lunix
+- Clean Repo Remove Clutter
+- Proper Load Balancer with plug and play for multiple instances around the world
+- Clean path to start including all nessesary tems, like a data base setp script, tunnel setup script, and test scripts that help trubbleshoot
+- 10-30 min setup after clone
+
+---
+
+## FINAL NOTES
+
+- All listed features above are **explicitly included**
+- All charts originate from **Stooq via browser**
+- All analytics originate from **database-stored yfinance**
+- Repo remains clean and clutter free
+- No email alerts under any circumstance
+- Paper trading is a first-class system
+- Design remains color-agnostic and professional
+
+---
+
+**This document is the authoritative execution blueprint for MVP2.**
