@@ -47,6 +47,7 @@ from . import indicators_api
 from . import enterprise_api
 from . import admin_api
 from . import matomo_proxy
+from . import paper_trading_api
 from django.conf import settings
 from django.utils import timezone
 import hashlib
@@ -363,4 +364,26 @@ urlpatterns = [
     path('compare/stocks/', grouping_api.compare_stocks, name='compare_stocks'),
     path('compare/groups/', grouping_api.compare_groups, name='compare_groups'),
     path('compare/chart/', grouping_api.get_comparison_chart, name='comparison_chart'),
+
+    # ============================================================================
+    # PAPER TRADING SYSTEM (MVP2 v3.4)
+    # ============================================================================
+    
+    # Paper Trading Account Management
+    path('paper-trading/account/', paper_trading_api.paper_account, name='paper_account'),
+    path('paper-trading/account/reset/', paper_trading_api.reset_account, name='reset_paper_account'),
+    
+    # Order Placement
+    path('paper-trading/orders/place/', paper_trading_api.place_order, name='place_paper_order'),
+    path('paper-trading/orders/<int:trade_id>/cancel/', paper_trading_api.cancel_order, name='cancel_paper_order'),
+    
+    # Position Management
+    path('paper-trading/positions/', paper_trading_api.open_positions, name='paper_open_positions'),
+    path('paper-trading/positions/<int:trade_id>/close/', paper_trading_api.close_position, name='close_paper_position'),
+    
+    # Trade History & Performance
+    path('paper-trading/history/', paper_trading_api.trade_history, name='paper_trade_history'),
+    path('paper-trading/performance/', paper_trading_api.performance_metrics, name='paper_performance'),
+    path('paper-trading/leaderboard/', paper_trading_api.leaderboard, name='paper_leaderboard'),
+    
 ]

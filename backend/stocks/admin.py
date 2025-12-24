@@ -4,7 +4,8 @@ from .models import (
     UserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
     PortfolioFollowing, DiscountCode, UserDiscountUsage,
-    RevenueTracking, MonthlyRevenueSummary
+    RevenueTracking, MonthlyRevenueSummary,
+    PaperTradingAccount, PaperTrade, PaperTradePerformance
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
 
@@ -138,3 +139,109 @@ class MonthlyRevenueSummaryAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # These are auto-generated, so disable manual addition
         return False
+
+
+# ============================================================================
+# Paper Trading Admin
+# ============================================================================
+
+@admin.register(PaperTradingAccount)
+class PaperTradingAccountAdmin(admin.ModelAdmin):
+    list_display = ['user', 'name', 'total_value', 'total_return', 'total_trades', 'win_rate', 'is_active', 'created_at']
+    list_filter = ['is_active', 'allow_shorting', 'created_at']
+    search_fields = ['user__username', 'name']
+    readonly_fields = ['created_at', 'last_updated', 'last_trade_at', 'total_return', 'win_rate', 'sharpe_ratio']
+    
+    fieldsets = (
+        ('Account Info', {
+            'fields': ('user', 'name', 'is_active')
+        }),
+        ('Balances', {
+            'fields': ('initial_balance', 'cash_balance', 'equity_value', 'total_value')
+        }),
+        ('Performance', {
+            'fields': ('total_return', 'total_profit_loss', 'realized_pl', 'unrealized_pl')
+        }),
+        ('Trading Statistics', {
+            'fields': ('total_trades', 'winning_trades', 'losing_trades', 'win_rate')
+        }),
+        ('Risk Metrics', {
+            'fields': ('max_drawdown', 'sharpe_ratio')
+        }),
+        ('Settings', {
+            'fields': ('allow_shorting', 'max_position_size_pct')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'last_updated', 'last_trade_at')
+        }),
+    )
+
+
+@admin.register(PaperTrade)
+class PaperTradeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'account', 'stock', 'order_type', 'side', 'status', 'shares', 'entry_price', 'realized_pl', 'created_at']
+    list_filter = ['order_type', 'side', 'status', 'created_at', 'filled_at', 'closed_at']
+    search_fields = ['account__user__username', 'stock__ticker', 'notes']
+    readonly_fields = ['created_at', 'filled_at', 'closed_at', 'holding_period_days']
+    
+    fieldsets = (
+        ('Trade Info', {
+            'fields': ('account', 'stock', 'order_type', 'side', 'status')
+        }),
+        ('Quantity & Pricing', {
+            'fields': ('shares', 'entry_price', 'exit_price', 'current_price')
+        }),
+        ('Order Parameters', {
+            'fields': ('limit_price', 'stop_price', 'trailing_amount', 'trailing_percent')
+        }),
+        ('Bracket Order (Pro)', {
+            'fields': ('take_profit_price', 'stop_loss_price'),
+            'classes': ('collapse',)
+        }),
+        ('Position Values', {
+            'fields': ('entry_value', 'current_value', 'exit_value')
+        }),
+        ('Performance', {
+            'fields': ('unrealized_pl', 'unrealized_pl_pct', 'realized_pl', 'realized_pl_pct')
+        }),
+        ('Fees', {
+            'fields': ('commission',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'filled_at', 'closed_at', 'holding_period_days')
+        }),
+        ('Notes', {
+            'fields': ('notes',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(PaperTradePerformance)
+class PaperTradePerformanceAdmin(admin.ModelAdmin):
+    list_display = ['account', 'period_type', 'period_start', 'period_end', 'period_return', 'period_win_rate', 'trades_closed']
+    list_filter = ['period_type', 'period_start']
+    search_fields = ['account__user__username', 'account__name']
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('Period Info', {
+            'fields': ('account', 'period_type', 'period_start', 'period_end')
+        }),
+        ('Performance', {
+            'fields': ('starting_value', 'ending_value', 'period_return', 'period_pl')
+        }),
+        ('Trading Activity', {
+            'fields': ('trades_opened', 'trades_closed', 'winning_trades', 'losing_trades', 'period_win_rate')
+        }),
+        ('Risk Metrics', {
+            'fields': ('max_gain', 'max_loss', 'volatility')
+        }),
+        ('Benchmark', {
+            'fields': ('benchmark_return', 'alpha'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',)
+        }),
+    )

@@ -1116,3 +1116,393 @@ class ValueHunterPosition(models.Model):
     
     def __str__(self):
         return f"{self.symbol} - Week {self.week.week_number} {self.week.year} (Rank #{self.rank})"
+
+
+
+
+# ============================================================================
+# PAPER TRADING SYSTEM MODELS
+# Append this to stocks/models.py
+# ============================================================================
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+
+class PaperTradingAccount(models.Model):
+    """
+    Virtual trading account for paper trading simulation.
+    Separate ledger from real portfolio data.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='paper_accounts')
+    name = models.CharField(max_length=100, default='Paper Trading Account')
+
+    # Account Balance
+    initial_balance = models.DecimalField(max_digits=15, decimal_places=2, default=100000.00,
+                                         help_text="Starting virtual cash")
+    cash_balance = models.DecimalField(max_digits=15, decimal_places=2, default=100000.00,
+                                      help_text="Current available cash")
+    equity_value = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                      help_text="Current value of open positions")
+    total_value = models.DecimalField(max_digits=15, decimal_places=2, default=100000.00,
+                                     help_text="Cash + Equity")
+
+    # Performance Metrics
+    total_return = models.DecimalField(max_digits=10, decimal_places=2, default=0.00,
+                                      help_text="Total return percentage")
+    total_profit_loss = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                           help_text="Total P/L in dollars")
+    realized_pl = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                     help_text="Realized profit/loss from closed trades")
+    unrealized_pl = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                       help_text="Unrealized profit/loss from open positions")
+
+    # Trading Statistics
+    total_trades = models.IntegerField(default=0)
+    winning_trades = models.IntegerField(default=0)
+    losing_trades = models.IntegerField(default=0)
+    win_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00,
+                                  help_text="Percentage of winning trades")
+
+    # Risk Metrics
+    max_drawdown = models.DecimalField(max_digits=10, decimal_places=2, default=0.00,
+                                      help_text="Maximum peak-to-trough decline")
+    sharpe_ratio = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True,
+                                      help_text="Risk-adjusted return metric")
+
+    # Account Settings
+    is_active = models.BooleanField(default=True)
+    allow_shorting = models.BooleanField(default=False, help_text="Allow short selling (Pro tier)")
+    max_position_size_pct = models.DecimalField(max_digits=5, decimal_places=2, default=25.00,
+                                               help_text="Max position size as % of account")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    last_trade_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['-total_return']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name} (${self.total_value:,.2f})"
+
+    def update_balances(self):
+        """Recalculate account balances based on open positions"""
+        from decimal import Decimal
+
+        # Get open positions
+        open_positions = self.paper_trades.filter(status='open')
+
+        # Calculate equity value
+        equity_total = Decimal('0.00')
+        unrealized_total = Decimal('0.00')
+
+        for position in open_positions:
+            position.update_current_value()
+            equity_total += position.current_value or Decimal('0.00')
+            unrealized_total += position.unrealized_pl or Decimal('0.00')
+
+        self.equity_value = equity_total
+        self.unrealized_pl = unrealized_total
+        self.total_value = self.cash_balance + self.equity_value
+
+        # Calculate total return
+        if self.initial_balance > 0:
+            self.total_return = ((self.total_value - self.initial_balance) / self.initial_balance) * 100
+
+        self.total_profit_loss = self.realized_pl + self.unrealized_pl
+
+        # Update win rate
+        if self.total_trades > 0:
+            self.win_rate = (self.winning_trades / self.total_trades) * 100
+
+        self.save()
+
+
+class PaperTrade(models.Model):
+    """
+    Individual paper trade with support for multiple order types.
+    Deterministic fill simulation based on market data.
+    """
+    ORDER_TYPES = [
+        ('market', 'Market Order'),
+        ('limit', 'Limit Order'),
+        ('stop', 'Stop Order'),
+        ('stop_limit', 'Stop-Limit Order'),
+        # Pro tier advanced orders
+        ('trailing_stop', 'Trailing Stop'),
+        ('bracket', 'Bracket Order'),
+        ('oco', 'One-Cancels-Other'),
+    ]
+
+    TRADE_SIDES = [
+        ('long', 'Long'),
+        ('short', 'Short'),  # Pro tier only
+    ]
+
+    TRADE_STATUS = [
+        ('pending', 'Pending'),      # Order placed but not filled
+        ('open', 'Open'),            # Position is active
+        ('closed', 'Closed'),        # Position closed
+        ('cancelled', 'Cancelled'),  # Order cancelled before fill
+        ('rejected', 'Rejected'),    # Order rejected (insufficient funds, etc.)
+    ]
+
+    # Relationships
+    account = models.ForeignKey('PaperTradingAccount', on_delete=models.CASCADE, related_name='paper_trades')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
+
+    # Order Details
+    order_type = models.CharField(max_length=20, choices=ORDER_TYPES, default='market')
+    side = models.CharField(max_length=10, choices=TRADE_SIDES, default='long')
+    status = models.CharField(max_length=20, choices=TRADE_STATUS, default='pending')
+
+    # Quantity & Pricing
+    shares = models.DecimalField(max_digits=15, decimal_places=4, help_text="Number of shares")
+    entry_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                     help_text="Actual fill price")
+    exit_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                    help_text="Actual exit price")
+    current_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                       help_text="Current market price for open positions")
+
+    # Order Parameters
+    limit_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                     help_text="Limit price for limit/stop-limit orders")
+    stop_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                    help_text="Stop price for stop/stop-limit orders")
+    trailing_amount = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                         help_text="Trailing amount for trailing stop (Pro)")
+    trailing_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True,
+                                          help_text="Trailing percentage for trailing stop (Pro)")
+
+    # Bracket Order Parameters (Pro tier)
+    take_profit_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                           help_text="Take profit price for bracket orders")
+    stop_loss_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                         help_text="Stop loss price for bracket orders")
+
+    # Position Values
+    entry_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                     help_text="Total entry cost (shares × entry_price)")
+    current_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                       help_text="Current position value")
+    exit_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                    help_text="Total exit proceeds")
+
+    # Performance
+    unrealized_pl = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                       help_text="Unrealized profit/loss for open positions")
+    unrealized_pl_pct = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True,
+                                           help_text="Unrealized P/L percentage")
+    realized_pl = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                     help_text="Realized profit/loss for closed positions")
+    realized_pl_pct = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True,
+                                         help_text="Realized P/L percentage")
+
+    # Fees (simulated)
+    commission = models.DecimalField(max_digits=10, decimal_places=2, default=0.00,
+                                    help_text="Simulated commission fees")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, help_text="When order was placed")
+    filled_at = models.DateTimeField(null=True, blank=True, help_text="When order was filled")
+    closed_at = models.DateTimeField(null=True, blank=True, help_text="When position was closed")
+    holding_period_days = models.IntegerField(null=True, blank=True, help_text="Days held")
+
+    # Notes
+    notes = models.TextField(blank=True, help_text="Trade notes/strategy")
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['account', 'status']),
+            models.Index(fields=['stock', '-created_at']),
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['account', 'stock', 'status']),
+        ]
+
+    def __str__(self):
+        status_display = self.get_status_display()
+        return f"{self.stock.ticker} - {self.side.upper()} {self.shares} @ ${self.entry_price or 'N/A'} ({status_display})"
+
+    def update_current_value(self):
+        """Update current value and unrealized P/L for open positions"""
+        if self.status == 'open' and self.entry_price:
+            # Get current stock price
+            self.current_price = self.stock.current_price
+
+            if self.current_price:
+                self.current_value = self.shares * self.current_price
+
+                # Calculate unrealized P/L based on side
+                if self.side == 'long':
+                    self.unrealized_pl = (self.current_price - self.entry_price) * self.shares
+                else:  # short
+                    self.unrealized_pl = (self.entry_price - self.current_price) * self.shares
+
+                # Calculate unrealized P/L percentage
+                if self.entry_value and self.entry_value > 0:
+                    self.unrealized_pl_pct = (self.unrealized_pl / self.entry_value) * 100
+
+                self.save()
+
+    def execute_market_order(self):
+        """
+        Execute market order with deterministic fill.
+        Uses current stock price from database.
+        """
+        if self.status != 'pending':
+            return False
+
+        # Get current price
+        current_price = self.stock.current_price
+        if not current_price:
+            self.status = 'rejected'
+            self.save()
+            return False
+
+        # Calculate required funds
+        required_funds = self.shares * current_price
+
+        # Check if account has sufficient funds
+        if required_funds > self.account.cash_balance:
+            self.status = 'rejected'
+            self.save()
+            return False
+
+        # Fill the order
+        self.entry_price = current_price
+        self.entry_value = required_funds
+        self.current_price = current_price
+        self.current_value = required_funds
+        self.status = 'open'
+        self.filled_at = timezone.now()
+
+        # Deduct from account cash
+        self.account.cash_balance -= required_funds
+        self.account.last_trade_at = self.filled_at
+        self.account.save()
+
+        self.save()
+        return True
+
+    def close_position(self, exit_price=None):
+        """
+        Close an open position.
+        If exit_price not provided, uses current market price.
+        """
+        if self.status != 'open':
+            return False
+
+        # Use provided exit price or current market price
+        if exit_price is None:
+            exit_price = self.stock.current_price
+
+        if not exit_price:
+            return False
+
+        self.exit_price = exit_price
+        self.exit_value = self.shares * exit_price
+        self.closed_at = timezone.now()
+
+        # Calculate realized P/L
+        if self.side == 'long':
+            self.realized_pl = (exit_price - self.entry_price) * self.shares - self.commission
+        else:  # short
+            self.realized_pl = (self.entry_price - exit_price) * self.shares - self.commission
+
+        if self.entry_value and self.entry_value > 0:
+            self.realized_pl_pct = (self.realized_pl / self.entry_value) * 100
+
+        # Calculate holding period
+        if self.filled_at:
+            holding_period = self.closed_at - self.filled_at
+            self.holding_period_days = holding_period.days
+
+        # Update status
+        self.status = 'closed'
+
+        # Return cash to account
+        self.account.cash_balance += self.exit_value
+        self.account.realized_pl += self.realized_pl
+        self.account.total_trades += 1
+
+        if self.realized_pl > 0:
+            self.account.winning_trades += 1
+        elif self.realized_pl < 0:
+            self.account.losing_trades += 1
+
+        self.account.save()
+        self.save()
+
+        # Update account balances
+        self.account.update_balances()
+
+        return True
+
+
+class PaperTradePerformance(models.Model):
+    """
+    Aggregated performance metrics for paper trading accounts.
+    Tracks daily/weekly/monthly statistics.
+    """
+    PERIOD_TYPES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+
+    account = models.ForeignKey('PaperTradingAccount', on_delete=models.CASCADE, related_name='performance_records')
+    period_type = models.CharField(max_length=10, choices=PERIOD_TYPES)
+    period_start = models.DateField()
+    period_end = models.DateField()
+
+    # Period Performance
+    starting_value = models.DecimalField(max_digits=15, decimal_places=2)
+    ending_value = models.DecimalField(max_digits=15, decimal_places=2)
+    period_return = models.DecimalField(max_digits=10, decimal_places=2,
+                                       help_text="Return percentage for this period")
+    period_pl = models.DecimalField(max_digits=15, decimal_places=2,
+                                   help_text="Profit/loss in dollars for this period")
+
+    # Trading Activity
+    trades_opened = models.IntegerField(default=0)
+    trades_closed = models.IntegerField(default=0)
+    winning_trades = models.IntegerField(default=0)
+    losing_trades = models.IntegerField(default=0)
+    period_win_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+
+    # Risk Metrics
+    max_gain = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                  help_text="Largest single winning trade")
+    max_loss = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                  help_text="Largest single losing trade")
+    volatility = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True,
+                                    help_text="Standard deviation of returns")
+
+    # Benchmark Comparison
+    benchmark_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                          help_text="S&P 500 return for same period")
+    alpha = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                               help_text="Excess return vs benchmark")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-period_start']
+        unique_together = ['account', 'period_type', 'period_start']
+        indexes = [
+            models.Index(fields=['account', 'period_type', '-period_start']),
+            models.Index(fields=['-period_return']),
+        ]
+
+    def __str__(self):
+        return f"{self.account.name} - {self.period_type} ({self.period_start} to {self.period_end})"

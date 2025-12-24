@@ -10052,3 +10052,256 @@ Quit the server with CTRL-BREAK.
 [24/Dec/2025 07:03:39] "GET /health/ HTTP/1.1" 301 0
 [24/Dec/2025 07:04:00] "GET /health/ HTTP/1.1" 301 0
 [24/Dec/2025 07:04:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:04:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:05:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:05:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:05:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:06:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:06:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:06:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:07:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:07:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:07:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:08:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:08:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:08:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:09:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:09:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:09:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:10:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:10:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:11:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:11:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:11:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:12:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:12:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:12:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:13:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:13:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:13:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:14:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:14:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:14:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:15:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:15:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:15:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:16:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:16:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:16:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:17:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:17:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:18:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:18:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:18:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:19:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:19:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:19:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:20:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:20:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:20:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:21:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:21:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:21:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:22:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:22:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:22:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:23:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:23:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:23:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:24:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:24:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:24:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:25:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:25:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:26:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:26:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:26:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:27:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:27:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:27:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:28:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:28:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:28:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:29:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:29:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:29:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:30:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:30:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:30:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:31:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:31:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:31:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:32:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:32:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:33:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:33:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:33:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:34:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:34:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:34:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:35:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:35:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:35:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:36:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:36:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:36:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:37:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:37:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:37:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:38:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:38:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:38:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:39:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:39:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:40:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:40:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:40:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:41:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:41:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:41:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:42:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:42:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:42:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:43:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:43:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:43:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:44:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:44:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:44:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:45:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:45:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:45:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:46:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:46:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:46:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:47:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:47:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:48:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:48:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:48:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:49:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:49:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:49:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:50:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:50:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:50:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:51:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:51:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:51:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:52:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:52:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:52:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:53:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:53:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:54:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:54:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:54:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:55:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:55:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:55:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:56:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:56:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:56:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:57:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:57:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:57:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:58:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:58:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:58:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:59:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:59:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 07:59:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:00:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:00:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:00:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:01:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:01:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:02:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:02:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:02:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:03:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:03:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:03:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:04:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:04:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:04:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:05:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:05:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:05:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:06:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:06:34] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 08:06:47,589] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\models.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 08:07:08,241] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 08:07:26
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 08:07:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:08:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:08:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:08:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:09:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:09:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:09:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:10:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:10:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:10:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:11:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:11:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:11:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:12:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:12:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:12:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:13:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:13:38] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 08:13:39,654] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 08:13:44,903] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+
+You have 1 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): stocks.
+Run 'python manage.py migrate' to apply them.
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 08:13:49
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 08:13:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:14:20] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 08:14:38,158] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 08:14:41,457] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+
+You have 1 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): stocks.
+Run 'python manage.py migrate' to apply them.
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 08:14:45
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 08:15:05] "GET /health/ HTTP/1.1" 301 0
