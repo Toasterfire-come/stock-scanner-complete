@@ -1506,3 +1506,312 @@ class PaperTradePerformance(models.Model):
 
     def __str__(self):
         return f"{self.account.name} - {self.period_type} ({self.period_start} to {self.period_end})"
+
+
+
+# ============================================================================
+# SMS ALERT SYSTEM MODELS (MVP2 v3.4)
+# Append this to stocks/models.py
+# ============================================================================
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+
+class SMSAlertRule(models.Model):
+    """
+    SMS Alert Rules supporting single and multi-condition alerts.
+    Uses TextBelt for SMS delivery (no email).
+    """
+    ALERT_TYPES = [
+        ('price_above', 'Price Above'),
+        ('price_below', 'Price Below'),
+        ('price_crosses_above', 'Price Crosses Above'),
+        ('price_crosses_below', 'Price Crosses Below'),
+        ('volume_surge', 'Volume Surge'),
+        ('volume_above', 'Volume Above'),
+        ('price_change_percent', 'Price Change %'),
+        ('rsi_above', 'RSI Above'),
+        ('rsi_below', 'RSI Below'),
+        ('macd_cross_bullish', 'MACD Bullish Cross'),
+        ('macd_cross_bearish', 'MACD Bearish Cross'),
+        ('sma_cross_above', 'SMA Cross Above'),
+        ('sma_cross_below', 'SMA Cross Below'),
+        ('gap_up', 'Gap Up %'),
+        ('gap_down', 'Gap Down %'),
+    ]
+
+    CONDITION_OPERATORS = [
+        ('and', 'AND - All conditions must be true'),
+        ('or', 'OR - Any condition can be true'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sms_alerts')
+    name = models.CharField(max_length=200, help_text="Alert name/description")
+
+    # Target
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, null=True, blank=True,
+                             help_text="Specific stock (leave blank for watchlist alerts)")
+    watchlist = models.ForeignKey('UserWatchlist', on_delete=models.CASCADE, null=True, blank=True,
+                                  help_text="Apply alert to all stocks in watchlist")
+
+    # Multi-Condition Support (Pro tier)
+    is_multi_condition = models.BooleanField(default=False,
+                                            help_text="Whether this is a multi-condition alert (Pro tier)")
+    condition_operator = models.CharField(max_length=10, choices=CONDITION_OPERATORS, default='and',
+                                         help_text="How to combine multiple conditions (Pro tier)")
+
+    # SMS Delivery
+    phone_number = models.CharField(max_length=20, help_text="Phone number for SMS (E.164 format)")
+
+    # Status & Tracking
+    is_active = models.BooleanField(default=True)
+    trigger_count = models.IntegerField(default=0, help_text="Number of times this alert has triggered")
+    last_triggered_at = models.DateTimeField(null=True, blank=True)
+    last_checked_at = models.DateTimeField(null=True, blank=True)
+
+    # One-time vs Recurring
+    is_one_time = models.BooleanField(default=False,
+                                     help_text="Deactivate after first trigger")
+    max_triggers_per_day = models.IntegerField(default=10,
+                                              help_text="Maximum triggers per day (prevent spam)")
+
+    # Webhook Support
+    webhook_url = models.URLField(blank=True, help_text="Optional webhook to call when alert triggers")
+    webhook_enabled = models.BooleanField(default=False)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['stock', 'is_active']),
+            models.Index(fields=['watchlist', 'is_active']),
+            models.Index(fields=['-last_checked_at']),
+        ]
+
+    def __str__(self):
+        target = self.stock.ticker if self.stock else f"Watchlist: {self.watchlist.name}"
+        return f"{self.user.username} - {self.name} ({target})"
+
+    def can_trigger_today(self):
+        """Check if alert can trigger based on daily limit"""
+        if not self.last_triggered_at:
+            return True
+
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Count triggers today
+        triggers_today = SMSAlertHistory.objects.filter(
+            alert_rule=self,
+            sent_at__gte=today_start
+        ).count()
+
+        return triggers_today < self.max_triggers_per_day
+
+
+class SMSAlertCondition(models.Model):
+    """
+    Individual conditions for multi-condition alerts (Pro tier).
+    Single-condition alerts (Basic tier) have exactly one condition.
+    """
+    ALERT_TYPES = SMSAlertRule.ALERT_TYPES
+
+    alert_rule = models.ForeignKey(SMSAlertRule, on_delete=models.CASCADE, related_name='conditions')
+
+    # Condition Details
+    condition_type = models.CharField(max_length=30, choices=ALERT_TYPES)
+    target_value = models.DecimalField(max_digits=15, decimal_places=4,
+                                      help_text="Target value for comparison")
+
+    # For indicator-based alerts (RSI, MACD, SMA)
+    indicator_period = models.IntegerField(null=True, blank=True,
+                                          help_text="Period for indicator calculation (e.g., 14 for RSI)")
+
+    # For cross alerts (SMA cross)
+    comparison_period = models.IntegerField(null=True, blank=True,
+                                           help_text="Second period for cross comparisons (e.g., SMA 50 vs SMA 200)")
+
+    # Status Tracking
+    last_met_at = models.DateTimeField(null=True, blank=True,
+                                      help_text="When this condition was last met")
+    previous_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True,
+                                        help_text="Previous value for cross detection")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['alert_rule', 'condition_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.alert_rule.name} - {self.get_condition_type_display()}: {self.target_value}"
+
+
+class SMSAlertHistory(models.Model):
+    """
+    History of SMS alerts sent via TextBelt.
+    Tracks delivery status and retry attempts.
+    """
+    DELIVERY_STATUS = [
+        ('pending', 'Pending'),
+        ('sent', 'Sent'),
+        ('delivered', 'Delivered'),
+        ('failed', 'Failed'),
+        ('retry', 'Retrying'),
+    ]
+
+    alert_rule = models.ForeignKey(SMSAlertRule, on_delete=models.CASCADE, related_name='history')
+    stock = models.ForeignKey('Stock', on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Alert Content
+    message = models.TextField(help_text="SMS message content")
+    phone_number = models.CharField(max_length=20)
+
+    # Trigger Details
+    trigger_price = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    trigger_volume = models.BigIntegerField(null=True, blank=True)
+    condition_values = models.JSONField(null=True, blank=True,
+                                       help_text="Values of all conditions when triggered")
+
+    # Delivery Status
+    status = models.CharField(max_length=20, choices=DELIVERY_STATUS, default='pending')
+    textbelt_id = models.CharField(max_length=100, blank=True,
+                                  help_text="TextBelt message ID")
+    textbelt_quota = models.IntegerField(null=True, blank=True,
+                                        help_text="Remaining TextBelt quota")
+    delivery_attempts = models.IntegerField(default=0)
+    max_attempts = models.IntegerField(default=3)
+
+    # Error Tracking
+    error_message = models.TextField(blank=True)
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+
+    # Webhook
+    webhook_sent = models.BooleanField(default=False)
+    webhook_response = models.TextField(blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['alert_rule', '-created_at']),
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['phone_number', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.alert_rule.name} - {self.status} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
+
+    def should_retry(self):
+        """Check if message should be retried"""
+        return (
+            self.status in ['pending', 'failed', 'retry'] and
+            self.delivery_attempts < self.max_attempts
+        )
+
+
+class SMSAlertQuota(models.Model):
+    """
+    Track SMS quota usage per user.
+    Free tier has limits, Pro tier has higher limits.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='sms_quota')
+
+    # Quota Limits (monthly)
+    monthly_limit = models.IntegerField(default=50, help_text="Monthly SMS limit")
+    current_usage = models.IntegerField(default=0, help_text="SMS sent this month")
+
+    # Tracking
+    last_reset_at = models.DateTimeField(auto_now_add=True, help_text="Last monthly reset")
+    total_sent = models.IntegerField(default=0, help_text="Total SMS sent all-time")
+
+    # Status
+    is_blocked = models.BooleanField(default=False, help_text="Block SMS if quota exceeded or abuse detected")
+    block_reason = models.CharField(max_length=200, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "SMS Alert Quotas"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.current_usage}/{self.monthly_limit} SMS"
+
+    def can_send_sms(self):
+        """Check if user can send SMS (within quota and not blocked)"""
+        if self.is_blocked:
+            return False
+
+        # Reset monthly quota if needed
+        now = timezone.now()
+        if (now - self.last_reset_at).days >= 30:
+            self.current_usage = 0
+            self.last_reset_at = now
+            self.save()
+
+        return self.current_usage < self.monthly_limit
+
+    def increment_usage(self):
+        """Increment SMS usage counter"""
+        self.current_usage += 1
+        self.total_sent += 1
+        self.save()
+
+
+class TextBeltConfig(models.Model):
+    """
+    TextBelt configuration for self-hosted instance.
+    Singleton model - only one instance should exist.
+    """
+    # TextBelt Server
+    api_url = models.URLField(default='http://localhost:8080/text',
+                             help_text="TextBelt API endpoint URL")
+    api_key = models.CharField(max_length=200, blank=True,
+                              help_text="Optional API key (for paid plans)")
+
+    # Self-Hosted Settings
+    is_self_hosted = models.BooleanField(default=True,
+                                        help_text="Whether using self-hosted TextBelt")
+    max_retries = models.IntegerField(default=3)
+    retry_delay_seconds = models.IntegerField(default=60)
+
+    # Rate Limiting
+    max_sms_per_minute = models.IntegerField(default=10,
+                                            help_text="Rate limit for SMS sending")
+
+    # Monitoring
+    total_sent = models.IntegerField(default=0)
+    total_failed = models.IntegerField(default=0)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+
+    # Status
+    is_enabled = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "TextBelt Configuration"
+        verbose_name_plural = "TextBelt Configuration"
+
+    def __str__(self):
+        status = "Enabled" if self.is_enabled else "Disabled"
+        return f"TextBelt Config ({status}) - {self.total_sent} sent"
+
+    @classmethod
+    def get_config(cls):
+        """Get or create singleton config"""
+        config, created = cls.objects.get_or_create(pk=1)
+        return config

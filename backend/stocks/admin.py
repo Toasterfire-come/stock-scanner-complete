@@ -5,7 +5,8 @@ from .models import (
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
     PortfolioFollowing, DiscountCode, UserDiscountUsage,
     RevenueTracking, MonthlyRevenueSummary,
-    PaperTradingAccount, PaperTrade, PaperTradePerformance
+    PaperTradingAccount, PaperTrade, PaperTradePerformance,
+    SMSAlertRule, SMSAlertCondition, SMSAlertHistory, SMSAlertQuota, TextBeltConfig
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
 
@@ -245,3 +246,132 @@ class PaperTradePerformanceAdmin(admin.ModelAdmin):
             'fields': ('created_at',)
         }),
     )
+
+
+# ============================================================================
+# SMS Alert System Admin
+# ============================================================================
+
+@admin.register(SMSAlertRule)
+class SMSAlertRuleAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'name', 'stock', 'watchlist', 'is_active', 'trigger_count', 'created_at']
+    list_filter = ['is_active', 'is_multi_condition', 'is_one_time', 'created_at']
+    search_fields = ['user__username', 'name', 'stock__ticker', 'phone_number']
+    readonly_fields = ['trigger_count', 'last_triggered_at', 'last_checked_at', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Alert Info', {
+            'fields': ('user', 'name', 'stock', 'watchlist')
+        }),
+        ('Conditions', {
+            'fields': ('is_multi_condition', 'condition_operator')
+        }),
+        ('Delivery', {
+            'fields': ('phone_number', 'webhook_enabled', 'webhook_url')
+        }),
+        ('Status & Limits', {
+            'fields': ('is_active', 'is_one_time', 'max_triggers_per_day')
+        }),
+        ('Statistics', {
+            'fields': ('trigger_count', 'last_triggered_at', 'last_checked_at')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(SMSAlertCondition)
+class SMSAlertConditionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'alert_rule', 'condition_type', 'target_value', 'indicator_period']
+    list_filter = ['condition_type']
+    search_fields = ['alert_rule__name', 'alert_rule__user__username']
+    readonly_fields = ['last_met_at', 'created_at']
+
+
+@admin.register(SMSAlertHistory)
+class SMSAlertHistoryAdmin(admin.ModelAdmin):
+    list_display = ['id', 'alert_rule', 'stock', 'status', 'delivery_attempts', 'created_at']
+    list_filter = ['status', 'webhook_sent', 'created_at']
+    search_fields = ['alert_rule__name', 'stock__ticker', 'phone_number', 'textbelt_id']
+    readonly_fields = ['created_at', 'sent_at', 'delivered_at']
+    
+    fieldsets = (
+        ('Alert Info', {
+            'fields': ('alert_rule', 'stock', 'phone_number', 'message')
+        }),
+        ('Trigger Details', {
+            'fields': ('trigger_price', 'trigger_volume', 'condition_values')
+        }),
+        ('Delivery Status', {
+            'fields': ('status', 'textbelt_id', 'textbelt_quota', 'delivery_attempts', 'max_attempts')
+        }),
+        ('Error Tracking', {
+            'fields': ('error_message', 'last_attempt_at')
+        }),
+        ('Webhook', {
+            'fields': ('webhook_sent', 'webhook_response'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'sent_at', 'delivered_at')
+        }),
+    )
+
+
+@admin.register(SMSAlertQuota)
+class SMSAlertQuotaAdmin(admin.ModelAdmin):
+    list_display = ['user', 'current_usage', 'monthly_limit', 'total_sent', 'is_blocked']
+    list_filter = ['is_blocked', 'last_reset_at']
+    search_fields = ['user__username']
+    readonly_fields = ['total_sent', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('Quota', {
+            'fields': ('monthly_limit', 'current_usage', 'last_reset_at', 'total_sent')
+        }),
+        ('Status', {
+            'fields': ('is_blocked', 'block_reason')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(TextBeltConfig)
+class TextBeltConfigAdmin(admin.ModelAdmin):
+    list_display = ['id', 'is_enabled', 'is_self_hosted', 'total_sent', 'total_failed', 'last_sent_at']
+    readonly_fields = ['total_sent', 'total_failed', 'last_sent_at', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Server Configuration', {
+            'fields': ('api_url', 'api_key', 'is_self_hosted')
+        }),
+        ('Retry Settings', {
+            'fields': ('max_retries', 'retry_delay_seconds')
+        }),
+        ('Rate Limiting', {
+            'fields': ('max_sms_per_minute',)
+        }),
+        ('Monitoring', {
+            'fields': ('total_sent', 'total_failed', 'last_sent_at')
+        }),
+        ('Status', {
+            'fields': ('is_enabled',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Only allow one config instance
+        return not TextBeltConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Don't allow deletion of config
+        return False

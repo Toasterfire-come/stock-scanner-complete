@@ -48,6 +48,7 @@ from . import enterprise_api
 from . import admin_api
 from . import matomo_proxy
 from . import paper_trading_api
+from . import sms_alert_api
 from django.conf import settings
 from django.utils import timezone
 import hashlib
@@ -385,5 +386,30 @@ urlpatterns = [
     path('paper-trading/history/', paper_trading_api.trade_history, name='paper_trade_history'),
     path('paper-trading/performance/', paper_trading_api.performance_metrics, name='paper_performance'),
     path('paper-trading/leaderboard/', paper_trading_api.leaderboard, name='paper_leaderboard'),
+
+    # ============================================================================
+    # SMS ALERT SYSTEM (MVP2 v3.4 - TextBelt)
+    # ============================================================================
+    
+    # Alert Rule Management
+    path('sms-alerts/', sms_alert_api.alert_rules, name='sms_alert_rules'),
+    path('sms-alerts/<int:alert_id>/', sms_alert_api.alert_rule_detail, name='sms_alert_detail'),
+    path('sms-alerts/<int:alert_id>/toggle/', sms_alert_api.toggle_alert, name='toggle_sms_alert'),
+    path('sms-alerts/<int:alert_id>/test/', sms_alert_api.test_alert, name='test_sms_alert'),
+    
+    # Alert History & Quota
+    path('sms-alerts/history/', sms_alert_api.alert_history, name='sms_alert_history'),
+    path('sms-alerts/quota/', sms_alert_api.quota_status, name='sms_quota_status'),
+    
+    # Alert Configuration
+    path('sms-alerts/conditions/available/', sms_alert_api.available_conditions, name='available_alert_conditions'),
+    path('sms-alerts/summary/', sms_alert_api.alert_summary, name='sms_alert_summary'),
+    
+    # TextBelt Status & Monitoring
+    path('sms-alerts/textbelt/status/', sms_alert_api.textbelt_status, name='textbelt_status'),
+    
+    # Cron Endpoint (Internal - should be protected)
+    path('sms-alerts/cron/check/', sms_alert_api.check_alerts_cron, name='check_alerts_cron'),
+    
     
 ]
