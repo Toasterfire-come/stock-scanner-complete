@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getEnterpriseSolutions } from '../../api/client';
+import logger from '../../lib/logger';
 
 const SolutionsShowcase = () => {
   const [solutions, setSolutions] = useState([]);
@@ -43,7 +44,7 @@ const SolutionsShowcase = () => {
         setSolutions(mockSolutions);
       }
     } catch (error) {
-      console.error('Failed to load enterprise solutions:', error);
+      logger.error('Failed to load enterprise solutions:', error);
       setSolutions(mockSolutions);
     } finally {
       setLoading(false);

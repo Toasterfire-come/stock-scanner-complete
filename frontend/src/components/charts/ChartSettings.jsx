@@ -16,6 +16,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { Settings, Upload, Download, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import logger from '../../lib/logger';
 
 /**
  * ChartSettings Component
@@ -172,7 +173,7 @@ export default function ChartSettings({ onSave, initialSettings = {} }) {
         toast.success('Settings imported successfully');
       } catch (error) {
         toast.error('Failed to import settings');
-        console.error(error);
+        logger.error(error);
       }
     };
     reader.readAsText(file);

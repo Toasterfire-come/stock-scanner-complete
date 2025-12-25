@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
+import logger from '../../lib/logger';
 
 const CourseCatalog = () => {
   const [courses, setCourses] = useState([]);
@@ -55,7 +56,7 @@ const CourseCatalog = () => {
       const response = await api.get(url);
       setCourses(response.data || []);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      logger.error('Error fetching courses:', error);
       setCourses([]);
     } finally {
       setLoading(false);

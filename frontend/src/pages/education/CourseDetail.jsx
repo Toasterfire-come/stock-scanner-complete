@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
+import logger from '../../lib/logger';
 
 const CourseDetail = () => {
   const { courseSlug } = useParams();
@@ -26,7 +27,7 @@ const CourseDetail = () => {
       setCourse(response.data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching course:', error);
+      logger.error('Error fetching course:', error);
       setLoading(false);
     }
   };
@@ -39,7 +40,7 @@ const CourseDetail = () => {
         navigate(`/learn/lesson/${response.data.first_lesson_slug}`);
       }
     } catch (error) {
-      console.error('Error enrolling:', error);
+      logger.error('Error enrolling:', error);
       if (error.response?.status === 403) {
         alert('Premium subscription required for this course');
       }

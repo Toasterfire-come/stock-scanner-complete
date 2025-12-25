@@ -47,6 +47,7 @@ import MarketStatus from "../../components/MarketStatus";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "../../components/ui/resizable";
 import ReferralSystem from "../../components/ReferralSystem";
+import logger from '../../lib/logger';
 
 const PARTNER_REFERRAL_EMAILS = [
   "hamzashehata3000@gmail.com",
@@ -132,7 +133,7 @@ const AppDashboard = () => {
           total: totalData,
         });
       } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+        logger.error("Failed to fetch dashboard data:", error);
       } finally {
         setIsLoading(false);
       }

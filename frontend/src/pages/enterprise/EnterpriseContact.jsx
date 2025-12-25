@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { submitEnterpriseContact } from '../../api/client';
 import { toast } from 'sonner';
+import logger from '../../lib/logger';
 
 const EnterpriseContact = () => {
   const [formData, setFormData] = useState({
@@ -67,7 +68,7 @@ const EnterpriseContact = () => {
         toast.error(response.message || 'Failed to submit inquiry');
       }
     } catch (error) {
-      console.error('Failed to submit contact form:', error);
+      logger.error('Failed to submit contact form:', error);
       toast.error('Failed to submit inquiry. Please try again.');
     } finally {
       setLoading(false);

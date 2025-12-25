@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
+import logger from '../lib/logger';
 
 // Client-side stock data fetcher using Yahoo Finance API proxy
 const fetchYahooData = async (symbol, interval = '1d', range = '1mo') => {
@@ -43,7 +44,7 @@ const fetchYahooData = async (symbol, interval = '1d', range = '1mo') => {
     }
     return [];
   } catch (error) {
-    console.error('Failed to fetch data:', error);
+    logger.error('Failed to fetch data:', error);
     return [];
   }
 };
@@ -119,7 +120,7 @@ export default function EnhancedStockChart({
       }
     } catch (error) {
       toast.error('Failed to fetch chart data');
-      console.error(error);
+      logger.error(error);
     } finally {
       setIsLoading(false);
     }

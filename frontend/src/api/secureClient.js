@@ -1,13 +1,14 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 import security, { apiRateLimiter, requestQueue, sessionManager, secureStorage, validateSecurityHeaders, sanitizeError } from "../lib/security";
+import logger from '../lib/logger';
 
 // Use REACT_APP_BACKEND_URL exclusively from environment
 const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 const isProd = process.env.NODE_ENV === 'production';
 
 if (!BASE_URL) {
-  console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+  logger.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
   if (isProd) {
     throw new Error("Backend URL configuration missing");
   }
@@ -76,7 +77,7 @@ const refreshTokenIfNeeded = async () => {
             return newToken;
           })
           .catch(error => {
-            console.error('Token refresh failed:', error);
+            logger.error('Token refresh failed:', error);
             tokenRefreshPromise = null; // Clear immediately on failure to allow retry
             // Force logout on refresh failure
             secureStorage.remove(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
@@ -90,7 +91,7 @@ const refreshTokenIfNeeded = async () => {
     
     return token;
   } catch (error) {
-    console.error('Token validation failed:', error);
+    logger.error('Token validation failed:', error);
     return token; // Return original token if validation fails
   }
 };
@@ -186,13 +187,13 @@ api.interceptors.response.use(
       if (rateLimitUsed && rateLimitLimit) {
         const remaining = rateLimitLimit - rateLimitUsed;
         if (remaining < 10) {
-          console.warn(`Rate limit warning: ${remaining} requests remaining`);
+          logger.warn(`Rate limit warning: ${remaining} requests remaining`);
         }
       }
       
       return response;
     } catch (error) {
-      console.error('Response processing error:', error);
+      logger.error('Response processing error:', error);
       return response;
     }
   },
@@ -231,7 +232,7 @@ api.interceptors.response.use(
       if (error.response?.status === 429) {
         const retryAfter = error.response.headers['retry-after'];
         if (retryAfter) {
-          console.warn(`Rate limited. Retry after ${retryAfter} seconds`);
+          logger.warn(`Rate limited. Retry after ${retryAfter} seconds`);
         }
       }
       
@@ -243,7 +244,7 @@ api.interceptors.response.use(
       
       return Promise.reject(sanitizeError(error));
     } catch (processingError) {
-      console.error('Error processing error:', processingError);
+      logger.error('Error processing error:', processingError);
       return Promise.reject(sanitizeError(error));
     }
   }
@@ -272,7 +273,7 @@ export async function logClientError(payload) {
     
     await secureApiCall(() => api.post('/logs/client/', sanitizedPayload));
   } catch (error) {
-    console.error('Failed to log client error:', error);
+    logger.error('Failed to log client error:', error);
   }
 }
 
@@ -289,7 +290,7 @@ export async function logClientMetric(payload) {
     
     await secureApiCall(() => api.post('/logs/metrics/', sanitizedPayload));
   } catch (error) {
-    console.error('Failed to log metric:', error);
+    logger.error('Failed to log metric:', error);
   }
 }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import security from '../lib/security';
+import logger from '../lib/logger';
 
 const SecurityProvider = ({ children }) => {
   const [isSecurityInitialized, setIsSecurityInitialized] = useState(false);
@@ -41,7 +42,7 @@ const SecurityProvider = ({ children }) => {
         
         // Monitor for security violations
         window.addEventListener('securitypolicyviolation', (e) => {
-          console.error('CSP Violation:', e);
+          logger.error('CSP Violation:', e);
           // Log to backend in production
           if (process.env.NODE_ENV === 'production') {
             const apiRoot = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
@@ -57,13 +58,13 @@ const SecurityProvider = ({ children }) => {
                 documentURI: e.documentURI,
                 timestamp: new Date().toISOString()
               })
-            }).catch(console.error);
+            }).catch(err => logger.error("CSP violation report failed:", err));
           }
         });
         
         setIsSecurityInitialized(true);
       } catch (error) {
-        console.error('Security initialization error:', error);
+        logger.error('Security initialization error:', error);
         setSecurityError(error.message);
         
         // Don't block the app even if security init fails
@@ -75,7 +76,7 @@ const SecurityProvider = ({ children }) => {
   }, []);
 
   if (securityError) {
-    console.error('Security initialization failed:', securityError);
+    logger.error('Security initialization failed:', securityError);
     // Log security init failure but don't block the app
   }
 

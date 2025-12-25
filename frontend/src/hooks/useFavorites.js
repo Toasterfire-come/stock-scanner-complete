@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import logger from '../lib/logger';
 
 /**
  * useFavorites Hook
@@ -17,7 +18,7 @@ export function useFavorites() {
       const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error('Failed to load favorites:', error);
+      logger.error('Failed to load favorites:', error);
       return [];
     }
   });
@@ -29,7 +30,7 @@ export function useFavorites() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
     } catch (error) {
-      console.error('Failed to save favorites:', error);
+      logger.error('Failed to save favorites:', error);
     }
   }, [favorites]);
 
@@ -46,7 +47,7 @@ export function useFavorites() {
 
       setIsLoading(false);
     } catch (error) {
-      console.error('Failed to sync favorites:', error);
+      logger.error('Failed to sync favorites:', error);
       setIsLoading(false);
     }
   }, []);

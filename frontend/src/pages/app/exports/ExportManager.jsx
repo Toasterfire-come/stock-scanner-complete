@@ -32,6 +32,7 @@ import {
 } from '../../../api/client';
 import { downloadBlob } from '../../../lib/downloads';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const ExportManager = () => {
   const { user } = useAuth();
@@ -93,7 +94,7 @@ const ExportManager = () => {
         limit: limits.monthlyApi === Infinity ? 0 : limits.monthlyApi
       });
     } catch (error) {
-      console.error('Failed to load usage info:', error);
+      logger.error('Failed to load usage info:', error);
     }
   };
 
@@ -127,7 +128,7 @@ const ExportManager = () => {
       // Refresh export history
       await loadExportHistory();
     } catch (error) {
-      console.error(`Failed to export ${type}:`, error);
+      logger.error(`Failed to export ${type}:`, error);
       toast.error(`Failed to export ${type} data`);
     } finally {
       setLoading(false);
@@ -147,7 +148,7 @@ const ExportManager = () => {
       }
       toast.success('Download started');
     } catch (error) {
-      console.error('Download failed:', error);
+      logger.error('Download failed:', error);
       toast.error('Download failed');
     }
   };

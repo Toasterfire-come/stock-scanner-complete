@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
+import logger from '../lib/logger';
 
 /**
  * Debounce function - delay execution until after wait period
@@ -326,7 +327,7 @@ export const useRenderOptimization = () => {
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       renderCount.current += 1;
-      console.log(`Component rendered ${renderCount.current} times`);
+      logger.info(`Component rendered ${renderCount.current} times`);
     }
   });
 
@@ -350,7 +351,7 @@ export const performanceMonitoring = {
       const duration = end - start;
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${componentName} rendered in ${duration.toFixed(2)}ms`);
+        logger.info(`${componentName} rendered in ${duration.toFixed(2)}ms`);
       }
 
       return duration;
@@ -363,7 +364,7 @@ export const performanceMonitoring = {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.duration > threshold) {
-            console.warn(`Long task detected: ${entry.duration.toFixed(2)}ms`);
+            logger.warn(`Long task detected: ${entry.duration.toFixed(2)}ms`);
           }
         }
       });
@@ -408,10 +409,10 @@ export const serviceWorkerHelpers = {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register(swPath);
-        console.log('Service Worker registered:', registration);
+        logger.info('Service Worker registered:', registration);
         return registration;
       } catch (error) {
-        console.error('Service Worker registration failed:', error);
+        logger.error('Service Worker registration failed:', error);
       }
     }
   },

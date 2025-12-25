@@ -24,6 +24,7 @@ import {
   syncPortfolioNews
 } from '../api/client';
 import { Link } from 'react-router-dom';
+import logger from '../lib/logger';
 
 const RealTimeNewsFeed = ({ 
   maxItems = 20, 
@@ -83,7 +84,7 @@ const RealTimeNewsFeed = ({
       }
     } catch (err) {
       setError('Failed to load news feed');
-      console.error('News feed error:', err);
+      logger.error('News feed error:', err);
     } finally {
       loading(false);
     }
@@ -96,7 +97,7 @@ const RealTimeNewsFeed = ({
       // Open news article
       window.open(newsItem.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      console.error('Mark news clicked error:', err);
+      logger.error('Mark news clicked error:', err);
       // Still open the link even if tracking fails
       window.open(newsItem.url, '_blank', 'noopener,noreferrer');
     }
@@ -109,7 +110,7 @@ const RealTimeNewsFeed = ({
         item.id === newsId ? { ...item, is_read: true } : item
       ));
     } catch (err) {
-      console.error('Mark as read error:', err);
+      logger.error('Mark as read error:', err);
     }
   };
 
@@ -118,7 +119,7 @@ const RealTimeNewsFeed = ({
       await syncPortfolioNews();
       await fetchNews(); // Refresh after sync
     } catch (err) {
-      console.error('Sync portfolio news error:', err);
+      logger.error('Sync portfolio news error:', err);
     }
   };
 

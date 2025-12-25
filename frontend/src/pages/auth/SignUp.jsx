@@ -15,6 +15,7 @@ import { registerUser } from "../../api/client";
 import OneTapGoogle from "../../components/OneTapGoogle";
 import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
 import { useAuth } from "../../context/SecureAuthContext";
+import logger from '../../lib/logger';
 
 // TESTING MODE: Registration is disabled during beta testing
 const BETA_TESTING_MODE = true;
@@ -79,10 +80,10 @@ const SignUp = () => {
           try {
             setReferralCookie(st.discountCode);
           } catch (error) {
-            console.warn('Failed to set referral cookie:', error);
+            logger.warn('Failed to set referral cookie:', error);
           }
         } catch (error) {
-          console.warn('Failed to process discount code:', error);
+          logger.warn('Failed to process discount code:', error);
         }
       }
       if (st.emailPrefill && typeof st.emailPrefill === 'string') {
@@ -96,7 +97,7 @@ const SignUp = () => {
         }
       }
     } catch (error) {
-      console.warn('Failed to process navigation state:', error);
+      logger.warn('Failed to process navigation state:', error);
     }
   }, [location.state]);
 

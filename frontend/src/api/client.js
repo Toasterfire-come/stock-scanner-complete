@@ -1,12 +1,13 @@
 import axios from "axios";
 import { getCache, setCache } from "../lib/cache";
 import { getReferralFromCookie, normalizeReferralCode } from "../lib/referral";
+import logger from '../lib/logger';
 
 // Use REACT_APP_BACKEND_URL exclusively from environment, with production fallback
 const BASE_URL = process.env.REACT_APP_BACKEND_URL || "https://api.retailtradescanner.com";
 
 if (!BASE_URL) {
-  console.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
+  logger.error("REACT_APP_BACKEND_URL is not set. API calls will fail.");
 }
 
 export const API_ROOT = `${BASE_URL}/api`;
@@ -439,7 +440,7 @@ export async function listStocks(params = {}, options = {}) {
     const { data } = await api.get('/stocks/', { params, signal: options.signal });
     return data;
   } catch (error) {
-    console.error('Failed to fetch stocks:', error);
+    logger.error('Failed to fetch stocks:', error);
     throw error;
   }
 }
@@ -617,7 +618,7 @@ export async function getPortfolio(params = {}) {
     const { data } = await api.get('/portfolio/', { params });
     return data;
   } catch (error) {
-    console.error('Failed to fetch portfolio:', error);
+    logger.error('Failed to fetch portfolio:', error);
     throw error;
   }
 }
@@ -905,7 +906,7 @@ export async function createPayPalOrder(planType, billingCycle, discountCode = n
     const { data } = await api.post('/billing/create-paypal-order/', orderData);
     return data;
   } catch (error) {
-    console.error('PayPal order creation failed:', error);
+    logger.error('PayPal order creation failed:', error);
     throw error;
   }
 }
@@ -918,7 +919,7 @@ export async function capturePayPalOrder(orderId, paymentData) {
     });
     return data;
   } catch (error) {
-    console.error('PayPal order capture failed:', error);
+    logger.error('PayPal order capture failed:', error);
     throw error;
   }
 }

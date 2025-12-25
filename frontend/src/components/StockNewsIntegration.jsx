@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getStockNews, markNewsRead, markNewsClicked } from '../api/client';
 import { Link } from 'react-router-dom';
+import logger from '../lib/logger';
 
 const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
   const [news, setNews] = useState([]);
@@ -45,7 +46,7 @@ const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
       setNews([]);
     } catch (err) {
       setError(`Failed to load news for ${symbol}`);
-      console.error('Stock news error:', err);
+      logger.error('Stock news error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +62,7 @@ const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
       // Open news article
       window.open(newsItem.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      console.error('Mark news clicked error:', err);
+      logger.error('Mark news clicked error:', err);
       // Still open the link even if tracking fails
       window.open(newsItem.url, '_blank', 'noopener,noreferrer');
     }
@@ -77,7 +78,7 @@ const StockNewsIntegration = ({ symbol, maxItems = 10, showHeader = true }) => {
         ));
       }
     } catch (err) {
-      console.error('Mark as read error:', err);
+      logger.error('Mark as read error:', err);
     }
   };
 

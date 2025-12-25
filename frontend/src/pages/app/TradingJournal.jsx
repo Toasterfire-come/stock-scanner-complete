@@ -38,6 +38,7 @@ import { api } from "../../api/client";
 import SEO from "../../components/SEO";
 import { JournalAnalytics } from "../../components/JournalAnalytics";
 import { TaxReportExporter, DataExporter } from "../../components/ExportUtils";
+import logger from '../../lib/logger';
 
 // Trading Journal - Phase 9 Retention Feature
 export default function TradingJournal() {
@@ -88,7 +89,7 @@ export default function TradingJournal() {
         setEntries(JSON.parse(stored));
       }
     } catch (error) {
-      console.error("Failed to load journal entries:", error);
+      logger.error("Failed to load journal entries:", error);
     } finally {
       setIsLoading(false);
     }

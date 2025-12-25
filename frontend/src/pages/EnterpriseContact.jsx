@@ -6,6 +6,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
 import {
+import logger from '../lib/logger';
   Building2,
   Users,
   Globe,
@@ -73,7 +74,7 @@ const EnterpriseContact = () => {
         throw new Error('Failed to submit form');
       }
     } catch (error) {
-      console.error('Enterprise contact form submission failed:', error);
+      logger.error('Enterprise contact form submission failed:', error);
       toast.error("Failed to submit request", {
         description: "Please try again or contact us directly.",
       });

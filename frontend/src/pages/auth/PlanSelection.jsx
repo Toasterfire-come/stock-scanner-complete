@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Check, Crown, Zap, ArrowRight } from "lucide-react";
+import logger from '../../lib/logger';
 
 const plans = [
   {
@@ -93,7 +94,7 @@ export default function PlanSelection() {
         }
       });
     } catch (error) {
-      console.error("Plan selection error:", error);
+      logger.error("Plan selection error:", error);
     } finally {
       setIsLoading(false);
     }

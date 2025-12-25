@@ -9,6 +9,7 @@ import { Copy, Eye, EyeOff, Key, Plus, Trash2, AlertTriangle, CheckCircle } from
 import { useAuth } from '../../../context/SecureAuthContext';
 import { getApiKeys, createApiKey, deleteApiKey } from '../../../api/client';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const ApiKeyManagement = () => {
   const { user } = useAuth();
@@ -42,7 +43,7 @@ const ApiKeyManagement = () => {
         toast.error('Failed to load API keys');
       }
     } catch (error) {
-      console.error('Failed to load API keys:', error);
+      logger.error('Failed to load API keys:', error);
       toast.error('Failed to load API keys');
     } finally {
       setLoading(false);
@@ -68,7 +69,7 @@ const ApiKeyManagement = () => {
         toast.error(response.message || 'Failed to create API key');
       }
     } catch (error) {
-      console.error('Failed to create API key:', error);
+      logger.error('Failed to create API key:', error);
       toast.error('Failed to create API key');
     }
   };
@@ -87,7 +88,7 @@ const ApiKeyManagement = () => {
         toast.error('Failed to delete API key');
       }
     } catch (error) {
-      console.error('Failed to delete API key:', error);
+      logger.error('Failed to delete API key:', error);
       toast.error('Failed to delete API key');
     }
   };

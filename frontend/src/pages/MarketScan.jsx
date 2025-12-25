@@ -8,8 +8,8 @@ const MarketScan = () => {
       <SEO
         title="Market Scan | Real-Time Market Scanning"
         description="Run a market scan to find movers, breakouts, and unusual volume. Real-time scanning with alerts and watchlists."
-        url="https://tradescanpro.com/market-scan"
-        jsonLd={{"@context":"https://schema.org","@type":"WebPage","name":"Market Scan","url":"https://tradescanpro.com/market-scan"}}
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/market-scan` : "https://tradescanpro.com/market-scan"}
+        jsonLd={{"@context":"https://schema.org","@type":"WebPage","name":"Market Scan","url": process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/market-scan` : "https://tradescanpro.com/market-scan"}}
       />
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-4xl">

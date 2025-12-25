@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { api } from "../../api/client";
 import SEO from "../../components/SEO";
+import logger from '../../lib/logger';
 
 // Custom Indicator Builder Page - Phase 9 Retention Feature
 export default function IndicatorBuilder() {
@@ -63,7 +64,7 @@ export default function IndicatorBuilder() {
         setIndicators(data.data || []);
       }
     } catch (error) {
-      console.error("Failed to load indicators:", error);
+      logger.error("Failed to load indicators:", error);
     } finally {
       setIsLoading(false);
     }

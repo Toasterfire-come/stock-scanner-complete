@@ -931,3 +931,15 @@
 2025-12-25T01:27:50Z INF Registered tunnel connection connIndex=2 connection=9dbe41b8-c0ff-46b9-aa4d-4fb22c1529bf event=0 ip=198.41.192.77 location=ord02 protocol=quic
 2025-12-25T01:27:51Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.53
 2025-12-25T01:27:52Z INF Registered tunnel connection connIndex=3 connection=6c8389bf-d21a-4dff-9e1b-fa9476709d50 event=0 ip=198.41.200.53 location=ord12 protocol=quic
+2025-12-25T06:21:51Z WRN Failed to serve tunnel connection error="timeout: no recent network activity" connIndex=3 event=0 ip=198.41.200.53
+2025-12-25T06:21:51Z WRN Serve tunnel error error="timeout: no recent network activity" connIndex=3 event=0 ip=198.41.200.53
+2025-12-25T06:21:51Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.53
+2025-12-25T06:21:52Z WRN Connection terminated error="timeout: no recent network activity" connIndex=3
+2025-12-25T06:22:07Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.43
+2025-12-25T06:22:07Z INF Registered tunnel connection connIndex=3 connection=48bc0ad1-561e-41ab-b495-5edda1c7a2f8 event=0 ip=198.41.200.43 location=ord12 protocol=quic
+2025-12-25T08:50:41Z WRN Failed to serve tunnel connection error="timeout: no recent network activity" connIndex=3 event=0 ip=198.41.200.43
+2025-12-25T08:50:41Z WRN Serve tunnel error error="timeout: no recent network activity" connIndex=3 event=0 ip=198.41.200.43
+2025-12-25T08:50:41Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.200.43
+2025-12-25T08:50:43Z WRN Connection terminated error="timeout: no recent network activity" connIndex=3
+2025-12-25T08:50:50Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.23
+2025-12-25T08:50:51Z INF Registered tunnel connection connIndex=3 connection=f91ad908-a378-455b-8044-01e86c81091c event=0 ip=198.41.200.23 location=ord11 protocol=quic

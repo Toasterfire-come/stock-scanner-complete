@@ -6,6 +6,7 @@ import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { changePlan, createPayPalOrder, capturePayPalOrder } from "../api/client";
+import logger from '../lib/logger';
 
 const PayPalCheckout = ({ 
   planType = "bronze", 
@@ -192,7 +193,7 @@ const PayPalCheckout = ({
                   fundingSource={undefined}
                   createSubscription={createSubscription}
                   onApprove={onApproveSubscription}
-                  onError={(err) => { console.error("PayPal subscription error:", err); onError?.(err); }}
+                  onError={(err) => { logger.error("PayPal subscription error:", err); onError?.(err); }}
                   onCancel={onCancel}
                 />
                 {billingCycle === 'annual' && (
@@ -202,7 +203,7 @@ const PayPalCheckout = ({
                     fundingSource="paylater"
                     createSubscription={createSubscription}
                     onApprove={onApproveSubscription}
-                    onError={(err) => { console.error("PayPal PayLater subscription error:", err); onError?.(err); }}
+                    onError={(err) => { logger.error("PayPal PayLater subscription error:", err); onError?.(err); }}
                     onCancel={onCancel}
                   />
                 )}
@@ -223,7 +224,7 @@ const PayPalCheckout = ({
                   fundingSource={undefined}
                   createOrder={createOrder}
                   onApprove={onApproveOrder}
-                  onError={(err) => { console.error("PayPal order error:", err); onError?.(err); setError("Payment error. Please try again."); }}
+                  onError={(err) => { logger.error("PayPal order error:", err); onError?.(err); setError("Payment error. Please try again."); }}
                   onCancel={onCancel}
                 />
                 {/* Orders API: Card button */}
@@ -233,7 +234,7 @@ const PayPalCheckout = ({
                   fundingSource="card"
                   createOrder={createOrder}
                   onApprove={onApproveOrder}
-                  onError={(err) => { console.error("PayPal card error:", err); onError?.(err); setError("Card payment error. Please try again."); }}
+                  onError={(err) => { logger.error("PayPal card error:", err); onError?.(err); setError("Card payment error. Please try again."); }}
                   onCancel={onCancel}
                 />
                 {/* Advanced Cards (Hosted Fields) - behind flag */}

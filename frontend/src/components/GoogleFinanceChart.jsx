@@ -14,6 +14,7 @@ import {
   Download
 } from 'lucide-react';
 import { getStock, getRealTimeQuote } from '../api/client';
+import logger from '../lib/logger';
 
 const GoogleFinanceChart = ({ 
   symbol, 
@@ -75,7 +76,7 @@ const GoogleFinanceChart = ({
         setStockData(response.data);
       }
     } catch (err) {
-      console.error('Stock data fetch error:', err);
+      logger.error('Stock data fetch error:', err);
     }
   };
 
@@ -86,7 +87,7 @@ const GoogleFinanceChart = ({
         setCurrentPrice(response.data);
       }
     } catch (err) {
-      console.error('Current price fetch error:', err);
+      logger.error('Current price fetch error:', err);
     }
   };
 
@@ -111,7 +112,7 @@ const GoogleFinanceChart = ({
       
     } catch (err) {
       setError(`Failed to fetch chart data for ${symbol}`);
-      console.error('Price data fetch error:', err);
+      logger.error('Price data fetch error:', err);
       
       // Generate fallback data
       const fallbackData = generateRealisticPriceData(100, timeframe);
@@ -133,14 +134,14 @@ const GoogleFinanceChart = ({
       
       // Since we can't directly call Yahoo Finance due to CORS, we'll simulate the data structure
       // In a real implementation, you'd proxy this through your backend or use a CORS proxy
-      console.log('Would fetch from:', url);
+      logger.info('Would fetch from:', url);
       
       // For now, we'll generate realistic data based on the symbol and timeframe
       const realisticData = await generateEnhancedPriceData(symbol, timeframe);
       setPriceData(realisticData);
       
     } catch (err) {
-      console.error('Yahoo Finance fetch error:', err);
+      logger.error('Yahoo Finance fetch error:', err);
     }
   };
 

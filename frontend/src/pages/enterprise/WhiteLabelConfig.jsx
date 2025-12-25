@@ -25,6 +25,7 @@ import {
 import { useAuth } from '../../context/SecureAuthContext';
 import { api } from '../../api/client';
 import { toast } from 'sonner';
+import logger from '../../lib/logger';
 
 const WhiteLabelConfig = () => {
   const { user } = useAuth();
@@ -67,7 +68,7 @@ const WhiteLabelConfig = () => {
         setConfig({ ...config, ...data.config });
       }
     } catch (error) {
-      console.error('Failed to load white-label configuration:', error);
+      logger.error('Failed to load white-label configuration:', error);
       toast.error('Failed to load configuration');
     } finally {
       setLoading(false);
@@ -85,7 +86,7 @@ const WhiteLabelConfig = () => {
         toast.error('Failed to save configuration');
       }
     } catch (error) {
-      console.error('Failed to save white-label configuration:', error);
+      logger.error('Failed to save white-label configuration:', error);
       toast.error('Failed to save configuration');
     } finally {
       setSaving(false);

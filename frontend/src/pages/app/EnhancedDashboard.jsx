@@ -12,6 +12,7 @@ import {
   SkeletonLoader
 } from "../../components/AnimatedComponents";
 import {
+import logger from '../../lib/logger';
   TrendingUp,
   TrendingDown,
   BarChart3,
@@ -77,7 +78,7 @@ const EnhancedDashboard = () => {
       try {
         setDashboardLayout(JSON.parse(savedLayout));
       } catch (e) {
-        console.error('Failed to parse saved layout:', e);
+        logger.error('Failed to parse saved layout:', e);
       }
     }
 

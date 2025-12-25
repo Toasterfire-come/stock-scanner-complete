@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import LightweightPriceChart from "../components/LightweightPriceChart";
 import { computeIndicatorsInWorker } from "../lib/indicatorsWorkerClient";
 import {
+import logger from '../lib/logger';
   marketingMetrics,
   formatNumber,
   formatPercent,
@@ -85,7 +86,7 @@ const Home = () => {
         }
         // If using fallback data, don't show stats
       } catch (error) {
-        console.error("Failed to fetch market data:", error);
+        logger.error("Failed to fetch market data:", error);
       } finally {
         setIsLoading(false);
       }

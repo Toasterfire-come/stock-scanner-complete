@@ -59,7 +59,7 @@ const About = () => {
       <SEO
         title="About | Trade Scan Pro"
         description="Learn about Trade Scan Pro's mission, values, and story providing professional-grade screening and analytics tools for traders."
-        url="https://tradescanpro.com/about"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/about` : "https://tradescanpro.com/about"}
       />
       {/* Hero Section */}
       <section className="py-20 sm:py-32">

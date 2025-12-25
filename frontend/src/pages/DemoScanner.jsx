@@ -31,8 +31,8 @@ const DemoScanner = () => {
       <SEO
         title="Demo Stock Scanner | First 10 Results"
         description="Preview the stock scanner with the first 10 results. Sign in to view full results, alerts, and advanced filters."
-        url="https://tradescanpro.com/demo-scanner"
-        jsonLd={{"@context":"https://schema.org","@type":"WebPage","name":"Demo Stock Scanner","url":"https://tradescanpro.com/demo-scanner"}}
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/demo-scanner` : "https://tradescanpro.com/demo-scanner"}
+        jsonLd={{"@context":"https://schema.org","@type":"WebPage","name":"Demo Stock Scanner","url": process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/demo-scanner` : "https://tradescanpro.com/demo-scanner"}}
       />
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-5xl">

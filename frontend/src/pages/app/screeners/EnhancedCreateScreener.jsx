@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui
 import { X, Plus, Save, Play, Search, Info } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
+import logger from '../../../lib/logger';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
@@ -55,7 +56,7 @@ const EnhancedCreateScreener = () => {
         setPresets(presetsRes.data.data.presets || []);
       }
     } catch (error) {
-      console.error('Failed to load screener fields:', error);
+      logger.error('Failed to load screener fields:', error);
       toast.error('Failed to load screener configuration');
     } finally {
       setIsLoadingFields(false);
@@ -137,7 +138,7 @@ const EnhancedCreateScreener = () => {
         throw new Error('Failed to save');
       }
     } catch (error) {
-      console.error('Save error:', error);
+      logger.error('Save error:', error);
       toast.error("Failed to save screener");
     } finally {
       setIsLoading(false);
@@ -176,7 +177,7 @@ const EnhancedCreateScreener = () => {
         throw new Error('Failed to run screener');
       }
     } catch (error) {
-      console.error('Run error:', error);
+      logger.error('Run error:', error);
       toast.error("Failed to run screener");
     } finally {
       setIsLoading(false);

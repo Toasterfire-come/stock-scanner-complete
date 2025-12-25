@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import logger from '../lib/logger';
 
 class SystemErrorBoundary extends React.Component {
   constructor(props) {
@@ -12,7 +13,7 @@ class SystemErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('System error caught by boundary:', error, errorInfo);
+    logger.error('System error caught by boundary:', error, errorInfo);
   }
 
   render() {

@@ -13,6 +13,7 @@ import {
   Bell
 } from 'lucide-react';
 import { getMarketStatus, getMarketStatsSafe, API_ROOT } from '../api/client';
+import logger from '../lib/logger';
 
 const MarketStatusIndicator = ({ compact = false }) => {
   const [marketStatus, setMarketStatus] = useState(null);
@@ -66,7 +67,7 @@ const MarketStatusIndicator = ({ compact = false }) => {
       setError(null);
     } catch (err) {
       setError('Failed to load market status');
-      console.error('Market status error:', err);
+      logger.error('Market status error:', err);
     } finally {
       setIsLoading(false);
     }

@@ -11,6 +11,7 @@ import { Search, Book, Code, AlertTriangle, Copy, ExternalLink, Play } from 'luc
 import { useAuth } from '../../../context/SecureAuthContext';
 import { getApiDocumentation } from '../../../api/client';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const ApiDocumentation = () => {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ const ApiDocumentation = () => {
         setDocumentation(mockDocumentation);
       }
     } catch (error) {
-      console.error('Failed to load API documentation:', error);
+      logger.error('Failed to load API documentation:', error);
       setDocumentation(mockDocumentation);
     } finally {
       setLoading(false);

@@ -23,6 +23,7 @@ import {
   Rocket
 } from "lucide-react";
 import { getCurrentPlan, changePlan, getUsageSummary } from "../../api/client";
+import logger from '../../lib/logger';
 
 const CurrentPlan = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +48,7 @@ const CurrentPlan = () => {
           }
         } catch (_) {}
       } catch (error) {
-        console.error("Failed to load plan data:", error);
+        logger.error("Failed to load plan data:", error);
         setPlanData(null);
       } finally {
         setIsLoading(false);

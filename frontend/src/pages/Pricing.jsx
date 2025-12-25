@@ -264,7 +264,7 @@ const Pricing = () => {
       <SEO
         title="Pricing (Legacy) | Trade Scan Pro"
         description="Legacy pricing page for Trade Scan Pro plans."
-        url="https://tradescanpro.com/pricing-old"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/pricing-old` : "https://tradescanpro.com/pricing-old"}
         jsonLdUrls={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}
         robots="noindex,follow"
       />

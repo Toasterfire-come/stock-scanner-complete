@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../api/client';
+import logger from '../../lib/logger';
 
 const Glossary = () => {
   const { termSlug } = useParams();
@@ -56,7 +57,7 @@ const Glossary = () => {
       setTerms(response.data || []);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching glossary:', error);
+      logger.error('Error fetching glossary:', error);
       setTerms([]);
       setLoading(false);
     }
@@ -70,7 +71,7 @@ const Glossary = () => {
       // Track view
       await api.post(`/api/education/glossary/${slug}/track-view/`);
     } catch (error) {
-      console.error('Error fetching term detail:', error);
+      logger.error('Error fetching term detail:', error);
     }
   };
 

@@ -5,12 +5,13 @@ import { marketingMetrics, formatNumber, formatPercent, timeframeCopy } from "..
 const Press = () => {
   const contactEmail = process.env.REACT_APP_PRESS_EMAIL || process.env.REACT_APP_CONTACT_EMAIL || 'noreply.retailtradescanner@gmail.com';
   const { usage, outcomes, testimonials, reliability, enterprise } = marketingMetrics;
+  const siteUrl = process.env.REACT_APP_PUBLIC_URL || "https://tradescanpro.com";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Trade Scan Pro",
-    "url": "https://tradescanpro.com",
-    "logo": "https://tradescanpro.com/logo.png",
+    "url": siteUrl,
+    "logo": `${siteUrl}/logo.png`,
     "contactPoint": [{
       "@type": "ContactPoint",
       "contactType": "Press",
@@ -22,7 +23,7 @@ const Press = () => {
       <SEO
         title="Press Kit | Trade Scan Pro"
         description="Logos, brand usage, and boilerplate for media. Contact our team for quotes and product reviews."
-        url="https://tradescanpro.com/press"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/press` : "https://tradescanpro.com/press"}
         jsonLd={jsonLd}
       />
       <section className="py-16 sm:py-24">

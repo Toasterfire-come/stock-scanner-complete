@@ -41,6 +41,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import logger from '../../lib/logger';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -105,7 +106,7 @@ export default function PartnerAnalytics() {
       }
 
     } catch (err) {
-      console.error('Analytics fetch error:', err);
+      logger.error('Analytics fetch error:', err);
       setError(err.response?.data?.error || err.message || 'Failed to load analytics');
       toast.error('Failed to load analytics data');
     } finally {
@@ -121,7 +122,7 @@ export default function PartnerAnalytics() {
   const copyReferralLink = () => {
     if (!referralCode) return;
 
-    const link = `https://tradescanpro.com/r/${referralCode}`;
+    const link = `${process.env.REACT_APP_PUBLIC_URL || window.location.origin}/r/${referralCode}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     toast.success('Referral link copied to clipboard!');
@@ -263,7 +264,7 @@ export default function PartnerAnalytics() {
           <CardContent>
             <div className="flex items-center gap-2">
               <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm">
-                https://tradescanpro.com/r/{referralCode}
+                {process.env.REACT_APP_PUBLIC_URL || window.location.origin}/r/{referralCode}
               </div>
               <Button onClick={copyReferralLink}>
                 {copiedLink ? (

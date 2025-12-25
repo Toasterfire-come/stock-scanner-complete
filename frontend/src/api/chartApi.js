@@ -2,6 +2,7 @@
  * Chart API functions for Phase 3 Advanced Charting
  */
 import { api } from './client';
+import logger from '../lib/logger';
 
 /**
  * Get chart data for a stock
@@ -24,7 +25,7 @@ export async function getChartData(ticker, options = {}) {
     const { data } = await api.get(`/chart/${encodeURIComponent(ticker.toUpperCase())}/`, { params });
     return data;
   } catch (error) {
-    console.error('Failed to fetch chart data:', error);
+    logger.error('Failed to fetch chart data:', error);
     return { success: false, error: error.message || 'Failed to load chart data' };
   }
 }
@@ -48,7 +49,7 @@ export async function getChartIndicators(ticker, options = {}) {
     const { data } = await api.get(`/chart/${encodeURIComponent(ticker.toUpperCase())}/indicators/`, { params });
     return data;
   } catch (error) {
-    console.error('Failed to fetch indicators:', error);
+    logger.error('Failed to fetch indicators:', error);
     return { success: false, error: error.message || 'Failed to load indicators' };
   }
 }
@@ -61,7 +62,7 @@ export async function getChartTimeframes() {
     const { data } = await api.get('/chart/timeframes/');
     return data;
   } catch (error) {
-    console.error('Failed to fetch timeframes:', error);
+    logger.error('Failed to fetch timeframes:', error);
     return { success: false, error: error.message || 'Failed to load chart options' };
   }
 }

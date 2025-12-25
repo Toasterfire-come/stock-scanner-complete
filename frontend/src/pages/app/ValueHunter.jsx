@@ -44,6 +44,7 @@ import {
   Area
 } from "recharts";
 import SEO from "../../components/SEO";
+import logger from '../../lib/logger';
 
 // Metric Card Component
 const MetricCard = ({ title, value, subtitle, icon: Icon, trend, color = "blue" }) => {
@@ -210,10 +211,10 @@ export default function ValueHunter() {
       if (response.success) {
         setCurrentWeek(response.week);
       } else {
-        console.log("No current week active");
+        logger.info("No current week active");
       }
     } catch (error) {
-      console.error("Failed to load current week:", error);
+      logger.error("Failed to load current week:", error);
       toast.error("Failed to load current week data");
     } finally {
       setIsLoading(false);
@@ -228,7 +229,7 @@ export default function ValueHunter() {
         setWeekHistory(response.weeks || []);
       }
     } catch (error) {
-      console.error("Failed to load week history:", error);
+      logger.error("Failed to load week history:", error);
       toast.error("Failed to load history");
     } finally {
       setHistoryLoading(false);
@@ -243,7 +244,7 @@ export default function ValueHunter() {
         setTopStocks(response.stocks || []);
       }
     } catch (error) {
-      console.error("Failed to load top stocks:", error);
+      logger.error("Failed to load top stocks:", error);
     } finally {
       setTopStocksLoading(false);
     }

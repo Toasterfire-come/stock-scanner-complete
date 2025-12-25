@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTrendingSafe, getMarketStatsSafe } from '../api/client';
+import logger from '../lib/logger';
 
 const RealTrendingSparkline = ({ 
   dataType = 'total', // 'total', 'gainers', 'losers'
@@ -43,7 +44,7 @@ const RealTrendingSparkline = ({
 
       setSparklineData(data);
     } catch (error) {
-      console.error('Sparkline data fetch error:', error);
+      logger.error('Sparkline data fetch error:', error);
       // Fallback to realistic generated data
       const fallbackValue = getFallbackValue(dataType);
       setSparklineData(generateRealisticTrendData(fallbackValue, dataType));

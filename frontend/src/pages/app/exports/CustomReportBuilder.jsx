@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../../../context/SecureAuthContext';
 import { generateCustomReport, downloadReport } from '../../../api/client';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const CustomReportBuilder = () => {
   const { user } = useAuth();
@@ -198,7 +199,7 @@ const CustomReportBuilder = () => {
       setShowPreview(true);
       toast.success('Preview generated successfully');
     } catch (error) {
-      console.error('Failed to generate preview:', error);
+      logger.error('Failed to generate preview:', error);
       toast.error('Failed to generate preview');
     } finally {
       setLoading(false);
@@ -226,7 +227,7 @@ const CustomReportBuilder = () => {
         toast.error('Failed to generate report');
       }
     } catch (error) {
-      console.error('Failed to generate report:', error);
+      logger.error('Failed to generate report:', error);
       toast.error('Failed to generate report');
     } finally {
       setLoading(false);

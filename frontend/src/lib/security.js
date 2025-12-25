@@ -1,5 +1,6 @@
 // Security utilities for production deployment
 import DOMPurify from 'dompurify';
+import logger from '../lib/logger';
 
 // Environment check
 export const isProd = process.env.NODE_ENV === 'production';
@@ -131,7 +132,7 @@ export const validateInput = (input, type = 'general') => {
   
   for (const pattern of sqlPatterns) {
     if (pattern.test(input)) {
-      console.warn('Potentially malicious input detected and blocked');
+      logger.warn('Potentially malicious input detected and blocked');
       return '';
     }
   }
@@ -175,7 +176,7 @@ export const secureStorage = {
       }
       localStorage.setItem(key, valueToStore);
     } catch (error) {
-      console.error('Failed to store data securely:', error);
+      logger.error('Failed to store data securely:', error);
     }
   },
   
@@ -199,7 +200,7 @@ export const secureStorage = {
         return value;
       }
     } catch (error) {
-      console.error('Failed to retrieve data securely:', error);
+      logger.error('Failed to retrieve data securely:', error);
       return null;
     }
   },
@@ -210,7 +211,7 @@ export const secureStorage = {
       const enc = await encryptString(typeof value === 'string' ? value : JSON.stringify(value));
       localStorage.setItem(key, enc);
     } catch (error) {
-      console.error('Failed to encrypt and store data:', error);
+      logger.error('Failed to encrypt and store data:', error);
     }
   },
 
@@ -224,7 +225,7 @@ export const secureStorage = {
       }
       try { return JSON.parse(stored); } catch { return stored; }
     } catch (error) {
-      console.error('Failed to decrypt stored data:', error);
+      logger.error('Failed to decrypt stored data:', error);
       return null;
     }
   },
@@ -233,7 +234,7 @@ export const secureStorage = {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      console.error('Failed to remove data:', error);
+      logger.error('Failed to remove data:', error);
     }
   },
   
@@ -241,7 +242,7 @@ export const secureStorage = {
     try {
       localStorage.clear();
     } catch (error) {
-      console.error('Failed to clear storage:', error);
+      logger.error('Failed to clear storage:', error);
     }
   }
 };
@@ -369,7 +370,7 @@ export const validateSecurityHeaders = (response) => {
   );
   
   if (missingHeaders.length > 0 && isDev) {
-    console.warn('Missing security headers:', missingHeaders);
+    logger.warn('Missing security headers:', missingHeaders);
   }
   
   return missingHeaders.length === 0;
@@ -404,13 +405,13 @@ export const sanitizeError = (error) => {
   };
   
   // Log full error server-side but return sanitized version to client
-  console.error('Full error (server-side only):', error);
+  logger.error('Full error (server-side only):', error);
   return sanitizedError;
 };
 
 // Client-side error logging (placeholder - will be implemented in secureClient.js)
 export const logClientError = async (payload) => {
-  console.warn('Error logged:', payload);
+  logger.warn('Error logged:', payload);
 };
 // Environment validation
 export const validateEnvironment = () => {
@@ -422,7 +423,7 @@ export const validateEnvironment = () => {
   const missing = requiredVars.filter(varName => !process.env[varName]);
   
   if (missing.length > 0) {
-    console.error('Missing required environment variables:', missing);
+    logger.error('Missing required environment variables:', missing);
     return false;
   }
   

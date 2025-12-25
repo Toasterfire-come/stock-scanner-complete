@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import { SubmitStrategyForm } from '../../components/SubmitStrategyForm';
 import { SocialShareButtons } from '../../components/SocialShareButtons';
+import logger from '../../lib/logger';
 
 const StrategyLeaderboard = () => {
   const [strategies, setStrategies] = useState([]);
@@ -26,7 +27,7 @@ const StrategyLeaderboard = () => {
         setCategories(response.data.data.categories);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error);
     }
   };
 
@@ -50,7 +51,7 @@ const StrategyLeaderboard = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      logger.error('Error fetching leaderboard:', error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ const StrategyLeaderboard = () => {
         setSelectedStrategy(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching strategy detail:', error);
+      logger.error('Error fetching strategy detail:', error);
     }
   };
 
@@ -76,7 +77,7 @@ const StrategyLeaderboard = () => {
       });
       alert('Strategy cloned successfully!');
     } catch (error) {
-      console.error('Error cloning strategy:', error);
+      logger.error('Error cloning strategy:', error);
       alert('Failed to clone strategy. Please try again.');
     }
   };

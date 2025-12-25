@@ -9,12 +9,12 @@ const Resources = () => {
       <SEO
         title="Resources | Trade Scan Pro"
         description="Free resources to link to Trade Scan Pro: embeddable market widgets, partner badges, press kit, and helpful guides."
-        url="https://tradescanpro.com/resources"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/resources` : "https://tradescanpro.com/resources"}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           "name": "Trade Scan Pro Resources",
-          "url": "https://tradescanpro.com/resources"
+          "url": process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/resources` : "https://tradescanpro.com/resources"
         }}
       />
       <section className="py-16 sm:py-24">

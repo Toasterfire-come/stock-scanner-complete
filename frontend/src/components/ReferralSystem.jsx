@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { getPartnerReferralSummary, getPartnerReferralTimeseries } from "../api/client";
 import { useAuth } from "../context/SecureAuthContext";
+import logger from '../lib/logger';
 
 const ReferralSystem = ({ user: propUser = null, code: propCode = "" }) => {
   const { user: authUser, isAuthenticated } = useAuth();
@@ -67,11 +68,11 @@ const ReferralSystem = ({ user: propUser = null, code: propCode = "" }) => {
         setReferralCode(summaryData.code || propCode || "");
         setTimeseries(timeseriesRes.success ? (timeseriesRes.data?.series || []) : []);
         if (!timeseriesRes.success && timeseriesRes.error) {
-          console.warn("Referral timeseries load failed:", timeseriesRes.error);
+          logger.warn("Referral timeseries load failed:", timeseriesRes.error);
         }
       } catch (err) {
         if (cancelled) return;
-        console.error("Referral analytics error:", err);
+        logger.error("Referral analytics error:", err);
         setSummary(null);
         setTimeseries([]);
         setError(err.message || "Unable to load referral analytics");
@@ -131,7 +132,7 @@ const ReferralSystem = ({ user: propUser = null, code: propCode = "" }) => {
   const avgRevenuePerPurchase = lifetimePurchases ? lifetimeRevenueAmount / lifetimePurchases : 0;
   const avgCommissionPerPurchase = lifetimePurchases ? lifetimeCommissionAmount / lifetimePurchases : 0;
 
-  const referralLink = referralCode ? `https://tradescanpro.com/?ref=${referralCode}` : "";
+  const referralLink = referralCode ? `${process.env.REACT_APP_PUBLIC_URL || window.location.origin}/?ref=${referralCode}` : "";
   const timeseriesPreview = timeseries.slice(-7).reverse();
 
   const formatDate = (iso) => {
@@ -172,7 +173,7 @@ const ReferralSystem = ({ user: propUser = null, code: propCode = "" }) => {
         description: "Share this link to start earning commissions",
       });
     } catch (err) {
-      console.error("Copy referral link failed:", err);
+      logger.error("Copy referral link failed:", err);
       toast.error("Unable to copy referral link. You can copy it manually.");
     }
   };

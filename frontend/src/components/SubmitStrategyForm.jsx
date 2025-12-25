@@ -23,6 +23,7 @@ import {
 } from "./ui/select";
 import { toast } from "sonner";
 import { Plus, Loader2, Upload, Lightbulb } from "lucide-react";
+import logger from '../lib/logger';
 
 /**
  * Submit Strategy Form - Allows users to submit their own strategies
@@ -73,7 +74,7 @@ export function SubmitStrategyForm({ onSuccess }) {
       });
       onSuccess?.();
     } catch (error) {
-      console.error("Strategy submission error:", error);
+      logger.error("Strategy submission error:", error);
       toast.error(error.response?.data?.message || "Failed to submit strategy");
     } finally {
       setSubmitting(false);

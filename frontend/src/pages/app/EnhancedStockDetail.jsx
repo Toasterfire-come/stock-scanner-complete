@@ -31,6 +31,7 @@ import {
 import EnhancedStockChart from "../../components/EnhancedStockChart";
 import StockMetricsComparison from "../../components/StockMetricsComparison";
 import { cn } from "../../lib/utils";
+import logger from '../../lib/logger';
 
 // Client-side Yahoo Finance quote fetcher
 const fetchYahooQuote = async (symbol) => {
@@ -85,7 +86,7 @@ const fetchYahooQuote = async (symbol) => {
     }
     return null;
   } catch (error) {
-    console.error('Failed to fetch quote:', error);
+    logger.error('Failed to fetch quote:', error);
     return null;
   }
 };
@@ -112,7 +113,7 @@ const EnhancedStockDetail = () => {
         }
       } catch (error) {
         toast.error('Error fetching stock data');
-        console.error(error);
+        logger.error(error);
       } finally {
         setIsLoading(false);
       }
@@ -222,7 +223,7 @@ const EnhancedStockDetail = () => {
       <SEO
         title={`${stockData.ticker} - ${stockData.company_name} | Live Stock Analysis`}
         description={`Real-time stock analysis for ${stockData.company_name} (${stockData.ticker}). View live charts, key metrics, and valuation analysis.`}
-        url={`https://tradescanpro.com/app/stocks/${encodeURIComponent(stockData.ticker)}`}
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/app/stocks/${encodeURIComponent(stockData.ticker)}` : `https://tradescanpro.com/app/stocks/${encodeURIComponent(stockData.ticker)}`}
       />
       
       <div className="space-y-6">

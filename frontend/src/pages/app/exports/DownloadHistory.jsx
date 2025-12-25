@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/SecureAuthContext';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const DownloadHistory = () => {
   const { user } = useAuth();
@@ -115,7 +116,7 @@ const DownloadHistory = () => {
       ];
       setDownloads(mockDownloads);
     } catch (error) {
-      console.error('Failed to load download history:', error);
+      logger.error('Failed to load download history:', error);
       toast.error('Failed to load download history');
     } finally {
       setLoading(false);
@@ -187,7 +188,7 @@ const DownloadHistory = () => {
           : d
       ));
     } catch (error) {
-      console.error('Download failed:', error);
+      logger.error('Download failed:', error);
       toast.error('Download failed');
     }
   };
@@ -197,7 +198,7 @@ const DownloadHistory = () => {
       setDownloads(prev => prev.filter(d => d.id !== id));
       toast.success('Download record deleted');
     } catch (error) {
-      console.error('Failed to delete download:', error);
+      logger.error('Failed to delete download:', error);
       toast.error('Failed to delete download');
     }
   };

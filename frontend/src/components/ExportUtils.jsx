@@ -22,6 +22,7 @@ import { Label } from "./ui/label";
 import { toast } from "sonner";
 import { Download, FileSpreadsheet, FileText, Loader2, Calendar } from "lucide-react";
 import { format, startOfYear, endOfYear, subYears } from "date-fns";
+import logger from '../lib/logger';
 
 /**
  * Export Journal Data to CSV
@@ -178,7 +179,7 @@ export function TaxReportExporter({ entries = [] }) {
       
       setOpen(false);
     } catch (error) {
-      console.error("Export error:", error);
+      logger.error("Export error:", error);
       toast.error("Failed to generate tax report");
     } finally {
       setExporting(false);

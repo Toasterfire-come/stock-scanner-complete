@@ -7,6 +7,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { api } from '../../api/client';
+import logger from '../../lib/logger';
 
 const InfoTooltip = ({ term, children }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +48,7 @@ const InfoTooltip = ({ term, children }) => {
         await api.post(`/api/education/glossary/${slug}/track-tooltip/`);
       }
     } catch (error) {
-      console.error('Error fetching term:', error);
+      logger.error('Error fetching term:', error);
       // Set a default error state
       setTermData({
         term: typeof term === 'string' ? term : term.term,

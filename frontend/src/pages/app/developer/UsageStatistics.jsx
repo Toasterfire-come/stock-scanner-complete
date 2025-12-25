@@ -9,6 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '../../../context/SecureAuthContext';
 import { getUsageStats } from '../../../api/client';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const UsageStatistics = () => {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ const UsageStatistics = () => {
         toast.error('Failed to load usage statistics');
       }
     } catch (error) {
-      console.error('Failed to load usage statistics:', error);
+      logger.error('Failed to load usage statistics:', error);
       toast.error('Failed to load usage statistics');
     } finally {
       setLoading(false);

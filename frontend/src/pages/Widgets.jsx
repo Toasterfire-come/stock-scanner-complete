@@ -2,8 +2,9 @@ import React from "react";
 import SEO from "../components/SEO";
 
 const Widgets = () => {
+  const siteUrl = process.env.REACT_APP_PUBLIC_URL || window.location.origin;
   const snippet = (
-    `<script defer src="https://tradescanpro.com/widgets/market-badge.js"></script>\n` +
+    `<script defer src="${siteUrl}/widgets/market-badge.js"></script>\n` +
     `<div data-tradescan-badge data-symbol="AAPL" data-theme="light"></div>`
   );
   return (
@@ -11,7 +12,7 @@ const Widgets = () => {
       <SEO
         title="Widgets | Trade Scan Pro"
         description="Free embeddable stock market badge widget with attribution link. Copy and paste the snippet to add a badge to your site."
-        url="https://tradescanpro.com/widgets"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/widgets` : "https://tradescanpro.com/widgets"}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "TechArticle",

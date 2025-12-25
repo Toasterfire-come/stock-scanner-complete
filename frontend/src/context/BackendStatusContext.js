@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { pingHealth } from '../api/client';
+import logger from '../lib/logger';
 
 const BackendStatusContext = createContext();
 
@@ -21,7 +22,7 @@ export const BackendStatusProvider = ({ children }) => {
       setIsBackendUp(true);
       setLastCheck(new Date());
     } catch (error) {
-      console.warn('Backend health check failed:', error);
+      logger.warn('Backend health check failed:', error);
       setIsBackendUp(false);
       setLastCheck(new Date());
     }

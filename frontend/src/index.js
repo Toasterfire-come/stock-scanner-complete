@@ -7,6 +7,7 @@ import App from "./App";
 import { initSentry } from './sentry';
 import { toast } from 'sonner';
 import { initAnalytics, initMatomo, initClarity } from './lib/analytics';
+import logger from './lib/logger';
 
 // Initialize performance monitoring
 const startTime = performance.now();
@@ -31,7 +32,7 @@ const renderApp = () => {
   // Log render performance
   const renderTime = performance.now() - startTime;
   if (renderTime > 1000) {
-    console.warn(`Slow app render: ${renderTime.toFixed(2)}ms`);
+    logger.warn(`Slow app render: ${renderTime.toFixed(2)}ms`);
   }
 };
 
@@ -39,7 +40,7 @@ const renderApp = () => {
 try {
   renderApp();
 } catch (error) {
-  console.error('App render failed:', error);
+  logger.error('App render failed:', error);
   
   // Fallback error UI
   root.render(
@@ -80,7 +81,7 @@ if (process.env.NODE_ENV === 'production') {
   // Log page load performance
   window.addEventListener('load', () => {
     const loadTime = performance.now();
-    console.info(`Page load time: ${loadTime.toFixed(2)}ms`);
+    logger.info(`Page load time: ${loadTime.toFixed(2)}ms`);
     
     // Send performance metrics to backend
     if (window.logClientMetric) {
@@ -96,7 +97,7 @@ if (process.env.NODE_ENV === 'production') {
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if (entry.entryType === 'measure' && entry.duration > 100) {
-        console.warn(`Slow operation: ${entry.name} took ${entry.duration.toFixed(2)}ms`);
+        logger.warn(`Slow operation: ${entry.name} took ${entry.duration.toFixed(2)}ms`);
       }
     }
   });
@@ -113,7 +114,7 @@ if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('SW registered: ', registration);
+        logger.info('SW registered: ', registration);
         // Listen for updates
         registration.addEventListener('updatefound', () => {
           const installing = registration.installing;
@@ -134,7 +135,7 @@ if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
         });
       })
       .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
+        logger.info('SW registration failed: ', registrationError);
       });
   });
 

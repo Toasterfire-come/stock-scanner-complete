@@ -10,8 +10,8 @@ const Partners = () => {
       <SEO
         title="Partners | Trade Scan Pro"
         description="Partner with Trade Scan Pro. Affiliates, data partners, and integrations welcome."
-        url="https://tradescanpro.com/partners"
-        jsonLd={{"@context":"https://schema.org","@type":"AboutPage","name":"Partners","url":"https://tradescanpro.com/partners"}}
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/partners` : "https://tradescanpro.com/partners"}
+        jsonLd={{"@context":"https://schema.org","@type":"AboutPage","name":"Partners","url": process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/partners` : "https://tradescanpro.com/partners"}}
       />
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-4xl">

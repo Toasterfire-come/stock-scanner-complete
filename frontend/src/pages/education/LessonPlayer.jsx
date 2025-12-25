@@ -10,6 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import ReactMarkdown from 'react-markdown';
 import InfoTooltip from './InfoTooltip';
+import logger from '../../lib/logger';
 
 const LessonPlayer = () => {
   const { lessonSlug } = useParams();
@@ -49,7 +50,7 @@ const LessonPlayer = () => {
       
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching lesson:', error);
+      logger.error('Error fetching lesson:', error);
       setLoading(false);
     }
   };
@@ -58,7 +59,7 @@ const LessonPlayer = () => {
     try {
       await api.post(`/api/education/lessons/${lessonSlug}/start/`);
     } catch (error) {
-      console.error('Error starting lesson:', error);
+      logger.error('Error starting lesson:', error);
     }
   };
 
@@ -70,7 +71,7 @@ const LessonPlayer = () => {
         time_spent_seconds: timeSpent
       });
     } catch (error) {
-      console.error('Error updating progress:', error);
+      logger.error('Error updating progress:', error);
     }
   };
 
@@ -85,7 +86,7 @@ const LessonPlayer = () => {
         navigate(`/learn/${lesson.course}`);
       }
     } catch (error) {
-      console.error('Error completing lesson:', error);
+      logger.error('Error completing lesson:', error);
     }
   };
 
@@ -98,7 +99,7 @@ const LessonPlayer = () => {
       
       setQuizResult(response.data);
     } catch (error) {
-      console.error('Error submitting quiz:', error);
+      logger.error('Error submitting quiz:', error);
     }
   };
 

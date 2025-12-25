@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { getBillingHistory, downloadInvoice, getBillingStats } from "../../api/client";
 import { downloadBlob } from "../../lib/downloads";
+import logger from '../../lib/logger';
 
 const BillingHistory = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +45,7 @@ const BillingHistory = () => {
           setBillingStats(statsResponse.data);
         }
       } catch (error) {
-        console.error("Failed to load billing data:", error);
+        logger.error("Failed to load billing data:", error);
         setBillingHistory([]);
         setBillingStats(null);
       } finally {

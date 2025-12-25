@@ -378,7 +378,7 @@ const StockDetail = () => {
       <SEO
         title={`${stockData.ticker} | ${stockData.company_name} | Trade Scan Pro`}
         description={`Live quote, key stats and news for ${stockData.company_name} (${stockData.ticker}).`}
-        url={`https://tradescanpro.com/app/stocks/${encodeURIComponent(stockData.ticker)}`}
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/app/stocks/${encodeURIComponent(stockData.ticker)}` : `https://tradescanpro.com/app/stocks/${encodeURIComponent(stockData.ticker)}`}
         robots="noindex,follow"
       />
       <div className="space-y-6">

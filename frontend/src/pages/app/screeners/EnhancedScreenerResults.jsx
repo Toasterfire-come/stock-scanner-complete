@@ -5,6 +5,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { ArrowLeft, Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const EnhancedScreenerResults = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const EnhancedScreenerResults = () => {
         setFilters(JSON.parse(filtersData));
       }
     } catch (error) {
-      console.error('Failed to load results:', error);
+      logger.error('Failed to load results:', error);
       toast.error('Failed to load results');
     }
   };

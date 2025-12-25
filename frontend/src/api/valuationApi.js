@@ -2,6 +2,7 @@
  * Valuation API functions for Phase 2 Valuation Engine
  */
 import { api } from './client';
+import logger from '../lib/logger';
 
 /**
  * Get comprehensive stock valuation analysis
@@ -12,7 +13,7 @@ export async function getStockValuation(ticker) {
     const { data } = await api.get(`/valuation/${encodeURIComponent(ticker.toUpperCase())}/`);
     return data;
   } catch (error) {
-    console.error('Failed to fetch valuation:', error);
+    logger.error('Failed to fetch valuation:', error);
     return { success: false, error: error.message || 'Failed to load valuation data' };
   }
 }
@@ -26,7 +27,7 @@ export async function getQuickValuation(ticker) {
     const { data } = await api.get(`/valuation/${encodeURIComponent(ticker.toUpperCase())}/quick/`);
     return data;
   } catch (error) {
-    console.error('Failed to fetch quick valuation:', error);
+    logger.error('Failed to fetch quick valuation:', error);
     return { success: false, error: error.message || 'Failed to load valuation' };
   }
 }
@@ -50,7 +51,7 @@ export async function getUndervaluedStocks(options = {}) {
     const { data } = await api.get('/screener/undervalued/', { params });
     return data;
   } catch (error) {
-    console.error('Failed to fetch undervalued stocks:', error);
+    logger.error('Failed to fetch undervalued stocks:', error);
     return { success: false, error: error.message || 'Failed to load screener results' };
   }
 }
@@ -64,7 +65,7 @@ export async function syncStockFundamentals(ticker) {
     const { data } = await api.post(`/fundamentals/${encodeURIComponent(ticker.toUpperCase())}/sync/`);
     return data;
   } catch (error) {
-    console.error('Failed to sync fundamentals:', error);
+    logger.error('Failed to sync fundamentals:', error);
     return { success: false, error: error.message || 'Failed to sync fundamentals' };
   }
 }
@@ -77,7 +78,7 @@ export async function getSectorAnalysis() {
     const { data } = await api.get('/valuation/sectors/');
     return data;
   } catch (error) {
-    console.error('Failed to fetch sector analysis:', error);
+    logger.error('Failed to fetch sector analysis:', error);
     return { success: false, error: error.message || 'Failed to load sector analysis' };
   }
 }
@@ -99,7 +100,7 @@ export async function getTopValueStocks(options = {}) {
     const { data } = await api.get('/valuation/top-value/', { params });
     return data;
   } catch (error) {
-    console.error('Failed to fetch top value stocks:', error);
+    logger.error('Failed to fetch top value stocks:', error);
     return { success: false, error: error.message || 'Failed to load top value stocks' };
   }
 }
@@ -115,7 +116,7 @@ export async function compareValuations(tickers) {
     });
     return data;
   } catch (error) {
-    console.error('Failed to compare valuations:', error);
+    logger.error('Failed to compare valuations:', error);
     return { success: false, error: error.message || 'Failed to compare stocks' };
   }
 }
@@ -129,7 +130,7 @@ export async function getStockFundamentals(ticker) {
     const { data } = await api.get(`/fundamentals/${encodeURIComponent(ticker.toUpperCase())}/`);
     return data;
   } catch (error) {
-    console.error('Failed to fetch fundamentals:', error);
+    logger.error('Failed to fetch fundamentals:', error);
     return { success: false, error: error.message || 'Failed to load fundamentals' };
   }
 }

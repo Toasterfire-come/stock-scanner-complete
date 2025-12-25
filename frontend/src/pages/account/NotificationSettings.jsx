@@ -17,6 +17,7 @@ import {
   Volume2
 } from "lucide-react";
 import { getNotificationSettings, updateNotificationSettings, requestSmsCode, verifySmsCode, sendTestSms } from "../../api/client";
+import logger from '../../lib/logger';
 
 const NotificationSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +70,7 @@ const NotificationSettings = () => {
           toast.error("Failed to load notification settings");
         }
       } catch (error) {
-        console.error("Failed to load settings:", error);
+        logger.error("Failed to load settings:", error);
         // Continue with default settings
       } finally {
         setIsLoading(false);

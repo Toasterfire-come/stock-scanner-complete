@@ -8,8 +8,8 @@ const StockFilter = () => {
       <SEO
         title="Stock Filter | Fast, Flexible Filters for Stocks"
         description="Build a stock filter with price, volume, fundamentals, and technicals. Create saved filters and alerts with Trade Scan Pro."
-        url="https://tradescanpro.com/stock-filter"
-        jsonLd={{"@context":"https://schema.org","@type":"WebPage","name":"Stock Filter","url":"https://tradescanpro.com/stock-filter"}}
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/stock-filter` : "https://tradescanpro.com/stock-filter"}
+        jsonLd={{"@context":"https://schema.org","@type":"WebPage","name":"Stock Filter","url": process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/stock-filter` : "https://tradescanpro.com/stock-filter"}}
       />
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-4xl">

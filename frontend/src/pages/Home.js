@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { api } from "../api/client";
 import MarketStatus from "../components/MarketStatus";
+import logger from '../lib/logger';
 
 const Home = () => {
   const [platformStats, setPlatformStats] = useState(null);
@@ -38,7 +39,7 @@ const Home = () => {
         const { data } = await api.get('/platform-stats');
         setPlatformStats(data);
       } catch (error) {
-        console.error("Failed to fetch platform data:", error);
+        logger.error("Failed to fetch platform data:", error);
       } finally {
         setIsLoading(false);
       }

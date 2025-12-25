@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/SecureAuthContext';
 import { toast } from 'sonner';
+import logger from '../../../lib/logger';
 
 const ScheduledExports = () => {
   const { user } = useAuth();
@@ -128,7 +129,7 @@ const ScheduledExports = () => {
       });
       toast.success('Scheduled export created successfully');
     } catch (error) {
-      console.error('Failed to create scheduled export:', error);
+      logger.error('Failed to create scheduled export:', error);
       toast.error('Failed to create scheduled export');
     } finally {
       setLoading(false);

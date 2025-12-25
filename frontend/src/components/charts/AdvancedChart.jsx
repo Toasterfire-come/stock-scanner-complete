@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { api } from '../../api/client';
+import logger from '../../lib/logger';
 
 const TIMEFRAMES = [
   { id: '1m', label: '1M', premium: true },
@@ -135,7 +136,7 @@ export default function AdvancedChart({
         setIndicatorData(response.data.indicators || {});
       }
     } catch (err) {
-      console.error('Failed to load indicators:', err);
+      logger.error('Failed to load indicators:', err);
     }
   }, [ticker, timeframe, activeIndicators]);
 
@@ -313,7 +314,7 @@ export default function AdvancedChart({
           link.click();
         }
       } catch (err) {
-        console.error('Export failed:', err);
+        logger.error('Export failed:', err);
       }
     } else if (format === 'csv') {
       const csv = ['Time,Open,High,Low,Close,Volume'];

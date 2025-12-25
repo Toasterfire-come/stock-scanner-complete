@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { submitQuoteRequest } from '../../api/client';
 import { toast } from 'sonner';
+import logger from '../../lib/logger';
 
 const QuoteRequest = () => {
   const [formData, setFormData] = useState({
@@ -119,7 +120,7 @@ const QuoteRequest = () => {
         toast.error(response.message || 'Failed to submit quote request');
       }
     } catch (error) {
-      console.error('Failed to submit quote request:', error);
+      logger.error('Failed to submit quote request:', error);
       toast.error('Failed to submit quote request. Please try again.');
     } finally {
       setLoading(false);

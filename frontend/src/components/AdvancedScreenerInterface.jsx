@@ -30,6 +30,7 @@ import {
   exportStocksCSV
 } from '../api/client';
 import { Link, useNavigate } from 'react-router-dom';
+import logger from '../lib/logger';
 
 const AdvancedScreenerInterface = () => {
   const [screeners, setScreeners] = useState([]);
@@ -66,7 +67,7 @@ const AdvancedScreenerInterface = () => {
       setTemplates(Array.isArray(templatesRes.data) ? templatesRes.data : []);
     } catch (err) {
       setError('Failed to load screener data');
-      console.error('Screener data error:', err);
+      logger.error('Screener data error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +89,7 @@ const AdvancedScreenerInterface = () => {
       }
     } catch (err) {
       setError('Failed to create screener');
-      console.error('Create screener error:', err);
+      logger.error('Create screener error:', err);
     }
   };
 
@@ -100,7 +101,7 @@ const AdvancedScreenerInterface = () => {
       }
     } catch (err) {
       setError('Failed to run screener');
-      console.error('Run screener error:', err);
+      logger.error('Run screener error:', err);
     }
   };
 
@@ -115,7 +116,7 @@ const AdvancedScreenerInterface = () => {
       }
     } catch (err) {
       setError('Failed to delete screener');
-      console.error('Delete screener error:', err);
+      logger.error('Delete screener error:', err);
     }
   };
 
@@ -135,7 +136,7 @@ const AdvancedScreenerInterface = () => {
       }
     } catch (err) {
       setError('Failed to duplicate screener');
-      console.error('Duplicate screener error:', err);
+      logger.error('Duplicate screener error:', err);
     }
   };
 
@@ -153,7 +154,7 @@ const AdvancedScreenerInterface = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       setError('Failed to export results');
-      console.error('Export error:', err);
+      logger.error('Export error:', err);
     }
   };
 

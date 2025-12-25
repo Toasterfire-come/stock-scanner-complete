@@ -14,6 +14,7 @@ import {
   Clock,
 } from "lucide-react";
 import { getEndpointStatus } from "../../api/client";
+import logger from '../../lib/logger';
 
 const EndpointStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +38,7 @@ const EndpointStatus = () => {
         toast.error("Endpoint status not available");
       }
     } catch (e) {
-      console.error("Failed to fetch status:", e);
+      logger.error("Failed to fetch status:", e);
       setStatusData({ endpoints: [], total_tested: 0, successful: 0, failed: 0 });
       setError("Failed to fetch endpoint status");
       toast.error("Failed to fetch endpoint status");

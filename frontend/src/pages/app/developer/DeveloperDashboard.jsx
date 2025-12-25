@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../../../context/SecureAuthContext';
 import { getApiKeys, getUsageStats } from '../../../api/client';
 import { getCurrentApiUsage } from '../../../api/client';
+import logger from '../../../lib/logger';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
@@ -61,7 +62,7 @@ const DeveloperDashboard = () => {
         });
       }
     } catch (error) {
-      console.error('Failed to load developer data:', error);
+      logger.error('Failed to load developer data:', error);
     } finally {
       setLoading(false);
     }

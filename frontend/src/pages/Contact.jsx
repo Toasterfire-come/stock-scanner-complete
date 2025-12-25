@@ -15,6 +15,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import logger from '../lib/logger';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -68,7 +69,7 @@ const Contact = () => {
         throw new Error('Failed to submit form');
       }
     } catch (error) {
-      console.error('Contact form submission failed:', error);
+      logger.error('Contact form submission failed:', error);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -90,7 +91,7 @@ const Contact = () => {
       <SEO
         title="Contact Us | Trade Scan Pro"
         description="Contact Trade Scan Pro for support, sales, enterprise solutions, and API access. We typically respond within 24 hours."
-        url="https://tradescanpro.com/contact"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/contact` : "https://tradescanpro.com/contact"}
         jsonLdUrls={["/structured/contact.jsonld"]}
       />
       {/* Hero Section */}

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getUserActivityFeed, getUserInsights } from '../api/client';
 import { Link } from 'react-router-dom';
+import logger from '../lib/logger';
 
 const RealUserActivityFeed = ({ maxItems = 10, showHeader = true }) => {
   const [activities, setActivities] = useState([]);
@@ -52,7 +53,7 @@ const RealUserActivityFeed = ({ maxItems = 10, showHeader = true }) => {
       setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to load activity feed');
-      console.error('Activity feed error:', err);
+      logger.error('Activity feed error:', err);
     } finally {
       setIsLoading(false);
     }

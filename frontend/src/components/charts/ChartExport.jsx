@@ -1,5 +1,6 @@
 import React from 'react';
 import { toast } from 'sonner';
+import logger from '../../lib/logger';
 
 /**
  * Chart Export Utilities
@@ -36,7 +37,7 @@ export const exportChartAsPNG = async (chartElement, filename = 'chart.png', opt
       toast.success('Chart exported as PNG');
     }, 'image/png');
   } catch (error) {
-    console.error('PNG export error:', error);
+    logger.error('PNG export error:', error);
     toast.error('Failed to export chart as PNG');
   }
 };
@@ -82,7 +83,7 @@ export const exportChartAsSVG = async (chartElement, filename = 'chart.svg') => 
 
     toast.success('Chart exported as SVG');
   } catch (error) {
-    console.error('SVG export error:', error);
+    logger.error('SVG export error:', error);
     toast.error('Failed to export chart as SVG');
   }
 };
@@ -135,7 +136,7 @@ export const exportChartDataAsCSV = (data, filename = 'chart-data.csv', columns 
 
     toast.success('Data exported as CSV');
   } catch (error) {
-    console.error('CSV export error:', error);
+    logger.error('CSV export error:', error);
     toast.error('Failed to export data as CSV');
   }
 };
@@ -194,7 +195,7 @@ const createCanvasFromElement = async (element, options = {}) => {
 
     ctx.drawImage(img, 0, 0, width, height);
   } catch (err) {
-    console.warn('Fallback rendering failed:', err);
+    logger.warn('Fallback rendering failed:', err);
   }
 
   return canvas;

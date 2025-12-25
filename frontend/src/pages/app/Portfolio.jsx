@@ -24,9 +24,9 @@ import {
   AlertCircle
 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, AreaChart, Area } from 'recharts';
-import { 
-  getPortfolio, 
-  addPortfolio, 
+import {
+  getPortfolio,
+  addPortfolio,
   deletePortfolio,
   exportPortfolioCSV,
   searchStocks,
@@ -37,6 +37,7 @@ import {
   createPortfolio,
   createShareLinkForPortfolio
 } from "../../api/client";
+import logger from '../../lib/logger';
 
 const Portfolio = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -139,7 +140,7 @@ const Portfolio = () => {
         setPriceMap(map);
       } catch { setPriceMap({}); }
     } catch (error) {
-      console.error("Failed to load portfolio data:", error);
+      logger.error("Failed to load portfolio data:", error);
       toast.error("Failed to load portfolio data");
     } finally {
       setIsLoading(false);
@@ -191,7 +192,7 @@ const Portfolio = () => {
         throw new Error(response?.message || 'Failed to add stock');
       }
     } catch (error) {
-      console.error("Failed to add stock:", error);
+      logger.error("Failed to add stock:", error);
       toast.error(error.message || "Failed to add stock to portfolio");
     }
   };
@@ -230,7 +231,7 @@ const Portfolio = () => {
         throw new Error(response?.message || 'Failed to delete stock');
       }
     } catch (error) {
-      console.error("Failed to delete stock:", error);
+      logger.error("Failed to delete stock:", error);
       toast.error(error.message || "Failed to remove stock from portfolio");
     }
   };
@@ -249,7 +250,7 @@ const Portfolio = () => {
       window.URL.revokeObjectURL(url);
       toast.success("Portfolio exported successfully");
     } catch (error) {
-      console.error("Failed to export portfolio:", error);
+      logger.error("Failed to export portfolio:", error);
       // Fallback CSV from current state
       try {
         const rows = [["Symbol","Company","Shares","Avg Cost","Current Price","Current Value","Gain/Loss","Gain/Loss %"]];

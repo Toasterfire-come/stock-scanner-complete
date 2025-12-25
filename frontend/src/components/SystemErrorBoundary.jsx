@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import logger from '../lib/logger';
 
 export default class SystemErrorBoundary extends React.Component {
   constructor(props) {
@@ -17,7 +18,7 @@ export default class SystemErrorBoundary extends React.Component {
     }
     // Optional: console for dev
     // eslint-disable-next-line no-console
-    console.error('UI ErrorBoundary caught:', error, info);
+    logger.error('UI ErrorBoundary caught:', error, info);
   }
   onReload = () => window.location.reload();
   onCopy = () => {

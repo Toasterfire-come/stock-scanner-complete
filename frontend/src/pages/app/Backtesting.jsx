@@ -48,6 +48,7 @@ import {
   AreaChart
 } from "recharts";
 import SEO from "../../components/SEO";
+import logger from '../../lib/logger';
 
 // Baseline strategy templates
 const BASELINE_STRATEGIES = {
@@ -219,7 +220,7 @@ export default function Backtesting() {
         setBacktestHistory(response.backtests || []);
       }
     } catch (error) {
-      console.error("Failed to load backtest history:", error);
+      logger.error("Failed to load backtest history:", error);
     } finally {
       setHistoryLoading(false);
     }
@@ -284,7 +285,7 @@ export default function Backtesting() {
       }
 
     } catch (error) {
-      console.error("Backtest error:", error);
+      logger.error("Backtest error:", error);
       toast.error(error.response?.data?.error || "An error occurred");
     } finally {
       setIsLoading(false);

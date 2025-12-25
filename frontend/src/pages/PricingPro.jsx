@@ -228,7 +228,7 @@ const PricingPro = () => {
       <SEO
         title="Pricing | Stock Filter & Market Scan Plans"
         description="Plans for stock filter and market scan workflows: real-time alerts, watchlists, portfolios, insider metrics, and in-depth stock info."
-        url="https://tradescanpro.com/pricing"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/pricing` : "https://tradescanpro.com/pricing"}
         jsonLdUrls={["/structured/pricing-products.jsonld", "/structured/pricing-faq.jsonld"]}
       />
       {/* Header */}

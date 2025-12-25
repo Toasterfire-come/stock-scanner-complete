@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { login as apiLogin, registerUser as apiRegister, logout as apiLogout } from '../api/client';
 import security, { secureStorage, validateEmail, validatePassword, sessionManager } from '../lib/security';
+import logger from '../lib/logger';
 
 const AuthContext = createContext();
 
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
           await logout();
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        logger.error('Auth initialization error:', error);
         await logout();
       } finally {
         setIsLoading(false);
@@ -221,12 +222,12 @@ export const AuthProvider = ({ children }) => {
       const token = secureStorage.get(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);
       if (token) {
         apiLogout().catch(error => {
-          console.warn('Logout API call failed:', error);
+          logger.warn('Logout API call failed:', error);
           // Continue with local logout even if API call fails
         });
       }
     } catch (error) {
-      console.warn('Logout error:', error);
+      logger.warn('Logout error:', error);
     } finally {
       // Clear all local data
       secureStorage.remove(security.SECURITY_CONFIG.TOKEN_STORAGE_KEY);

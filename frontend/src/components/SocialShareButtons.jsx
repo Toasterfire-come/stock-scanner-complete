@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
+import logger from '../lib/logger';
 
 /**
  * Social Share Buttons Component
@@ -69,7 +70,7 @@ export function SocialShareButtons({
         });
       } catch (error) {
         if (error.name !== "AbortError") {
-          console.error("Share failed:", error);
+          logger.error("Share failed:", error);
         }
       }
     }

@@ -2,14 +2,15 @@ import React from "react";
 import SEO from "../components/SEO";
 
 const Badges = () => {
-  const htmlLight = `<a href=\"https://tradescanpro.com/?utm_source=badge&utm_medium=referral\" rel=\"noopener\"><img src=\"https://tradescanpro.com/badges/tradescanpro-badge-light.svg\" alt=\"Powered by Trade Scan Pro\" width=\"180\" height=\"48\"/></a>`;
-  const htmlDark = `<a href=\"https://tradescanpro.com/?utm_source=badge&utm_medium=referral\" rel=\"noopener\"><img src=\"https://tradescanpro.com/badges/tradescanpro-badge-dark.svg\" alt=\"Powered by Trade Scan Pro\" width=\"180\" height=\"48\"/></a>`;
+  const siteUrl = process.env.REACT_APP_PUBLIC_URL || window.location.origin;
+  const htmlLight = `<a href=\"${siteUrl}/?utm_source=badge&utm_medium=referral\" rel=\"noopener\"><img src=\"${siteUrl}/badges/tradescanpro-badge-light.svg\" alt=\"Powered by Trade Scan Pro\" width=\"180\" height=\"48\"/></a>`;
+  const htmlDark = `<a href=\"${siteUrl}/?utm_source=badge&utm_medium=referral\" rel=\"noopener\"><img src=\"${siteUrl}/badges/tradescanpro-badge-dark.svg\" alt=\"Powered by Trade Scan Pro\" width=\"180\" height=\"48\"/></a>`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-100/50">
       <SEO
         title="Badges | Trade Scan Pro"
         description="Download partner badges and copy HTML to link back to Trade Scan Pro."
-        url="https://tradescanpro.com/badges"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/badges` : "https://tradescanpro.com/badges"}
       />
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-4xl">

@@ -31,6 +31,7 @@ import {
   formatPercent,
   timeframeCopy,
 } from "../data/marketingMetrics";
+import logger from '../lib/logger';
 
 const Features = () => {
   const [platformStats, setPlatformStats] = useState(null);
@@ -42,7 +43,7 @@ const Features = () => {
         const { data } = await api.get('/status/');
         setPlatformStats(data);
       } catch (error) {
-        console.error("Failed to fetch platform stats:", error);
+        logger.error("Failed to fetch platform stats:", error);
       }
     };
 
@@ -259,7 +260,7 @@ const Features = () => {
       <SEO
         title="Features | Value Investing Tools & Fundamental Analysis"
         description="Powerful stock filter and market scan: build filters by price, volume, RSI, insider buys; run real-time scans with alerts and watchlists."
-        url="https://tradescanpro.com/features"
+        url={process.env.REACT_APP_PUBLIC_URL ? `${process.env.REACT_APP_PUBLIC_URL}/features` : "https://tradescanpro.com/features"}
         jsonLdUrls={["/structured/features.jsonld"]}
       />
       {/* Hero Section */}

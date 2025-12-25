@@ -38,6 +38,7 @@ import {
   Download
 } from "lucide-react";
 import { getPortfolio, getMarketStats } from "../api/client";
+import logger from '../lib/logger';
 
 const AdvancedAnalytics = ({ userId }) => {
   const [timeframe, setTimeframe] = useState("1M");
@@ -56,7 +57,7 @@ const AdvancedAnalytics = ({ userId }) => {
         setPortfolioData(portfolio);
         setMarketData(market);
       } catch (error) {
-        console.error("Failed to fetch analytics:", error);
+        logger.error("Failed to fetch analytics:", error);
       } finally {
         setIsLoading(false);
       }

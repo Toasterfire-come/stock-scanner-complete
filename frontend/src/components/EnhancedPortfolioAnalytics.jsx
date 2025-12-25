@@ -21,6 +21,7 @@ import {
   exportPortfolioCSV 
 } from '../api/client';
 import { Link } from 'react-router-dom';
+import logger from '../lib/logger';
 
 const EnhancedPortfolioAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
@@ -48,7 +49,7 @@ const EnhancedPortfolioAnalytics = () => {
       setDividendTracking(dividendRes);
     } catch (err) {
       setError('Failed to load portfolio analytics');
-      console.error('Portfolio analytics error:', err);
+      logger.error('Portfolio analytics error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +68,7 @@ const EnhancedPortfolioAnalytics = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Export failed:', err);
+      logger.error('Export failed:', err);
     }
   };
 
