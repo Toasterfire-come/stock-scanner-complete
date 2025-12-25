@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Stock, StockPrice, StockAlert,
-    UserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
+    UserProfile as OldUserProfile, UserPortfolio, PortfolioHolding, TradeTransaction,
     UserWatchlist, WatchlistItem, UserInterests, PersonalizedNews,
     PortfolioFollowing, DiscountCode, UserDiscountUsage,
     RevenueTracking, MonthlyRevenueSummary,
@@ -14,9 +14,16 @@ from .models import (
     TradingStrategy, StrategyScore, StrategyRating, StrategyClone, StrategyLeaderboard,
     LearningPath, Lesson, UserLessonProgress,
     IndicatorExplanation, FeatureWalkthrough, UserWalkthroughProgress,
-    KnowledgeBaseArticle, UserKBFeedback
+    KnowledgeBaseArticle, UserKBFeedback,
+    # Phase 8 - Social & Copy Trading
+    SocialUserProfile, SocialFollow, CopyTradingRelationship, CopiedTrade,
+    StrategyShare, ReferralReward,
+    # Phase 9 - Retention & Habits
+    TradingJournal, PerformanceReview, CustomIndicator, UserCustomIndicator,
+    TradeExport, AlertTemplate, TriggeredAlert
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
+# Note: UserProfile (old) imported as OldUserProfile to avoid conflict with new social UserProfile
 
 # Basic models
 @admin.register(Stock)
@@ -42,7 +49,7 @@ class StockAlertAdmin(admin.ModelAdmin):
 # To manage subscriptions, use the billing app admin interface
 
 # User Profile
-@admin.register(UserProfile)
+@admin.register(OldUserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'username', 'created_at', 'updated_at']
     search_fields = ['user__username', 'username']

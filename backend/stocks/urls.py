@@ -64,6 +64,8 @@ from . import backtesting_api
 from . import value_hunter_api
 from . import strategy_ranking_api
 from . import education_api
+from . import social_trading_api
+from . import retention_api
 # NEW MVP Feature APIs
 from . import ai_chat_api
 from . import enhanced_screener_api
@@ -354,6 +356,74 @@ urlpatterns = [
     path('education/kb/helpful/', education_api.get_helpful_kb_articles, name='helpful_kb_articles'),
     path('education/kb/<slug:slug>/', education_api.get_kb_article, name='kb_article'),
     path('education/kb/<int:article_id>/feedback/', education_api.submit_kb_feedback, name='submit_kb_feedback'),
+
+    # ============================================================================
+    # PHASE 8 - SOCIAL & COPY TRADING (MVP2 v3.4)
+    # ============================================================================
+
+    # User Profile endpoints
+    path('social/profile/me/', social_trading_api.get_my_profile, name='my_profile'),
+    path('social/profile/me/update/', social_trading_api.update_my_profile, name='update_my_profile'),
+    path('social/profiles/', social_trading_api.get_public_profiles, name='public_profiles'),
+    path('social/profiles/search/', social_trading_api.search_profiles, name='search_profiles'),
+    path('social/profile/<int:user_id>/', social_trading_api.get_profile_by_id, name='profile_by_id'),
+
+    # Follow endpoints
+    path('social/follow/<int:user_id>/', social_trading_api.follow_user, name='follow_user'),
+    path('social/unfollow/<int:user_id>/', social_trading_api.unfollow_user, name='unfollow_user'),
+    path('social/followers/', social_trading_api.get_my_followers, name='my_followers'),
+    path('social/following/', social_trading_api.get_my_following, name='my_following'),
+
+    # Copy Trading endpoints
+    path('social/copy/start/', social_trading_api.start_copy_trading, name='start_copy_trading'),
+    path('social/copy/<int:relationship_id>/pause/', social_trading_api.pause_copy_trading, name='pause_copy_trading'),
+    path('social/copy/<int:relationship_id>/resume/', social_trading_api.resume_copy_trading, name='resume_copy_trading'),
+    path('social/copy/<int:relationship_id>/stop/', social_trading_api.stop_copy_trading, name='stop_copy_trading'),
+    path('social/copy/my-relationships/', social_trading_api.get_my_copy_relationships, name='my_copy_relationships'),
+
+    # Strategy Sharing endpoints
+    path('social/share/strategy/', social_trading_api.share_strategy, name='share_strategy'),
+    path('social/share/<str:share_token>/', social_trading_api.get_shared_strategy, name='get_shared_strategy'),
+    path('social/share/<int:share_id>/revoke/', social_trading_api.revoke_share, name='revoke_share'),
+
+    # Referral endpoints
+    path('social/referral/apply/', social_trading_api.apply_referral_code, name='apply_referral'),
+    path('social/referral/stats/', social_trading_api.get_referral_stats, name='referral_stats'),
+
+    # ============================================================================
+    # PHASE 9 - RETENTION & HABITS (MVP2 v3.4)
+    # ============================================================================
+
+    # Trading Journal endpoints
+    path('journal/create/', retention_api.create_journal_entry, name='create_journal_entry'),
+    path('journal/<int:entry_id>/update/', retention_api.update_journal_entry, name='update_journal_entry'),
+    path('journal/my-entries/', retention_api.get_my_journal_entries, name='my_journal_entries'),
+    path('journal/stats/', retention_api.get_journal_stats, name='journal_stats'),
+
+    # Performance Review endpoints
+    path('review/generate/', retention_api.generate_performance_review, name='generate_performance_review'),
+    path('review/my-reviews/', retention_api.get_my_performance_reviews, name='my_performance_reviews'),
+    path('review/<int:review_id>/', retention_api.get_performance_review, name='get_performance_review'),
+    path('review/<int:review_id>/viewed/', retention_api.mark_review_viewed, name='mark_review_viewed'),
+
+    # Custom Indicator endpoints
+    path('indicators/custom/create/', retention_api.create_custom_indicator, name='create_custom_indicator'),
+    path('indicators/custom/my-indicators/', retention_api.get_my_custom_indicators, name='my_custom_indicators'),
+    path('indicators/custom/public/', retention_api.get_public_custom_indicators, name='public_custom_indicators'),
+
+    # Trade Export endpoints
+    path('exports/request/', retention_api.request_trade_export, name='request_trade_export'),
+    path('exports/my-exports/', retention_api.get_my_exports, name='my_exports'),
+
+    # Alert Template endpoints
+    path('alerts/create/', retention_api.create_alert, name='create_alert'),
+    path('alerts/<int:alert_id>/update/', retention_api.update_alert, name='update_alert'),
+    path('alerts/<int:alert_id>/delete/', retention_api.delete_alert, name='delete_alert'),
+    path('alerts/my-alerts/', retention_api.get_my_alerts, name='my_alerts'),
+
+    # Triggered Alert endpoints
+    path('alerts/triggered/', retention_api.get_triggered_alerts, name='triggered_alerts'),
+    path('alerts/triggered/<int:trigger_id>/acknowledge/', retention_api.acknowledge_alert, name='acknowledge_alert'),
 
     # ============================================================================
     # NEW MVP FEATURES

@@ -712,7 +712,7 @@ class CustomIndicator(models.Model):
     ]
 
     id = models.CharField(max_length=64, primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='custom_indicators')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='old_custom_indicators')
     name = models.CharField(max_length=150)
     mode = models.CharField(max_length=16, choices=MODE_CHOICES, default='formula')
     formula = models.TextField(blank=True)
@@ -3400,3 +3400,580 @@ class UserKBFeedback(models.Model):
     def __str__(self):
         helpful = "Helpful" if self.was_helpful else "Not Helpful"
         return f"{self.user.email} - {self.article.title} ({helpful})"
+
+
+# ============================================================================
+# PHASE 8 — SOCIAL & COPY TRADING (MVP2 v3.4)
+# ============================================================================
+
+
+class SocialUserProfile(models.Model):
+    """
+    Public user profile for social features (opt-in).
+    """
+    VISIBILITY_CHOICES = [
+        ('private', 'Private (hidden)'),
+        ('public', 'Public (discoverable)'),
+        ('followers_only', 'Followers Only'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='social_profile')
+
+    # Profile settings
+    display_name = models.CharField(max_length=100, blank=True, help_text="Public display name")
+    bio = models.TextField(max_length=500, blank=True, help_text="Short bio")
+    avatar_url = models.URLField(blank=True, help_text="Profile picture URL")
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='private')
+
+    # Social stats
+    followers_count = models.IntegerField(default=0)
+    following_count = models.IntegerField(default=0)
+    strategies_shared_count = models.IntegerField(default=0)
+    total_copiers = models.IntegerField(default=0, help_text="Total users copying this trader")
+
+    # Verification
+    is_verified = models.BooleanField(default=False, help_text="Verified trader badge")
+    verification_date = models.DateTimeField(null=True, blank=True)
+
+    # Performance showcase (aggregated from strategies)
+    showcase_annual_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    showcase_sharpe_ratio = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    showcase_win_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Settings
+    allow_copy_trading = models.BooleanField(default=False, help_text="Allow others to copy trades")
+    allow_messages = models.BooleanField(default=True, help_text="Allow direct messages")
+    show_stats = models.BooleanField(default=True, help_text="Show performance stats on profile")
+
+    # Referral tracking
+    referral_code = models.CharField(max_length=20, unique=True, blank=True)
+    referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
+    referral_count = models.IntegerField(default=0)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['visibility', '-followers_count']),
+            models.Index(fields=['is_verified', '-followers_count']),
+            models.Index(fields=['referral_code']),
+        ]
+
+    def __str__(self):
+        return f"{self.display_name or self.user.email} ({self.visibility})"
+
+    def update_showcase_stats(self):
+        """Update showcase stats from user's best performing strategies."""
+        from django.db.models import Avg
+
+        public_strategies = TradingStrategy.objects.filter(
+            user=self.user,
+            visibility='public',
+            status='live'
+        )
+
+        if public_strategies.exists():
+            self.showcase_annual_return = public_strategies.aggregate(Avg('annual_return'))['annual_return__avg']
+            self.showcase_sharpe_ratio = public_strategies.aggregate(Avg('sharpe_ratio'))['sharpe_ratio__avg']
+            self.showcase_win_rate = public_strategies.aggregate(Avg('win_rate'))['win_rate__avg']
+            self.save(update_fields=['showcase_annual_return', 'showcase_sharpe_ratio', 'showcase_win_rate'])
+
+
+class SocialFollow(models.Model):
+    """
+    Follow relationship between users.
+    """
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_following')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_followers')
+
+    # Metadata
+    followed_at = models.DateTimeField(auto_now_add=True)
+    notifications_enabled = models.BooleanField(default=True, help_text="Get notified of new strategies")
+
+    class Meta:
+        ordering = ['-followed_at']
+        unique_together = ['follower', 'following']
+        indexes = [
+            models.Index(fields=['follower', '-followed_at']),
+            models.Index(fields=['following', '-followed_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.follower.email} follows {self.following.email}"
+
+
+class CopyTradingRelationship(models.Model):
+    """
+    Copy trading relationship - one user copies another user's strategy.
+    """
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('stopped', 'Stopped'),
+    ]
+
+    copier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='copying')
+    trader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='copiers')
+    strategy = models.ForeignKey(TradingStrategy, on_delete=models.CASCADE, related_name='copy_relationships')
+
+    # Copy settings
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    allocation_amount = models.DecimalField(max_digits=12, decimal_places=2, help_text="$ allocated to copy this strategy")
+    position_size_multiplier = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, help_text="0.5 = half size, 2.0 = double size")
+
+    # Risk controls
+    max_daily_loss = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Stop copying if daily loss exceeds")
+    stop_loss_pct = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Override strategy stop loss")
+
+    # Mode
+    is_paper_trading = models.BooleanField(default=True, help_text="Paper trade or live (future)")
+
+    # Performance tracking
+    total_profit_loss = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    trades_copied = models.IntegerField(default=0)
+    win_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Timestamps
+    started_at = models.DateTimeField(auto_now_add=True)
+    paused_at = models.DateTimeField(null=True, blank=True)
+    stopped_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['copier', 'status']),
+            models.Index(fields=['trader', 'status']),
+            models.Index(fields=['strategy', 'status']),
+        ]
+        unique_together = ['copier', 'strategy']
+
+    def __str__(self):
+        return f"{self.copier.email} copying {self.strategy.name} ({self.status})"
+
+    def pause(self):
+        """Pause copy trading."""
+        self.status = 'paused'
+        self.paused_at = timezone.now()
+        self.save()
+
+    def resume(self):
+        """Resume copy trading."""
+        self.status = 'active'
+        self.paused_at = None
+        self.save()
+
+    def stop(self):
+        """Stop copy trading permanently."""
+        self.status = 'stopped'
+        self.stopped_at = timezone.now()
+        self.save()
+
+
+class CopiedTrade(models.Model):
+    """
+    Record of an individual trade copied from a trader.
+    """
+    copy_relationship = models.ForeignKey(CopyTradingRelationship, on_delete=models.CASCADE, related_name='trades')
+    original_trade = models.ForeignKey('PaperTrade', on_delete=models.SET_NULL, null=True, related_name='copied_as')
+
+    # Trade details
+    ticker = models.CharField(max_length=10)
+    action = models.CharField(max_length=10, help_text="buy, sell, short, cover")
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=12, decimal_places=4)
+
+    # Outcome
+    profit_loss = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    is_closed = models.BooleanField(default=False)
+
+    # Timestamps
+    executed_at = models.DateTimeField(auto_now_add=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-executed_at']
+        indexes = [
+            models.Index(fields=['copy_relationship', '-executed_at']),
+            models.Index(fields=['ticker', '-executed_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.action.upper()} {self.quantity} {self.ticker} @ ${self.price}"
+
+
+class StrategyShare(models.Model):
+    """
+    Track when a strategy is shared publicly or with specific users.
+    """
+    SHARE_TYPE_CHOICES = [
+        ('public', 'Public (marketplace)'),
+        ('unlisted', 'Unlisted (link only)'),
+        ('private_share', 'Private Share'),
+    ]
+
+    strategy = models.ForeignKey(TradingStrategy, on_delete=models.CASCADE, related_name='shares')
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_strategies')
+    share_type = models.CharField(max_length=20, choices=SHARE_TYPE_CHOICES, default='unlisted')
+
+    # Share link
+    share_token = models.CharField(max_length=32, unique=True, help_text="Unique token for sharing")
+
+    # Stats
+    view_count = models.IntegerField(default=0)
+    clone_count = models.IntegerField(default=0)
+    copy_count = models.IntegerField(default=0, help_text="Number of users copying this strategy")
+
+    # Settings
+    allow_cloning = models.BooleanField(default=True)
+    allow_copying = models.BooleanField(default=False)
+
+    # Timestamps
+    shared_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Optional expiration")
+
+    class Meta:
+        ordering = ['-shared_at']
+        indexes = [
+            models.Index(fields=['share_token']),
+            models.Index(fields=['share_type', '-view_count']),
+        ]
+
+    def __str__(self):
+        return f"{self.strategy.name} shared by {self.shared_by.email} ({self.share_type})"
+
+    def is_active(self):
+        """Check if share is still active."""
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False
+        return True
+
+
+class ReferralReward(models.Model):
+    """
+    Track referral rewards and bonuses.
+    """
+    REWARD_TYPE_CHOICES = [
+        ('signup', 'Signup Bonus'),
+        ('first_trade', 'First Trade Bonus'),
+        ('subscription', 'Subscription Commission'),
+    ]
+
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_rewards')
+    referred_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_source')
+
+    # Reward details
+    reward_type = models.CharField(max_length=20, choices=REWARD_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Reward amount in $")
+
+    # Status
+    is_paid = models.BooleanField(default=False)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    # Timestamps
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-earned_at']
+        indexes = [
+            models.Index(fields=['referrer', '-earned_at']),
+            models.Index(fields=['is_paid', '-earned_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.referrer.email} earned ${self.amount} from {self.referred_user.email}"
+
+
+# ============================================================================
+# PHASE 9 — RETENTION & HABITS (MVP2 v3.4)
+# ============================================================================
+
+
+class TradingJournal(models.Model):
+    """
+    User's trading journal for reflection and learning.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='journal_entries')
+    trade = models.ForeignKey('PaperTrade', on_delete=models.SET_NULL, null=True, blank=True, related_name='journal_entries')
+
+    # Entry content
+    title = models.CharField(max_length=200)
+    notes = models.TextField(help_text="Trade notes, reasoning, lessons learned")
+
+    # Emotional state
+    EMOTION_CHOICES = [
+        ('confident', 'Confident'),
+        ('anxious', 'Anxious'),
+        ('fearful', 'Fearful'),
+        ('greedy', 'Greedy'),
+        ('neutral', 'Neutral'),
+        ('disciplined', 'Disciplined'),
+        ('impulsive', 'Impulsive'),
+    ]
+    emotion_before = models.CharField(max_length=20, choices=EMOTION_CHOICES, blank=True, help_text="Emotion before trade")
+    emotion_after = models.CharField(max_length=20, choices=EMOTION_CHOICES, blank=True, help_text="Emotion after trade")
+
+    # Trade assessment
+    followed_plan = models.BooleanField(null=True, blank=True, help_text="Did I follow my trading plan?")
+    mistakes_made = models.TextField(blank=True, help_text="What mistakes did I make?")
+    lessons_learned = models.TextField(blank=True, help_text="What did I learn?")
+
+    # Tags
+    tags = models.JSONField(default=list, blank=True, help_text="Custom tags for categorization")
+
+    # Attachments
+    chart_screenshot_url = models.URLField(blank=True, help_text="Chart screenshot")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['emotion_before']),
+            models.Index(fields=['followed_plan']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.title} ({self.created_at.strftime('%Y-%m-%d')})"
+
+
+class PerformanceReview(models.Model):
+    """
+    Monthly automated performance reviews.
+    """
+    REVIEW_PERIOD_CHOICES = [
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('yearly', 'Yearly'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='performance_reviews')
+
+    # Review period
+    review_period = models.CharField(max_length=20, choices=REVIEW_PERIOD_CHOICES, default='monthly')
+    period_start = models.DateField()
+    period_end = models.DateField()
+
+    # Performance metrics
+    total_trades = models.IntegerField(default=0)
+    winning_trades = models.IntegerField(default=0)
+    losing_trades = models.IntegerField(default=0)
+    win_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    total_profit_loss = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    avg_win = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    avg_loss = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    profit_factor = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Risk metrics
+    max_drawdown = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    sharpe_ratio = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Emotional insights (from journal)
+    most_common_emotion = models.CharField(max_length=20, blank=True)
+    plan_adherence_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="% of trades following plan")
+
+    # Summary
+    summary = models.TextField(blank=True, help_text="AI-generated summary of performance")
+    recommendations = models.TextField(blank=True, help_text="AI-generated recommendations")
+
+    # Status
+    is_generated = models.BooleanField(default=False)
+    is_viewed = models.BooleanField(default=False)
+    viewed_at = models.DateTimeField(null=True, blank=True)
+
+    # Timestamps
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-period_end']
+        unique_together = ['user', 'review_period', 'period_start', 'period_end']
+        indexes = [
+            models.Index(fields=['user', '-period_end']),
+            models.Index(fields=['is_generated', '-generated_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.review_period} ({self.period_start} to {self.period_end})"
+
+
+class UserCustomIndicator(models.Model):
+    """
+    User-created custom technical indicators.
+    """
+    INDICATOR_TYPE_CHOICES = [
+        ('overlay', 'Overlay (on price chart)'),
+        ('oscillator', 'Oscillator (separate panel)'),
+        ('volume', 'Volume-based'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='custom_indicators')
+
+    # Indicator details
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    indicator_type = models.CharField(max_length=20, choices=INDICATOR_TYPE_CHOICES)
+
+    # Formula/calculation
+    formula = models.TextField(help_text="Pine Script or Python formula")
+    parameters = models.JSONField(default=dict, help_text="Configurable parameters with defaults")
+
+    # Visibility
+    VISIBILITY_CHOICES = [
+        ('private', 'Private'),
+        ('public', 'Public (marketplace)'),
+        ('unlisted', 'Unlisted (link only)'),
+    ]
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='private')
+
+    # Usage stats
+    usage_count = models.IntegerField(default=0, help_text="Times used by creator")
+    clone_count = models.IntegerField(default=0, help_text="Times cloned by others")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['visibility', '-clone_count']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} by {self.user.email}"
+
+
+class TradeExport(models.Model):
+    """
+    Export records for trades (CSV, PDF, tax prep format).
+    """
+    EXPORT_FORMAT_CHOICES = [
+        ('csv', 'CSV'),
+        ('pdf', 'PDF Report'),
+        ('tax_prep', 'Tax Preparation Format'),
+        ('json', 'JSON'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='trade_exports')
+
+    # Export settings
+    export_format = models.CharField(max_length=20, choices=EXPORT_FORMAT_CHOICES)
+    date_from = models.DateField()
+    date_to = models.DateField()
+
+    # Filters
+    include_paper_trades = models.BooleanField(default=True)
+    include_live_trades = models.BooleanField(default=False)
+    strategy_filter = models.ForeignKey(TradingStrategy, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # File
+    file_url = models.URLField(blank=True, help_text="S3 URL or file path")
+    file_size_bytes = models.IntegerField(default=0)
+
+    # Status
+    is_generated = models.BooleanField(default=False)
+    error_message = models.TextField(blank=True)
+
+    # Timestamps
+    requested_at = models.DateTimeField(auto_now_add=True)
+    generated_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Download link expiration")
+
+    class Meta:
+        ordering = ['-requested_at']
+        indexes = [
+            models.Index(fields=['user', '-requested_at']),
+            models.Index(fields=['is_generated', '-requested_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.export_format.upper()} ({self.date_from} to {self.date_to})"
+
+
+class AlertTemplate(models.Model):
+    """
+    Custom multi-condition alert templates (Pro tier).
+    """
+    CONDITION_TYPE_CHOICES = [
+        ('price', 'Price Crosses'),
+        ('volume', 'Volume Threshold'),
+        ('indicator', 'Indicator Signal'),
+        ('pattern', 'Chart Pattern'),
+        ('news', 'News/Sentiment'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alert_templates')
+
+    # Alert details
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    # Conditions (array of condition objects)
+    conditions = models.JSONField(default=list, help_text="Array of alert conditions (AND logic)")
+
+    # Notification settings
+    notify_sms = models.BooleanField(default=False)
+    notify_email = models.BooleanField(default=False)
+    notify_push = models.BooleanField(default=True)
+
+    # Status
+    is_active = models.BooleanField(default=True)
+    times_triggered = models.IntegerField(default=0)
+    last_triggered_at = models.DateTimeField(null=True, blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['is_active', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.user.email})"
+
+
+class TriggeredAlert(models.Model):
+    """
+    Record of when an alert template was triggered.
+    """
+    alert_template = models.ForeignKey(AlertTemplate, on_delete=models.CASCADE, related_name='triggers')
+    ticker = models.CharField(max_length=10)
+
+    # Trigger details
+    triggered_conditions = models.JSONField(default=list, help_text="Which conditions triggered")
+    market_data = models.JSONField(default=dict, help_text="Snapshot of market data at trigger time")
+
+    # Notification status
+    sms_sent = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False)
+    push_sent = models.BooleanField(default=False)
+
+    # User action
+    is_acknowledged = models.BooleanField(default=False)
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+
+    # Timestamp
+    triggered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-triggered_at']
+        indexes = [
+            models.Index(fields=['alert_template', '-triggered_at']),
+            models.Index(fields=['ticker', '-triggered_at']),
+            models.Index(fields=['is_acknowledged', '-triggered_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.alert_template.name} - {self.ticker} at {self.triggered_at.strftime('%Y-%m-%d %H:%M')}"
