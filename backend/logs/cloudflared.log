@@ -910,3 +910,24 @@
 2025-12-25T01:27:33Z INF Tunnel server stopped
 2025-12-25T01:27:33Z ERR icmp router terminated error="context canceled"
 2025-12-25T01:27:33Z INF Metrics server stopped
+2025-12-25T01:27:48Z INF Starting tunnel tunnelID=66a404f0-c651-4141-bb4e-008a551bc5b5
+2025-12-25T01:27:48Z INF Version 2025.7.0 (Checksum 9e37ce90110dc9e83108317273369641d2cab438cd9ca0458b30a6568fb09eac)
+2025-12-25T01:27:48Z INF GOOS: windows, GOVersion: go1.24.2, GoArch: amd64
+2025-12-25T01:27:48Z INF Settings: map[cred-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json credentials-file:C:/Users/Carterpc/.cloudflared/66a404f0-c651-4141-bb4e-008a551bc5b5.json edge-ip-version:auto loglevel:info no-autoupdate:true p:quic proto-loglevel:warn protocol:quic transport-loglevel:warn]
+2025-12-25T01:27:48Z INF cloudflared will not automatically update on Windows systems.
+2025-12-25T01:27:48Z INF Generated Connector ID: e0ddd966-ab4e-458e-b87f-80b14a4b4685
+2025-12-25T01:27:48Z INF Initial protocol quic
+2025-12-25T01:27:48Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-12-25T01:27:48Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-12-25T01:27:48Z INF cloudflared does not support loading the system root certificate pool on Windows. Please use --origin-ca-pool <PATH> to specify the path to the certificate pool
+2025-12-25T01:27:48Z INF ICMP proxy will use 192.168.0.12 as source for IPv4
+2025-12-25T01:27:48Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.27
+2025-12-25T01:27:48Z INF ICMP proxy will use fe80::8eb9:6dc1:3988:5d40 in zone Ethernet as source for IPv6
+2025-12-25T01:27:48Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2025-12-25T01:27:49Z INF Registered tunnel connection connIndex=0 connection=db0d7fff-6071-494b-b9a3-10667059e04f event=0 ip=198.41.192.27 location=ord06 protocol=quic
+2025-12-25T01:27:49Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=1 event=0 ip=198.41.200.13
+2025-12-25T01:27:49Z INF Registered tunnel connection connIndex=1 connection=1c929e47-c89a-41a4-9bb4-38e0f9501764 event=0 ip=198.41.200.13 location=ord07 protocol=quic
+2025-12-25T01:27:50Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=2 event=0 ip=198.41.192.77
+2025-12-25T01:27:50Z INF Registered tunnel connection connIndex=2 connection=9dbe41b8-c0ff-46b9-aa4d-4fb22c1529bf event=0 ip=198.41.192.77 location=ord02 protocol=quic
+2025-12-25T01:27:51Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=3 event=0 ip=198.41.200.53
+2025-12-25T01:27:52Z INF Registered tunnel connection connIndex=3 connection=6c8389bf-d21a-4dff-9e1b-fa9476709d50 event=0 ip=198.41.200.53 location=ord12 protocol=quic

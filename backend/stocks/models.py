@@ -2993,3 +2993,410 @@ class StrategyLeaderboard(models.Model):
 
     def __str__(self):
         return f"#{self.rank} - {self.strategy.name} ({self.get_category_display()} - {self.get_timeframe_display()})"
+
+
+# ==================== EDUCATION & CONTEXT SYSTEM ====================
+# MVP2 v3.4 - Phase 7: Structured learning paths, tooltips, and knowledge base
+
+class LearningPath(models.Model):
+    """
+    Structured learning journey for different user skill levels.
+    Onboarding and feature adoption framework.
+    """
+    DIFFICULTY_LEVELS = [
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('advanced', 'Advanced'),
+        ('expert', 'Expert'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('onboarding', 'Platform Onboarding'),
+        ('technical_analysis', 'Technical Analysis'),
+        ('fundamental_analysis', 'Fundamental Analysis'),
+        ('options_trading', 'Options Trading'),
+        ('paper_trading', 'Paper Trading'),
+        ('risk_management', 'Risk Management'),
+        ('strategy_development', 'Strategy Development'),
+        ('news_sentiment', 'News & Sentiment'),
+    ]
+
+    # Core fields
+    title = models.CharField(max_length=200, help_text="Learning path title")
+    slug = models.SlugField(max_length=200, unique=True, help_text="URL-friendly identifier")
+    description = models.TextField(help_text="Path overview and goals")
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_LEVELS, default='beginner')
+
+    # Content
+    cover_image_url = models.URLField(blank=True, help_text="Cover image URL")
+    estimated_duration_minutes = models.IntegerField(help_text="Total estimated completion time")
+
+    # Ordering and visibility
+    order = models.IntegerField(default=0, help_text="Display order")
+    is_published = models.BooleanField(default=True)
+    is_required_for_onboarding = models.BooleanField(default=False, help_text="Required for new users")
+
+    # Prerequisites
+    required_tier = models.CharField(max_length=20, choices=[
+        ('free', 'Free'),
+        ('basic', 'Basic'),
+        ('pro', 'Pro'),
+        ('enterprise', 'Enterprise'),
+    ], default='free')
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'title']
+        indexes = [
+            models.Index(fields=['category', 'difficulty']),
+            models.Index(fields=['is_published', 'order']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.get_difficulty_display()})"
+
+    def get_completion_rate(self, user):
+        """Calculate user's completion rate for this path"""
+        total_lessons = self.lessons.count()
+        if total_lessons == 0:
+            return 0
+        completed = UserLessonProgress.objects.filter(
+            user=user,
+            lesson__learning_path=self,
+            is_completed=True
+        ).count()
+        return (completed / total_lessons) * 100
+
+
+class Lesson(models.Model):
+    """
+    Individual lesson within a learning path.
+    Contains content, examples, and interactive elements.
+    """
+    CONTENT_TYPES = [
+        ('text', 'Text/Article'),
+        ('video', 'Video'),
+        ('interactive', 'Interactive Demo'),
+        ('quiz', 'Quiz'),
+        ('exercise', 'Hands-on Exercise'),
+    ]
+
+    # Relationships
+    learning_path = models.ForeignKey(LearningPath, on_delete=models.CASCADE, related_name='lessons')
+
+    # Core fields
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200)
+    description = models.TextField(help_text="Lesson overview")
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, default='text')
+
+    # Content
+    content = models.TextField(help_text="Lesson content (Markdown supported)")
+    video_url = models.URLField(blank=True, help_text="Video URL if content_type is video")
+    example_code = models.TextField(blank=True, help_text="Example code snippets")
+    interactive_demo_url = models.URLField(blank=True, help_text="Interactive demo link")
+
+    # Metadata
+    order = models.IntegerField(default=0)
+    estimated_duration_minutes = models.IntegerField(default=5)
+    difficulty = models.CharField(max_length=20, choices=LearningPath.DIFFICULTY_LEVELS, default='beginner')
+
+    # Quiz/Exercise data
+    quiz_questions = models.JSONField(default=list, blank=True, help_text="Quiz questions for quiz lessons")
+    exercise_instructions = models.TextField(blank=True, help_text="Exercise instructions")
+
+    # Visibility
+    is_published = models.BooleanField(default=True)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['learning_path', 'order']
+        indexes = [
+            models.Index(fields=['learning_path', 'order']),
+            models.Index(fields=['content_type']),
+        ]
+        unique_together = ['learning_path', 'slug']
+
+    def __str__(self):
+        return f"{self.learning_path.title} - {self.title}"
+
+
+class UserLessonProgress(models.Model):
+    """
+    Track user progress through lessons.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stocks_lesson_progress')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='user_progress')
+
+    # Progress tracking
+    is_completed = models.BooleanField(default=False)
+    completion_percentage = models.IntegerField(default=0, help_text="0-100")
+    time_spent_seconds = models.IntegerField(default=0, help_text="Time spent on lesson")
+
+    # Quiz results
+    quiz_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Quiz score percentage")
+    quiz_attempts = models.IntegerField(default=0)
+    quiz_answers = models.JSONField(default=dict, blank=True, help_text="User's quiz answers")
+
+    # Exercise results
+    exercise_completed = models.BooleanField(default=False)
+    exercise_feedback = models.TextField(blank=True, help_text="Feedback on exercise")
+
+    # Timestamps
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    last_accessed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-last_accessed_at']
+        indexes = [
+            models.Index(fields=['user', 'is_completed']),
+            models.Index(fields=['lesson', '-completed_at']),
+        ]
+        unique_together = ['user', 'lesson']
+
+    def __str__(self):
+        status = "Completed" if self.is_completed else f"{self.completion_percentage}%"
+        return f"{self.user.email} - {self.lesson.title} ({status})"
+
+
+class IndicatorExplanation(models.Model):
+    """
+    Detailed explanations for technical indicators.
+    Shown as tooltips and in knowledge base.
+    """
+    INDICATOR_CATEGORIES = [
+        ('trend', 'Trend Indicators'),
+        ('momentum', 'Momentum Indicators'),
+        ('volatility', 'Volatility Indicators'),
+        ('volume', 'Volume Indicators'),
+        ('support_resistance', 'Support/Resistance'),
+    ]
+
+    # Indicator info
+    indicator_name = models.CharField(max_length=100, unique=True, help_text="Indicator name (e.g., 'RSI', 'MACD')")
+    full_name = models.CharField(max_length=200, help_text="Full indicator name")
+    category = models.CharField(max_length=30, choices=INDICATOR_CATEGORIES)
+
+    # Explanations
+    short_description = models.CharField(max_length=200, help_text="Tooltip text (1-2 sentences)")
+    detailed_explanation = models.TextField(help_text="Comprehensive explanation")
+    how_to_use = models.TextField(help_text="How to interpret and use this indicator")
+    common_mistakes = models.TextField(blank=True, help_text="Common mistakes to avoid")
+
+    # Formula and calculation
+    formula = models.TextField(blank=True, help_text="Mathematical formula")
+    calculation_example = models.TextField(blank=True, help_text="Step-by-step calculation example")
+
+    # Parameters
+    default_parameters = models.JSONField(default=dict, help_text="Default parameter values")
+    parameter_explanations = models.JSONField(default=dict, help_text="Explanation of each parameter")
+
+    # Visual aids
+    example_chart_url = models.URLField(blank=True, help_text="Example chart showing indicator")
+    video_tutorial_url = models.URLField(blank=True)
+
+    # Related content
+    related_indicators = models.ManyToManyField('self', blank=True, symmetrical=True)
+    related_lessons = models.ManyToManyField(Lesson, blank=True, related_name='explained_indicators')
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'indicator_name']
+        indexes = [
+            models.Index(fields=['category']),
+            models.Index(fields=['indicator_name']),
+        ]
+
+    def __str__(self):
+        return f"{self.indicator_name} - {self.full_name}"
+
+
+class FeatureWalkthrough(models.Model):
+    """
+    Interactive feature walkthroughs (onboarding tours).
+    Step-by-step guides for new features.
+    """
+    TRIGGER_TYPES = [
+        ('on_visit', 'On Page Visit'),
+        ('on_first_visit', 'On First Visit Only'),
+        ('manual', 'Manual Trigger'),
+        ('feature_release', 'New Feature Release'),
+    ]
+
+    # Core fields
+    feature_name = models.CharField(max_length=100, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+
+    # Trigger settings
+    trigger_type = models.CharField(max_length=20, choices=TRIGGER_TYPES, default='on_first_visit')
+    target_url = models.CharField(max_length=200, help_text="URL pattern where walkthrough appears")
+
+    # Steps
+    steps = models.JSONField(default=list, help_text="Array of walkthrough steps with selectors and text")
+
+    # Visibility and targeting
+    is_active = models.BooleanField(default=True)
+    required_tier = models.CharField(max_length=20, choices=[
+        ('all', 'All Users'),
+        ('free', 'Free Tier'),
+        ('basic', 'Basic Tier'),
+        ('pro', 'Pro Tier'),
+        ('enterprise', 'Enterprise Tier'),
+    ], default='all')
+
+    # Priority
+    priority = models.IntegerField(default=0, help_text="Higher priority walkthroughs shown first")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-priority', 'feature_name']
+        indexes = [
+            models.Index(fields=['is_active', '-priority']),
+            models.Index(fields=['trigger_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.feature_name} - {self.title}"
+
+
+class UserWalkthroughProgress(models.Model):
+    """
+    Track which walkthroughs users have completed.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='walkthrough_progress')
+    walkthrough = models.ForeignKey(FeatureWalkthrough, on_delete=models.CASCADE, related_name='user_progress')
+
+    # Progress
+    is_completed = models.BooleanField(default=False)
+    is_dismissed = models.BooleanField(default=False, help_text="User dismissed without completing")
+    current_step = models.IntegerField(default=0)
+
+    # Timestamps
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    dismissed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['user', 'is_completed']),
+            models.Index(fields=['walkthrough', '-started_at']),
+        ]
+        unique_together = ['user', 'walkthrough']
+
+    def __str__(self):
+        if self.is_completed:
+            status = "Completed"
+        elif self.is_dismissed:
+            status = "Dismissed"
+        else:
+            status = f"Step {self.current_step}"
+        return f"{self.user.email} - {self.walkthrough.feature_name} ({status})"
+
+
+class KnowledgeBaseArticle(models.Model):
+    """
+    Searchable knowledge base articles for user support.
+    FAQs, how-tos, troubleshooting guides.
+    """
+    ARTICLE_TYPES = [
+        ('faq', 'FAQ'),
+        ('howto', 'How-To Guide'),
+        ('troubleshooting', 'Troubleshooting'),
+        ('feature_guide', 'Feature Guide'),
+        ('api_docs', 'API Documentation'),
+        ('best_practices', 'Best Practices'),
+    ]
+
+    # Core fields
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+    article_type = models.CharField(max_length=20, choices=ARTICLE_TYPES)
+
+    # Content
+    summary = models.CharField(max_length=300, help_text="Short summary for search results")
+    content = models.TextField(help_text="Full article content (Markdown supported)")
+
+    # Categorization
+    category = models.CharField(max_length=50, help_text="Main category")
+    tags = models.JSONField(default=list, help_text="Array of tags for filtering")
+
+    # SEO and search
+    search_keywords = models.TextField(blank=True, help_text="Additional keywords for search")
+    meta_description = models.CharField(max_length=160, blank=True)
+
+    # Related content
+    related_articles = models.ManyToManyField('self', blank=True, symmetrical=True)
+    related_lessons = models.ManyToManyField(Lesson, blank=True, related_name='related_kb_articles')
+    related_indicators = models.ManyToManyField(IndicatorExplanation, blank=True, related_name='kb_articles')
+
+    # Engagement metrics
+    view_count = models.IntegerField(default=0)
+    helpful_count = models.IntegerField(default=0, help_text="Users who found this helpful")
+    not_helpful_count = models.IntegerField(default=0)
+
+    # Visibility
+    is_published = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False, help_text="Featured in knowledge base home")
+
+    # Author and maintenance
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='kb_articles')
+    last_reviewed_at = models.DateTimeField(null=True, blank=True, help_text="Last content review date")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_featured', '-view_count', '-created_at']
+        indexes = [
+            models.Index(fields=['article_type', 'is_published']),
+            models.Index(fields=['category', '-view_count']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.get_article_type_display()})"
+
+
+class UserKBFeedback(models.Model):
+    """
+    User feedback on knowledge base articles.
+    """
+    article = models.ForeignKey(KnowledgeBaseArticle, on_delete=models.CASCADE, related_name='feedback')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='kb_feedback')
+
+    # Feedback
+    was_helpful = models.BooleanField(help_text="Did user find this helpful?")
+    comment = models.TextField(blank=True, help_text="Optional feedback comment")
+
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['article', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+        unique_together = ['article', 'user']
+
+    def __str__(self):
+        helpful = "Helpful" if self.was_helpful else "Not Helpful"
+        return f"{self.user.email} - {self.article.title} ({helpful})"

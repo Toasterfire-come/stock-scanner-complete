@@ -63,6 +63,7 @@ from . import charting_api
 from . import backtesting_api
 from . import value_hunter_api
 from . import strategy_ranking_api
+from . import education_api
 # NEW MVP Feature APIs
 from . import ai_chat_api
 from . import enhanced_screener_api
@@ -333,7 +334,27 @@ urlpatterns = [
     path('strategy-ranking/<int:strategy_id>/clone/', strategy_ranking_api.clone_strategy, name='clone_strategy'),
     path('strategy-ranking/<int:strategy_id>/rate/', strategy_ranking_api.rate_strategy, name='rate_strategy'),
     path('strategy-ranking/<int:strategy_id>/recalculate/', strategy_ranking_api.recalculate_strategy_score, name='recalculate_strategy_score'),
-    
+
+    # Education & Context System endpoints (Phase 7 - MVP2 v3.4)
+    path('education/paths/', education_api.get_learning_paths, name='learning_paths'),
+    path('education/paths/recommended/', education_api.get_recommended_paths, name='recommended_paths'),
+    path('education/paths/<int:path_id>/', education_api.get_learning_path_detail, name='learning_path_detail'),
+    path('education/lessons/<int:lesson_id>/', education_api.get_lesson_detail, name='lesson_detail'),
+    path('education/lessons/<int:lesson_id>/progress/', education_api.update_lesson_progress, name='update_lesson_progress'),
+    path('education/lessons/<int:lesson_id>/quiz/', education_api.submit_quiz, name='submit_quiz'),
+    path('education/indicators/', education_api.list_indicators, name='list_indicators'),
+    path('education/indicators/<str:indicator_name>/tooltip/', education_api.get_indicator_tooltip, name='indicator_tooltip'),
+    path('education/indicators/<str:indicator_name>/', education_api.get_indicator_explanation, name='indicator_explanation'),
+    path('education/walkthroughs/active/', education_api.get_active_walkthroughs, name='active_walkthroughs'),
+    path('education/walkthroughs/<int:walkthrough_id>/start/', education_api.start_walkthrough, name='start_walkthrough'),
+    path('education/walkthroughs/<int:walkthrough_id>/update/', education_api.update_walkthrough_step, name='update_walkthrough_step'),
+    path('education/walkthroughs/<int:walkthrough_id>/dismiss/', education_api.dismiss_walkthrough, name='dismiss_walkthrough'),
+    path('education/kb/search/', education_api.search_knowledge_base, name='search_knowledge_base'),
+    path('education/kb/popular/', education_api.get_popular_kb_articles, name='popular_kb_articles'),
+    path('education/kb/helpful/', education_api.get_helpful_kb_articles, name='helpful_kb_articles'),
+    path('education/kb/<slug:slug>/', education_api.get_kb_article, name='kb_article'),
+    path('education/kb/<int:article_id>/feedback/', education_api.submit_kb_feedback, name='submit_kb_feedback'),
+
     # ============================================================================
     # NEW MVP FEATURES
     # ============================================================================

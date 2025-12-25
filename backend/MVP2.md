@@ -340,6 +340,7 @@ Everything in Basic **plus**:
 - Paper trading is a first-class system
 - Design remains color-agnostic and professional
 
+Ensure proper dherince to this file and QA-Frontend.md. Test backend and do visual/static testing of the frontend to ensure quality and production readyness. Identify issues as a non-Biased 3rd party for both the frontend and backend. Ensure proper connection between them. Verify both backend and frontend ready for production and have been fully updated in claims, visuals, and in processes to 
 ---
 
 **This document is the authoritative execution blueprint for MVP2.**
