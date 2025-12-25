@@ -20,7 +20,10 @@ from .models import (
     StrategyShare, ReferralReward,
     # Phase 9 - Retention & Habits
     TradingJournal, PerformanceReview, CustomIndicator, UserCustomIndicator,
-    TradeExport, AlertTemplate, TriggeredAlert
+    TradeExport, AlertTemplate, TriggeredAlert,
+    # Phase 10 & 11 - Polish, Scale & Setup
+    UserDashboard, ChartPreset, PerformanceMetric, SecurityAuditLog,
+    NavigationAnalytics, FeatureFlag, SystemHealthCheck, DeploymentLog, DatabaseMigrationLog
 )
 # Note: Membership model has been deprecated in favor of billing.models.Subscription
 # Note: UserProfile (old) imported as OldUserProfile to avoid conflict with new social UserProfile

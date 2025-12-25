@@ -250,3 +250,32 @@ class TriggeredAlertSerializer(serializers.ModelSerializer):
             'id', 'alert_name', 'triggered_conditions', 'market_data',
             'sms_sent', 'email_sent', 'push_sent', 'triggered_at'
         ]
+
+
+# ============================================================================
+# Phase 10 & 11 Serializers
+# ============================================================================
+
+from .models import (
+    UserDashboard, ChartPreset, FeatureFlag, SystemHealthCheck
+)
+
+class UserDashboardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDashboard
+        fields = ['id', 'name', 'layout', 'is_default', 'visibility', 'created_at', 'updated_at']
+
+class ChartPresetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChartPreset
+        fields = ['id', 'name', 'description', 'chart_type', 'timeframe', 'indicators', 'drawing_tools', 'color_scheme', 'is_public', 'clone_count']
+
+class FeatureFlagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureFlag
+        fields = ['name', 'description', 'is_enabled', 'rollout_strategy', 'rollout_percentage']
+
+class SystemHealthCheckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemHealthCheck
+        fields = ['check_type', 'status', 'response_time_ms', 'checked_at']

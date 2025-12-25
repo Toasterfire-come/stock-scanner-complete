@@ -66,6 +66,7 @@ from . import strategy_ranking_api
 from . import education_api
 from . import social_trading_api
 from . import retention_api
+from . import system_api
 # NEW MVP Feature APIs
 from . import ai_chat_api
 from . import enhanced_screener_api
@@ -588,5 +589,33 @@ urlpatterns = [
     path('news/fetch/trigger/', news_sentiment_api.trigger_news_fetch, name='trigger_news_fetch'),
     path('news/sentiment/analyze/', news_sentiment_api.trigger_sentiment_analysis, name='trigger_sentiment_analysis'),
 
+    # ============================================================================
+    # PHASE 10 & 11 - POLISH, SCALE & TRUST + SETUP (MVP2 v3.4)
+    # ============================================================================
 
+    # Dashboards
+    path('dashboards/create/', system_api.create_dashboard, name='create_dashboard'),
+    path('dashboards/my/', system_api.get_my_dashboards, name='my_dashboards'),
+    path('dashboards/public/', system_api.get_public_dashboards, name='public_dashboards'),
+    path('dashboards/<int:dashboard_id>/update/', system_api.update_dashboard, name='update_dashboard'),
+
+    # Chart Presets
+    path('chart-presets/create/', system_api.create_chart_preset, name='create_chart_preset'),
+    path('chart-presets/my/', system_api.get_my_chart_presets, name='my_chart_presets'),
+    path('chart-presets/public/', system_api.get_public_chart_presets, name='public_chart_presets'),
+
+    # Performance Monitoring
+    path('performance/record/', system_api.record_performance_metric, name='record_performance_metric'),
+    path('performance/report/', system_api.get_performance_report, name='performance_report'),
+
+    # Feature Flags
+    path('features/<str:flag_name>/check/', system_api.check_feature_flag, name='check_feature_flag'),
+    path('features/all/', system_api.get_all_feature_flags, name='all_feature_flags'),
+    path('features/<str:flag_name>/toggle/', system_api.toggle_feature_flag, name='toggle_feature_flag'),
+
+    # System Health
+    path('health/', system_api.health_check, name='health_check'),
+    path('health/history/', system_api.get_health_history, name='health_history'),
+    path('system/info/', system_api.get_system_info, name='system_info'),
+    path('system/verify/', system_api.verify_setup, name='verify_setup'),
 ]

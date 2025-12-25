@@ -3977,3 +3977,374 @@ class TriggeredAlert(models.Model):
 
     def __str__(self):
         return f"{self.alert_template.name} - {self.ticker} at {self.triggered_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+# ============================================================================
+# PHASE 10 — POLISH, SCALE & TRUST (MVP2 v3.4)
+# ============================================================================
+
+
+class UserDashboard(models.Model):
+    """
+    Modular dashboard configuration for users.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dashboards')
+
+    # Dashboard details
+    name = models.CharField(max_length=100, help_text="Dashboard name")
+    layout = models.JSONField(default=dict, help_text="Dashboard layout configuration (widgets, positions, sizes)")
+    is_default = models.BooleanField(default=False, help_text="Default dashboard for user")
+
+    # Sharing
+    VISIBILITY_CHOICES = [
+        ('private', 'Private'),
+        ('public', 'Public (template)'),
+        ('shared', 'Shared with specific users'),
+    ]
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='private')
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_default', '-updated_at']
+        indexes = [
+            models.Index(fields=['user', '-updated_at']),
+            models.Index(fields=['visibility', '-updated_at']),
+        ]
+
+    def __str__(self):
+        default = " (Default)" if self.is_default else ""
+        return f"{self.user.email} - {self.name}{default}"
+
+
+class ChartPreset(models.Model):
+    """
+    Saved chart configurations and layouts.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chart_presets')
+
+    # Preset details
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    # Chart configuration
+    chart_type = models.CharField(max_length=50, help_text="candlestick, line, area, etc.")
+    timeframe = models.CharField(max_length=20, help_text="1m, 5m, 1h, 1d, etc.")
+    indicators = models.JSONField(default=list, help_text="List of indicators with parameters")
+    drawing_tools = models.JSONField(default=list, help_text="Saved drawings/annotations")
+    color_scheme = models.JSONField(default=dict, help_text="Custom color configuration")
+
+    # Settings
+    is_public = models.BooleanField(default=False, help_text="Share as public template")
+    clone_count = models.IntegerField(default=0, help_text="Times cloned by other users")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['user', '-updated_at']),
+            models.Index(fields=['is_public', '-clone_count']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"
+
+
+class PerformanceMetric(models.Model):
+    """
+    System performance metrics for monitoring and optimization.
+    """
+    METRIC_TYPE_CHOICES = [
+        ('api_response_time', 'API Response Time'),
+        ('database_query_time', 'Database Query Time'),
+        ('page_load_time', 'Page Load Time'),
+        ('websocket_latency', 'WebSocket Latency'),
+        ('cache_hit_rate', 'Cache Hit Rate'),
+    ]
+
+    metric_type = models.CharField(max_length=50, choices=METRIC_TYPE_CHOICES)
+    endpoint = models.CharField(max_length=200, blank=True, help_text="API endpoint or page path")
+
+    # Metric values
+    value = models.FloatField(help_text="Metric value (ms, %, etc.)")
+    unit = models.CharField(max_length=20, default='ms', help_text="Unit of measurement")
+
+    # Context
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='performance_metrics')
+    request_data = models.JSONField(default=dict, blank=True, help_text="Request context for debugging")
+
+    # Timestamp
+    recorded_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+        indexes = [
+            models.Index(fields=['metric_type', '-recorded_at']),
+            models.Index(fields=['endpoint', '-recorded_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.metric_type}: {self.value}{self.unit} at {self.recorded_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class SecurityAuditLog(models.Model):
+    """
+    Security audit trail for compliance and threat detection.
+    """
+    EVENT_TYPE_CHOICES = [
+        ('login_success', 'Login Success'),
+        ('login_failure', 'Login Failure'),
+        ('password_change', 'Password Change'),
+        ('email_change', 'Email Change'),
+        ('api_key_created', 'API Key Created'),
+        ('api_key_revoked', 'API Key Revoked'),
+        ('permission_change', 'Permission Change'),
+        ('data_export', 'Data Export'),
+        ('suspicious_activity', 'Suspicious Activity'),
+    ]
+
+    SEVERITY_CHOICES = [
+        ('info', 'Info'),
+        ('warning', 'Warning'),
+        ('critical', 'Critical'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='security_logs')
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='info')
+
+    # Event details
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    endpoint = models.CharField(max_length=200, blank=True)
+    details = models.JSONField(default=dict, help_text="Additional event context")
+
+    # Response
+    was_blocked = models.BooleanField(default=False, help_text="Was the action blocked?")
+    action_taken = models.TextField(blank=True, help_text="Automated response taken")
+
+    # Timestamp
+    occurred_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-occurred_at']
+        indexes = [
+            models.Index(fields=['user', '-occurred_at']),
+            models.Index(fields=['event_type', '-occurred_at']),
+            models.Index(fields=['severity', '-occurred_at']),
+            models.Index(fields=['was_blocked', '-occurred_at']),
+        ]
+
+    def __str__(self):
+        user_email = self.user.email if self.user else "Anonymous"
+        return f"{self.event_type} by {user_email} at {self.occurred_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class NavigationAnalytics(models.Model):
+    """
+    Track user navigation patterns for UX optimization.
+    """
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='navigation_analytics')
+    session_id = models.CharField(max_length=64, db_index=True, help_text="User session identifier")
+
+    # Navigation details
+    from_page = models.CharField(max_length=200)
+    to_page = models.CharField(max_length=200)
+    action = models.CharField(max_length=100, blank=True, help_text="Button/link clicked")
+
+    # Timing
+    time_on_page = models.IntegerField(help_text="Seconds spent on page")
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['session_id', '-timestamp']),
+            models.Index(fields=['from_page', '-timestamp']),
+            models.Index(fields=['to_page', '-timestamp']),
+        ]
+
+    def __str__(self):
+        user_email = self.user.email if self.user else "Anonymous"
+        return f"{user_email}: {self.from_page} -> {self.to_page}"
+
+
+class FeatureFlag(models.Model):
+    """
+    Feature flags for gradual rollouts and A/B testing.
+    """
+    ROLLOUT_STRATEGY_CHOICES = [
+        ('all', 'All Users'),
+        ('percentage', 'Percentage Rollout'),
+        ('whitelist', 'Whitelist Only'),
+        ('tier_based', 'Tier-Based'),
+    ]
+
+    # Flag details
+    name = models.CharField(max_length=100, unique=True, help_text="Feature flag key")
+    description = models.TextField(help_text="What this flag controls")
+    is_enabled = models.BooleanField(default=False)
+
+    # Rollout configuration
+    rollout_strategy = models.CharField(max_length=20, choices=ROLLOUT_STRATEGY_CHOICES, default='all')
+    rollout_percentage = models.IntegerField(default=0, help_text="Percentage of users (0-100)")
+    whitelisted_users = models.JSONField(default=list, help_text="User IDs with access")
+    tier_requirement = models.CharField(max_length=20, blank=True, help_text="Required tier (basic, pro, etc.)")
+
+    # Metadata
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_feature_flags')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        status = "Enabled" if self.is_enabled else "Disabled"
+        return f"{self.name} ({status})"
+
+    def is_enabled_for_user(self, user):
+        """Check if feature is enabled for a specific user."""
+        if not self.is_enabled:
+            return False
+
+        if self.rollout_strategy == 'all':
+            return True
+
+        if self.rollout_strategy == 'whitelist':
+            return user.id in self.whitelisted_users
+
+        if self.rollout_strategy == 'percentage':
+            # Deterministic percentage based on user ID
+            import hashlib
+            hash_value = int(hashlib.md5(f"{self.name}{user.id}".encode()).hexdigest(), 16)
+            return (hash_value % 100) < self.rollout_percentage
+
+        if self.rollout_strategy == 'tier_based':
+            # Would check user's subscription tier
+            # For now, return False (implement with billing integration)
+            return False
+
+        return False
+
+
+# ============================================================================
+# PHASE 11 — PROPER SETUP (MVP2 v3.4)
+# ============================================================================
+
+
+class SystemHealthCheck(models.Model):
+    """
+    System health check results for monitoring.
+    """
+    CHECK_TYPE_CHOICES = [
+        ('database', 'Database Connection'),
+        ('redis', 'Redis Cache'),
+        ('api', 'External API'),
+        ('disk_space', 'Disk Space'),
+        ('memory', 'Memory Usage'),
+        ('celery', 'Celery Workers'),
+    ]
+
+    STATUS_CHOICES = [
+        ('healthy', 'Healthy'),
+        ('degraded', 'Degraded'),
+        ('unhealthy', 'Unhealthy'),
+    ]
+
+    check_type = models.CharField(max_length=50, choices=CHECK_TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+
+    # Check results
+    response_time_ms = models.IntegerField(null=True, blank=True)
+    details = models.JSONField(default=dict, help_text="Check-specific details")
+    error_message = models.TextField(blank=True)
+
+    # Timestamp
+    checked_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-checked_at']
+        indexes = [
+            models.Index(fields=['check_type', '-checked_at']),
+            models.Index(fields=['status', '-checked_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.check_type}: {self.status} at {self.checked_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class DeploymentLog(models.Model):
+    """
+    Track deployments for auditing and rollback.
+    """
+    version = models.CharField(max_length=50, help_text="Version/tag deployed")
+    environment = models.CharField(max_length=20, help_text="production, staging, etc.")
+
+    # Deployment details
+    deployed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='deployments')
+    commit_hash = models.CharField(max_length=40, blank=True, help_text="Git commit hash")
+    release_notes = models.TextField(blank=True)
+
+    # Status
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+        ('rolled_back', 'Rolled Back'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    error_log = models.TextField(blank=True)
+
+    # Timestamps
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['environment', '-started_at']),
+            models.Index(fields=['status', '-started_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.environment} v{self.version} - {self.status}"
+
+
+class DatabaseMigrationLog(models.Model):
+    """
+    Track database migrations for troubleshooting.
+    """
+    app_label = models.CharField(max_length=100)
+    migration_name = models.CharField(max_length=200)
+
+    # Migration details
+    applied = models.BooleanField(default=False)
+    applied_at = models.DateTimeField(null=True, blank=True)
+    execution_time_seconds = models.FloatField(null=True, blank=True)
+
+    # Error tracking
+    had_errors = models.BooleanField(default=False)
+    error_message = models.TextField(blank=True)
+
+    # Rollback info
+    was_rolled_back = models.BooleanField(default=False)
+    rolled_back_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-applied_at']
+        unique_together = ['app_label', 'migration_name']
+        indexes = [
+            models.Index(fields=['applied', '-applied_at']),
+            models.Index(fields=['had_errors']),
+        ]
+
+    def __str__(self):
+        status = "Applied" if self.applied else "Pending"
+        return f"{self.app_label}.{self.migration_name} - {status}"
