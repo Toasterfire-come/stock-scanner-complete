@@ -107,7 +107,7 @@ def search_profiles(request):
 def get_profile_by_id(request, user_id):
     """Get a specific user's profile by user ID."""
     try:
-        profile = UserProfile.objects.get(user_id=user_id)
+        profile = SocialUserProfile.objects.get(user_id=user_id)
 
         # Check visibility
         if profile.visibility == 'private' and (not request.user.is_authenticated or request.user.id != user_id):
@@ -122,7 +122,7 @@ def get_profile_by_id(request, user_id):
             'success': True,
             'profile': serializer.data
         })
-    except UserProfile.DoesNotExist:
+    except SocialUserProfile.DoesNotExist:
         return Response({
             'success': False,
             'message': 'Profile not found'
