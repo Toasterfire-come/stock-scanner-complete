@@ -325,12 +325,14 @@ urlpatterns = [
     path('value-hunter/exit/', value_hunter_api.execute_exit, name='vh_execute_exit'),
     path('value-hunter/top-stocks/', value_hunter_api.get_top_stocks, name='vh_top_stocks'),
     
-    # Strategy Ranking endpoints (Phase 6)
+    # Strategy Ranking endpoints (Phase 6 - MVP2 v3.4)
     path('strategy-ranking/leaderboard/', strategy_ranking_api.get_strategy_leaderboard, name='strategy_leaderboard'),
     path('strategy-ranking/categories/', strategy_ranking_api.get_leaderboard_categories, name='leaderboard_categories'),
+    path('strategy-ranking/my-strategies/', strategy_ranking_api.get_my_strategies, name='my_strategies'),
     path('strategy-ranking/<int:strategy_id>/', strategy_ranking_api.get_strategy_detail, name='strategy_detail'),
     path('strategy-ranking/<int:strategy_id>/clone/', strategy_ranking_api.clone_strategy, name='clone_strategy'),
     path('strategy-ranking/<int:strategy_id>/rate/', strategy_ranking_api.rate_strategy, name='rate_strategy'),
+    path('strategy-ranking/<int:strategy_id>/recalculate/', strategy_ranking_api.recalculate_strategy_score, name='recalculate_strategy_score'),
     
     # ============================================================================
     # NEW MVP FEATURES

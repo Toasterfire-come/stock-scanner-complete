@@ -2708,3 +2708,288 @@ class SentimentTimeseries(models.Model):
 
     def __str__(self):
         return f"{self.stock.ticker} - {self.get_interval_display()} - {self.period_start.date()}"
+
+
+# ==================== STRATEGY RANKING & SCORING SYSTEM ====================
+# MVP2 v3.4 - Phase 6: Community-driven strategy marketplace with composite scoring
+
+class TradingStrategy(models.Model):
+    """
+    User-created trading strategies with performance tracking.
+    Supports paper trading integration and community sharing.
+    """
+    STRATEGY_TYPES = [
+        ('momentum', 'Momentum'),
+        ('mean_reversion', 'Mean Reversion'),
+        ('breakout', 'Breakout'),
+        ('swing', 'Swing Trading'),
+        ('day_trading', 'Day Trading'),
+        ('options', 'Options Strategy'),
+        ('custom', 'Custom'),
+    ]
+
+    VISIBILITY_CHOICES = [
+        ('private', 'Private'),
+        ('unlisted', 'Unlisted (link only)'),
+        ('public', 'Public'),
+    ]
+
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('backtesting', 'Backtesting'),
+        ('paper_trading', 'Paper Trading'),
+        ('live', 'Live Trading'),
+        ('archived', 'Archived'),
+    ]
+
+    # Core fields
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='trading_strategies')
+    name = models.CharField(max_length=200, help_text="Strategy name")
+    description = models.TextField(help_text="Strategy description and methodology")
+    strategy_type = models.CharField(max_length=30, choices=STRATEGY_TYPES, default='custom')
+
+    # Configuration
+    strategy_code = models.TextField(blank=True, help_text="Python strategy code (optional)")
+    configuration = models.JSONField(default=dict, help_text="Strategy parameters and settings")
+    entry_rules = models.JSONField(default=list, help_text="Entry condition rules")
+    exit_rules = models.JSONField(default=list, help_text="Exit condition rules")
+
+    # Risk management
+    max_position_size = models.DecimalField(max_digits=5, decimal_places=2, default=10.0, help_text="Max % of portfolio per position")
+    max_portfolio_risk = models.DecimalField(max_digits=5, decimal_places=2, default=2.0, help_text="Max % portfolio risk per trade")
+    stop_loss_pct = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Default stop loss %")
+    take_profit_pct = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Default take profit %")
+
+    # Paper trading integration
+    paper_account = models.ForeignKey('PaperTradingAccount', on_delete=models.SET_NULL, null=True, blank=True, related_name='strategies')
+    total_trades = models.IntegerField(default=0)
+    winning_trades = models.IntegerField(default=0)
+    losing_trades = models.IntegerField(default=0)
+
+    # Community features
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='private')
+    is_featured = models.BooleanField(default=False, help_text="Featured on leaderboard")
+    is_verified = models.BooleanField(default=False, help_text="Verified by admin/algo")
+    clone_count = models.IntegerField(default=0, help_text="Number of times cloned")
+    view_count = models.IntegerField(default=0)
+
+    # Performance snapshots (cached)
+    annual_return = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    sharpe_ratio = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
+    max_drawdown = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    win_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    profit_factor = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+
+    # Status and metadata
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_traded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['visibility', 'is_featured']),
+            models.Index(fields=['strategy_type', '-annual_return']),
+            models.Index(fields=['-clone_count']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} by {self.user.email}"
+
+    def update_performance_cache(self):
+        """Update cached performance metrics from paper trading account"""
+        if self.paper_account:
+            perf = self.paper_account.get_performance_metrics()
+            self.annual_return = perf.get('annual_return')
+            self.sharpe_ratio = perf.get('sharpe_ratio')
+            self.max_drawdown = perf.get('max_drawdown')
+            self.win_rate = perf.get('win_rate')
+            self.profit_factor = perf.get('profit_factor')
+            self.save()
+
+
+class StrategyScore(models.Model):
+    """
+    Composite scoring for strategy ranking.
+    Normalized 0-100 scale with component breakdown.
+    """
+    strategy = models.OneToOneField(TradingStrategy, on_delete=models.CASCADE, related_name='score')
+
+    # Component scores (0-100 scale, weighted)
+    performance_score = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Performance metrics (30% weight)")
+    risk_score = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Risk-adjusted metrics (25% weight)")
+    consistency_score = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Win rate & stability (20% weight)")
+    efficiency_score = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Trade efficiency (15% weight)")
+    community_score = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Ratings & clones (10% weight)")
+
+    # Composite score
+    total_score = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Weighted composite score")
+
+    # Component details (for transparency)
+    score_breakdown = models.JSONField(default=dict, help_text="Detailed score calculations")
+
+    # Anti-overfitting controls
+    min_trades_threshold = models.IntegerField(default=30, help_text="Minimum trades for valid score")
+    is_sufficient_data = models.BooleanField(default=False, help_text="Has enough trades for scoring")
+    verification_status = models.CharField(max_length=20, choices=[
+        ('unverified', 'Unverified'),
+        ('pending', 'Pending Verification'),
+        ('verified', 'Verified'),
+        ('flagged', 'Flagged for Review'),
+    ], default='unverified')
+
+    # Metadata
+    last_calculated_at = models.DateTimeField(auto_now=True)
+    calculation_engine_version = models.CharField(max_length=20, default='v1.0')
+
+    class Meta:
+        ordering = ['-total_score']
+        indexes = [
+            models.Index(fields=['-total_score']),
+            models.Index(fields=['is_sufficient_data', '-total_score']),
+        ]
+
+    def __str__(self):
+        return f"{self.strategy.name} - Score: {self.total_score}"
+
+    def calculate_composite_score(self):
+        """
+        Calculate composite score using weighted components.
+        Based on strategy_ranking_api.py algorithm.
+        """
+        if self.strategy.total_trades < self.min_trades_threshold:
+            self.is_sufficient_data = False
+            self.total_score = 0
+            self.save()
+            return
+
+        self.is_sufficient_data = True
+
+        # Component weights
+        weights = {
+            'performance': 0.30,
+            'risk': 0.25,
+            'consistency': 0.20,
+            'efficiency': 0.15,
+            'community': 0.10,
+        }
+
+        # Calculate weighted total
+        self.total_score = (
+            float(self.performance_score) * weights['performance'] +
+            float(self.risk_score) * weights['risk'] +
+            float(self.consistency_score) * weights['consistency'] +
+            float(self.efficiency_score) * weights['efficiency'] +
+            float(self.community_score) * weights['community']
+        )
+
+        self.save()
+
+
+class StrategyRating(models.Model):
+    """
+    User ratings for strategies (1-5 stars).
+    Feeds into community_score component.
+    """
+    strategy = models.ForeignKey(TradingStrategy, on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='strategy_ratings')
+    rating = models.IntegerField(help_text="1-5 stars")
+    review = models.TextField(blank=True, help_text="Optional review text")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['strategy', 'user']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['strategy', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} rated {self.strategy.name} - {self.rating}★"
+
+    def save(self, *args, **kwargs):
+        # Validate rating range
+        if not 1 <= self.rating <= 5:
+            raise ValueError("Rating must be between 1 and 5")
+        super().save(*args, **kwargs)
+
+
+class StrategyClone(models.Model):
+    """
+    Track strategy clones for community metrics.
+    Allows users to copy and customize strategies.
+    """
+    original_strategy = models.ForeignKey(TradingStrategy, on_delete=models.CASCADE, related_name='clones')
+    cloned_strategy = models.OneToOneField(TradingStrategy, on_delete=models.CASCADE, related_name='clone_source')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cloned_strategies')
+
+    # Customization tracking
+    customizations = models.JSONField(default=dict, help_text="Changes made from original")
+    is_modified = models.BooleanField(default=False)
+
+    # Metadata
+    cloned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-cloned_at']
+        indexes = [
+            models.Index(fields=['original_strategy', '-cloned_at']),
+            models.Index(fields=['user', '-cloned_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} cloned {self.original_strategy.name}"
+
+
+class StrategyLeaderboard(models.Model):
+    """
+    Pre-calculated leaderboard rankings for performance.
+    Updated periodically to avoid expensive real-time calculations.
+    """
+    TIMEFRAME_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('all_time', 'All Time'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('overall', 'Overall'),
+        ('momentum', 'Momentum Strategies'),
+        ('mean_reversion', 'Mean Reversion'),
+        ('breakout', 'Breakout'),
+        ('swing', 'Swing Trading'),
+        ('day_trading', 'Day Trading'),
+        ('options', 'Options'),
+        ('rookies', 'Rookie Strategies (<90 days)'),
+    ]
+
+    strategy = models.ForeignKey(TradingStrategy, on_delete=models.CASCADE, related_name='leaderboard_entries')
+    timeframe = models.CharField(max_length=20, choices=TIMEFRAME_CHOICES)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+
+    # Ranking
+    rank = models.IntegerField()
+    score = models.DecimalField(max_digits=5, decimal_places=2)
+
+    # Snapshot data
+    snapshot_data = models.JSONField(default=dict, help_text="Performance metrics at snapshot time")
+
+    # Metadata
+    calculated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'timeframe', 'rank']
+        indexes = [
+            models.Index(fields=['category', 'timeframe', 'rank']),
+            models.Index(fields=['-calculated_at']),
+        ]
+        unique_together = ['strategy', 'timeframe', 'category']
+
+    def __str__(self):
+        return f"#{self.rank} - {self.strategy.name} ({self.get_category_display()} - {self.get_timeframe_display()})"

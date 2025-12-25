@@ -10528,3 +10528,1885 @@ Starting development server at http://0.0.0.0:8000/
 Quit the server with CTRL-BREAK.
 
 [24/Dec/2025 08:57:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:57:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:57:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:58:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:58:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:58:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:59:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:59:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 08:59:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:00:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:00:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:00:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:01:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:01:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:01:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:02:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:02:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:02:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:03:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:03:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:04:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:04:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:04:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:05:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:05:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:05:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:06:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:06:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:06:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:07:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:07:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:07:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:08:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:08:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:08:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:09:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:09:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:10:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:10:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:10:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:11:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:11:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:11:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:12:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:12:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:12:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:13:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:13:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:13:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:14:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:14:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:14:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:15:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:15:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:15:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:16:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:16:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:16:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:17:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:17:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:18:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:18:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:18:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:19:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:19:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:19:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:20:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:20:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:20:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:21:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:21:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:21:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:22:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:22:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:22:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:23:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:23:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:23:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:24:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:24:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:25:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:25:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:25:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:26:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:26:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:26:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:27:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:27:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:27:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:28:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:28:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:28:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:29:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:29:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:29:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:30:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:30:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:30:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:31:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:31:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:32:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:32:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:32:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:33:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:33:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:33:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:34:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:34:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:34:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:35:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:35:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:35:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:36:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:36:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:36:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:37:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:37:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:37:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:38:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:38:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:38:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:39:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:39:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:40:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:40:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:40:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:41:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:41:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:41:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:42:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:42:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:42:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:43:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:43:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:43:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:44:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:44:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:44:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:45:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:45:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:45:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:46:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:46:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:47:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:47:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:47:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:48:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:48:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:48:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:49:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:49:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:49:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:50:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:50:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:50:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:51:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:51:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:51:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:52:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:52:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:52:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:53:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:53:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:54:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:54:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:54:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:55:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:55:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:55:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 09:56:06] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 09:56:22,436] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\models.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 09:56:31,936] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+stocks.OptionsWatchlist.user: (fields.E300) Field defines a relation with model 'User', which is either not installed, or is abstract.
+stocks.OptionsWatchlist.user: (fields.E307) The field stocks.OptionsWatchlist.user was declared with a lazy reference to 'stocks.user', but app 'stocks' doesn't provide model 'user'.
+
+System check identified 2 issues (0 silenced).
+[2025-12-24 14:21:42,810] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\models.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:21:48,368] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 14:21:52
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 14:22:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:22:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:22:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:23:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:23:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:23:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:24:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:24:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:24:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:25:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:25:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:26:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:26:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:26:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:27:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:27:25] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 14:27:29,728] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:27:34,702] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 485, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\urls.py", line 42, in check_url_namespaces_unique
+    all_namespaces = _load_all_namespaces(resolver)
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\urls.py", line 61, in _load_all_namespaces
+    url_patterns = getattr(resolver, "url_patterns", [])
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\resolvers.py", line 715, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\resolvers.py", line 708, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stockscanner_django\urls.py", line 25, in <module>
+    path('api/', include('stocks.urls')),
+                 ~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\conf.py", line 38, in include
+    urlconf_module = import_module(urlconf_module)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py", line 53, in <module>
+    from . import options_api
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\options_api.py", line 16, in <module>
+    from stocks.services.options_service import OptionsService
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\services\options_service.py", line 11, in <module>
+    from scipy.stats import norm
+ModuleNotFoundError: No module named 'scipy'
+[2025-12-24 14:28:13,908] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:28:16,970] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 485, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\urls.py", line 42, in check_url_namespaces_unique
+    all_namespaces = _load_all_namespaces(resolver)
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\urls.py", line 61, in _load_all_namespaces
+    url_patterns = getattr(resolver, "url_patterns", [])
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\resolvers.py", line 715, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\resolvers.py", line 708, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stockscanner_django\urls.py", line 25, in <module>
+    path('api/', include('stocks.urls')),
+                 ~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\conf.py", line 38, in include
+    urlconf_module = import_module(urlconf_module)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py", line 53, in <module>
+    from . import options_api
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\options_api.py", line 16, in <module>
+    from stocks.services.options_service import OptionsService
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\services\options_service.py", line 11, in <module>
+    from scipy.stats import norm
+ModuleNotFoundError: No module named 'scipy'
+[2025-12-24 14:28:47,178] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:28:49,979] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 485, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\urls.py", line 42, in check_url_namespaces_unique
+    all_namespaces = _load_all_namespaces(resolver)
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\checks\urls.py", line 61, in _load_all_namespaces
+    url_patterns = getattr(resolver, "url_patterns", [])
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\resolvers.py", line 715, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\resolvers.py", line 708, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stockscanner_django\urls.py", line 25, in <module>
+    path('api/', include('stocks.urls')),
+                 ~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\urls\conf.py", line 38, in include
+    urlconf_module = import_module(urlconf_module)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py", line 53, in <module>
+    from . import options_api
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\options_api.py", line 16, in <module>
+    from stocks.services.options_service import OptionsService
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\services\options_service.py", line 11, in <module>
+    from scipy.stats import norm
+ModuleNotFoundError: No module named 'scipy'
+[2025-12-24 14:32:04,008] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:32:07,093] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute or method on 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'fetch_timestamp', which is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute or method on 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'fetch_timestamp', which does not refer to a Field.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'underlying_price', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'total_volume', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'avg_iv', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'max_pain_strike', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute of 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'contract_symbol', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'rank_score', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'contract_type', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'strike', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'expiration', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[7]' refers to 'fetch_timestamp', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'contract_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'fetch_timestamp', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute of 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'last_updated', which is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute or method on 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_updated', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'last_checked', which is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute or method on 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_checked', which does not refer to a Field.
+
+System check identified 26 issues (0 silenced).
+[2025-12-24 14:32:52,489] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:32:55,581] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute or method on 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'fetch_timestamp', which is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute or method on 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'fetch_timestamp', which does not refer to a Field.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'underlying_price', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'total_volume', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'avg_iv', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'max_pain_strike', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'option_type', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'strike_price', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'expiration_date', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'days_to_expiration', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'option_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'expiration_date', which does not refer to a Field.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute of 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'contract_symbol', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'rank_score', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'contract_type', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'strike', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'expiration', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[7]' refers to 'fetch_timestamp', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'contract_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'fetch_timestamp', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute of 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'last_updated', which is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute or method on 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_updated', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'last_checked', which is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute or method on 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_checked', which does not refer to a Field.
+
+System check identified 33 issues (0 silenced).
+[2025-12-24 14:33:06,263] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:33:08,866] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'underlying_price', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'total_volume', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'avg_iv', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'max_pain_strike', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'option_type', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'strike_price', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'expiration_date', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'days_to_expiration', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'option_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'expiration_date', which does not refer to a Field.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute of 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'contract_symbol', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'rank_score', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'contract_type', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'strike', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'expiration', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E108) The value of 'list_display[7]' refers to 'fetch_timestamp', which is not a callable, an attribute of 'OptionsScreenerResultAdmin', or an attribute or method on 'stocks.OptionsScreenerResult'.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'contract_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsScreenerResultAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'fetch_timestamp', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute of 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'last_updated', which is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute or method on 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_updated', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'last_checked', which is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute or method on 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_checked', which does not refer to a Field.
+
+System check identified 30 issues (0 silenced).
+[2025-12-24 14:33:19,441] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:33:22,079] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[0]' refers to 'ticker', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'underlying_price', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'total_volume', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[5]' refers to 'avg_iv', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsAnalyticsAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'max_pain_strike', which is not a callable, an attribute of 'OptionsAnalyticsAdmin', or an attribute or method on 'stocks.OptionsAnalytics'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'option_type', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'strike_price', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'expiration_date', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'days_to_expiration', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'option_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'expiration_date', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute of 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'last_updated', which is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute or method on 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_updated', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'last_checked', which is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute or method on 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_checked', which does not refer to a Field.
+
+System check identified 20 issues (0 silenced).
+[2025-12-24 14:33:36,714] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:33:39,382] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'option_type', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'strike_price', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'expiration_date', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'days_to_expiration', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'option_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'expiration_date', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute of 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'last_updated', which is not a callable, an attribute of 'OptionsWatchlistAdmin', or an attribute or method on 'stocks.OptionsWatchlist'.
+<class 'stocks.admin.OptionsWatchlistAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_updated', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'last_checked', which is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute or method on 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_checked', which does not refer to a Field.
+
+System check identified 15 issues (0 silenced).
+[2025-12-24 14:33:50,072] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:33:55,171] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'option_type', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'strike_price', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'expiration_date', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'days_to_expiration', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'option_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'expiration_date', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E108) The value of 'list_display[6]' refers to 'last_checked', which is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute or method on 'stocks.OptionsWatchlistItem'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E116) The value of 'list_filter[1]' refers to 'last_checked', which does not refer to a Field.
+
+System check identified 12 issues (0 silenced).
+[2025-12-24 14:34:06,911] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:34:09,462] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[0]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'OptionsContractAdmin', or an attribute of 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[1]' refers to 'option_type', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[2]' refers to 'strike_price', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[3]' refers to 'expiration_date', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E108) The value of 'list_display[4]' refers to 'days_to_expiration', which is not a callable, an attribute of 'OptionsContractAdmin', or an attribute or method on 'stocks.OptionsContract'.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[0]' refers to 'option_type', which does not refer to a Field.
+<class 'stocks.admin.OptionsContractAdmin'>: (admin.E116) The value of 'list_filter[2]' refers to 'expiration_date', which does not refer to a Field.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+
+System check identified 10 issues (0 silenced).
+[2025-12-24 14:34:55,694] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:34:58,509] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.ImpliedVolatilitySurfaceAdmin'>: (admin.E035) The value of 'readonly_fields[2]' is not a callable, an attribute of 'ImpliedVolatilitySurfaceAdmin', or an attribute of 'stocks.ImpliedVolatilitySurface'.
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+
+System check identified 2 issues (0 silenced).
+[2025-12-24 14:35:09,986] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:35:13,142] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 133, in inner_run
+    self.check(display_num_errors=True)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\base.py", line 556, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+<class 'stocks.admin.OptionsWatchlistItemAdmin'>: (admin.E035) The value of 'readonly_fields[1]' is not a callable, an attribute of 'OptionsWatchlistItemAdmin', or an attribute of 'stocks.OptionsWatchlistItem'.
+
+System check identified 1 issue (0 silenced).
+[2025-12-24 14:35:24,405] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 14:35:27,238] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+
+You have 1 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): stocks.
+Run 'python manage.py migrate' to apply them.
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 14:35:33
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 14:35:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:35:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:36:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:36:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:37:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:37:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:37:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:38:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:38:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:38:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:39:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:39:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:39:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:40:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:40:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:40:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:41:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:41:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:41:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:42:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:42:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:42:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:43:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:43:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:43:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:44:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:44:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:45:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:45:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:45:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:46:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:46:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:46:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:47:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:47:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:47:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:48:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:48:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:48:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:49:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:49:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:49:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:50:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:50:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:50:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:51:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:51:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:52:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:52:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:52:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:53:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:53:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:53:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:54:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:54:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:54:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:55:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:55:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:55:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:56:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:56:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:56:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:57:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:57:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:57:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:58:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:58:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:59:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:59:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 14:59:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:00:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:00:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:00:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:01:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:01:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:01:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:02:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:02:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:02:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:03:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:03:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:03:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:04:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:04:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:04:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:05:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:05:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:05:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:06:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:06:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:07:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:07:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:07:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:08:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:08:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:08:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:09:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:09:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:09:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:10:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:10:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:10:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:11:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:11:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:11:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:12:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:12:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:12:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:13:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:13:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:14:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:14:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:14:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:15:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:15:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:15:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:16:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:16:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:16:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:17:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:17:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:17:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:18:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:18:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:18:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:19:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:19:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:19:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:20:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:20:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:21:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:21:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:21:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:22:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:22:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:22:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:23:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:23:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:23:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:24:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:24:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:24:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:25:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:25:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:25:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:26:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:26:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:26:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:27:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:27:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:27:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:28:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:28:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:29:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:29:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:29:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:30:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:30:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:30:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:31:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:31:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:31:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:32:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:32:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:32:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:33:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:33:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:33:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:34:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:34:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:34:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:35:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:35:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:36:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:36:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:36:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:37:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:37:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:37:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:38:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:38:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:38:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:39:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:39:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:39:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:40:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:40:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:40:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:41:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:41:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:41:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:42:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:42:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:43:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:43:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:43:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:44:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:44:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:44:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:45:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:45:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:45:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:46:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:46:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:46:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:47:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:47:33] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 15:47:41,278] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\models.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 15:47:49,237] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 15:47:56
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 15:47:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:48:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:48:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:48:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:49:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:49:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:50:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:50:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:50:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:51:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:51:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:51:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:52:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:52:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:52:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:53:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:53:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:53:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:54:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:54:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:54:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:55:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:55:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:56:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:56:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:56:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:57:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:57:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:57:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:58:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:58:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:58:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:59:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 15:59:32] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 15:59:43,011] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 15:59:47,897] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 15:59:54
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 15:59:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:00:15] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 16:00:26,427] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 16:00:30,979] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 16:00:37
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 16:00:37] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 16:00:56,198] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 16:00:59,591] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 16:01:05
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 16:01:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:01:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:02:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:02:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:02:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:03:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:03:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:03:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:04:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:04:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:04:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:05:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:05:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:05:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:06:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:06:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:06:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:07:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:07:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:08:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:08:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:08:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:09:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:09:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:09:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:10:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:10:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:10:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:11:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:11:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:11:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:12:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:12:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:12:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:13:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:13:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:13:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:14:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:14:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:15:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:15:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:15:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:16:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:16:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:16:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:17:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:17:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:17:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:18:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:18:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:18:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:19:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:19:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:19:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:20:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:20:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:20:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:21:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:21:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:22:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:22:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:22:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:23:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:23:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:23:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:24:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:24:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:24:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:25:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:25:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:25:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:26:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:26:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:26:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:27:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:27:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:27:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:28:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:28:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:28:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:29:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:29:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:30:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:30:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:30:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:31:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:31:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:31:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:32:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:32:28] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:32:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:33:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:33:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:33:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:34:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:34:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:34:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:35:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:35:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:35:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:36:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:36:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:37:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:37:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:37:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:38:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:38:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:38:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:39:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:39:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:39:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:40:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:40:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:40:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:41:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:41:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:41:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:42:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:42:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:42:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:43:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:43:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:43:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:44:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:44:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:45:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:45:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:45:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:46:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:46:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:46:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:47:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:47:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:47:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:48:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:48:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:48:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:49:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:49:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:49:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:50:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:50:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:50:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:51:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:51:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:51:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:52:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:52:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:53:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:53:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:53:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:54:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:54:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:54:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:55:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:55:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:55:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:56:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:56:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:56:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:57:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:57:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:57:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:58:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:58:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:58:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:59:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 16:59:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:00:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:00:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:00:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:01:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:01:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:01:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:02:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:02:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:02:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:03:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:03:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:03:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:04:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:04:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:04:54] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:05:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:05:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:05:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:06:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:06:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:07:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:07:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:07:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:08:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:08:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:08:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:09:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:09:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:09:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:10:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:10:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:10:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:11:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:11:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:11:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:12:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:12:36] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:12:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:13:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:13:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:13:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:14:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:14:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:15:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:15:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:15:44] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:16:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:16:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:16:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:17:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:17:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:17:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:18:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:18:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:18:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:19:13] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:19:34] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:19:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:20:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:20:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:20:57] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:21:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:21:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:22:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:22:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:22:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:23:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:23:23] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:23:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:24:05] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:24:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:24:48] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:25:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:25:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:25:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:26:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:26:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:26:53] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:27:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:27:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:27:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:28:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:28:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:28:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:29:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:29:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:30:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:30:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:30:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:31:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:31:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:31:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:32:09] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:32:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:32:50] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:33:12] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:33:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:33:53] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 17:34:07,108] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\models.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 17:34:15,878] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\handlers\base.py:61: UserWarning: No directory at: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\staticfiles\
+  mw_instance = middleware(adapted_handler)
+December 24, 2025 - 17:34:23
+Django version 4.2.11, using settings 'stockscanner_django.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+[24/Dec/2025 17:34:38] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:34:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:35:20] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:35:41] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:36:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:36:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:36:47] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:37:08] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:37:29] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:37:51] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:38:11] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:38:33] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:38:55] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:39:15] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:39:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:39:58] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:40:18] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:40:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:41:00] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:41:21] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:41:42] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:42:03] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:42:24] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:42:45] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:43:06] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:43:27] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:43:49] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:44:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:44:32] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:44:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:45:16] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:45:37] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:45:59] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:46:19] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:46:40] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:47:01] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:47:22] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:47:43] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:48:04] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:48:25] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:48:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:49:10] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:49:31] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:49:52] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:50:14] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:50:35] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:50:56] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:51:17] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:51:39] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:52:02] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:52:26] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:52:46] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:53:07] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:53:30] "GET /health/ HTTP/1.1" 301 0
+[24/Dec/2025 17:53:50] "GET /health/ HTTP/1.1" 301 0
+[2025-12-24 17:53:55,311] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 17:54:05,144] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 125, in inner_run
+    autoreload.raise_last_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 87, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\apps\registry.py", line 124, in populate
+    app_config.ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\apps.py", line 27, in ready
+    self.module.autodiscover()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\__init__.py", line 50, in autodiscover
+    autodiscover_modules("admin", register_to=site)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\module_loading.py", line 58, in autodiscover_modules
+    import_module("%s.%s" % (app_config.name, module_to_search))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py", line 14
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface, OptionsScreenerResult,
+    ^^^^^^^^^^^^
+SyntaxError: invalid syntax
+[2025-12-24 18:01:54,932] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 18:02:05,792] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 125, in inner_run
+    autoreload.raise_last_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 87, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\apps\registry.py", line 124, in populate
+    app_config.ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\apps.py", line 27, in ready
+    self.module.autodiscover()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\__init__.py", line 50, in autodiscover
+    autodiscover_modules("admin", register_to=site)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\module_loading.py", line 58, in autodiscover_modules
+    import_module("%s.%s" % (app_config.name, module_to_search))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py", line 14
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface, OptionsScreenerResult,
+    ^^^^^^^^^^^^
+SyntaxError: invalid syntax
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 19:28:13,730] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 125, in inner_run
+    autoreload.raise_last_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 87, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\apps\registry.py", line 124, in populate
+    app_config.ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\apps.py", line 27, in ready
+    self.module.autodiscover()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\__init__.py", line 50, in autodiscover
+    autodiscover_modules("admin", register_to=site)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\module_loading.py", line 58, in autodiscover_modules
+    import_module("%s.%s" % (app_config.name, module_to_search))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py", line 14
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface, OptionsScreenerResult,
+    ^^^^^^^^^^^^
+SyntaxError: invalid syntax
+[2025-12-24 19:31:27,584] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 19:31:35,678] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 125, in inner_run
+    autoreload.raise_last_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 87, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\apps\registry.py", line 124, in populate
+    app_config.ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\apps.py", line 27, in ready
+    self.module.autodiscover()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\__init__.py", line 50, in autodiscover
+    autodiscover_modules("admin", register_to=site)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\module_loading.py", line 58, in autodiscover_modules
+    import_module("%s.%s" % (app_config.name, module_to_search))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py", line 14
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface, OptionsScreenerResult,
+    ^^^^^^^^^^^^
+SyntaxError: invalid syntax
+[2025-12-24 19:36:15,758] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\strategy_ranking_api.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 19:36:23,713] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 125, in inner_run
+    autoreload.raise_last_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 87, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\apps\registry.py", line 124, in populate
+    app_config.ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\apps.py", line 27, in ready
+    self.module.autodiscover()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\__init__.py", line 50, in autodiscover
+    autodiscover_modules("admin", register_to=site)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\module_loading.py", line 58, in autodiscover_modules
+    import_module("%s.%s" % (app_config.name, module_to_search))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py", line 14
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface, OptionsScreenerResult,
+    ^^^^^^^^^^^^
+SyntaxError: invalid syntax
+[2025-12-24 19:36:54,384] INFO django.utils.autoreload: C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\urls.py changed, reloading.
+PyMySQL configured for MySQL compatibility
+INFO: PyMySQL configured as MySQLdb replacement
+DEBUG MODE: False (raw value: False)
+SECURE_SSL_REDIRECT = True
+[2025-12-24 19:36:57,372] INFO django.utils.autoreload: Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\commands\runserver.py", line 125, in inner_run
+    autoreload.raise_last_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 87, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+    ~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\apps\registry.py", line 124, in populate
+    app_config.ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\apps.py", line 27, in ready
+    self.module.autodiscover()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\contrib\admin\__init__.py", line 50, in autodiscover
+    autodiscover_modules("admin", register_to=site)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Carterpc\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\utils\module_loading.py", line 58, in autodiscover_modules
+    import_module("%s.%s" % (app_config.name, module_to_search))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\backend\stocks\admin.py", line 14
+    OptionsChain, OptionsContract, ImpliedVolatilitySurface, OptionsScreenerResult,
+    ^^^^^^^^^^^^
+SyntaxError: invalid syntax
