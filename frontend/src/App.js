@@ -8,6 +8,8 @@ import { TradingModeProvider } from "./context/TradingModeContext";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
+import SkipToContent from "./components/SkipToContent";
+import CookieConsent from "./components/CookieConsent";
 
 // Layouts
 import EnhancedAppLayout from "./layouts/EnhancedAppLayout.jsx";
@@ -208,8 +210,9 @@ function App() {
         <TradingModeProvider>
         <BrowserRouter>
           {/* LatencyIndicator removed per request */}
+          <SkipToContent />
           <SystemErrorBoundary>
-            <div className="min-h-screen bg-background">
+            <div id="main-content" className="min-h-screen bg-background" tabIndex="-1">
               <OfflineBanner />
               <Suspense fallback={<div className="p-8 text-center">Loading…</div>}>
               <PageViewTracker />
@@ -580,6 +583,7 @@ function App() {
               </Routes>
               </Suspense>
               <Toaster position="top-right" />
+              <CookieConsent />
             </div>
           </SystemErrorBoundary>
         </BrowserRouter>
