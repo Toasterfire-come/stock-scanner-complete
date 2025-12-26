@@ -10,7 +10,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Subscription, PaymentHistory
 from .sales_tax import get_plan_pricing_with_tax, calculate_total_with_tax
-from .paypal_integration import PayPalClient, get_paypal_plan_id
+from .paypal_integration import PayPalClient, PLAN_DISPLAY_NAMES
 import logging
 
 logger = logging.getLogger(__name__)
@@ -75,21 +75,28 @@ def upgrade_plan(request):
     """
     new_plan = request.data.get('plan')
 
-    if new_plan not in ['bronze', 'silver']:
+    # Normalize plan name (support both basic/pro and legacy bronze/silver)
+    plan_normalized = new_plan.lower()
+    if plan_normalized == 'bronze':
+        plan_normalized = 'basic'
+    elif plan_normalized == 'silver':
+        plan_normalized = 'pro'
+
+    if plan_normalized not in ['basic', 'pro']:
         return Response({
-            'error': 'Invalid plan selected. Must be "bronze" (Basic) or "silver" (Pro)'
+            'error': 'Invalid plan selected. Must be "basic" or "pro"'
         }, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         subscription = request.user.subscription
-        subscription.plan = new_plan
+        subscription.plan = plan_normalized
         subscription.save()
 
-        logger.info(f"User {request.user.username} upgraded to {new_plan}")
+        logger.info(f"User {request.user.username} upgraded to {plan_normalized}")
 
         return Response({
-            'message': f'Successfully upgraded to {new_plan} plan',
-            'plan': new_plan,
+            'message': f'Successfully upgraded to {plan_normalized} plan',
+            'plan': plan_normalized,
         })
     except Subscription.DoesNotExist:
         return Response({
@@ -137,8 +144,8 @@ def get_pricing(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
     pricing = {
-        'bronze': get_plan_pricing_with_tax('bronze', billing_cycle),
-        'silver': get_plan_pricing_with_tax('silver', billing_cycle),
+        'basic': get_plan_pricing_with_tax('basic', billing_cycle),
+        'pro': get_plan_pricing_with_tax('pro', billing_cycle),
     }
 
     return Response({
@@ -153,14 +160,21 @@ def get_plan_pricing(request, plan):
     Get pricing for a specific plan with sales tax
 
     Args:
-        plan (str): Plan tier ('bronze', 'silver') - Bronze=Basic, Silver=Pro
+        plan (str): Plan tier ('basic', 'pro')
 
     Query params:
         - billing_cycle: 'monthly' or 'yearly' (default: 'monthly')
     """
-    if plan not in ['bronze', 'silver']:
+    # Normalize plan name (support both basic/pro and legacy bronze/silver)
+    plan_normalized = plan.lower()
+    if plan_normalized == 'bronze':
+        plan_normalized = 'basic'
+    elif plan_normalized == 'silver':
+        plan_normalized = 'pro'
+
+    if plan_normalized not in ['basic', 'pro']:
         return Response({
-            'error': 'Invalid plan. Must be "bronze" (Basic) or "silver" (Pro)'
+            'error': 'Invalid plan. Must be "basic" or "pro"'
         }, status=status.HTTP_400_BAD_REQUEST)
 
     billing_cycle = request.GET.get('billing_cycle', 'monthly')
@@ -170,7 +184,7 @@ def get_plan_pricing(request, plan):
             'error': 'Invalid billing cycle. Must be "monthly" or "yearly"'
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    pricing = get_plan_pricing_with_tax(plan, billing_cycle)
+    pricing = get_plan_pricing_with_tax(plan_normalized, billing_cycle)
 
     if pricing is None:
         return Response({
@@ -187,7 +201,7 @@ def create_paypal_subscription(request):
     Create a PayPal subscription for a user
 
     Request body:
-        - plan: Plan tier ('bronze', 'silver')
+        - plan: Plan tier ('basic', 'pro')
         - billing_cycle: Billing cycle ('monthly', 'yearly')
 
     Returns:
@@ -197,10 +211,17 @@ def create_paypal_subscription(request):
     plan = request.data.get('plan')
     billing_cycle = request.data.get('billing_cycle', 'monthly')
 
+    # Normalize plan name (support both basic/pro and legacy bronze/silver)
+    plan_normalized = plan.lower() if plan else ''
+    if plan_normalized == 'bronze':
+        plan_normalized = 'basic'
+    elif plan_normalized == 'silver':
+        plan_normalized = 'pro'
+
     # Validate plan
-    if plan not in ['bronze', 'silver']:
+    if plan_normalized not in ['basic', 'pro']:
         return Response({
-            'error': 'Invalid plan. Must be "bronze" (Basic) or "silver" (Pro)'
+            'error': 'Invalid plan. Must be "basic" or "pro"'
         }, status=status.HTTP_400_BAD_REQUEST)
 
     # Validate billing cycle
@@ -209,16 +230,30 @@ def create_paypal_subscription(request):
             'error': 'Invalid billing cycle. Must be "monthly" or "yearly"'
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Get PayPal plan ID
-    paypal_plan_id = get_paypal_plan_id(plan, billing_cycle)
+    # Get pricing with tax
+    pricing = get_plan_pricing_with_tax(plan_normalized, billing_cycle)
+    if not pricing:
+        return Response({
+            'error': 'Failed to calculate pricing'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Get display name for PayPal plan
+    plan_display_name = PLAN_DISPLAY_NAMES.get(plan_normalized, plan_normalized.capitalize())
+
+    # Create or get PayPal billing plan
+    paypal_client = PayPalClient()
+    paypal_plan_id = paypal_client.create_or_get_billing_plan(
+        plan_name=plan_display_name,
+        plan_price=float(pricing['total']),
+        billing_cycle=billing_cycle
+    )
 
     if not paypal_plan_id:
         return Response({
-            'error': f'PayPal plan ID not configured for {plan} {billing_cycle}'
+            'error': 'Failed to create or retrieve PayPal billing plan'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Create PayPal subscription
-    paypal_client = PayPalClient()
     subscription_data = paypal_client.create_subscription(
         plan_id=paypal_plan_id,
         user_email=request.user.email
@@ -246,14 +281,14 @@ def create_paypal_subscription(request):
         subscription, created = Subscription.objects.get_or_create(
             user=request.user,
             defaults={
-                'plan': plan,
+                'plan': plan_normalized,
                 'billing_cycle': billing_cycle,
                 'status': 'pending',
             }
         )
 
         if not created:
-            subscription.plan = plan
+            subscription.plan = plan_normalized
             subscription.billing_cycle = billing_cycle
             subscription.status = 'pending'
 
@@ -268,7 +303,8 @@ def create_paypal_subscription(request):
     return Response({
         'subscription_id': subscription_data.get('id'),
         'approval_url': approval_url,
-        'plan': plan,
+        'plan': plan_normalized,
         'billing_cycle': billing_cycle,
         'status': 'pending_approval',
+        'price': pricing['total'],
     })

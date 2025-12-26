@@ -13,8 +13,8 @@ class Subscription(models.Model):
     User subscription model for different plan tiers
     """
     PLAN_CHOICES = [
-        ('bronze', 'Basic - $9.99/month'),
-        ('silver', 'Pro - $24.99/month'),
+        ('basic', 'Basic - $9.99/month'),
+        ('pro', 'Pro - $24.99/month'),
     ]
 
     STATUS_CHOICES = [
@@ -32,7 +32,7 @@ class Subscription(models.Model):
     )
 
     # Plan details
-    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default='bronze')
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default='basic')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
 
     # Billing cycle

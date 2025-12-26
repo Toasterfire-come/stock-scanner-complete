@@ -88,16 +88,25 @@ def get_plan_pricing_with_tax(plan, billing_cycle='monthly'):
     Returns:
         dict: Pricing information including tax breakdown
     """
-    # Plan pricing - Bronze (Basic) and Silver (Pro) only
+    # Plan pricing - Basic and Pro
     # 10% discount on annual plans
     pricing = {
-        'bronze': {
+        'basic': {
             'monthly': Decimal('9.99'),
             'yearly': Decimal('107.89'),  # $9.99 * 12 * 0.9 = $107.89
         },
-        'silver': {
+        'pro': {
             'monthly': Decimal('24.99'),
             'yearly': Decimal('269.89'),  # $24.99 * 12 * 0.9 = $269.89
+        },
+        # Legacy support for bronze/silver
+        'bronze': {
+            'monthly': Decimal('9.99'),
+            'yearly': Decimal('107.89'),
+        },
+        'silver': {
+            'monthly': Decimal('24.99'),
+            'yearly': Decimal('269.89'),
         },
     }
 
