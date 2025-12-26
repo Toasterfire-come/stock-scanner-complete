@@ -13,9 +13,8 @@ class Subscription(models.Model):
     User subscription model for different plan tiers
     """
     PLAN_CHOICES = [
-        ('bronze', 'Bronze'),
-        ('silver', 'Silver'),
-        ('gold', 'Gold'),
+        ('bronze', 'Basic - $9.99/month'),
+        ('silver', 'Pro - $24.99/month'),
     ]
 
     STATUS_CHOICES = [

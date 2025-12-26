@@ -74,9 +74,9 @@ def upgrade_plan(request):
     """
     new_plan = request.data.get('plan')
 
-    if new_plan not in ['bronze', 'silver', 'gold']:
+    if new_plan not in ['bronze', 'silver']:
         return Response({
-            'error': 'Invalid plan selected'
+            'error': 'Invalid plan selected. Must be "bronze" (Basic) or "silver" (Pro)'
         }, status=status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -138,7 +138,6 @@ def get_pricing(request):
     pricing = {
         'bronze': get_plan_pricing_with_tax('bronze', billing_cycle),
         'silver': get_plan_pricing_with_tax('silver', billing_cycle),
-        'gold': get_plan_pricing_with_tax('gold', billing_cycle),
     }
 
     return Response({
@@ -153,14 +152,14 @@ def get_plan_pricing(request, plan):
     Get pricing for a specific plan with sales tax
 
     Args:
-        plan (str): Plan tier ('bronze', 'silver', 'gold')
+        plan (str): Plan tier ('bronze', 'silver') - Bronze=Basic, Silver=Pro
 
     Query params:
         - billing_cycle: 'monthly' or 'yearly' (default: 'monthly')
     """
-    if plan not in ['bronze', 'silver', 'gold']:
+    if plan not in ['bronze', 'silver']:
         return Response({
-            'error': 'Invalid plan. Must be "bronze", "silver", or "gold"'
+            'error': 'Invalid plan. Must be "bronze" (Basic) or "silver" (Pro)'
         }, status=status.HTTP_400_BAD_REQUEST)
 
     billing_cycle = request.GET.get('billing_cycle', 'monthly')

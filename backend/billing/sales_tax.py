@@ -82,25 +82,22 @@ def get_plan_pricing_with_tax(plan, billing_cycle='monthly'):
     Get subscription plan pricing with sales tax
 
     Args:
-        plan (str): Plan tier ('bronze', 'silver', 'gold')
+        plan (str): Plan tier ('bronze', 'silver') - Bronze=Basic, Silver=Pro
         billing_cycle (str): Billing cycle ('monthly' or 'yearly')
 
     Returns:
         dict: Pricing information including tax breakdown
     """
-    # Plan pricing (from environment variables or defaults)
+    # Plan pricing - Bronze (Basic) and Silver (Pro) only
+    # 10% discount on annual plans
     pricing = {
         'bronze': {
-            'monthly': Decimal('24.99'),
-            'yearly': Decimal('254.99'),
+            'monthly': Decimal('9.99'),
+            'yearly': Decimal('107.89'),  # $9.99 * 12 * 0.9 = $107.89
         },
         'silver': {
-            'monthly': Decimal('49.99'),
-            'yearly': Decimal('509.99'),
-        },
-        'gold': {
-            'monthly': Decimal('79.99'),
-            'yearly': Decimal('814.99'),
+            'monthly': Decimal('24.99'),
+            'yearly': Decimal('269.89'),  # $24.99 * 12 * 0.9 = $269.89
         },
     }
 
