@@ -10,6 +10,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Subscription, PaymentHistory
 from .sales_tax import get_plan_pricing_with_tax, calculate_total_with_tax
+from .paypal_integration import PayPalClient, get_paypal_plan_id
 import logging
 
 logger = logging.getLogger(__name__)
@@ -177,3 +178,97 @@ def get_plan_pricing(request, plan):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response(pricing)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_paypal_subscription(request):
+    """
+    Create a PayPal subscription for a user
+
+    Request body:
+        - plan: Plan tier ('bronze', 'silver')
+        - billing_cycle: Billing cycle ('monthly', 'yearly')
+
+    Returns:
+        - subscription_id: PayPal subscription ID
+        - approval_url: URL to redirect user for PayPal approval
+    """
+    plan = request.data.get('plan')
+    billing_cycle = request.data.get('billing_cycle', 'monthly')
+
+    # Validate plan
+    if plan not in ['bronze', 'silver']:
+        return Response({
+            'error': 'Invalid plan. Must be "bronze" (Basic) or "silver" (Pro)'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate billing cycle
+    if billing_cycle not in ['monthly', 'yearly']:
+        return Response({
+            'error': 'Invalid billing cycle. Must be "monthly" or "yearly"'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get PayPal plan ID
+    paypal_plan_id = get_paypal_plan_id(plan, billing_cycle)
+
+    if not paypal_plan_id:
+        return Response({
+            'error': f'PayPal plan ID not configured for {plan} {billing_cycle}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Create PayPal subscription
+    paypal_client = PayPalClient()
+    subscription_data = paypal_client.create_subscription(
+        plan_id=paypal_plan_id,
+        user_email=request.user.email
+    )
+
+    if not subscription_data:
+        return Response({
+            'error': 'Failed to create PayPal subscription'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Extract approval URL
+    approval_url = None
+    for link in subscription_data.get('links', []):
+        if link.get('rel') == 'approve':
+            approval_url = link.get('href')
+            break
+
+    if not approval_url:
+        return Response({
+            'error': 'No approval URL returned from PayPal'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Store subscription info in database
+    try:
+        subscription, created = Subscription.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'plan': plan,
+                'billing_cycle': billing_cycle,
+                'status': 'pending',
+            }
+        )
+
+        if not created:
+            subscription.plan = plan
+            subscription.billing_cycle = billing_cycle
+            subscription.status = 'pending'
+
+        subscription.paypal_subscription_id = subscription_data.get('id')
+        subscription.save()
+
+        logger.info(f"Created PayPal subscription for {request.user.username}: {subscription_data.get('id')}")
+
+    except Exception as e:
+        logger.error(f"Failed to save subscription to database: {e}")
+
+    return Response({
+        'subscription_id': subscription_data.get('id'),
+        'approval_url': approval_url,
+        'plan': plan,
+        'billing_cycle': billing_cycle,
+        'status': 'pending_approval',
+    })

@@ -18,6 +18,7 @@ class Subscription(models.Model):
     ]
 
     STATUS_CHOICES = [
+        ('pending', 'Pending'),
         ('active', 'Active'),
         ('cancelled', 'Cancelled'),
         ('expired', 'Expired'),

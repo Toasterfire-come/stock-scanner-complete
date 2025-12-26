@@ -194,9 +194,12 @@ PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', '')
 PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', os.environ.get('PAYPAL_SECRET', ''))
 PAYPAL_WEBHOOK_URL = os.environ.get('PAYPAL_WEBHOOK_URL', '')
 PAYPAL_WEBHOOK_ID = os.environ.get('PAYPAL_WEBHOOK_ID', '')
-PAYPAL_PLAN_ID_BRONZE = os.environ.get('PAYPAL_PLAN_ID_BRONZE', '')
-PAYPAL_PLAN_ID_SILVER = os.environ.get('PAYPAL_PLAN_ID_SILVER', '')
-PAYPAL_PLAN_ID_GOLD = os.environ.get('PAYPAL_PLAN_ID_GOLD', '')
+
+# PayPal Plan IDs (4 plans: Bronze Monthly/Yearly, Silver Monthly/Yearly)
+PAYPAL_PLAN_ID_BRONZE_MONTHLY = os.environ.get('PAYPAL_PLAN_ID_BRONZE_MONTHLY', '')
+PAYPAL_PLAN_ID_BRONZE_YEARLY = os.environ.get('PAYPAL_PLAN_ID_BRONZE_YEARLY', '')
+PAYPAL_PLAN_ID_SILVER_MONTHLY = os.environ.get('PAYPAL_PLAN_ID_SILVER_MONTHLY', '')
+PAYPAL_PLAN_ID_SILVER_YEARLY = os.environ.get('PAYPAL_PLAN_ID_SILVER_YEARLY', '')
 
 # Sales Tax configuration
 SALES_TAX_RATE = float(os.environ.get('SALES_TAX_RATE', '0.07'))  # 7% default

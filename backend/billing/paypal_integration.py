@@ -200,9 +200,25 @@ class PayPalClient:
             return False
 
 
-# PayPal Plan IDs (set these in your environment variables or settings)
-PAYPAL_PLAN_IDS = {
-    'bronze': getattr(settings, 'PAYPAL_PLAN_ID_BRONZE', ''),
-    'silver': getattr(settings, 'PAYPAL_PLAN_ID_SILVER', ''),
-    'gold': getattr(settings, 'PAYPAL_PLAN_ID_GOLD', ''),
-}
+# PayPal Plan IDs mapping
+# Maps (plan, billing_cycle) -> PayPal Plan ID
+def get_paypal_plan_id(plan, billing_cycle='monthly'):
+    """
+    Get PayPal plan ID based on plan tier and billing cycle
+
+    Args:
+        plan (str): Plan tier ('bronze', 'silver')
+        billing_cycle (str): Billing cycle ('monthly', 'yearly')
+
+    Returns:
+        str: PayPal plan ID or empty string if not found
+    """
+    plan_mapping = {
+        ('bronze', 'monthly'): getattr(settings, 'PAYPAL_PLAN_ID_BRONZE_MONTHLY', ''),
+        ('bronze', 'yearly'): getattr(settings, 'PAYPAL_PLAN_ID_BRONZE_YEARLY', ''),
+        ('silver', 'monthly'): getattr(settings, 'PAYPAL_PLAN_ID_SILVER_MONTHLY', ''),
+        ('silver', 'yearly'): getattr(settings, 'PAYPAL_PLAN_ID_SILVER_YEARLY', ''),
+    }
+
+    key = (plan.lower(), billing_cycle.lower())
+    return plan_mapping.get(key, '')

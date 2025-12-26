@@ -12,6 +12,7 @@ urlpatterns = [
     path('subscription/', views.get_subscription, name='get_subscription'),
     path('subscription/upgrade/', views.upgrade_plan, name='upgrade_plan'),
     path('subscription/cancel/', views.cancel_subscription, name='cancel_subscription'),
+    path('subscription/create/', views.create_paypal_subscription, name='create_paypal_subscription'),
 
     # Payment history
     path('payments/', views.get_payment_history, name='payment_history'),
