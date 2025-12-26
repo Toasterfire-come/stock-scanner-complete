@@ -151,6 +151,8 @@ def get_pricing(request):
     return Response({
         'pricing': pricing,
         'billing_cycle': billing_cycle,
+        'tax_notice': '*Sales Tax Not Included',
+        'tax_details': '7% sales tax will be added at checkout',
     })
 
 
