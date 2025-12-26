@@ -15,4 +15,8 @@ urlpatterns = [
 
     # Payment history
     path('payments/', views.get_payment_history, name='payment_history'),
+
+    # Pricing (includes sales tax)
+    path('pricing/', views.get_pricing, name='get_pricing'),
+    path('pricing/<str:plan>/', views.get_plan_pricing, name='get_plan_pricing'),
 ]

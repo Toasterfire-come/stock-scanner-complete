@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Subscription, PaymentHistory
+from .sales_tax import get_plan_pricing_with_tax, calculate_total_with_tax
 import logging
 
 logger = logging.getLogger(__name__)
@@ -117,3 +118,63 @@ def cancel_subscription(request):
         return Response({
             'error': 'No active subscription found'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_pricing(request):
+    """
+    Get subscription pricing for all plans with sales tax
+
+    Query params:
+        - billing_cycle: 'monthly' or 'yearly' (default: 'monthly')
+    """
+    billing_cycle = request.GET.get('billing_cycle', 'monthly')
+
+    if billing_cycle not in ['monthly', 'yearly']:
+        return Response({
+            'error': 'Invalid billing cycle. Must be "monthly" or "yearly"'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    pricing = {
+        'bronze': get_plan_pricing_with_tax('bronze', billing_cycle),
+        'silver': get_plan_pricing_with_tax('silver', billing_cycle),
+        'gold': get_plan_pricing_with_tax('gold', billing_cycle),
+    }
+
+    return Response({
+        'pricing': pricing,
+        'billing_cycle': billing_cycle,
+    })
+
+
+@api_view(['GET'])
+def get_plan_pricing(request, plan):
+    """
+    Get pricing for a specific plan with sales tax
+
+    Args:
+        plan (str): Plan tier ('bronze', 'silver', 'gold')
+
+    Query params:
+        - billing_cycle: 'monthly' or 'yearly' (default: 'monthly')
+    """
+    if plan not in ['bronze', 'silver', 'gold']:
+        return Response({
+            'error': 'Invalid plan. Must be "bronze", "silver", or "gold"'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    billing_cycle = request.GET.get('billing_cycle', 'monthly')
+
+    if billing_cycle not in ['monthly', 'yearly']:
+        return Response({
+            'error': 'Invalid billing cycle. Must be "monthly" or "yearly"'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    pricing = get_plan_pricing_with_tax(plan, billing_cycle)
+
+    if pricing is None:
+        return Response({
+            'error': 'Failed to calculate pricing'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response(pricing)
