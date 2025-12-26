@@ -131,9 +131,9 @@ class Subscription(models.Model):
     status = CharField(choices=STATUS_CHOICES, default='active')
     billing_cycle = CharField(choices=[('monthly', 'Monthly'), ('yearly', 'Yearly')])
 
-    # Stripe integration
-    stripe_customer_id = CharField(max_length=255)
-    stripe_subscription_id = CharField(max_length=255)
+    # PayPal integration
+    paypal_customer_id = CharField(max_length=255)
+    paypal_subscription_id = CharField(max_length=255)
 
     # Renewal settings
     auto_renew = BooleanField(default=True)
@@ -149,7 +149,8 @@ class PaymentHistory(models.Model):
     payment_method = CharField(max_length=50)
     payment_status = CharField(choices=[...])
     transaction_id = CharField(max_length=255, unique=True)
-    stripe_payment_intent_id = CharField(max_length=255)
+    paypal_transaction_id = CharField(max_length=255)
+    paypal_order_id = CharField(max_length=255)
 ```
 
 **API Endpoints Implemented:**
@@ -450,7 +451,7 @@ backend/
 - **Recommendation:** Verify CSRF tokens in production
 
 ### ✅ Secrets Management
-- Stripe keys should be in environment variables
+- PayPal API credentials should be in environment variables
 - Database credentials configurable via settings
 - SECRET_KEY warning noted (env config needed)
 
@@ -483,7 +484,7 @@ backend/
 - [x] Commit code changes
 - [ ] Set production SECRET_KEY (50+ random chars)
 - [ ] Configure ALLOWED_HOSTS for domain
-- [ ] Set Stripe API keys in environment
+- [ ] Set PayPal API credentials in environment
 - [ ] Verify database backups configured
 - [ ] Set up logging to files/service
 
@@ -495,10 +496,14 @@ DEBUG=False
 ALLOWED_HOSTS=tradescanpro.com,www.tradescanpro.com
 DATABASE_URL=mysql://user:pass@host:port/dbname
 
-# Optional (if using Stripe)
-STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx
-STRIPE_SECRET_KEY=sk_live_xxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxx
+# PayPal Configuration
+PAYPAL_MODE=live  # or 'sandbox' for testing
+PAYPAL_CLIENT_ID=your_paypal_client_id
+PAYPAL_CLIENT_SECRET=your_paypal_client_secret
+PAYPAL_PLAN_ID_BRONZE=your_bronze_plan_id
+PAYPAL_PLAN_ID_SILVER=your_silver_plan_id
+PAYPAL_PLAN_ID_GOLD=your_gold_plan_id
+PAYPAL_WEBHOOK_ID=your_webhook_id
 ```
 
 ---
@@ -562,8 +567,8 @@ Backend Status:
 ### Immediate (Before Production):
 1. Generate secure SECRET_KEY (50+ characters)
 2. Set ALLOWED_HOSTS to production domain
-3. Configure Stripe API keys
-4. Test all billing endpoints with real Stripe test keys
+3. Configure PayPal API credentials (client ID, secret, plan IDs)
+4. Test all billing endpoints with PayPal sandbox mode
 5. Set up error logging service (Sentry recommended)
 
 ### Optional Improvements:
@@ -583,14 +588,14 @@ The Django backend is **100% production ready** from a code perspective. All cri
 - ✅ Fixed 3 critical import errors blocking deployment
 - ✅ Created 7 new production-ready modules
 - ✅ Added 32 database indexes for performance
-- ✅ Implemented complete billing system with Stripe support
+- ✅ Implemented complete billing system with PayPal integration support
 - ✅ Applied 4 new migrations (33 total)
 - ✅ Achieved 0 Django system check errors
 - ✅ Server starts cleanly with no errors
 
 **Remaining Work:**
 - Environment variable configuration (SECRET_KEY, ALLOWED_HOSTS)
-- Stripe API key setup
+- PayPal API credentials setup
 - Production logging configuration
 
 **Confidence Level:** 🔥 **HIGH** - Ready for production deployment with environment configuration.

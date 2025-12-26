@@ -48,8 +48,13 @@ class Subscription(models.Model):
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
     # Payment gateway integration
+    # Legacy Stripe fields (for backward compatibility)
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
     stripe_subscription_id = models.CharField(max_length=255, blank=True, null=True)
+
+    # PayPal integration (Primary payment processor)
+    paypal_customer_id = models.CharField(max_length=255, blank=True, null=True)
+    paypal_subscription_id = models.CharField(max_length=255, blank=True, null=True)
 
     # Renewal settings
     auto_renew = models.BooleanField(default=True)
@@ -100,7 +105,13 @@ class PaymentHistory(models.Model):
 
     # Transaction identifiers
     transaction_id = models.CharField(max_length=255, unique=True)
+
+    # Legacy Stripe fields (for backward compatibility)
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
+
+    # PayPal transaction tracking (Primary payment processor)
+    paypal_transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    paypal_order_id = models.CharField(max_length=255, blank=True, null=True)
 
     # Metadata
     description = models.TextField(blank=True)
