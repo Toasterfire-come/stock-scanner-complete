@@ -1,4 +1,1 @@
-try:
-    from . import tasks
-except ImportError:
-    pass
+# Emails app

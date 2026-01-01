@@ -18,10 +18,10 @@ echo ""
 TUNNEL_NAME="django-api"
 MAX_RETRIES=10
 RETRY_DELAY=5
-HEALTH_CHECK_INTERVAL=20
-KEEPALIVE_INTERVAL=15
-DNS_CHECK_INTERVAL=60
-ERROR_THRESHOLD=3
+HEALTH_CHECK_INTERVAL=30  # Increased from 20 to reduce overhead
+KEEPALIVE_INTERVAL=30     # Increased from 15 to reduce overhead
+DNS_CHECK_INTERVAL=120    # Increased from 60 to reduce overhead
+ERROR_THRESHOLD=5         # Increased from 3 to be more tolerant
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
@@ -55,7 +55,7 @@ log_message() {
     local line="[$timestamp] [$level] $message"
     echo "$line" >> "$LOG_FILE"
     if [ "$level" = "ERROR" ]; then
-        echo "$line" | tee -a "$ERROR_LOG_FILE" >/dev/tty
+        echo "$line" | tee -a "$ERROR_LOG_FILE" >&2
     fi
 }
 
@@ -250,7 +250,20 @@ start_tunnel() {
         TUNNEL_PID=$!
 
         sleep 8
-        if ps -p $TUNNEL_PID >/dev/null 2>&1; then
+        # Windows-compatible process check
+        # On Windows, check by process name since $! PID doesn't match actual cloudflared.exe PID
+        local is_running=false
+        if is_windows; then
+            if tasklist //FI "IMAGENAME eq cloudflared.exe" 2>/dev/null | grep -q "cloudflared.exe"; then
+                # Get the actual PID from tasklist
+                TUNNEL_PID=$(tasklist //FI "IMAGENAME eq cloudflared.exe" //FO CSV //NH 2>/dev/null | head -1 | cut -d',' -f2 | tr -d '"' | tr -d ' ')
+                is_running=true
+            fi
+        else
+            ps -p $TUNNEL_PID >/dev/null 2>&1 && is_running=true
+        fi
+
+        if [ "$is_running" = "true" ]; then
             log_message "INFO" "Cloudflare tunnel started successfully (PID: $TUNNEL_PID)"
             CONSECUTIVE_ERRORS=0
             TOTAL_RESTARTS=$((TOTAL_RESTARTS + 1))
@@ -292,21 +305,61 @@ start_django() {
     fi
 
     # Start Django and write full output to log file
-    python3 manage.py runserver 0.0.0.0:8000 >> "$DJANGO_LOG_FILE" 2>&1 &
+    # Use --noreload to prevent auto-reloader from complicating process management
+    python manage.py runserver 0.0.0.0:8000 --noreload >> "$DJANGO_LOG_FILE" 2>&1 &
     SERVER_PID=$!
 
     # Stream only errors (4xx/5xx and error traces) to console and error log
     (
-        tail -n +1 -F "$DJANGO_LOG_FILE" 2>/dev/null | awk '/" (4|5)[0-9][0-9] / || /ERROR|Exception|Traceback|CRITICAL|WARNING|WARN/ { print; fflush(); }' | tee -a "$ERROR_LOG_FILE" >/dev/tty
+        tail -n +1 -F "$DJANGO_LOG_FILE" 2>/dev/null | awk '/" (4|5)[0-9][0-9] / || /ERROR|Exception|Traceback|CRITICAL|WARNING|WARN/ { print; fflush(); }' | tee -a "$ERROR_LOG_FILE" >&2
     ) &
     DJANGO_ERROR_MONITOR_PID=$!
 
-    sleep 3
-    if ps -p $SERVER_PID >/dev/null 2>&1; then
+    # Wait for Django to start by checking if it's responding on port 8000
+    log_message "INFO" "Waiting for Django to start on port 8000..."
+    local max_wait=15
+    local waited=0
+    local is_running=false
+
+    while [ $waited -lt $max_wait ]; do
+        sleep 1
+        waited=$((waited + 1))
+
+        # Check if port 8000 is listening and responding (accept any HTTP response including 301)
+        local http_code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 1 http://localhost:8000/ 2>/dev/null)
+        if [ -n "$http_code" ] && [ "$http_code" != "000" ]; then
+            is_running=true
+            log_message "INFO" "Django server is responding on port 8000 (HTTP $http_code)"
+            break
+        fi
+
+        # Also check if the process is still running (didn't crash)
+        if is_windows; then
+            if ! tasklist //FI "IMAGENAME eq python.exe" 2>/dev/null | grep -q "python.exe"; then
+                log_message "ERROR" "Django process died during startup"
+                return 1
+            fi
+        else
+            if ! ps -p $SERVER_PID >/dev/null 2>&1; then
+                log_message "ERROR" "Django process died during startup"
+                return 1
+            fi
+        fi
+    done
+
+    if [ "$is_running" = "true" ]; then
+        # Get the actual PID on Windows
+        if is_windows; then
+            # Find python.exe process listening on port 8000
+            local port_pid=$(netstat -ano | grep ":8000" | grep "LISTENING" | awk '{print $5}' | head -1)
+            if [ -n "$port_pid" ]; then
+                SERVER_PID=$port_pid
+            fi
+        fi
         log_message "INFO" "Django server started successfully (PID: $SERVER_PID)"
         return 0
     else
-        log_message "ERROR" "Failed to start Django server. See above logs for details."
+        log_message "ERROR" "Django server failed to respond after ${max_wait} seconds. Check logs for details."
         return 1
     fi
 }
@@ -315,7 +368,7 @@ start_django() {
 # Health Monitor + Keepalive
 # -------------------------------
 send_keepalive() {
-    curl -s -o /dev/null http://localhost:8000/health/ 2>/dev/null || true
+    curl -s -o /dev/null http://localhost:8000/api/health/ 2>/dev/null || true
     # If you enabled metrics in cloudflared, you can ping it here:
     # curl -s -o /dev/null http://localhost:2000/metrics 2>/dev/null || true
 }
@@ -339,13 +392,38 @@ health_monitor() {
             send_keepalive
         fi
 
-        if ! ps -p $TUNNEL_PID >/dev/null 2>&1; then
+        # Windows-compatible process check
+        local tunnel_alive=false
+        if is_windows; then
+            # Check by process name since PID tracking is unreliable on Windows
+            tasklist //FI "IMAGENAME eq cloudflared.exe" 2>/dev/null | grep -q "cloudflared.exe" && tunnel_alive=true
+        else
+            ps -p $TUNNEL_PID >/dev/null 2>&1 && tunnel_alive=true
+        fi
+
+        if [ "$tunnel_alive" = "false" ]; then
             log_message "ERROR" "Tunnel process died, restarting..."
             start_tunnel || cleanup
         fi
 
-        if ! ps -p $SERVER_PID >/dev/null 2>&1; then
-            log_message "ERROR" "Django server died, restarting..."
+        # Check Django health via HTTP request instead of process check
+        # This is more reliable than checking for python.exe on Windows
+        # Accept any HTTP response (including 301 from SECURE_SSL_REDIRECT) as proof of life
+        local django_alive=false
+        local http_code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 http://localhost:8000/ 2>/dev/null)
+        if [ -n "$http_code" ] && [ "$http_code" != "000" ]; then
+            django_alive=true
+        fi
+
+        if [ "$django_alive" = "false" ]; then
+            log_message "ERROR" "Django server not responding, restarting..."
+            # Kill any lingering python processes on port 8000
+            if is_windows; then
+                local port_pid=$(netstat -ano | grep ":8000" | grep "LISTENING" | awk '{print $5}' | head -1)
+                if [ -n "$port_pid" ]; then
+                    taskkill //F //PID $port_pid 2>/dev/null || true
+                fi
+            fi
             start_django || cleanup
         fi
     done

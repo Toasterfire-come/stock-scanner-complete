@@ -25,6 +25,7 @@ if USE_XAMPP and IS_XAMPP_AVAILABLE:
 SECRET_KEY = os.environ.get('SECRET_KEY') or os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-development-key')
 _debug_raw = os.environ.get('DEBUG', os.environ.get('DJANGO_DEBUG', 'True'))
 DEBUG = str(_debug_raw).lower() == 'true'
+print(f"DEBUG MODE: {DEBUG} (raw value: {_debug_raw})")
 
 # Allow configuration of ALLOWED_HOSTS via environment variables
 # Prefer DJANGO_ALLOWED_HOSTS (comma-separated), fallback to ALLOWED_HOSTS, then defaults
@@ -66,8 +67,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_extensions',
     'stocks',
-    'billing',
+    'education',
     'emails',
+    'billing',
     'core',
     'news',
 ]
@@ -186,10 +188,22 @@ CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
 SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', str(6 * 60 * 60)))
 
 # PayPal configuration (env-driven)
+PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', '')
+PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', os.environ.get('PAYPAL_SECRET', ''))
 PAYPAL_WEBHOOK_URL = os.environ.get('PAYPAL_WEBHOOK_URL', '')
 PAYPAL_WEBHOOK_ID = os.environ.get('PAYPAL_WEBHOOK_ID', '')
+
+# PayPal Plan IDs (4 plans: Bronze Monthly/Yearly, Silver Monthly/Yearly)
+PAYPAL_PLAN_ID_BRONZE_MONTHLY = os.environ.get('PAYPAL_PLAN_ID_BRONZE_MONTHLY', '')
+PAYPAL_PLAN_ID_BRONZE_YEARLY = os.environ.get('PAYPAL_PLAN_ID_BRONZE_YEARLY', '')
+PAYPAL_PLAN_ID_SILVER_MONTHLY = os.environ.get('PAYPAL_PLAN_ID_SILVER_MONTHLY', '')
+PAYPAL_PLAN_ID_SILVER_YEARLY = os.environ.get('PAYPAL_PLAN_ID_SILVER_YEARLY', '')
+
+# Sales Tax configuration
+SALES_TAX_RATE = float(os.environ.get('SALES_TAX_RATE', '0.07'))  # 7% default
+SALES_TAX_ENABLED = os.environ.get('SALES_TAX_ENABLED', 'True').lower() == 'true'
 
 # Optional Google reCAPTCHA (enterprise-friendly: set per environment)
 RECAPTCHA_SECRET = os.environ.get('RECAPTCHA_SECRET', '')
@@ -306,6 +320,13 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
         'burst': '60/minute',
     }
+}
+
+# API Configuration
+API_CONFIG = {
+    'MAX_PAGE_SIZE': 100,
+    'MARKET_CAP_LARGE': 10_000_000_000,  # $10B
+    'MARKET_CAP_SMALL': 2_000_000_000,    # $2B
 }
 
 CACHES = {
