@@ -792,7 +792,7 @@
 
 .form-group input,
 .form-group select {
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   border: 2px solid #e0e0e0;
   border-radius: 6px;
   font-size: 0.95rem;
@@ -1153,5 +1153,15 @@
 
   .explanation-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Fix chart container overflow on mobile */
+  .greek-chart-container {
+    min-width: 100%;
+    overflow-x: auto;
+  }
+
+  .greeks-charts-grid {
+    min-width: unset;
   }
 }
