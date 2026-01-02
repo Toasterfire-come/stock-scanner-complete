@@ -110,6 +110,9 @@ import NewsSubscribe from "./pages/app/NewsSubscribe";
 // Paper Trading (MVP2 v3.4 - Basic Tier)
 import PaperTrading from "./pages/app/PaperTrading";
 
+// Options Analytics (MVP2 v3.4 - Pro Tier)
+import OptionsAnalytics from "./pages/app/OptionsAnalytics";
+
 // Alerts & Signals (Protected)
 import Alerts from "./pages/app/Alerts";
 import AlertHistory from "./pages/app/AlertHistory";
@@ -465,6 +468,13 @@ function App() {
                   <Route path="/app/paper-trading" element={
                     <ProtectedRoute>
                       <PaperTrading />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Options Analytics - MVP2 v3.4 (Pro Tier) */}
+                  <Route path="/app/options" element={
+                    <ProtectedRoute>
+                      <OptionsAnalytics />
                     </ProtectedRoute>
                   } />
 
