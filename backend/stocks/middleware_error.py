@@ -175,7 +175,7 @@ class CircuitBreakerMiddleware:
     """
     Circuit breaker pattern to prevent cascading failures
     """
-    
+
     def __init__(self, get_response):
         self.get_response = get_response
         self.failure_count = {}
@@ -183,10 +183,22 @@ class CircuitBreakerMiddleware:
         self.last_failure_time = {}
         self.threshold = 5  # Number of failures before opening circuit
         self.timeout = 60   # Seconds before attempting to close circuit
-        
+        # Exclude health check endpoints from circuit breaker
+        self.excluded_paths = [
+            '/api/health/',
+            '/api/health/detailed/',
+            '/api/health/ready/',
+            '/api/health/live/',
+            '/health/',
+        ]
+
     def __call__(self, request):
         endpoint = request.path
-        
+
+        # Skip circuit breaker for health check endpoints
+        if any(endpoint.startswith(excluded) for excluded in self.excluded_paths):
+            return self.get_response(request)
+
         # Check if circuit is open
         if self.is_circuit_open(endpoint):
             return JsonResponse({

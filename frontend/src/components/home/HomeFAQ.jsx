@@ -14,11 +14,11 @@ const defaultFaqs = [
   },
   {
     question: "Do you offer API access?",
-    answer: "Yes! Our Silver and Gold plans include full REST API access, allowing you to integrate our data into your own applications and trading systems."
+    answer: "Yes! Our Pro plan include full REST API access, allowing you to integrate our data into your own applications and trading systems."
   },
   {
     question: "What's the difference between plans?",
-    answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+    answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Basic is great for active traders starting out, while Pro is perfect for serious traders and professionals who need advanced features and higher limits."
   },
   {
     question: "How does the API call counting work?",

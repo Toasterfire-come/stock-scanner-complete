@@ -45,12 +45,15 @@ const CheckoutSuccess = () => {
   }, [planId, amount, navigate]);
 
   const planNames = {
-    pro: "Professional",
+    pro: "Pro",
+    basic: "Basic",
+    payPerUse: "Pay-Per-Use",
     enterprise: "Enterprise",
     free: "Free",
-    bronze: "Bronze",
-    silver: "Silver",
-    gold: "Gold",
+    // Legacy support
+    bronze: "Basic",
+    silver: "Pro",
+    gold: "Pay-Per-Use",
   };
 
   return (

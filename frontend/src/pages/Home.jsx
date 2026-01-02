@@ -32,8 +32,8 @@ import MarketStatus from "../components/MarketStatus";
 import { toast } from "sonner";
 import LightweightPriceChart from "../components/LightweightPriceChart";
 import { computeIndicatorsInWorker } from "../lib/indicatorsWorkerClient";
-import {
 import logger from '../lib/logger';
+import {
   marketingMetrics,
   formatNumber,
   formatPercent,
@@ -262,11 +262,11 @@ const Home = () => {
     },
     {
       question: "Do you offer API access?",
-      answer: "Yes! Our Silver and Gold plans include full REST API access, allowing you to integrate our data into your own applications and trading systems."
+      answer: "Yes! Our Pro and Pay-Per-Use plans include full REST API access, allowing you to integrate our data into your own applications and trading systems."
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders and institutions."
+      answer: "Plans differ mainly in the number of API calls per month, available features, and support level. Basic is perfect for learning traders, Pro for active traders, and Pay-Per-Use for seasonal or heavy users with flexible usage-based billing."
     },
     {
       question: "How does the API call counting work?",
@@ -321,72 +321,62 @@ const Home = () => {
           },
         ];
 
-  // QA Fix: Using centralized plan features (Issue #2, #3, #9)
-  // Removed Free plan for consistency with Pricing page
-  // Fixed API call math errors by using centralized data
+  // Updated to match Pricing page: Basic/Pro/Pay-Per-Use
   const pricingPlans = [
     {
-      name: "Bronze",
-      price: "$24.99",
+      name: "Basic",
+      price: "$19.00",
       period: "/month",
-      annualPrice: "$254.99",
-      description: "Enhanced features for active traders",
+      description: "Perfect for learning traders",
       features: [
-        "1,500 API calls per month (50 daily average)", // Fixed: was "1500 API calls per month"
-        "10 Screeners with 9 min median time",
-        "50 Alerts per month",
-        "2 Watchlists",
-        "No portfolios",
-        "Professional stock data access",
-        "Real-time market information",
-        "High Quality News and Sentiment Analysis",
+        "2,500 API calls per month",
+        "5 saved screeners, 50 runs/month",
+        "25 active alerts",
+        "3 watchlists (50 stocks each)",
+        "2 portfolios (25 holdings)",
+        "15-min delayed data",
+        "Stooq charting",
+        "Education resources",
         "Email support"
       ],
+      popular: false,
+      cta: "Start Basic Plan"
+    },
+    {
+      name: "Pro",
+      price: "$49.00",
+      period: "/month",
+      description: "For serious active traders",
+      features: [
+        "10,000 API calls per month",
+        "25 saved screeners, 500 runs/month",
+        "150 active alerts",
+        "10 watchlists (unlimited stocks)",
+        "Real-time data",
+        "TradingView Premium charting",
+        "AI backtesting & analytics",
+        "Priority support",
+        "Early feature access"
+      ],
       popular: true,
-      cta: "Start 14-Day Free Trial" // QA Fix: Clearer CTA (Issue #8)
+      cta: "Start Pro Plan"
     },
     {
-      name: "Silver",
-      price: "$49.99",
-      period: "/month",
-      annualPrice: "$509.99",
-      description: "Advanced features for serious traders",
+      name: "Pay-Per-Use",
+      price: "$49.00",
+      period: " base + usage",
+      description: "Flexible usage-based pricing",
       features: [
-        "5,000 API calls per month (166 daily average)", // Fixed: was "5000 API calls per month"
-        "25 Screeners with 9 min median time",
-        "150 Alerts per month",
-        "5 Watchlists",
-        "3 Portfolios",
-        "Professional stock data access",
-        "Real-time market information",
-        "High Quality News and Sentiment Analysis",
-        "AI-powered backtesting",
-        "Priority email support"
+        "Same base as Pro",
+        "Pay for overages ($1/1K calls)",
+        "Hard cap: $124.99/month max",
+        "Usage notifications",
+        "Auto-pause at cap",
+        "No surprise bills",
+        "Perfect for seasonal traders"
       ],
       popular: false,
-      cta: "Start 14-Day Free Trial"
-    },
-    {
-      name: "Gold",
-      price: "$99.99",
-      period: "/month",
-      annualPrice: "$1019.99",
-      description: "Professional-grade features",
-      features: [
-        "15,000 API calls per month (500 daily average)", // Fixed: clarified limits
-        "Unlimited Screeners with 9 min median time",
-        "500 Alerts per month",
-        "Unlimited Watchlists",
-        "10 Portfolios",
-        "Professional stock data access",
-        "Real-time market information",
-        "High Quality News and Sentiment Analysis",
-        "AI-powered backtesting",
-        "Advanced portfolio analytics",
-        "Priority support"
-      ],
-      popular: false,
-      cta: "Start 14-Day Free Trial"
+      cta: "Start Pay-Per-Use"
     }
   ];
 
@@ -670,7 +660,7 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
+          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <Card key={index} className={`relative hover:scale-105 transition-transform duration-300 ${plan.popular ? 'ring-4 ring-yellow-400 scale-105' : ''} ${plan.isFree ? 'order-last lg:order-none' : ''}`}>
                 {plan.popular && (

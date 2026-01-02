@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 import { TradingModeProvider } from "./context/TradingModeContext";
+import "./lib/quotaInterceptor"; // Global quota limit monitoring
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -45,10 +46,13 @@ const Widgets = lazy(() => import(/* webpackPrefetch: true */ "./pages/Widgets")
 const Badges = lazy(() => import(/* webpackPrefetch: true */ "./pages/Badges"));
 const Partners = lazy(() => import(/* webpackPrefetch: true */ "./pages/Partners"));
 import AdvancedAnalytics from "./components/AdvancedAnalytics";
-import ReferralSystem from "./components/ReferralSystem";
 import CheckoutSuccess from "./pages/billing/CheckoutSuccess";
 import CheckoutFailure from "./pages/billing/CheckoutFailure";
 import Checkout from "./pages/billing/Checkout";
+
+// PayPal Subscription Pages
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionCancel from "./pages/SubscriptionCancel";
 
 // App Pages (Protected)
 const AppDashboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/AppDashboard"));
@@ -98,10 +102,13 @@ import TopMovers from "./pages/app/TopMovers";
 import PreAfterMarket from "./pages/app/PreAfterMarket";
 import EconomicCalendar from "./pages/app/EconomicCalendar";
 
-// News (REMOVED per MVP spec - Phase 1)
-// import NewsFeed from "./pages/app/NewsFeed";
-// import NewsPreferences from "./pages/app/NewsPreferences";
-// import NewsSubscribe from "./pages/app/NewsSubscribe";
+// News & Sentiment (Re-enabled for production)
+import NewsFeed from "./pages/app/NewsFeed";
+import NewsPreferences from "./pages/app/NewsPreferences";
+import NewsSubscribe from "./pages/app/NewsSubscribe";
+
+// Paper Trading (MVP2 v3.4 - Basic Tier)
+import PaperTrading from "./pages/app/PaperTrading";
 
 // Alerts & Signals (Protected)
 import Alerts from "./pages/app/Alerts";
@@ -241,6 +248,10 @@ function App() {
                 <Route path="/checkout/failure" element={<CheckoutFailure />} />
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
 
+                {/* PayPal Subscription Routes */}
+                <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+                <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
+
                 {/* Main App Routes */}
                 <Route element={<EnhancedAppLayout cmdOpen={cmdOpen} setCmdOpen={setCmdOpen} />}>
                   {/* Public/Marketing Routes - Available to all users */}
@@ -292,11 +303,12 @@ function App() {
                       <AdvancedAnalytics />
                     </ProtectedRoute>
                   } />
-                  <Route path="/app/referrals" element={
+                  {/* ReferralSystem component removed - not implemented yet */}
+                  {/* <Route path="/app/referrals" element={
                     <ProtectedRoute>
                       <ReferralSystem />
                     </ProtectedRoute>
-                  } />
+                  } /> */}
 
                   {/* Partner Analytics - Protected (whitelisted emails only) */}
                   <Route path="/partner/analytics" element={<PartnerAnalyticsRoute />} />
@@ -432,7 +444,7 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* News - REMOVED per MVP spec Phase 1
+                  {/* News & Sentiment (Re-enabled for production) */}
                   <Route path="/app/news" element={
                     <ProtectedRoute>
                       <NewsFeed />
@@ -448,7 +460,13 @@ function App() {
                       <NewsSubscribe />
                     </ProtectedRoute>
                   } />
-                  */}
+
+                  {/* Paper Trading - MVP2 v3.4 (Basic Tier) */}
+                  <Route path="/app/paper-trading" element={
+                    <ProtectedRoute>
+                      <PaperTrading />
+                    </ProtectedRoute>
+                  } />
 
                   {/* Alerts & Signals - Protected */}
                   <Route path="/app/alerts" element={

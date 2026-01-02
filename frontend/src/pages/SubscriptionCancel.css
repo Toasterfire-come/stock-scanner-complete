@@ -1,0 +1,193 @@
+.subscription-cancel-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  padding: 20px;
+}
+
+.cancel-container {
+  background: white;
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.icon-cancel {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.subscription-cancel-page h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 12px;
+}
+
+.cancel-subtitle {
+  font-size: 18px;
+  color: #718096;
+  margin-bottom: 32px;
+}
+
+.info-box {
+  background: #fff5f5;
+  border-left: 4px solid #fc8181;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.info-box h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #c53030;
+  margin-bottom: 12px;
+}
+
+.info-box p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.action-section {
+  margin: 32px 0;
+}
+
+.action-section h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.btn {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.btn-secondary {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+  background: #f7fafc;
+  border-color: #764ba2;
+  color: #764ba2;
+}
+
+.help-section {
+  margin: 32px 0;
+  text-align: left;
+  background: #f7fafc;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.help-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 12px;
+}
+
+.help-section p {
+  color: #4a5568;
+  margin-bottom: 16px;
+}
+
+.help-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.help-section li {
+  padding: 8px 0;
+  padding-left: 28px;
+  position: relative;
+  color: #4a5568;
+}
+
+.help-section li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.help-section a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.help-section a:hover {
+  text-decoration: underline;
+}
+
+.reassurance {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 16px;
+  color: #4a5568;
+}
+
+.reassurance strong {
+  color: #38a169;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .cancel-container {
+    padding: 32px 24px;
+  }
+
+  .subscription-cancel-page h1 {
+    font-size: 24px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

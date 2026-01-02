@@ -114,7 +114,7 @@ const Home = () => {
     },
     {
       question: "What's the difference between plans?",
-      answer: "Plans differ mainly in the number of API calls per month and available features. Bronze is great for casual traders, Silver for active traders, and Gold for professional traders."
+      answer: "Plans differ mainly in the number of API calls per month and available features. Basic is perfect for learning traders, Pro for active traders, and Pay-Per-Use for seasonal or heavy users."
     },
     {
       question: "Do you provide investment advice?",
@@ -124,52 +124,52 @@ const Home = () => {
 
   const pricingPlans = [
     {
-      name: "Bronze",
-      price: "$24.99",
+      name: "Basic",
+      price: "$19.00",
       period: "/month",
-      description: "Enhanced features for active traders",
+      description: "Perfect for learning traders",
       features: [
-        "1,500 API calls per month",
-        "150 API calls per day",
-        "Full stock scanner & lookup",
-        "Email alerts & notifications", 
-        "Real-time alerts",
-        "Basic portfolio tracking"
+        "2,500 API calls per month",
+        "5 saved screeners, 50 runs/month",
+        "25 active alerts",
+        "3 watchlists (50 stocks each)",
+        "2 portfolios (25 holdings)",
+        "15-min delayed data"
+      ],
+      popular: false,
+      cta: "Start Basic Plan"
+    },
+    {
+      name: "Pro",
+      price: "$49.00",
+      period: "/month",
+      description: "For serious active traders",
+      features: [
+        "10,000 API calls per month",
+        "25 saved screeners, 500 runs/month",
+        "150 active alerts",
+        "10 watchlists (unlimited stocks)",
+        "Real-time data",
+        "Priority support"
       ],
       popular: true,
-      cta: "Try Now for Free"
+      cta: "Start Pro Plan"
     },
     {
-      name: "Silver", 
-      price: "$39.99",
-      period: "/month",
-      description: "Professional tools for serious traders",
+      name: "Pay-Per-Use",
+      price: "$49.00",
+      period: " base + usage",
+      description: "Flexible usage-based pricing",
       features: [
-        "5,000 API calls per month",
-        "500 API calls per day",
-        "Advanced filtering & screening",
-        "Custom watchlists (10)",
-        "Real-time alerts",
-        "Priority email support"
+        "Same base as Pro",
+        "Pay for overages ($1/1K calls)",
+        "Hard cap: $124.99/month max",
+        "Usage notifications",
+        "Auto-pause at cap",
+        "No surprise bills"
       ],
       popular: false,
-      cta: "Try Now for Free"
-    },
-    {
-      name: "Gold",
-      price: "$89.99", 
-      period: "/month",
-      description: "Ultimate trading experience",
-      features: [
-        "Unlimited API calls",
-        "Unlimited daily usage",
-        "All premium features",
-        "Real-time alerts", 
-        "Full REST API access",
-        "Priority email support"
-      ],
-      popular: false,
-      cta: "Try Now for Free"
+      cta: "Start Pay-Per-Use"
     }
   ];
 

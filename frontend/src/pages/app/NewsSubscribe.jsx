@@ -168,39 +168,40 @@ const NewsSubscribe = () => {
           <Card>
             <CardHeader>
               <CardTitle>Contact Information</CardTitle>
-              <CardDescription>Enter your email to receive news alerts</CardDescription>
+              <CardDescription>Enter your phone number to receive news alerts via SMS</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  id="phone"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={formData.phone || ''}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 />
+                <p className="text-xs text-gray-500 mt-1">Enter with country code (e.g., +1 for US)</p>
               </div>
 
               <div>
-                <Label className="text-base font-medium">Notification Methods</Label>
+                <Label className="text-base font-medium">Notification Method</Label>
                 <div className="space-y-3 mt-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="email-notifications"
-                      checked={formData.notifications.email}
-                      onCheckedChange={() => toggleNotification("email")}
+                      id="sms-notifications"
+                      checked={formData.notifications.sms || true}
+                      onCheckedChange={() => toggleNotification("sms")}
                     />
-                    <Label htmlFor="email-notifications" className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      Email Notifications
+                    <Label htmlFor="sms-notifications" className="flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      SMS Notifications (TextBelt)
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 opacity-50">
                     <Checkbox
                       id="push-notifications"
-                      checked={formData.notifications.push}
-                      onCheckedChange={() => toggleNotification("push")}
+                      checked={false}
+                      disabled
                     />
                     <Label htmlFor="push-notifications" className="flex items-center gap-2">
                       <Bell className="h-4 w-4" />

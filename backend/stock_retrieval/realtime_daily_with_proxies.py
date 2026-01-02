@@ -2,9 +2,10 @@
 """
 Daily Scanner with Proxy Rotation & Rate Limiting
 ==================================================
-Target: 0.25 tickers/second (avoid rate limits)
+Target: 0.488 tickers/second (spread over 5 hours to avoid rate limits)
 Threads: 20
 Proxies: Rotate through working proxies from http_proxies.txt
+Rate Limit: ~800 requests spread across proxies over 5-hour period
 """
 
 import os
@@ -81,10 +82,10 @@ def sanitize_float(value, default=None, max_value=9999999999.9999):
 MAX_THREADS = 20
 BATCH_SIZE = 100
 TIMEOUT = 10.0  # Reasonable timeout for stability
-TARGET_RATE = 3.5  # 3.5 tickers/second (realistic, achievable without proxies)
-DELAY_PER_REQUEST = 1 / TARGET_RATE  # ~0.286 seconds per request
-USE_PROXIES = False  # Proxies disabled (adds overhead, no benefit)
-PROXY_FILE = Path(__file__).parent / "http_proxies.txt" if USE_PROXIES else None
+TARGET_RATE = 0.488  # 0.488 tickers/second (spread over 5 hours to avoid rate limits)
+DELAY_PER_REQUEST = 1 / TARGET_RATE  # ~2.05 seconds per request
+USE_PROXIES = True  # Proxies enabled for rate limit distribution
+PROXY_FILE = Path(__file__).parent / "http_proxies.txt"
 
 # Rate limiting
 rate_limiter = threading.Semaphore(1)

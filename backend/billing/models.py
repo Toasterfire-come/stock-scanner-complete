@@ -7,7 +7,8 @@ import uuid
 class PlanTier(models.TextChoices):
     FREE = 'free', 'Free'
     BASIC = 'basic', 'Basic'
-    PLUS = 'plus', 'Plus'
+    PRO = 'pro', 'Pro'
+    PAY_PER_USE = 'pay_per_use', 'Pay-Per-Use'
 
 
 class BillingCycle(models.TextChoices):

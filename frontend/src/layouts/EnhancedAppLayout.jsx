@@ -119,7 +119,8 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
         { name: "Journal", href: "/app/journal", icon: BookOpen, description: "Trade journal & notes" },
         { name: "Indicators", href: "/app/indicators", icon: LineChart, description: "Custom indicators" },
         { name: "Tax Report", href: "/app/tax-reporting", icon: Calculator, description: "Tax reporting" },
-        { name: "Referrals", href: "/app/referrals", icon: Users, description: "Referral program" },
+        // Referrals removed - component not implemented
+        // { name: "Referrals", href: "/app/referrals", icon: Users, description: "Referral program" },
         // Partner analytics for whitelisted partners only
         ...(user?.email?.toLowerCase().trim() === 'hamzashehata3000@gmail.com' ? [
           { name: "Partner Analytics", href: "/partner/analytics", icon: BarChart3, description: "Referral performance" },
@@ -153,7 +154,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
   const showBreadcrumbs = location.pathname.startsWith("/docs");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO {...seoForPath(location.pathname)} />
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} isAuthenticated={isAuthenticated} />
       {/* Enhanced Header */}
@@ -358,7 +359,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
       </header>
 
       {/* Main content */}
-      <main className="relative">
+      <main className="flex-1 relative">
         <Outlet />
       </main>
 

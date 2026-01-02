@@ -34,7 +34,6 @@ const Contact = lazy(() => import("./pages/Contact"));
 const PricingPro = lazy(() => import("./pages/PricingPro"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const AdvancedAnalytics = lazy(() => import("./components/AdvancedAnalytics"));
-const ReferralSystem = lazy(() => import("./components/ReferralSystem"));
 const CheckoutSuccess = lazy(() => import("./pages/billing/CheckoutSuccess"));
 const CheckoutFailure = lazy(() => import("./pages/billing/CheckoutFailure"));
 const Checkout = lazy(() => import("./pages/billing/Checkout"));
@@ -194,7 +193,6 @@ function SecureApp() {
                     <Route path="/pricing" element={<PricingPro />} />
                     <Route path="/pricing-old" element={<Pricing />} />
                     <Route path="/app/analytics" element={<AdvancedAnalytics />} />
-                    <Route path="/app/referrals" element={<ReferralSystem />} />
 
                     {/* Marketing Pages - Using placeholders */}
                     <Route path="/product" element={<PlaceholderPage title="Product" />} />

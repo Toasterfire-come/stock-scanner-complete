@@ -1,76 +1,73 @@
-# Force MIME types for static files
-<IfModule mod_mime.c>
-  AddType text/css .css
-  AddType application/javascript .js
-  AddType application/json .json
-  AddType image/svg+xml .svg
-  AddType image/webp .webp
-  AddType image/avif .avif
-  AddType image/png .png
-  AddType image/jpeg .jpg .jpeg
-  AddType image/x-icon .ico
-  AddType font/woff .woff
-  AddType font/woff2 .woff2
-  AddType font/ttf .ttf
-  AddType text/plain .txt
-</IfModule>
-
 <IfModule mod_rewrite.c>
+  # Enable Rewrite Engine
   RewriteEngine On
 
-  # Canonical host: force non-www
-  RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
-  RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
+  # Set base directory
+  RewriteBase /
 
-  # Enforce HTTPS only when both indicators show non-https (avoid proxy loops)
-  RewriteCond %{HTTPS} !=on
-  RewriteCond %{HTTP:X-Forwarded-Proto} !https
-  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # Force HTTPS (recommended for production)
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # CRITICAL: Do not rewrite existing static files
-  # This must come BEFORE the SPA fallback
-  RewriteCond %{REQUEST_FILENAME} -f
-  RewriteRule ^ - [L]
+  # Handle React Router - Route all requests to index.html
+  # This ensures React Router can handle client-side routing
 
-  # Do not rewrite existing directories
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
+  # If the request is for a real file or directory, serve it directly
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
 
-  # SPA fallback to index.html ONLY for non-existing files
-  # This catches all other requests (HTML5 pushState URLs)
-  RewriteRule ^ /index.html [L]
+  # Otherwise, route to index.html
+  RewriteRule . /index.html [L]
 </IfModule>
 
-DirectoryIndex index.html
-
-# Custom 404
-ErrorDocument 404 /404.html
-
-# Security headers
+# Security Headers
 <IfModule mod_headers.c>
-  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  # Prevent clickjacking
+  Header set X-Frame-Options "SAMEORIGIN"
+
+  # Prevent MIME type sniffing
   Header set X-Content-Type-Options "nosniff"
-  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Enable XSS Protection
+  Header set X-XSS-Protection "1; mode=block"
+
+  # Referrer Policy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions Policy
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
 </IfModule>
 
-# Compression
+# Gzip Compression for better performance
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
 </IfModule>
 
-<IfModule mod_brotli.c>
-  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
-</IfModule>
-
-# Browser caching for static assets
+# Browser Caching for static assets
 <IfModule mod_expires.c>
   ExpiresActive On
-  ExpiresByType text/css "access plus 7 days"
-  ExpiresByType application/javascript "access plus 7 days"
-  ExpiresByType image/svg+xml "access plus 30 days"
-  ExpiresByType image/webp "access plus 30 days"
-  ExpiresByType image/avif "access plus 30 days"
-  ExpiresByType image/png "access plus 30 days"
-  ExpiresByType image/jpeg "access plus 30 days"
-  ExpiresDefault "access plus 1 day"
+
+  # Images
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+
+  # CSS, JavaScript
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+
+  # Fonts
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+
+  # HTML - short cache for SPA
+  ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
+
+# Error Documents
+ErrorDocument 403 /index.html
+ErrorDocument 404 /index.html

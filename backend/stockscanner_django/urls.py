@@ -20,7 +20,8 @@ def api_info(request):
 
 urlpatterns = [
     path('', api_info, name='api_info'),
-    path('health/', health_check, name='health_check'),
+    # Remove duplicate health check - use /api/health/ instead
+    # path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
     path('api/', include('stocks.urls')),
     path('api/billing/', include('billing.urls')),

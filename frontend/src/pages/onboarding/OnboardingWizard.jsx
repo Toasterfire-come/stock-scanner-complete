@@ -128,22 +128,22 @@ const OnboardingWizard = () => {
 
   const subscriptionPlans = [
     {
-      id: "bronze",
-      name: "Bronze",
-      price: "$14.99/month",
-      features: ["1,000 stocks/month", "Basic screening", "Email alerts"]
+      id: "basic",
+      name: "Basic",
+      price: "$19.00/month",
+      features: ["2,500 API calls/month", "5 screeners", "25 alerts", "15-min delayed data"]
     },
     {
-      id: "silver", 
-      name: "Silver",
-      price: "$29.99/month",
-      features: ["5,000 stocks/month", "Advanced screening", "Real-time alerts", "API access"]
+      id: "pro",
+      name: "Pro",
+      price: "$49.00/month",
+      features: ["10,000 API calls/month", "25 screeners", "150 alerts", "Real-time data", "Priority support"]
     },
     {
-      id: "gold",
-      name: "Gold", 
-      price: "$59.99/month",
-      features: ["10,000 stocks/month", "All features", "Priority support", "Advanced analytics"]
+      id: "payPerUse",
+      name: "Pay-Per-Use",
+      price: "$49.00 base + usage",
+      features: ["Same as Pro", "Pay for overages", "Hard cap $124.99/mo", "Perfect for seasonal traders"]
     }
   ];
 

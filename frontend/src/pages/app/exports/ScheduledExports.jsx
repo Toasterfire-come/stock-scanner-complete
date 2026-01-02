@@ -42,8 +42,8 @@ const ScheduledExports = () => {
     time: '09:00',
     timezone: 'UTC',
     enabled: true,
-    email_notifications: true,
-    email_recipients: '',
+    sms_notifications: false,
+    sms_recipients: '',
     retention_days: 30
   });
 
@@ -64,8 +64,8 @@ const ScheduledExports = () => {
         time: '09:00',
         timezone: 'UTC',
         enabled: true,
-        email_notifications: true,
-        email_recipients: 'investor@company.com',
+        sms_notifications: true,
+        sms_recipients: '+1234567890',
         retention_days: 30,
         last_run: '2024-01-15T09:00:00Z',
         next_run: '2024-01-22T09:00:00Z',
@@ -82,8 +82,8 @@ const ScheduledExports = () => {
         time: '08:00',
         timezone: 'UTC',
         enabled: false,
-        email_notifications: false,
-        email_recipients: '',
+        sms_notifications: false,
+        sms_recipients: '',
         retention_days: 60,
         last_run: '2024-01-01T08:00:00Z',
         next_run: null,
@@ -123,8 +123,8 @@ const ScheduledExports = () => {
         time: '09:00',
         timezone: 'UTC',
         enabled: true,
-        email_notifications: true,
-        email_recipients: '',
+        sms_notifications: false,
+        sms_recipients: '',
         retention_days: 30
       });
       toast.success('Scheduled export created successfully');
@@ -318,10 +318,10 @@ const ScheduledExports = () => {
 
                       <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
                         <span>Runs: {schedule.run_count}</span>
-                        {schedule.email_notifications && (
+                        {schedule.sms_notifications && (
                           <span className="flex items-center gap-1">
-                            <Mail className="h-4 w-4" />
-                            Email notifications enabled
+                            <Bell className="h-4 w-4" />
+                            SMS notifications enabled
                           </span>
                         )}
                         <span>Retention: {schedule.retention_days} days</span>
@@ -389,8 +389,8 @@ const ScheduledExports = () => {
                 <span className="font-medium">90 days</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Email notifications:</span>
-                <span className="font-medium">Included</span>
+                <span className="text-gray-600">SMS notifications:</span>
+                <span className="font-medium">Included (TextBelt)</span>
               </div>
             </CardContent>
           </Card>
@@ -520,25 +520,25 @@ const ScheduledExports = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-base font-medium">Email Notifications</Label>
-                    <p className="text-sm text-gray-600">Send email when export completes</p>
+                    <Label className="text-base font-medium">SMS Notifications</Label>
+                    <p className="text-sm text-gray-600">Send SMS when export completes</p>
                   </div>
                   <Switch
-                    checked={newSchedule.email_notifications}
-                    onCheckedChange={(checked) => setNewSchedule(prev => ({ ...prev, email_notifications: checked }))}
+                    checked={newSchedule.sms_notifications || false}
+                    onCheckedChange={(checked) => setNewSchedule(prev => ({ ...prev, sms_notifications: checked }))}
                   />
                 </div>
 
-                {newSchedule.email_notifications && (
+                {newSchedule.sms_notifications && (
                   <div className="space-y-2">
-                    <Label htmlFor="email_recipients">Email Recipients</Label>
+                    <Label htmlFor="sms_recipients">Phone Numbers</Label>
                     <Input
-                      id="email_recipients"
-                      value={newSchedule.email_recipients}
-                      onChange={(e) => setNewSchedule(prev => ({ ...prev, email_recipients: e.target.value }))}
-                      placeholder="email1@company.com, email2@company.com"
+                      id="sms_recipients"
+                      value={newSchedule.sms_recipients || ''}
+                      onChange={(e) => setNewSchedule(prev => ({ ...prev, sms_recipients: e.target.value }))}
+                      placeholder="+1234567890, +1987654321"
                     />
-                    <p className="text-xs text-gray-600">Separate multiple emails with commas</p>
+                    <p className="text-xs text-gray-600">Separate multiple phone numbers with commas</p>
                   </div>
                 )}
 

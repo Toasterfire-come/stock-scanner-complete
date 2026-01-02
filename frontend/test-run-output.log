@@ -1,0 +1,246 @@
+🚀 Launching browser...
+
+============================================================
+Testing 52 pages on https://tradescanpro.com
+============================================================
+
+📄 Testing: https://tradescanpro.com/
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/about
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/features
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/pricing
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/contact
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/help
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/demo
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/status
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/markets
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/partners
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/press
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/resources
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/signin
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/signup
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/forgot-password
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/reset-password
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/privacy
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/terms
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/docs
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/docs/getting-started
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/docs/getting-started/create-account
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/docs/getting-started/dashboard
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/docs/getting-started/first-screener
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/dashboard
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/stocks
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/watchlists
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/screeners
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/alerts
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/portfolio
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/markets
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/news
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/calendar
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/backtesting
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/settings
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/profile
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/app/billing
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/account/profile
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/account/settings
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/account/billing
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/account/password
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/account/notifications
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/checkout
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/checkout/success
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/checkout/failure
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/enterprise
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/enterprise/contact
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/enterprise/solutions
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/education
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/education/courses
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/education/glossary
+   ❌ FAILED: page.waitForTimeout is not a function
+
+📄 Testing: https://tradescanpro.com/education/progress
+   ❌ FAILED: page.waitForTimeout is not a function
+
+
+============================================================
+PAGE ERROR TESTING SUMMARY
+============================================================
+
+Base URL: https://tradescanpro.com
+Test Duration: 70.25s
+Timestamp: 2025-12-29T01:52:32.215Z
+
+RESULTS:
+  Total Pages: 52
+  ✅ Passed: 0
+  ⚠️  Warnings: 0
+  ❌ Errors: 0
+  💥 Failed: 52
+
+DETAILS:
+  Total Errors: 104
+  Network Errors: 52
+  Warnings: 0
+  Avg Load Time: 1035ms
+
+============================================================
+
+PAGES WITH ERRORS:
+  / - FAIL (2 errors, 1 network errors)
+  /about - FAIL (2 errors, 1 network errors)
+  /features - FAIL (2 errors, 1 network errors)
+  /pricing - FAIL (2 errors, 1 network errors)
+  /contact - FAIL (2 errors, 1 network errors)
+  /help - FAIL (2 errors, 1 network errors)
+  /demo - FAIL (2 errors, 1 network errors)
+  /status - FAIL (2 errors, 1 network errors)
+  /markets - FAIL (2 errors, 1 network errors)
+  /partners - FAIL (2 errors, 1 network errors)
+  /press - FAIL (2 errors, 1 network errors)
+  /resources - FAIL (2 errors, 1 network errors)
+  /signin - FAIL (2 errors, 1 network errors)
+  /signup - FAIL (2 errors, 1 network errors)
+  /forgot-password - FAIL (2 errors, 1 network errors)
+  /reset-password - FAIL (2 errors, 1 network errors)
+  /privacy - FAIL (2 errors, 1 network errors)
+  /terms - FAIL (2 errors, 1 network errors)
+  /docs - FAIL (2 errors, 1 network errors)
+  /docs/getting-started - FAIL (2 errors, 1 network errors)
+  /docs/getting-started/create-account - FAIL (2 errors, 1 network errors)
+  /docs/getting-started/dashboard - FAIL (2 errors, 1 network errors)
+  /docs/getting-started/first-screener - FAIL (2 errors, 1 network errors)
+  /app - FAIL (2 errors, 1 network errors)
+  /app/dashboard - FAIL (2 errors, 1 network errors)
+  /app/stocks - FAIL (2 errors, 1 network errors)
+  /app/watchlists - FAIL (2 errors, 1 network errors)
+  /app/screeners - FAIL (2 errors, 1 network errors)
+  /app/alerts - FAIL (2 errors, 1 network errors)
+  /app/portfolio - FAIL (2 errors, 1 network errors)
+  /app/markets - FAIL (2 errors, 1 network errors)
+  /app/news - FAIL (2 errors, 1 network errors)
+  /app/calendar - FAIL (2 errors, 1 network errors)
+  /app/backtesting - FAIL (2 errors, 1 network errors)
+  /app/settings - FAIL (2 errors, 1 network errors)
+  /app/profile - FAIL (2 errors, 1 network errors)
+  /app/billing - FAIL (2 errors, 1 network errors)
+  /account/profile - FAIL (2 errors, 1 network errors)
+  /account/settings - FAIL (2 errors, 1 network errors)
+  /account/billing - FAIL (2 errors, 1 network errors)
+  /account/password - FAIL (2 errors, 1 network errors)
+  /account/notifications - FAIL (2 errors, 1 network errors)
+  /checkout - FAIL (2 errors, 1 network errors)
+  /checkout/success - FAIL (2 errors, 1 network errors)
+  /checkout/failure - FAIL (2 errors, 1 network errors)
+  /enterprise - FAIL (2 errors, 1 network errors)
+  /enterprise/contact - FAIL (2 errors, 1 network errors)
+  /enterprise/solutions - FAIL (2 errors, 1 network errors)
+  /education - FAIL (2 errors, 1 network errors)
+  /education/courses - FAIL (2 errors, 1 network errors)
+  /education/glossary - FAIL (2 errors, 1 network errors)
+  /education/progress - FAIL (2 errors, 1 network errors)
+
+============================================================
+
+
+✅ Full report saved to: page-errors-report.json
+📝 Error details saved to: page-errors-details.md
+📊 Summary saved to: page-errors-summary.txt

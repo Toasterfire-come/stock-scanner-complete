@@ -5,15 +5,14 @@ import { Switch } from "../../components/ui/switch";
 import { Label } from "../../components/ui/label";
 import { Skeleton } from "../../components/ui/skeleton";
 import { toast } from "sonner";
-import { 
-  Bell, 
-  TrendingUp, 
-  PieChart, 
-  Newspaper, 
-  Shield, 
+import {
+  Bell,
+  TrendingUp,
+  PieChart,
+  Newspaper,
+  Shield,
   Save,
   Smartphone,
-  Mail,
   Volume2
 } from "lucide-react";
 import { getNotificationSettings, updateNotificationSettings, requestSmsCode, verifySmsCode, sendTestSms } from "../../api/client";
@@ -149,44 +148,33 @@ const NotificationSettings = () => {
           </p>
         </div>
 
-        {/* Notification Methods */}
+        {/* SMS Delivery Method - SMS Only (MVP2 Requirement) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <Volume2 className="h-5 w-5 mr-2" />
-              Delivery Methods
+              SMS Delivery (TextBelt)
             </CardTitle>
             <CardDescription>
-              Choose how you want to receive notifications
+              All alerts and notifications are delivered via SMS text message
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                <Mail className="h-5 w-5 text-blue-500" />
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50">
+              <div className="flex items-center space-x-3">
+                <Smartphone className="h-6 w-6 text-blue-600" />
                 <div>
-                  <div className="font-medium">Email</div>
-                  <div className="text-sm text-gray-600">Always enabled</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 p-4 border rounded-lg opacity-50">
-                <Smartphone className="h-5 w-5 text-gray-400" />
-                <div>
-                  <div className="font-medium">Push Notifications</div>
-                  <div className="text-sm text-gray-600">Coming soon</div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Volume2 className="h-5 w-5 text-gray-600" />
-                  <div>
-                    <div className="font-medium">SMS</div>
-                    <div className="text-sm text-gray-600">{smsVerified ? 'Verified' : 'Verify phone to enable'}</div>
+                  <div className="font-medium text-lg">SMS Alerts</div>
+                  <div className="text-sm text-gray-600">
+                    {smsVerified ? '✓ Verified and enabled' : 'Verify your phone number below to enable SMS alerts'}
                   </div>
                 </div>
-                <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} disabled={!smsVerified} />
               </div>
+              <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} disabled={!smsVerified} />
             </div>
+            <p className="text-sm text-gray-500">
+              Trade Scan Pro uses TextBelt for SMS delivery. No signup required, completely free for all users.
+            </p>
           </CardContent>
         </Card>
 
@@ -315,7 +303,7 @@ const NotificationSettings = () => {
               <div className="space-y-1">
                 <Label htmlFor="daily-summary">Daily Summary</Label>
                 <p className="text-sm text-gray-600">
-                  Daily portfolio performance and market summary email
+                  Daily portfolio performance and market summary via SMS
                 </p>
               </div>
               <Switch

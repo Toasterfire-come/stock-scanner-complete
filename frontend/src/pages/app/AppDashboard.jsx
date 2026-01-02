@@ -45,21 +45,20 @@ import UsageTracker from "../../components/UsageTracker";
 // Removed EnhancedPortfolioAnalytics and RealUserActivityFeed from dashboard per request
 import MarketStatus from "../../components/MarketStatus";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
+import UsageMetrics from "../../components/UsageMetrics";
+import UpgradeModal from "../../components/UpgradeModal";
+import useQuotaLimit from "../../hooks/useQuotaLimit";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "../../components/ui/resizable";
-import ReferralSystem from "../../components/ReferralSystem";
 import logger from '../../lib/logger';
-
-const PARTNER_REFERRAL_EMAILS = [
-  "hamzashehata3000@gmail.com",
-];
 
 const AppDashboard = () => {
   const { isAuthenticated, user } = useAuth();
+  const { showUpgradeModal, limitData, closeModal } = useQuotaLimit();
   const [marketData, setMarketData] = useState(null);
   const [trendingStocks, setTrendingStocks] = useState(null);
   const [portfolioAnalytics, setPortfolioAnalytics] = useState(null);
   const [userActivity, setUserActivity] = useState([]);
-  
+
   const [sectorPerformance, setSectorPerformance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState(null);
@@ -72,8 +71,6 @@ const AppDashboard = () => {
       return { run: false, save: false, alert: false };
     }
   });
-
-  const showReferralDashboard = !!(user?.email && PARTNER_REFERRAL_EMAILS.includes(user.email.toLowerCase()));
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -398,20 +395,30 @@ const AppDashboard = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
 
-        {/* Activity & Market Status Grid */}  
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6">
-          {/* Market Status only */}
+        {/* Activity & Market Status Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
+          {/* Market Status */}
           <div>
             <MarketStatus />
           </div>
-        </div>
 
-        {showReferralDashboard && (
-          <div className="mt-8">
-            <ReferralSystem user={user} />
+          {/* Usage Metrics */}
+          <div>
+            <UsageMetrics user={user} />
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Upgrade Modal - Triggered when quota limits are reached */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={closeModal}
+        currentPlan={limitData.currentPlan}
+        resourceType={limitData.resourceType}
+        currentUsage={limitData.currentUsage}
+        quotaLimit={limitData.quotaLimit}
+        usagePercentage={limitData.usagePercentage}
+      />
     </div>
   );
 };

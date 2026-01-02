@@ -165,38 +165,28 @@ def health_check_detailed(request):
 def readiness_check(request):
     """
     Readiness probe - checks if the service is ready to accept traffic
+    Simplified to avoid triggering circuit breaker with complex database queries
     """
     try:
-        # Check database is accessible
+        # Simple database connectivity check (lightweight)
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
             cursor.fetchone()
-        
-        # Check critical tables exist
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT COUNT(*) 
-                FROM information_schema.tables 
-                WHERE table_schema = DATABASE() 
-                AND table_name IN ('stocks_stock', 'stocks_stockdata')
-            """)
-            table_count = cursor.fetchone()[0]
-            
-            if table_count < 2:
-                return JsonResponse({
-                    "ready": False,
-                    "reason": "Required tables not found"
-                }, status=503)
-        
+
         return JsonResponse({
             "ready": True,
             "timestamp": datetime.now().isoformat()
         })
-        
+
     except Exception as e:
+        # Log the error but don't expose details in production
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Readiness check failed: {str(e)}")
+
         return JsonResponse({
             "ready": False,
-            "error": str(e),
+            "error": "Database connectivity check failed",
             "timestamp": datetime.now().isoformat()
         }, status=503)
 

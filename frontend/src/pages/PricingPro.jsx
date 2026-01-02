@@ -78,87 +78,84 @@ const PricingPro = () => {
   // fetchPlans removed to keep pricing fully static
 
   const getDefaultPlans = () => ({
-    // Free plan removed
-    bronze: {
-      name: 'Bronze Plan', 
+    basic: {
+      name: 'Basic Plan',
+      price: 9.99,
+      price_yearly: 101.99, // 9.99 * 12 * 0.85
+      popular: false,
+      limits: {
+        api_calls: 2500,
+        screeners: 5,
+        alerts: 25,
+        watchlists: 3,
+        portfolios: 2,
+      },
+      features: [
+        '2,500 API calls per month',
+        '5 saved screeners, 50 runs/month',
+        '25 active alerts',
+        '3 watchlists (50 stocks each)',
+        '2 portfolios (25 holdings)',
+        '20 chart exports/month',
+        '5 AI backtests/month',
+        '15-min delayed data',
+        'Stooq charting',
+        'Education resources',
+        'Email support'
+      ]
+    },
+    pro: {
+      name: 'Pro Plan',
+      price: 24.99,
+      price_yearly: 254.99, // 24.99 * 12 * 0.85
+      popular: true,
+      limits: {
+        api_calls: 10000,
+        screeners: 25,
+        alerts: 150,
+        watchlists: 10,
+        portfolios: 10,
+      },
+      features: [
+        '10,000 API calls per month',
+        '25 saved screeners, 500 runs/month',
+        '150 active alerts',
+        '10 watchlists (unlimited stocks)',
+        '10 portfolios (unlimited holdings)',
+        '200 chart exports/month',
+        '50 AI backtests/month',
+        'Real-time data',
+        'TradingView Premium charting',
+        'Options analytics & Greeks',
+        'Social trading features',
+        'Priority support',
+        'Early feature access'
+      ]
+    },
+    payPerUse: {
+      name: 'Pay-Per-Use Plan',
       price: 24.99,
       price_yearly: 254.99,
       popular: false,
       limits: {
-        api_calls: 1500,
-        screeners: 10,
-        alerts: 50,
-        watchlists: 2, 
-        portfolios: 0,
-      },
-      features: [
-        'Professional stock data access',
-        '1,500 API calls per month',
-        '10 Screeners',
-        '100 Email Alerts per month',
-        '2 Watchlists',
-        'Real-time market information',
-        'Basic stock screener',
-        'Email alerts & notifications',
-        'Portfolio tracking',
-        'High Quality News and Sentiment Analysis',
-        'Email support',
-        'Advanced screener filters',
-        'Custom watchlists',
-        'Priority support'
-      ]
-    },
-    silver: {
-      name: 'Silver Plan',
-      price: 49.99,
-      price_yearly: 509.99,
-      popular: true,
-      limits: {
-        api_calls: 5000,
-        screeners: 20,
-        alerts: 100,
+        api_calls: 10000,
+        screeners: 25,
+        alerts: 150,
         watchlists: 10,
-        portfolios: 1,
+        portfolios: 10,
       },
       features: [
-        'All Bronze features',
-        '5,000 API calls per month',
-        '20 Screeners',
-        '500 Alerts per month',
-        '5 Watchlists',
-        'Portfolio Analytics',
-        'Advanced Screener Tools (JSON input/output)',
-        'Advanced Watchlist Tools (JSON input/output)',
-        'Historical data access',
-        'Custom Portfolios',
-        'Data Export (CSV, JSON)',
-        'Priority support'
-      ]
-    },
-    gold: {
-      name: 'Gold Plan',
-      price: 79.99,
-      price_yearly: 814.99,
-      popular: false,
-      limits: {
-        api_calls: -1,
-        screeners: -1,
-        alerts: -1,
-        watchlists: -1,
-        portfolios: -1,
-      },
-      features: [
-        'Everything in Silver',
-        'Unlimited API calls',
-        'Unlimited everything',
-        'API Key Access',
-        'Developer Tools',
-        'White-label Solutions',
-        'Custom Reports',
-        'Real-time market data',
-        'Professional analytics',
-        'Advanced export options',
-        'Premium support'
+        'Same base allocation as Pro',
+        'Pay only for what you use beyond limits',
+        'API calls: $1 per 1,000',
+        'Screener runs: $0.10 per run',
+        'AI backtests: $0.25 per test',
+        'Chart exports: $0.02 per export',
+        'Hard cap: $124.99/month maximum',
+        'Usage notifications at 50%, 75%, 90%, 100%',
+        'Auto-pause at cap',
+        'Detailed usage analytics',
+        'No surprise bills'
       ]
     }
   });
@@ -166,9 +163,9 @@ const PricingPro = () => {
   const getPlanIcon = (planKey) => {
     switch (planKey) {
       case 'free': return <Zap className="h-6 w-6" />;
-      case 'bronze': return <Award className="h-6 w-6" />;
-      case 'silver': return <Shield className="h-6 w-6" />;
-      case 'gold': return <Crown className="h-6 w-6" />;
+      case 'basic': return <Award className="h-6 w-6" />;
+      case 'pro': return <Shield className="h-6 w-6" />;
+      case 'payPerUse': return <Crown className="h-6 w-6" />;
       default: return <Zap className="h-6 w-6" />;
     }
   };
@@ -176,9 +173,9 @@ const PricingPro = () => {
   const getPlanColor = (planKey) => {
     switch (planKey) {
       case 'free': return 'text-gray-600 border-gray-200';
-      case 'bronze': return 'text-orange-600 border-orange-200 bg-orange-50';
-      case 'silver': return 'text-blue-600 border-blue-200 bg-blue-50';
-      case 'gold': return 'text-yellow-600 border-yellow-200 bg-yellow-50';
+      case 'basic': return 'text-orange-600 border-orange-200 bg-orange-50';
+      case 'pro': return 'text-blue-600 border-blue-200 bg-blue-50';
+      case 'payPerUse': return 'text-purple-600 border-purple-200 bg-purple-50';
       default: return 'text-gray-600 border-gray-200';
     }
   };
@@ -288,7 +285,7 @@ const PricingPro = () => {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 max-w-6xl mx-auto">
         {Object.entries(plans).map(([planKey, plan]) => {
           const savings = getAnnualSavings(plan.price);
           
@@ -423,22 +420,18 @@ const PricingPro = () => {
       {/* Which plan is right for me? */}
       <div className="max-w-4xl mx-auto mb-16">
         <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Which plan is right for me?</h2>
-        <div className="grid sm:grid-cols-2 gap-4 text-sm">
+        <div className="grid sm:grid-cols-3 gap-4 text-sm">
           <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Free</p>
-            <p className="text-gray-600">Trying the platform; basic lookup and 1 portfolio.</p>
+            <p className="font-semibold text-gray-900 mb-1">Basic ($9.99/mo)</p>
+            <p className="text-gray-600">Learning traders; 2,500 API calls, 5 screeners, 25 alerts. Perfect for getting started.</p>
           </div>
           <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Bronze</p>
-            <p className="text-gray-600">Casual trader; 10 screeners, 2 watchlists, 50 alerts/month.</p>
+            <p className="font-semibold text-gray-900 mb-1">Pro ($24.99/mo)</p>
+            <p className="text-gray-600">Active traders; 10,000 API calls, 25 screeners, 150 alerts. Real-time data and advanced features.</p>
           </div>
           <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Silver</p>
-            <p className="text-gray-600">Active trader; 20 screeners, 10 watchlists, 100 alerts, 1 portfolio.</p>
-          </div>
-          <div className="bg-white border rounded-lg p-4">
-            <p className="font-semibold text-gray-900 mb-1">Gold</p>
-            <p className="text-gray-600">Power user/team; unlimited limits and premium support.</p>
+            <p className="font-semibold text-gray-900 mb-1">Pay-Per-Use ($24.99 base + usage)</p>
+            <p className="text-gray-600">Seasonal/heavy users; same base as Pro, pay for overages up to $124.99/mo cap. No surprise bills.</p>
           </div>
         </div>
       </div>
@@ -509,7 +502,7 @@ const PricingPro = () => {
           <AccordionItem value="item-4">
             <AccordionTrigger>How much do I save with annual billing?</AccordionTrigger>
             <AccordionContent>
-              Annual plans save you 15% compared to monthly billing. For example, Bronze saves $44.89/year, Silver saves $89.89/year, and Gold saves $144.89/year.
+              Annual plans save you 15% compared to monthly billing. For example, Basic saves $17.89/year, Pro saves $44.89/year, and Pay-Per-Use saves $44.89/year.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-5">

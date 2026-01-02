@@ -73,72 +73,89 @@ const Pricing = () => {
 
   const plans = [
     {
-      id: "bronze",
-      name: "Bronze",
+      id: "basic",
+      name: "Basic",
       icon: <Award className="h-6 w-6" />,
-      description: "Enhanced features for active traders",
-      price: { monthly: 24.99, annual: null },
+      description: "Essential features for active traders",
+      price: { monthly: 9.99, annual: null },
       features: [
-        "150 API calls per day, 1,500/month",
-        `Screeners with ${usage.medianTimeToFirstScreenerMinutes} min median time-to-first insight`,
-        "Email alerts & notifications",
-        `Real-time alerts (50 alerts/mo) with sub-${reliability.apiP95LatencyMs}ms delivery`,
-        "2 Watchlists",
-        "No portfolios",
-        "Basic charting with 4 themes",
-        "Standard data export (CSV)"
+        "Stooq charting (standard + volume profile)",
+        "Core indicators & automated technical summaries",
+        "Financial statements & fundamentals",
+        "News + sentiment analysis",
+        "Economic calendar (earnings, Fed decisions)",
+        "Manual paper trading",
+        "Single-condition SMS alerts",
+        "Mobile chart viewing",
+        "Education & help resources",
+        "Security features (MFA, encryption)"
       ],
       limitations: [],
       popular: true,
       color: "orange",
-      cta: "Try for free",
+      cta: "Upgrade to Basic",
       headlineMetric: `${formatPercent(outcomes.trialToPaidConversionPercent)} trial-to-paid`
     },
     {
-      id: "silver",
-      name: "Silver",
+      id: "pro",
+      name: "Pro",
       icon: <Crown className="h-6 w-6" />,
       description: "Professional tools for serious traders",
-      price: { monthly: 49.99, annual: null },
+      price: { monthly: 24.99, annual: null },
       features: [
-        "500 API calls per day, 5000/month",
-        `Advanced filtering & screening across ${formatNumber(usage.coverageUniverse)}+ equities`,
-        "Custom watchlists (10)",
-        `Real-time alerts (100 alerts/mo) with ${formatPercent(outcomes.averageDrawdownReductionPercent)} drawdown reduction`,
-        "Portfolio tracking (1 portfolio)",
-        `Priority email support (${reliability.supportFirstResponseMinutes} min median reply)`,
-        "Advanced charting with 10+ indicators",
-        "Multi-format export (PNG, SVG, CSV)",
-        "Virtual scrolling for large datasets"
+        "All Basic features",
+        "Exotic chart types (Renko, Kagi, P&F, Heikin-Ashi)",
+        "Saved chart layouts & modular dashboards",
+        "AI backtesting & strategy scoring",
+        "Leaderboards & strategy cloning",
+        "Full paper trading (strategy + advanced orders)",
+        "Intraday options analytics (Greeks, IV surfaces)",
+        "Multi-condition SMS alerts",
+        "Follow & copy traders",
+        "Trading journal & performance reviews",
+        "Custom themes"
       ],
       limitations: [],
       popular: false,
       color: "blue",
-      cta: "Try for free",
+      cta: "Upgrade to Pro",
       headlineMetric: `${formatPercent(marketingMetrics.testimonials.retentionPercent90Day)} 90-day retention`
     },
     {
-      id: "gold",
-      name: "Gold",
-      icon: <Star className="h-6 w-6" />,
-      description: "Ultimate trading experience",
-      price: { monthly: 79.99, annual: null },
+      id: "pay-per-use",
+      name: "Pay-Per-Use",
+      icon: <Zap className="h-6 w-6" />,
+      description: "Flexible pricing for seasonal traders & developers",
+      price: { monthly: 24.99, annual: null },
+      baseAllocation: {
+        apiCalls: "10,000",
+        screeners: "25",
+        screenerRuns: "500",
+        alerts: "150"
+      },
+      overagePricing: {
+        apiCalls: "$1 per 1,000",
+        screenerRuns: "$0.10 per run",
+        aiBacktests: "$0.25 per test",
+        chartExports: "$0.02 per export"
+      },
+      hardCap: "$124.99/month",
       features: [
-        "Unlimited API calls",
-        "All premium features",
-        "Real-time alerts",
-        "Full REST API access",
-        `Strategic support for ${formatNumber(enterprise.enterpriseClients)} enterprise accounts`,
-        "Full charting suite with customization",
-        "Premium export features (high DPI PNG, SVG vector)",
-        "White-label deployment options",
-        "Automated deployment support"
+        "All Pro features included",
+        "Same base allocation as Pro (10K API calls, etc.)",
+        "Transparent overage pricing",
+        "Usage notifications at 50%, 75%, 90%, 100%",
+        "Hard cap: $124.99/month maximum",
+        "Auto-pause at cap (no surprise bills)",
+        "Detailed usage analytics & forecasting",
+        "Pause/resume usage control",
+        "Perfect for seasonal trading"
       ],
       limitations: [],
       popular: false,
-      color: "yellow",
-      cta: "Try for free",
-      headlineMetric: `${formatNumber(enterprise.enterpriseClients)} enterprise teams`
+      color: "purple",
+      cta: "Start Pay-Per-Use",
+      headlineMetric: "No surprise bills - Capped at $124.99"
     },
     // Free plan removed per policy
   ];
@@ -204,41 +221,52 @@ const Pricing = () => {
 
   const features = [
     {
-      category: "Stock Analysis",
+      category: "Charting & Technical Analysis",
       icon: <BarChart3 className="h-5 w-5" />,
       items: [
-        { name: "Monthly stock queries", free: "15", bronze: "100/day, 1500/month", silver: "500/day, 5000/month", gold: "Unlimited" },
-        { name: "Stock symbol lookup", free: true, bronze: true, silver: true, gold: true },
-        { name: "Basic price filtering", free: true, bronze: true, silver: true, gold: true },
-        { name: "Advanced screening", free: false, bronze: true, silver: true, gold: true },
-        { name: "Real-time data", free: false, bronze: true, silver: true, gold: true }
+        { name: "Stooq charting (browser-based)", basic: true, pro: true, payPerUse: true },
+        { name: "Volume profile view", basic: true, pro: true, payPerUse: true },
+        { name: "Core indicators (SMA, RSI, MACD)", basic: true, pro: true, payPerUse: true },
+        { name: "Automated technical summaries", basic: true, pro: true, payPerUse: true },
+        { name: "Exotic charts (Renko, Kagi, P&F, Heikin-Ashi)", basic: false, pro: true, payPerUse: true },
+        { name: "Saved chart layouts", basic: false, pro: true, payPerUse: true },
+        { name: "Modular dashboards", basic: false, pro: true, payPerUse: true },
+        { name: "Custom themes", basic: false, pro: true, payPerUse: true }
       ]
     },
     {
-      category: "Alerts & Notifications",
+      category: "Market Intelligence",
       icon: <Bell className="h-5 w-5" />,
       items: [
-        { name: "Email alerts", free: false, bronze: true, silver: true, gold: true },
-        { name: "Real-time alerts", free: false, bronze: "50 alerts", silver: "100 alerts", gold: true },
-        { name: "Custom alert conditions", free: false, bronze: "Basic", silver: "Advanced", gold: "Unlimited" }
+        { name: "Real-time news ingestion", basic: true, pro: true, payPerUse: true },
+        { name: "NLP sentiment analysis", basic: true, pro: true, payPerUse: true },
+        { name: "Economic calendar", basic: true, pro: true, payPerUse: true },
+        { name: "Financial statements", basic: true, pro: true, payPerUse: true },
+        { name: "Intraday options analytics (Greeks, IV)", basic: false, pro: true, payPerUse: true }
       ]
     },
     {
-      category: "Portfolio & Tracking",
+      category: "Alerts & Trading",
       icon: <Users className="h-5 w-5" />,
       items: [
-        { name: "Portfolio management", free: false, bronze: "No portfolios", silver: "1 portfolio", gold: "Professional" },
-        { name: "Watchlists", free: false, bronze: "2", silver: "10", gold: "Unlimited" },
-        { name: "Performance analytics", free: false, bronze: false, silver: true, gold: true }
+        { name: "SMS alerts (TextBelt)", basic: "Single-condition", pro: "Multi-condition", payPerUse: "Multi-condition" },
+        { name: "Webhook alerts", basic: true, pro: true, payPerUse: true },
+        { name: "Manual paper trading", basic: true, pro: true, payPerUse: true },
+        { name: "Strategy-based paper trading", basic: false, pro: true, payPerUse: true },
+        { name: "Advanced order types (bracket, OCO, trailing)", basic: false, pro: true, payPerUse: true }
       ]
     },
     {
-      category: "Support & API",
+      category: "Strategy & Analysis",
       icon: <Mail className="h-5 w-5" />,
       items: [
-        { name: "Email support", free: false, bronze: true, silver: true, gold: true },
-        { name: "Priority support", free: false, bronze: false, silver: true, gold: true },
-        { name: "API access", free: false, bronze: false, silver: "Limited", gold: "Full" }
+        { name: "AI backtesting", basic: false, pro: true, payPerUse: true },
+        { name: "Composite strategy scoring", basic: false, pro: true, payPerUse: true },
+        { name: "Leaderboards", basic: false, pro: true, payPerUse: true },
+        { name: "Strategy cloning", basic: false, pro: true, payPerUse: true },
+        { name: "Trading journal", basic: false, pro: true, payPerUse: true },
+        { name: "Performance reviews", basic: false, pro: true, payPerUse: true },
+        { name: "Follow & copy traders", basic: false, pro: true, payPerUse: true }
       ]
     }
   ];
@@ -255,6 +283,7 @@ const Pricing = () => {
       case 'orange': return 'bg-orange-100 text-orange-600 border-orange-500';
       case 'blue': return 'bg-blue-100 text-blue-600 border-blue-500';
       case 'yellow': return 'bg-yellow-100 text-yellow-600 border-yellow-500';
+      case 'purple': return 'bg-purple-100 text-purple-600 border-purple-500';
       default: return 'bg-gray-100 text-gray-600 border-gray-500';
     }
   };
@@ -354,7 +383,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto mb-16">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
           {plans.map((plan) => (
             <Card 
               key={plan.id} 
@@ -392,13 +421,17 @@ const Pricing = () => {
                       </span>
                     )}
                   </div>
-                  
+
+                  <div className="text-xs text-gray-500 mt-1">
+                    *Sales Tax Not Included
+                  </div>
+
                   {appliedDiscount && plan.id !== "free" && (
                     <div className="text-sm text-gray-500 line-through mt-1">
                       Was ${isAnnual ? computeAnnual(plan.price.monthly) : plan.price.monthly}/{isAnnual ? 'year' : 'month'}
                     </div>
                   )}
-                  
+
                   {isAnnual && plan.price.monthly > 0 && !appliedDiscount && (
                     <div className="text-sm text-green-600 mt-1">
                       Save ${((plan.price.monthly * 12) - computeAnnual(plan.price.monthly)).toFixed(2)} per year
@@ -472,17 +505,16 @@ const Pricing = () => {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-4 font-medium">Features</th>
-                        <th className="text-center p-4 font-medium">Free</th>
-                        <th className="text-center p-4 font-medium">Bronze</th>
-                        <th className="text-center p-4 font-medium">Silver</th>
-                        <th className="text-center p-4 font-medium">Gold</th>
+                        <th className="text-center p-4 font-medium">Basic</th>
+                        <th className="text-center p-4 font-medium">Pro</th>
+                        <th className="text-center p-4 font-medium">Pay-Per-Use</th>
                       </tr>
                     </thead>
                     <tbody>
                       {features.map((category) => (
                         <React.Fragment key={category.category}>
                           <tr className="bg-gray-50">
-                            <td colSpan="5" className="p-4 font-semibold text-gray-900 flex items-center">
+                            <td colSpan="4" className="p-4 font-semibold text-gray-900 flex items-center">
                               {category.icon}
                               <span className="ml-2">{category.category}</span>
                             </td>
@@ -491,27 +523,21 @@ const Pricing = () => {
                             <tr key={index} className="border-b">
                               <td className="p-4">{item.name}</td>
                               <td className="p-4 text-center">
-                                {typeof item.free === 'boolean' ? 
-                                  (item.free ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
-                                  item.free
+                                {typeof item.basic === 'boolean' ?
+                                  (item.basic ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.basic
                                 }
                               </td>
                               <td className="p-4 text-center">
-                                {typeof item.bronze === 'boolean' ? 
-                                  (item.bronze ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
-                                  item.bronze
+                                {typeof item.pro === 'boolean' ?
+                                  (item.pro ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.pro
                                 }
                               </td>
                               <td className="p-4 text-center">
-                                {typeof item.silver === 'boolean' ? 
-                                  (item.silver ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
-                                  item.silver
-                                }
-                              </td>
-                              <td className="p-4 text-center">
-                                {typeof item.gold === 'boolean' ? 
-                                  (item.gold ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
-                                  item.gold
+                                {typeof item.payPerUse === 'boolean' ?
+                                  (item.payPerUse ? <Check className="h-4 w-4 text-green-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />) :
+                                  item.payPerUse
                                 }
                               </td>
                             </tr>

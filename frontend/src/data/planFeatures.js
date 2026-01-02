@@ -5,8 +5,8 @@
  * Use this file consistently across ALL pages (Home, Pricing, PricingPro, etc.)
  * to avoid inconsistencies in feature claims.
  *
- * Last Updated: December 22, 2024
- * QA Issue: #9 - Feature Claims Inconsistency Fix
+ * Last Updated: December 29, 2025
+  * Updated: Pricing from Bronze/Silver/Gold to Basic/Pro plans
  */
 
 export const PLAN_FEATURES = {
@@ -54,153 +54,231 @@ export const PLAN_FEATURES = {
     ]
   },
 
-  // BRONZE PLAN - Entry level paid plan
-  bronze: {
-    id: 'bronze',
-    name: 'Bronze',
-    price: 24.99,
-    priceMonthly: 24.99,
-    priceAnnual: 254.99, // ~15% discount (24.99 * 12 * 0.85 = 254.9)
+  // BASIC PLAN - Essential for active traders
+  basic: {
+    id: 'basic',
+    name: 'Basic',
+    price: 9.99,
+    priceMonthly: 9.99,
+    priceAnnual: 101.99, // ~15% discount (9.99 * 12 * 0.85 = 101.9)
     isActive: true,
     popular: true,
-    description: 'Enhanced features for active traders',
+    description: 'Essential features for active traders',
     apiCalls: {
-      total: 1500,
+      total: 2500,
       period: 'month',
-      daily: 50, // Average: 1500 / 30 = 50
-      description: '1,500 API calls per month (50 daily average)'
+      daily: 83, // Average: 2500 / 30 ≈ 83
+      description: '2,500 API calls per month (83 daily average)'
     },
     screeners: {
-      count: 10,
+      count: 5,
       type: 'standard',
       medianTimeMinutes: 9,
-      description: '10 Screeners with 9 min median time'
+      runsPerMonth: 50,
+      description: '5 saved screeners, 50 runs per month'
     },
     watchlists: {
-      count: 2,
-      description: '2 Watchlists'
+      count: 3,
+      stocksPerList: 50,
+      description: '3 watchlists with up to 50 stocks each'
     },
     portfolios: {
-      count: 0,
-      description: 'No portfolios'
+      count: 2,
+      holdingsPerPortfolio: 25,
+      description: '2 portfolios with up to 25 holdings each'
     },
     alerts: {
-      count: 50,
+      count: 25,
       period: 'month',
-      description: '50 Alerts per month'
+      description: '25 active alerts'
     },
+    charting: {
+      provider: 'Stooq',
+      types: ['Standard', 'Volume Profile'],
+      exports: 20,
+      description: 'Stooq charting with standard and volume profile'
+    },
+    dataDelay: '15 minutes',
     support: 'Email',
     features: [
-      '1,500 API calls per month (50 daily average)',
-      '10 Screeners with 9 min median time',
-      '50 Alerts per month',
-      '2 Watchlists',
-      'No portfolios',
-      'Professional stock data access',
-      'Real-time market information',
-      'High Quality News and Sentiment Analysis',
+      '2,500 API calls per month (83 daily average)',
+      '5 saved screeners, 50 runs per month',
+      '25 active alerts with SMS notifications',
+      '3 watchlists with up to 50 stocks each',
+      '2 portfolios with up to 25 holdings each',
+      'Stooq charting (standard + volume profile)',
+      'Core indicators & automated technical summaries',
+      'Financial statements & fundamentals',
+      'News + sentiment analysis',
+      'Economic calendar (earnings, Fed decisions)',
+      'Manual paper trading',
+      'Mobile chart viewing',
+      'Education & help resources',
+      'Security features (MFA, encryption)',
       'Email support'
     ]
   },
 
-  // SILVER PLAN - Mid-tier plan
-  silver: {
-    id: 'silver',
-    name: 'Silver',
-    price: 49.99,
-    priceMonthly: 49.99,
-    priceAnnual: 509.99, // ~15% discount
+  // PRO PLAN - Professional tools for serious traders
+  pro: {
+    id: 'pro',
+    name: 'Pro',
+    price: 24.99,
+    priceMonthly: 24.99,
+    priceAnnual: 254.99, // ~15% discount (24.99 * 12 * 0.85 = 254.9)
     isActive: true,
     popular: false,
-    description: 'Advanced features for serious traders',
+    description: 'Professional tools for serious traders',
     apiCalls: {
-      total: 5000,
+      total: 10000,
       period: 'month',
-      daily: 166, // Average: 5000 / 30 ≈ 166
-      description: '5,000 API calls per month (166 daily average)'
+      daily: 333, // Average: 10000 / 30 ≈ 333
+      description: '10,000 API calls per month (333 daily average)'
     },
     screeners: {
       count: 25,
       type: 'advanced',
       medianTimeMinutes: 9,
-      description: '25 Screeners with 9 min median time'
+      runsPerMonth: 500,
+      description: '25 saved screeners, 500 runs per month'
     },
     watchlists: {
-      count: 5,
-      description: '5 Watchlists'
+      count: 10,
+      stocksPerList: 'unlimited',
+      description: '10 watchlists with unlimited stocks'
     },
     portfolios: {
-      count: 3,
-      description: '3 Portfolios'
+      count: 10,
+      holdingsPerPortfolio: 'unlimited',
+      description: '10 portfolios with unlimited holdings'
     },
     alerts: {
       count: 150,
       period: 'month',
-      description: '150 Alerts per month'
+      description: '150 active alerts'
     },
+    charting: {
+      provider: 'TradingView',
+      types: ['Standard', 'Volume Profile', 'Heikin Ashi', 'Renko', 'Point & Figure'],
+      exports: 200,
+      description: 'TradingView Premium with exotic chart types'
+    },
+    backtests: {
+      count: 50,
+      period: 'month',
+      description: '50 AI backtests per month'
+    },
+    dataDelay: 'Real-time',
     support: 'Priority Email',
     features: [
-      '5,000 API calls per month (166 daily average)',
-      '25 Screeners with 9 min median time',
-      '150 Alerts per month',
-      '5 Watchlists',
-      '3 Portfolios',
-      'Professional stock data access',
-      'Real-time market information',
-      'High Quality News and Sentiment Analysis',
-      'AI-powered backtesting',
-      'Priority email support'
+      '10,000 API calls per month (333 daily average)',
+      '25 saved screeners, 500 runs per month',
+      '150 active alerts with SMS and webhook notifications',
+      '10 watchlists with unlimited stocks',
+      '10 portfolios with unlimited holdings',
+      'TradingView Premium charting',
+      'Advanced indicators (VWAP, Ichimoku, etc.)',
+      'Fair value & DCF analysis tools',
+      '50 AI-powered backtests per month',
+      'Portfolio tracking & analytics',
+      'Multi-condition webhook alerts',
+      'Insider trading activity feed',
+      'Options analytics (Greeks, IV surfaces)',
+      'Social features (follow traders, clone strategies)',
+      'Real-time market data',
+      'Priority support & onboarding',
+      'Early access to new features'
     ]
   },
 
-  // GOLD PLAN - Premium plan
-  gold: {
-    id: 'gold',
-    name: 'Gold',
-    price: 99.99,
-    priceMonthly: 99.99,
-    priceAnnual: 1019.99, // ~15% discount
+  // PAY-PER-USE PLAN - Flexible usage-based pricing
+  payPerUse: {
+    id: 'pay-per-use',
+    name: 'Pay-Per-Use',
+    price: 24.99,
+    priceMonthly: 24.99,
+    priceAnnual: 254.99, // ~15% discount (24.99 * 12 * 0.85 = 254.9)
     isActive: true,
     popular: false,
-    description: 'Professional-grade features',
+    description: 'Flexible pricing for seasonal traders and developers',
+    baseAllocation: {
+      apiCalls: 10000,
+      screeners: 25,
+      screenerRuns: 500,
+      alerts: 150,
+      watchlists: 10,
+      portfolios: 10,
+      chartExports: 200,
+      aiBacktests: 50
+    },
+    overagePricing: {
+      apiCall: 0.001, // $0.001 per call = $1 per 1,000 calls
+      screenerRun: 0.10,
+      aiBacktest: 0.25,
+      chartExport: 0.02,
+      watchlist: 1.00, // per additional list
+      portfolio: 2.00  // per additional portfolio
+    },
+    hardCaps: {
+      apiCalls: 100000, // max 100K API calls per month
+      totalBill: 124.99  // max $124.99/month (base $24.99 + $100 overages)
+    },
+    notifications: {
+      thresholds: [50, 75, 90, 100], // notify at these % of limits
+      autoPauseAtCap: true
+    },
     apiCalls: {
-      total: 15000,
+      total: 10000,
       period: 'month',
-      daily: 500, // Average: 15000 / 30 = 500
-      description: '15,000 API calls per month (500 daily average)'
+      daily: 333,
+      description: '10,000 API calls per month base (333 daily average), then $1 per 1,000 additional calls'
     },
     screeners: {
-      count: 'unlimited',
-      type: 'professional',
+      count: 25,
+      type: 'advanced',
       medianTimeMinutes: 9,
-      description: 'Unlimited Screeners with 9 min median time'
+      runsPerMonth: 500,
+      description: '25 saved screeners, 500 runs per month base, then $0.10 per additional run'
     },
     watchlists: {
-      count: 'unlimited',
-      description: 'Unlimited Watchlists'
+      count: 10,
+      stocksPerList: 'unlimited',
+      description: '10 watchlists base, then $1.00 per additional watchlist'
     },
     portfolios: {
       count: 10,
-      description: '10 Portfolios'
+      holdingsPerPortfolio: 'unlimited',
+      description: '10 portfolios base, then $2.00 per additional portfolio'
     },
     alerts: {
-      count: 500,
+      count: 150,
       period: 'month',
-      description: '500 Alerts per month'
+      description: '150 active alerts (included in base)'
     },
-    support: 'Priority Support',
+    charting: {
+      provider: 'TradingView',
+      types: ['Standard', 'Volume Profile', 'Heikin Ashi', 'Renko', 'Point & Figure'],
+      exports: 200,
+      description: 'TradingView Premium, 200 exports base, then $0.02 per additional export'
+    },
+    backtests: {
+      count: 50,
+      period: 'month',
+      description: '50 AI backtests base, then $0.25 per additional backtest'
+    },
+    dataDelay: 'Real-time',
+    support: 'Priority Email',
     features: [
-      '15,000 API calls per month (500 daily average)',
-      'Unlimited Screeners with 9 min median time',
-      '500 Alerts per month',
-      'Unlimited Watchlists',
-      '10 Portfolios',
-      'Professional stock data access',
-      'Real-time market information',
-      'High Quality News and Sentiment Analysis',
-      'AI-powered backtesting',
-      'Advanced portfolio analytics',
-      'Priority support'
+      'Everything in Pro, plus:',
+      'Pay only for what you use beyond base allocation',
+      'Hard cap at $124.99/month (no surprise bills)',
+      'Notifications at 50%, 75%, 90%, 100% usage',
+      'Auto-pause at usage cap (configurable)',
+      'Perfect for seasonal trading patterns',
+      'Ideal for algorithm developers',
+      'Detailed usage analytics and forecasting',
+      'Monthly usage reports with cost breakdown',
+      'Flexible - scale up or down anytime'
     ]
   }
 };

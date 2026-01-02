@@ -21,7 +21,8 @@ const Alerts = () => {
     ticker: "",
     targetPrice: "",
     condition: "above",
-    email: ""
+    phoneNumber: "",
+    deliveryMethod: "sms"
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -63,8 +64,8 @@ const Alerts = () => {
       toast.error("Please sign in to create alerts");
       return;
     }
-    if (!newAlert.ticker || !newAlert.targetPrice || !newAlert.email) {
-      toast.error("Please fill in all required fields");
+    if (!newAlert.ticker || !newAlert.targetPrice || !newAlert.phoneNumber) {
+      toast.error("Please fill in all required fields (ticker, price, phone number)");
       return;
     }
 
@@ -84,12 +85,13 @@ const Alerts = () => {
         ticker: newAlert.ticker.toUpperCase(),
         target_price: parseFloat(newAlert.targetPrice),
         condition: newAlert.condition,
-        email: newAlert.email
+        phone_number: newAlert.phoneNumber,
+        delivery_method: newAlert.deliveryMethod
       });
 
       if (response.alert_id || response.success) {
         toast.success("Alert created successfully");
-        setNewAlert({ ticker: "", targetPrice: "", condition: "above", email: "" });
+        setNewAlert({ ticker: "", targetPrice: "", condition: "above", phoneNumber: "", deliveryMethod: "sms" });
         fetchAlerts(); // Refresh the list
       } else {
         toast.error("Failed to create alert");
@@ -238,13 +240,13 @@ const Alerts = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={newAlert.email}
-                  onChange={(e) => setNewAlert({...newAlert, email: e.target.value})}
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={newAlert.phoneNumber}
+                  onChange={(e) => setNewAlert({...newAlert, phoneNumber: e.target.value})}
                 />
               </div>
               <div className="flex items-end">

@@ -1,0 +1,10 @@
+
+> frontend@0.1.0 build
+> cross-env NODE_OPTIONS='--max-old-space-size=16384' craco build
+
+Creating an optimized production build...
+Failed to compile.
+
+Module not found: Error: Can't resolve '../utils/subscriptionService' in 'C:\Stock-scanner-project\v2mvp-stock-scanner-complete\stock-scanner-complete\frontend\src\pages'
+
+

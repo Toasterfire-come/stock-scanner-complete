@@ -1,0 +1,642 @@
+/**
+ * Mobile Experience Enhancements
+ * Additional polish for mobile devices (phones and tablets)
+ * Import this file in your main App.css or index.css
+ */
+
+/* ========================================
+   MOBILE-FIRST GLOBAL IMPROVEMENTS
+   ======================================== */
+
+/* Smooth scrolling on all devices */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent text size adjustment on mobile */
+body {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ========================================
+   TOUCH-FRIENDLY INTERACTIONS
+   ======================================== */
+
+/* Larger tap targets for mobile (minimum 44x44px) */
+@media (max-width: 768px) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  .btn,
+  .cta-button,
+  .subscription-button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 20px;
+  }
+
+  /* Remove hover effects on touch devices */
+  button:hover,
+  a:hover,
+  .btn:hover {
+    transform: none;
+  }
+
+  /* Add active/pressed state for better feedback */
+  button:active,
+  a:active,
+  .btn:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* ========================================
+   SUBSCRIPTION BUTTON MOBILE ENHANCEMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  .subscription-button {
+    width: 100%;
+    font-size: 16px; /* Prevents zoom on iOS */
+    font-weight: 600;
+    padding: 16px 24px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .subscription-button.primary {
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .subscription-button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* ========================================
+   PRICING PAGE MOBILE OPTIMIZATIONS
+   ======================================== */
+
+@media (max-width: 768px) {
+  .pricing-hero {
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 32px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* Make pricing cards stack beautifully */
+  .pricing-cards {
+    flex-direction: column;
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .pricing-card {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  /* Larger, more readable prices on mobile */
+  .price-amount {
+    font-size: 48px;
+  }
+
+  .price-decimal {
+    font-size: 28px;
+  }
+
+  /* Feature list improvements */
+  .features-list {
+    text-align: left;
+    font-size: 15px;
+  }
+
+  .feature-item {
+    padding: 10px 0;
+  }
+}
+
+/* ========================================
+   SUCCESS PAGE MOBILE POLISH
+   ======================================== */
+
+@media (max-width: 768px) {
+  .subscription-success-page,
+  .subscription-cancel-page {
+    padding: 16px;
+  }
+
+  .success-container,
+  .cancel-container {
+    padding: 32px 20px;
+    border-radius: 12px;
+  }
+
+  .icon-success,
+  .icon-error,
+  .icon-cancel {
+    width: 60px;
+    height: 60px;
+    font-size: 32px;
+  }
+
+  .subscription-success-page h1,
+  .subscription-cancel-page h1 {
+    font-size: 24px;
+    line-height: 1.3;
+  }
+
+  .success-subtitle,
+  .cancel-subtitle {
+    font-size: 16px;
+  }
+
+  .subscription-details {
+    padding: 20px 16px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  .detail-row .label {
+    font-size: 12px;
+  }
+
+  .detail-row .value {
+    font-size: 16px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+
+  .next-steps {
+    text-align: left;
+  }
+
+  .next-steps h2 {
+    font-size: 18px;
+  }
+
+  .next-steps li {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+/* ========================================
+   MOBILE FORM INPUTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+    padding: 12px 16px;
+    border-radius: 8px;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+  }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .loading-spinner-large {
+    width: 50px;
+    height: 50px;
+    border-width: 3px;
+  }
+
+  .loading-spinner {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+  }
+}
+
+/* ========================================
+   COMPARISON TABLE MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .comparison-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+
+  .comparison-table {
+    font-size: 13px;
+    min-width: 500px; /* Allows horizontal scroll */
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+
+  .feature-column {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* ========================================
+   SPACING AND LAYOUT MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+  section {
+    padding: 40px 20px;
+  }
+
+  .section-title {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+
+  .section-subtitle {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+}
+
+/* ========================================
+   SAFE AREA INSETS (iPhone notch, etc.)
+   ======================================== */
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+
+  .fixed-header,
+  .fixed-footer {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* ========================================
+   MOBILE BILLING TOGGLE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .billing-toggle {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 24px 0;
+  }
+
+  .billing-toggle button {
+    flex: 1;
+    max-width: 150px;
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  .savings-badge {
+    display: block;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+}
+
+/* ========================================
+   MOBILE FAQ IMPROVEMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  .faq-list {
+    padding: 0;
+  }
+
+  .faq-item {
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .faq-question {
+    padding: 16px;
+    font-size: 15px;
+    text-align: left;
+  }
+
+  .question-text {
+    flex: 1;
+    line-height: 1.5;
+  }
+
+  .toggle-icon {
+    font-size: 24px;
+    margin-left: 12px;
+  }
+
+  .faq-answer {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .answer-content {
+    padding: 16px;
+  }
+}
+
+/* ========================================
+   MOBILE COST CALCULATOR
+   ======================================== */
+
+@media (max-width: 768px) {
+  .cost-calculator {
+    padding: 20px 16px;
+  }
+
+  .calculator-inputs {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .input-group label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .base-limit {
+    font-size: 12px;
+  }
+
+  input[type="number"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .calculator-result {
+    margin-top: 24px;
+    padding: 20px 16px;
+  }
+
+  .result-row {
+    font-size: 15px;
+  }
+
+  .total-cost {
+    font-size: 28px;
+  }
+}
+
+/* ========================================
+   MOBILE TRUST SECTION
+   ======================================== */
+
+@media (max-width: 768px) {
+  .trust-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .trust-item {
+    text-align: center;
+    padding: 24px 20px;
+  }
+
+  .trust-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  .trust-item h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .trust-item p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+/* ========================================
+   MOBILE HELP TEXT
+   ======================================== */
+
+@media (max-width: 768px) {
+  .help-text,
+  .help-section {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .help-text a,
+  .help-section a {
+    word-break: break-word;
+  }
+}
+
+/* ========================================
+   MOBILE REASSURANCE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .reassurance,
+  .info-box {
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Reduce animations on low-power devices */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support for mobile */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles here if needed */
+}
+
+/* ========================================
+   LANDSCAPE ORIENTATION
+   ======================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .pricing-hero {
+    padding: 24px 20px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .success-container,
+  .cancel-container {
+    padding: 24px 20px;
+  }
+
+  .subscription-success-page h1,
+  .subscription-cancel-page h1 {
+    font-size: 22px;
+  }
+}
+
+/* ========================================
+   VERY SMALL SCREENS (iPhone SE, etc.)
+   ======================================== */
+
+@media (max-width: 375px) {
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .price-amount {
+    font-size: 40px;
+  }
+
+  .price-decimal {
+    font-size: 24px;
+  }
+
+  .pricing-card {
+    padding: 20px 16px;
+  }
+
+  .btn,
+  .subscription-button {
+    font-size: 15px;
+    padding: 14px 20px;
+  }
+
+  .success-container,
+  .cancel-container {
+    padding: 24px 16px;
+  }
+}
+
+/* ========================================
+   TABLET (iPad, etc.)
+   ======================================== */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pricing-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .pricing-card {
+    max-width: none;
+  }
+
+  /* Popular plan spans both columns on 2-column layout */
+  .pricing-card.popular {
+    grid-column: 1 / -1;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+/* Better focus indicators for keyboard navigation */
+@media (max-width: 768px) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+  }
+
+  /* Skip to content link for screen readers */
+  .skip-to-content {
+    position: absolute;
+    left: -9999px;
+    z-index: 999;
+    padding: 12px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+  }
+
+  .skip-to-content:focus {
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
+  }
+}
+
+/* ========================================
+   PRINT STYLES (for receipts, etc.)
+   ======================================== */
+
+@media print {
+  .subscription-button,
+  .action-buttons,
+  .help-text {
+    display: none;
+  }
+
+  .subscription-details {
+    border: 1px solid #000;
+  }
+}
+
+/* ========================================
+   END OF MOBILE ENHANCEMENTS
+   ======================================== */

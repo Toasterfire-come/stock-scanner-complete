@@ -2,12 +2,14 @@
 """
 1-Minute Hybrid Scanner - WebSocket Prices and Volume
 ======================================================
-Runs every minute to update prices and volume via WebSocket streaming
+Runs continuously during market hours (9:30 AM - 4:00 PM EST)
+Updates prices and volume via WebSocket streaming every minute
 
 Features:
 - WebSocket for real-time data (NO rate limits)
 - Updates: current_price, price_change, price_change_percent, volume
-- Runs continuously every 60 seconds
+- Self-managing: checks market hours and exits when market closes
+- Runs continuously every 60 seconds during market hours
 - Fast execution (<60s for 8782 tickers)
 """
 
@@ -19,6 +21,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Set
+from zoneinfo import ZoneInfo
 import yfinance as yf
 
 # Django setup
@@ -35,6 +38,22 @@ class OneMinuteScanner:
 
     def __init__(self):
         self.websocket_updates = {}  # Store WebSocket price updates
+        self.est_tz = ZoneInfo("America/New_York")
+
+    def is_market_hours(self):
+        """Check if current time is within market hours (9:30 AM - 4:00 PM EST, weekdays)"""
+        now_est = datetime.now(self.est_tz)
+
+        # Check if weekday (Monday=0, Sunday=6)
+        if now_est.weekday() >= 5:  # Saturday or Sunday
+            return False
+
+        # Check if between 9:30 AM and 4:00 PM EST
+        # Market closes AT 4:00 PM, so we use < instead of <=
+        market_open = now_est.replace(hour=9, minute=30, second=0, microsecond=0)
+        market_close = now_est.replace(hour=16, minute=0, second=0, microsecond=0)
+
+        return market_open <= now_est < market_close
 
     @sync_to_async
     def get_all_tickers(self):
@@ -152,27 +171,63 @@ class OneMinuteScanner:
         print(f"Next scan in 60s\n")
 
     async def run_continuous(self):
-        """Run scanner continuously every minute"""
+        """Run scanner continuously every minute during market hours"""
         print("="*80)
         print("1-MINUTE PRICE SCANNER (WEBSOCKET)")
         print("="*80)
-        print("Updates prices every 60 seconds")
+        print("Updates prices every 60 seconds during market hours")
+        print("Market hours: 9:30 AM - 4:00 PM EST (weekdays)")
         print("Press Ctrl+C to stop")
         print("="*80)
 
+        # Check if market is open before starting
+        if not self.is_market_hours():
+            now_est = datetime.now(self.est_tz)
+            print(f"\n[INFO] Market is currently closed")
+            print(f"[INFO] Current time (EST): {now_est.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            print(f"[INFO] Market hours: Monday-Friday, 9:30 AM - 4:00 PM EST")
+            print(f"[EXIT] Exiting scanner")
+            return
+
+        print(f"\n[INFO] Market is open - starting continuous scan")
+
         while True:
             try:
+                # Check if market is still open
+                if not self.is_market_hours():
+                    now_est = datetime.now(self.est_tz)
+                    print(f"\n{'='*80}")
+                    print(f"[MARKET CLOSED] Market hours ended")
+                    print(f"[INFO] Current time (EST): {now_est.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+                    print(f"[EXIT] Stopping scanner")
+                    print(f"{'='*80}")
+                    break
+
                 await self.run_once()
+
+                # Check again after scan (in case market closed during scan)
+                if not self.is_market_hours():
+                    now_est = datetime.now(self.est_tz)
+                    print(f"\n{'='*80}")
+                    print(f"[MARKET CLOSED] Market hours ended")
+                    print(f"[INFO] Current time (EST): {now_est.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+                    print(f"[EXIT] Stopping scanner")
+                    print(f"{'='*80}")
+                    break
 
                 # Wait 60 seconds before next scan
                 print(f"[SLEEP] Waiting 60 seconds until next scan...")
                 await asyncio.sleep(60)
 
             except KeyboardInterrupt:
-                print("\n[STOP] Scanner stopped by user")
+                print("\n[STOP] Scanner stopped by user (Ctrl+C)")
                 break
             except Exception as e:
                 print(f"\n[ERROR] Scan failed: {e}")
+                # Check if market is still open before retrying
+                if not self.is_market_hours():
+                    print("[EXIT] Market closed, stopping scanner")
+                    break
                 print("Retrying in 60s...")
                 await asyncio.sleep(60)
 

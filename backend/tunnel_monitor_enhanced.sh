@@ -114,7 +114,7 @@ check_tunnel_health() {
     fi
     
     # Check local Django server
-    if ! curl -s -f -o /dev/null -w "%{http_code}" --max-time 5 "$LOCAL_URL/health/" > /dev/null 2>&1; then
+    if ! curl -s -f -o /dev/null -w "%{http_code}" --max-time 5 "$LOCAL_URL/api/health/" > /dev/null 2>&1; then
         log_message "WARN" "Local Django server not responding"
         return 1
     fi

@@ -16,15 +16,19 @@ from .models import Subscription, Payment, Invoice, PayPalWebhookEvent, PlanTier
 logger = logging.getLogger(__name__)
 
 
-# Plan pricing configuration - Updated December 2024
+# Plan pricing configuration - Updated December 30, 2025
 PLAN_PRICING = {
     'basic': {
-        'monthly': Decimal('14.99'),
-        'annual': Decimal('149.99'),
+        'monthly': Decimal('9.99'),
+        'annual': Decimal('101.99'),  # 15% discount (9.99 * 12 * 0.85)
     },
-    'plus': {
+    'pro': {
         'monthly': Decimal('24.99'),
-        'annual': Decimal('249.99'),
+        'annual': Decimal('254.99'),  # 15% discount (24.99 * 12 * 0.85)
+    },
+    'pay_per_use': {
+        'monthly': Decimal('24.99'),
+        'annual': Decimal('254.99'),  # 15% discount (base price, same as Pro)
     },
 }
 

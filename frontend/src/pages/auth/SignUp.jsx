@@ -17,8 +17,11 @@ import { setReferralCookie, normalizeReferralCode } from "../../lib/referral";
 import { useAuth } from "../../context/SecureAuthContext";
 import logger from '../../lib/logger';
 
-// TESTING MODE: Registration is disabled during beta testing
-const BETA_TESTING_MODE = true;
+// WHITELIST MODE: Only whitelisted emails can register
+const WHITELIST_MODE = true;
+const WHITELISTED_EMAILS = process.env.REACT_APP_WHITELISTED_EMAILS
+  ? process.env.REACT_APP_WHITELISTED_EMAILS.split(',').map(e => e.trim().toLowerCase())
+  : [];
 
 // Friction-reduced: name + email + password; keep Google SSO. Username optional (derived), last name optional.
 const signUpSchema = z.object({
@@ -118,6 +121,16 @@ const SignUp = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
+      // Check whitelist if enabled
+      if (WHITELIST_MODE && WHITELISTED_EMAILS.length > 0) {
+        const emailLower = data.email.toLowerCase();
+        if (!WHITELISTED_EMAILS.includes(emailLower)) {
+          toast.error("Registration is currently invite-only. Please contact support for access.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // Capture referral from URL path or query: /auth/sign-up/ref-abc12 or ?ref=abc12
       let refCode = null;
       try {

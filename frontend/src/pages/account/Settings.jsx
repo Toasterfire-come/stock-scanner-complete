@@ -29,7 +29,8 @@ const Settings = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [settings, setSettings] = useState({
     notifications: {
-      email: true,
+      sms: true,
+      phoneNumber: '',
       push: false,
       priceAlerts: true,
       newsAlerts: false,
@@ -201,15 +202,28 @@ const Settings = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Email Notifications</Label>
+                      <Label>SMS Alerts (TextBelt)</Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive notifications via email
+                        Receive alerts via SMS text message
                       </p>
                     </div>
                     <Switch
-                      checked={settings.notifications.email}
-                      onCheckedChange={(checked) => handleSettingChange('notifications', 'email', checked)}
+                      checked={settings.notifications.sms}
+                      onCheckedChange={(checked) => handleSettingChange('notifications', 'sms', checked)}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Phone Number</Label>
+                    <Input
+                      type="tel"
+                      placeholder="+1234567890"
+                      value={settings.notifications.phoneNumber}
+                      onChange={(e) => handleSettingChange('notifications', 'phoneNumber', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your phone number with country code for SMS alerts
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between">

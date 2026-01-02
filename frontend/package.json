@@ -68,7 +68,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=16384' craco build",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps",
     "ci:lighthouse": "node scripts/lighthouse-ci.js",
@@ -101,6 +101,7 @@
     "@eslint/js": "9.23.0",
     "@playwright/test": "^1.55.1",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
     "eslint": "9.23.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.10.2",

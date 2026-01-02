@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import "./styles/mobile-enhancements.css";
 
 // Import the regular App
 import App from "./App";

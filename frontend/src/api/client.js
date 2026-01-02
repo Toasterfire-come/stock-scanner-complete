@@ -40,31 +40,46 @@ export const api = axios.create({
 // Plan limits enforcement (client-side guard; server should enforce as source of truth)
 // ====================
 const PLAN_LIMITS = {
-  free: { 
-    monthlyApi: 30, 
-    alerts: 0, 
-    watchlists: 0, 
+  free: {
+    monthlyApi: 30,
+    alerts: 0,
+    watchlists: 0,
     portfolios: 1,
     screeners: 1
   },
-  bronze: { 
-    monthlyApi: 1500, 
-    alerts: 50, 
-    watchlists: 2, 
+  basic: {
+    monthlyApi: 1500,
+    alerts: 50,
+    watchlists: 2,
     portfolios: 0,
     screeners: 10
   },
-  silver: { 
-    monthlyApi: 5000, 
-    alerts: 100, 
-    watchlists: 10, 
+  pro: {
+    monthlyApi: Infinity,
+    alerts: Infinity,
+    watchlists: Infinity,
+    portfolios: Infinity,
+    screeners: Infinity
+  },
+  // Legacy plan mappings for backward compatibility
+  bronze: {
+    monthlyApi: 1500,
+    alerts: 50,
+    watchlists: 2,
+    portfolios: 0,
+    screeners: 10
+  },
+  silver: {
+    monthlyApi: 5000,
+    alerts: 100,
+    watchlists: 10,
     portfolios: 1,
     screeners: 20
   },
-  gold: { 
-    monthlyApi: Infinity, 
-    alerts: Infinity, 
-    watchlists: Infinity, 
+  gold: {
+    monthlyApi: Infinity,
+    alerts: Infinity,
+    watchlists: Infinity,
     portfolios: Infinity,
     screeners: Infinity
   },
@@ -405,7 +420,7 @@ export async function getPartnerReferralTimeseries(params = {}) {
 // HEALTH & STATUS
 // ====================
 export async function pingHealth() {
-  // Use documented health endpoints only
+  // Use documented health endpoints only - prefer /api/health/ (no redirect)
   try {
     const { data } = await api.get('/health/', { timeout: 5000 });
     return data;

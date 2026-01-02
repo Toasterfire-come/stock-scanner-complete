@@ -17,9 +17,13 @@ import { getNextMonthFirstUTC } from "../../lib/dates";
 
 const PLAN_NAMES = {
   free: "Free",
-  bronze: "Bronze",
-  silver: "Silver",
-  gold: "Gold",
+  basic: "Basic",
+  pro: "Pro",
+  payPerUse: "Pay-Per-Use",
+  // Legacy support (will be removed)
+  bronze: "Basic",
+  silver: "Pro",
+  gold: "Pay-Per-Use",
 };
 
 export default function Checkout() {
@@ -36,7 +40,7 @@ export default function Checkout() {
 
   const initialPlan = useMemo(() => {
     const st = location.state || {};
-    return st.plan || searchParams.get("plan") || "bronze";
+    return st.plan || searchParams.get("plan") || "basic";
   }, [location.state, searchParams]);
 
   const initialCycle = useMemo(() => {
@@ -148,40 +152,40 @@ export default function Checkout() {
         // Fallback local meta when API is unavailable (e.g., 404)
         if (isMounted) {
           const pct = 15;
-          const bronzeAnnual = 299.99, silverAnnual = 599.99, goldAnnual = 959.99;
+          const basicAnnual = 228.00, proAnnual = 588.00, payPerUseAnnual = 588.00;
           const discountAnnual = (v) => Number((v * 0.85).toFixed(2));
           setMeta({
             currency: 'USD',
             discounts: { annual_percent: pct },
             plans: {
-              bronze: {
-                name: 'Bronze',
-                monthly_price: 24.99,
-                annual_list_price: bronzeAnnual,
-                annual_final_price: discountAnnual(bronzeAnnual),
+              basic: {
+                name: 'Basic',
+                monthly_price: 19.00,
+                annual_list_price: basicAnnual,
+                annual_final_price: discountAnnual(basicAnnual),
                 paypal_plan_ids: {
-                  monthly: process.env.REACT_APP_PAYPAL_PLAN_BRONZE_MONTHLY || '',
-                  annual: process.env.REACT_APP_PAYPAL_PLAN_BRONZE_ANNUAL || '',
+                  monthly: process.env.REACT_APP_PAYPAL_PLAN_BASIC_MONTHLY || '',
+                  annual: process.env.REACT_APP_PAYPAL_PLAN_BASIC_ANNUAL || '',
                 },
               },
-              silver: {
-                name: 'Silver',
-                monthly_price: 49.99,
-                annual_list_price: silverAnnual,
-                annual_final_price: discountAnnual(silverAnnual),
+              pro: {
+                name: 'Pro',
+                monthly_price: 49.00,
+                annual_list_price: proAnnual,
+                annual_final_price: discountAnnual(proAnnual),
                 paypal_plan_ids: {
-                  monthly: process.env.REACT_APP_PAYPAL_PLAN_SILVER_MONTHLY || '',
-                  annual: process.env.REACT_APP_PAYPAL_PLAN_SILVER_ANNUAL || '',
+                  monthly: process.env.REACT_APP_PAYPAL_PLAN_PRO_MONTHLY || '',
+                  annual: process.env.REACT_APP_PAYPAL_PLAN_PRO_ANNUAL || '',
                 },
               },
-              gold: {
-                name: 'Gold',
-                monthly_price: 79.99,
-                annual_list_price: goldAnnual,
-                annual_final_price: discountAnnual(goldAnnual),
+              payPerUse: {
+                name: 'Pay-Per-Use',
+                monthly_price: 49.00,
+                annual_list_price: payPerUseAnnual,
+                annual_final_price: discountAnnual(payPerUseAnnual),
                 paypal_plan_ids: {
-                  monthly: process.env.REACT_APP_PAYPAL_PLAN_GOLD_MONTHLY || '',
-                  annual: process.env.REACT_APP_PAYPAL_PLAN_GOLD_ANNUAL || '',
+                  monthly: process.env.REACT_APP_PAYPAL_PLAN_PAYPERUSE_MONTHLY || '',
+                  annual: process.env.REACT_APP_PAYPAL_PLAN_PAYPERUSE_ANNUAL || '',
                 },
               },
             },

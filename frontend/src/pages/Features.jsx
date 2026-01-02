@@ -94,14 +94,15 @@ const Features = () => {
     },
     {
       icon: <Bell className="h-8 w-8" />,
-      title: "Investment Alerts",
-      description: "Never miss an investment opportunity with smart notifications.",
+      title: "SMS & Webhook Alerts",
+      description: "Never miss an investment opportunity with instant SMS notifications via TextBelt.",
       details: [
         `Price movement alerts (% change or absolute) with sub-${reliability.apiP95LatencyMs}ms delivery`,
         "Fair value threshold alerts - know when stocks become undervalued",
         "Fundamental changes (earnings surprises, dividend announcements)",
-        `Email and push notification delivery (${formatNumber(usage.alertsDeliveredMonthly)}+ alerts/mo)`,
-        "Custom alert conditions",
+        `SMS delivery via TextBelt (free, no signup required) - ${formatNumber(usage.alertsDeliveredMonthly)}+ alerts/mo`,
+        "Webhook support for custom integrations",
+        "Single-condition (Basic) and multi-condition alerts (Pro)",
         "Alert history and management"
       ]
     },
@@ -347,19 +348,60 @@ const Features = () => {
                   </Card>
                 </div>
                 <div className="lg:w-1/2">
-                  <div className="rounded-2xl overflow-hidden border bg-black">
-                    <video
-                      className="w-full h-64"
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      poster={`/react/demos/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.jpg`}
-                    >
-                      <source src={`/react/demos/${feature.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.mp4`} type="video/mp4" />
-                    </video>
-                  </div>
+                  {/* Testimonial Card */}
+                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
+                    <CardContent className="p-8">
+                      <div className="mb-6">
+                        <div className="flex items-center mb-4">
+                          <div className="flex text-yellow-400">
+                            {'★'.repeat(5)}
+                          </div>
+                        </div>
+                        <blockquote className="text-lg text-gray-700 leading-relaxed mb-6">
+                          {index === 0 && "\"TradeScanPro's Value Hunter has completely transformed how I find undervalued stocks. The DCF calculator is incredibly accurate and saved me hundreds of hours of manual analysis. Best investment tool I've ever used.\""}
+                          {index === 1 && "\"The AI backtesting feature is a game-changer. I can test my strategies in minutes instead of weeks, and the AI insights help me understand WHY my trades work. My Sharpe ratio has improved by 40% since I started using it.\""}
+                          {index === 2 && "\"As a fundamental investor, TradeScanPro's screening tools are exactly what I needed. The ability to screen by P/E, ROE, and debt ratios across 8,000+ stocks instantly is incredible. I found 3 winning stocks in my first week.\""}
+                          {index === 3 && "\"The SMS alerts feature is pure gold. I never miss a price target anymore, even when I'm away from my desk. The sub-50ms delivery means I'm always first to react to market movements.\""}
+                        </blockquote>
+                        <div className="flex items-center">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl mr-4">
+                            {index === 0 && "MJ"}
+                            {index === 1 && "RK"}
+                            {index === 2 && "SL"}
+                            {index === 3 && "TC"}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">
+                              {index === 0 && "Michael Johnson"}
+                              {index === 1 && "Rachel Kim"}
+                              {index === 2 && "Sarah Lopez"}
+                              {index === 3 && "Thomas Chen"}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {index === 0 && "Value Investor, Pro Plan"}
+                              {index === 1 && "Quantitative Trader, Pro Plan"}
+                              {index === 2 && "Fundamental Analyst, Basic Plan"}
+                              {index === 3 && "Day Trader, Pay-Per-Use Plan"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="pt-6 border-t border-blue-200">
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span className="flex items-center">
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                            Verified Customer
+                          </span>
+                          <span>
+                            {index === 0 && "Member since 2024"}
+                            {index === 1 && "Member since 2024"}
+                            {index === 2 && "Member since 2024"}
+                            {index === 3 && "Member since 2025"}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             ))}

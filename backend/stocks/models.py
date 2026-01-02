@@ -4348,3 +4348,5 @@ class DatabaseMigrationLog(models.Model):
     def __str__(self):
         status = "Applied" if self.applied else "Pending"
         return f"{self.app_label}.{self.migration_name} - {status}"
+
+

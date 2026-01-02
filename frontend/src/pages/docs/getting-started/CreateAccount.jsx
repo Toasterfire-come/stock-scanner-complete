@@ -58,7 +58,7 @@ const CreateAccount = () => {
       title: "Choose Your Plan",
       description: "Select the subscription plan that best fits your trading needs.",
       details: [
-        "Review our available plans: Bronze, Silver, and Gold",
+        "Review our available plans: Basic, Pro, and Pay-Per-Use",
         "Compare features, API call limits, and pricing",
         "Start a free trial (until next 1st) to explore the platform",
         "Upgrade anytime as your needs grow"
@@ -80,26 +80,25 @@ const CreateAccount = () => {
   ];
 
   const planComparison = [
-    // Free plan removed per policy
     {
-      name: "Bronze", 
-      price: "$24.99",
+      name: "Basic",
+      price: "$19.00",
       period: "/month",
-      features: ["1,500 API calls/month", "10 Screeners", "100 Email alerts", "Real-time data"],
-      recommended: true
-    },
-    {
-      name: "Silver",
-      price: "$49.99", 
-      period: "/month",
-      features: ["5,000 API calls/month", "20 Screeners", "500 Alerts", "Advanced analytics"],
+      features: ["2,500 API calls/month", "5 Screeners", "25 Alerts", "15-min delayed data"],
       recommended: false
     },
     {
-      name: "Gold",
-      price: "$79.99",
-      period: "/month", 
-      features: ["Unlimited everything", "API access", "Priority support", "White-label options"],
+      name: "Pro",
+      price: "$49.00",
+      period: "/month",
+      features: ["10,000 API calls/month", "25 Screeners", "150 Alerts", "Real-time data", "Priority support"],
+      recommended: true
+    },
+    {
+      name: "Pay-Per-Use",
+      price: "$49.00",
+      period: " base + usage",
+      features: ["Same as Pro", "Pay for overages", "Hard cap $124.99/mo", "Perfect for seasonal traders"],
       recommended: false
     }
   ];
