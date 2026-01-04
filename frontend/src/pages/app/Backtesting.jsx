@@ -9,13 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Progress } from "../../components/ui/progress";
-import { 
-  Brain, 
-  Play, 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  Clock, 
+import {
+  Brain,
+  Play,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  Clock,
   DollarSign,
   BarChart3,
   LineChart,
@@ -26,7 +26,13 @@ import {
   Sparkles,
   History,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Share2,
+  Twitter,
+  Linkedin,
+  Share,
+  Copy,
+  Check
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -200,12 +206,85 @@ export default function Backtesting() {
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [initialCapital, setInitialCapital] = useState("10000");
   const [backtestName, setBacktestName] = useState("");
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [currentBacktest, setCurrentBacktest] = useState(null);
   const [backtestHistory, setBacktestHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Share helper functions
+  const getShareUrl = (backtest) => {
+    // For now use current domain, later this will be a dedicated share page
+    return `${window.location.origin}/app/backtesting?share=${backtest.id}`;
+  };
+
+  const generateShareText = (backtest) => {
+    const { total_return, win_rate, sharpe_ratio, total_trades } = backtest.results || {};
+    const emoji = total_return >= 50 ? "🚀" : total_return >= 20 ? "📈" : total_return >= 0 ? "✅" : "📉";
+
+    if (total_return >= 0) {
+      return `I just backtested "${backtest.name}" on @TradeScanPro and got +${total_return?.toFixed(1)}% returns ${emoji}
+
+Win rate: ${win_rate?.toFixed(1)}%
+Sharpe: ${sharpe_ratio?.toFixed(2)}
+Trades: ${total_trades}
+
+Try it yourself 👉 ${getShareUrl(backtest)}`;
+    } else {
+      return `I tested "${backtest.name}" on @TradeScanPro ${emoji}
+
+Return: ${total_return?.toFixed(1)}%
+Win rate: ${win_rate?.toFixed(1)}%
+Trades: ${total_trades}
+
+Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
+    }
+  };
+
+  const shareToTwitter = (backtest) => {
+    const text = generateShareText(backtest);
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "width=550,height=420");
+
+    // Track share event
+    logger.info("Shared to Twitter", { backtest_id: backtest.id });
+  };
+
+  const shareToLinkedIn = (backtest) => {
+    const url = getShareUrl(backtest);
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+    window.open(linkedInUrl, "_blank", "width=550,height=420");
+
+    // Track share event
+    logger.info("Shared to LinkedIn", { backtest_id: backtest.id });
+  };
+
+  const shareToReddit = (backtest) => {
+    const text = generateShareText(backtest);
+    const url = getShareUrl(backtest);
+    const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(backtest.name + " - Backtest Results")}`;
+    window.open(redditUrl, "_blank", "width=550,height=420");
+
+    // Track share event
+    logger.info("Shared to Reddit", { backtest_id: backtest.id });
+  };
+
+  const copyShareLink = async (backtest) => {
+    const text = generateShareText(backtest);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success("Copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+
+      // Track copy event
+      logger.info("Copied share link", { backtest_id: backtest.id });
+    } catch (err) {
+      toast.error("Failed to copy");
+    }
+  };
 
   // Load backtest history
   useEffect(() => {
@@ -575,6 +654,83 @@ export default function Backtesting() {
                   color={currentBacktest.results?.profit_factor >= 1 ? "green" : "red"}
                 />
               </div>
+
+              {/* Social Sharing Section */}
+              <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Share2 className="h-5 w-5 text-blue-500" />
+                    Share Your Results
+                  </CardTitle>
+                  <CardDescription>
+                    Show your trading strategy performance to the world
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Share Buttons */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      variant="outline"
+                      className="w-full hover:bg-blue-50 hover:border-blue-300 transition-all"
+                      onClick={() => shareToTwitter(currentBacktest)}
+                    >
+                      <Twitter className="h-4 w-4 mr-2 text-blue-500" />
+                      Twitter/X
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full hover:bg-blue-50 hover:border-blue-300 transition-all"
+                      onClick={() => shareToLinkedIn(currentBacktest)}
+                    >
+                      <Linkedin className="h-4 w-4 mr-2 text-blue-700" />
+                      LinkedIn
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full hover:bg-orange-50 hover:border-orange-300 transition-all"
+                      onClick={() => shareToReddit(currentBacktest)}
+                    >
+                      <Share className="h-4 w-4 mr-2 text-orange-500" />
+                      Reddit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full hover:bg-green-50 hover:border-green-300 transition-all"
+                      onClick={() => copyShareLink(currentBacktest)}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2 text-green-500" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2 text-gray-600" />
+                          Copy Text
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Share Preview */}
+                  <div className="p-4 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                    <p className="text-xs text-gray-600 mb-2 font-semibold uppercase tracking-wide">
+                      Share preview:
+                    </p>
+                    <p className="text-sm text-gray-700 whitespace-pre-line font-mono bg-gray-50 p-3 rounded border">
+                      {generateShareText(currentBacktest)}
+                    </p>
+                  </div>
+
+                  {/* Share Stats (optional - for future enhancement) */}
+                  <div className="flex items-center justify-center gap-6 pt-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Share2 className="h-3 w-3" />
+                      <span>Share to grow the community</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Equity Curve Chart */}
               {equityCurveData.length > 0 && (
