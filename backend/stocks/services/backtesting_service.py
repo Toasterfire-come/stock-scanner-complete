@@ -416,69 +416,207 @@ def exit_condition(data, index, entry_price, entry_index):
         except Exception as e:
             return {"error": f"Strategy execution failed: {str(e)}"}
     
-    def _calculate_metrics(self, trades: List[Dict], equity_curve: List[float], 
+    def _calculate_metrics(self, trades: List[Dict], equity_curve: List[float],
                           initial_capital: float) -> Dict:
-        """Calculate backtest performance metrics"""
+        """Calculate comprehensive backtest performance metrics"""
         if not trades:
             return {
                 'total_return': 0,
                 'annualized_return': 0,
                 'sharpe_ratio': 0,
+                'sortino_ratio': 0,
+                'calmar_ratio': 0,
+                'omega_ratio': 0,
                 'max_drawdown': 0,
                 'win_rate': 0,
                 'profit_factor': 0,
                 'total_trades': 0,
                 'winning_trades': 0,
                 'losing_trades': 0,
-                'composite_score': 0
+                'avg_win': 0,
+                'avg_loss': 0,
+                'expectancy': 0,
+                'kelly_criterion': 0,
+                'max_consecutive_wins': 0,
+                'max_consecutive_losses': 0,
+                'recovery_factor': 0,
+                'ulcer_index': 0,
+                'var_95': 0,
+                'cvar_95': 0,
+                't_statistic': 0,
+                'p_value': 1.0,
+                'composite_score': 0,
+                'quality_grade': 'F'
             }
-        
-        # Total return
+
+        # Basic calculations
         final_capital = equity_curve[-1]
         total_return = ((final_capital - initial_capital) / initial_capital) * 100
-        
+
         # Annualized return (assume 252 trading days per year)
         days = len(equity_curve)
         years = days / 252
         annualized_return = (((final_capital / initial_capital) ** (1 / years)) - 1) * 100 if years > 0 else total_return
-        
-        # Sharpe ratio
+
+        # Daily returns
         returns = pd.Series(equity_curve).pct_change().dropna()
+
+        # Sharpe ratio
         sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252) if returns.std() > 0 else 0
-        
+
+        # === ADVANCED RISK METRICS ===
+
+        # Sortino Ratio (only penalizes downside volatility)
+        downside_returns = returns[returns < 0]
+        downside_std = downside_returns.std() if len(downside_returns) > 0 else 0
+        sortino_ratio = (returns.mean() / downside_std) * np.sqrt(252) if downside_std > 0 else 0
+
         # Max drawdown
         peak = np.maximum.accumulate(equity_curve)
-        drawdown = (equity_curve - peak) / peak
+        drawdown = (np.array(equity_curve) - peak) / peak
         max_drawdown = np.min(drawdown) * 100
-        
-        # Win rate
+
+        # Calmar Ratio (Return / Max Drawdown)
+        calmar_ratio = annualized_return / abs(max_drawdown) if max_drawdown < 0 else 0
+
+        # Omega Ratio (probability-weighted ratio of gains vs losses)
+        threshold = 0
+        gains = returns[returns > threshold].sum()
+        losses = abs(returns[returns < threshold].sum())
+        omega_ratio = gains / losses if losses > 0 else 0
+
+        # Recovery Factor (Net Profit / Max Drawdown)
+        net_profit = final_capital - initial_capital
+        recovery_factor = net_profit / abs(max_drawdown * initial_capital / 100) if max_drawdown < 0 else 0
+
+        # Ulcer Index (measure of downside volatility)
+        drawdown_squared = drawdown ** 2
+        ulcer_index = np.sqrt(np.mean(drawdown_squared)) * 100
+
+        # Value at Risk (VaR) - 95% confidence
+        var_95 = np.percentile(returns, 5) * 100
+
+        # Conditional VaR (CVaR) - Expected loss when VaR is exceeded
+        var_threshold = np.percentile(returns, 5)
+        cvar_returns = returns[returns <= var_threshold]
+        cvar_95 = np.mean(cvar_returns) * 100 if len(cvar_returns) > 0 else 0
+
+        # === TRADE QUALITY METRICS ===
+
         winning_trades = [t for t in trades if t['return_pct'] > 0]
         losing_trades = [t for t in trades if t['return_pct'] <= 0]
         win_rate = (len(winning_trades) / len(trades)) * 100
-        
+
+        # Average win/loss
+        avg_win = np.mean([t['return_pct'] for t in winning_trades]) if winning_trades else 0
+        avg_loss = np.mean([t['return_pct'] for t in losing_trades]) if losing_trades else 0
+
         # Profit factor
         gross_profit = sum(t['profit'] for t in winning_trades)
         gross_loss = abs(sum(t['profit'] for t in losing_trades))
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
-        
-        # Composite score (weighted average)
-        score = (
-            min(max(total_return, 0), 100) * 0.30 +  # 30% weight on returns
-            min(max(sharpe_ratio * 20, 0), 100) * 0.25 +  # 25% weight on sharpe
-            min(win_rate, 100) * 0.20 +  # 20% weight on win rate
-            min(max(100 + max_drawdown, 0), 100) * 0.15 +  # 15% weight on drawdown
-            min(max(profit_factor * 10, 0), 100) * 0.10  # 10% weight on profit factor
-        )
-        
+
+        # Expectancy (average profit per trade)
+        win_prob = len(winning_trades) / len(trades) if trades else 0
+        loss_prob = 1 - win_prob
+        expectancy = (win_prob * avg_win) + (loss_prob * avg_loss)
+
+        # Kelly Criterion (optimal position size)
+        win_loss_ratio = abs(avg_win / avg_loss) if avg_loss != 0 else 0
+        kelly_criterion = (win_prob - (loss_prob / win_loss_ratio)) * 100 if win_loss_ratio > 0 else 0
+        kelly_criterion = max(min(kelly_criterion, 100), 0)  # Clamp between 0-100%
+
+        # Max consecutive wins/losses
+        consecutive_wins = 0
+        consecutive_losses = 0
+        max_consecutive_wins = 0
+        max_consecutive_losses = 0
+
+        for trade in trades:
+            if trade['return_pct'] > 0:
+                consecutive_wins += 1
+                consecutive_losses = 0
+                max_consecutive_wins = max(max_consecutive_wins, consecutive_wins)
+            else:
+                consecutive_losses += 1
+                consecutive_wins = 0
+                max_consecutive_losses = max(max_consecutive_losses, consecutive_losses)
+
+        # === STATISTICAL SIGNIFICANCE ===
+
+        # T-statistic (tests if returns are significantly different from zero)
+        from scipy import stats
+        if len(returns) > 1:
+            t_statistic, p_value = stats.ttest_1samp(returns, 0)
+        else:
+            t_statistic = 0
+            p_value = 1.0
+
+        # === COMPOSITE QUALITY SCORE ===
+
+        # Component scores (0-100 scale)
+        score_components = {
+            'returns': min(max(annualized_return / 30 * 20, 0), 20),  # 20 points max
+            'sharpe': min(max(sharpe_ratio / 2 * 15, 0), 15),  # 15 points max
+            'sortino': min(max(sortino_ratio / 2 * 10, 0), 10),  # 10 points max
+            'win_rate': (win_rate / 100) * 15,  # 15 points max
+            'drawdown': max(20 + (max_drawdown / 5), 0),  # 20 points max (lower DD = higher score)
+            'consistency': min(max(expectancy * 2, 0), 10),  # 10 points max
+            'trade_count': min(len(trades) / 50 * 10, 10)  # 10 points max
+        }
+
+        composite_score = sum(score_components.values())
+
+        # Quality grade
+        if composite_score >= 90:
+            quality_grade = 'A+'
+        elif composite_score >= 80:
+            quality_grade = 'A'
+        elif composite_score >= 70:
+            quality_grade = 'B'
+        elif composite_score >= 60:
+            quality_grade = 'C'
+        elif composite_score >= 50:
+            quality_grade = 'D'
+        else:
+            quality_grade = 'F'
+
         return {
+            # Basic metrics
             'total_return': round(total_return, 2),
             'annualized_return': round(annualized_return, 2),
+
+            # Risk-adjusted metrics
             'sharpe_ratio': round(sharpe_ratio, 4),
+            'sortino_ratio': round(sortino_ratio, 4),
+            'calmar_ratio': round(calmar_ratio, 4),
+            'omega_ratio': round(omega_ratio, 4),
+
+            # Risk metrics
             'max_drawdown': round(max_drawdown, 2),
+            'recovery_factor': round(recovery_factor, 2),
+            'ulcer_index': round(ulcer_index, 2),
+            'var_95': round(var_95, 2),
+            'cvar_95': round(cvar_95, 2),
+
+            # Trade quality metrics
             'win_rate': round(win_rate, 2),
             'profit_factor': round(profit_factor, 4),
             'total_trades': len(trades),
             'winning_trades': len(winning_trades),
             'losing_trades': len(losing_trades),
-            'composite_score': round(score, 2)
+            'avg_win': round(avg_win, 2),
+            'avg_loss': round(avg_loss, 2),
+            'expectancy': round(expectancy, 2),
+            'kelly_criterion': round(kelly_criterion, 2),
+            'max_consecutive_wins': max_consecutive_wins,
+            'max_consecutive_losses': max_consecutive_losses,
+
+            # Statistical significance
+            't_statistic': round(float(t_statistic), 4),
+            'p_value': round(float(p_value), 4),
+
+            # Overall quality
+            'composite_score': round(composite_score, 2),
+            'quality_grade': quality_grade
         }

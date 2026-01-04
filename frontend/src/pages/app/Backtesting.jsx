@@ -752,30 +752,226 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                          <XAxis 
-                            dataKey="day" 
+                          <XAxis
+                            dataKey="day"
                             stroke="#9CA3AF"
                             tick={{ fontSize: 12 }}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke="#9CA3AF"
                             tick={{ fontSize: 12 }}
                             tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
                           />
-                          <Tooltip 
+                          <Tooltip
                             formatter={(value) => [`$${value.toFixed(2)}`, "Portfolio Value"]}
                             contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="equity" 
-                            stroke="#3B82F6" 
+                          <Area
+                            type="monotone"
+                            dataKey="equity"
+                            stroke="#3B82F6"
                             strokeWidth={2}
-                            fill="url(#equityGradient)" 
+                            fill="url(#equityGradient)"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Advanced Metrics - Help Users Judge Strategy Quality */}
+              {currentBacktest.results && (
+                <Card className="border-2 border-purple-100 bg-gradient-to-r from-purple-50/30 to-pink-50/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-purple-500" />
+                      Advanced Metrics
+                      <Badge variant="outline" className="ml-2 bg-purple-100 text-purple-700 border-purple-300">
+                        {currentBacktest.results.quality_grade || 'N/A'}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      Deep dive into your strategy's risk profile and statistical significance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Risk-Adjusted Returns */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-blue-500" />
+                        Risk-Adjusted Returns
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Sortino Ratio</p>
+                          <p className="text-lg font-bold text-blue-600">
+                            {currentBacktest.results.sortino_ratio?.toFixed(2) || '0.00'}
+                          </p>
+                          <p className="text-xs text-gray-400">Downside risk only</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Calmar Ratio</p>
+                          <p className="text-lg font-bold text-green-600">
+                            {currentBacktest.results.calmar_ratio?.toFixed(2) || '0.00'}
+                          </p>
+                          <p className="text-xs text-gray-400">Return / Max DD</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Omega Ratio</p>
+                          <p className="text-lg font-bold text-purple-600">
+                            {currentBacktest.results.omega_ratio?.toFixed(2) || '0.00'}
+                          </p>
+                          <p className="text-xs text-gray-400">Gains vs losses</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Recovery Factor</p>
+                          <p className="text-lg font-bold text-indigo-600">
+                            {currentBacktest.results.recovery_factor?.toFixed(2) || '0.00'}
+                          </p>
+                          <p className="text-xs text-gray-400">Profit / Drawdown</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Downside Risk Metrics */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                        Downside Risk Analysis
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Ulcer Index</p>
+                          <p className="text-lg font-bold text-red-600">
+                            {currentBacktest.results.ulcer_index?.toFixed(2) || '0.00'}%
+                          </p>
+                          <p className="text-xs text-gray-400">Stress measure</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">VaR (95%)</p>
+                          <p className="text-lg font-bold text-orange-600">
+                            {currentBacktest.results.var_95?.toFixed(2) || '0.00'}%
+                          </p>
+                          <p className="text-xs text-gray-400">Worst 5% day</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">CVaR (95%)</p>
+                          <p className="text-lg font-bold text-red-700">
+                            {currentBacktest.results.cvar_95?.toFixed(2) || '0.00'}%
+                          </p>
+                          <p className="text-xs text-gray-400">Expected tail loss</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Trade Quality Analysis */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                        <Trophy className="h-4 w-4 text-yellow-500" />
+                        Trade Quality
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Avg Win</p>
+                          <p className="text-lg font-bold text-green-600">
+                            +{currentBacktest.results.avg_win?.toFixed(2) || '0.00'}%
+                          </p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Avg Loss</p>
+                          <p className="text-lg font-bold text-red-600">
+                            {currentBacktest.results.avg_loss?.toFixed(2) || '0.00'}%
+                          </p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Expectancy</p>
+                          <p className={`text-lg font-bold ${currentBacktest.results.expectancy >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {currentBacktest.results.expectancy >= 0 ? '+' : ''}{currentBacktest.results.expectancy?.toFixed(2) || '0.00'}%
+                          </p>
+                          <p className="text-xs text-gray-400">Per trade avg</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Kelly Criterion</p>
+                          <p className="text-lg font-bold text-blue-600">
+                            {currentBacktest.results.kelly_criterion?.toFixed(1) || '0.0'}%
+                          </p>
+                          <p className="text-xs text-gray-400">Optimal position</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Consistency Metrics */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-indigo-500" />
+                        Consistency
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Max Consecutive Wins</p>
+                          <p className="text-lg font-bold text-green-600">
+                            {currentBacktest.results.max_consecutive_wins || 0}
+                          </p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">Max Consecutive Losses</p>
+                          <p className="text-lg font-bold text-red-600">
+                            {currentBacktest.results.max_consecutive_losses || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Statistical Significance */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-purple-500" />
+                        Statistical Significance
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">T-Statistic</p>
+                          <p className="text-lg font-bold text-purple-600">
+                            {currentBacktest.results.t_statistic?.toFixed(2) || '0.00'}
+                          </p>
+                          <p className="text-xs text-gray-400">Returns vs zero</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border">
+                          <p className="text-xs text-gray-500">P-Value</p>
+                          <p className={`text-lg font-bold ${currentBacktest.results.p_value < 0.05 ? 'text-green-600' : 'text-gray-600'}`}>
+                            {currentBacktest.results.p_value?.toFixed(4) || '1.0000'}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {currentBacktest.results.p_value < 0.05 ? 'Significant!' : 'Not significant'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quality Interpretation */}
+                    <Alert className={`${
+                      currentBacktest.results.quality_grade === 'A+' || currentBacktest.results.quality_grade === 'A' ? 'bg-green-50 border-green-200' :
+                      currentBacktest.results.quality_grade === 'B' ? 'bg-blue-50 border-blue-200' :
+                      currentBacktest.results.quality_grade === 'C' ? 'bg-yellow-50 border-yellow-200' :
+                      'bg-red-50 border-red-200'
+                    }`}>
+                      <AlertCircle className={`h-4 w-4 ${
+                        currentBacktest.results.quality_grade === 'A+' || currentBacktest.results.quality_grade === 'A' ? 'text-green-600' :
+                        currentBacktest.results.quality_grade === 'B' ? 'text-blue-600' :
+                        currentBacktest.results.quality_grade === 'C' ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`} />
+                      <AlertDescription className="text-sm">
+                        <strong>Strategy Quality: {currentBacktest.results.quality_grade}</strong>
+                        <br />
+                        {currentBacktest.results.quality_grade === 'A+' && 'Exceptional strategy with strong risk-adjusted returns and statistical significance.'}
+                        {currentBacktest.results.quality_grade === 'A' && 'Excellent strategy with solid metrics across the board.'}
+                        {currentBacktest.results.quality_grade === 'B' && 'Good strategy but room for improvement in risk management or consistency.'}
+                        {currentBacktest.results.quality_grade === 'C' && 'Mediocre strategy. Consider refining entry/exit rules.'}
+                        {(currentBacktest.results.quality_grade === 'D' || currentBacktest.results.quality_grade === 'F') && 'Poor strategy. Significant improvements needed before live trading.'}
+                      </AlertDescription>
+                    </Alert>
                   </CardContent>
                 </Card>
               )}
