@@ -223,8 +223,8 @@ export default function Backtesting() {
 
   // Share helper functions
   const getShareUrl = (backtest) => {
-    // For now use current domain, later this will be a dedicated share page
-    return `${window.location.origin}/app/backtesting?share=${backtest.id}`;
+    // Use dedicated public share page for viral sharing
+    return `${window.location.origin}/share/backtest/${backtest.id}`;
   };
 
   const generateShareText = (backtest) => {

@@ -317,6 +317,7 @@ urlpatterns = [
     path('backtesting/create/', backtesting_api.create_backtest, name='create_backtest'),
     path('backtesting/<int:backtest_id>/run/', backtesting_api.run_backtest, name='run_backtest'),
     path('backtesting/<int:backtest_id>/', backtesting_api.get_backtest, name='get_backtest'),
+    path('backtesting/public/<int:backtest_id>/', backtesting_api.get_public_backtest, name='get_public_backtest'),
     path('backtesting/list/', backtesting_api.list_backtests, name='list_backtests'),
     path('backtesting/baseline-strategies/', backtesting_api.list_baseline_strategies, name='baseline_strategies'),
     path('backtesting/limits/', backtesting_api.get_backtest_limits, name='backtest_limits'),

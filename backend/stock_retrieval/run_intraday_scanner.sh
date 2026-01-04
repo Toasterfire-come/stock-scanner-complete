@@ -42,6 +42,9 @@ fi
 # Change to backend directory
 cd "$BACKEND_DIR" || exit 1
 
+# Set PYTHONPATH to include backend directory for Django imports
+export PYTHONPATH="$BACKEND_DIR:$PYTHONPATH"
+
 # Run the intraday scanner (manages its own loop and exits at market close)
 python3 "$SCRIPT_DIR/scanner_1min_hybrid.py" 2>&1 | tee -a "$LOG_FILE"
 

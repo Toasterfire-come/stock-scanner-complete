@@ -382,3 +382,76 @@ def get_backtest_limits(request):
             'success': False,
             'error': f'Error retrieving backtest limits: {str(e)}'
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_public_backtest(request, backtest_id):
+    """
+    Get public backtest results for sharing
+    No authentication required - allows viral sharing
+    """
+    try:
+        backtest = BacktestRun.objects.get(id=backtest_id)
+
+        # Only show completed backtests publicly
+        if backtest.status != 'completed':
+            return JsonResponse({
+                'success': False,
+                'error': 'Backtest not available for public viewing'
+            }, status=404)
+
+        return JsonResponse({
+            'success': True,
+            'backtest': {
+                'id': backtest.id,
+                'name': backtest.name,
+                'category': backtest.category,
+                'symbols': backtest.symbols,
+                'start_date': str(backtest.start_date),
+                'end_date': str(backtest.end_date),
+                'initial_capital': float(backtest.initial_capital),
+                'results': {
+                    'total_return': float(backtest.total_return) if backtest.total_return else None,
+                    'annualized_return': float(backtest.annualized_return) if backtest.annualized_return else None,
+                    'sharpe_ratio': float(backtest.sharpe_ratio) if backtest.sharpe_ratio else None,
+                    'max_drawdown': float(backtest.max_drawdown) if backtest.max_drawdown else None,
+                    'win_rate': float(backtest.win_rate) if backtest.win_rate else None,
+                    'profit_factor': float(backtest.profit_factor) if backtest.profit_factor else None,
+                    'total_trades': backtest.total_trades,
+                    'composite_score': float(backtest.composite_score) if backtest.composite_score else None,
+                    'quality_grade': get_quality_grade(backtest.composite_score)
+                },
+                'equity_curve': backtest.equity_curve,
+                'created_at': backtest.created_at.isoformat()
+            }
+        })
+
+    except BacktestRun.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Backtest not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+def get_quality_grade(score):
+    """Convert composite score to letter grade"""
+    if not score:
+        return "N/A"
+    if score >= 90:
+        return "A+"
+    elif score >= 80:
+        return "A"
+    elif score >= 70:
+        return "B"
+    elif score >= 60:
+        return "C"
+    elif score >= 50:
+        return "D"
+    else:
+        return "F"

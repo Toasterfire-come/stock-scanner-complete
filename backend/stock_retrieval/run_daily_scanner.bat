@@ -43,6 +43,9 @@ if exist "%BACKEND_DIR%\venv\Scripts\activate.bat" (
     echo Virtual environment activated >> "%LOG_FILE%"
 )
 
+REM Set PYTHONPATH to include backend directory for Django imports
+set "PYTHONPATH=%BACKEND_DIR%;%PYTHONPATH%"
+
 REM Run the daily scanner
 python "%SCRIPT_DIR%realtime_daily_with_proxies.py" >> "%LOG_FILE%" 2>&1
 

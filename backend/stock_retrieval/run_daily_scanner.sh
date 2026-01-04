@@ -39,6 +39,9 @@ fi
 # Change to backend directory
 cd "$BACKEND_DIR" || exit 1
 
+# Set PYTHONPATH to include backend directory for Django imports
+export PYTHONPATH="$BACKEND_DIR:$PYTHONPATH"
+
 # Run the daily scanner
 python3 "$SCRIPT_DIR/realtime_daily_with_proxies.py" 2>&1 | tee -a "$LOG_FILE"
 

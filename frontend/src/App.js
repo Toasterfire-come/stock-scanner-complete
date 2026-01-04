@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/SecureAuthContext";
 import { Toaster } from "sonner";
 import { BackendStatusProvider, useBackendStatus } from "./context/BackendStatusContext";
 import { TradingModeProvider } from "./context/TradingModeContext";
+import { HelmetProvider } from "react-helmet-async";
 import "./lib/quotaInterceptor"; // Global quota limit monitoring
 
 // Components
@@ -70,6 +71,7 @@ const TaxReporting = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/
 const SharedWatchlist = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedWatchlist"));
 const SharedPortfolio = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/SharedPortfolio"));
 const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/PublicProfile"));
+const PublicBacktestShare = lazy(() => import(/* webpackPrefetch: true */ "./pages/PublicBacktestShare"));
 const StrategyLeaderboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StrategyLeaderboard"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
@@ -215,6 +217,7 @@ function App() {
   const [cmdOpen, setCmdOpen] = React.useState(false);
   useGlobalHotkeys(setCmdOpen);
   return (
+    <HelmetProvider>
     <BackendStatusProvider>
       <AuthProvider>
         <TradingModeProvider>
@@ -280,6 +283,7 @@ function App() {
                   <Route path="/w/:slug" element={<SharedWatchlist />} />
                   <Route path="/p/:slug" element={<SharedPortfolio />} />
                   <Route path="/u/:username" element={<PublicProfile />} />
+                  <Route path="/share/backtest/:backtest_id" element={<PublicBacktestShare />} />
 
                   {/* Marketing Pages - Using placeholders */}
                   <Route path="/product" element={<PlaceholderPage title="Product" />} />
@@ -618,6 +622,7 @@ function App() {
         </TradingModeProvider>
       </AuthProvider>
     </BackendStatusProvider>
+    </HelmetProvider>
   );
 }
 

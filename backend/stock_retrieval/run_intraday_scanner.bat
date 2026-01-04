@@ -44,6 +44,9 @@ if exist "%BACKEND_DIR%\venv\Scripts\activate.bat" (
     call "%BACKEND_DIR%\..\venv\Scripts\activate.bat"
 )
 
+REM Set PYTHONPATH to include backend directory for Django imports
+set "PYTHONPATH=%BACKEND_DIR%;%PYTHONPATH%"
+
 REM Run the intraday scanner (manages its own loop and exits at market close)
 python "%SCRIPT_DIR%scanner_1min_hybrid.py" >> "%LOG_FILE%" 2>&1
 
