@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Progress } from "../../components/ui/progress";
+import * as htmlToImage from 'html-to-image';
 import {
   Brain,
   Play,
@@ -32,7 +33,9 @@ import {
   Linkedin,
   Share,
   Copy,
-  Check
+  Check,
+  Download,
+  Image
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -213,6 +216,10 @@ export default function Backtesting() {
   const [backtestHistory, setBacktestHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Ref for export functionality
+  const resultsCardRef = useRef(null);
 
   // Share helper functions
   const getShareUrl = (backtest) => {
@@ -283,6 +290,39 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
       logger.info("Copied share link", { backtest_id: backtest.id });
     } catch (err) {
       toast.error("Failed to copy");
+    }
+  };
+
+  // Image export function
+  const exportToImage = async () => {
+    if (!resultsCardRef.current) {
+      toast.error("Results not available for export");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const dataUrl = await htmlToImage.toPng(resultsCardRef.current, {
+        quality: 0.95,
+        pixelRatio: 2, // Higher resolution for better quality
+        backgroundColor: '#ffffff'
+      });
+
+      // Create download link
+      const link = document.createElement('a');
+      link.download = `${currentBacktest?.name || 'backtest'}-results-tradescanpro.png`;
+      link.href = dataUrl;
+      link.click();
+
+      toast.success("Image exported successfully!");
+
+      // Track export event
+      logger.info("Exported backtest image", { backtest_id: currentBacktest?.id });
+    } catch (err) {
+      console.error('Export failed:', err);
+      toast.error("Failed to export image");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -590,7 +630,7 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
         {/* Results Tab */}
         <TabsContent value="results" className="space-y-6">
           {currentBacktest ? (
-            <>
+            <div ref={resultsCardRef}>
               {/* Results Header */}
               <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-0">
                 <CardContent className="p-6">
@@ -668,7 +708,7 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Share Buttons */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     <Button
                       variant="outline"
                       className="w-full hover:bg-blue-50 hover:border-blue-300 transition-all"
@@ -707,6 +747,24 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
                         <>
                           <Copy className="h-4 w-4 mr-2 text-gray-600" />
                           Copy Text
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full hover:bg-purple-50 hover:border-purple-300 transition-all"
+                      onClick={exportToImage}
+                      disabled={exporting}
+                    >
+                      {exporting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 text-purple-500 animate-spin" />
+                          Exporting...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-2 text-purple-600" />
+                          Export PNG
                         </>
                       )}
                     </Button>
@@ -1031,7 +1089,14 @@ Learn from my mistakes 👉 ${getShareUrl(backtest)}`;
                   </CardContent>
                 </Card>
               )}
-            </>
+
+              {/* Watermark for export */}
+              <div className="mt-6 text-center pb-4">
+                <p className="text-sm text-gray-500 font-medium">
+                  Generated with TradeScanPro.com
+                </p>
+              </div>
+            </div>
           ) : (
             <Card className="p-12 text-center">
               <BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-4" />
