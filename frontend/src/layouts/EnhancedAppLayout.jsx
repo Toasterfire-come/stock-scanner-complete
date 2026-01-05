@@ -60,12 +60,14 @@ import {
 import MarketStatus from "../components/MarketStatus";
 import CommandPalette from "../components/CommandPalette";
 import QuickActions from "../components/QuickActions";
+import ProductTour from "../components/ProductTour";
 
 const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } = {}) => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cmdOpenState, setCmdOpenState] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const cmdOpen = typeof cmdOpenProp === 'boolean' ? cmdOpenProp : cmdOpenState;
   const setCmdOpen = typeof setCmdOpenProp === 'function' ? setCmdOpenProp : setCmdOpenState;
 
@@ -157,6 +159,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
     <div className="min-h-screen bg-background flex flex-col">
       <SEO {...seoForPath(location.pathname)} />
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} isAuthenticated={isAuthenticated} />
+      <ProductTour run={tourOpen} onRunChange={setTourOpen} autoRunEnabled={isAuthenticated} />
       {/* Enhanced Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -364,7 +367,7 @@ const EnhancedAppLayout = ({ cmdOpen: cmdOpenProp, setCmdOpen: setCmdOpenProp } 
       </main>
 
       {/* Quick Actions Floating Button */}
-      <QuickActions />
+      <QuickActions onStartTour={() => setTourOpen(true)} />
 
       {/* Enhanced Footer */}
       <footer className="border-t bg-gray-50/80 backdrop-blur">

@@ -74,6 +74,8 @@ const PublicProfile = lazy(() => import(/* webpackPrefetch: true */ "./pages/app
 const PublicBacktestShare = lazy(() => import(/* webpackPrefetch: true */ "./pages/PublicBacktestShare"));
 const StrategyLeaderboard = lazy(() => import(/* webpackPrefetch: true */ "./pages/app/StrategyLeaderboard"));
 const EmbedBacktest = lazy(() => import(/* webpackPrefetch: true */ "./pages/EmbedBacktest"));
+const BlogIndex = lazy(() => import(/* webpackPrefetch: true */ "./pages/blog/BlogIndex"));
+const BlogPost = lazy(() => import(/* webpackPrefetch: true */ "./pages/blog/BlogPost"));
 import WatchlistDetail from "./pages/app/WatchlistDetail";
 
 // Education Pages (Phase 7)
@@ -271,6 +273,8 @@ function App() {
                   <Route path="/ref/:code" element={<ReferralApply redirectTo="/pricing" />} />
                   <Route path="/pricing" element={<PricingPro />} />
                   <Route path="/pricing-old" element={<Pricing />} />
+                  <Route path="/blog" element={<BlogIndex />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/stock-filter" element={<StockFilter />} />
                   <Route path="/market-scan" element={<MarketScan />} />
                   <Route path="/demo-scanner" element={<DemoScanner />} />

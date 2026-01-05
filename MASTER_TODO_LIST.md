@@ -125,18 +125,18 @@ The repo already contains substantial implementation work that this checklist wa
 ### Content Marketing Start - Week 3-4 (20 hours)
 
 #### Blog Content
-- [ ] **Blog Setup** (4 hours)
-  - [ ] Set up blog infrastructure (/blog route)
-  - [ ] Create blog post template
-  - [ ] Set up CMS (if needed) or Markdown files
-  - [ ] Configure SEO for blog posts
+- [x] **Blog Setup** (4 hours) ✅
+  - [x] Set up blog infrastructure (/blog route)
+  - [x] Create blog post template
+  - [x] Set up CMS (if needed) or Markdown files *(Markdown files in `frontend/public/blog/*.md`)*
+  - [x] Configure SEO for blog posts
 
-- [ ] **Write 4 Blog Posts** (16 hours)
-  - [ ] Post 1: "Top 10 Trading Strategies Backtested (AI Results)"
-  - [ ] Post 2: "How to Beat the S&P 500: Data-Driven Analysis"
-  - [ ] Post 3: "Day Trading vs Swing Trading: Which is More Profitable?"
-  - [ ] Post 4: "Understanding Sharpe Ratio: A Beginner's Guide"
-  - [ ] Publish all posts
+- [x] **Write 4 Blog Posts** (16 hours) ✅ *(published in-app; social distribution pending)*
+  - [x] Post 1: "Top 10 Trading Strategies Backtested (AI Results)"
+  - [x] Post 2: "How to Beat the S&P 500: Data-Driven Analysis"
+  - [x] Post 3: "Day Trading vs Swing Trading: Which is More Profitable?"
+  - [x] Post 4: "Understanding Sharpe Ratio: A Beginner's Guide"
+  - [x] Publish all posts *(available at `/blog`)*
   - [ ] Share on social media
 
 #### Error Monitoring
@@ -244,12 +244,12 @@ The repo already contains substantial implementation work that this checklist wa
 ### UX Improvements (20 hours)
 
 #### Onboarding
-- [ ] **Interactive Product Tour** (8 hours)
-  - [ ] Install Intro.js or similar
-  - [ ] Create step-by-step tour
-  - [ ] Add tooltips for key features
-  - [ ] Show on first login
-  - [ ] Add "Skip Tour" option
+- [x] **Interactive Product Tour** (8 hours) ✅
+  - [x] Install Intro.js or similar *(implemented via `react-joyride`)*
+  - [x] Create step-by-step tour
+  - [x] Add tooltips for key features *(Joyride tooltips)*
+  - [x] Show on first login *(first authenticated `/app/*` visit)*
+  - [x] Add "Skip Tour" option
 
 #### Welcome Email Series
 - [ ] **Email Onboarding** (6 hours)
@@ -281,12 +281,12 @@ The repo already contains substantial implementation work that this checklist wa
   - [ ] Aim for 60%+ code coverage
 
 #### E2E Testing
-- [ ] **End-to-End Tests** (10 hours)
-  - [ ] Set up Playwright or Cypress
+- [ ] **End-to-End Tests** (10 hours) 🟨 *(Playwright wired; expand coverage)*
+  - [x] Set up Playwright or Cypress *(Playwright configured with `webServer`)*
   - [ ] Write test: Complete backtest flow
   - [ ] Write test: Share to social media
   - [ ] Write test: Fork strategy
-  - [ ] Write test: Public page access
+  - [x] Write test: Public page access *(basic route smoke tests + blog)*
 
 #### Load Testing
 - [ ] **Performance Testing** (8 hours)

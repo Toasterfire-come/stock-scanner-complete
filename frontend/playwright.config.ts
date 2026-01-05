@@ -6,6 +6,13 @@ export default defineConfig({
   expect: { timeout: 5000 },
   fullyParallel: true,
   reporter: 'list',
+  webServer: {
+    // Disable CRA eslint plugin during E2E to avoid blocking runtime with overlay errors.
+    command: 'DISABLE_ESLINT_PLUGIN=true BROWSER=none yarn start',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 180 * 1000,
+  },
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
